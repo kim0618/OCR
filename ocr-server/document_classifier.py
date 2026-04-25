@@ -31,6 +31,52 @@
 import re
 
 
+def _has_valid_biz_checksum(digits: str) -> bool:
+    if len(digits) != 10 or not digits.isdigit():
+        return False
+    weights = [1, 3, 7, 1, 3, 7, 1, 3, 5]
+    total = sum(int(digits[i]) * weights[i] for i in range(9))
+    total += (int(digits[8]) * 5) // 10
+    return (10 - (total % 10)) % 10 == int(digits[9])
+
+
+def _receipt_like_unknown_evidence(text: str) -> tuple[bool, dict]:
+    """Promote only receipt-like unknowns with multiple independent signals."""
+    compact = re.sub(r'\s+', '', text or '')
+    if not compact:
+        return False, {}
+
+    biz_candidates = re.findall(r'(?<!\d)(\d{10})(?!\d)', compact)
+    biz_hits = [d for d in biz_candidates if _has_valid_biz_checksum(d)]
+    has_biz = bool(biz_hits)
+    has_tel = bool(re.search(r'(?:0\d{1,2}[-)]?\d{3,4}[-]?\d{4})', compact))
+    has_amount = bool(re.search(r'(?<!\d)\d{1,3}[,.]\d{3}(?!\d)', compact))
+    has_address = bool(re.search(
+        r'[\uAC00-\uD7A3]{1,12}(?:\uC2DC|\uAD70|\uAD6C|\uB3D9|\uC74D|\uBA74|\uB85C|\uAE38|\uB300\uB85C)\d*',
+        compact,
+    ))
+    receipt_context_hits = [
+        label for label, pattern in (
+            ("receipt", r'\uC601\uC218|\uD615\uC218'),
+            ("slip", r'\uC804\uD45C|\uC99D\uC778|\uC2B9\uC778'),
+            ("point", r'\uD3EC\uC778\uD2B8'),
+            ("item", r'(?:\uD488\uBAA9|\uC0C1\uD488|\uC218\uB7C9|\uAE08\uC561)'),
+            ("receipt_no", r'(?:NO|N0)[:.]?\d{2,}'),
+        )
+        if re.search(pattern, compact, re.I)
+    ]
+    evidence_count = sum([has_amount, has_address, bool(receipt_context_hits)]) + sum([has_biz, has_tel])
+    ok = has_amount and (has_biz or has_tel) and (has_address or bool(receipt_context_hits)) and evidence_count >= 3
+    return ok, {
+        "biz": has_biz,
+        "tel": has_tel,
+        "amount": has_amount,
+        "address": has_address,
+        "receipt_context": receipt_context_hits,
+        "evidence_count": evidence_count,
+    }
+
+
 _POS_SIGNALS = [
     r'영수증', r'세금계산서', r'상품명', r'수량', r'단가',
     r'공급가액', r'과세물품', r'면세물품', r'부가세', r'봉사료',
@@ -91,6 +137,7 @@ def classify_document(full_text: str) -> dict:
     card_n, card_hits = _count_hits(_CARD_SIGNALS, text)
     bank_n, bank_hits = _count_hits(_BANK_SIGNALS, text)
     form_n, form_hits = _count_hits(_FORM_SIGNALS, text)
+    receipt_like_ok, receipt_like_evidence = _receipt_like_unknown_evidence(full_text)
 
     # 결정 규칙 (우선순위):
     #   1. form_n ≥ 2 이고 다른 타입보다 높으면 form_or_handwritten (수기/폼 문서)
@@ -115,6 +162,8 @@ def classify_document(full_text: str) -> dict:
         doc_type = "receipt_pos"
     elif bank_n >= 1:
         doc_type = "bank_slip"
+    elif receipt_like_ok and bank_n == 0 and form_n == 0:
+        doc_type = "receipt_pos"
     else:
         doc_type = "unknown"
 
@@ -122,4 +171,5 @@ def classify_document(full_text: str) -> dict:
         "type": doc_type,
         "scores": {"pos": pos_n, "card": card_n, "bank": bank_n, "form": form_n},
         "hits": {"pos": pos_hits, "card": card_hits, "bank": bank_hits, "form": form_hits},
+        "receipt_like_unknown_evidence": receipt_like_evidence,
     }

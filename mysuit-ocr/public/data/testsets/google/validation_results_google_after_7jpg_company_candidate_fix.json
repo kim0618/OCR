@@ -1,0 +1,2572 @@
+{
+  "dataset": "google",
+  "generated_at": "2026-04-25T12:47:40.412387Z",
+  "summary": {
+    "dataset": "google",
+    "total_files": 11,
+    "selected": 10,
+    "suppression": 1,
+    "unknown": 0,
+    "error": 0,
+    "avg_total_ms": 23923.7,
+    "avg_detect_orientation_ms": 10355.6,
+    "avg_full_ocr_ms": 8598.8,
+    "avg_upper_reocr_total_ms": 3501.7,
+    "avg_amount_reocr_total_ms": 1361.2
+  },
+  "rows": [
+    {
+      "file": "1.jpg",
+      "status": "selected",
+      "doc_type": "receipt_pos",
+      "suppression": false,
+      "unknown": false,
+      "receipt_fields": {
+        "회사명": "스카토레",
+        "사업자번호": "",
+        "대표자": "",
+        "tel": "",
+        "주소": "",
+        "총합계금액": "15,900"
+      },
+      "processing_time": 22.13,
+      "total_ms": 22131.0,
+      "detect_orientation_ms": 12414.0,
+      "full_ocr_ms": 5080.0,
+      "upper_reocr_total_ms": 3695.0,
+      "amount_reocr_total_ms": 753.0,
+      "upper_reocr_ran": true,
+      "amount_reocr_ran": true,
+      "field_sources": {
+        "회사명": "upper_block",
+        "사업자번호": "",
+        "대표자": "",
+        "tel": "",
+        "주소": "",
+        "총합계금액": "full_ocr"
+      },
+      "document_classification": {
+        "type": "receipt_pos",
+        "scores": {
+          "pos": 2,
+          "card": 1,
+          "bank": 0,
+          "form": 0
+        },
+        "hits": {
+          "pos": [
+            "수량",
+            "단가"
+          ],
+          "card": [
+            "신용카드"
+          ],
+          "bank": [],
+          "form": []
+        },
+        "receipt_like_unknown_evidence": {
+          "biz": false,
+          "tel": false,
+          "amount": true,
+          "address": true,
+          "receipt_context": [
+            "item"
+          ],
+          "evidence_count": 3
+        }
+      },
+      "amount_debug": {
+        "status": "selected",
+        "reason": "+20 하단부 위치; +10 천단위 콤마 포맷; +4.4 OCR 신뢰도 0.94",
+        "accept_reasons": [
+          "+20 하단부 위치",
+          "+10 천단위 콤마 포맷",
+          "+4.4 OCR 신뢰도 0.94"
+        ],
+        "rejected_top": [
+          {
+            "value": "10,900",
+            "score": 34.13,
+            "source": "full_ocr",
+            "pattern": "comma",
+            "row_pos": 0.875,
+            "reasons": [
+              "+20 하단부 위치",
+              "+10 천단위 콤마 포맷",
+              "+4.1 OCR 신뢰도 0.91"
+            ]
+          },
+          {
+            "value": "42,700",
+            "score": 3.45,
+            "source": "full_ocr",
+            "pattern": "comma",
+            "row_pos": 0.125,
+            "reasons": [
+              "-10 상단부 위치 (합계 가능성 낮음)",
+              "+10 천단위 콤마 포맷"
+            ]
+          }
+        ],
+        "candidates": [
+          {
+            "value": 15900,
+            "formatted": "15,900",
+            "pattern": "comma",
+            "row_idx": 6,
+            "row_pos": 0.75,
+            "text": "15,900",
+            "conf": 0.9430620074272156,
+            "context": "메스카토레15,900",
+            "near_above": "fs계ura70",
+            "near_below": "크림새우1샐러드]리코타10,900",
+            "source": "full_ocr",
+            "score": 34.43,
+            "reasons": [
+              "+20 하단부 위치",
+              "+10 천단위 콤마 포맷",
+              "+4.4 OCR 신뢰도 0.94"
+            ]
+          },
+          {
+            "value": 10900,
+            "formatted": "10,900",
+            "pattern": "comma",
+            "row_idx": 7,
+            "row_pos": 0.875,
+            "text": "10,900",
+            "conf": 0.9128841757774353,
+            "context": "크림새우1샐러드]리코타10,900",
+            "near_above": "메스카토레15,900",
+            "near_below": "품명단가수량1금액",
+            "source": "full_ocr",
+            "score": 34.13,
+            "reasons": [
+              "+20 하단부 위치",
+              "+10 천단위 콤마 포맷",
+              "+4.1 OCR 신뢰도 0.91"
+            ]
+          },
+          {
+            "value": 42700,
+            "formatted": "42,700",
+            "pattern": "comma",
+            "row_idx": 1,
+            "row_pos": 0.125,
+            "text": "42,700",
+            "conf": 0.8452829718589783,
+            "context": "신용카드:42,700",
+            "near_above": "카드p응",
+            "near_below": "보문에i>10-tdnudum66금금",
+            "source": "full_ocr",
+            "score": 3.45,
+            "reasons": [
+              "-10 상단부 위치 (합계 가능성 낮음)",
+              "+10 천단위 콤마 포맷"
+            ]
+          }
+        ],
+        "selected": {
+          "value": "15,900",
+          "row_idx": 6,
+          "row_pos": 0.75,
+          "pattern": "comma",
+          "score": 34.43,
+          "reasons": [
+            "+20 하단부 위치",
+            "+10 천단위 콤마 포맷",
+            "+4.4 OCR 신뢰도 0.94"
+          ],
+          "text": "15,900",
+          "source": "full_ocr",
+          "synth_from": null,
+          "cross_source": false,
+          "source_set": null,
+          "verified_by_synth": false
+        }
+      },
+      "upper_text": "-0-TG0\n크림시Q\n품명\n2\nC\n러의\n-T\n10\no0\n\n스카토레\nDnDb\nH\n목\n2",
+      "amount_text": "기 되어있는\n단기",
+      "full_text": "신용카드:\n보문에\nF\n메스카토레\n크림새우\n1샐러드] 리코타\n카드p응\n품명\nI>10-T\nS계\nDnUDU\n가세\n면세\n부\n물품가액\n품욕입니다.\n15,900\n단가 수량\n1 금액\n42,700\n66\nURA70\n10,900\n금금"
+    },
+    {
+      "file": "2.jpg",
+      "status": "selected",
+      "doc_type": "receipt_card",
+      "suppression": false,
+      "unknown": false,
+      "receipt_fields": {
+        "회사명": "아우프글렛",
+        "사업자번호": "476-41-00855",
+        "대표자": "김기탁",
+        "tel": "010-5187-2011",
+        "주소": "서울 용신구 이태원로54가길 20 1,2층",
+        "총합계금액": "15,400"
+      },
+      "processing_time": 30.38,
+      "total_ms": 30380.0,
+      "detect_orientation_ms": 13422.0,
+      "full_ocr_ms": 13645.0,
+      "upper_reocr_total_ms": 2918.0,
+      "amount_reocr_total_ms": 0.0,
+      "upper_reocr_ran": true,
+      "amount_reocr_ran": false,
+      "field_sources": {
+        "회사명": "upper_block",
+        "사업자번호": "upper_block",
+        "대표자": "",
+        "tel": "upper_block",
+        "주소": "full_ocr",
+        "총합계금액": "full_ocr"
+      },
+      "document_classification": {
+        "type": "receipt_card",
+        "scores": {
+          "pos": 3,
+          "card": 5,
+          "bank": 0,
+          "form": 0
+        },
+        "hits": {
+          "pos": [
+            "영수증",
+            "수량",
+            "단가"
+          ],
+          "card": [
+            "승인번호",
+            "승인금액",
+            "카드번호",
+            "할부",
+            "신용카드"
+          ],
+          "bank": [],
+          "form": []
+        },
+        "receipt_like_unknown_evidence": {
+          "biz": true,
+          "tel": true,
+          "amount": true,
+          "address": true,
+          "receipt_context": [
+            "receipt",
+            "slip",
+            "item",
+            "receipt_no"
+          ],
+          "evidence_count": 5
+        }
+      },
+      "amount_debug": {
+        "status": "selected",
+        "reason": "+40 결제/청구/승인/합계 키워드; +20 하단부 위치; +10 천단위 콤마 포맷; -70 전표/승인번호/가맹점번호 문맥; +5.0 OCR 신뢰도 1.00; +42 실 후보 값이 공급가액+부가세 합성과 일치 (교차 검증); +45 검산 성공 (14,000+1,400=15,400)",
+        "accept_reasons": [
+          "+40 결제/청구/승인/합계 키워드",
+          "+20 하단부 위치",
+          "+10 천단위 콤마 포맷",
+          "-70 전표/승인번호/가맹점번호 문맥",
+          "+5.0 OCR 신뢰도 1.00",
+          "+42 실 후보 값이 공급가액+부가세 합성과 일치 (교차 검증)",
+          "+45 검산 성공 (14,000+1,400=15,400)"
+        ],
+        "rejected_top": [
+          {
+            "value": "22,000",
+            "score": 69.99,
+            "source": "full_ocr",
+            "pattern": "comma",
+            "row_pos": 0.636,
+            "reasons": [
+              "+10 중하단 위치",
+              "+10 천단위 콤마 포맷",
+              "+5.0 OCR 신뢰도 1.00",
+              "+45 검산 성공 (6,600+15,400=22,000)"
+            ]
+          },
+          {
+            "value": "14,000",
+            "score": 24.99,
+            "source": "full_ocr",
+            "pattern": "comma",
+            "row_pos": 0.636,
+            "reasons": [
+              "+10 중하단 위치",
+              "+10 천단위 콤마 포맷",
+              "+5.0 OCR 신뢰도 1.00"
+            ]
+          },
+          {
+            "value": "6,600",
+            "score": 24.96,
+            "source": "full_ocr",
+            "pattern": "comma",
+            "row_pos": 0.636,
+            "reasons": [
+              "+10 중하단 위치",
+              "+10 천단위 콤마 포맷",
+              "+5.0 OCR 신뢰도 1.00"
+            ]
+          }
+        ],
+        "candidates": [
+          {
+            "value": 15400,
+            "formatted": "15,400",
+            "pattern": "comma",
+            "row_idx": 9,
+            "row_pos": 0.8181818181818182,
+            "text": "15,400",
+            "conf": 0.99684077501297,
+            "context": "칸드상명할부기간승인금액일시물15,4001ibk비씨체카드번호·[신용카드결제]입력방법승인번호ic7231181062100360",
+            "near_above": "-출이클역15.4006,600",
+            "near_below": "발맹일시:2024-06-2218:55:35",
+            "source": "full_ocr",
+            "verified_by_synth": true,
+            "score": 91.97,
+            "reasons": [
+              "+40 결제/청구/승인/합계 키워드",
+              "+20 하단부 위치",
+              "+10 천단위 콤마 포맷",
+              "-70 전표/승인번호/가맹점번호 문맥",
+              "+5.0 OCR 신뢰도 1.00",
+              "+42 실 후보 값이 공급가액+부가세 합성과 일치 (교차 검증)",
+              "+45 검산 성공 (14,000+1,400=15,400)"
+            ]
+          },
+          {
+            "value": 22000,
+            "formatted": "22,000",
+            "pattern": "comma",
+            "row_idx": 7,
+            "row_pos": 0.6363636363636364,
+            "text": "22,000",
+            "conf": 0.999291181564331,
+            "context": "부-가세공급가금액주문,압계(직원(단골)말인30%)14,0001.40022,0006,600",
+            "near_above": "no.02eatin베로와상크림브릴레아메리카노(ice)아몬드5,5006,5005,00000--5,5006,50010,00000",
+            "near_below": "-출이클역15.4006,600",
+            "source": "full_ocr",
+            "score": 69.99,
+            "reasons": [
+              "+10 중하단 위치",
+              "+10 천단위 콤마 포맷",
+              "+5.0 OCR 신뢰도 1.00",
+              "+45 검산 성공 (6,600+15,400=22,000)"
+            ]
+          },
+          {
+            "value": 14000,
+            "formatted": "14,000",
+            "pattern": "comma",
+            "row_idx": 7,
+            "row_pos": 0.6363636363636364,
+            "text": "14,000",
+            "conf": 0.999098539352417,
+            "context": "부-가세공급가금액주문,압계(직원(단골)말인30%)14,0001.40022,0006,600",
+            "near_above": "no.02eatin베로와상크림브릴레아메리카노(ice)아몬드5,5006,5005,00000--5,5006,50010,00000",
+            "near_below": "-출이클역15.4006,600",
+            "source": "full_ocr",
+            "score": 24.99,
+            "reasons": [
+              "+10 중하단 위치",
+              "+10 천단위 콤마 포맷",
+              "+5.0 OCR 신뢰도 1.00"
+            ]
+          },
+          {
+            "value": 6600,
+            "formatted": "6,600",
+            "pattern": "comma",
+            "row_idx": 7,
+            "row_pos": 0.6363636363636364,
+            "text": "6,600",
+            "conf": 0.9958651661872864,
+            "context": "부-가세공급가금액주문,압계(직원(단골)말인30%)14,0001.40022,0006,600",
+            "near_above": "no.02eatin베로와상크림브릴레아메리카노(ice)아몬드5,5006,5005,00000--5,5006,50010,00000",
+            "near_below": "-출이클역15.4006,600",
+            "source": "full_ocr",
+            "score": 24.96,
+            "reasons": [
+              "+10 중하단 위치",
+              "+10 천단위 콤마 포맷",
+              "+5.0 OCR 신뢰도 1.00"
+            ]
+          },
+          {
+            "value": 1400,
+            "formatted": "1,400",
+            "pattern": "comma",
+            "row_idx": 7,
+            "row_pos": 0.6363636363636364,
+            "text": "1.400",
+            "conf": 0.9465667605400085,
+            "context": "부-가세공급가금액주문,압계(직원(단골)말인30%)14,0001.40022,0006,600",
+            "near_above": "no.02eatin베로와상크림브릴레아메리카노(ice)아몬드5,5006,5005,00000--5,5006,50010,00000",
+            "near_below": "-출이클역15.4006,600",
+            "source": "full_ocr",
+            "score": 24.47,
+            "reasons": [
+              "+10 중하단 위치",
+              "+10 천단위 콤마 포맷",
+              "+4.5 OCR 신뢰도 0.95"
+            ]
+          },
+          {
+            "value": 5000,
+            "formatted": "5,000",
+            "pattern": "comma",
+            "row_idx": 6,
+            "row_pos": 0.5454545454545454,
+            "text": "5,000",
+            "conf": 0.9995139837265015,
+            "context": "no.02eatin베로와상크림브릴레아메리카노(ice)아몬드5,5006,5005,00000--5,5006,50010,00000",
+            "near_above": "품명단가수량금액",
+            "near_below": "부-가세공급가금액주문,압계(직원(단골)말인30%)14,0001.40022,0006,600",
+            "source": "full_ocr",
+            "score": 15.0,
+            "reasons": [
+              "+10 천단위 콤마 포맷",
+              "+5.0 OCR 신뢰도 1.00"
+            ]
+          },
+          {
+            "value": 5500,
+            "formatted": "5,500",
+            "pattern": "comma",
+            "row_idx": 6,
+            "row_pos": 0.5454545454545454,
+            "text": "5,500",
+            "conf": 0.9989258050918579,
+            "context": "no.02eatin베로와상크림브릴레아메리카노(ice)아몬드5,5006,5005,00000--5,5006,50010,00000",
+            "near_above": "품명단가수량금액",
+            "near_below": "부-가세공급가금액주문,압계(직원(단골)말인30%)14,0001.40022,0006,600",
+            "source": "full_ocr",
+            "score": 14.99,
+            "reasons": [
+              "+10 천단위 콤마 포맷",
+              "+5.0 OCR 신뢰도 1.00"
+            ]
+          },
+          {
+            "value": 10000,
+            "formatted": "10,000",
+            "pattern": "comma",
+            "row_idx": 6,
+            "row_pos": 0.5454545454545454,
+            "text": "10,000",
+            "conf": 0.9970092177391052,
+            "context": "no.02eatin베로와상크림브릴레아메리카노(ice)아몬드5,5006,5005,00000--5,5006,50010,00000",
+            "near_above": "품명단가수량금액",
+            "near_below": "부-가세공급가금액주문,압계(직원(단골)말인30%)14,0001.40022,0006,600",
+            "source": "full_ocr",
+            "score": 14.97,
+            "reasons": [
+              "+10 천단위 콤마 포맷",
+              "+5.0 OCR 신뢰도 1.00"
+            ]
+          },
+          {
+            "value": 6500,
+            "formatted": "6,500",
+            "pattern": "comma",
+            "row_idx": 6,
+            "row_pos": 0.5454545454545454,
+            "text": "6,500",
+            "conf": 0.9972597360610962,
+            "context": "no.02eatin베로와상크림브릴레아메리카노(ice)아몬드5,5006,5005,00000--5,5006,50010,00000",
+            "near_above": "품명단가수량금액",
+            "near_below": "부-가세공급가금액주문,압계(직원(단골)말인30%)14,0001.40022,0006,600",
+            "source": "full_ocr",
+            "score": 14.97,
+            "reasons": [
+              "+10 천단위 콤마 포맷",
+              "+5.0 OCR 신뢰도 1.00"
+            ]
+          },
+          {
+            "value": 62100360,
+            "formatted": "62,100,360",
+            "pattern": "bare",
+            "row_idx": 9,
+            "row_pos": 0.8181818181818182,
+            "text": "62100360",
+            "conf": 0.999616801738739,
+            "context": "칸드상명할부기간승인금액일시물15,4001ibk비씨체카드번호·[신용카드결제]입력방법승인번호ic7231181062100360",
+            "near_above": "-출이클역15.4006,600",
+            "near_below": "발맹일시:2024-06-2218:55:35",
+            "source": "full_ocr",
+            "score": -19.0,
+            "reasons": [
+              "+40 결제/청구/승인/합계 키워드",
+              "+20 하단부 위치",
+              "-14 콤마 없는 단순 숫자",
+              "-70 전표/승인번호/가맹점번호 문맥",
+              "+5.0 OCR 신뢰도 1.00"
+            ]
+          }
+        ],
+        "selected": {
+          "value": "15,400",
+          "row_idx": 9,
+          "row_pos": 0.818,
+          "pattern": "comma",
+          "score": 91.97,
+          "reasons": [
+            "+40 결제/청구/승인/합계 키워드",
+            "+20 하단부 위치",
+            "+10 천단위 콤마 포맷",
+            "-70 전표/승인번호/가맹점번호 문맥",
+            "+5.0 OCR 신뢰도 1.00",
+            "+42 실 후보 값이 공급가액+부가세 합성과 일치 (교차 검증)",
+            "+45 검산 성공 (14,000+1,400=15,400)"
+          ],
+          "text": "15,400",
+          "source": "full_ocr",
+          "synth_from": null,
+          "cross_source": false,
+          "source_set": null,
+          "verified_by_synth": true
+        }
+      },
+      "upper_text": "아우프글렛\n사업자번호\n4764100855\n대-표I자\n김기탁\n번호:01051872011\n\n영수증\n영수증# 20240622-10106",
+      "amount_text": "",
+      "full_text": "아우프글렛\n사업자번호\n4764100855\n대표자\n김기탁\n전화 번호\n01051872011\n부소 : 서울 용신구 이태원로54가길 20 1,2층\n영수증\n영수증#20240622-10106\n포스 ID : 10\n테l이블:EatIn\n김기탁\n품명\n단가 수량\n금액\nNO.02\nEat In\n0\n0\n아메리카노(Ice)\n0\n0\n5,000\n크림브릴레\n10,000\n6,500\n--\n베로와상\n6,500\n아몬드\n5,500\n5,500\n주문,압계\n(직원(단골)말인 30%)\n22,000\n공급가금액\n6,600\n부-가 세\n14,000\n1.400\n-\n6,600\n15.400\n1\n·[신용카드결제]\n칸드상명\nIBK비씨체 카드번호\n승인금액\n62100360\n15,400\n할부기간\n승인번호\n일시물\n72311810\n입력방법\nIC\n발맹 일 시 :2024-06-22 18:55:35\nWifi:AUFGLET\npassword:AuFGlET1234\n로객용"
+    },
+    {
+      "file": "3.jpg",
+      "status": "selected",
+      "doc_type": "receipt_pos",
+      "suppression": false,
+      "unknown": false,
+      "receipt_fields": {
+        "회사명": "키페보니뜨시담점",
+        "사업자번호": "142-88-00355",
+        "대표자": "박광수",
+        "tel": "02-584-0011",
+        "주소": "",
+        "총합계금액": "8,200"
+      },
+      "processing_time": 24.0,
+      "total_ms": 24003.0,
+      "detect_orientation_ms": 12540.0,
+      "full_ocr_ms": 7112.0,
+      "upper_reocr_total_ms": 4308.0,
+      "amount_reocr_total_ms": 0.0,
+      "upper_reocr_ran": true,
+      "amount_reocr_ran": false,
+      "field_sources": {
+        "회사명": "upper_block",
+        "사업자번호": "upper_block",
+        "대표자": "upper_block",
+        "tel": "full_ocr",
+        "주소": "",
+        "총합계금액": "full_ocr"
+      },
+      "document_classification": {
+        "type": "receipt_pos",
+        "scores": {
+          "pos": 5,
+          "card": 0,
+          "bank": 0,
+          "form": 0
+        },
+        "hits": {
+          "pos": [
+            "상품명",
+            "수량",
+            "단가",
+            "과세물품",
+            "부가세"
+          ],
+          "card": [],
+          "bank": [],
+          "form": []
+        },
+        "receipt_like_unknown_evidence": {
+          "biz": false,
+          "tel": true,
+          "amount": true,
+          "address": false,
+          "receipt_context": [
+            "receipt",
+            "item"
+          ],
+          "evidence_count": 3
+        }
+      },
+      "amount_debug": {
+        "status": "selected",
+        "reason": "+20 하단부 위치; +10 천단위 콤마 포맷; +4.8 OCR 신뢰도 0.98; +45 검산 성공 (4,500+3,700=8,200)",
+        "accept_reasons": [
+          "+20 하단부 위치",
+          "+10 천단위 콤마 포맷",
+          "+4.8 OCR 신뢰도 0.98",
+          "+45 검산 성공 (4,500+3,700=8,200)"
+        ],
+        "rejected_top": [
+          {
+            "value": "11,900",
+            "score": 57.96,
+            "source": "full_ocr",
+            "pattern": "comma",
+            "row_pos": 0.4,
+            "reasons": [
+              "+10 천단위 콤마 포맷",
+              "+45 검산 성공 (3,700+8,200=11,900)"
+            ]
+          },
+          {
+            "value": "4,500",
+            "score": 28.75,
+            "source": "full_ocr",
+            "pattern": "comma",
+            "row_pos": 0.4,
+            "reasons": [
+              "+10 천단위 콤마 포맷",
+              "+4.8 OCR 신뢰도 0.98",
+              "+14 복수 실소스 교차 일치"
+            ]
+          },
+          {
+            "value": "3,700",
+            "score": 14.64,
+            "source": "full_ocr",
+            "pattern": "comma",
+            "row_pos": 0.4,
+            "reasons": [
+              "+10 천단위 콤마 포맷",
+              "+4.6 OCR 신뢰도 0.96"
+            ]
+          }
+        ],
+        "candidates": [
+          {
+            "value": 8200,
+            "formatted": "8,200",
+            "pattern": "comma",
+            "row_idx": 4,
+            "row_pos": 0.8,
+            "text": "8,200",
+            "conf": 0.9839955568313599,
+            "context": "부8,200",
+            "near_above": "*할인내역부가세과세물품가액세8,200",
+            "near_below": "그o맥산업정보포털i-db.co.kridb",
+            "source": "full_ocr",
+            "score": 79.84,
+            "reasons": [
+              "+20 하단부 위치",
+              "+10 천단위 콤마 포맷",
+              "+4.8 OCR 신뢰도 0.98",
+              "+45 검산 성공 (4,500+3,700=8,200)"
+            ]
+          },
+          {
+            "value": 11900,
+            "formatted": "11,900",
+            "pattern": "comma",
+            "row_idx": 2,
+            "row_pos": 0.4,
+            "text": "11,900",
+            "conf": 0.7958276271820068,
+            "context": "[주[대표자박광수000191000055레드벨넷토르타상품명[영수층]20180107-01-0071[0출일]2018-01-0716:17:16r)마이스마메리카노보클단가수량4,5003.700>일반할민2금액4,5003.70011,9003,7003.700",
+            "near_above": "[매장명]카메보니또사당점[tel]02-584-001101-박광수",
+            "near_below": "*할인내역부가세과세물품가액세8,200",
+            "source": "full_ocr",
+            "score": 57.96,
+            "reasons": [
+              "+10 천단위 콤마 포맷",
+              "+45 검산 성공 (3,700+8,200=11,900)"
+            ]
+          },
+          {
+            "value": 4500,
+            "formatted": "4,500",
+            "pattern": "comma",
+            "row_idx": 2,
+            "row_pos": 0.4,
+            "text": "4,500",
+            "conf": 0.9751364588737488,
+            "context": "[주[대표자박광수000191000055레드벨넷토르타상품명[영수층]20180107-01-0071[0출일]2018-01-0716:17:16r)마이스마메리카노보클단가수량4,5003.700>일반할민2금액4,5003.70011,9003,7003.700",
+            "near_above": "[매장명]카메보니또사당점[tel]02-584-001101-박광수",
+            "near_below": "*할인내역부가세과세물품가액세8,200",
+            "source": "full_ocr",
+            "cross_source": true,
+            "source_set": [
+              "full_ocr",
+              "upper_block"
+            ],
+            "score": 28.75,
+            "reasons": [
+              "+10 천단위 콤마 포맷",
+              "+4.8 OCR 신뢰도 0.98",
+              "+14 복수 실소스 교차 일치"
+            ]
+          },
+          {
+            "value": 3700,
+            "formatted": "3,700",
+            "pattern": "comma",
+            "row_idx": 2,
+            "row_pos": 0.4,
+            "text": "3.700",
+            "conf": 0.9642640948295593,
+            "context": "[주[대표자박광수000191000055레드벨넷토르타상품명[영수층]20180107-01-0071[0출일]2018-01-0716:17:16r)마이스마메리카노보클단가수량4,5003.700>일반할민2금액4,5003.70011,9003,7003.700",
+            "near_above": "[매장명]카메보니또사당점[tel]02-584-001101-박광수",
+            "near_below": "*할인내역부가세과세물품가액세8,200",
+            "source": "full_ocr",
+            "score": 14.64,
+            "reasons": [
+              "+10 천단위 콤마 포맷",
+              "+4.6 OCR 신뢰도 0.96"
+            ]
+          },
+          {
+            "value": 17816,
+            "formatted": "17,816",
+            "pattern": "bare",
+            "row_idx": 0,
+            "row_pos": 0.0,
+            "text": "[0일] 2018-01-07 16:17816",
+            "conf": 0.9501270651817322,
+            "context": "[주대표자박광수[사업자3142-88-00355[매장명]키페보니뜨시담점영수증]20180107-01-0071[0일]2018-01-0716:17816단가수량-01-박광수금액4.500",
+            "near_above": "",
+            "near_below": "",
+            "source": "upper_block",
+            "score": -109.5,
+            "reasons": [
+              "-10 상단부 위치 (합계 가능성 낮음)",
+              "-14 콤마 없는 단순 숫자",
+              "-10 bare + 합계 키워드 부재",
+              "-60 사업자/등록번호 문맥",
+              "+4.5 OCR 신뢰도 0.95",
+              "-20 상단 사업자 블록 소스 (합계 가능성 낮음)"
+            ]
+          }
+        ],
+        "selected": {
+          "value": "8,200",
+          "row_idx": 4,
+          "row_pos": 0.8,
+          "pattern": "comma",
+          "score": 79.84,
+          "reasons": [
+            "+20 하단부 위치",
+            "+10 천단위 콤마 포맷",
+            "+4.8 OCR 신뢰도 0.98",
+            "+45 검산 성공 (4,500+3,700=8,200)"
+          ],
+          "text": "8,200",
+          "source": "full_ocr",
+          "synth_from": null,
+          "cross_source": false,
+          "source_set": null,
+          "verified_by_synth": false
+        }
+      },
+      "upper_text": "-\n01-박광수\n[매장명] 키페보니뜨시담점\n[사업자3142-88-00355\n[주\n금액\n대표자박광수\n단가 수량\n[0일] 2018-01-07 16:17816\n4.500\n영수증] 20180107-01-0071",
+      "amount_text": "",
+      "full_text": "[명수즘]\n[매장명] 카메보니또사당점\n[TEL] 02-584-0011\n01-박광수\n[주\n금액\n[대표자박광수\n[0출일]2018-01-07 16:17:16\n단가수량\n4,500\n[영수층]20180107-01-0071\n>\n3.700\n상품명\n4,500\n2\n11,900\n레드벨넷토르타\n3.700\n3,700\n000191\nR) 마이스마메리카노보\n3.700\n000055\n클\n일반할민\n세\n8,200\n* 할인내역\n부가세 과세물품가액\n부\n8,200\n산업정보포털\n맥\niDB\n그o\ni-DB.co.kr"
+    },
+    {
+      "file": "4.jpeg",
+      "status": "selected",
+      "doc_type": "receipt_pos",
+      "suppression": false,
+      "unknown": false,
+      "receipt_fields": {
+        "회사명": "문정수정점",
+        "사업자번호": "880-95-99360",
+        "대표자": "",
+        "tel": "",
+        "주소": "",
+        "총합계금액": "18,308"
+      },
+      "processing_time": 17.77,
+      "total_ms": 17773.0,
+      "detect_orientation_ms": 4101.0,
+      "full_ocr_ms": 6118.0,
+      "upper_reocr_total_ms": 4053.0,
+      "amount_reocr_total_ms": 3441.0,
+      "upper_reocr_ran": true,
+      "amount_reocr_ran": true,
+      "field_sources": {
+        "회사명": "upper_block",
+        "사업자번호": "upper_block",
+        "대표자": "",
+        "tel": "",
+        "주소": "",
+        "총합계금액": "amount_block"
+      },
+      "document_classification": {
+        "type": "receipt_pos",
+        "scores": {
+          "pos": 2,
+          "card": 0,
+          "bank": 0,
+          "form": 0
+        },
+        "hits": {
+          "pos": [
+            "상품명",
+            "수량"
+          ],
+          "card": [],
+          "bank": [],
+          "form": []
+        },
+        "receipt_like_unknown_evidence": {
+          "biz": true,
+          "tel": false,
+          "amount": true,
+          "address": true,
+          "receipt_context": [
+            "item"
+          ],
+          "evidence_count": 4
+        }
+      },
+      "amount_debug": {
+        "status": "selected",
+        "reason": "+20 하단부 위치; -14 콤마 없는 단순 숫자; -10 bare + 합계 키워드 부재; +8 하단 금액 블록의 고신뢰 bare 후보; +4.9 OCR 신뢰도 0.99; +28 하단 금액 블록 재OCR 소스; +14 복수 실소스 교차 일치",
+        "accept_reasons": [
+          "+20 하단부 위치",
+          "-14 콤마 없는 단순 숫자",
+          "-10 bare + 합계 키워드 부재",
+          "+8 하단 금액 블록의 고신뢰 bare 후보",
+          "+4.9 OCR 신뢰도 0.99",
+          "+28 하단 금액 블록 재OCR 소스",
+          "+14 복수 실소스 교차 일치"
+        ],
+        "rejected_top": [
+          {
+            "value": "13,820",
+            "score": 45.77,
+            "source": "amount_block",
+            "pattern": "comma",
+            "row_pos": 0.091,
+            "reasons": [
+              "-10 상단부 위치 (합계 가능성 낮음)",
+              "+10 천단위 콤마 포맷",
+              "+3.8 OCR 신뢰도 0.88",
+              "+28 하단 금액 블록 재OCR 소스",
+              "+14 복수 실소스 교차 일치"
+            ]
+          }
+        ],
+        "candidates": [
+          {
+            "value": 18308,
+            "formatted": "18,308",
+            "pattern": "bare",
+            "row_idx": 10,
+            "row_pos": 0.9090909090909091,
+            "text": "문정수정점#18308",
+            "conf": 0.9922784566879272,
+            "context": "문정수정점#18308",
+            "near_above": "파쿠구그니2",
+            "near_below": "등편의점enteokr",
+            "source": "amount_block",
+            "cross_source": true,
+            "source_set": [
+              "amount_block",
+              "full_ocr"
+            ],
+            "score": 50.92,
+            "reasons": [
+              "+20 하단부 위치",
+              "-14 콤마 없는 단순 숫자",
+              "-10 bare + 합계 키워드 부재",
+              "+8 하단 금액 블록의 고신뢰 bare 후보",
+              "+4.9 OCR 신뢰도 0.99",
+              "+28 하단 금액 블록 재OCR 소스",
+              "+14 복수 실소스 교차 일치"
+            ]
+          },
+          {
+            "value": 13820,
+            "formatted": "13,820",
+            "pattern": "comma",
+            "row_idx": 1,
+            "row_pos": 0.09090909090909091,
+            "text": "W13.820",
+            "conf": 0.877381443977356,
+            "context": "w13.820",
+            "near_above": "a",
+            "near_below": "목품가입",
+            "source": "amount_block",
+            "cross_source": true,
+            "source_set": [
+              "amount_block",
+              "full_ocr"
+            ],
+            "score": 45.77,
+            "reasons": [
+              "-10 상단부 위치 (합계 가능성 낮음)",
+              "+10 천단위 콤마 포맷",
+              "+3.8 OCR 신뢰도 0.88",
+              "+28 하단 금액 블록 재OCR 소스",
+              "+14 복수 실소스 교차 일치"
+            ]
+          }
+        ],
+        "selected": {
+          "value": "18,308",
+          "row_idx": 10,
+          "row_pos": 0.909,
+          "pattern": "bare",
+          "score": 50.92,
+          "reasons": [
+            "+20 하단부 위치",
+            "-14 콤마 없는 단순 숫자",
+            "-10 bare + 합계 키워드 부재",
+            "+8 하단 금액 블록의 고신뢰 bare 후보",
+            "+4.9 OCR 신뢰도 0.99",
+            "+28 하단 금액 블록 재OCR 소스",
+            "+14 복수 실소스 교차 일치"
+          ],
+          "text": "문정수정점#18308",
+          "source": "amount_block",
+          "synth_from": null,
+          "cross_source": true,
+          "source_set": [
+            "amount_block",
+            "full_ocr"
+          ],
+          "verified_by_synth": false
+        }
+      },
+      "upper_text": "20\n(분정동)\n생307\n답계\n스마인트474m\n랑랑스웠바널라마인트474\n\n88095993600\n삼품명 수람\n\n세계 1등 편의점\n\nS\n관세특품가액\n3\n\n8\nTe\n문정수정점#\nW13.",
+      "amount_text": "목품가입\n파인트474m1\n라마인특474\n\n파쿠구그니2\n등 편의점\n문정수정점#18308\n수량\nW13.820\n2\n1 20:59:47\nenteokr\n\n금액\n\nDR\n\nA\n",
+      "full_text": "(분청동)\n생307)\n합a\n상품명\n괄세품가액\n문정수정점#18308\n수량\n2158544631\nW13,820\nven co kr\n20:59:47\n금액\n성"
+    },
+    {
+      "file": "5.jpg",
+      "status": "selected",
+      "doc_type": "receipt_card",
+      "suppression": false,
+      "unknown": false,
+      "receipt_fields": {
+        "회사명": "GS25역상효성점",
+        "사업자번호": "220-09-99115",
+        "대표자": "",
+        "tel": "02-538-1248",
+        "주소": "서울 강남대로84길23",
+        "총합계금액": "53,200"
+      },
+      "processing_time": 30.8,
+      "total_ms": 30803.0,
+      "detect_orientation_ms": 12913.0,
+      "full_ocr_ms": 9664.0,
+      "upper_reocr_total_ms": 5319.0,
+      "amount_reocr_total_ms": 2829.0,
+      "upper_reocr_ran": true,
+      "amount_reocr_ran": true,
+      "field_sources": {
+        "회사명": "upper_block",
+        "사업자번호": "upper_block",
+        "대표자": "",
+        "tel": "upper_block",
+        "주소": "",
+        "총합계금액": "amount_block"
+      },
+      "document_classification": {
+        "type": "receipt_card",
+        "scores": {
+          "pos": 1,
+          "card": 1,
+          "bank": 0,
+          "form": 0
+        },
+        "hits": {
+          "pos": [
+            "수량"
+          ],
+          "card": [
+            "매입사"
+          ],
+          "bank": [],
+          "form": []
+        },
+        "receipt_like_unknown_evidence": {
+          "biz": true,
+          "tel": true,
+          "amount": true,
+          "address": true,
+          "receipt_context": [
+            "receipt",
+            "slip",
+            "item",
+            "receipt_no"
+          ],
+          "evidence_count": 5
+        }
+      },
+      "amount_debug": {
+        "status": "selected",
+        "reason": "+12 원/￦ 단위 접미; +20 하단부 위치; +10 천단위 콤마 포맷; +4.7 OCR 신뢰도 0.97; +28 하단 금액 블록 재OCR 소스; +14 복수 실소스 교차 일치",
+        "accept_reasons": [
+          "+12 원/￦ 단위 접미",
+          "+20 하단부 위치",
+          "+10 천단위 콤마 포맷",
+          "+4.7 OCR 신뢰도 0.97",
+          "+28 하단 금액 블록 재OCR 소스",
+          "+14 복수 실소스 교차 일치"
+        ],
+        "rejected_top": [
+          {
+            "value": "6,546",
+            "score": 36.95,
+            "source": "amount_block",
+            "pattern": "bare",
+            "row_pos": 1.0,
+            "reasons": [
+              "+20 하단부 위치",
+              "-14 콤마 없는 단순 숫자",
+              "-10 bare + 합계 키워드 부재",
+              "+8 하단 금액 블록의 고신뢰 bare 후보",
+              "+4.9 OCR 신뢰도 0.99",
+              "+28 하단 금액 블록 재OCR 소스"
+            ]
+          },
+          {
+            "value": "18,891,872",
+            "score": 0.42,
+            "source": "full_ocr",
+            "pattern": "bare",
+            "row_pos": 0.833,
+            "reasons": [
+              "+20 하단부 위치",
+              "-14 콤마 없는 단순 숫자",
+              "-10 bare + 합계 키워드 부재",
+              "+4.4 OCR 신뢰도 0.94"
+            ]
+          },
+          {
+            "value": "27,355",
+            "score": -15.6,
+            "source": "full_ocr",
+            "pattern": "bare",
+            "row_pos": 0.167,
+            "reasons": [
+              "-10 상단부 위치 (합계 가능성 낮음)",
+              "-14 콤마 없는 단순 숫자",
+              "-10 bare + 합계 키워드 부재",
+              "+4.4 OCR 신뢰도 0.94",
+              "+14 복수 실소스 교차 일치"
+            ]
+          }
+        ],
+        "candidates": [
+          {
+            "value": 53200,
+            "formatted": "53,200",
+            "pattern": "comma",
+            "row_idx": 2,
+            "row_pos": 1.0,
+            "text": "53,200원",
+            "conf": 0.9732255935668945,
+            "context": "53,200원신용카두,접표(고객용)9410-19rk-kxkk-6546",
+            "near_above": "면세매출ㅣ용가겔e\"는면세상품표시입니다53,20053,200",
+            "near_below": "",
+            "source": "amount_block",
+            "cross_source": true,
+            "source_set": [
+              "amount_block",
+              "full_ocr"
+            ],
+            "score": 88.73,
+            "reasons": [
+              "+12 원/￦ 단위 접미",
+              "+20 하단부 위치",
+              "+10 천단위 콤마 포맷",
+              "+4.7 OCR 신뢰도 0.97",
+              "+28 하단 금액 블록 재OCR 소스",
+              "+14 복수 실소스 교차 일치"
+            ]
+          },
+          {
+            "value": 6546,
+            "formatted": "6,546",
+            "pattern": "bare",
+            "row_idx": 2,
+            "row_pos": 1.0,
+            "text": "6546",
+            "conf": 0.9948476552963257,
+            "context": "53,200원신용카두,접표(고객용)9410-19rk-kxkk-6546",
+            "near_above": "면세매출ㅣ용가겔e\"는면세상품표시입니다53,20053,200",
+            "near_below": "",
+            "source": "amount_block",
+            "score": 36.95,
+            "reasons": [
+              "+20 하단부 위치",
+              "-14 콤마 없는 단순 숫자",
+              "-10 bare + 합계 키워드 부재",
+              "+8 하단 금액 블록의 고신뢰 bare 후보",
+              "+4.9 OCR 신뢰도 0.99",
+              "+28 하단 금액 블록 재OCR 소스"
+            ]
+          },
+          {
+            "value": 18891872,
+            "formatted": "18,891,872",
+            "pattern": "bare",
+            "row_idx": 5,
+            "row_pos": 0.8333333333333334,
+            "text": "증인번호18891872",
+            "conf": 0.942051112651825,
+            "context": "일부증인번호18891872253,200원신용카들,적표(고객용)18/07/0416:47:28(매입사:신한카드)",
+            "near_above": "합면세매출신용카계드*는면세상품표시입니다53,20053,20053,200",
+            "near_below": "i스트gs25",
+            "source": "full_ocr",
+            "score": 0.42,
+            "reasons": [
+              "+20 하단부 위치",
+              "-14 콤마 없는 단순 숫자",
+              "-10 bare + 합계 키워드 부재",
+              "+4.4 OCR 신뢰도 0.94"
+            ]
+          },
+          {
+            "value": 27355,
+            "formatted": "27,355",
+            "pattern": "bare",
+            "row_idx": 1,
+            "row_pos": 0.16666666666666666,
+            "text": "N0:27355",
+            "conf": 0.9403090476989746,
+            "context": "석춘서울gs25역삼효성점2018/07/04석*강남대로84길2302-538-12482200999115n0:27355",
+            "near_above": "가까운행복을만나다gs2",
+            "near_below": "*정부방침에의해,교환/환반드시형수층을지참하셔야카드결제는30일(08월03일)0나)카드와영수층치참시'가능합니다며",
+            "source": "full_ocr",
+            "cross_source": true,
+            "source_set": [
+              "full_ocr",
+              "upper_block"
+            ],
+            "score": -15.6,
+            "reasons": [
+              "-10 상단부 위치 (합계 가능성 낮음)",
+              "-14 콤마 없는 단순 숫자",
+              "-10 bare + 합계 키워드 부재",
+              "+4.4 OCR 신뢰도 0.94",
+              "+14 복수 실소스 교차 일치"
+            ]
+          }
+        ],
+        "selected": {
+          "value": "53,200",
+          "row_idx": 2,
+          "row_pos": 1.0,
+          "pattern": "comma",
+          "score": 88.73,
+          "reasons": [
+            "+12 원/￦ 단위 접미",
+            "+20 하단부 위치",
+            "+10 천단위 콤마 포맷",
+            "+4.7 OCR 신뢰도 0.97",
+            "+28 하단 금액 블록 재OCR 소스",
+            "+14 복수 실소스 교차 일치"
+          ],
+          "text": "53,200원",
+          "source": "amount_block",
+          "synth_from": null,
+          "cross_source": true,
+          "source_set": [
+            "amount_block",
+            "full_ocr"
+          ],
+          "verified_by_synth": false
+        }
+      },
+      "upper_text": "GS25역상효성점\n02-538-1248\n\n석춘\n2200999115\n-\n서울\n\n강남대로84\n23\nS\n\n\n-\n9\n\n\nN0:27355\n–\n113\nS\n-\n9\n/\n\n'",
+      "amount_text": "합계수량/금액\n53. 20\n면세 매출\n53, 200\n겔\nㅣ 용 가\nE\n\"는 면세상품 표시입니다\n53,200\n신용카두,접표(고객용)\n9410-19RK-KXKK-\n53,200원\n6546",
+      "full_text": "가까운 행복을 만나다 GS2\nGS25역삼효성점\n02-538-1248\n석춘\n2200999115\n서울\n강남대로84길23\n2018/07/04 석*\nN0:27355\n*정부방침에 의해,교환/환\n반드시 형수층을 지참하셔야\n며\n카드결제는 30일(08월03일)0나)\n카드와 영수층 치참 시 '가능합니다\n*감남영업50L\n40\n53,200\n합계수량/금액\n40\n53,200\n면세 매출\n53,200\n합\n계드\n53,200\n신용카\n*는 면세상품 표시입니다\n53,200\n신용카들,적표(고객용)\n53,200원\n(매입사:신한카드)\n일\n부\n증인번호18891872\n18/07/04 16:47:28\nI스트 GS25"
+    },
+    {
+      "file": "6.jpg",
+      "status": "suppressed_bank_slip",
+      "doc_type": "bank_slip",
+      "suppression": true,
+      "unknown": false,
+      "receipt_fields": {
+        "회사명": "GS25궁리대명점",
+        "사업자번호": "",
+        "대표자": "",
+        "tel": "031-552-2292",
+        "주소": "",
+        "총합계금액": "2,900"
+      },
+      "processing_time": 9.88,
+      "total_ms": 9883.0,
+      "detect_orientation_ms": 2209.0,
+      "full_ocr_ms": 7608.0,
+      "upper_reocr_total_ms": 0.0,
+      "amount_reocr_total_ms": 0.0,
+      "upper_reocr_ran": false,
+      "amount_reocr_ran": false,
+      "field_sources": {
+        "회사명": "",
+        "사업자번호": "",
+        "대표자": "",
+        "tel": "full_ocr",
+        "주소": "",
+        "총합계금액": "full_ocr"
+      },
+      "document_classification": {
+        "type": "bank_slip",
+        "scores": {
+          "pos": 0,
+          "card": 0,
+          "bank": 1,
+          "form": 0
+        },
+        "hits": {
+          "pos": [],
+          "card": [],
+          "bank": [
+            "입금"
+          ],
+          "form": []
+        },
+        "receipt_like_unknown_evidence": {
+          "biz": false,
+          "tel": true,
+          "amount": true,
+          "address": true,
+          "receipt_context": [
+            "slip",
+            "item"
+          ],
+          "evidence_count": 4
+        }
+      },
+      "amount_debug": {
+        "status": "selected",
+        "reason": "+40 결제/청구/승인/합계 키워드; +26 본문 행에 합계 문맥 직접 존재; +12 원/￦ 단위 접미; +10 천단위 콤마 포맷; +4.9 OCR 신뢰도 0.99; +8 합계 문맥의 실 OCR 금액 우대",
+        "accept_reasons": [
+          "+40 결제/청구/승인/합계 키워드",
+          "+26 본문 행에 합계 문맥 직접 존재",
+          "+12 원/￦ 단위 접미",
+          "+10 천단위 콤마 포맷",
+          "+4.9 OCR 신뢰도 0.99",
+          "+8 합계 문맥의 실 OCR 금액 우대"
+        ],
+        "rejected_top": [],
+        "candidates": [
+          {
+            "value": 2900,
+            "formatted": "2,900",
+            "pattern": "comma",
+            "row_idx": 2,
+            "row_pos": 0.4,
+            "text": "2,900원",
+            "conf": 0.9941573143005371,
+            "context": "칼드번호결제금액2016/12/07심용우2,900원4658-87**no:1",
+            "near_above": "실흑우gs25궁리대명점031-552-22924861100312",
+            "near_below": "있습니다.조메시지가발송되지\"않을수인멘세지가릭더라로자으로및통신사'사정에따라적으로처리되지않았습니다'승인취소가'될예정이며,",
+            "source": "full_ocr",
+            "score": 100.94,
+            "reasons": [
+              "+40 결제/청구/승인/합계 키워드",
+              "+26 본문 행에 합계 문맥 직접 존재",
+              "+12 원/￦ 단위 접미",
+              "+10 천단위 콤마 포맷",
+              "+4.9 OCR 신뢰도 0.99",
+              "+8 합계 문맥의 실 OCR 금액 우대"
+            ]
+          }
+        ],
+        "selected": {
+          "value": "2,900",
+          "row_idx": 2,
+          "row_pos": 0.4,
+          "pattern": "comma",
+          "score": 100.94,
+          "reasons": [
+            "+40 결제/청구/승인/합계 키워드",
+            "+26 본문 행에 합계 문맥 직접 존재",
+            "+12 원/￦ 단위 접미",
+            "+10 천단위 콤마 포맷",
+            "+4.9 OCR 신뢰도 0.99",
+            "+8 합계 문맥의 실 OCR 금액 우대"
+          ],
+          "text": "2,900원",
+          "source": "full_ocr",
+          "synth_from": null,
+          "cross_source": false,
+          "source_set": null,
+          "verified_by_synth": false
+        }
+      },
+      "upper_text": "",
+      "amount_text": "",
+      "full_text": "yos\n참게하는행복Gs25\nGS25궁리대명점\n031-552-2292\n실흑우\n4861100312\n2016/12/07심용우\nNO:1\n칼드번호\n4658-87**\n결제금액\n2,900원\n적으로 처리되지 않았습니다\n인 멘세지가릭더라로 자으로\n'승인취소가'될 예정이며,\n및통신사'사정에 따라\n조 메시지가 발송되지\"않을 수\n있습니다.\n금융긴관 영업일\n4일'이내 고객는\n'통장으로\n입금될 예청입니다\n감사합니당\n16/12/0717:16:45\n-\nGS25 멤번십 카들,출시!"
+    },
+    {
+      "file": "7.jpg",
+      "status": "selected",
+      "doc_type": "receipt_pos",
+      "suppression": false,
+      "unknown": false,
+      "receipt_fields": {
+        "회사명": "GS25성신로데오점",
+        "사업자번호": "543-49-00108",
+        "대표자": "",
+        "tel": "02-927-2369",
+        "주소": "",
+        "총합계금액": "7,650"
+      },
+      "processing_time": 16.01,
+      "total_ms": 16005.0,
+      "detect_orientation_ms": 3610.0,
+      "full_ocr_ms": 7510.0,
+      "upper_reocr_total_ms": 3232.0,
+      "amount_reocr_total_ms": 1584.0,
+      "upper_reocr_ran": true,
+      "amount_reocr_ran": true,
+      "field_sources": {
+        "회사명": "",
+        "사업자번호": "upper_block",
+        "대표자": "",
+        "tel": "full_ocr",
+        "주소": "",
+        "총합계금액": "amount_block"
+      },
+      "document_classification": {
+        "type": "receipt_pos",
+        "scores": {
+          "pos": 0,
+          "card": 0,
+          "bank": 0,
+          "form": 0
+        },
+        "hits": {
+          "pos": [],
+          "card": [],
+          "bank": [],
+          "form": []
+        },
+        "receipt_like_unknown_evidence": {
+          "biz": false,
+          "tel": true,
+          "amount": true,
+          "address": true,
+          "receipt_context": [
+            "receipt",
+            "slip",
+            "point",
+            "receipt_no"
+          ],
+          "evidence_count": 4
+        }
+      },
+      "amount_debug": {
+        "status": "selected",
+        "reason": "+20 하단부 위치; -14 콤마 없는 단순 숫자; -10 bare + 합계 키워드 부재; +8 하단 금액 블록의 고신뢰 bare 후보; +3.6 OCR 신뢰도 0.86; +28 하단 금액 블록 재OCR 소스",
+        "accept_reasons": [
+          "+20 하단부 위치",
+          "-14 콤마 없는 단순 숫자",
+          "-10 bare + 합계 키워드 부재",
+          "+8 하단 금액 블록의 고신뢰 bare 후보",
+          "+3.6 OCR 신뢰도 0.86",
+          "+28 하단 금액 블록 재OCR 소스"
+        ],
+        "rejected_top": [
+          {
+            "value": "7,850",
+            "score": 21.94,
+            "source": "full_ocr",
+            "pattern": "comma",
+            "row_pos": 0.667,
+            "reasons": [
+              "+10 중하단 위치",
+              "+10 천단위 콤마 포맷"
+            ]
+          },
+          {
+            "value": "8,500",
+            "score": 14.87,
+            "source": "full_ocr",
+            "pattern": "comma",
+            "row_pos": 0.333,
+            "reasons": [
+              "+10 천단위 콤마 포맷",
+              "+4.9 OCR 신뢰도 0.99"
+            ]
+          },
+          {
+            "value": "1,500",
+            "score": 14.87,
+            "source": "full_ocr",
+            "pattern": "comma",
+            "row_pos": 0.333,
+            "reasons": [
+              "+10 천단위 콤마 포맷",
+              "+4.9 OCR 신뢰도 0.99"
+            ]
+          }
+        ],
+        "candidates": [
+          {
+            "value": 7650,
+            "formatted": "7,650",
+            "pattern": "bare",
+            "row_idx": 3,
+            "row_pos": 1.0,
+            "text": "7650",
+            "conf": 0.8602339029312134,
+            "context": "인트적립내역7650",
+            "near_above": "955",
+            "near_below": "",
+            "source": "amount_block",
+            "score": 35.6,
+            "reasons": [
+              "+20 하단부 위치",
+              "-14 콤마 없는 단순 숫자",
+              "-10 bare + 합계 키워드 부재",
+              "+8 하단 금액 블록의 고신뢰 bare 후보",
+              "+3.6 OCR 신뢰도 0.86",
+              "+28 하단 금액 블록 재OCR 소스"
+            ]
+          },
+          {
+            "value": 7850,
+            "formatted": "7,850",
+            "pattern": "comma",
+            "row_idx": 2,
+            "row_pos": 0.6666666666666666,
+            "text": "7.850",
+            "conf": 0.6937373280525208,
+            "context": ")gs동포인트적립내역7.8506,.95",
+            "near_above": "대게딱-마이홈)치킨2편3오모리면홍기gs25성신로데오점장80g부발침에의해/불는30일(08월12일)이내형수증을\"지참하셔야하며,영수지참지\"가능합니다8,500동소문로22길28,1증-8503,5001,5003,500n0:19078543490010802-927-2369",
+            "near_below": "맞살이증인번호전표(고객6점",
+            "source": "full_ocr",
+            "score": 21.94,
+            "reasons": [
+              "+10 중하단 위치",
+              "+10 천단위 콤마 포맷"
+            ]
+          },
+          {
+            "value": 8500,
+            "formatted": "8,500",
+            "pattern": "comma",
+            "row_idx": 1,
+            "row_pos": 0.3333333333333333,
+            "text": "8,500",
+            "conf": 0.9870834350585938,
+            "context": "대게딱-마이홈)치킨2편3오모리면홍기gs25성신로데오점장80g부발침에의해/불는30일(08월12일)이내형수증을\"지참하셔야하며,영수지참지\"가능합니다8,500동소문로22길28,1증-8503,5001,5003,500n0:19078543490010802-927-2369",
+            "near_above": "참께하는행복gs2",
+            "near_below": ")gs동포인트적립내역7.8506,.95",
+            "source": "full_ocr",
+            "score": 14.87,
+            "reasons": [
+              "+10 천단위 콤마 포맷",
+              "+4.9 OCR 신뢰도 0.99"
+            ]
+          },
+          {
+            "value": 1500,
+            "formatted": "1,500",
+            "pattern": "comma",
+            "row_idx": 1,
+            "row_pos": 0.3333333333333333,
+            "text": "1,500",
+            "conf": 0.9871262311935425,
+            "context": "대게딱-마이홈)치킨2편3오모리면홍기gs25성신로데오점장80g부발침에의해/불는30일(08월12일)이내형수증을\"지참하셔야하며,영수지참지\"가능합니다8,500동소문로22길28,1증-8503,5001,5003,500n0:19078543490010802-927-2369",
+            "near_above": "참께하는행복gs2",
+            "near_below": ")gs동포인트적립내역7.8506,.95",
+            "source": "full_ocr",
+            "score": 14.87,
+            "reasons": [
+              "+10 천단위 콤마 포맷",
+              "+4.9 OCR 신뢰도 0.99"
+            ]
+          },
+          {
+            "value": 3500,
+            "formatted": "3,500",
+            "pattern": "comma",
+            "row_idx": 1,
+            "row_pos": 0.3333333333333333,
+            "text": "3,500",
+            "conf": 0.889358639717102,
+            "context": "대게딱-마이홈)치킨2편3오모리면홍기gs25성신로데오점장80g부발침에의해/불는30일(08월12일)이내형수증을\"지참하셔야하며,영수지참지\"가능합니다8,500동소문로22길28,1증-8503,5001,5003,500n0:19078543490010802-927-2369",
+            "near_above": "참께하는행복gs2",
+            "near_below": ")gs동포인트적립내역7.8506,.95",
+            "source": "full_ocr",
+            "score": 13.89,
+            "reasons": [
+              "+10 천단위 콤마 포맷",
+              "+3.9 OCR 신뢰도 0.89"
+            ]
+          },
+          {
+            "value": 19078,
+            "formatted": "19,078",
+            "pattern": "bare",
+            "row_idx": 1,
+            "row_pos": 0.3333333333333333,
+            "text": "N0:19078",
+            "conf": 0.946418821811676,
+            "context": "대게딱-마이홈)치킨2편3오모리면홍기gs25성신로데오점장80g부발침에의해/불는30일(08월12일)이내형수증을\"지참하셔야하며,영수지참지\"가능합니다8,500동소문로22길28,1증-8503,5001,5003,500n0:19078543490010802-927-2369",
+            "near_above": "참께하는행복gs2",
+            "near_below": ")gs동포인트적립내역7.8506,.95",
+            "source": "full_ocr",
+            "cross_source": true,
+            "source_set": [
+              "full_ocr",
+              "upper_block"
+            ],
+            "score": -5.54,
+            "reasons": [
+              "-14 콤마 없는 단순 숫자",
+              "-10 bare + 합계 키워드 부재",
+              "+4.5 OCR 신뢰도 0.95",
+              "+14 복수 실소스 교차 일치"
+            ]
+          },
+          {
+            "value": 2017,
+            "formatted": "2,017",
+            "pattern": "bare",
+            "row_idx": 0,
+            "row_pos": 0.0,
+            "text": "2017/0",
+            "conf": 0.9990556240081787,
+            "context": "2017/0[영수정부방침에의해교환임우현s동소문로22길28,no:1907854349001087-2369",
+            "near_above": "",
+            "near_below": "",
+            "source": "upper_block",
+            "score": -49.01,
+            "reasons": [
+              "-10 상단부 위치 (합계 가능성 낮음)",
+              "-14 콤마 없는 단순 숫자",
+              "-10 bare + 합계 키워드 부재",
+              "+5.0 OCR 신뢰도 1.00",
+              "-20 상단 사업자 블록 소스 (합계 가능성 낮음)"
+            ]
+          }
+        ],
+        "selected": {
+          "value": "7,650",
+          "row_idx": 3,
+          "row_pos": 1.0,
+          "pattern": "bare",
+          "score": 35.6,
+          "reasons": [
+            "+20 하단부 위치",
+            "-14 콤마 없는 단순 숫자",
+            "-10 bare + 합계 키워드 부재",
+            "+8 하단 금액 블록의 고신뢰 bare 후보",
+            "+3.6 OCR 신뢰도 0.86",
+            "+28 하단 금액 블록 재OCR 소스"
+          ],
+          "text": "7650",
+          "source": "amount_block",
+          "synth_from": null,
+          "cross_source": false,
+          "source_set": null,
+          "verified_by_synth": false
+        }
+      },
+      "upper_text": "7-2369\n5434900108\n동소문로22길28,\n\n2017/0\nS\n임우현\nNO:19078\n정부방침에 의해 교환\n\n[영수\n",
+      "amount_text": "500\n500\n500\n3\n955\n7650\n인트적립내역",
+      "full_text": "참께하는행복\nGS2\nGS25성신로데오점\n02-927-2369\n5434900108\n동소문로22길 28,1증\n-\nN0:19078\n부발침에의해/불\n형수증을\"지참하셔야 하며,\n3\n는 30일 (08월 12일) 이내\n영수지참지\"가능합니다\n대게딱\n오모리면홍기\n장80G\n마이홈)치킨2편\n3,500\n1,500\n3,500\n8,500\n-850\n6,.95\n7.850\nGS동\n포인트 적립내역\n전표(고객\n6점\n증인번호\n맞살이"
+    },
+    {
+      "file": "8.jpg",
+      "status": "selected",
+      "doc_type": "receipt_pos",
+      "suppression": false,
+      "unknown": false,
+      "receipt_fields": {
+        "회사명": "",
+        "사업자번호": "",
+        "대표자": "",
+        "tel": "02-1234-5678",
+        "주소": "서울 영등포구 은행로 17(여의도동, 나이스1사옥)",
+        "총합계금액": "5,500"
+      },
+      "processing_time": 25.98,
+      "total_ms": 25977.0,
+      "detect_orientation_ms": 12171.0,
+      "full_ocr_ms": 9227.0,
+      "upper_reocr_total_ms": 4522.0,
+      "amount_reocr_total_ms": 0.0,
+      "upper_reocr_ran": true,
+      "amount_reocr_ran": false,
+      "field_sources": {
+        "회사명": "",
+        "사업자번호": "",
+        "대표자": "",
+        "tel": "upper_block",
+        "주소": "full_ocr",
+        "총합계금액": "full_ocr"
+      },
+      "document_classification": {
+        "type": "receipt_pos",
+        "scores": {
+          "pos": 6,
+          "card": 0,
+          "bank": 0,
+          "form": 0
+        },
+        "hits": {
+          "pos": [
+            "영수증",
+            "상품명",
+            "수량",
+            "단가",
+            "과세물품",
+            "부가세"
+          ],
+          "card": [],
+          "bank": [],
+          "form": []
+        },
+        "receipt_like_unknown_evidence": {
+          "biz": false,
+          "tel": true,
+          "amount": true,
+          "address": true,
+          "receipt_context": [
+            "receipt",
+            "item"
+          ],
+          "evidence_count": 4
+        }
+      },
+      "amount_debug": {
+        "status": "selected",
+        "reason": "+20 하단부 위치; +10 천단위 콤마 포맷; +5.0 OCR 신뢰도 1.00; +45 검산 성공 (2,500+3,000=5,500)",
+        "accept_reasons": [
+          "+20 하단부 위치",
+          "+10 천단위 콤마 포맷",
+          "+5.0 OCR 신뢰도 1.00",
+          "+45 검산 성공 (2,500+3,000=5,500)"
+        ],
+        "rejected_top": [
+          {
+            "value": "2,500",
+            "score": 79.96,
+            "source": "full_ocr",
+            "pattern": "comma",
+            "row_pos": 0.417,
+            "reasons": [
+              "+55 총합계/합계금액/최종금액 키워드",
+              "+10 인접 행 합계 문맥",
+              "+10 천단위 콤마 포맷",
+              "+5.0 OCR 신뢰도 1.00"
+            ]
+          },
+          {
+            "value": "3,000",
+            "score": 79.63,
+            "source": "full_ocr",
+            "pattern": "comma",
+            "row_pos": 0.417,
+            "reasons": [
+              "+55 총합계/합계금액/최종금액 키워드",
+              "+10 인접 행 합계 문맥",
+              "+10 천단위 콤마 포맷",
+              "+4.6 OCR 신뢰도 0.96"
+            ]
+          },
+          {
+            "value": "5,001",
+            "score": 72.88,
+            "source": "full_ocr",
+            "pattern": "comma",
+            "row_pos": 0.583,
+            "reasons": [
+              "+55 총합계/합계금액/최종금액 키워드",
+              "+18 인접 행 공급가액/부가세 뒤의 합계 문맥",
+              "+10 중하단 위치",
+              "+10 천단위 콤마 포맷",
+              "-25 공급가액/부가세/봉사료 (부분 금액)",
+              "+4.9 OCR 신뢰도 0.99"
+            ]
+          }
+        ],
+        "candidates": [
+          {
+            "value": 5500,
+            "formatted": "5,500",
+            "pattern": "comma",
+            "row_idx": 10,
+            "row_pos": 0.8333333333333334,
+            "text": "5,500",
+            "conf": 0.9960419535636902,
+            "context": "7발5,5005,500",
+            "near_above": "현금5,500",
+            "near_below": "20230711/03/9992/1115/1700",
+            "source": "full_ocr",
+            "score": 79.96,
+            "reasons": [
+              "+20 하단부 위치",
+              "+10 천단위 콤마 포맷",
+              "+5.0 OCR 신뢰도 1.00",
+              "+45 검산 성공 (2,500+3,000=5,500)"
+            ]
+          },
+          {
+            "value": 2500,
+            "formatted": "2,500",
+            "pattern": "comma",
+            "row_idx": 5,
+            "row_pos": 0.4166666666666667,
+            "text": "2,500",
+            "conf": 0.9964084625244141,
+            "context": "에스프레소hot아메리카노2,5003,00072g3,0002,500",
+            "near_above": "상품명단가수량금액",
+            "near_below": "합계금액5,500",
+            "source": "full_ocr",
+            "score": 79.96,
+            "reasons": [
+              "+55 총합계/합계금액/최종금액 키워드",
+              "+10 인접 행 합계 문맥",
+              "+10 천단위 콤마 포맷",
+              "+5.0 OCR 신뢰도 1.00"
+            ]
+          },
+          {
+            "value": 3000,
+            "formatted": "3,000",
+            "pattern": "comma",
+            "row_idx": 5,
+            "row_pos": 0.4166666666666667,
+            "text": "3,000",
+            "conf": 0.963068962097168,
+            "context": "에스프레소hot아메리카노2,5003,00072g3,0002,500",
+            "near_above": "상품명단가수량금액",
+            "near_below": "합계금액5,500",
+            "source": "full_ocr",
+            "score": 79.63,
+            "reasons": [
+              "+55 총합계/합계금액/최종금액 키워드",
+              "+10 인접 행 합계 문맥",
+              "+10 천단위 콤마 포맷",
+              "+4.6 OCR 신뢰도 0.96"
+            ]
+          },
+          {
+            "value": 5001,
+            "formatted": "5,001",
+            "pattern": "comma",
+            "row_idx": 7,
+            "row_pos": 0.5833333333333334,
+            "text": "5,001",
+            "conf": 0.9882570505142212,
+            "context": "부가세과세물품가액5,001",
+            "near_above": "합계금액5,500",
+            "near_below": "부가세499",
+            "source": "full_ocr",
+            "score": 72.88,
+            "reasons": [
+              "+55 총합계/합계금액/최종금액 키워드",
+              "+18 인접 행 공급가액/부가세 뒤의 합계 문맥",
+              "+10 중하단 위치",
+              "+10 천단위 콤마 포맷",
+              "-25 공급가액/부가세/봉사료 (부분 금액)",
+              "+4.9 OCR 신뢰도 0.99"
+            ]
+          },
+          {
+            "value": 2030,
+            "formatted": "2,030",
+            "pattern": "bare",
+            "row_idx": 12,
+            "row_pos": 1.0,
+            "text": "2030부산세계박람회 유치를 응원합니다!",
+            "conf": 0.9538085460662842,
+            "context": "2030부산세계박람회유치를응원합니다!",
+            "near_above": "20230711/03/9992/1115/1700",
+            "near_below": "",
+            "source": "full_ocr",
+            "score": -17.46,
+            "reasons": [
+              "+12 원/￦ 단위 접미",
+              "+20 하단부 위치",
+              "-14 콤마 없는 단순 숫자",
+              "-10 bare + 합계 키워드 부재",
+              "-30 문서 최하단 bare (바코드/전표꼬리 의심)",
+              "+4.5 OCR 신뢰도 0.95"
+            ]
+          },
+          {
+            "value": 20230711,
+            "formatted": "20,230,711",
+            "pattern": "bare",
+            "row_idx": 11,
+            "row_pos": 0.9166666666666666,
+            "text": "20230711/03/9992/1115/1700",
+            "conf": 0.9998940825462341,
+            "context": "20230711/03/9992/1115/1700",
+            "near_above": "7발5,5005,500",
+            "near_below": "2030부산세계박람회유치를응원합니다!",
+            "source": "full_ocr",
+            "score": -29.0,
+            "reasons": [
+              "+20 하단부 위치",
+              "-14 콤마 없는 단순 숫자",
+              "-10 bare + 합계 키워드 부재",
+              "-30 문서 최하단 bare (바코드/전표꼬리 의심)",
+              "+5.0 OCR 신뢰도 1.00"
+            ]
+          },
+          {
+            "value": 9992,
+            "formatted": "9,992",
+            "pattern": "bare",
+            "row_idx": 11,
+            "row_pos": 0.9166666666666666,
+            "text": "20230711/03/9992/1115/1700",
+            "conf": 0.9998940825462341,
+            "context": "20230711/03/9992/1115/1700",
+            "near_above": "7발5,5005,500",
+            "near_below": "2030부산세계박람회유치를응원합니다!",
+            "source": "full_ocr",
+            "score": -29.0,
+            "reasons": [
+              "+20 하단부 위치",
+              "-14 콤마 없는 단순 숫자",
+              "-10 bare + 합계 키워드 부재",
+              "-30 문서 최하단 bare (바코드/전표꼬리 의심)",
+              "+5.0 OCR 신뢰도 1.00"
+            ]
+          },
+          {
+            "value": 1700,
+            "formatted": "1,700",
+            "pattern": "bare",
+            "row_idx": 11,
+            "row_pos": 0.9166666666666666,
+            "text": "20230711/03/9992/1115/1700",
+            "conf": 0.9998940825462341,
+            "context": "20230711/03/9992/1115/1700",
+            "near_above": "7발5,5005,500",
+            "near_below": "2030부산세계박람회유치를응원합니다!",
+            "source": "full_ocr",
+            "score": -29.0,
+            "reasons": [
+              "+20 하단부 위치",
+              "-14 콤마 없는 단순 숫자",
+              "-10 bare + 합계 키워드 부재",
+              "-30 문서 최하단 bare (바코드/전표꼬리 의심)",
+              "+5.0 OCR 신뢰도 1.00"
+            ]
+          },
+          {
+            "value": 1115,
+            "formatted": "1,115",
+            "pattern": "bare",
+            "row_idx": 11,
+            "row_pos": 0.9166666666666666,
+            "text": "20230711/03/9992/1115/1700",
+            "conf": 0.9998940825462341,
+            "context": "20230711/03/9992/1115/1700",
+            "near_above": "7발5,5005,500",
+            "near_below": "2030부산세계박람회유치를응원합니다!",
+            "source": "full_ocr",
+            "score": -29.0,
+            "reasons": [
+              "+20 하단부 위치",
+              "-14 콤마 없는 단순 숫자",
+              "-10 bare + 합계 키워드 부재",
+              "-30 문서 최하단 bare (바코드/전표꼬리 의심)",
+              "+5.0 OCR 신뢰도 1.00"
+            ]
+          }
+        ],
+        "selected": {
+          "value": "5,500",
+          "row_idx": 10,
+          "row_pos": 0.833,
+          "pattern": "comma",
+          "score": 79.96,
+          "reasons": [
+            "+20 하단부 위치",
+            "+10 천단위 콤마 포맷",
+            "+5.0 OCR 신뢰도 1.00",
+            "+45 검산 성공 (2,500+3,000=5,500)"
+          ],
+          "text": "5,500",
+          "source": "full_ocr",
+          "synth_from": null,
+          "cross_source": false,
+          "source_set": null,
+          "verified_by_synth": false
+        }
+      },
+      "upper_text": "나이스사옥)\n여의도동\n울 영등포구 은행로17\n\nI\n-\n•\n1\nI\n:\n\n02-1234-5678 /20230711-03-0017\n2023-07-11 16:44:56",
+      "amount_text": "",
+      "full_text": "[영수증]\n서울 영등포구 은행로 17(여의도동, 나이스1사옥)\n3층\n02-1234-5678 /20230711-03-0017\n2023-07-11 16:44:56\n단가 수량 금액\n상품명\n에스프레소\n2,500\n2,500\n72\n3,000\nHOT아메리카노\n3,000\n합계 금액\n5,500\n부가세 과세물품가액\n5,001\n부\n가\n세\n499\n금\n5,500\n현\n발\n5,500\n5,500\n20230711/03/9992/1115/1700\n2030부산세계박람회 유치를 응원합니다!"
+    },
+    {
+      "file": "9.jpg",
+      "status": "selected",
+      "doc_type": "receipt_pos",
+      "suppression": false,
+      "unknown": false,
+      "receipt_fields": {
+        "회사명": "미화약국",
+        "사업자번호": "506-17-32861",
+        "대표자": "정은진",
+        "tel": "02-2011-0777",
+        "주소": "경상북도 포함시 남구 포스코대로353번길 8 6070",
+        "총합계금액": "27,000"
+      },
+      "processing_time": 49.81,
+      "total_ms": 49812.0,
+      "detect_orientation_ms": 23763.0,
+      "full_ocr_ms": 14522.0,
+      "upper_reocr_total_ms": 5787.0,
+      "amount_reocr_total_ms": 5668.0,
+      "upper_reocr_ran": true,
+      "amount_reocr_ran": true,
+      "field_sources": {
+        "회사명": "upper_block",
+        "사업자번호": "upper_block",
+        "대표자": "",
+        "tel": "upper_block",
+        "주소": "upper_block",
+        "총합계금액": "amount_block"
+      },
+      "document_classification": {
+        "type": "receipt_pos",
+        "scores": {
+          "pos": 4,
+          "card": 0,
+          "bank": 0,
+          "form": 0
+        },
+        "hits": {
+          "pos": [
+            "수량",
+            "단가",
+            "가맹점명",
+            "점명"
+          ],
+          "card": [],
+          "bank": [],
+          "form": []
+        },
+        "receipt_like_unknown_evidence": {
+          "biz": false,
+          "tel": true,
+          "amount": false,
+          "address": true,
+          "receipt_context": [
+            "item"
+          ],
+          "evidence_count": 3
+        }
+      },
+      "amount_debug": {
+        "status": "selected",
+        "reason": "+10 중하단 위치; +10 천단위 콤마 포맷; +4.7 OCR 신뢰도 0.97; +28 하단 금액 블록 재OCR 소스; +14 복수 실소스 교차 일치",
+        "accept_reasons": [
+          "+10 중하단 위치",
+          "+10 천단위 콤마 포맷",
+          "+4.7 OCR 신뢰도 0.97",
+          "+28 하단 금액 블록 재OCR 소스",
+          "+14 복수 실소스 교차 일치"
+        ],
+        "rejected_top": [
+          {
+            "value": "53,918,660",
+            "score": 12.58,
+            "source": "amount_block",
+            "pattern": "bare",
+            "row_pos": 0.0,
+            "reasons": [
+              "-10 상단부 위치 (합계 가능성 낮음)",
+              "-14 콤마 없는 단순 숫자",
+              "-10 bare + 합계 키워드 부재",
+              "+4.6 OCR 신뢰도 0.96",
+              "+28 하단 금액 블록 재OCR 소스",
+              "+14 복수 실소스 교차 일치"
+            ]
+          },
+          {
+            "value": "1,644",
+            "score": -29.03,
+            "source": "full_ocr",
+            "pattern": "bare",
+            "row_pos": 0.9,
+            "reasons": [
+              "+20 하단부 위치",
+              "-14 콤마 없는 단순 숫자",
+              "-10 bare + 합계 키워드 부재",
+              "-30 문서 최하단 bare (바코드/전표꼬리 의심)",
+              "+5.0 OCR 신뢰도 1.00"
+            ]
+          },
+          {
+            "value": "6,070,009",
+            "score": -105.01,
+            "source": "full_ocr",
+            "pattern": "bare",
+            "row_pos": 0.1,
+            "reasons": [
+              "-10 상단부 위치 (합계 가능성 낮음)",
+              "-14 콤마 없는 단순 숫자",
+              "-10 bare + 합계 키워드 부재",
+              "-60 사업자/등록번호 문맥",
+              "-30 인접 행이 안내문 (간접 근거)",
+              "+5.0 OCR 신뢰도 1.00",
+              "+14 복수 실소스 교차 일치"
+            ]
+          }
+        ],
+        "candidates": [
+          {
+            "value": 27000,
+            "formatted": "27,000",
+            "pattern": "comma",
+            "row_idx": 3,
+            "row_pos": 0.6,
+            "text": "27,000",
+            "conf": 0.9702320694923401,
+            "context": "명민제약(좌27,00027.000",
+            "near_above": "01이가탄에프캡슬",
+            "near_below": "제의약품반의약를27,000",
+            "source": "amount_block",
+            "cross_source": true,
+            "source_set": [
+              "amount_block",
+              "full_ocr"
+            ],
+            "score": 66.7,
+            "reasons": [
+              "+10 중하단 위치",
+              "+10 천단위 콤마 포맷",
+              "+4.7 OCR 신뢰도 0.97",
+              "+28 하단 금액 블록 재OCR 소스",
+              "+14 복수 실소스 교차 일치"
+            ]
+          },
+          {
+            "value": 53918660,
+            "formatted": "53,918,660",
+            "pattern": "bare",
+            "row_idx": 0,
+            "row_pos": 0.0,
+            "text": "53918660",
+            "conf": 0.9578403234481812,
+            "context": "카카가a변총번원호류호시:539186602018/02/08신안카드체크13:41:24(일시를)",
+            "near_above": "",
+            "near_below": "상품명/제약사단가수랑금액",
+            "source": "amount_block",
+            "cross_source": true,
+            "source_set": [
+              "amount_block",
+              "full_ocr",
+              "upper_block"
+            ],
+            "score": 12.58,
+            "reasons": [
+              "-10 상단부 위치 (합계 가능성 낮음)",
+              "-14 콤마 없는 단순 숫자",
+              "-10 bare + 합계 키워드 부재",
+              "+4.6 OCR 신뢰도 0.96",
+              "+28 하단 금액 블록 재OCR 소스",
+              "+14 복수 실소스 교차 일치"
+            ]
+          },
+          {
+            "value": 1644,
+            "formatted": "1,644",
+            "pattern": "bare",
+            "row_idx": 9,
+            "row_pos": 0.9,
+            "text": "1644",
+            "conf": 0.9972322583198547,
+            "context": "승매일인입번호사람-신안카드1644kicc로제출0156",
+            "near_above": "일합조제의약품반의약품계27:0000원",
+            "near_below": "[회원용]",
+            "source": "full_ocr",
+            "score": -29.03,
+            "reasons": [
+              "+20 하단부 위치",
+              "-14 콤마 없는 단순 숫자",
+              "-10 bare + 합계 키워드 부재",
+              "-30 문서 최하단 bare (바코드/전표꼬리 의심)",
+              "+5.0 OCR 신뢰도 1.00"
+            ]
+          },
+          {
+            "value": 6070009,
+            "formatted": "6,070,009",
+            "pattern": "bare",
+            "row_idx": 1,
+            "row_pos": 0.1,
+            "text": "6070009",
+            "conf": 0.9992467761039734,
+            "context": "대표자/전가맹점명가맹번호:53918660사업자/단말:508-17-32861:정은진3:미화약국6070009273-5220",
+            "near_above": "9팜페이www.phampayoakr신고안내[포상금10만원지급]여신금용억회:02-2011-0777가맹점명,가맹점주소가실제와다론경우",
+            "near_below": "대도동)주소:경상북도포항시남구포스코대로353번길8",
+            "source": "full_ocr",
+            "cross_source": true,
+            "source_set": [
+              "full_ocr",
+              "upper_block"
+            ],
+            "score": -105.01,
+            "reasons": [
+              "-10 상단부 위치 (합계 가능성 낮음)",
+              "-14 콤마 없는 단순 숫자",
+              "-10 bare + 합계 키워드 부재",
+              "-60 사업자/등록번호 문맥",
+              "-30 인접 행이 안내문 (간접 근거)",
+              "+5.0 OCR 신뢰도 1.00",
+              "+14 복수 실소스 교차 일치"
+            ]
+          }
+        ],
+        "selected": {
+          "value": "27,000",
+          "row_idx": 3,
+          "row_pos": 0.6,
+          "pattern": "comma",
+          "score": 66.7,
+          "reasons": [
+            "+10 중하단 위치",
+            "+10 천단위 콤마 포맷",
+            "+4.7 OCR 신뢰도 0.97",
+            "+28 하단 금액 블록 재OCR 소스",
+            "+14 복수 실소스 교차 일치"
+          ],
+          "text": "27,000",
+          "source": "amount_block",
+          "synth_from": null,
+          "cross_source": true,
+          "source_set": [
+            "amount_block",
+            "full_ocr"
+          ],
+          "verified_by_synth": false
+        }
+      },
+      "upper_text": "9팔페이\n가맹점명,기맹점주소가 실제와 다론경우\n신고안내 (또상금 10만원 지금]\nwww.phampayoakr\n여신금8혈1회:02-2011-0777\n가맹 점 명:미화약국\n대표자/전 화:정은진\n273-5220\n사업자/단말:506-17-32861\n6070009\n가맹 번호:53918660\n\n주 소:경상북도 포함시 남구 포스코대로353번길 8\n대도동)",
+      "amount_text": "카카가A\n변총번원\n호류호시\n\n신안카드체크\n53918660\n(일시를)\n2018/02/08\n13:41:24\n:\n상품명/제약사\n단가\n수랑\n금액\n01이가탄에프캡슬\n명민제약(좌\n27,000\n27.000\n제의약품\n27,000\n\n반 의약를\n\n\n\n0\n인\n6번\n1\n1LB44\n0156\n입\n\n신민카드",
+      "full_text": "9팜페이\n가맹점명,가맹점주소가 실제와 다론경우\n신고안내 [포상금 10만원 지급]\nwww.phampayoakr\n여신금용억회:02-2011-0777\n가맹점\n명\n3:미화약국\n대표자/전\n:정은진\n273-5220\n사업자/단말:508-17-32861\n6070009\n가맹 번 호:53918660\n주 소:경상북도 포항시 남구 포스코대로353번길 8\n대도동)\n[신용구매]\n카카가거\n번총번일\n호류호시\n신안카드체크\n53918660\n(일시불)\n:2018/02/08\n13:41:24\n삼품명/제약사\n단가\n수량\n금액\n01 이가탄에프캡술\n명민제약(좌\n27,000\n10\n27,000\n조 제 의약품\n0원\n27:000\n일합\n반 의약품\n계\n승매일\n인\n번\n호\n1644\n0156\n-\n입\n사람\n신안카드\nKICC로제출\n[회원용]"
+    },
+    {
+      "file": "10.jpg",
+      "status": "selected",
+      "doc_type": "receipt_pos",
+      "suppression": false,
+      "unknown": false,
+      "receipt_fields": {
+        "회사명": "아비꼬(홍대호정)",
+        "사업자번호": "",
+        "대표자": "",
+        "tel": "02-823-0129",
+        "주소": "",
+        "총합계금액": "26,000"
+      },
+      "processing_time": 20.15,
+      "total_ms": 20152.0,
+      "detect_orientation_ms": 10080.0,
+      "full_ocr_ms": 7596.0,
+      "upper_reocr_total_ms": 2390.0,
+      "amount_reocr_total_ms": 0.0,
+      "upper_reocr_ran": true,
+      "amount_reocr_ran": false,
+      "field_sources": {
+        "회사명": "upper_block",
+        "사업자번호": "",
+        "대표자": "",
+        "tel": "upper_block",
+        "주소": "",
+        "총합계금액": "full_ocr"
+      },
+      "document_classification": {
+        "type": "receipt_pos",
+        "scores": {
+          "pos": 3,
+          "card": 1,
+          "bank": 0,
+          "form": 0
+        },
+        "hits": {
+          "pos": [
+            "상품명",
+            "과세물품",
+            "부가세"
+          ],
+          "card": [
+            "신용카드"
+          ],
+          "bank": [],
+          "form": []
+        },
+        "receipt_like_unknown_evidence": {
+          "biz": false,
+          "tel": false,
+          "amount": true,
+          "address": false,
+          "receipt_context": [
+            "item"
+          ],
+          "evidence_count": 2
+        }
+      },
+      "amount_debug": {
+        "status": "selected",
+        "reason": "+4 본문 행에 합계 문맥 존재; +24 합계 파편 행의 최대 금액; +10 중하단 위치; +10 천단위 콤마 포맷; -8 합계 행에 섞인 공급가액/부가세 라벨; +5.0 OCR 신뢰도 1.00; +42 실 후보 값이 공급가액+부가세 합성과 일치 (교차 검증); +45 검산 성공 (23,636+2,364=26,000); +18 검산 성공 + 합계 문맥 동시 충족; +8 합계 문맥의 실 OCR 금액 우대; +18 합계 문맥 내 최대 금액",
+        "accept_reasons": [
+          "+4 본문 행에 합계 문맥 존재",
+          "+24 합계 파편 행의 최대 금액",
+          "+10 중하단 위치",
+          "+10 천단위 콤마 포맷",
+          "-8 합계 행에 섞인 공급가액/부가세 라벨",
+          "+5.0 OCR 신뢰도 1.00",
+          "+42 실 후보 값이 공급가액+부가세 합성과 일치 (교차 검증)",
+          "+45 검산 성공 (23,636+2,364=26,000)",
+          "+18 검산 성공 + 합계 문맥 동시 충족",
+          "+8 합계 문맥의 실 OCR 금액 우대",
+          "+18 합계 문맥 내 최대 금액"
+        ],
+        "rejected_top": [
+          {
+            "value": "23,636",
+            "score": -0.06,
+            "source": "full_ocr",
+            "pattern": "comma",
+            "row_pos": 0.571,
+            "reasons": [
+              "+10 중하단 위치",
+              "+10 천단위 콤마 포맷",
+              "-25 공급가액/부가세/봉사료 (부분 금액)",
+              "+4.9 OCR 신뢰도 0.99"
+            ]
+          },
+          {
+            "value": "2,364",
+            "score": -1.4,
+            "source": "full_ocr",
+            "pattern": "comma",
+            "row_pos": 0.571,
+            "reasons": [
+              "+10 중하단 위치",
+              "+10 천단위 콤마 포맷",
+              "-25 공급가액/부가세/봉사료 (부분 금액)",
+              "+3.6 OCR 신뢰도 0.86"
+            ]
+          }
+        ],
+        "candidates": [
+          {
+            "value": 26000,
+            "formatted": "26,000",
+            "pattern": "comma",
+            "row_idx": 4,
+            "row_pos": 0.5714285714285714,
+            "text": "26,000",
+            "conf": 0.9986873269081116,
+            "context": "부합칼밤.01.신용카드:결제수단별결제내역가은금액:부가세과세물품가액:계세:외7품목26,00026,00026,00023,6362,364",
+            "near_above": "2인a세트-치킨상품명",
+            "near_below": "26,000",
+            "source": "full_ocr",
+            "verified_by_synth": true,
+            "score": 175.99,
+            "reasons": [
+              "+4 본문 행에 합계 문맥 존재",
+              "+24 합계 파편 행의 최대 금액",
+              "+10 중하단 위치",
+              "+10 천단위 콤마 포맷",
+              "-8 합계 행에 섞인 공급가액/부가세 라벨",
+              "+5.0 OCR 신뢰도 1.00",
+              "+42 실 후보 값이 공급가액+부가세 합성과 일치 (교차 검증)",
+              "+45 검산 성공 (23,636+2,364=26,000)",
+              "+18 검산 성공 + 합계 문맥 동시 충족",
+              "+8 합계 문맥의 실 OCR 금액 우대",
+              "+18 합계 문맥 내 최대 금액"
+            ]
+          },
+          {
+            "value": 23636,
+            "formatted": "23,636",
+            "pattern": "comma",
+            "row_idx": 4,
+            "row_pos": 0.5714285714285714,
+            "text": "23,636",
+            "conf": 0.9939748644828796,
+            "context": "부합칼밤.01.신용카드:결제수단별결제내역가은금액:부가세과세물품가액:계세:외7품목26,00026,00026,00023,6362,364",
+            "near_above": "2인a세트-치킨상품명",
+            "near_below": "26,000",
+            "source": "full_ocr",
+            "score": -0.06,
+            "reasons": [
+              "+10 중하단 위치",
+              "+10 천단위 콤마 포맷",
+              "-25 공급가액/부가세/봉사료 (부분 금액)",
+              "+4.9 OCR 신뢰도 0.99"
+            ]
+          },
+          {
+            "value": 2364,
+            "formatted": "2,364",
+            "pattern": "comma",
+            "row_idx": 4,
+            "row_pos": 0.5714285714285714,
+            "text": "2,364",
+            "conf": 0.859764575958252,
+            "context": "부합칼밤.01.신용카드:결제수단별결제내역가은금액:부가세과세물품가액:계세:외7품목26,00026,00026,00023,6362,364",
+            "near_above": "2인a세트-치킨상품명",
+            "near_below": "26,000",
+            "source": "full_ocr",
+            "score": -1.4,
+            "reasons": [
+              "+10 중하단 위치",
+              "+10 천단위 콤마 포맷",
+              "-25 공급가액/부가세/봉사료 (부분 금액)",
+              "+3.6 OCR 신뢰도 0.86"
+            ]
+          }
+        ],
+        "selected": {
+          "value": "26,000",
+          "row_idx": 4,
+          "row_pos": 0.571,
+          "pattern": "comma",
+          "score": 175.99,
+          "reasons": [
+            "+4 본문 행에 합계 문맥 존재",
+            "+24 합계 파편 행의 최대 금액",
+            "+10 중하단 위치",
+            "+10 천단위 콤마 포맷",
+            "-8 합계 행에 섞인 공급가액/부가세 라벨",
+            "+5.0 OCR 신뢰도 1.00",
+            "+42 실 후보 값이 공급가액+부가세 합성과 일치 (교차 검증)",
+            "+45 검산 성공 (23,636+2,364=26,000)",
+            "+18 검산 성공 + 합계 문맥 동시 충족",
+            "+8 합계 문맥의 실 OCR 금액 우대",
+            "+18 합계 문맥 내 최대 금액"
+          ],
+          "text": "26,000",
+          "source": "full_ocr",
+          "synth_from": null,
+          "cross_source": false,
+          "source_set": null,
+          "verified_by_synth": true
+        }
+      },
+      "upper_text": "아비꼬(홍대호정)\n647-40-0005 TEL: 02)823-0129\n테이블:[테이블3\n김현철\n2018-08-18 20:42(8)\n2인LA세\n산\nDDegn",
+      "amount_text": "",
+      "full_text": "아비꼬(홍대호점)\n테이블:[]테이블3\n김현철\n/\n2인A세트-치킨\n상\n품\n명\n부가세 과세 물품가액:\n외 7 품목\n부\n가\n세:\n23,636\n합\n2,364\n계\n칼\n밤\n은금액:\n26,000\n26,000\n결제수단별 결제내역\n26,000\n01.신용카드:\n26,000\n18\n빌금"
+    },
+    {
+      "file": "11.jpg",
+      "status": "selected",
+      "doc_type": "receipt_card",
+      "suppression": false,
+      "unknown": false,
+      "receipt_fields": {
+        "회사명": "(주)커피빈코리아",
+        "사업자번호": "120-86-07029",
+        "대표자": "",
+        "tel": "02-33-4278",
+        "주소": "서울시 마포구홍익로 6길26 163-12호",
+        "총합계금액": "15,000"
+      },
+      "processing_time": 16.24,
+      "total_ms": 16242.0,
+      "detect_orientation_ms": 6689.0,
+      "full_ocr_ms": 6505.0,
+      "upper_reocr_total_ms": 2295.0,
+      "amount_reocr_total_ms": 698.0,
+      "upper_reocr_ran": true,
+      "amount_reocr_ran": true,
+      "field_sources": {
+        "회사명": "upper_block",
+        "사업자번호": "full_ocr",
+        "대표자": "",
+        "tel": "full_ocr",
+        "주소": "upper_block",
+        "총합계금액": "full_ocr"
+      },
+      "document_classification": {
+        "type": "receipt_card",
+        "scores": {
+          "pos": 0,
+          "card": 2,
+          "bank": 0,
+          "form": 0
+        },
+        "hits": {
+          "pos": [],
+          "card": [
+            "신용카드",
+            "매출전표"
+          ],
+          "bank": [],
+          "form": []
+        },
+        "receipt_like_unknown_evidence": {
+          "biz": false,
+          "tel": false,
+          "amount": true,
+          "address": true,
+          "receipt_context": [
+            "slip"
+          ],
+          "evidence_count": 3
+        }
+      },
+      "amount_debug": {
+        "status": "selected",
+        "reason": "-10 상단부 위치 (합계 가능성 낮음); +10 천단위 콤마 포맷; +4.9 OCR 신뢰도 0.99; +45 검산 성공 (1,364+13,636=15,000)",
+        "accept_reasons": [
+          "-10 상단부 위치 (합계 가능성 낮음)",
+          "+10 천단위 콤마 포맷",
+          "+4.9 OCR 신뢰도 0.99",
+          "+45 검산 성공 (1,364+13,636=15,000)"
+        ],
+        "rejected_top": [
+          {
+            "value": "1,364",
+            "score": 4.99,
+            "source": "full_ocr",
+            "pattern": "comma",
+            "row_pos": 0.0,
+            "reasons": [
+              "-10 상단부 위치 (합계 가능성 낮음)",
+              "+10 천단위 콤마 포맷",
+              "+5.0 OCR 신뢰도 1.00"
+            ]
+          },
+          {
+            "value": "13,636",
+            "score": 4.98,
+            "source": "full_ocr",
+            "pattern": "comma",
+            "row_pos": 0.0,
+            "reasons": [
+              "-10 상단부 위치 (합계 가능성 낮음)",
+              "+10 천단위 콤마 포맷",
+              "+5.0 OCR 신뢰도 1.00"
+            ]
+          },
+          {
+            "value": "1,963",
+            "score": -29.01,
+            "source": "full_ocr",
+            "pattern": "bare",
+            "row_pos": 0.0,
+            "reasons": [
+              "-10 상단부 위치 (합계 가능성 낮음)",
+              "-14 콤마 없는 단순 숫자",
+              "-10 bare + 합계 키워드 부재",
+              "+5.0 OCR 신뢰도 1.00"
+            ]
+          }
+        ],
+        "candidates": [
+          {
+            "value": 15000,
+            "formatted": "15,000",
+            "pattern": "comma",
+            "row_idx": 0,
+            "row_pos": 0.0,
+            "text": "15,000",
+            "conf": 0.9878520965576172,
+            "context": "-7inhe==00신용카드매출전표st1963tean--o,000—00015주년usb(망고16gb)21,364진동기번호:13,63615,000진동기없이15,000120-86-07029서울시마포구홍익로6길26163-12호(주)커피빈코리아홍대역심tel:02)33-4278",
+            "near_above": "",
+            "near_below": "",
+            "source": "full_ocr",
+            "score": 49.88,
+            "reasons": [
+              "-10 상단부 위치 (합계 가능성 낮음)",
+              "+10 천단위 콤마 포맷",
+              "+4.9 OCR 신뢰도 0.99",
+              "+45 검산 성공 (1,364+13,636=15,000)"
+            ]
+          },
+          {
+            "value": 1364,
+            "formatted": "1,364",
+            "pattern": "comma",
+            "row_idx": 0,
+            "row_pos": 0.0,
+            "text": "1,364",
+            "conf": 0.9986248016357422,
+            "context": "-7inhe==00신용카드매출전표st1963tean--o,000—00015주년usb(망고16gb)21,364진동기번호:13,63615,000진동기없이15,000120-86-07029서울시마포구홍익로6길26163-12호(주)커피빈코리아홍대역심tel:02)33-4278",
+            "near_above": "",
+            "near_below": "",
+            "source": "full_ocr",
+            "score": 4.99,
+            "reasons": [
+              "-10 상단부 위치 (합계 가능성 낮음)",
+              "+10 천단위 콤마 포맷",
+              "+5.0 OCR 신뢰도 1.00"
+            ]
+          },
+          {
+            "value": 13636,
+            "formatted": "13,636",
+            "pattern": "comma",
+            "row_idx": 0,
+            "row_pos": 0.0,
+            "text": "13,636",
+            "conf": 0.9976601600646973,
+            "context": "-7inhe==00신용카드매출전표st1963tean--o,000—00015주년usb(망고16gb)21,364진동기번호:13,63615,000진동기없이15,000120-86-07029서울시마포구홍익로6길26163-12호(주)커피빈코리아홍대역심tel:02)33-4278",
+            "near_above": "",
+            "near_below": "",
+            "source": "full_ocr",
+            "score": 4.98,
+            "reasons": [
+              "-10 상단부 위치 (합계 가능성 낮음)",
+              "+10 천단위 콤마 포맷",
+              "+5.0 OCR 신뢰도 1.00"
+            ]
+          },
+          {
+            "value": 1963,
+            "formatted": "1,963",
+            "pattern": "bare",
+            "row_idx": 0,
+            "row_pos": 0.0,
+            "text": "1963",
+            "conf": 0.9993296265602112,
+            "context": "-7inhe==00신용카드매출전표st1963tean--o,000—00015주년usb(망고16gb)21,364진동기번호:13,63615,000진동기없이15,000120-86-07029서울시마포구홍익로6길26163-12호(주)커피빈코리아홍대역심tel:02)33-4278",
+            "near_above": "",
+            "near_below": "",
+            "source": "full_ocr",
+            "score": -29.01,
+            "reasons": [
+              "-10 상단부 위치 (합계 가능성 낮음)",
+              "-14 콤마 없는 단순 숫자",
+              "-10 bare + 합계 키워드 부재",
+              "+5.0 OCR 신뢰도 1.00"
+            ]
+          }
+        ],
+        "selected": {
+          "value": "15,000",
+          "row_idx": 0,
+          "row_pos": 0.0,
+          "pattern": "comma",
+          "score": 49.88,
+          "reasons": [
+            "-10 상단부 위치 (합계 가능성 낮음)",
+            "+10 천단위 콤마 포맷",
+            "+4.9 OCR 신뢰도 0.99",
+            "+45 검산 성공 (1,364+13,636=15,000)"
+          ],
+          "text": "15,000",
+          "source": "full_ocr",
+          "synth_from": null,
+          "cross_source": false,
+          "source_set": null,
+          "verified_by_synth": false
+        }
+      },
+      "upper_text": "(주)커피빈코리아\n서울시마포구의로\n20-86-07029\n진동기번호\n\n\n15주년USB(망고160\n—\n보무두무아",
+      "amount_text": "매출\n전",
+      "full_text": "120-86-07029\n(주)커피빈코리아 홍대역심\n서울시 마포구홍익로 6길26 163-12호\n15주년USB(망고16GB)\n진동기번호:\n--\nTEL:02)33-4278\n진동기 없이\n==\n신용카드매출전표\nn\n15,000\nTea\n-7inhe\nst\n1963\n15,000\n13,636\n,000\n000\n1,364\nO"
+    }
+  ]
+}

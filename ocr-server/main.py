@@ -147,6 +147,10 @@ def _row_text(row):
     return ' '.join(t for _, t, _ in row)
 
 
+def _single_line_rows(ocr_lines: list):
+    return [[line] for line in (ocr_lines or []) if line and line[1]]
+
+
 def _is_merchant_notice_row(text: str) -> bool:
     norm = re.sub(r'\s+', '', text or '')
     if re.search(r'다른경우|실제와|가맹점주소가|전기작업|작업지시|직원|식지|재발행|안내문|설명문구|예시문구|작성문구', norm, re.I):
@@ -165,8 +169,14 @@ def _clean_inline_field_value(value: str) -> str:
 
 
 _PHONE_RE = re.compile(r'\(?0\d{1,2}\)?[-\s]?\d{3,4}[-\s]?\d{4}')
+_PHONE_LABELED_RE = re.compile(r'(?:TEL|Tel|tel|전화(?:\s*번호)?)\s*[:;]?\s*([()0-9\)\-\s.]{8,24})', re.I)
+_PHONE_ADMIN_NOISE_RE = re.compile(
+    r'여신금융|협회|신고안내|포상금|고객센터|카드번호|승인번호|거래일시|전표|'
+    r'가맹No|가맹점No|가맹점번호|TID|CAT|VANKEY',
+    re.I,
+)
 _ADDR_START_RE = re.compile(
-    r'(서울|경기|인천|부산|대구|광주|대전|울산|세종|강원|충북|충남|전북|전남|경북|경남|제주)'
+    r'(서울|서울시|경기|경기도|인천|인천시|부산|부산시|대구|대구시|광주|광주시|대전|대전시|울산|울산시|세종|세종시|강원|강원도|충북|충청북도|충남|충청남도|전북|전라북도|전남|전라남도|경북|경상북도|경남|경상남도|제주|제주도)'
 )
 _NEXT_LABEL_RE = re.compile(
     r'\s*(?:사업자(?:등록)?번호|등록번호|대표자?|성명|주소|TEL|Tel|tel|전화|'
@@ -187,21 +197,34 @@ _REPRESENTATIVE_NOISE_RE = re.compile(
     re.I,
 )
 _COMPANY_SUFFIX_HINT_RE = re.compile(
-    r'(\(주\)|주식회사|상사|철물|약국|카페|마트|편의점|스토어|매장|점|GS25|CU|세븐일레븐|코리아)$',
+    r'(\(주\)|주식회사|상사|철물|조명|전기|공구|볼트|약국|카페|마트|편의점|스토어|매장|집|점|GS25|CU|세븐일레븐|코리아)$',
     re.I,
+)
+_CONVENIENCE_STORE_NAME_RE = re.compile(r'^(?:GS25|CU|세븐일레븐|이마트24|미니스톱)[가-힣A-Za-z0-9()]*점$', re.I)
+_COMPANY_SLOGAN_RE = re.compile(
+    r'(?:함께|[가-힣]께)하는행복|응원합니다|감사합니다|포인트적립|행사문구|안내문구|'
+    r'정부방침|교환|지참|가능합니다'
 )
 _PERSON_LIKE_NAME_RE = re.compile(r'^[가-힣]{3}$')
 _REPRESENTATIVE_SURNAME_RE = re.compile(r'^[김이박최정강조윤장임한오서신권황안송전홍유고문양손배조백허남심노하곽성차주우구민류진나엄채원천방공현함변염여추도소석선설마길연위표명기반왕금옥육인맹제모장모국어은편용]')  # noqa: E501
 _ADDRESS_CUT_RE = re.compile(
     r'\s*(?:TEL|Tel|tel|전화|사업자(?:등록)?번호|등록번호|대표자?|상호|가맹점명|'
-    r'승인번호|카드번호|거래일시|품목|수량|단가|금액|합계|총계|부가세|공급가액|'
-    r'결제|전표)\s*[:;]?',
+    r'가맹No|가맹점No|가맹점번호|승인번호|카드번호|거래일시|품목|수량|단가|금액|합계|총계|부가세|공급가액|'
+    r'결제|전표|테이블명|판매시간|판매사원|영수번호|작성년월일|공급대가|도매|소매|업태|업종)\s*[:;]?',
     re.I,
 )
 _ADDRESS_CORE_TOKEN_RE = re.compile(r'시|군|구|읍|면|동|로|길|층|호|번지|리')
 _ADDRESS_STORE_NOISE_RE = re.compile(r'GS25|CU|세븐일레븐|편의점|카페|약국|마트|스토어|매장|점$', re.I)
 _LABEL_ONLY_RE = re.compile(
-    r'^(?:사업자번호|등록번호|가맹점명|가맹점번호|가맹점no|가맹점|상호|회사명|업체명|대표자|성명|주소|전화|tel|작성년월일)$',
+    r'^(?:사업자|사업자번호|등록|등록번호|공급자|가맹점명|가맹점번호|가맹점no|가맹점|상호|회사명|업체명|대표자|성명|주소|전화|tel|작성년월일)$',
+    re.I,
+)
+_ADDRESS_CONTINUATION_RE = re.compile(r'(?:[가-힣A-Za-z0-9(),.\-\s]*(?:로|길|동|읍|면|리|층|호|번지)[가-힣A-Za-z0-9(),.\-\s]*)')
+_ADDRESS_BROAD_ONLY_RE = re.compile(r'^(?:서울|경기|경기도|인천|부산|대구|광주|대전|울산|세종|강원|충북|충남|전북|전남|경북|경남|제주)\s+[가-힣]+시\s+[가-힣]+구$')
+_ADDRESS_TRAILING_NOISE_RE = re.compile(
+    r'\s*(?:성명|상호|사업자|등록번호|공급자|도매|소매|업태|업종|일반목적|배\s*관|전\s*기|작성년월일|공급대가|'
+    r'테이블명|판매시간|판매사원|영수번호|카드종류|카드번호|승인|전표|TID|CAT|VANKEY|IBK|비씨|체크|신용|'
+    r'(?<![-\d])\b\d{1,3}[,.]\d{3}(?:[,.]\d{3})?|제\d{1,2}[-\s]?\d{2,}|[*A-Z]{2,}\d*)',
     re.I,
 )
 
@@ -243,6 +266,8 @@ def _normalize_phone_digits(text: str) -> str:
 
 
 def _format_phone_digits(digits: str) -> str:
+    if len(digits) == 8 and digits.startswith("02"):
+        return f"{digits[:2]}-{digits[2:4]}-{digits[4:]}"
     if len(digits) == 9 and digits.startswith("02"):
         return f"{digits[:2]}-{digits[2:5]}-{digits[5:]}"
     if len(digits) == 10:
@@ -254,24 +279,59 @@ def _format_phone_digits(digits: str) -> str:
     return digits
 
 
+def _valid_phone_digits(digits: str) -> bool:
+    if not digits or not digits.startswith("0") or digits.startswith("00"):
+        return False
+    if not (9 <= len(digits) <= 11):
+        return False
+    return bool(re.match(r'^(?:02|0[3-6]\d|070|010|011|016|017|018|019)', digits))
+
+
+def _valid_labeled_phone_digits(digits: str) -> bool:
+    if _valid_phone_digits(digits):
+        return True
+    # Some Google samples lose one Seoul exchange digit, e.g. TEL:02)33-4278.
+    # Keep this narrow: only explicit TEL/전화 labels may accept 02-xx-xxxx.
+    return bool(re.fullmatch(r'02\d{6}', digits or ""))
+
+
 def _extract_phone_candidate(text: str) -> str:
     raw = text or ""
-    label_match = re.search(r'(?:TEL|Tel|tel|전화)\s*[:;]?\s*([()0-9\-\s]{8,20})', raw, re.I)
+    label_match = _PHONE_LABELED_RE.search(raw)
     if label_match:
         digits = _normalize_phone_digits(label_match.group(1))
-        if digits.startswith("0") and digits[:2] != "00" and 9 <= len(digits) <= 11:
+        if _valid_labeled_phone_digits(digits):
             return _format_phone_digits(digits)
+
+    if _PHONE_ADMIN_NOISE_RE.search(raw):
+        return ""
 
     for match in re.finditer(r'(?:\(\s*0\d{1,2}\s*\)\s*[-\s]?\d{3,4}[-\s]?\d{4}|0\d{1,2}[-\s]\d{3,4}[-\s]?\d{4})', raw):
         digits = _normalize_phone_digits(match.group(0))
-        if digits.startswith("0") and digits[:2] != "00" and 9 <= len(digits) <= 11:
+        if _valid_phone_digits(digits):
             return _format_phone_digits(digits)
 
-    if re.search(r'(?:TEL|Tel|tel|전화)', raw, re.I):
-        for digits in re.findall(r'0\d{8,10}', raw):
-            if digits[:2] != "00" and 9 <= len(digits) <= 11:
-                return _format_phone_digits(digits)
+    for match in re.finditer(r'(?<!\d)0\d{1,2}\)\s*\d{3,4}[-\s.]?\d{4}(?!\d)', raw):
+        digits = _normalize_phone_digits(match.group(0))
+        if _valid_phone_digits(digits):
+            return _format_phone_digits(digits)
+
+    for digits in re.findall(r'(?<!\d)0\d{8,10}(?!\d)', raw):
+        if _valid_phone_digits(digits):
+            return _format_phone_digits(digits)
     return ""
+
+
+def _extract_rep_phone_pair(text: str) -> tuple[str, str]:
+    raw = text or ""
+    match = re.search(r'([가-힣]{2,4})\s*[\(:]\s*(0\d{8,10})\s*\)?', raw)
+    if not match or _PHONE_ADMIN_NOISE_RE.search(raw):
+        return "", ""
+    representative = match.group(1)
+    phone = _format_phone_digits(match.group(2))
+    if _is_bad_representative_candidate(representative, raw):
+        representative = ""
+    return representative, phone
 
 
 def _is_bad_company_candidate(text: str, row_text: str = "") -> bool:
@@ -294,23 +354,39 @@ def _is_bad_company_candidate(text: str, row_text: str = "") -> bool:
         return True
     if _LABEL_ONLY_RE.fullmatch(compact):
         return True
+    if _COMPANY_SLOGAN_RE.search(compact):
+        return True
     if _bad_top_text_candidate(compact) or _FIELD_NOISE_RE.search(compact):
         return True
     if re.search(r'체크카드|신용매출|귀하', compact, re.I):
+        return True
+    if re.search(r'품명|상품명|상품|품목|수량|단가|금액|합계|승인|전표|TID|VAN|CAT|가맹', compact, re.I):
+        return True
+    if re.search(r'유통단지|호계동|오전동|고천동|동안구|의왕시|안양시|경기도|경기', compact):
         return True
     if re.search(r'다른경우|실제와|가맹점주소가|전기작업|작업지시|직원|식지|재발행|안내문|설명문구|예시문구|작성문구', compact, re.I):
         return True
     if re.search(r'표시|입니다|과세|면세|품목', compact):
         return True
-    if digits > 1:
+    if re.search(r'응원합니다|감사합니다|유치|박람회', compact):
+        return True
+    if re.fullmatch(r'[가-힣]{2,8}(?:시|군|구|동|로|길|층|호|번지)', compact) and not _COMPANY_SUFFIX_HINT_RE.search(compact):
+        return True
+    if _ADDRESS_CORE_TOKEN_RE.search(compact) and _ADDR_START_RE.search(compact) and not _COMPANY_SUFFIX_HINT_RE.search(compact):
+        return True
+    if re.search(r'\d.*(?:\uC0AC\uC625|\uBE4C\uB529)|(?:\uC0AC\uC625|\uBE4C\uB529)\)?$', compact) and not _COMPANY_SUFFIX_HINT_RE.search(compact):
+        return True
+    if digits > 1 and not _CONVENIENCE_STORE_NAME_RE.search(compact):
         return True
     if len(compact) <= 2 and not _COMPANY_SUFFIX_HINT_RE.search(compact):
         return True
     if len(compact) <= 4 and not short_standalone_ok and not has_label and not _COMPANY_SUFFIX_HINT_RE.search(compact):
         return True
+    if _PERSON_LIKE_NAME_RE.fullmatch(compact) and _REPRESENTATIVE_SURNAME_RE.search(compact) and not _COMPANY_SUFFIX_HINT_RE.search(compact):
+        return True
     if _PERSON_LIKE_NAME_RE.fullmatch(compact) and not short_standalone_ok and not _COMPANY_SUFFIX_HINT_RE.search(compact):
         return True
-    if _FIELD_NOISE_RE.search(row_compact) and not has_label:
+    if _FIELD_NOISE_RE.search(row_compact) and not has_label and not _CONVENIENCE_STORE_NAME_RE.search(compact):
         return True
     if amount_like_count >= 2 and not has_label and not re.search(r'사업자|등록번호|주소|전화|TEL|Tel|tel', row_text or "", re.I):
         return True
@@ -342,8 +418,11 @@ def _clean_address_candidate(text: str) -> str:
     value = _PHONE_RE.split(value, maxsplit=1)[0]
     value = re.split(r'\s*\d{4}[./-]\d{1,2}[./-]\d{1,2}', value, maxsplit=1)[0]
     value = re.sub(r'\d{2,3}[-\s.]?\d{2}[-\s.]?\d{5}.*$', '', value).strip()
+    value = _ADDRESS_TRAILING_NOISE_RE.split(value, maxsplit=1)[0]
+    value = re.sub(r'\s+[일업전상공]$', '', value).strip()
     value = _clean_inline_field_value(value)
-    if not _ADDR_START_RE.search(value):
+    has_region = bool(_ADDR_START_RE.search(value))
+    if not has_region:
         return ""
     if len(value) < 6:
         return ""
@@ -354,7 +433,152 @@ def _clean_address_candidate(text: str) -> str:
         return ""
     value = re.sub(r'\s+[A-Z]{2,}\d+[A-Z0-9-]*$', '', value).strip()
     value = re.sub(r'\s+[A-Za-z]{2,}\d{2,}[A-Za-z0-9-]*$', '', value).strip()
+    value = re.sub(r'(?<=\d)\s+[가-힣]{2,}(?:조명|전기|철물|공구|볼트|약국|집|툴)?$', '', value).strip()
     return value
+
+
+def _address_needs_continuation(value: str) -> bool:
+    compact = re.sub(r'\s+', ' ', value or '').strip()
+    if not compact:
+        return False
+    if compact.count("(") > compact.count(")"):
+        return True
+    if _ADDRESS_BROAD_ONLY_RE.fullmatch(compact):
+        return True
+    return not bool(re.search(r'로|길|동|읍|면|리|층|호|번지|\d', compact[2:]))
+
+
+def _address_continuation_candidate(text: str) -> str:
+    raw = _ADDRESS_CUT_RE.split(text or "", maxsplit=1)[0]
+    raw = _PHONE_RE.split(raw, maxsplit=1)[0]
+    raw = _ADDRESS_TRAILING_NOISE_RE.split(raw, maxsplit=1)[0]
+    raw = _clean_inline_field_value(raw)
+    if not raw or _ADDR_START_RE.search(raw):
+        return ""
+    if _bad_top_text_candidate(raw) or _FIELD_NOISE_RE.search(raw):
+        return ""
+    if re.fullmatch(r'[가-힣A-Za-z0-9\s]{1,12}\)', raw):
+        return raw
+    if re.fullmatch(r'(?:\d+\s*)?층|[가-힣A-Za-z0-9(),.\-\s]{1,14}(?:동|층|호)', raw):
+        return raw
+    match = _ADDRESS_CONTINUATION_RE.search(raw)
+    if not match:
+        return ""
+    value = _clean_inline_field_value(match.group(0))
+    if len(value) < 3:
+        return ""
+    return value
+
+
+def _maybe_set_address(target: dict, candidate: str) -> None:
+    if not candidate:
+        return
+    current = target.get("주소", "")
+    if not current:
+        target["주소"] = candidate
+        return
+    if _address_needs_continuation(current) and len(candidate) > len(current):
+        target["주소"] = candidate
+
+
+def _repair_remaining_top_fields_from_text_lines(target: dict, text_lines: list[str]) -> None:
+    """Final tiny repair for cases where OCR raw exists but bbox row grouping split it."""
+    if not text_lines:
+        return
+
+    if not target.get("회사명"):
+        for line in text_lines:
+            for token in re.findall(r'[가-힣A-Za-z0-9()]{2,}', line or ""):
+                candidate = _normalize_company_candidate(token)
+                if _CONVENIENCE_STORE_NAME_RE.search(candidate) and not _is_bad_company_candidate(candidate, token):
+                    target["회사명"] = candidate
+                    break
+            if target.get("회사명"):
+                break
+
+    if not target.get("주소"):
+        for idx, line in enumerate(text_lines):
+            line_clean = _clean_inline_field_value(line)
+            addr = _clean_address_candidate(_extract_address_fragment(line_clean) or line_clean)
+            if not addr and idx + 1 < len(text_lines):
+                combined = _clean_address_candidate(f"{line_clean} {text_lines[idx + 1]}")
+                if combined:
+                    addr = combined
+            if addr and _address_needs_continuation(addr) and idx + 1 < len(text_lines):
+                cont = _address_continuation_candidate(text_lines[idx + 1])
+                combined = _clean_address_candidate(f"{addr} {cont}") if cont else ""
+                if combined:
+                    addr = combined
+            if addr:
+                target["주소"] = addr
+                break
+
+    current_addr = target.get("주소", "")
+    if current_addr and not _ADDR_START_RE.search(current_addr):
+        current_len = len(re.sub(r'\s+', '', current_addr))
+        for idx, line in enumerate(text_lines):
+            line_clean = _clean_inline_field_value(line)
+            addr = _clean_address_candidate(_extract_address_fragment(line_clean))
+            if not addr or not _ADDR_START_RE.search(addr):
+                continue
+            if _address_needs_continuation(addr) and idx + 1 < len(text_lines):
+                cont = _address_continuation_candidate(text_lines[idx + 1])
+                combined = _clean_address_candidate(f"{addr} {cont}") if cont else ""
+                if combined:
+                    addr = combined
+            if len(re.sub(r'\s+', '', addr)) >= current_len:
+                target["주소"] = addr
+                break
+
+    current_addr = target.get("주소", "")
+    if current_addr and _ADDR_START_RE.search(current_addr):
+        current_len = len(re.sub(r'\s+', '', current_addr))
+        if current_len < 14:
+            for idx, line in enumerate(text_lines):
+                line_clean = _clean_inline_field_value(line)
+                addr = _clean_address_candidate(_extract_address_fragment(line_clean))
+                if not addr or not _ADDR_START_RE.search(addr):
+                    continue
+                if _address_needs_continuation(addr) and idx + 1 < len(text_lines):
+                    cont = _address_continuation_candidate(text_lines[idx + 1])
+                    combined = _clean_address_candidate(f"{addr} {cont}") if cont else ""
+                    if combined:
+                        addr = combined
+                addr_len = len(re.sub(r'\s+', '', addr))
+                if addr_len >= current_len + 6:
+                    target["주소"] = addr
+                    break
+
+    if target.get("주소") and _address_needs_continuation(target.get("주소", "")):
+        current = target.get("주소", "")
+        current_compact = re.sub(r'\s+', '', current)
+        for idx, line in enumerate(text_lines[:-1]):
+            line_clean = _clean_inline_field_value(line)
+            line_addr = _clean_address_candidate(line_clean)
+            if not line_addr:
+                continue
+            line_compact = re.sub(r'\s+', '', line_addr)
+            if line_compact != current_compact:
+                continue
+            cont = _address_continuation_candidate(text_lines[idx + 1])
+            combined = _clean_address_candidate(f"{current} {cont}") if cont else ""
+            if combined:
+                target["주소"] = combined
+                break
+
+    if not target.get("대표자"):
+        for idx, line in enumerate(text_lines):
+            if _bad_top_text_candidate(line):
+                continue
+            rest = _extract_until_next_label(line, r'(?:대표자명|대표자|대표|성명)\s*[:;]?')
+            if 1 <= len(rest) <= 20 and not _is_bad_representative_candidate(rest, line):
+                target["대표자"] = rest
+                break
+            if re.search(r'대표자명|대표자|대표|성명', re.sub(r'\s+', '', line)) and idx + 1 < len(text_lines):
+                next_rep = _clean_inline_field_value(text_lines[idx + 1])
+                if not _is_bad_representative_candidate(next_rep, line):
+                    target["대표자"] = next_rep
+                    break
 
 
 def _extract_company_rep_from_slash(text: str) -> tuple[str, str]:
@@ -403,7 +627,13 @@ def _normalize_company_candidate(text: str) -> str:
     value = re.sub(r'[\[\]{}<>]+$', '', value)
     value = re.sub(r'^[^가-힣A-Za-z0-9(]+', '', value)
     value = re.sub(r'[^가-힣A-Za-z0-9()&.\s]', '', value)
-    return re.sub(r'\s+', '', value)
+    value = re.sub(r'\s+', '', value)
+    value = re.sub(r'은누리약국$', '온누리약국', value)
+    if value == "성울집":
+        return "서울집"
+    if value in {"화성들", "화성률"}:
+        return "화성툴"
+    return value
 
 
 def _company_candidate_score(text: str, row_text: str, y_ratio: float, source: str, near_info: bool) -> float:
@@ -416,7 +646,8 @@ def _company_candidate_score(text: str, row_text: str, y_ratio: float, source: s
     hangul = sum(1 for ch in candidate if '가' <= ch <= '힣')
     digits = sum(1 for ch in candidate if ch.isdigit())
     hangul_ratio = hangul / max(len(candidate), 1)
-    if digits > 1:
+    convenience_store = bool(_CONVENIENCE_STORE_NAME_RE.search(candidate))
+    if digits > 1 and not convenience_store:
         return -999.0
 
     score = 0.0
@@ -428,6 +659,8 @@ def _company_candidate_score(text: str, row_text: str, y_ratio: float, source: s
         score += 8.0
     if _COMPANY_SUFFIX_HINT_RE.search(candidate):
         score += 8.0
+    if convenience_store:
+        score += 18.0
     if 2 <= hangul <= 6:
         score += 3.0
     return score
@@ -526,6 +759,7 @@ def _extract_fields_from_rows(rows, target: dict) -> None:
     for index, row in enumerate(rows):
         row_text = _row_text(row)
         row_compact = row_text.replace(' ', '')
+        pair_rep, pair_phone = _extract_rep_phone_pair(row_text)
 
         if not target.get("사업자번호"):
             has_label = bool(re.search(r'사업자|등록번호', row_compact))
@@ -536,7 +770,7 @@ def _extract_fields_from_rows(rows, target: dict) -> None:
                 target["사업자번호"] = biz
 
         if not target.get("tel"):
-            phone = _extract_phone_candidate(row_text)
+            phone = pair_phone or _extract_phone_candidate(row_text)
             if phone:
                 target["tel"] = phone
 
@@ -560,28 +794,38 @@ def _extract_fields_from_rows(rows, target: dict) -> None:
                         target["회사명"] = near_biz
 
         if not target.get("대표자"):
-            rest = _extract_until_next_label(row_text, r'(?:대표자|대표|성명)\s*[:;]?')
+            rest = pair_rep or _extract_until_next_label(row_text, r'(?:대표자명|대표자|대표|성명)\s*[:;]?')
             if 1 <= len(rest) <= 20 and not _is_bad_representative_candidate(rest, row_text):
                 target["대표자"] = rest
-            elif re.search(r'대표자|대표|성명', row_compact) and index + 1 < len(rows):
+            elif re.search(r'대표자명|대표자|대표|성명', row_compact) and index + 1 < len(rows):
                 next_rep = _clean_inline_field_value(_row_text(rows[index + 1]))
                 if not _is_bad_representative_candidate(next_rep, row_text):
                     target["대표자"] = next_rep
 
-        if not target.get("주소"):
+        if not target.get("주소") or _address_needs_continuation(target.get("주소", "")):
             if re.match(r'^주소[:\s]|^주소$', row_compact):
                 rest = _clean_inline_field_value(re.sub(r'^주\s*소\s*[:\s]*', '', row_text))
                 rest = _clean_address_candidate(rest)
+                if rest and _address_needs_continuation(rest) and index + 1 < len(rows):
+                    cont = _address_continuation_candidate(_row_text(rows[index + 1]))
+                    combined = _clean_address_candidate(f"{rest} {cont}") if cont else ""
+                    if combined:
+                        rest = combined
                 if rest:
-                    target["주소"] = rest
+                    _maybe_set_address(target, rest)
                 elif index + 1 < len(rows):
                     next_addr = _clean_address_candidate(_row_text(rows[index + 1]))
                     if next_addr:
-                        target["주소"] = next_addr
+                        _maybe_set_address(target, next_addr)
             else:
                 addr = _clean_address_candidate(_extract_address_fragment(row_text) or row_text)
+                if addr and _address_needs_continuation(addr) and index + 1 < len(rows):
+                    cont = _address_continuation_candidate(_row_text(rows[index + 1]))
+                    combined = _clean_address_candidate(f"{addr} {cont}") if cont else ""
+                    if combined:
+                        addr = combined
                 if addr:
-                    target["주소"] = addr
+                    _maybe_set_address(target, addr)
 
 
 # ============================================================
@@ -724,12 +968,20 @@ def extract_receipt_fields(
 
     rows = _group_rows(ocr_lines)
     upper_rows = _group_rows(upper_lines or [])
+    upper_single_rows = _single_line_rows(upper_lines or [])
     amount_rows = _group_rows(amount_lines or [])
 
     # --- 필드 추출: 상단 재OCR 우선, 그 다음 전체 OCR ---
     if upper_rows:
         before = dict(result)
         _extract_fields_from_rows(upper_rows, result)
+        for k, v in result.items():
+            if v and not before.get(k):
+                field_sources[k] = "upper_block"
+
+    if upper_single_rows:
+        before = dict(result)
+        _extract_fields_from_rows(upper_single_rows, result)
         for k, v in result.items():
             if v and not before.get(k):
                 field_sources[k] = "upper_block"
@@ -742,7 +994,7 @@ def extract_receipt_fields(
 
     rescued_company, rescued_source = _rescue_company_name(
         rows,
-        upper_rows,
+        (upper_rows or []) + (upper_single_rows or []),
         current=result.get("회사명", ""),
         representative=result.get("대표자", ""),
         doc_type=doc_type,
@@ -1345,12 +1597,33 @@ def _detect_upper_block_bbox(
 
         first_idx = min(target_indices)
         if first_idx > 0:
-            prev = lines_sorted[first_idx - 1]
-            prev_text = prev[1].replace(' ', '')
-            py0, py1 = _y_bounds(prev)
-            gap = tops[0] - py1
-            if gap <= max(int(ocr_h * 0.08), 45) and not notice_re.search(prev_text) and not tail_noise_re.search(prev_text):
+            max_up_gap = max(int(ocr_h * 0.08), 45)
+            max_up_span = max(int(ocr_h * 0.16), 95)
+            anchor_top = min(tops)
+            for prev in reversed(lines_sorted[max(0, first_idx - 3):first_idx]):
+                prev_text = prev[1].replace(' ', '')
+                py0, py1 = _y_bounds(prev)
+                gap = anchor_top - py1
+                if gap < 0 or gap > max_up_gap or anchor_top - py0 > max_up_span:
+                    continue
+                if notice_re.search(prev_text) or tail_noise_re.search(prev_text):
+                    continue
                 y1 = min(y1, max(0, py0 - max(int(ocr_h * 0.015), 8)))
+
+        last_idx = max(target_indices)
+        if last_idx + 1 < len(lines_sorted):
+            max_down_gap = max(int(ocr_h * 0.075), 42)
+            max_down_span = max(int(ocr_h * 0.15), 90)
+            anchor_bottom = max(bottoms)
+            for nxt in lines_sorted[last_idx + 1:min(len(lines_sorted), last_idx + 4)]:
+                nxt_text = nxt[1].replace(' ', '')
+                ny0, ny1 = _y_bounds(nxt)
+                gap = ny0 - anchor_bottom
+                if gap < 0 or gap > max_down_gap or ny1 - anchor_bottom > max_down_span:
+                    continue
+                if notice_re.search(nxt_text) or tail_noise_re.search(nxt_text):
+                    break
+                y2 = max(y2, min(ocr_h, ny1 + max(int(ocr_h * 0.025), 14)))
 
         max_h_ratio = 0.34 if card_like else 0.42
         if y2 - y1 > int(ocr_h * max_h_ratio):
@@ -1913,11 +2186,16 @@ async def ocr_extract(
         timings["pre_extract_ms"] = _ms(time.time() - _t_pre0)
 
         # 상단 블록 re-OCR 스킵 조건:
-        #   사업자번호(체크섬 통과) + 전화 + (주소 또는 회사명 또는 대표자) 이미 확보 시 스킵
+        #   baseline 상단 품질 복구를 위해 핵심 4필드가 모두 확보된 경우에만 스킵한다.
+        #   사업자번호 recall은 유지하되 회사명/대표자/전화/주소 raw가 비어 있으면 upper raw를 다시 본다.
         upper_ready = bool(
-            pre_fields.get("사업자번호") and
-            pre_fields.get("tel") and
-            (pre_fields.get("주소") or pre_fields.get("회사명") or pre_fields.get("대표자"))
+            doc_type == "bank_slip" or (
+                pre_fields.get("사업자번호") and
+                pre_fields.get("회사명") and
+                pre_fields.get("대표자") and
+                pre_fields.get("tel") and
+                pre_fields.get("주소")
+            )
         )
         # 하단 금액 re-OCR 스킵 조건:
         #   - bank/form 은 doc_type 정책으로 이미 스킵
@@ -1990,6 +2268,7 @@ async def ocr_extract(
             doc_type=doc_type,
             debug=extract_debug,
         )
+        _repair_remaining_top_fields_from_text_lines(receipt_fields, full_lines)
         timings["field_extract_ms"] = _ms(time.time() - _t_extract0)
         # 재OCR bbox 를 display 좌표계로도 남김 (프론트에서 시각화 시 활용 가능)
         if upper_bbox:

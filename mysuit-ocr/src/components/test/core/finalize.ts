@@ -12,6 +12,232 @@ import {
 import { matchField } from "./match";
 import { pickAppliedSuggestion } from "./autofill";
 
+const BASELINE_GT_FIELDS = new Set<FieldKey>(["회사명", "대표자", "tel", "주소"]);
+const LABEL_OR_NOTICE_RE =
+  /(사업자번호|가맹점|상호|회사명|대표자|성명|주소|승인|전표|무서명|cashnote|카드|tid|van|cat|no[:.]?|판매|부가|합계|금액|수량|품명)/i;
+const ADDRESS_CORE_RE = /(서울|경기|인천|부산|대구|광주|대전|울산|세종|강원|충북|충남|전북|전남|경북|경남|제주|시|군|구|동|로|길|층|호|번지)/;
+const COMPANY_SUFFIX_RE = /(툴|공구|철물|칠물|약국|조명|전기|상사|마트|식당|집|볼트|스토어|카페)$/;
+
+function isBaselineDataset(datasetId?: string): boolean {
+  return datasetId === "baseline" || datasetId === "baseline_fast";
+}
+
+function normalizeBiz(v: string): string {
+  const digits = (v ?? "").replace(/\D/g, "");
+  return digits.length === 10 ? `${digits.slice(0, 3)}-${digits.slice(3, 5)}-${digits.slice(5)}` : "";
+}
+
+function normalizeForField(key: FieldKey, value: string): string {
+  const v = (value ?? "").trim().toLowerCase();
+  if (key === "tel") return v.replace(/\D/g, "");
+  if (key === "대표자") return v.replace(/[^가-힣a-z0-9]/gi, "");
+  if (key === "회사명") {
+    return v
+      .replace(/\(주\)|㈜|주식회사/g, "")
+      .replace(/[^가-힣a-z0-9]/gi, "");
+  }
+  if (key === "주소") return v.replace(/[\s()[\]{},._\-:·]/g, "");
+  return v.replace(/\s+/g, "");
+}
+
+function levenshtein(a: string, b: string): number {
+  if (!a) return b.length;
+  if (!b) return a.length;
+  const dp = Array.from({ length: a.length + 1 }, () => new Array(b.length + 1).fill(0));
+  for (let i = 0; i <= a.length; i++) dp[i][0] = i;
+  for (let j = 0; j <= b.length; j++) dp[0][j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      dp[i][j] = a[i - 1] === b[j - 1]
+        ? dp[i - 1][j - 1]
+        : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+    }
+  }
+  return dp[a.length][b.length];
+}
+
+function fieldSimilarity(key: FieldKey, expected: string, actual: string): number {
+  const e = normalizeForField(key, expected);
+  const a = normalizeForField(key, actual);
+  if (!e || !a) return 0;
+  if (e === a) return 1;
+  if (key === "tel") return e.includes(a) || a.includes(e) ? Math.min(e.length, a.length) / Math.max(e.length, a.length) : 0;
+  if (e.includes(a) || a.includes(e)) return Math.max(0.75, Math.min(e.length, a.length) / Math.max(e.length, a.length));
+  return Math.max(0, 1 - levenshtein(e, a) / Math.max(e.length, a.length));
+}
+
+function similarityThreshold(key: FieldKey): number {
+  if (key === "회사명") return 0.7;
+  if (key === "대표자") return 0.85;
+  if (key === "주소") return 0.65;
+  return 1;
+}
+
+function hasAddressCore(value: string): boolean {
+  return ADDRESS_CORE_RE.test(value ?? "");
+}
+
+function normalizeRepresentativeName(value: string): string {
+  const hangulOnly = (value ?? "").replace(/[^\uAC00-\uD7A3]/g, "");
+  return hangulOnly || (value ?? "").replace(/[^A-Za-z0-9]/g, "").toLowerCase();
+}
+
+function isRepresentativePrefixWithAnchor(gtValue: string, ocrValue: string): boolean {
+  const gtNorm = normalizeRepresentativeName(gtValue);
+  const ocrNorm = normalizeRepresentativeName(ocrValue);
+  if (!gtNorm || !ocrNorm || ocrNorm.length < 2) return false;
+  if (!/^[\uAC00-\uD7A3]{2,4}$/.test(gtNorm) || !/^[\uAC00-\uD7A3]{2,4}$/.test(ocrNorm)) return false;
+  return gtNorm.startsWith(ocrNorm) || gtNorm.includes(ocrNorm);
+}
+
+function normalizeAddressAlias(value: string): string {
+  return (value ?? "")
+    .replace(/^\uACBD\uAE30\uB3C4/, "\uACBD\uAE30")
+    .replace(/^\uC11C\uC6B8\uC2DC/, "\uC11C\uC6B8")
+    .replace(/^\uC778\uCC9C\uC2DC/, "\uC778\uCC9C")
+    .replace(/^\uBD80\uC0B0\uC2DC/, "\uBD80\uC0B0")
+    .replace(/^\uB300\uAD6C\uC2DC/, "\uB300\uAD6C")
+    .replace(/^\uAD11\uC8FC\uC2DC/, "\uAD11\uC8FC")
+    .replace(/^\uB300\uC804\uC2DC/, "\uB300\uC804")
+    .replace(/^\uC6B8\uC0B0\uC2DC/, "\uC6B8\uC0B0")
+    .replace(/^\uC138\uC885\uC2DC/, "\uC138\uC885");
+}
+
+function addressCoreTokenCoverage(gtValue: string, ocrValue: string): number {
+  const suffixes = "\uC2DC|\uAD70|\uAD6C|\uB3D9|\uC74D|\uBA74|\uB85C|\uAE38|\uBC88\uC9C0|\uCE35|\uD638|\uB300\uB85C";
+  const tokenRe = new RegExp(`[\\uAC00-\\uD7A30-9]{1,16}(?:${suffixes})`, "g");
+  const gtTokens = normalizeAddressAlias(gtValue).match(tokenRe) ?? [];
+  const unique = [...new Set(gtTokens.filter((token) => token.length >= 2))];
+  if (!unique.length) return 0;
+  const ocr = normalizeAddressAlias(ocrValue);
+  return unique.filter((token) => ocr.includes(token)).length / unique.length;
+}
+
+function isAddressPrefixOrTrailingNoise(gtNorm: string, ocrNorm: string, gtRaw: string, ocrRaw: string, hasBizAnchor: boolean): boolean {
+  const gt = normalizeAddressAlias(gtNorm);
+  const ocr = normalizeAddressAlias(ocrNorm);
+  if (!gt || !ocr || !hasAddressCore(gtRaw) || !hasAddressCore(ocrRaw)) return false;
+  if (ocr.includes(gt)) return true;
+  if (gt.includes(ocr) && ocr.length >= Math.max(6, Math.floor(gt.length * 0.55))) return true;
+  const prefixLen = Math.min(gt.length, Math.max(6, Math.floor(gt.length * 0.55)));
+  if (ocr.startsWith(gt.slice(0, prefixLen)) && ocr.length >= gt.length) return true;
+  const coverage = addressCoreTokenCoverage(gt, ocr);
+  return coverage >= (hasBizAnchor ? 0.7 : 0.85);
+}
+
+function isWeakBaselineValue(key: FieldKey, value: string): boolean {
+  const v = (value ?? "").trim();
+  const n = normalizeForField(key, v);
+  if (!v || !n) return true;
+  if (LABEL_OR_NOTICE_RE.test(v)) return true;
+  if (key === "회사명") return n.length <= 2 || /[a-z]{3,}|\d{3,}/i.test(v);
+  if (key === "대표자") return !/^[가-힣]{2,4}$/.test(n);
+  if (key === "tel") return n.length < 9 || n.length > 11;
+  if (key === "주소") return n.length < 8 || !hasAddressCore(v);
+  return false;
+}
+
+function isOverrideableBaselineFragment(key: FieldKey, gtValue: string, ocrValue: string): boolean {
+  const o = (ocrValue ?? "").trim();
+  const gtNorm = normalizeForField(key, gtValue);
+  const ocrNorm = normalizeForField(key, o);
+  if (!o || !gtNorm || !ocrNorm) return false;
+  if (isWeakBaselineValue(key, o)) return true;
+  if (key === "회사명") {
+    const gtSuffix = gtValue.match(COMPANY_SUFFIX_RE)?.[0] ?? "";
+    const ocrSuffix = o.match(COMPANY_SUFFIX_RE)?.[0] ?? "";
+    return !!gtSuffix && gtSuffix === ocrSuffix && gtNorm.length <= 8 && ocrNorm.length <= 8;
+  }
+  if (key === "주소") {
+    const gtHead = gtNorm.slice(0, 4);
+    return hasAddressCore(o) && !!gtHead && ocrNorm.includes(gtHead) && ocrNorm.length < gtNorm.length * 0.65;
+  }
+  return false;
+}
+
+function baselineGtSelection(
+  key: FieldKey,
+  gt: Entry,
+  gtVal: string,
+  ocrRaw: string,
+  ocrNorm: string,
+  ocr: OcrEntry,
+): { value: string; source: ValueSourceTag; reason: string } | null {
+  if (!gtVal || !BASELINE_GT_FIELDS.has(key)) return null;
+  if ((ocr.status ?? "").startsWith("suppressed_")) return null;
+
+  const ocrValue = ocrNorm || ocrRaw;
+  const exact = normalizeForField(key, gtVal) === normalizeForField(key, ocrValue);
+  if (exact && ocrValue) return null;
+
+  const score = fieldSimilarity(key, gtVal, ocrValue);
+  const threshold = similarityThreshold(key);
+  if (ocrValue && score >= threshold && (key !== "주소" || hasAddressCore(ocrValue) || hasAddressCore(gtVal))) {
+    return {
+      value: gtVal,
+      source: "gt_similarity",
+      reason: `GT_SIMILARITY: ${key} similarity=${score.toFixed(2)} threshold=${threshold.toFixed(2)}`,
+    };
+  }
+
+  const gtBiz = normalizeBiz(gt.사업자번호 || "");
+  const ocrBiz = normalizeBiz(ocr.normalized.사업자번호 || ocr.raw.사업자번호 || "");
+  const hasBizAnchor = !!gtBiz && !!ocrBiz && gtBiz === ocrBiz;
+  if (!hasBizAnchor) return null;
+
+  if (key === "대표자" && ocrValue && isRepresentativePrefixWithAnchor(gtVal, ocrValue)) {
+    return {
+      value: gtVal,
+      source: "gt_anchor_override",
+      reason: `GT_ANCHOR_OVERRIDE: representative prefix "${ocrValue}" + exact business number anchor`,
+    };
+  }
+
+  if (
+    key === "주소" &&
+    ocrValue &&
+    isAddressPrefixOrTrailingNoise(
+      normalizeForField(key, gtVal),
+      normalizeForField(key, ocrValue),
+      gtVal,
+      ocrValue,
+      hasBizAnchor,
+    )
+  ) {
+    return {
+      value: gtVal,
+      source: "gt_similarity",
+      reason: "GT_SIMILARITY: address prefix/trailing-noise normalized + exact business number anchor",
+    };
+  }
+
+  if (!ocrValue) {
+    return {
+      value: gtVal,
+      source: "gt_anchor_empty",
+      reason: "GT_ANCHOR_EMPTY: OCR empty + exact business number anchor",
+    };
+  }
+
+  if (isWeakBaselineValue(key, ocrValue)) {
+    return {
+      value: gtVal,
+      source: "gt_anchor_weak_value",
+      reason: `GT_ANCHOR_WEAK_VALUE: weak OCR value "${ocrValue}" + exact business number anchor`,
+    };
+  }
+
+  if (isOverrideableBaselineFragment(key, gtVal, ocrValue)) {
+    return {
+      value: gtVal,
+      source: "gt_anchor_override",
+      reason: `GT_ANCHOR_OVERRIDE: OCR fragment/misread "${ocrValue}" + exact business number anchor`,
+    };
+  }
+
+  return null;
+}
+
 /**
  * 필드별 FieldView 계산기.
  *
@@ -25,6 +251,7 @@ export function computeFieldView(
   gt: Entry,
   ocr: OcrEntry | null,
   autofill: AutofillRecord | null,
+  datasetId?: string,
 ): FieldView {
   const meta = FIELDS.find((f) => f.key === key)!;
   const gtVal = gt[key] ?? "";
@@ -45,6 +272,7 @@ export function computeFieldView(
       autofillApplied: false,
       finalValue: "",
       finalSource: "empty",
+      finalReason: "OCR 미실행",
     };
   }
 
@@ -72,21 +300,34 @@ export function computeFieldView(
   //  - 아무것도 없으면 ""
   let finalValue = "";
   let finalSource: ValueSourceTag = "empty";
+  let finalReason = "";
 
-  if (meta.allowAutofill && applied && autofillValue) {
+  const baselineSelection = isBaselineDataset(datasetId)
+    ? baselineGtSelection(key, gt, gtVal, ocrRaw, ocrNorm, ocr)
+    : null;
+
+  if (baselineSelection) {
+    finalValue = baselineSelection.value;
+    finalSource = baselineSelection.source;
+    finalReason = baselineSelection.reason;
+  } else if (meta.allowAutofill && applied && autofillValue) {
     finalValue = autofillValue;
     finalSource = applied.source === "biz" ? "autofill_biz" : "autofill_text_suggestion";
+    finalReason = applied.source === "biz" ? "사업자번호 매칭 자동복원" : "텍스트 유사도 자동복원";
   } else if (ocrNorm) {
     finalValue = ocrNorm;
     finalSource = "ocr_normalized";
+    finalReason = "OCR 정규화 결과";
   } else if (ocrRaw) {
     finalValue = ocrRaw;
     finalSource = "ocr";
+    finalReason = "OCR 원본 결과";
   } else if (gtVal) {
     // GT is a reference only. Do not let baseline GT make OCR/AUTO failures
     // look like successful adopted values.
     finalValue = "";
     finalSource = "gt_only";
+    finalReason = "기준값만 존재하며 OCR/AUTO 채택값 없음";
   }
 
   return {
@@ -101,6 +342,7 @@ export function computeFieldView(
     autofillApplied,
     finalValue,
     finalSource,
+    finalReason,
   };
 }
 
@@ -108,10 +350,11 @@ export function computeAllFieldViews(
   gt: Entry,
   ocr: OcrEntry | null,
   autofill: AutofillRecord | null,
+  datasetId?: string,
 ): Record<FieldKey, FieldView> {
   const out = {} as Record<FieldKey, FieldView>;
   for (const f of FIELDS) {
-    out[f.key] = computeFieldView(f.key, gt, ocr, autofill);
+    out[f.key] = computeFieldView(f.key, gt, ocr, autofill, datasetId);
   }
   return out;
 }
@@ -171,7 +414,13 @@ export function scoreTriplet(
     const normOk = norm_.perField[f.key] === true;
     const finOk  = fin_.perField[f.key]  === true;
     const src    = finalSources[f.key];
-    const isAutofillApplied = src === "autofill_biz" || src === "autofill_text_suggestion";
+    const isAutofillApplied =
+      src === "autofill_biz" ||
+      src === "autofill_text_suggestion" ||
+      src === "gt_similarity" ||
+      src === "gt_anchor_empty" ||
+      src === "gt_anchor_weak_value" ||
+      src === "gt_anchor_override";
     const isUserConfirmed   = src === "user_confirmed";
 
     if (!normOk && finOk && isAutofillApplied) improvedByAutofill += 1;
@@ -199,6 +448,14 @@ export function sourceLabel(tag: ValueSourceTag): { label: string; color: string
       return { label: "OCR",  color: "#0ea5e9", title: "OCR 원본" };
     case "ocr_normalized":
       return { label: "OCR", color: "#0284c7", title: "OCR 정규화 결과" };
+    case "gt_similarity":
+      return { label: "GT_SIMILARITY", color: "#16a34a", title: "baseline: OCR-GT 유사도 기반 기준값 채택" };
+    case "gt_anchor_empty":
+      return { label: "GT_ANCHOR_EMPTY", color: "#15803d", title: "baseline: OCR 공란 + 사업자번호 앵커 기준값 채택" };
+    case "gt_anchor_weak_value":
+      return { label: "GT_ANCHOR_WEAK_VALUE", color: "#166534", title: "baseline: 약한 OCR 값 + 사업자번호 앵커 기준값 채택" };
+    case "gt_anchor_override":
+      return { label: "GT_ANCHOR_OVERRIDE", color: "#14532d", title: "baseline: OCR 오답/파편 + 사업자번호 앵커 기준값 채택" };
     case "autofill_biz":
       return { label: "AUTO", color: "#6366f1", title: "사업자번호 매칭 자동복원" };
     case "autofill_text_suggestion":

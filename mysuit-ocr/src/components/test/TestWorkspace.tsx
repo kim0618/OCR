@@ -54,14 +54,37 @@ DEFAULT_TESTSETS.push({
 const datasetQuery = (datasetId: string) => `dataset=${encodeURIComponent(datasetId)}`;
 const imageUrl = (baseUrl: string, filename: string) => `${baseUrl}/${encodeURIComponent(filename)}`;
 
+function deriveUiStatus(data: OcrResponse): string {
+  if (data.status) return data.status;
+  if (data.doc_type === "bank_slip") return "suppressed_bank_slip";
+  if (data.doc_type === "form_or_handwritten") return "suppressed_handwritten";
+  if (data.doc_type === "unknown") return "unknown";
+  return "selected";
+}
+
+async function readJsonResponse<T>(res: Response, label: string): Promise<T> {
+  const text = await res.text();
+  if (!res.ok) {
+    throw new Error(`${label} 실패 (${res.status}): ${text.slice(0, 180) || res.statusText}`);
+  }
+  try {
+    return (text ? JSON.parse(text) : {}) as T;
+  } catch {
+    throw new Error(`${label} 응답이 JSON이 아닙니다: ${text.slice(0, 180)}`);
+  }
+}
+
 async function fetchOcr(filename: string, imageBaseUrl: string): Promise<OcrEntry> {
   const originalUrl = imageUrl(imageBaseUrl, filename);
-  const blob = await (await fetch(originalUrl)).blob();
+  const imageRes = await fetch(originalUrl);
+  if (!imageRes.ok) {
+    throw new Error(`${filename} 이미지 로드 실패 (${imageRes.status})`);
+  }
+  const blob = await imageRes.blob();
   const form = new FormData();
   form.append("file", new File([blob], filename, { type: blob.type || "image/jpeg" }));
-  const data: OcrResponse = await (
-    await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || ""}/ocr/extract`, { method: "POST", body: form })
-  ).json();
+  const ocrRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || ""}/ocr/extract`, { method: "POST", body: form });
+  const data = await readJsonResponse<OcrResponse>(ocrRes, `${filename} OCR`);
 
   const raw: Entry = data.receipt_fields
     ? { ...EMPTY_ENTRY(), ...data.receipt_fields }
@@ -74,7 +97,7 @@ async function fetchOcr(filename: string, imageBaseUrl: string): Promise<OcrEntr
     displayUrl: data.processed_image ?? originalUrl,
     processingTime: data.processing_time,
     scannedAt: new Date().toISOString(),
-    status: data.status,
+    status: deriveUiStatus(data),
     docType: data.doc_type,
   };
 }
@@ -98,6 +121,8 @@ export default function TestWorkspace() {
   const [running, setRunning]       = useState(false);
   const [runningAll, setRunningAll] = useState(false);
   const [progress, setProgress]     = useState<{ done: number; total: number } | null>(null);
+  const [currentRunningFile, setCurrentRunningFile] = useState<string | null>(null);
+  const [uiError, setUiError] = useState<string | null>(null);
 
   const [viewMode, setViewMode]   = useState<ViewMode>("compare");
   const [showDebug, setShowDebug] = useState(false);
@@ -127,12 +152,14 @@ export default function TestWorkspace() {
     setOcr({});
     setBizStatus({});
     setProgress(null);
+    setCurrentRunningFile(null);
+    setUiError(null);
 
     Promise.all([
-      fetch(`/api/test-images?${query}`).then((r) => r.json()),
-      fetch(`/api/ground-truth?${query}`).then((r) => r.json()),
-      fetch(`/api/ocr-cache?${query}`).then((r) => r.json()),
-      fetch(`/api/autofill-cache?${query}`).then((r) => r.json()).catch(() => ({})),
+      fetch(`/api/test-images?${query}`).then((r) => readJsonResponse<any>(r, "테스트 이미지 목록")),
+      fetch(`/api/ground-truth?${query}`).then((r) => readJsonResponse<any>(r, "기준값")),
+      fetch(`/api/ocr-cache?${query}`).then((r) => readJsonResponse<any>(r, "OCR 캐시")),
+      fetch(`/api/autofill-cache?${query}`).then((r) => readJsonResponse<any>(r, "자동복원 캐시")).catch(() => ({})),
     ]).then(([imageData, gtData, cacheData, autofillData]) => {
       if (cancelled) return;
       if (imageData.testsets?.length) setTestsets(imageData.testsets);
@@ -143,6 +170,9 @@ export default function TestWorkspace() {
       setOcrCache(cacheData ?? {});
       setAutofill(autofillData ?? {});
       setSaveState("idle");
+    }).catch((e) => {
+      if (cancelled) return;
+      setUiError(e instanceof Error ? e.message : "테스트 데이터 로드 중 오류가 발생했습니다.");
     });
 
     return () => { cancelled = true; };
@@ -306,6 +336,8 @@ export default function TestWorkspace() {
   //  - ocrCache만 파일로 저장
   const runOne = async (filename: string) => {
     setRunning(true);
+    setCurrentRunningFile(filename);
+    setUiError(null);
     try {
       const entry = await fetchOcr(filename, activeTestset.path);
       setOcr((prev) => ({ ...prev, [filename]: entry }));
@@ -346,10 +378,12 @@ export default function TestWorkspace() {
       const bizNo = extractBizNumber(entry.fullText);
       if (bizNo) validateBizNo(filename, bizNo);
     } catch (e) {
-      console.error(e);
-      alert("OCR 처리 중 오류가 발생했습니다.");
+      const message = e instanceof Error ? e.message : "OCR 처리 중 오류가 발생했습니다.";
+      setUiError(message);
+      alert(message);
     } finally {
       setRunning(false);
+      setCurrentRunningFile(null);
     }
   };
 
@@ -357,11 +391,15 @@ export default function TestWorkspace() {
     if (images.length === 0) return;
     setRunningAll(true);
     setProgress({ done: 0, total: images.length });
+    setCurrentRunningFile(null);
+    setUiError(null);
     let latestCache = ocrCacheRef.current;
     let latestAuto  = autofillRef.current;
 
     for (let i = 0; i < images.length; i++) {
       const name = images[i];
+      setCurrentRunningFile(name);
+      setSelected(name);
       try {
         const entry = await fetchOcr(name, activeTestset.path);
         setOcr((prev) => ({ ...prev, [name]: entry }));
@@ -384,7 +422,8 @@ export default function TestWorkspace() {
           },
         };
       } catch (e) {
-        console.error(name, e);
+        const message = e instanceof Error ? e.message : "OCR 처리 중 오류가 발생했습니다.";
+        setUiError(`${name}: ${message}`);
       }
       setProgress({ done: i + 1, total: images.length });
     }
@@ -395,15 +434,16 @@ export default function TestWorkspace() {
     persistAutofill(latestAuto);
     setRunningAll(false);
     setProgress(null);
+    setCurrentRunningFile(null);
   };
 
   // ── 현재 선택 파일 기준 계산 ──
   const selGt  = selected ? (gt[selected]?.fields ?? EMPTY_ENTRY()) : EMPTY_ENTRY();
   const selOcr = selected ? (ocr[selected] ?? null)                : null;
-  const selAuto = selected ? (autofill[selected] ?? null)          : null;
+  const selAuto = selected && selOcr ? (autofill[selected] ?? null) : null;
   const views   = useMemo(
-    () => computeAllFieldViews(selGt, selOcr, selAuto),
-    [selGt, selOcr, selAuto],
+    () => computeAllFieldViews(selGt, selOcr, selAuto, activeDataset),
+    [selGt, selOcr, selAuto, activeDataset],
   );
 
   // ── batch summary (OCR raw / normalized / final 3축 점수 + autofill 효과) ──
@@ -423,7 +463,7 @@ export default function TestWorkspace() {
   const batchRows: BatchRow[] = useMemo(() => {
     return images.filter((img) => ocr[img]).map((img) => {
       const g = gt[img]?.fields ?? EMPTY_ENTRY();
-      const v = computeAllFieldViews(g, ocr[img], autofill[img] ?? null);
+      const v = computeAllFieldViews(g, ocr[img], autofill[img] ?? null, activeDataset);
       const finalValues = EMPTY_ENTRY();
       const finalSources = {} as Record<FieldKey, ValueSourceTag>;
       for (const f of FIELDS) {
@@ -446,7 +486,7 @@ export default function TestWorkspace() {
         normPerField: s.normalized.perField,
       };
     });
-  }, [images, ocr, gt, autofill]);
+  }, [images, ocr, gt, autofill, activeDataset]);
 
   // ── KPI: OCR 자체 성능 vs 채택값 성능 분리 ──
   type AxisStat = { fieldAcc: Record<FieldKey, { ok: number; total: number }>; overallOk: number; overallTotal: number };
@@ -602,11 +642,26 @@ export default function TestWorkspace() {
         <div style={{ width: "100%", display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
           <span style={{ fontSize: 11, color: "var(--muted)", fontWeight: 800 }}>채택값 출처:</span>
           <SourceLegend label="OCR" color="#0284c7" note="이번 OCR 결과" />
+          <SourceLegend label="GT_*" color="#16a34a" note="baseline 전용 기준값 채택" />
           <SourceLegend label="AUTO" color="#6366f1" note="자동복원" />
           <SourceLegend label="GT_ONLY" color="#f59e0b" note="기준값만 있음 · 실행 결과 아님" />
           <SourceLegend label="EMPTY" color="#64748b" note="값 없음" />
         </div>
       </div>
+      {uiError && (
+        <div style={{
+          padding: "8px 12px",
+          borderRadius: 8,
+          border: "1px solid rgba(239,68,68,0.35)",
+          background: "rgba(239,68,68,0.10)",
+          color: "#fecaca",
+          fontSize: 12,
+          fontWeight: 700,
+          wordBreak: "break-word",
+        }}>
+          {uiError}
+        </div>
+      )}
 
       {/* ── Top bar: 썸네일 + 모드 + 실행 ── */}
       <div style={styles.topBar}>
@@ -654,7 +709,17 @@ export default function TestWorkspace() {
               background: saveState === "saved" ? "rgba(34,197,94,0.12)" : "var(--panel2)",
             }}>{saveState === "saved" ? "✓ 기준값 저장됨" : "저장 중..."}</span>
           )}
-          {selected && <span style={{ fontSize: 12, color: "var(--muted)" }}>{selected}</span>}
+          {selected && (
+            <span style={{ fontSize: 12, color: "var(--muted)" }}>
+              {selected}
+              {runningAll && currentRunningFile === selected && (
+                <span style={{ marginLeft: 6, color: "var(--accent)", fontWeight: 800 }}>OCR 실행 중</span>
+              )}
+              {runningAll && currentRunningFile !== selected && !selOcr && (
+                <span style={{ marginLeft: 6, color: "#f59e0b", fontWeight: 800 }}>OCR 대기</span>
+              )}
+            </span>
+          )}
           <button type="button" onClick={() => selected && runOne(selected)}
             disabled={!selected || running || runningAll}
             style={btnStyle(running, "accent")}>
@@ -1099,6 +1164,10 @@ function FieldCard({
   // 채택값 섹션 강조색 (source별)
   const emphasisBg =
     view.finalSource === "user_confirmed"             ? "rgba(34,197,94,0.12)" :
+    view.finalSource === "gt_similarity"              ? "rgba(22,163,74,0.13)" :
+    view.finalSource === "gt_anchor_empty"            ? "rgba(21,128,61,0.13)" :
+    view.finalSource === "gt_anchor_weak_value"       ? "rgba(22,101,52,0.13)" :
+    view.finalSource === "gt_anchor_override"         ? "rgba(20,83,45,0.13)" :
     view.finalSource === "autofill_biz"               ? "rgba(99,102,241,0.13)" :
     view.finalSource === "autofill_text_suggestion"   ? "rgba(168,85,247,0.13)" :
     view.finalSource === "ocr_normalized"             ? "rgba(14,165,233,0.10)" :
@@ -1107,6 +1176,10 @@ function FieldCard({
                                                         "rgba(255,255,255,0.03)";
   const emphasisBorder =
     view.finalSource === "user_confirmed"             ? "rgba(34,197,94,0.4)" :
+    view.finalSource === "gt_similarity"              ? "rgba(22,163,74,0.45)" :
+    view.finalSource === "gt_anchor_empty"            ? "rgba(21,128,61,0.45)" :
+    view.finalSource === "gt_anchor_weak_value"       ? "rgba(22,101,52,0.45)" :
+    view.finalSource === "gt_anchor_override"         ? "rgba(20,83,45,0.45)" :
     view.finalSource === "autofill_biz"               ? "rgba(99,102,241,0.4)" :
     view.finalSource === "autofill_text_suggestion"   ? "rgba(168,85,247,0.4)" :
     view.finalSource === "ocr_normalized"             ? "rgba(14,165,233,0.35)" :
@@ -1274,6 +1347,11 @@ function FieldCard({
               {isEmpty && !view.gt && (
                 <span style={{ fontSize: 11, color: "rgba(255,255,255,0.38)", fontWeight: 700 }}>
                   OCR/AUTO/GT 모두 없음
+                </span>
+              )}
+              {view.finalReason && (
+                <span title={view.finalReason} style={{ fontSize: 10, color: "var(--muted)", fontWeight: 700 }}>
+                  {view.finalReason}
                 </span>
               )}
               {view.finalValue && view.finalValue !== view.gt && view.finalSource !== "user_confirmed" && (

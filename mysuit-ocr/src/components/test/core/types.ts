@@ -95,6 +95,10 @@ export type ValueSourceTag =
   | "empty"
   | "ocr"
   | "ocr_normalized"
+  | "gt_similarity"
+  | "gt_anchor_empty"
+  | "gt_anchor_weak_value"
+  | "gt_anchor_override"
   | "autofill_biz"
   | "autofill_text_suggestion"
   | "gt_only"
@@ -112,6 +116,7 @@ export type FieldView = {
   autofillApplied: boolean;
   finalValue: string;
   finalSource: ValueSourceTag;
+  finalReason?: string;
 };
 
 // threshold

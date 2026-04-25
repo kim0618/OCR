@@ -472,9 +472,18 @@ def score_amount_candidate(cand: dict, all_candidates: list[dict]) -> dict:
             reasons.append("-12 판매금액/소계 (합계보다 약함)")
 
     # 문서 최하단 bare 억제 (바코드/전표꼬리 숫자)
+    amount_block_bare = (
+        cand.get("source") == "amount_block"
+        and cand["pattern"] == "bare"
+        and cand.get("conf", 0) >= 0.75
+    )
     if cand["row_pos"] >= 0.90 and cand["pattern"] == "bare" and not matched_strong_pos:
-        score -= 30
-        reasons.append("-30 문서 최하단 bare (바코드/전표꼬리 의심)")
+        if amount_block_bare:
+            score += 8
+            reasons.append("+8 하단 금액 블록의 고신뢰 bare 후보")
+        else:
+            score -= 30
+            reasons.append("-30 문서 최하단 bare (바코드/전표꼬리 의심)")
     if _NEG_RECEIPT_TAIL.search(wide_ctx) and cand["pattern"] == "bare" and not matched_strong_pos:
         score -= 20
         reasons.append("-20 '감사합니다/재발행' 부근 bare")
