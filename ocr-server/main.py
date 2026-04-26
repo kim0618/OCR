@@ -24,6 +24,28 @@ from amount_extractor import (
     synthesize_supply_vat_totals,
 )
 from document_classifier import classify_document
+from utils.text_normalize import _clean_number, _clean_inline_field_value
+from utils.rows import _row_text, _single_line_rows, _is_merchant_notice_row, _group_rows
+from utils.io_json import _load_json, _save_json
+from extractors.common import _bad_top_text_candidate, _extract_until_next_label
+from extractors.business_number import _validate_biz_number, _extract_biz_number
+from extractors.phone import (
+    _normalize_phone_digits,
+    _format_phone_digits,
+    _valid_phone_digits,
+    _valid_labeled_phone_digits,
+    _extract_phone_candidate,
+)
+from utils.regex_patterns import (
+    _PHONE_RE, _PHONE_LABELED_RE, _PHONE_ADMIN_NOISE_RE,
+    _ADDR_START_RE, _NEXT_LABEL_RE, _FIELD_NOISE_RE,
+    _REPRESENTATIVE_NOISE_RE, _COMPANY_SUFFIX_HINT_RE,
+    _CONVENIENCE_STORE_NAME_RE, _COMPANY_SLOGAN_RE,
+    _PERSON_LIKE_NAME_RE, _REPRESENTATIVE_SURNAME_RE,
+    _ADDRESS_CUT_RE, _ADDRESS_CORE_TOKEN_RE, _ADDRESS_STORE_NOISE_RE,
+    _LABEL_ONLY_RE, _ADDRESS_CONTINUATION_RE,
+    _ADDRESS_BROAD_ONLY_RE, _ADDRESS_TRAILING_NOISE_RE,
+)
 
 app = FastAPI(title="MySuit OCR Server")
 
@@ -45,32 +67,6 @@ def _parse_ocr_lines(result):
     return lines
 
 
-def _clean_number(s: str) -> str:
-    s = s.replace('O', '0').replace('l', '1').replace('I', '1').replace('S', '5').replace('B', '8')
-    s = re.sub(r'(\d)\.(\d{3})', r'\1,\2', s)  # 33.000 → 33,000
-    return s
-
-
-def _validate_biz_number(digits: str) -> bool:
-    """사업자등록번호 체크섬 검증 (10자리 숫자 문자열)"""
-    if len(digits) != 10 or digits[0] == '0':
-        return False
-    weights = [1, 3, 7, 1, 3, 7, 1, 3, 5]
-    total = sum(int(digits[i]) * weights[i] for i in range(9))
-    total += int(digits[8]) * 5 // 10
-    check = (10 - (total % 10)) % 10
-    return check == int(digits[9])
-
-
-def _extract_biz_number(text: str) -> str | None:
-    """텍스트에서 사업자번호 추출 + 체크섬 검증"""
-    cleaned = _clean_number(text)
-    candidates = re.findall(r'[1-9]\d{2}[-\s.]?\d{2}[-\s.]?\d{5}', cleaned)
-    for c in candidates:
-        digits = re.sub(r'\D', '', c)
-        if _validate_biz_number(digits):
-            return f"{digits[:3]}-{digits[3:5]}-{digits[5:]}"
-    return None
 
 
 def _parse_amounts(s: str, keyword_context: bool = False) -> list:
@@ -100,142 +96,14 @@ def _parse_amounts(s: str, keyword_context: bool = False) -> list:
     return result
 
 
-def _group_rows(ocr_lines: list):
-    """OCR 라인들을 행 기준으로 그룹핑.
-
-    PaddleOCR v5 에서는 세로형 영수증에서 polygon 이 '세로로 긴 박스'로 들어오는 경우가 있어
-    단순 y-span 기준 그룹핑이 전표 전체를 한 행으로 합쳐버릴 수 있다. 그런 경우에는 x축을
-    읽기 진행축으로 간주해 행을 복구한다.
-    """
-    if not ocr_lines:
-        return []
-
-    def cy(line): ys = [p[1] for p in line[0]]; return (min(ys) + max(ys)) / 2
-    def cx(line): xs = [p[0] for p in line[0]]; return (min(xs) + max(xs)) / 2
-    def width(line): xs = [p[0] for p in line[0]]; return max(xs) - min(xs)
-    def height(line): ys = [p[1] for p in line[0]]; return max(ys) - min(ys)
-
-    widths = sorted(width(line) for line in ocr_lines)
-    heights = sorted(height(line) for line in ocr_lines)
-    median_w = widths[len(widths) // 2] if widths else 20
-    median_h = heights[len(heights) // 2] if heights else 20
-    vertical_layout = median_h > max(median_w * 1.8, 80)
-
-    primary_center = cx if vertical_layout else cy
-    secondary_center = cy if vertical_layout else cx
-    primary_size = width if vertical_layout else height
-
-    sorted_lines = sorted(ocr_lines, key=primary_center)
-    primary_sizes = [primary_size(line) for line in sorted_lines]
-    median_primary = sorted(primary_sizes)[len(primary_sizes) // 2] if primary_sizes else 20
-    row_thr_scale = 0.45 if vertical_layout else 0.75
-    row_thr = max(median_primary * row_thr_scale, 8)
-
-    rows = []
-    cur = [sorted_lines[0]]
-    for line in sorted_lines[1:]:
-        if abs(primary_center(line) - primary_center(cur[-1])) <= row_thr:
-            cur.append(line)
-        else:
-            rows.append(sorted(cur, key=secondary_center))
-            cur = [line]
-    rows.append(sorted(cur, key=secondary_center))
-    return rows
 
 
-def _row_text(row):
-    return ' '.join(t for _, t, _ in row)
 
 
-def _single_line_rows(ocr_lines: list):
-    return [[line] for line in (ocr_lines or []) if line and line[1]]
 
 
-def _is_merchant_notice_row(text: str) -> bool:
-    norm = re.sub(r'\s+', '', text or '')
-    if re.search(r'다른경우|실제와|가맹점주소가|전기작업|작업지시|직원|식지|재발행|안내문|설명문구|예시문구|작성문구', norm, re.I):
-        return True
-    return bool(re.search(
-        r'신고안내|여신금융|협회|고객센터|가맹점주소.*다른경우|crefia|'
-        r'승인번호|카드번호|거래일시|매출전표|공급가액|부가세|합계|총계|품목|수량|단가|금액',
-        norm,
-        re.I,
-    ))
 
 
-def _clean_inline_field_value(value: str) -> str:
-    value = re.sub(r'\s+', ' ', value or '').strip()
-    return value.strip(" :;|/-")
-
-
-_PHONE_RE = re.compile(r'\(?0\d{1,2}\)?[-\s]?\d{3,4}[-\s]?\d{4}')
-_PHONE_LABELED_RE = re.compile(r'(?:TEL|Tel|tel|전화(?:\s*번호)?)\s*[:;]?\s*([()0-9\)\-\s.]{8,24})', re.I)
-_PHONE_ADMIN_NOISE_RE = re.compile(
-    r'여신금융|협회|신고안내|포상금|고객센터|카드번호|승인번호|거래일시|전표|'
-    r'가맹No|가맹점No|가맹점번호|TID|CAT|VANKEY',
-    re.I,
-)
-_ADDR_START_RE = re.compile(
-    r'(서울|서울시|경기|경기도|인천|인천시|부산|부산시|대구|대구시|광주|광주시|대전|대전시|울산|울산시|세종|세종시|강원|강원도|충북|충청북도|충남|충청남도|전북|전라북도|전남|전라남도|경북|경상북도|경남|경상남도|제주|제주도)'
-)
-_NEXT_LABEL_RE = re.compile(
-    r'\s*(?:사업자(?:등록)?번호|등록번호|대표자?|성명|주소|TEL|Tel|tel|전화|'
-    r'가맹점명|가맹점No|가맹점번호|승인번호|카드번호|거래일시)\s*[:;]?',
-    re.I,
-)
-_FIELD_NOISE_RE = re.compile(
-    r'단가수량|단가|수량|금액|합계|총계|subtotal|total|tax|cash|'
-    r'품목|상품명|주문|테이블|단말|영수증|안내|정보|포털|결제|전표|승인|거래|'
-    r'사업자번호|등록번호|가맹점명|가맹점번호|가맹점no|가맹점|상호|회사명|업체명|대표자|성명|주소|전화|tel|작성년월일|'
-    r'업태|업종|도매|소매|중개업|서비스업|상품중개업|일반목적용기계및장비|'
-    r'cashier|server|guests|station|order|table|dine\s*in|code|desc|qty|price|amount',
-    re.I,
-)
-_REPRESENTATIVE_NOISE_RE = re.compile(
-    r'테이블|단말|번호|영수증|번길|주문|품목|수량|단가|금액|주소|사업자|가맹점|상호|회사명|'
-    r'cashier|server|guests|station|order|table|menu|item|qty|price|amount',
-    re.I,
-)
-_COMPANY_SUFFIX_HINT_RE = re.compile(
-    r'(\(주\)|주식회사|상사|철물|조명|전기|공구|볼트|약국|카페|마트|편의점|스토어|매장|집|점|GS25|CU|세븐일레븐|코리아)$',
-    re.I,
-)
-_CONVENIENCE_STORE_NAME_RE = re.compile(r'^(?:GS25|CU|세븐일레븐|이마트24|미니스톱)[가-힣A-Za-z0-9()]*점$', re.I)
-_COMPANY_SLOGAN_RE = re.compile(
-    r'(?:함께|[가-힣]께)하는행복|응원합니다|감사합니다|포인트적립|행사문구|안내문구|'
-    r'정부방침|교환|지참|가능합니다'
-)
-_PERSON_LIKE_NAME_RE = re.compile(r'^[가-힣]{3}$')
-_REPRESENTATIVE_SURNAME_RE = re.compile(r'^[김이박최정강조윤장임한오서신권황안송전홍유고문양손배조백허남심노하곽성차주우구민류진나엄채원천방공현함변염여추도소석선설마길연위표명기반왕금옥육인맹제모장모국어은편용]')  # noqa: E501
-_ADDRESS_CUT_RE = re.compile(
-    r'\s*(?:TEL|Tel|tel|전화|사업자(?:등록)?번호|등록번호|대표자?|상호|가맹점명|'
-    r'가맹No|가맹점No|가맹점번호|승인번호|카드번호|거래일시|품목|수량|단가|금액|합계|총계|부가세|공급가액|'
-    r'결제|전표|테이블명|판매시간|판매사원|영수번호|작성년월일|공급대가|도매|소매|업태|업종)\s*[:;]?',
-    re.I,
-)
-_ADDRESS_CORE_TOKEN_RE = re.compile(r'시|군|구|읍|면|동|로|길|층|호|번지|리')
-_ADDRESS_STORE_NOISE_RE = re.compile(r'GS25|CU|세븐일레븐|편의점|카페|약국|마트|스토어|매장|점$', re.I)
-_LABEL_ONLY_RE = re.compile(
-    r'^(?:사업자|사업자번호|등록|등록번호|공급자|가맹점명|가맹점번호|가맹점no|가맹점|상호|회사명|업체명|대표자|성명|주소|전화|tel|작성년월일)$',
-    re.I,
-)
-_ADDRESS_CONTINUATION_RE = re.compile(r'(?:[가-힣A-Za-z0-9(),.\-\s]*(?:로|길|동|읍|면|리|층|호|번지)[가-힣A-Za-z0-9(),.\-\s]*)')
-_ADDRESS_BROAD_ONLY_RE = re.compile(r'^(?:서울|경기|경기도|인천|부산|대구|광주|대전|울산|세종|강원|충북|충남|전북|전남|경북|경남|제주)\s+[가-힣]+시\s+[가-힣]+구$')
-_ADDRESS_TRAILING_NOISE_RE = re.compile(
-    r'\s*(?:성명|상호|사업자|등록번호|공급자|도매|소매|업태|업종|일반목적|배\s*관|전\s*기|작성년월일|공급대가|'
-    r'테이블명|판매시간|판매사원|영수번호|카드종류|카드번호|승인|전표|TID|CAT|VANKEY|IBK|비씨|체크|신용|'
-    r'(?<![-\d])\b\d{1,3}[,.]\d{3}(?:[,.]\d{3})?|제\d{1,2}[-\s]?\d{2,}|[*A-Z]{2,}\d*)',
-    re.I,
-)
-
-
-def _extract_until_next_label(text: str, pattern: str) -> str:
-    match = re.search(pattern, text, re.I)
-    if not match:
-        return ""
-    value = text[match.end():]
-    value = _NEXT_LABEL_RE.split(value, maxsplit=1)[0]
-    return _clean_inline_field_value(value)
 
 
 def _extract_address_fragment(text: str) -> str:
@@ -248,78 +116,6 @@ def _extract_address_fragment(text: str) -> str:
     value = re.split(r'\s*\d{4}[./-]\d{1,2}[./-]\d{1,2}', value, maxsplit=1)[0]
     value = re.sub(r'\d{2,3}[-\s.]?\d{2}[-\s.]?\d{5}.*$', '', value).strip()
     return _clean_inline_field_value(value)
-
-
-def _bad_top_text_candidate(text: str) -> bool:
-    if re.search(r'다른경우|실제와|가맹점주소가|전기작업|작업지시|직원|식지|재발행|체크카드|신용매출|귀하|안내문|설명문구|예시문구|작성문구', text or "", re.I):
-        return True
-    return bool(re.search(
-        r'신고안내|여신금융|협회|고객센터|승인번호|카드번호|거래일시|매출전표|'
-        r'공급가액|부가세|합계|총계|품목|수량|단가|금액|van|tid|cat|ibk|nh',
-        text or "",
-        re.I,
-    ))
-
-
-def _normalize_phone_digits(text: str) -> str:
-    return re.sub(r'\D', '', text or '')
-
-
-def _format_phone_digits(digits: str) -> str:
-    if len(digits) == 8 and digits.startswith("02"):
-        return f"{digits[:2]}-{digits[2:4]}-{digits[4:]}"
-    if len(digits) == 9 and digits.startswith("02"):
-        return f"{digits[:2]}-{digits[2:5]}-{digits[5:]}"
-    if len(digits) == 10:
-        if digits.startswith("02"):
-            return f"{digits[:2]}-{digits[2:6]}-{digits[6:]}"
-        return f"{digits[:3]}-{digits[3:6]}-{digits[6:]}"
-    if len(digits) == 11:
-        return f"{digits[:3]}-{digits[3:7]}-{digits[7:]}"
-    return digits
-
-
-def _valid_phone_digits(digits: str) -> bool:
-    if not digits or not digits.startswith("0") or digits.startswith("00"):
-        return False
-    if not (9 <= len(digits) <= 11):
-        return False
-    return bool(re.match(r'^(?:02|0[3-6]\d|070|010|011|016|017|018|019)', digits))
-
-
-def _valid_labeled_phone_digits(digits: str) -> bool:
-    if _valid_phone_digits(digits):
-        return True
-    # Some Google samples lose one Seoul exchange digit, e.g. TEL:02)33-4278.
-    # Keep this narrow: only explicit TEL/전화 labels may accept 02-xx-xxxx.
-    return bool(re.fullmatch(r'02\d{6}', digits or ""))
-
-
-def _extract_phone_candidate(text: str) -> str:
-    raw = text or ""
-    label_match = _PHONE_LABELED_RE.search(raw)
-    if label_match:
-        digits = _normalize_phone_digits(label_match.group(1))
-        if _valid_labeled_phone_digits(digits):
-            return _format_phone_digits(digits)
-
-    if _PHONE_ADMIN_NOISE_RE.search(raw):
-        return ""
-
-    for match in re.finditer(r'(?:\(\s*0\d{1,2}\s*\)\s*[-\s]?\d{3,4}[-\s]?\d{4}|0\d{1,2}[-\s]\d{3,4}[-\s]?\d{4})', raw):
-        digits = _normalize_phone_digits(match.group(0))
-        if _valid_phone_digits(digits):
-            return _format_phone_digits(digits)
-
-    for match in re.finditer(r'(?<!\d)0\d{1,2}\)\s*\d{3,4}[-\s.]?\d{4}(?!\d)', raw):
-        digits = _normalize_phone_digits(match.group(0))
-        if _valid_phone_digits(digits):
-            return _format_phone_digits(digits)
-
-    for digits in re.findall(r'(?<!\d)0\d{8,10}(?!\d)', raw):
-        if _valid_phone_digits(digits):
-            return _format_phone_digits(digits)
-    return ""
 
 
 def _extract_rep_phone_pair(text: str) -> tuple[str, str]:
@@ -1076,18 +872,6 @@ HISTORY_FILE = os.path.join(DATA_DIR, "history.json")
 REVIEW_LOG_FILE = os.path.join(DATA_DIR, "review_log.jsonl")
 
 os.makedirs(DATA_DIR, exist_ok=True)
-
-
-def _load_json(path: str, default=None):
-    if not os.path.exists(path):
-        return default if default is not None else []
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-
-def _save_json(path: str, data):
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
 
 
 # ============================================================

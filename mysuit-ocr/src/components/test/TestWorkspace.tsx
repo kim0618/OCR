@@ -23,8 +23,31 @@ import { matchField, MatchResult } from "./core/match";
 import { extractFieldsFallback, normalizeEntry, parseAmounts } from "./core/extract";
 import { buildAutofillSuggestions, canAutoApply } from "./core/autofill";
 import { computeAllFieldViews, sourceLabel, sortSuggestions, scoreTriplet } from "./core/finalize";
+import type { DatasetManifest, ManifestItem } from "@/lib/testsets";
 
 type ViewMode = "compare" | "ocr_only" | "autofill" | "gt_edit";
+
+type DocTypeSummaryRow = {
+  documentType: string;
+  total: number;
+  selected: number;
+  suppressed: number;
+  unknown: number;
+  error: number;
+  notRun: number;
+  fieldFilled: Record<FieldKey, number>;
+};
+
+type QualityTagSummaryRow = {
+  tag: string;
+  total: number;
+  selected: number;
+  suppressed: number;
+  unknown: number;
+  error: number;
+  notRun: number;
+  fieldFilled: Record<FieldKey, number>;
+};
 
 type TestsetMeta = {
   id: string;
@@ -127,6 +150,9 @@ export default function TestWorkspace() {
   const [viewMode, setViewMode]   = useState<ViewMode>("compare");
   const [showDebug, setShowDebug] = useState(false);
   const [showReasons, setShowReasons] = useState(false);
+  const [manifest, setManifest] = useState<DatasetManifest | null>(null);
+  const [selectedQualityTags, setSelectedQualityTags] = useState<string[]>([]);
+  const [showBatchSummary, setShowBatchSummary] = useState(true);
   const activeTestset = useMemo(
     () => testsets.find((t) => t.id === activeDataset) ?? DEFAULT_TESTSETS[0],
     [testsets, activeDataset],
@@ -154,6 +180,14 @@ export default function TestWorkspace() {
     setProgress(null);
     setCurrentRunningFile(null);
     setUiError(null);
+    setManifest(null);
+    setSelectedQualityTags([]);
+
+    // manifest.json fetch (non-blocking, silent fallback if not present)
+    fetch(`/data/testsets/${activeDataset}/manifest.json`)
+      .then((r) => (r.ok ? (r.json() as Promise<DatasetManifest>) : Promise.resolve(null)))
+      .then((data) => { if (!cancelled) setManifest(data); })
+      .catch(() => { if (!cancelled) setManifest(null); });
 
     Promise.all([
       fetch(`/api/test-images?${query}`).then((r) => readJsonResponse<any>(r, "테스트 이미지 목록")),
@@ -441,6 +475,90 @@ export default function TestWorkspace() {
   const selGt  = selected ? (gt[selected]?.fields ?? EMPTY_ENTRY()) : EMPTY_ENTRY();
   const selOcr = selected ? (ocr[selected] ?? null)                : null;
   const selAuto = selected && selOcr ? (autofill[selected] ?? null) : null;
+  const selMeta = useMemo(
+    () => (selected ? (manifest?.items.find((item) => item.filename === selected) ?? null) : null),
+    [selected, manifest],
+  );
+
+  // ── documentType별 집계 ──
+  const docTypeSummary = useMemo((): DocTypeSummaryRow[] | null => {
+    if (!manifest || images.length === 0) return null;
+    const map = new Map<string, DocTypeSummaryRow>();
+    const ensure = (dt: string): DocTypeSummaryRow => {
+      if (!map.has(dt)) {
+        const fieldFilled = {} as Record<FieldKey, number>;
+        for (const f of FIELDS) fieldFilled[f.key] = 0;
+        map.set(dt, { documentType: dt, total: 0, selected: 0, suppressed: 0, unknown: 0, error: 0, notRun: 0, fieldFilled });
+      }
+      return map.get(dt)!;
+    };
+    for (const img of images) {
+      const manifestItem = manifest.items.find((i) => i.filename === img);
+      const dt = manifestItem?.documentType ?? "unknown";
+      const row = ensure(dt);
+      row.total++;
+      const ocrEntry = ocr[img];
+      if (!ocrEntry) {
+        row.notRun++;
+      } else {
+        const status = ocrEntry.status ?? "selected";
+        if (status === "selected") row.selected++;
+        else if (status.startsWith("suppressed_")) row.suppressed++;
+        else if (status === "unknown") row.unknown++;
+        else row.error++;
+        const g = gt[img]?.fields ?? EMPTY_ENTRY();
+        const v = computeAllFieldViews(g, ocrEntry, autofill[img] ?? null, activeDataset);
+        for (const f of FIELDS) { if (v[f.key].finalValue) row.fieldFilled[f.key]++; }
+      }
+    }
+    return Array.from(map.values()).sort((a, b) => b.total - a.total);
+  }, [manifest, images, ocr, gt, autofill, activeDataset]);
+
+  // ── qualityTags별 집계 ──
+  const qualityTagSummary = useMemo((): QualityTagSummaryRow[] | null => {
+    if (!manifest || images.length === 0) return null;
+    const map = new Map<string, QualityTagSummaryRow>();
+    const ensure = (tag: string): QualityTagSummaryRow => {
+      if (!map.has(tag)) {
+        const fieldFilled = {} as Record<FieldKey, number>;
+        for (const f of FIELDS) fieldFilled[f.key] = 0;
+        map.set(tag, { tag, total: 0, selected: 0, suppressed: 0, unknown: 0, error: 0, notRun: 0, fieldFilled });
+      }
+      return map.get(tag)!;
+    };
+    for (const img of images) {
+      const manifestItem = manifest.items.find((i) => i.filename === img);
+      if (!manifestItem || manifestItem.qualityTags.length === 0) continue;
+      const ocrEntry = ocr[img];
+      let imgStatus = "";
+      let imgFieldFilled: Record<FieldKey, boolean> | null = null;
+      if (ocrEntry) {
+        imgStatus = ocrEntry.status ?? "selected";
+        const g = gt[img]?.fields ?? EMPTY_ENTRY();
+        const v = computeAllFieldViews(g, ocrEntry, autofill[img] ?? null, activeDataset);
+        imgFieldFilled = {} as Record<FieldKey, boolean>;
+        for (const f of FIELDS) imgFieldFilled[f.key] = !!v[f.key].finalValue;
+      }
+      for (const tag of manifestItem.qualityTags) {
+        const row = ensure(tag);
+        row.total++;
+        if (!ocrEntry) {
+          row.notRun++;
+        } else {
+          if (imgStatus === "selected") row.selected++;
+          else if (imgStatus.startsWith("suppressed_")) row.suppressed++;
+          else if (imgStatus === "unknown") row.unknown++;
+          else row.error++;
+          if (imgFieldFilled) {
+            for (const f of FIELDS) { if (imgFieldFilled[f.key]) row.fieldFilled[f.key]++; }
+          }
+        }
+      }
+    }
+    if (map.size === 0) return null;
+    return Array.from(map.values()).sort((a, b) => b.total - a.total);
+  }, [manifest, images, ocr, gt, autofill, activeDataset]);
+
   const views   = useMemo(
     () => computeAllFieldViews(selGt, selOcr, selAuto, activeDataset),
     [selGt, selOcr, selAuto, activeDataset],
@@ -552,11 +670,59 @@ export default function TestWorkspace() {
     };
   }, [batchRows, images.length, autofill]);
 
-  // ── 그룹핑 (사업자번호 기준) ──
+  // ── qualityTags 필터 ──
+  const availableQualityTags = useMemo(() => {
+    if (!manifest) return [];
+    const tagSet = new Set<string>();
+    for (const item of manifest.items) {
+      for (const tag of item.qualityTags) tagSet.add(tag);
+    }
+    return Array.from(tagSet).sort();
+  }, [manifest]);
+
+  const filteredImages = useMemo(() => {
+    if (selectedQualityTags.length === 0) return images;
+    const selectedSet = new Set(selectedQualityTags);
+    return images.filter((img) => {
+      const meta = manifest?.items.find((i) => i.filename === img);
+      if (!meta) return false;
+      return meta.qualityTags.some((t) => selectedSet.has(t));
+    });
+  }, [images, selectedQualityTags, manifest]);
+
+  const toggleQualityTag = (tag: string) => {
+    setSelectedQualityTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
+  };
+
+  // ── documentType 기준 썸네일 그룹 (manifest 있을 때만) ──
+  const docTypeGroups = useMemo((): { documentType: string; images: string[] }[] | null => {
+    if (!manifest) return null;
+    const map = new Map<string, string[]>();
+    for (const img of filteredImages) {
+      const dt = manifest.items.find((i) => i.filename === img)?.documentType ?? "unknown";
+      if (!map.has(dt)) map.set(dt, []);
+      map.get(dt)!.push(img);
+    }
+    const result: { documentType: string; images: string[] }[] = [];
+    for (const dt of DOC_TYPE_ORDER) {
+      const imgs = map.get(dt);
+      if (imgs && imgs.length > 0) result.push({ documentType: dt, images: imgs });
+    }
+    for (const [dt, imgs] of map.entries()) {
+      if (!DOC_TYPE_ORDER.includes(dt) && imgs.length > 0) {
+        result.push({ documentType: dt, images: imgs });
+      }
+    }
+    return result.length > 0 ? result : null;
+  }, [manifest, filteredImages]);
+
+  // ── 그룹핑 (사업자번호 기준 — manifest 없을 때 fallback) ──
   const groups: { label: string; biz: string; images: string[] }[] = [];
   const ungrouped: string[] = [];
   const seen: Record<string, number> = {};
-  for (const img of images) {
+  for (const img of filteredImages) {
     const rec  = gt[img];
     const biz  = rec?.fields?.사업자번호 ? normalizeBizNumber(rec.fields.사업자번호) ?? "" : "";
     const name = rec?.fields?.회사명 ?? "";
@@ -575,29 +741,40 @@ export default function TestWorkspace() {
   const singles = [...groups.filter((g) => g.images.length < 2).flatMap((g) => g.images), ...ungrouped];
 
   // ── 렌더 ──
-  const renderThumb = (img: string) => (
-    <button
-      key={img}
-      type="button"
-      onClick={() => setSelected(img)}
-      style={{
-        ...styles.thumb,
-        border: selected === img ? "2px solid var(--accent)" : "2px solid transparent",
-        boxShadow: selected === img ? "0 0 0 2px var(--accentBg)" : undefined,
-      }}
-    >
-      <img src={imageUrl(activeTestset.path, img)} alt={img} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-      <div style={styles.thumbLabel}>{img}</div>
-      <div style={{ position: "absolute", bottom: 3, right: 3, display: "flex", gap: 2 }}>
-        {!!(gt[img]?.fields?.사업자번호 || gt[img]?.fields?.대표자) && <span style={dot("#22c55e")} title="기준값 있음" />}
-        {!!ocrCache[img]?.ocr_text && <span style={dot("#a78bfa")} title="OCR 캐시" />}
-        {!!ocr[img] && <span style={dot("var(--accent)")} title="OCR 실행됨" />}
-        {autofill[img]?.appliedSource && (
-          <span style={dot(autofill[img].appliedSource === "biz" ? "#6366f1" : "#a855f7")} title="자동복원 적용" />
+  const renderThumb = (img: string) => {
+    const thumbMeta = manifest?.items.find((i) => i.filename === img) ?? null;
+    return (
+      <button
+        key={img}
+        type="button"
+        onClick={() => setSelected(img)}
+        style={{
+          ...styles.thumb,
+          border: selected === img ? "2px solid var(--accent)" : "2px solid transparent",
+          boxShadow: selected === img ? "0 0 0 2px var(--accentBg)" : undefined,
+        }}
+      >
+        <img src={imageUrl(activeTestset.path, img)} alt={img} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        <div style={styles.thumbLabel}>{img}</div>
+        {thumbMeta && (
+          <span
+            title={thumbMeta.documentType}
+            style={{ position: "absolute", top: 3, left: 3, fontSize: 9, fontWeight: 800, padding: "1px 4px", borderRadius: 3, background: DOC_TYPE_COLOR[thumbMeta.documentType] ?? "#6b7280", color: "#fff", lineHeight: 1.4 }}
+          >
+            {DOC_TYPE_ABBR[thumbMeta.documentType] ?? "?"}
+          </span>
         )}
-      </div>
-    </button>
-  );
+        <div style={{ position: "absolute", bottom: 3, right: 3, display: "flex", gap: 2 }}>
+          {!!(gt[img]?.fields?.사업자번호 || gt[img]?.fields?.대표자) && <span style={dot("#22c55e")} title="기준값 있음" />}
+          {!!ocrCache[img]?.ocr_text && <span style={dot("#a78bfa")} title="OCR 캐시" />}
+          {!!ocr[img] && <span style={dot("var(--accent)")} title="OCR 실행됨" />}
+          {autofill[img]?.appliedSource && (
+            <span style={dot(autofill[img].appliedSource === "biz" ? "#6366f1" : "#a855f7")} title="자동복원 적용" />
+          )}
+        </div>
+      </button>
+    );
+  };
 
   const modes: { id: ViewMode; label: string }[] = [
     { id: "compare",  label: "전체 비교" },
@@ -614,6 +791,19 @@ export default function TestWorkspace() {
             Test Dataset
           </span>
           <span style={{ fontSize: 12, color: "var(--text)" }}>{activeTestset.description}</span>
+          {manifest && (
+            <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 2 }}>
+              <span title={manifest.datasetRole} style={{ fontSize: 9, fontWeight: 800, padding: "1px 6px", borderRadius: 3, color: "#fff", background: DATASET_ROLE_COLOR[manifest.datasetRole] ?? "#6b7280" }}>
+                {DATASET_ROLE_LABELS[manifest.datasetRole] ?? manifest.datasetRole}
+              </span>
+              <span
+                title={manifest.lockDoc ?? manifest.status}
+                style={{ fontSize: 9, fontWeight: 800, padding: "1px 6px", borderRadius: 3, color: "#fff", background: DATASET_STATUS_COLOR[manifest.status] ?? "#6b7280" }}
+              >
+                {manifest.status === "locked" ? "🔒 잠금" : (DATASET_STATUS_LABELS[manifest.status] ?? manifest.status)}
+              </span>
+            </div>
+          )}
         </div>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           {testsets.map((set) => (
@@ -663,27 +853,132 @@ export default function TestWorkspace() {
         </div>
       )}
 
+      {/* ── qualityTags 필터 ── */}
+      {availableQualityTags.length > 0 && (
+        <div style={styles.filterBar}>
+          <span style={{ fontSize: 10, fontWeight: 800, color: "var(--muted)", textTransform: "uppercase", letterSpacing: 0.5, whiteSpace: "nowrap" }}>
+            태그 필터
+          </span>
+          <div style={{ display: "flex", gap: 5, flexWrap: "wrap", flex: 1 }}>
+            {availableQualityTags.map((tag) => {
+              const active = selectedQualityTags.includes(tag);
+              return (
+                <button
+                  key={tag}
+                  type="button"
+                  title={tag}
+                  onClick={() => toggleQualityTag(tag)}
+                  style={{
+                    fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4,
+                    cursor: "pointer", whiteSpace: "nowrap",
+                    background: active ? "#475569" : "var(--panel2)",
+                    color: active ? "#fff" : "var(--muted)",
+                    border: active ? "1px solid #94a3b8" : "1px solid rgba(255,255,255,0.08)",
+                    transition: "all 0.1s",
+                  }}
+                >
+                  {getQualityTagLabel(tag)}
+                </button>
+              );
+            })}
+          </div>
+          {selectedQualityTags.length > 0 && (
+            <>
+              <span style={{ fontSize: 10, fontWeight: 700, color: "#f59e0b", whiteSpace: "nowrap" }}>
+                {filteredImages.length} / {images.length} shown
+              </span>
+              <button
+                type="button"
+                onClick={() => setSelectedQualityTags([])}
+                style={{
+                  fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4,
+                  cursor: "pointer", whiteSpace: "nowrap",
+                  background: "var(--panel2)", color: "var(--muted)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                }}
+              >
+                전체 보기
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* ── 문서 유형/태그 안내 범례 ── */}
+      <details style={{ background: "var(--panel)", borderRadius: 8, padding: "6px 14px", flexShrink: 0 }}>
+        <summary style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", cursor: "pointer", letterSpacing: 0.4, userSelect: "none" }}>
+          문서 유형 / 품질 태그 안내 ▶
+        </summary>
+        <div style={{ display: "flex", gap: 24, flexWrap: "wrap", marginTop: 8, fontSize: 10, color: "var(--muted)" }}>
+          <div>
+            <div style={{ fontWeight: 800, marginBottom: 4, color: "var(--text)" }}>문서 유형</div>
+            {Object.entries(DOC_TYPE_LABEL).map(([k, v]) => (
+              <div key={k} style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 2 }}>
+                <span style={{ display: "inline-block", width: 6, height: 6, borderRadius: 2, background: DOC_TYPE_COLOR[k] ?? "#6b7280", flexShrink: 0 }} />
+                <span style={{ fontWeight: 700, color: "var(--text)", minWidth: 28 }}>{DOC_TYPE_ABBR[k]}</span>
+                <span>{v}</span>
+              </div>
+            ))}
+          </div>
+          <div>
+            <div style={{ fontWeight: 800, marginBottom: 4, color: "var(--text)" }}>품질 태그</div>
+            {Object.entries(QUALITY_TAG_LABELS).slice(0, 7).map(([k, v]) => (
+              <div key={k} style={{ marginBottom: 2 }}>
+                <span style={{ fontWeight: 700, color: "var(--text)" }}>{v}</span>
+                <span style={{ marginLeft: 4, opacity: 0.65 }}>({k})</span>
+              </div>
+            ))}
+          </div>
+          <div>
+            <div style={{ fontWeight: 800, marginBottom: 4, color: "var(--text)", opacity: 0 }}>-</div>
+            {Object.entries(QUALITY_TAG_LABELS).slice(7).map(([k, v]) => (
+              <div key={k} style={{ marginBottom: 2 }}>
+                <span style={{ fontWeight: 700, color: "var(--text)" }}>{v}</span>
+                <span style={{ marginLeft: 4, opacity: 0.65 }}>({k})</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </details>
+
       {/* ── Top bar: 썸네일 + 모드 + 실행 ── */}
       <div style={styles.topBar}>
         <div style={{ display: "flex", gap: 12, overflowX: "auto", flex: 1, alignItems: "center" }}>
-          {multiGroups.map((g) => (
-            <div key={g.biz} style={styles.groupBox}>
-              <div style={styles.groupLabel}>
-                <span style={{ color: "var(--accent)" }}>●</span> {g.label}
-                <span style={{ color: "var(--muted)", fontWeight: 500, marginLeft: 4 }}>×{g.images.length}</span>
-              </div>
-              <div style={{ display: "flex", gap: 6 }}>{g.images.map(renderThumb)}</div>
-            </div>
-          ))}
-          {singles.length > 0 && multiGroups.length > 0 && (
-            <div style={{ width: 1, height: 56, background: "rgba(255,255,255,0.08)", flexShrink: 0 }} />
-          )}
-          {singles.length > 0 && (
-            <div style={styles.groupBox}>
-              <div style={{ ...styles.groupLabel, color: "var(--muted)" }}>단독</div>
-              <div style={{ display: "flex", gap: 6 }}>{singles.map(renderThumb)}</div>
-            </div>
-          )}
+          {docTypeGroups
+            ? docTypeGroups.map((g) => (
+                <div key={g.documentType} style={styles.groupBox}>
+                  <div style={styles.groupLabel}>
+                    <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 2, background: DOC_TYPE_COLOR[g.documentType] ?? "#6b7280", marginRight: 5, flexShrink: 0, verticalAlign: "middle" }} />
+                    <span title={g.documentType}>{DOC_TYPE_LABEL[g.documentType] ?? g.documentType}</span>
+                    <span style={{ color: "var(--muted)", fontSize: 9, marginLeft: 4, opacity: 0.7 }}>({g.documentType})</span>
+                    <span style={{ color: "var(--muted)", fontWeight: 500, marginLeft: 4 }}>×{g.images.length}</span>
+                  </div>
+                  <div style={{ display: "flex", gap: 6 }}>{g.images.map(renderThumb)}</div>
+                </div>
+              ))
+            : (
+              <>
+                {multiGroups.map((g) => (
+                  <div key={g.biz} style={styles.groupBox}>
+                    <div style={styles.groupLabel}>
+                      <span style={{ color: "var(--accent)" }}>●</span> {g.label}
+                      <span style={{ color: "var(--muted)", fontWeight: 500, marginLeft: 4 }}>×{g.images.length}</span>
+                    </div>
+                    <div style={{ display: "flex", gap: 6 }}>{g.images.map(renderThumb)}</div>
+                  </div>
+                ))}
+                {singles.length > 0 && multiGroups.length > 0 && (
+                  <div style={{ width: 1, height: 56, background: "rgba(255,255,255,0.08)", flexShrink: 0 }} />
+                )}
+                {singles.length > 0 && (
+                  <div style={styles.groupBox}>
+                    <div style={{ ...styles.groupLabel, color: "var(--muted)" }}>단독</div>
+                    <div style={{ display: "flex", gap: 6 }}>{singles.map(renderThumb)}</div>
+                  </div>
+                )}
+              </>
+            )
+          }
         </div>
 
         <div style={{ marginLeft: "auto", flexShrink: 0, display: "flex", alignItems: "center", gap: 8 }}>
@@ -763,6 +1058,7 @@ export default function TestWorkspace() {
             })}
           </KpiSection>
 
+          <div style={{ flex: "0.8 1 0", minWidth: 0 }}>
           <KpiSection title="자동복원 효과" tone="indigo" icon="⚡"
             subtitle="OCR 대비 개선 / 악화 카운트"
           >
@@ -771,6 +1067,7 @@ export default function TestWorkspace() {
             <KpiChip label="개선"     value={String(kpi.improvedByAutofill)} sub="OCR→채택 +" tone="green" />
             <KpiChip label="악화"     value={String(kpi.worsenedByAutofill)} sub="OCR→채택 −" tone={kpi.worsenedByAutofill > 0 ? "red" : "neutral"} />
           </KpiSection>
+          </div>
 
           <KpiSection title="최종 채택값 성능" tone="green" icon="★"
             subtitle="사용자에게 보여지는 값 · 서비스 품질 지표"
@@ -787,15 +1084,32 @@ export default function TestWorkspace() {
         </div>
       )}
 
-      {/* ── Batch summary (접는 대신 간략 테이블) ── */}
+      {/* ── documentType 집계 ── */}
+      {docTypeSummary && (
+        <DocTypeSummarySection rows={docTypeSummary} totalImages={images.length} />
+      )}
+      {qualityTagSummary && (
+        <QualityTagSummarySection rows={qualityTagSummary} />
+      )}
+
+      {/* ── Batch summary (접기/펼치기 토글) ── */}
       {batchRows.length > 0 && (
         <div style={styles.batchBox}>
-          <div style={styles.sectionHeader}>
-            전체 결과 요약 ({batchRows.length}건)
-            <span style={{ marginLeft: 8, color: "var(--muted)", fontWeight: 500, fontSize: 10 }}>
-              O=채택값이 기준값과 일치 · X=불일치 · ·=기준값 없음
+          <div
+            style={{ ...styles.sectionHeader, cursor: "pointer", userSelect: "none", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: showBatchSummary ? 8 : 0 }}
+            onClick={() => setShowBatchSummary((v) => !v)}
+          >
+            <span>
+              전체 결과 요약 ({batchRows.length}건)
+              <span style={{ marginLeft: 8, color: "var(--muted)", fontWeight: 500, fontSize: 10 }}>
+                O=채택값이 기준값과 일치 · X=불일치 · ·=기준값 없음
+              </span>
+            </span>
+            <span style={{ fontSize: 10, color: "var(--muted)", marginLeft: 8, flexShrink: 0 }}>
+              {showBatchSummary ? "▼" : "▶"}
             </span>
           </div>
+          {showBatchSummary && (
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
               <thead>
@@ -845,6 +1159,7 @@ export default function TestWorkspace() {
               </tbody>
             </table>
           </div>
+          )}
         </div>
       )}
 
@@ -949,6 +1264,9 @@ export default function TestWorkspace() {
               </button>
             </div>
           )}
+
+          {/* Manifest metadata badges */}
+          {selected && selMeta && <ManifestMetaBadges item={selMeta} />}
 
           {/* Field cards */}
           {selected && (
@@ -1466,6 +1784,310 @@ function toneOf(ok: number, total: number): KpiTone {
 }
 
 // ============================================================
+// Manifest metadata display
+// ============================================================
+const DOC_TYPE_COLOR: Record<string, string> = {
+  card_receipt:      "#0284c7",
+  pos_receipt:       "#7c3aed",
+  food_cafe_receipt: "#ea580c",
+  finance_slip:      "#dc2626",
+  medical_receipt:   "#16a34a",
+  invoice_statement: "#ca8a04",
+  unknown:           "#6b7280",
+};
+const DOC_TYPE_ABBR: Record<string, string> = {
+  card_receipt:      "카드",
+  pos_receipt:       "POS",
+  food_cafe_receipt: "음식",
+  finance_slip:      "금융",
+  medical_receipt:   "약국",
+  invoice_statement: "거래",
+  unknown:           "기타",
+};
+const DIFF_COLOR: Record<string, string> = {
+  easy:   "#22c55e",
+  medium: "#f59e0b",
+  hard:   "#ef4444",
+};
+const DOC_TYPE_ORDER: string[] = [
+  "card_receipt", "pos_receipt", "food_cafe_receipt",
+  "medical_receipt", "finance_slip", "invoice_statement", "unknown",
+];
+const DOC_TYPE_LABEL: Record<string, string> = {
+  card_receipt:      "카드전표/일반 영수증",
+  pos_receipt:       "POS/마트/편의점 영수증",
+  food_cafe_receipt: "음식점/카페 영수증",
+  medical_receipt:   "병원/약국 영수증",
+  finance_slip:      "은행/금융 전표",
+  invoice_statement: "세금계산서/거래명세서",
+  unknown:           "기타/Unknown",
+};
+const QUALITY_TAG_LABELS: Record<string, string> = {
+  ocr_noise:    "OCR 노이즈",
+  handwritten:  "필기/수기",
+  small_text:   "작은 글씨",
+  folded:       "접힘",
+  curled:       "말림",
+  skewed:       "기울어짐",
+  blurred:      "흐림",
+  low_contrast: "저대비",
+  shadow:       "그림자",
+  stamp:        "도장",
+  cropped:      "잘림",
+  rotated:      "회전",
+  long_receipt: "긴 영수증",
+  table_layout: "표/테이블 구조",
+};
+const DIFFICULTY_LABELS: Record<string, string> = {
+  easy:   "쉬움",
+  medium: "보통",
+  hard:   "어려움",
+};
+const DATASET_ROLE_LABELS: Record<string, string> = {
+  regression:    "회귀 검증",
+  generalization:"일반화 검증",
+  fast_check:    "빠른 점검",
+  experimental:  "실험용",
+  document_type: "문서유형 관리",
+};
+const DATASET_STATUS_LABELS: Record<string, string> = {
+  locked:      "잠금",
+  in_progress: "진행 중",
+  draft:       "초안",
+};
+function getQualityTagLabel(tag: string) { return QUALITY_TAG_LABELS[tag] ?? tag; }
+function getExpectedStatusLabel(s: string): string {
+  if (s === "selected") return "정상 선택";
+  if (s.startsWith("suppressed_")) return "정상 억제";
+  if (s === "unknown") return "미분류";
+  if (s === "error") return "오류";
+  return s;
+}
+
+const DATASET_ROLE_COLOR: Record<string, string> = {
+  regression:     "#0284c7",
+  generalization: "#7c3aed",
+  fast_check:     "#d97706",
+  experimental:   "#ea580c",
+  document_type:  "#16a34a",
+};
+const DATASET_STATUS_COLOR: Record<string, string> = {
+  locked:      "#16a34a",
+  in_progress: "#d97706",
+  draft:       "#6b7280",
+};
+
+function ManifestMetaBadges({ item }: { item: ManifestItem }) {
+  const isSuppr = item.expectedStatus !== "selected";
+  return (
+    <div style={{
+      display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap",
+      padding: "6px 12px", borderRadius: 8,
+      background: "var(--panel)", border: "1px solid rgba(255,255,255,0.06)",
+    }}>
+      <span style={{ fontSize: 9, fontWeight: 800, color: "var(--muted)", textTransform: "uppercase", letterSpacing: 0.5, marginRight: 2 }}>
+        문서 정보
+      </span>
+      <span title={item.documentType} style={{ ...chip, background: DOC_TYPE_COLOR[item.documentType] ?? "#6b7280" }}>
+        {DOC_TYPE_LABEL[item.documentType] ?? item.documentType}
+      </span>
+      <span style={{ ...chip, background: DIFF_COLOR[item.difficulty] ?? "#6b7280" }}>
+        {DIFFICULTY_LABELS[item.difficulty] ?? item.difficulty}
+      </span>
+      <span title={item.expectedStatus} style={{ ...chip, background: isSuppr ? "#dc2626" : "#16a34a" }}>
+        {getExpectedStatusLabel(item.expectedStatus)}
+      </span>
+      {item.qualityTags.map((tag) => (
+        <span key={tag} title={tag} style={{ ...chip, background: "#475569" }}>
+          {getQualityTagLabel(tag)}
+        </span>
+      ))}
+      {item.notes && (
+        <span title={item.notes} style={{ fontSize: 10, color: "var(--muted)", marginLeft: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 260, display: "inline-block" }}>
+          {item.notes}
+        </span>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
+// DocTypeSummarySection
+// ============================================================
+const FIELD_SHORT: Record<FieldKey, string> = {
+  회사명: "회사", 사업자번호: "사번", 대표자: "대표", tel: "전화", 주소: "주소", 총합계금액: "금액",
+};
+
+function DocTypeSummarySection({
+  rows,
+  totalImages,
+}: {
+  rows: DocTypeSummaryRow[];
+  totalImages: number;
+}) {
+  const thSm: React.CSSProperties = {
+    padding: "4px 8px", textAlign: "left", fontSize: 10, fontWeight: 700,
+    color: "var(--muted)", letterSpacing: 0.4, whiteSpace: "nowrap",
+    borderBottom: "1px solid rgba(255,255,255,0.07)",
+  };
+  const tdSm: React.CSSProperties = {
+    padding: "4px 8px", fontSize: 11,
+    borderBottom: "1px solid rgba(255,255,255,0.04)", verticalAlign: "middle",
+  };
+  return (
+    <details style={{ background: "var(--panel)", borderRadius: 8, padding: "8px 14px" }}>
+      <summary style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", cursor: "pointer", letterSpacing: 0.5, userSelect: "none" }}>
+        documentType 집계 ({totalImages}장) ▶
+      </summary>
+      <div style={{ marginTop: 8, overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+          <thead>
+            <tr>
+              <th style={thSm}>documentType</th>
+              <th style={{ ...thSm, textAlign: "center" }}>total</th>
+              <th style={{ ...thSm, textAlign: "center" }}>selected</th>
+              <th style={{ ...thSm, textAlign: "center" }}>suppressed</th>
+              <th style={{ ...thSm, textAlign: "center" }}>unknown</th>
+              <th style={{ ...thSm, textAlign: "center" }}>not_run</th>
+              <th style={{ ...thSm, textAlign: "center" }}>선택률</th>
+              {FIELDS.map((f) => (
+                <th key={f.key} style={{ ...thSm, textAlign: "center" }}>{FIELD_SHORT[f.key]}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => {
+              const runCount = row.total - row.notRun;
+              const selRate = row.total > 0 ? Math.round((row.selected / row.total) * 100) : null;
+              const selColor = selRate === 100 ? "#22c55e" : selRate !== null && selRate >= 50 ? "#f59e0b" : "#ef4444";
+              return (
+                <tr key={row.documentType}>
+                  <td style={tdSm}>
+                    <span title={row.documentType} style={{ ...chip, background: DOC_TYPE_COLOR[row.documentType] ?? "#6b7280", fontSize: 9 }}>
+                      {DOC_TYPE_LABEL[row.documentType] ?? row.documentType}
+                    </span>
+                  </td>
+                  <td style={{ ...tdSm, textAlign: "center" }}>{row.total}</td>
+                  <td style={{ ...tdSm, textAlign: "center", fontWeight: 700, color: row.selected > 0 ? "#22c55e" : "rgba(255,255,255,0.25)" }}>
+                    {row.selected || "—"}
+                  </td>
+                  <td style={{ ...tdSm, textAlign: "center", fontWeight: 700, color: row.suppressed > 0 ? "#ef4444" : "rgba(255,255,255,0.25)" }}>
+                    {row.suppressed || "—"}
+                  </td>
+                  <td style={{ ...tdSm, textAlign: "center", color: row.unknown > 0 ? "#f59e0b" : "rgba(255,255,255,0.25)" }}>
+                    {row.unknown || "—"}
+                  </td>
+                  <td style={{ ...tdSm, textAlign: "center", color: row.notRun > 0 ? "#94a3b8" : "rgba(255,255,255,0.25)" }}>
+                    {row.notRun || "—"}
+                  </td>
+                  <td style={{ ...tdSm, textAlign: "center", fontWeight: 800, color: selColor }}>
+                    {selRate !== null ? `${selRate}%` : "—"}
+                  </td>
+                  {FIELDS.map((f) => (
+                    <td key={f.key} style={{
+                      ...tdSm, textAlign: "center",
+                      color: runCount === 0 ? "rgba(255,255,255,0.2)"
+                           : row.fieldFilled[f.key] === runCount ? "#22c55e"
+                           : row.fieldFilled[f.key] > 0 ? "#f59e0b"
+                           : "#ef4444",
+                    }}>
+                      {runCount > 0 ? `${row.fieldFilled[f.key]}/${runCount}` : "—"}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </details>
+  );
+}
+
+// ============================================================
+// QualityTagSummarySection
+// ============================================================
+function QualityTagSummarySection({ rows }: { rows: QualityTagSummaryRow[] }) {
+  const thSm: React.CSSProperties = {
+    padding: "4px 8px", textAlign: "left", fontSize: 10, fontWeight: 700,
+    color: "var(--muted)", letterSpacing: 0.4, whiteSpace: "nowrap",
+    borderBottom: "1px solid rgba(255,255,255,0.07)",
+  };
+  const tdSm: React.CSSProperties = {
+    padding: "4px 8px", fontSize: 11,
+    borderBottom: "1px solid rgba(255,255,255,0.04)", verticalAlign: "middle",
+  };
+  return (
+    <details style={{ background: "var(--panel)", borderRadius: 8, padding: "8px 14px" }}>
+      <summary style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", cursor: "pointer", letterSpacing: 0.5, userSelect: "none" }}>
+        qualityTags 집계 ({rows.length}개 태그) ▶
+      </summary>
+      <div style={{ marginTop: 8, overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+          <thead>
+            <tr>
+              <th style={thSm}>qualityTag</th>
+              <th style={{ ...thSm, textAlign: "center" }}>total</th>
+              <th style={{ ...thSm, textAlign: "center" }}>selected</th>
+              <th style={{ ...thSm, textAlign: "center" }}>suppressed</th>
+              <th style={{ ...thSm, textAlign: "center" }}>unknown</th>
+              <th style={{ ...thSm, textAlign: "center" }}>not_run</th>
+              <th style={{ ...thSm, textAlign: "center" }}>선택률</th>
+              {FIELDS.map((f) => (
+                <th key={f.key} style={{ ...thSm, textAlign: "center" }}>{FIELD_SHORT[f.key]}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => {
+              const runCount = row.total - row.notRun;
+              const selRate = row.total > 0 ? Math.round((row.selected / row.total) * 100) : null;
+              const selColor = selRate === 100 ? "#22c55e" : selRate !== null && selRate >= 50 ? "#f59e0b" : "#ef4444";
+              return (
+                <tr key={row.tag}>
+                  <td style={tdSm}>
+                    <span title={row.tag} style={{ ...chip, background: "#475569", fontSize: 9 }}>
+                      {getQualityTagLabel(row.tag)}
+                    </span>
+                  </td>
+                  <td style={{ ...tdSm, textAlign: "center" }}>{row.total}</td>
+                  <td style={{ ...tdSm, textAlign: "center", fontWeight: 700, color: row.selected > 0 ? "#22c55e" : "rgba(255,255,255,0.25)" }}>
+                    {row.selected || "—"}
+                  </td>
+                  <td style={{ ...tdSm, textAlign: "center", fontWeight: 700, color: row.suppressed > 0 ? "#ef4444" : "rgba(255,255,255,0.25)" }}>
+                    {row.suppressed || "—"}
+                  </td>
+                  <td style={{ ...tdSm, textAlign: "center", color: row.unknown > 0 ? "#f59e0b" : "rgba(255,255,255,0.25)" }}>
+                    {row.unknown || "—"}
+                  </td>
+                  <td style={{ ...tdSm, textAlign: "center", color: row.notRun > 0 ? "#94a3b8" : "rgba(255,255,255,0.25)" }}>
+                    {row.notRun || "—"}
+                  </td>
+                  <td style={{ ...tdSm, textAlign: "center", fontWeight: 800, color: selColor }}>
+                    {selRate !== null ? `${selRate}%` : "—"}
+                  </td>
+                  {FIELDS.map((f) => (
+                    <td key={f.key} style={{
+                      ...tdSm, textAlign: "center",
+                      color: runCount === 0 ? "rgba(255,255,255,0.2)"
+                           : row.fieldFilled[f.key] === runCount ? "#22c55e"
+                           : row.fieldFilled[f.key] > 0 ? "#f59e0b"
+                           : "#ef4444",
+                    }}>
+                      {runCount > 0 ? `${row.fieldFilled[f.key]}/${runCount}` : "—"}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </details>
+  );
+}
+
+// ============================================================
 // styles
 // ============================================================
 const dot = (bg: string): React.CSSProperties => ({
@@ -1507,6 +2129,12 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 800,
     cursor: "pointer",
     transition: "all 0.15s",
+  },
+  filterBar: {
+    display: "flex", alignItems: "center", gap: 8, padding: "7px 12px",
+    background: "var(--panel)", borderRadius: 8,
+    border: "1px solid rgba(255,255,255,0.06)",
+    flexShrink: 0, flexWrap: "wrap",
   },
   emptyDataset: {
     padding: "22px 24px",
@@ -1571,7 +2199,7 @@ const styles: Record<string, React.CSSProperties> = {
     border: "none", cursor: "pointer", transition: "all 0.15s",
   },
   kpiWrapper: {
-    display: "flex", gap: 8, flexShrink: 0, flexWrap: "wrap",
+    display: "flex", gap: 6, flexShrink: 0, flexWrap: "wrap",
   },
   kpiBar: {
     display: "flex", gap: 6, padding: "6px 10px",
