@@ -23,7 +23,13 @@ export const FIELDS: FieldMeta[] = [
 
 export const AUTOFILLABLE_FIELDS: FieldKey[] = FIELDS.filter((f) => f.allowAutofill).map((f) => f.key);
 
-export type GtRecord = { fields: Entry; type: string; updated_at: string };
+export type GtRecord = {
+  fields: Entry;
+  type: string;
+  updated_at: string;
+  /** finance_profile 기준값 (bankName / transactionType / transactionDateTime / amount 등) */
+  financeFields?: Record<string, string>;
+};
 export const EMPTY_GT = (): GtRecord => ({ fields: EMPTY_ENTRY(), type: "영수증", updated_at: "" });
 
 export type OcrCacheRecord = { ocr_text: string; scanned_at: string };

@@ -32,7 +32,7 @@ import {
   MatchStatus,
 } from "./core/finalize";
 import type { DatasetManifest, ManifestItem } from "@/lib/testsets";
-import { resolveProfile, FINANCE_COLUMNS, isNotApplicableField } from "@/lib/profiles";
+import { resolveProfile, FINANCE_COLUMNS, FINANCE_TIER1_FIELDS, isNotApplicableField } from "@/lib/profiles";
 
 type ViewMode = "compare" | "ocr_only" | "autofill" | "gt_edit";
 
@@ -271,6 +271,21 @@ export default function TestWorkspace() {
     persistGt(updated);
   };
 
+  // finance 전용 기준값 편집 — GtRecord.financeFields에 저장. persistGt 재사용.
+  const updateFinanceGtField = (img: string, field: string, value: string) => {
+    const existing = gt[img] ?? EMPTY_GT();
+    const updated: Record<string, GtRecord> = {
+      ...gt,
+      [img]: {
+        ...existing,
+        financeFields: { ...(existing.financeFields ?? {}), [field]: value },
+        updated_at: new Date().toISOString(),
+      },
+    };
+    setGt(updated);
+    persistGt(updated);
+  };
+
   // 필드별 확정: 단일 필드의 채택값을 GT 로 승격
   const commitFieldToGt = (img: string, field: FieldKey, value: string) => {
     const existing = gt[img] ?? EMPTY_GT();
@@ -483,7 +498,8 @@ export default function TestWorkspace() {
   };
 
   // ── 현재 선택 파일 기준 계산 ──
-  const selGt  = selected ? (gt[selected]?.fields ?? EMPTY_ENTRY()) : EMPTY_ENTRY();
+  const selGt       = selected ? (gt[selected]?.fields         ?? EMPTY_ENTRY()) : EMPTY_ENTRY();
+  const selFinanceGt = selected ? (gt[selected]?.financeFields ?? {})            : {};
   const selOcr = selected ? (ocr[selected] ?? null)                : null;
   const selAuto = selected && selOcr ? (autofill[selected] ?? null) : null;
   const selMeta = useMemo(
@@ -723,34 +739,89 @@ export default function TestWorkspace() {
     };
   }, [receiptBatchRows, receiptImageCount, autofill]);
 
-  // finance KPI — 단순 카운트 (parser 미구현 단계) (docs/TEST_SUPPRESSION_POLICY_NOTE §6.2)
+  // finance KPI — Tier-1 추출률 + GT 기반 정확도 포함 (docs/TEST_SUPPRESSION_POLICY_NOTE §6.2)
   type FinanceKpiSummary = {
-    total: number;      // 전체 finance 이미지 수 (미실행 포함)
-    processed: number;  // OCR 실행 완료 건수
+    total: number;        // 전체 finance 이미지 수 (미실행 포함)
+    processed: number;    // OCR 실행 완료 건수
     selected: number;
     review: number;
     suppressed: number;
+    // Tier-1 추출률
+    tier1Full: number;    // Tier-1 4필드 전부 추출된 이미지 수
+    tier1Partial: number; // Tier-1 일부만 추출된 이미지 수
+    tier1FieldExtract: Record<string, number>; // 필드별 추출된 이미지 수
+    // GT 기반 정확도 (GT 있는 필드-이미지 쌍만 분모)
+    gtImageCount: number; // GT financeFields가 하나라도 있는 이미지 수
+    gtFieldTotal: number; // GT+OCR 비교 가능 필드 쌍 수 (Tier-1 한정)
+    gtFieldMatch: number; // 정확 일치한 필드 쌍 수
+    // Tier-1 필드별 GT 일치 상세 (breakdown용)
+    tier1FieldGtMatch: Record<string, { match: number; total: number }>;
   };
   const financeKpi = useMemo((): FinanceKpiSummary => {
     const total = images.filter((img) => {
       const dt = manifest?.items.find((i) => i.filename === img)?.documentType;
       return resolveProfile(dt).base === "finance";
     }).length;
+
     let selected = 0, review = 0, suppressed = 0;
+    let tier1Full = 0, tier1Partial = 0;
+    let gtImageCount = 0, gtFieldTotal = 0, gtFieldMatch = 0;
+    const tier1FieldExtract: Record<string, number> = {};
+    const tier1FieldGtMatch: Record<string, { match: number; total: number }> = {};
+    for (const k of FINANCE_TIER1_FIELDS) {
+      tier1FieldExtract[k] = 0;
+      tier1FieldGtMatch[k] = { match: 0, total: 0 };
+    }
+
     for (const row of financeBatchRows) {
-      const status = ocr[row.img]?.status ?? "";
-      if (status === "selected") {
-        selected++;
-      } else if (status === "suppressed_bank_slip") {
-        review++;          // suppression policy note §6.2: bank_slip → review 재분류
-      } else if (status?.startsWith("suppressed_")) {
-        suppressed++;
-      } else {
-        review++;          // unknown / empty 등 → review
+      // 상태 집계 — derived finance status 기준 (Tier-1 추출 + GT 비교 반영)
+      // 백엔드 raw status는 유지하되 화면 표시용 status로 재해석
+      const fStatus = deriveFinanceStatus(ocr[row.img], gt[row.img]?.financeFields);
+      if (fStatus === "selected")        selected++;
+      else if (fStatus === "review")     review++;
+      else                               suppressed++;
+
+      // Tier-1 추출률
+      const finFields = ocr[row.img]?.financeFields ?? {};
+      let extractCount = 0;
+      for (const k of FINANCE_TIER1_FIELDS) {
+        if (finFields[k]) {
+          tier1FieldExtract[k] += 1;
+          extractCount++;
+        }
+      }
+      if (extractCount === FINANCE_TIER1_FIELDS.length) tier1Full++;
+      else if (extractCount > 0) tier1Partial++;
+
+      // GT 기반 정확도 (Tier-1, GT 있는 필드만 분모)
+      const finGt = gt[row.img]?.financeFields ?? {};
+      const hasAnyGt = FINANCE_TIER1_FIELDS.some((k) => finGt[k]);
+      if (hasAnyGt) {
+        gtImageCount++;
+        for (const k of FINANCE_TIER1_FIELDS) {
+          const gtVal  = finGt[k]      ?? "";
+          const ocrVal = finFields[k]  ?? "";
+          if (gtVal) {
+            gtFieldTotal++;
+            tier1FieldGtMatch[k].total++;
+            // 정규화 비교 (콤마/공백/구분자/은행명 substring 흡수)
+            if (financeFieldMatches(k, gtVal, ocrVal)) {
+              gtFieldMatch++;
+              tier1FieldGtMatch[k].match++;
+            }
+          }
+        }
       }
     }
-    return { total, processed: financeBatchRows.length, selected, review, suppressed };
-  }, [financeBatchRows, images, manifest, ocr]);
+
+    return {
+      total, processed: financeBatchRows.length,
+      selected, review, suppressed,
+      tier1Full, tier1Partial, tier1FieldExtract,
+      gtImageCount, gtFieldTotal, gtFieldMatch,
+      tier1FieldGtMatch,
+    };
+  }, [financeBatchRows, images, manifest, ocr, gt]);
 
   // ── qualityTags 필터 ──
   const availableQualityTags = useMemo(() => {
@@ -1198,6 +1269,7 @@ export default function TestWorkspace() {
           <KpiSection title="금융전표 현황" tone="red" icon="🏦"
             subtitle={`finance_profile · ${financeKpi.processed}/${financeKpi.total} 처리`}
           >
+            {/* 기본 상태 카운트 */}
             <KpiChip label="전체" value={`${financeKpi.total}`} sub={`처리 ${financeKpi.processed}`} />
             <KpiChip
               label="selected"
@@ -1217,7 +1289,78 @@ export default function TestWorkspace() {
               value={String(financeKpi.total - financeKpi.processed)}
               tone={financeKpi.total - financeKpi.processed > 0 ? "neutral" : "green"}
             />
+            {/* Tier-1 추출률 — OCR 실행 건 중 4필드 전부 추출된 비율 */}
+            {financeKpi.processed > 0 && (
+              <KpiChip
+                label="Tier-1 완전"
+                value={`${financeKpi.tier1Full}/${financeKpi.processed}`}
+                sub={pct(financeKpi.tier1Full, financeKpi.processed)}
+                tone={toneOf(financeKpi.tier1Full, financeKpi.processed)}
+              />
+            )}
+            {/* GT 기반 정확도 — GT 입력된 Tier-1 필드-이미지 쌍 기준 */}
+            {financeKpi.gtFieldTotal > 0 && (
+              <KpiChip
+                label="GT 일치"
+                value={pct(financeKpi.gtFieldMatch, financeKpi.gtFieldTotal)}
+                sub={`${financeKpi.gtFieldMatch}/${financeKpi.gtFieldTotal} 필드`}
+                tone={toneOf(financeKpi.gtFieldMatch, financeKpi.gtFieldTotal)}
+              />
+            )}
           </KpiSection>
+          )}
+
+          {/* ── finance Tier-1 필드별 breakdown — 추출률 + GT 일치 (필드 기준) ── */}
+          {financeKpi.processed > 0 && (
+          <div style={{
+            flex: "1 1 100%",
+            display: "flex", flexDirection: "column", gap: 5,
+            padding: "8px 10px", borderRadius: 8,
+            background: "var(--panel)",
+            border: "1px solid rgba(220,38,38,0.12)",
+          }}>
+            <span style={{
+              fontSize: 9, fontWeight: 800, color: "#dc2626",
+              textTransform: "uppercase", letterSpacing: 0.5,
+            }}>
+              🏦 Tier-1 필드별 추출 / GT 일치
+            </span>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {FINANCE_TIER1_FIELDS.map((k) => {
+                const label     = FINANCE_COL_LABELS[k] ?? k;
+                const extracted = financeKpi.tier1FieldExtract[k] ?? 0;
+                const gtStat    = financeKpi.tier1FieldGtMatch[k] ?? { match: 0, total: 0 };
+                const hasGt     = gtStat.total > 0;
+
+                const exColor  = (() => { const t = toneOf(extracted, financeKpi.processed); return t === "green" ? "#22c55e" : t === "amber" ? "#f59e0b" : t === "red" ? "#ef4444" : "rgba(255,255,255,0.55)"; })();
+                const gtColor  = hasGt ? (() => { const t = toneOf(gtStat.match, gtStat.total); return t === "green" ? "#22c55e" : t === "amber" ? "#f59e0b" : t === "red" ? "#ef4444" : "rgba(255,255,255,0.55)"; })() : undefined;
+
+                return (
+                  <div key={k} style={{
+                    display: "flex", flexDirection: "column",
+                    padding: "5px 9px", borderRadius: 7,
+                    background: "var(--panel2)", minWidth: 72, flexShrink: 0,
+                  }}>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: "var(--muted)", whiteSpace: "nowrap" }}>
+                      {label}
+                    </span>
+                    {/* 추출률 */}
+                    <span style={{ fontSize: 12, fontWeight: 800, lineHeight: 1.2, color: exColor }}>
+                      {extracted}/{financeKpi.processed}
+                    </span>
+                    <span style={{ fontSize: 8, color: "var(--muted)", whiteSpace: "nowrap" }}>추출</span>
+                    {/* GT 일치 (GT 입력된 경우만) */}
+                    {hasGt && gtColor && (<>
+                      <span style={{ fontSize: 11, fontWeight: 700, marginTop: 2, lineHeight: 1.2, color: gtColor }}>
+                        {gtStat.match}/{gtStat.total}
+                      </span>
+                      <span style={{ fontSize: 8, color: "var(--muted)", whiteSpace: "nowrap" }}>GT 일치</span>
+                    </>)}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
           )}
         </div>
       )}
@@ -1352,7 +1495,9 @@ export default function TestWorkspace() {
                 <tbody>
                   {financeBatchRows.map((row) => {
                     const ocrEntry = ocr[row.img];
-                    const statusMeta = getFinanceStatusMeta(ocrEntry?.status ?? "");
+                    // derived finance status (Tier-1 추출 + GT 비교 반영)
+                    const fStatus = deriveFinanceStatus(ocrEntry, gt[row.img]?.financeFields);
+                    const statusMeta = getFinanceStatusMetaFromDerived(fStatus, !!ocrEntry);
                     const finFields = ocrEntry?.financeFields ?? {};
                     const reviewReasons = ocrEntry?.financeReviewReasons ?? [];
                     return (
@@ -1508,6 +1653,9 @@ export default function TestWorkspace() {
               financeFields={selOcr?.financeFields ?? null}
               reviewReasons={selOcr?.financeReviewReasons ?? []}
               hasOcr={!!selOcr}
+              financeGt={selFinanceGt}
+              onFinanceGtChange={(field, value) => updateFinanceGtField(selected!, field, value)}
+              derivedStatus={selOcr ? deriveFinanceStatus(selOcr, selFinanceGt) : undefined}
             />
           ) : selected ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -2084,6 +2232,143 @@ const FINANCE_FIELD_META: { key: string; label: string; required: boolean }[] = 
   { key: "memo",                label: "적요",          required: false },
 ];
 
+// finance GT vs OCR 비교용 정규화 — 보수적 최소 정규화
+// 너무 공격적인 fuzzy 매칭 금지. 명백히 같은 값을 다른 표기로 입력한 경우만 흡수.
+function normalizeFinanceValue(field: string, value: string): string {
+  if (!value) return "";
+  const trimmed = value.trim();
+  if (field === "amount" || field === "balanceAfter") {
+    // 콤마/원/₩/공백 제거 → 숫자만
+    return trimmed.replace(/[^0-9]/g, "");
+  }
+  if (field === "transactionDateTime") {
+    // 구분자 정규화: '/' '.' → '-' / 다중 공백 → 단일 공백
+    return trimmed.replace(/[./]/g, "-").replace(/\s+/g, " ").trim();
+  }
+  // bankName / transactionType / accountMasked / 기타: 공백 제거 + 소문자
+  return trimmed.replace(/\s+/g, "").toLowerCase();
+}
+
+// 동일 은행의 다른 표기를 단일 canonical name으로 매핑
+// 백엔드 finance_slip._BANK_CANONICAL_MAP과 동일한 규칙 (이중 안전장치)
+// 변경 시 양쪽을 함께 업데이트해야 함
+const BANK_CANONICAL_PATTERNS: { canonical: string; patterns: RegExp[] }[] = [
+  { canonical: "IBK기업은행",  patterns: [/IBK\s*기업은행/i, /기업은행/i, /i-?ONE\s*Bank/i, /ibk\.co\.kr/i] },
+  { canonical: "KB국민은행",   patterns: [/KB\s*국민은행/i, /국민은행/i, /kbstar(\.com)?/i, /kbstar\.co\.kr/i] },
+  { canonical: "신한은행",     patterns: [/신한은행/i, /shinhanbank(\.com)?/i] },
+  { canonical: "우리은행",     patterns: [/우리은행/i, /wooribank(\.com)?/i] },
+  { canonical: "KEB하나은행",  patterns: [/KEB\s*하나은행/i, /하나은행/i, /hanabank(\.com)?/i] },
+  { canonical: "NH농협은행",   patterns: [/NH\s*농협은행/i, /농협은행/i, /nonghyup\.com/i] },
+];
+
+// 매치되는 canonical name 반환. 매핑 없으면 null (오인 방지)
+function canonicalizeBankName(name: string): string | null {
+  if (!name) return null;
+  for (const { canonical, patterns } of BANK_CANONICAL_PATTERNS) {
+    for (const p of patterns) {
+      if (p.test(name)) return canonical;
+    }
+  }
+  return null;
+}
+
+// finance 필드 정규화 비교 (캐스케이드)
+//   1) raw exact 일치
+//   2) 공백/대소문자/구분자 정규화 일치
+//   3) bankName 한정: canonical 비교
+//   4) bankName 한정: 양방향 substring containment (보수적 fallback)
+function financeFieldMatches(field: string, gt: string, ocr: string): boolean {
+  if (!gt || !ocr) return false;
+  // 1) raw exact
+  if (gt === ocr) return true;
+
+  const gtN  = normalizeFinanceValue(field, gt);
+  const ocrN = normalizeFinanceValue(field, ocr);
+  if (!gtN || !ocrN) return false;
+  // 2) 공백/대소문자/구분자 정규화
+  if (gtN === ocrN) return true;
+
+  if (field === "bankName") {
+    // 3) canonical 비교 (양쪽 모두 매핑되고 결과가 같을 때만)
+    const gtC  = canonicalizeBankName(gt);
+    const ocrC = canonicalizeBankName(ocr);
+    if (gtC && ocrC && gtC === ocrC) return true;
+    // 4) substring containment — 마지막 fallback
+    return gtN.includes(ocrN) || ocrN.includes(gtN);
+  }
+  return false;
+}
+
+// finance profile 화면 표시용 status (백엔드 internal 문자열과 분리)
+//   - 백엔드 raw status는 backwards-compat 위해 유지
+//   - 화면 표시 status는 finance Tier-1 추출 품질 + GT 일치 기준으로 재해석
+type FinanceStatus = "selected" | "review" | "suppressed";
+
+// raw OCR entry + finance GT를 받아 화면 표시용 finance status 도출
+//
+// 정책 (보수적):
+//   1) 텍스트 붕괴 (EMPTY_TEXT) 또는 bank_slip 외 다른 suppressed_* → suppressed
+//   2) Tier-1 4필드 모두 추출 (transactionType ≠ "unknown") AND
+//      finance_review_reasons 빈 배열 AND
+//      (GT 미입력 OR GT 입력된 필드 전부 정규화 비교 일치) → selected
+//   3) 그 외 (Tier-1 partial / review reason / GT mismatch) → review
+function deriveFinanceStatus(
+  ocrEntry: import("./core/types").OcrEntry | undefined,
+  financeGt: Record<string, string> | undefined,
+): FinanceStatus {
+  if (!ocrEntry) return "review";  // OCR 미실행 — 호출 측에서 hasOcr로 별도 처리
+
+  const rawStatus = ocrEntry.status ?? "";
+  const fields    = ocrEntry.financeFields ?? {};
+  const reasons   = ocrEntry.financeReviewReasons ?? [];
+
+  // 1) 진짜 suppressed: bank_slip 외 다른 suppression 또는 텍스트 붕괴
+  if (rawStatus.startsWith("suppressed_") && rawStatus !== "suppressed_bank_slip") {
+    return "suppressed";
+  }
+  if (reasons.includes("EMPTY_TEXT")) {
+    return "suppressed";
+  }
+
+  // 2) Tier-1 완전 추출 여부 (transactionType의 "unknown"은 미추출로 간주)
+  const tier1Complete = FINANCE_TIER1_FIELDS.every((k) => {
+    const v = fields[k] ?? "";
+    if (!v) return false;
+    if (k === "transactionType" && v === "unknown") return false;
+    return true;
+  });
+
+  // 3) review reason 존재 여부 (TIER1_PARTIAL / AMOUNT_AMBIGUOUS / DATETIME_FORMAT_UNSTABLE / BANK_NAME_MULTIPLE_CANDIDATES 등)
+  const hasReviewReason = reasons.length > 0;
+
+  // 4) GT 비교 — 입력된 필드만 정규화 비교 (financeFieldMatches: canonical / 구분자 / 콤마 흡수)
+  let gtMismatch = false;
+  if (financeGt) {
+    for (const k of FINANCE_TIER1_FIELDS) {
+      const gtVal  = financeGt[k] ?? "";
+      const ocrVal = fields[k]    ?? "";
+      if (gtVal) {
+        if (!ocrVal || !financeFieldMatches(k, gtVal, ocrVal)) {
+          gtMismatch = true;
+          break;
+        }
+      }
+    }
+  }
+
+  if (tier1Complete && !hasReviewReason && !gtMismatch) return "selected";
+  return "review";
+}
+
+// derived FinanceStatus → 표시 라벨/배경색
+function getFinanceStatusMetaFromDerived(s: FinanceStatus, hasOcr: boolean): { label: string; bg: string } {
+  if (!hasOcr)              return { label: "미실행",     bg: "#475569" };
+  if (s === "selected")     return { label: "selected",  bg: "#16a34a" };
+  if (s === "review")       return { label: "review",    bg: "#d97706" };
+  if (s === "suppressed")   return { label: "suppressed", bg: "#dc2626" };
+  return { label: s, bg: "#6b7280" };
+}
+
 const REVIEW_REASON_LABELS: Record<string, string> = {
   TIER1_PARTIAL:                "Tier-1 일부 미추출",
   AMOUNT_AMBIGUOUS:             "거래금액·잔액 충돌",
@@ -2096,16 +2381,197 @@ const REVIEW_REASON_LABELS: Record<string, string> = {
   EMPTY_TEXT:                   "OCR 텍스트 없음",
 };
 
+// FinanceFieldCard — finance 필드 1개를 FieldCard와 동일한 구조로 표시
+//   ▎기준값(편집 가능) / ▎OCR / ▎자동복원 / ━ 채택값  의 수직 스택
+//   자동복원은 finance autofill 미구현 단계이므로 placeholder 표시
+function FinanceFieldCard({
+  fieldKey,
+  label,
+  isTier1,
+  value,
+  hasOcr,
+  gtValue,
+  onGtChange,
+}: {
+  fieldKey: string;
+  label: string;
+  isTier1: boolean;
+  value: string;
+  hasOcr: boolean;
+  gtValue: string;
+  onGtChange: (v: string) => void;
+}) {
+  const hasValue = value !== "";
+  const hasGt    = gtValue !== "";
+  // 정규화 비교 (콤마/공백/구분자/은행명 substring 흡수)
+  const gtMatch  = hasGt && hasValue && financeFieldMatches(fieldKey, gtValue, value);
+
+  // 상태 아이콘: GT 있으면 정규화 비교, GT 없으면 추출 성공 여부 기준
+  //   GT 있고 정규화 비교 일치 → O (green)
+  //   GT 있고 정규화 비교 불일치 → △ (amber, OCR 추출됨) / X (red, OCR 미추출)
+  //   GT 없고 OCR 값 있음 → O (green, 추출됨)
+  //   GT 없고 Tier-1 미추출 → X (red)
+  //   GT 없고 Tier-2 미추출 → — (gray)
+  const statusSymbol =
+    hasGt ? (gtMatch ? "O" : (hasValue ? "△" : "X")) :
+    hasValue ? "O" :
+    isTier1  ? "X" : "—";
+  const statusBg =
+    hasGt ? (gtMatch ? "#22c55e" : (hasValue ? "#f59e0b" : "#ef4444")) :
+    hasValue ? "#22c55e" :
+    isTier1  ? "#ef4444" :
+               "rgba(255,255,255,0.18)";
+  const statusTitle =
+    hasGt ? (gtMatch ? "기준값과 일치 (정규화 비교)" : (hasValue ? "기준값과 불일치" : "OCR 미추출")) :
+    hasValue ? "정상 추출됨 (기준값 없음)" :
+    isTier1  ? "필수 필드(Tier-1) 미추출" :
+               "선택 필드(Tier-2) 미추출";
+
+  // 채택값 슬롯 강조색 (finance 전용 — receipt의 source 기반 색과 별개)
+  const emphasisBg     = hasValue ? "rgba(220,38,38,0.10)" : "rgba(255,255,255,0.03)";
+  const emphasisBorder = hasValue ? "rgba(220,38,38,0.35)" : "rgba(255,255,255,0.12)";
+  const finalSrcColor  = hasValue ? "#dc2626" : "#64748b";
+  const finalSrcLabel  = hasValue ? "OCR" : "EMPTY";
+
+  return (
+    <div style={{
+      background: "var(--panel)", borderRadius: 10,
+      boxShadow: "var(--shadowSoft)", overflow: "hidden",
+      border: `1px solid ${
+        !hasOcr   ? "rgba(255,255,255,0.05)" :
+        hasValue  ? "rgba(220,38,38,0.25)"   :
+                    "rgba(255,255,255,0.05)"
+      }`,
+    }}>
+      {/* 헤더: 필드명 + Tier 배지 | 상태 아이콘 */}
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "7px 12px",
+        background: "var(--panel2)",
+        borderBottom: "1px solid rgba(255,255,255,0.05)",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ fontSize: 13, fontWeight: 800, color: "var(--text)" }}>{label}</span>
+          <span style={{
+            fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 4,
+            color: "#fff", background: isTier1 ? "#dc2626" : "#475569",
+          }}>
+            {isTier1 ? "Tier-1" : "Tier-2"}
+          </span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          {!hasOcr ? (
+            <span style={{
+              fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 999,
+              color: "rgba(255,255,255,0.55)", background: "rgba(255,255,255,0.06)",
+              border: "1px dashed rgba(255,255,255,0.2)", whiteSpace: "nowrap",
+            }}>OCR 미실행</span>
+          ) : (
+            <span title={statusTitle} style={{
+              display: "inline-flex", alignItems: "center", justifyContent: "center",
+              width: 22, height: 22, borderRadius: 999,
+              fontSize: 12, fontWeight: 800, color: "#fff",
+              background: statusBg,
+            }}>{statusSymbol}</span>
+          )}
+        </div>
+      </div>
+
+      {/* 기준값 슬롯 — 직접 입력 가능 (receipt FieldCard와 동일 방식) */}
+      <FieldSlot color="#22c55e" label="기준값">
+        <input
+          type="text"
+          value={gtValue}
+          onChange={(e) => onGtChange(e.target.value)}
+          placeholder="사람이 확정한 기준값을 직접 입력"
+          style={{
+            ...styles.gtInput,
+            background: hasGt ? "rgba(34,197,94,0.06)" : "var(--panel2)",
+            borderColor: hasGt ? "rgba(34,197,94,0.3)" : "rgba(255,255,255,0.07)",
+          }}
+        />
+      </FieldSlot>
+
+      {/* OCR 슬롯 (원본 + 정규화) */}
+      <FieldSlot color="#94a3b8" label="OCR">
+        <div style={{ display: "grid", gridTemplateColumns: "68px 1fr", rowGap: 3, columnGap: 8 }}>
+          <span style={{ fontSize: 9, fontWeight: 800, color: "#94a3b8", letterSpacing: 0.5, textTransform: "uppercase" }}>원본</span>
+          <span style={{ fontSize: 12, color: hasValue ? "var(--text)" : "rgba(255,255,255,0.25)", wordBreak: "break-all" }}>
+            {value || "—"}
+          </span>
+          <span style={{ fontSize: 9, fontWeight: 800, color: "#0ea5e9", letterSpacing: 0.5, textTransform: "uppercase" }}>정규화</span>
+          <span style={{ fontSize: 12, color: hasValue ? "var(--text)" : "rgba(255,255,255,0.25)", wordBreak: "break-all" }}>
+            {value || "—"}
+          </span>
+        </div>
+      </FieldSlot>
+
+      {/* 자동복원 슬롯 */}
+      <FieldSlot color="#475569" label="자동복원">
+        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.28)", fontStyle: "italic" }}>
+          제안 없음
+        </span>
+      </FieldSlot>
+
+      {/* 채택값 슬롯 (강조) */}
+      <FieldSlot color={hasOcr ? finalSrcColor : "rgba(255,255,255,0.2)"} label="채택값" emphasis>
+        <div style={{
+          display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
+          padding: "8px 10px",
+          background: hasOcr ? emphasisBg : "rgba(255,255,255,0.02)",
+          border: `1px ${hasOcr ? "solid" : "dashed"} ${hasOcr ? emphasisBorder : "rgba(255,255,255,0.12)"}`,
+          borderRadius: 6,
+        }}>
+          {!hasOcr ? (
+            <span style={{
+              fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.45)",
+              fontStyle: "italic", flex: 1,
+            }}>
+              OCR 미실행 · Run OCR 실행 후 채택값이 결정됩니다
+            </span>
+          ) : (
+            <>
+              <span style={{
+                fontSize: 10, fontWeight: 900, padding: "3px 8px", borderRadius: 999,
+                color: "#fff", background: finalSrcColor, whiteSpace: "nowrap",
+              }}>{finalSrcLabel}</span>
+              <span style={{
+                fontSize: 15, fontWeight: 800,
+                color: hasValue ? "var(--text)" : "rgba(255,255,255,0.25)",
+                wordBreak: "break-all", flex: 1, letterSpacing: -0.2,
+              }}>{value || "—"}</span>
+              {!hasValue && isTier1 && (
+                <span style={{ fontSize: 11, color: "#ef4444", fontWeight: 800 }}>
+                  Tier-1 미추출 · review
+                </span>
+              )}
+            </>
+          )}
+        </div>
+      </FieldSlot>
+    </div>
+  );
+}
+
 function FinanceDetailPanel({
   financeFields,
   reviewReasons,
   hasOcr,
+  financeGt,
+  onFinanceGtChange,
+  derivedStatus,
 }: {
   financeFields: Record<string, string> | null;
   reviewReasons: string[];
   hasOcr: boolean;
+  financeGt: Record<string, string>;
+  onFinanceGtChange: (field: string, value: string) => void;
+  derivedStatus?: FinanceStatus;
 }) {
   const hasData = financeFields !== null;
+  const statusMeta = derivedStatus
+    ? getFinanceStatusMetaFromDerived(derivedStatus, hasOcr)
+    : null;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -2118,8 +2584,20 @@ function FinanceDetailPanel({
         <span style={{ fontSize: 10, fontWeight: 800, color: "#dc2626", letterSpacing: 0.5 }}>
           🏦 FINANCE PROFILE
         </span>
+        {/* derived 화면 표시 status 배지 */}
+        {hasOcr && statusMeta && (
+          <span
+            title="finance Tier-1 추출 + GT 비교 기준 화면 status (백엔드 raw status는 별도)"
+            style={{
+              fontSize: 10, fontWeight: 800, padding: "2px 8px", borderRadius: 999,
+              color: "#fff", background: statusMeta.bg, whiteSpace: "nowrap",
+            }}
+          >
+            {statusMeta.label}
+          </span>
+        )}
         {!hasOcr && (
-          <span style={{ fontSize: 10, color: "var(--muted)" }}>OCR 미실행 — 실행 후 Tier-1 값 표시</span>
+          <span style={{ fontSize: 10, color: "var(--muted)" }}>OCR 미실행 — 실행 후 Tier-1 값 표시 · 기준값은 미리 입력 가능</span>
         )}
         {hasOcr && !hasData && (
           <span style={{ fontSize: 10, color: "var(--muted)" }}>finance_fields 없음 (OCR 재실행 필요)</span>
@@ -2131,58 +2609,19 @@ function FinanceDetailPanel({
         )}
       </div>
 
-      {/* Tier-1 / Tier-2 필드 카드 */}
-      {FINANCE_FIELD_META.map(({ key, label, required }) => {
-        const val = financeFields?.[key] ?? "";
-        const hasValue = val !== "";
-        const isTier1 = required;
-        return (
-          <div key={key} style={{
-            background: "var(--panel)", borderRadius: 10,
-            border: `1px solid ${hasValue ? (isTier1 ? "rgba(220,38,38,0.3)" : "rgba(255,255,255,0.08)") : "rgba(255,255,255,0.06)"}`,
-            overflow: "hidden",
-            opacity: hasOcr ? 1 : 0.5,
-          }}>
-            {/* 헤더 */}
-            <div style={{
-              display: "flex", alignItems: "center", justifyContent: "space-between",
-              padding: "7px 12px", background: "var(--panel2)",
-              borderBottom: "1px solid rgba(255,255,255,0.05)",
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ fontSize: 13, fontWeight: 800, color: "var(--text)" }}>{label}</span>
-                {isTier1 && (
-                  <span style={{ fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 4, color: "#fff", background: "#dc2626" }}>
-                    Tier-1
-                  </span>
-                )}
-              </div>
-              {hasOcr && (
-                <span style={{
-                  display: "inline-flex", alignItems: "center", justifyContent: "center",
-                  width: 22, height: 22, borderRadius: 999,
-                  fontSize: 12, fontWeight: 800, color: "#fff",
-                  background: hasValue ? "#22c55e" : "rgba(255,255,255,0.18)",
-                }}>
-                  {hasValue ? "O" : "—"}
-                </span>
-              )}
-            </div>
-            {/* 값 영역 */}
-            <div style={{ padding: "8px 12px" }}>
-              {hasValue ? (
-                <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", wordBreak: "break-all" }}>
-                  {val}
-                </span>
-              ) : (
-                <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", fontStyle: "italic" }}>
-                  {hasOcr ? (isTier1 ? "미추출 (review)" : "—") : "OCR 미실행"}
-                </span>
-              )}
-            </div>
-          </div>
-        );
-      })}
+      {/* 필드별 FieldCard 동일 구조 (기준값 편집 가능) */}
+      {FINANCE_FIELD_META.map(({ key, label, required }) => (
+        <FinanceFieldCard
+          key={key}
+          fieldKey={key}
+          label={label}
+          isTier1={required}
+          value={financeFields?.[key] ?? ""}
+          hasOcr={hasOcr}
+          gtValue={financeGt[key] ?? ""}
+          onGtChange={(v) => onFinanceGtChange(key, v)}
+        />
+      ))}
     </div>
   );
 }

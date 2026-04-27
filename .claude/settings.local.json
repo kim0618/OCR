@@ -14,7 +14,17 @@
       "Bash(.venv/Scripts/python.exe -u validate_r2b.py)",
       "Bash(.venv/Scripts/python.exe -m py_compile extractors/phone.py)",
       "Bash(.venv/Scripts/python.exe -u validate_r2c.py)",
-      "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('public/data/testsets/receipt_generalization/manifest.json','utf8'\\)\\); console.log\\('JSON OK'\\)\")"
+      "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('public/data/testsets/receipt_generalization/manifest.json','utf8'\\)\\); console.log\\('JSON OK'\\)\")",
+      "Bash(python -c \"import json; cache = json.load\\(open\\('ocr_cache.json'\\)\\); print\\('9.jpg text:'\\); print\\(cache.get\\('9.jpg', {}\\).get\\('ocr_text', 'NOT FOUND'\\)[:800]\\)\")",
+      "Bash(python -c \"import json; cache = json.load\\(open\\('ocr_cache.json', encoding='utf-8'\\)\\); print\\('9.jpg text:'\\); print\\(repr\\(cache.get\\('9.jpg', {}\\).get\\('ocr_text', 'NOT FOUND'\\)[:1000]\\)\\)\")",
+      "Bash(python -c \"import json; cache = json.load\\(open\\('ocr_cache.json', encoding='utf-8'\\)\\); print\\('6.jpg text:'\\); print\\(repr\\(cache.get\\('6.jpg', {}\\).get\\('ocr_text', 'NOT FOUND'\\)[:1500]\\)\\)\")",
+      "Bash(python -c \"import json; m = json.load\\(open\\('manifest.json', encoding='utf-8'\\)\\); [print\\(i['filename'], i['documentType']\\) for i in m['items']]\")",
+      "Bash(python -c \"from extractors.finance_slip import extract_finance_fields; print\\('import OK'\\)\")",
+      "Bash(python -c \"from extractors.finance_slip import extract_finance_fields; print\\('finance_slip import OK'\\)\")",
+      "Bash(python -c ' *)"
+    ],
+    "additionalDirectories": [
+      "c:\\OCR\\mysuit-ocr\\src\\components\\test"
     ]
   }
 }

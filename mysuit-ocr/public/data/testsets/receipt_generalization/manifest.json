@@ -145,16 +145,16 @@
       "documentType": "finance_slip",
       "qualityTags": ["rotated"],
       "difficulty": "medium",
-      "expectedStatus": "suppressed_bank_slip",
-      "notes": "KB ATM/은행 전표. 영수증으로 오인하지 않고 suppressed_bank_slip 기대."
+      "expectedStatus": "selected",
+      "notes": "KB 국민은행 입금 전표. Tier-1 4필드(bankName/transactionType/transactionDateTime/amount) 정상 추출 확인. finance parser 도입 후 selected 기대로 보정(2026-04-27). amount 250,000(요청금액) vs 249,000(입금액) 구분 주의."
     },
     {
       "filename": "finance_002.jpg",
       "documentType": "finance_slip",
       "qualityTags": ["skewed"],
-      "difficulty": "medium",
+      "difficulty": "hard",
       "expectedStatus": "suppressed_bank_slip",
-      "notes": "KB ATM 출금/금융 전표. 영수증 selected 오인 방지 확인."
+      "notes": "KB 국민은행 예금출금 전표. OCR 레이아웃이 value-before-label 역순 구조여서 현재 parser로 amount/datetime 미추출. TIER1_PARTIAL → review 상태. parser 개선 필요 케이스. difficulty hard로 조정."
     }
   ]
 }
