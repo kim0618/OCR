@@ -22,6 +22,7 @@ import { buildTableRows, normalizeColGuides } from "./core/table";
 type Props = {
   // ✅ 여기 중요: RefObject 제네릭에 | null 넣지 마세요
   imgRef: React.RefObject<HTMLImageElement>;
+  fileInputRef?: React.RefObject<HTMLInputElement | null>;
 
   loaded: LoadedImage | null;
 
@@ -48,6 +49,7 @@ type Props = {
 export default function OcrCanvasPane(props: Props) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const imgRef = props.imgRef;
+  const fileInputRef = props.fileInputRef;
 
   const {
     loaded,
@@ -815,19 +817,16 @@ export default function OcrCanvasPane(props: Props) {
     <div
       ref={wrapRef}
       style={{
-        border: "1px solid #e5e5e5",
+        border: "1px solid rgba(255,255,255,0.08)",
         borderRadius: 12,
         background: "var(--panel2)",
-        // ✅ 스크롤 컨테이너의 상/하 여백을 동일하게(시각적 '바닥 여백' 확보)
-        // - 긴 문서에서 맨 아래가 너무 딱 붙어 보이는 문제를 줄인다.
-        padding: 18,
+        padding: loaded ? 18 : 0,
         height: "100%",
         minHeight: 0,
-        // ✅ CSS Grid/Flex 안에서 내용물이 커도 이 패널이 가로로 부모를 밀어내지 않게
-        // (없으면 사이드바 접기/펼치기 시 폭이 줄어들어도 패널이 그대로 남아 '넘어가 보임')
         minWidth: 0,
-        // ✅ 문서가 길어지면 이 영역 내부에서만 스크롤
         overflow: "auto",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
       {/*
@@ -837,13 +836,66 @@ export default function OcrCanvasPane(props: Props) {
         바닥 여백이 체감되지 않는 케이스가 있어 스페이서를 안전장치로 추가.
       */}
       {!loaded ? (
-        <>
-          <div style={{ padding: 28, color: "#777", fontSize: 13 }}>
-            이미지를 선택하면 이곳에 표시되고, 드래그로 OCR 영역을 만들 수
-            있습니다.
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            minHeight: 400,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 14,
+            border: "1.5px dashed rgba(255,255,255,0.18)",
+            borderRadius: 8,
+            cursor: "pointer",
+            boxSizing: "border-box",
+          }}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => {
+            e.preventDefault();
+            const file = e.dataTransfer.files?.[0];
+            if (file && fileInputRef?.current) {
+              const dt = new DataTransfer();
+              dt.items.add(file);
+              fileInputRef.current.files = dt.files;
+              fileInputRef.current.dispatchEvent(new Event("change", { bubbles: true }));
+            }
+          }}
+          onClick={() => fileInputRef?.current?.click()}
+        >
+          {/* 업로드 아이콘 */}
+          <div style={{
+            width: 56, height: 56, borderRadius: 999,
+            background: "rgba(255,255,255,0.06)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <svg width="26" height="26" viewBox="0 0 20 20" fill="none">
+              <path d="M10 14V4M10 4L6 8M10 4L14 8" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M4 16h12" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round"/>
+            </svg>
           </div>
-          <div style={{ height: 18 }} />
-        </>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text)", marginBottom: 5 }}>
+              문서를 드래그하거나 업로드하세요
+            </div>
+            <div style={{ fontSize: 12, color: "var(--muted)" }}>
+              이미지(.jpeg .jpg .png .tif .tiff) 및 PDF 지원
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); fileInputRef?.current?.click(); }}
+            style={{
+              padding: "9px 28px", borderRadius: 8,
+              background: "var(--accent)", color: "#fff",
+              border: "none", fontWeight: 700, fontSize: 13,
+              cursor: "pointer",
+            }}
+          >
+            파일 선택
+          </button>
+        </div>
       ) : (
         <>
           <div

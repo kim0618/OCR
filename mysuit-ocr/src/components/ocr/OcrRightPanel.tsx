@@ -297,7 +297,7 @@ export default function OcrRightPanel(props: Props) {
   ]);
 
   return (
-    <aside className="oc-panel">
+    <aside className="oc-panel" style={{ flex: 1, minHeight: 0 }}>
       {/* 템플릿 명 입력 */}
       <div className="oc-template-input-wrap">
         <h2 className="oc-label">템플릿 명</h2>

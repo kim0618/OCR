@@ -3,34 +3,51 @@
 
 목적:
   - 일반 매장 영수증(receipt_pos), 카드매출전표(receipt_card),
+    의료/약국 영수증(medical_receipt),
     은행/ATM 거래표(bank_slip), 수기/폼 문서(form_or_handwritten),
-    unknown 을 OCR 전체 텍스트 기반 키워드 시그널로 구분.
-  - 완벽한 분류가 아니라 "일반 영수증군 vs 비정형(은행/폼)"를 가르는 것이 핵심.
+    unknown 을 OCR 전체 텍스트의 시그널 가중합으로 구분.
+  - 완벽한 분류가 아니라 "일반 영수증군 vs 비정형(은행/폼) vs 의료군"을 가르는 것이 핵심.
+
+설계:
+  - 시그널 사전은 signal_lists.py 에 분리되어 있다.
+  - 정확 매칭(_STRICT) 외에 OCR 노이즈를 흡수하는 약 매칭(_FUZZY) 패턴도 사용.
+  - 단일 키워드(예: '농협') 만으로 분류 결정이 뒤집히지 않도록 카드 브랜드와의
+    동음이의 가드 + 은행 구조 시그널 요구를 함께 적용.
+  - 공급가액 + 부가세 + 합계 3종 세트가 검출되면 카드/영수증 계열 가산 (bank 오분류 방지).
 
 운영 정책 — unknown 은 실패가 아니라 '정상 검토 상태':
   - 세상의 모든 영수증 포맷을 사전에 완벽히 분류하는 것은 불가능하다.
-  - 따라서 unknown 반환은 버그가 아니라 **시스템이 스스로 신중하게 판단을 보류**한
-    정상 경로다. main._apply_doc_type_amount_policy 가 unknown 의 bare 저신뢰를
-    비움 처리하고, review_log.jsonl 에 남겨 장기 개선의 입력이 된다.
-  - 동일한 unknown 패턴이 review_log 에 반복 누적되면 운영자는 해당 패턴의
-    시그널 키워드를 아래 _*_SIGNALS 리스트에 추가해 정식 유형으로 승격시킨다.
-
-패턴 승격(promotion) 흐름 (예시):
-  1) review_log.jsonl 에서 image_id 별 status=low_confidence 또는 suppressed_*
-     인 건수가 임계치 이상 축적된 unknown 패턴 식별
-  2) 해당 문서의 공통 키워드/레이아웃 추출 (예: 특정 프랜차이즈 영수증 헤더)
-  3) 새 분류(예: receipt_franchise_xxx) 를 만들거나 기존 _*_SIGNALS 에 키워드 추가
-  4) classify_document() 가 다음 요청부터 정식 유형으로 반환 →
-     총합계금액 정책이 정상 선택 경로로 전환
-  5) ground_truth.json 은 이 과정에서 수정되지 않는다 (동결 데이터셋)
+  - 따라서 unknown 반환은 버그가 아니라 시스템이 신중하게 판단을 보류한 정상 경로다.
+  - main._apply_doc_type_amount_policy 가 unknown 의 bare 저신뢰를 비움 처리하고,
+    review_log.jsonl 에 남겨 장기 개선의 입력이 된다.
+  - 동일한 unknown 패턴이 review_log 에 반복 누적되면 운영자는 시그널을 추가해
+    정식 유형으로 승격시킨다. ground_truth.json 은 이 과정에서 수정되지 않는다.
 
 사용:
   doc_info = classify_document(full_text)
-  doc_info["type"] ∈ {"receipt_pos","receipt_card","bank_slip","form_or_handwritten","unknown"}
+  doc_info["type"] ∈ {
+      "receipt_pos", "receipt_card", "medical_receipt",
+      "bank_slip", "form_or_handwritten", "unknown",
+  }
 """
 import re
 
+from signal_lists import (
+    POS_SIGNALS,
+    CARD_SIGNALS_STRICT,
+    CARD_SIGNALS_FUZZY,
+    CARD_BRAND_SIGNALS,
+    BANK_STRUCT_SIGNALS,
+    BANK_BRAND_SIGNALS,
+    FORM_SIGNALS,
+    MEDICAL_SIGNALS,
+    BANK_TO_CARD_DISAMBIG_PREFIXES,
+)
 
+
+# ============================================================
+# 보조: 사업자번호 체크섬
+# ============================================================
 def _has_valid_biz_checksum(digits: str) -> bool:
     if len(digits) != 10 or not digits.isdigit():
         return False
@@ -40,8 +57,11 @@ def _has_valid_biz_checksum(digits: str) -> bool:
     return (10 - (total % 10)) % 10 == int(digits[9])
 
 
+# ============================================================
+# 보조: receipt-like (unknown 후보 중 영수증 가능성 평가)
+# ============================================================
 def _receipt_like_unknown_evidence(text: str) -> tuple[bool, dict]:
-    """Promote only receipt-like unknowns with multiple independent signals."""
+    """unknown 으로 떨어졌더라도 영수증 같은 다중 증거가 있으면 receipt_pos 로 승격."""
     compact = re.sub(r'\s+', '', text or '')
     if not compact:
         return False, {}
@@ -52,15 +72,15 @@ def _receipt_like_unknown_evidence(text: str) -> tuple[bool, dict]:
     has_tel = bool(re.search(r'(?:0\d{1,2}[-)]?\d{3,4}[-]?\d{4})', compact))
     has_amount = bool(re.search(r'(?<!\d)\d{1,3}[,.]\d{3}(?!\d)', compact))
     has_address = bool(re.search(
-        r'[\uAC00-\uD7A3]{1,12}(?:\uC2DC|\uAD70|\uAD6C|\uB3D9|\uC74D|\uBA74|\uB85C|\uAE38|\uB300\uB85C)\d*',
+        r'[가-힣]{1,12}(?:시|군|구|동|읍|면|로|길|대로)\d*',
         compact,
     ))
     receipt_context_hits = [
         label for label, pattern in (
-            ("receipt", r'\uC601\uC218|\uD615\uC218'),
-            ("slip", r'\uC804\uD45C|\uC99D\uC778|\uC2B9\uC778'),
-            ("point", r'\uD3EC\uC778\uD2B8'),
-            ("item", r'(?:\uD488\uBAA9|\uC0C1\uD488|\uC218\uB7C9|\uAE08\uC561)'),
+            ("receipt", r'영수|형수'),
+            ("slip", r'전표|증인|승인'),
+            ("point", r'포인트'),
+            ("item", r'(?:품목|상품|수량|금액)'),
             ("receipt_no", r'(?:NO|N0)[:.]?\d{2,}'),
         )
         if re.search(pattern, compact, re.I)
@@ -77,42 +97,9 @@ def _receipt_like_unknown_evidence(text: str) -> tuple[bool, dict]:
     }
 
 
-_POS_SIGNALS = [
-    r'영수증', r'세금계산서', r'상품명', r'수량', r'단가',
-    r'공급가액', r'과세물품', r'면세물품', r'부가세', r'봉사료',
-    r'상호', r'가맹점명', r'점명',
-]
-
-_CARD_SIGNALS = [
-    r'승인번호', r'승인금액', r'승인일시',
-    r'카드종류', r'카드번호', r'매입사', r'할부',
-    r'거래구분', r'거래번호', r'신용카드', r'체크카드', r'IC카드',
-    r'CASHNOTE', r'KOCES', r'CATID', r'CAT1D', r'\bTID\b',
-    r'터미널', r'가맹점번호', r'매출전표',
-]
-
-_BANK_SIGNALS = [
-    r'거래후잔액', r'거래후진액', r'잔액조회', r'입금', r'출금',
-    r'계좌번호', r'계좌변호', r'수취인', r'수취계좌',
-    r'처리은행', r'이체', r'송금',
-    r'현금자동입출금', r'현금자동입\S?출금', r'ATM', r'타행이체', r'자동이체',
-    r'거래일시', r'거래일자', r'거래내역', r'거래명세',
-    r'i-?ONE\s?Bank', r'기업은행', r'국민은행', r'신한은행', r'우리은행', r'하나은행', r'농협',
-]
-
-# 수기 세금계산서/영수증 폼 문서
-_FORM_SIGNALS = [
-    r'작성년월일',
-    r'공급대가총액',
-    r'공급받는\s*자',
-    r'영수\s*[\(（]?\s*청구\s*[\)）]?\s*함',
-    r'귀하',
-    r'품\s*명\s*수\s*량\s*단\s*가',
-    r'아래\s*금액을\s*영수',
-    r'아래\s*금액을\s*청구',
-]
-
-
+# ============================================================
+# 보조: 시그널 패턴 카운트 (패턴 1개당 1점)
+# ============================================================
 def _count_hits(patterns: list[str], text: str) -> tuple[int, list[str]]:
     hits = []
     for p in patterns:
@@ -121,55 +108,199 @@ def _count_hits(patterns: list[str], text: str) -> tuple[int, list[str]]:
     return len(hits), hits
 
 
+# ============================================================
+# 보조: 공급가액 + 부가세 + 합계 3종 세트 검출
+#
+# 카드/세금계산서 영수증의 결정적 구조 시그널.
+# 일반 영수증에도 등장 가능 — pos/card 모두에 가산하므로 false positive 영향 최소.
+#
+# 판정 기준:
+#   - 1000 이상 정수 후보 amounts 추출 (콤마 또는 점 천단위 허용)
+#   - a + b == c, a >= 1000, b/a ∈ [0.08, 0.12] (부가세율 ±2%p)
+# ============================================================
+def _detect_supply_vat_total_triple(text: str) -> bool:
+    if not text:
+        return False
+    amounts: list[int] = []
+    for m in re.finditer(r'(?<!\d)(\d{1,3}(?:[.,]\d{3})+|\d{4,})(?!\d)', text):
+        s = m.group(1).replace(',', '').replace('.', '')
+        try:
+            n = int(s)
+        except ValueError:
+            continue
+        if 1000 <= n <= 100_000_000:
+            amounts.append(n)
+    if len(amounts) < 3:
+        return False
+    distinct = sorted(set(amounts))
+    distinct_set = set(distinct)
+    for a in distinct:
+        for b in distinct:
+            if b >= a:
+                continue
+            ratio = b / a
+            if not (0.08 <= ratio <= 0.12):
+                continue
+            if (a + b) in distinct_set:
+                return True
+    return False
+
+
+# ============================================================
+# 보조: 카드 브랜드 prefix 로 쓰이는 은행명 차감
+#
+# '농협비씨카드', '신한카드' 처럼 은행명이 카드명 일부로 등장한 경우
+# bank_n 에서 그만큼 차감해 bank_slip 오분류를 방지.
+#
+# 현재 BANK_BRAND_SIGNALS 가 단독 한글 약어를 보유하지 않으므로
+# 정상 경로에서는 이 차감이 0 이지만, 안전장치로 유지.
+# ============================================================
+def _bank_to_card_disambig(text: str) -> int:
+    if not text:
+        return 0
+    count = 0
+    for prefix in BANK_TO_CARD_DISAMBIG_PREFIXES:
+        # 은행 prefix 직후 4자 이내에 카드 키워드가 오는 패턴
+        pat = re.compile(
+            prefix + r'\s*.{0,4}?(?:비씨\s*카드|체크\s*카드|신용\s*카드|IC\s*카드|카드(?!사)|VISA|MASTER|JCB|AMEX)',
+            re.I,
+        )
+        count += len(pat.findall(text))
+    return count
+
+
+# ============================================================
+# 메인 분류기
+# ============================================================
 def classify_document(full_text: str) -> dict:
-    """OCR 전체 텍스트에서 키워드 시그널을 세어 문서 유형 분류.
+    """OCR 전체 텍스트에서 시그널 가중합으로 문서 유형 분류.
 
     Returns:
         {
-            "type":    "receipt_pos" | "receipt_card" | "bank_slip" | "form_or_handwritten" | "unknown",
-            "scores":  {pos, card, bank, form},
-            "hits":    {pos, card, bank, form},
+            "type":   "receipt_pos" | "receipt_card" | "medical_receipt" |
+                       "bank_slip" | "form_or_handwritten" | "unknown",
+            "scores": {pos, card, bank, form, medical, bank_struct, layout_svt},
+            "hits":   {pos, card_strict, card_fuzzy, card_brand,
+                       bank_struct, bank_brand, form, medical},
+            "guards": {bank_to_card_subtract, layout_supply_vat_total},
         }
     """
-    text = re.sub(r'\s+', '', full_text)
+    text = re.sub(r'\s+', '', full_text or '')
 
-    pos_n, pos_hits = _count_hits(_POS_SIGNALS, text)
-    card_n, card_hits = _count_hits(_CARD_SIGNALS, text)
-    bank_n, bank_hits = _count_hits(_BANK_SIGNALS, text)
-    form_n, form_hits = _count_hits(_FORM_SIGNALS, text)
-    receipt_like_ok, receipt_like_evidence = _receipt_like_unknown_evidence(full_text)
+    # --- 시그널 카운트 ---
+    pos_n,        pos_hits         = _count_hits(POS_SIGNALS,         text)
+    cs_n,         cs_hits          = _count_hits(CARD_SIGNALS_STRICT, text)
+    cf_n,         cf_hits          = _count_hits(CARD_SIGNALS_FUZZY,  text)
+    cb_n,         cb_hits          = _count_hits(CARD_BRAND_SIGNALS,  text)
+    bs_n,         bs_hits          = _count_hits(BANK_STRUCT_SIGNALS, text)
+    bb_n,         bb_hits          = _count_hits(BANK_BRAND_SIGNALS,  text)
+    form_n,       form_hits        = _count_hits(FORM_SIGNALS,        text)
+    medical_n,    medical_hits     = _count_hits(MEDICAL_SIGNALS,     text)
 
-    # 결정 규칙 (우선순위):
-    #   1. form_n ≥ 2 이고 다른 타입보다 높으면 form_or_handwritten (수기/폼 문서)
-    #   2. bank_n 최다이고 ≥2 면 bank_slip
-    #   3. card_n ≥ 2 면 receipt_card
-    #   4. pos_n ≥ 2 면 receipt_pos
-    #   5. 1건씩만 있으면 각각 낮은 신뢰도로 분류
-    #   6. 아무것도 없으면 unknown
-    if form_n >= 2 and form_n >= pos_n and form_n >= card_n and form_n >= bank_n:
+    # --- 구조/가드 시그널 ---
+    layout_svt_triple = _detect_supply_vat_total_triple(full_text or '')
+    bank_subtract     = _bank_to_card_disambig(text)
+
+    # --- 종합 ---
+    # card_n: strict + fuzzy + brand + (layout +1 if triplet)
+    card_n = cs_n + cf_n + cb_n + (1 if layout_svt_triple else 0)
+
+    # bank_n: struct + brand - 동음이의 차감
+    bank_n = max(0, bs_n + bb_n - bank_subtract)
+
+    # bank_struct_n: 단독 변수로 분류 임계 조건에 사용
+    bank_struct_n = bs_n
+
+    # --- 결정 트리 ---
+    #
+    # 우선순위:
+    #   1. form_n ≥ 2 (수기/폼)
+    #   2. bank_slip (구조 시그널 충족 필요)
+    #   3. medical_receipt (강한 의료 시그널 ≥ 2)
+    #   4. receipt_card (카드 시그널 합 ≥ 2)
+    #   5. receipt_pos (pos ≥ 2)
+    #   6. 단일 시그널 fallback (form/card/medical/pos 순)
+    #   7. bank_struct ≥ 1 만 있으면 bank_slip
+    #   8. receipt_like 증거 있으면 receipt_pos
+    #   9. unknown
+    #
+    # 핵심 정책:
+    #   - bank_slip 은 구조 시그널(BANK_STRUCT) 이 1개 이상 있어야 확정 가능.
+    #     단순 은행명 1회 출현으로는 bank_slip 결정하지 않음.
+    #   - layout_svt_triple(+공급가액/VAT/합계 검산)이 있으면 card 측에 이미 +1 가산되어
+    #     bank 와의 우선순위 다툼에서 카드/영수증 쪽이 유리하다.
+
+    if form_n >= 2 and form_n >= max(pos_n, card_n, bank_n, medical_n):
         doc_type = "form_or_handwritten"
-    elif bank_n >= 2 and bank_n > pos_n and bank_n > card_n:
+
+    # bank_slip 강한 결정: 구조 시그널 ≥ 2 또는 (구조 ≥ 1 + 브랜드 ≥ 1)
+    elif (
+        (bank_struct_n >= 2 or (bank_struct_n >= 1 and bb_n >= 1))
+        and bank_n > card_n
+        and bank_n > pos_n
+        and bank_n > medical_n
+    ):
         doc_type = "bank_slip"
+
+    # 의료 영수증
+    elif medical_n >= 2 and medical_n >= card_n and medical_n >= max(pos_n - 1, 0):
+        doc_type = "medical_receipt"
+
+    # 카드 매출전표
     elif card_n >= 2 and card_n >= pos_n:
         doc_type = "receipt_card"
+
+    # 일반 영수증
     elif pos_n >= 2 and pos_n >= card_n:
         doc_type = "receipt_pos"
-    elif form_n >= 1 and form_n >= pos_n and form_n >= card_n and form_n >= bank_n:
+
+    # 단일 시그널 fallback (낮은 신뢰)
+    elif form_n >= 1 and form_n >= max(pos_n, card_n, bank_n, medical_n):
         doc_type = "form_or_handwritten"
-    elif card_n >= 1 and card_n >= pos_n and card_n >= bank_n:
+    elif card_n >= 1 and card_n >= max(pos_n, bank_n, medical_n):
         doc_type = "receipt_card"
+    elif medical_n >= 1 and medical_n >= max(pos_n, card_n):
+        doc_type = "medical_receipt"
     elif pos_n >= 1 and pos_n >= bank_n:
         doc_type = "receipt_pos"
-    elif bank_n >= 1:
+
+    # bank 단일 fallback — 반드시 구조 시그널이 있을 때만
+    elif bank_struct_n >= 1:
         doc_type = "bank_slip"
-    elif receipt_like_ok and bank_n == 0 and form_n == 0:
+
+    # 마지막 보정: 영수증-like 증거가 있으면 receipt_pos
+    elif _receipt_like_unknown_evidence(full_text or '')[0] and bank_struct_n == 0 and form_n == 0:
         doc_type = "receipt_pos"
+
     else:
         doc_type = "unknown"
 
+    receipt_like_ok, receipt_like_evidence = _receipt_like_unknown_evidence(full_text or '')
+
     return {
         "type": doc_type,
-        "scores": {"pos": pos_n, "card": card_n, "bank": bank_n, "form": form_n},
-        "hits": {"pos": pos_hits, "card": card_hits, "bank": bank_hits, "form": form_hits},
+        "scores": {
+            "pos":          pos_n,
+            "card":         card_n,
+            "bank":         bank_n,
+            "form":         form_n,
+            "medical":      medical_n,
+            "bank_struct":  bank_struct_n,
+            "layout_svt":   1 if layout_svt_triple else 0,
+        },
+        "hits": {
+            "pos":         pos_hits,
+            "card_strict": cs_hits,
+            "card_fuzzy":  cf_hits,
+            "card_brand":  cb_hits,
+            "bank_struct": bs_hits,
+            "bank_brand":  bb_hits,
+            "form":        form_hits,
+            "medical":     medical_hits,
+        },
+        "guards": {
+            "bank_to_card_subtract":   bank_subtract,
+            "layout_supply_vat_total": layout_svt_triple,
+        },
         "receipt_like_unknown_evidence": receipt_like_evidence,
     }

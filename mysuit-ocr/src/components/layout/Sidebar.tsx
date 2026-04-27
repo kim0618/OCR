@@ -52,10 +52,11 @@ function NavIcon({ name, size = 16, color = "currentColor" }: { name: string; si
 }
 
 const DEFAULT_ITEMS: NavItem[] = [
-  { label: "Upload", href: "/upload", icon: "upload" },
-  { label: "Template", href: "/ocr", icon: "template" },
-  { label: "History", href: "/history", icon: "history" },
-  { label: "Test", href: "/test", icon: "test" },
+  { label: "Upload",    href: "/upload",    icon: "upload" },
+  { label: "Template",  href: "/template",  icon: "template" },
+  { label: "BTemplate", href: "/btemplate", icon: "template" },
+  { label: "History",   href: "/history",   icon: "history" },
+  { label: "Test",      href: "/test",      icon: "test" },
 ];
 
 export default function Sidebar({
@@ -77,6 +78,8 @@ export default function Sidebar({
     if (collapsedProp === undefined) setCollapsedState(next);
     onCollapsedChange?.(next);
   };
+
+  const [selectedSite, setSelectedSite] = useState("");
 
   const width = collapsed ? 40 : 150;
   const brandCollapsed = "M";
@@ -173,6 +176,48 @@ export default function Sidebar({
         )}
       </div>
 
+      {/* 사이트 선택 — MENU 위 */}
+      {!collapsed ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", letterSpacing: 0.4 }}>
+            사이트
+          </div>
+          <select
+            value={selectedSite}
+            onChange={(e) => setSelectedSite(e.target.value)}
+            style={{
+              width: "100%",
+              background: "var(--panel2)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              borderRadius: 7,
+              padding: "6px 24px 6px 8px",
+              color: selectedSite ? "var(--text)" : "var(--muted)",
+              fontSize: 12,
+              outline: "none",
+              cursor: "pointer",
+              appearance: "none",
+              WebkitAppearance: "none",
+              boxSizing: "border-box",
+              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+              backgroundRepeat: "no-repeat",
+              backgroundPosition: "right 7px center",
+            }}
+          >
+            <option value="">사이트 선택</option>
+            <option value="site-a">사이트 A</option>
+            <option value="site-b">사이트 B</option>
+            <option value="site-c">사이트 C</option>
+          </select>
+        </div>
+      ) : (
+        <div
+          title="사이트 선택"
+          style={{ display: "flex", justifyContent: "center", alignItems: "center", height: 28 }}
+        >
+          <span style={{ fontSize: 12, color: "var(--muted)" }}>🌐</span>
+        </div>
+      )}
+
       {/* Menu slot: ✅ 접혀도 높이 유지해서 아래 메뉴 시작 Y를 고정 */}
       <div
         style={{ height: MENU_SLOT_H, display: "flex", alignItems: "center" }}
@@ -180,7 +225,7 @@ export default function Sidebar({
         {!collapsed ? (
           <div style={{ fontSize: 11, color: "var(--muted)", fontWeight: 600 }}>MENU</div>
         ) : (
-          <div style={{ width: "100%" }} /> // 텍스트는 없지만 자리 유지
+          <div style={{ width: "100%" }} />
         )}
       </div>
 

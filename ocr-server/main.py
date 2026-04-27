@@ -31,15 +31,19 @@ from extractors.common import _bad_top_text_candidate, _extract_until_next_label
 from extractors.business_number import _validate_biz_number, _extract_biz_number
 from extractors.phone import (
     _normalize_phone_digits,
-    _format_phone_digits,
     _valid_phone_digits,
     _valid_labeled_phone_digits,
     _extract_phone_candidate,
 )
+from extractors.representative import (
+    _extract_rep_phone_pair,
+    _is_bad_representative_candidate,
+    _extract_company_rep_from_slash,
+)
 from utils.regex_patterns import (
-    _PHONE_RE, _PHONE_LABELED_RE, _PHONE_ADMIN_NOISE_RE,
+    _PHONE_RE,
     _ADDR_START_RE, _NEXT_LABEL_RE, _FIELD_NOISE_RE,
-    _REPRESENTATIVE_NOISE_RE, _COMPANY_SUFFIX_HINT_RE,
+    _COMPANY_SUFFIX_HINT_RE,
     _CONVENIENCE_STORE_NAME_RE, _COMPANY_SLOGAN_RE,
     _PERSON_LIKE_NAME_RE, _REPRESENTATIVE_SURNAME_RE,
     _ADDRESS_CUT_RE, _ADDRESS_CORE_TOKEN_RE, _ADDRESS_STORE_NOISE_RE,
@@ -118,18 +122,6 @@ def _extract_address_fragment(text: str) -> str:
     return _clean_inline_field_value(value)
 
 
-def _extract_rep_phone_pair(text: str) -> tuple[str, str]:
-    raw = text or ""
-    match = re.search(r'([가-힣]{2,4})\s*[\(:]\s*(0\d{8,10})\s*\)?', raw)
-    if not match or _PHONE_ADMIN_NOISE_RE.search(raw):
-        return "", ""
-    representative = match.group(1)
-    phone = _format_phone_digits(match.group(2))
-    if _is_bad_representative_candidate(representative, raw):
-        representative = ""
-    return representative, phone
-
-
 def _is_bad_company_candidate(text: str, row_text: str = "") -> bool:
     candidate = _clean_inline_field_value(text)
     compact = re.sub(r'\s+', '', candidate)
@@ -185,23 +177,6 @@ def _is_bad_company_candidate(text: str, row_text: str = "") -> bool:
     if _FIELD_NOISE_RE.search(row_compact) and not has_label and not _CONVENIENCE_STORE_NAME_RE.search(compact):
         return True
     if amount_like_count >= 2 and not has_label and not re.search(r'사업자|등록번호|주소|전화|TEL|Tel|tel', row_text or "", re.I):
-        return True
-    return False
-
-
-def _is_bad_representative_candidate(text: str, row_text: str = "") -> bool:
-    candidate = re.sub(r'\s+', '', _clean_inline_field_value(text))
-    if not candidate:
-        return True
-    if _LABEL_ONLY_RE.fullmatch(candidate):
-        return True
-    if _REPRESENTATIVE_NOISE_RE.search(candidate) or _REPRESENTATIVE_NOISE_RE.search(row_text or ""):
-        return True
-    if not re.fullmatch(r'[가-힣]{2,4}', candidate):
-        return True
-    if not _REPRESENTATIVE_SURNAME_RE.search(candidate):
-        return True
-    if re.search(r'점|길|로|동|층|호|마트|카페|약국', candidate):
         return True
     return False
 
@@ -375,19 +350,6 @@ def _repair_remaining_top_fields_from_text_lines(target: dict, text_lines: list[
                 if not _is_bad_representative_candidate(next_rep, line):
                     target["대표자"] = next_rep
                     break
-
-
-def _extract_company_rep_from_slash(text: str) -> tuple[str, str]:
-    if re.search(r'IBK|NH|신고안내|여신금융|주소|성명|대표자|사업자', text or "", re.I):
-        return "", ""
-    match = re.search(r'([가-힣A-Za-z0-9()&.\s]{2,24})\s*/\s*([가-힣]{2,4})', text or "")
-    if not match:
-        return "", ""
-    company = _clean_inline_field_value(match.group(1))
-    representative = _clean_inline_field_value(match.group(2))
-    if _bad_top_text_candidate(company) or _bad_top_text_candidate(representative):
-        return "", ""
-    return company, representative
 
 
 def _extract_company_near_biz(text: str) -> str:
@@ -2098,6 +2060,22 @@ async def ocr_extract(
         "receipt_fields": receipt_fields,
         "processing_time": round(elapsed, 2),
     }
+    # finance_profile Tier-1 추출: doc_type == "bank_slip" 분기에서만 실행
+    # _apply_doc_type_amount_policy / receipt_fields 완전 무수정 (docs/FINANCE_PARSER_TARGET §5.2)
+    if doc_type == "bank_slip":
+        try:
+            from extractors.finance_slip import extract_finance_fields  # local import: 기존 영역 오염 방지
+            _fin = extract_finance_fields("\n".join(full_lines))
+            _review = _fin.pop("_reviewReasons", [])  # 내부 감사 정보 분리
+            response["finance_fields"] = _fin
+            if _review:
+                response["finance_review_reasons"] = _review
+            print(f"[finance] bankName={_fin.get('bankName')} txType={_fin.get('transactionType')} "
+                  f"dt={_fin.get('transactionDateTime')} amount={_fin.get('amount')} "
+                  f"review={_review}")
+        except Exception as _fe:
+            print(f"[finance_slip] extractor error (응답 영향 없음): {_fe}")
+
     if processed_b64:
         response["processed_image"] = f"data:image/jpeg;base64,{processed_b64}"
     # 금액 추출 디버그 메타 (프론트 TEST 탭에서 활용 가능)

@@ -472,3 +472,123 @@ export function sortSuggestions(list: AutofillSuggestion[]): AutofillSuggestion[
     return (b.confidence ?? 0) - (a.confidence ?? 0);
   });
 }
+
+// ============================================================
+// Match status — exact match vs policy adoption 분리
+//
+// 두 축으로 결과를 해석한다:
+//   1. match status   : 기준값과 어떻게 일치하는가 (exact / policy / mismatch / no_baseline)
+//   2. adoption source: 어떤 채택 경로로 값이 결정됐는가 (finalSource — sourceLabel 참조)
+//
+// "exact"  = 사람이 보기에 똑같다고 인정할 수 있는 일치 (필드별 표준 정규화 후 동일).
+// "policy" = 일치하지만 정규화/유사도/anchor/자동복원 등의 정책 경로로 채택된 케이스.
+//            "OCR 이 정확히 맞췄다"고 보긴 어려우므로 별도 표시.
+// ============================================================
+
+export type MatchStatus = "exact" | "policy" | "mismatch" | "no_baseline";
+
+const POLICY_ADOPTION_SOURCES: ReadonlySet<ValueSourceTag> = new Set<ValueSourceTag>([
+  "gt_similarity",
+  "gt_anchor_empty",
+  "gt_anchor_weak_value",
+  "gt_anchor_override",
+  "autofill_biz",
+  "autofill_text_suggestion",
+]);
+
+// 필드별 "사람이 같다고 인정할 정규화" — 분리/구분자/대소문자 차이 무시.
+// 의미상 차이(법인 prefix 제외) 까지는 흡수. 그 이상은 normalizeForCompare 와 동일.
+function strictNormalizeForExact(key: FieldKey, v: string): string {
+  const s = (v ?? "").trim().toLowerCase();
+  switch (key) {
+    case "tel":
+    case "사업자번호":
+      return s.replace(/\D/g, "");
+    case "총합계금액":
+      return s.replace(/[\s,원￦₩.]/g, "");
+    case "대표자":
+      return s.replace(/[^가-힣a-z0-9]/gi, "");
+    case "회사명":
+      return s.replace(/\(주\)|㈜|주식회사/g, "").replace(/[^가-힣a-z0-9]/gi, "");
+    case "주소":
+      return s.replace(/[\s()[\]{},._\-:·]/g, "");
+    default:
+      return s.replace(/\s+/g, "");
+  }
+}
+
+function isExactByField(key: FieldKey, gt: string, value: string): boolean {
+  if (!gt || !value) return false;
+  const g = strictNormalizeForExact(key, gt);
+  const v = strictNormalizeForExact(key, value);
+  return !!g && g === v;
+}
+
+/**
+ * 매칭 상태 계산.
+ *
+ *  - GT 없음                                                              -> no_baseline
+ *  - finalValue 가 GT 와 matchField ok 아님                               -> mismatch
+ *  - finalSource 가 정책 채택(GT_SIMILARITY/ANCHOR/AUTOFILL_*)            -> policy
+ *      (정책 경로로 GT 가 채택된 결과는 OCR 의 정확성 보증이 아님)
+ *  - OCR 기반(ocr/ocr_normalized/user_confirmed)
+ *      - raw 가 strict 일치                                               -> exact
+ *      - raw 는 부정확하나 normalized 가 strict 일치                      -> policy (정규화로 살림)
+ *      - user_confirmed 인 경우 finalValue 가 strict 일치                 -> exact
+ *      - 그 외 (matchField ok 이나 strict 일치 아님)                      -> policy (유사도)
+ */
+export function computeMatchStatus(
+  fieldKey: FieldKey,
+  gtValue: string,
+  ocrRawValue: string,
+  ocrNormalizedValue: string,
+  finalValue: string,
+  finalSource: ValueSourceTag,
+): MatchStatus {
+  if (!gtValue) return "no_baseline";
+
+  if (!matchField(gtValue, finalValue).ok) return "mismatch";
+
+  if (POLICY_ADOPTION_SOURCES.has(finalSource)) return "policy";
+
+  // OCR 기반(ocr / ocr_normalized / user_confirmed) — raw 정확성을 우선 검사
+  if (isExactByField(fieldKey, gtValue, ocrRawValue)) return "exact";
+
+  if (isExactByField(fieldKey, gtValue, ocrNormalizedValue)) {
+    // raw 는 노이즈였지만 normalized 가 strict 일치 → 정규화 효과 = policy
+    return "policy";
+  }
+
+  if (finalSource === "user_confirmed") {
+    return isExactByField(fieldKey, gtValue, finalValue) ? "exact" : "policy";
+  }
+
+  return "policy";
+}
+
+export type StatusCounts = { exact: number; policy: number; mismatch: number; total: number };
+
+export function computeStatusPerField(
+  gt: Entry,
+  ocr: OcrEntry | null,
+  finalValues: Entry,
+  finalSources: Record<FieldKey, ValueSourceTag>,
+): { statusPerField: Record<FieldKey, MatchStatus>; counts: StatusCounts } {
+  const statusPerField = {} as Record<FieldKey, MatchStatus>;
+  let exact = 0, policy = 0, mismatch = 0, total = 0;
+  for (const f of FIELDS) {
+    const g   = gt[f.key] ?? "";
+    const raw = ocr?.raw?.[f.key]        ?? "";
+    const nrm = ocr?.normalized?.[f.key] ?? "";
+    const fin = finalValues[f.key];
+    const src = finalSources[f.key];
+    const st = computeMatchStatus(f.key, g, raw, nrm, fin, src);
+    statusPerField[f.key] = st;
+    if (st === "no_baseline") continue;
+    total += 1;
+    if (st === "exact") exact += 1;
+    else if (st === "policy") policy += 1;
+    else mismatch += 1;
+  }
+  return { statusPerField, counts: { exact, policy, mismatch, total } };
+}

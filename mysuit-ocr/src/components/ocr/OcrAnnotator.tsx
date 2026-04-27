@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useRef, useState } from "react";
+import React, { useMemo, useRef, useState, useCallback } from "react";
 import type { FieldType, LoadedImage, Region } from "./core/types";
 import { buildExportPayload } from "./core/export";
 import OcrCanvasPane from "./OcrCanvasPane";
@@ -8,6 +8,7 @@ import OcrRightPanel from "./OcrRightPanel";
 
 export default function OcrAnnotator() {
   const imgRef = useRef<HTMLImageElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const DEFAULT_ZOOM_PCT = 100;
 
@@ -95,29 +96,27 @@ export default function OcrAnnotator() {
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "minmax(0, 1fr) 320px",
+        gridTemplateColumns: "minmax(0, 1fr) 380px",
         gridTemplateRows: "auto 1fr",
-        gap: 12,
+        gap: 8,
         width: "100%",
         height: "100%",
         minHeight: 0,
         minWidth: 0,
       }}
     >
-      {/* Toolbar */}
-      <div className="oc-toolbar" style={{ gridColumn: "1 / -1", gridRow: 1 }}>
-        <label className="oc-mode-btn" style={{ cursor: "pointer" }}>
-          문서 선택
-          <input
-            type="file"
-            accept="image/*"
-            style={{ display: "none" }}
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) void onPickFile(f);
-            }}
-          />
-        </label>
+      {/* Toolbar — full width */}
+      <div className="oc-toolbar" style={{ gridColumn: "1 / -1", gridRow: 1, border: "1px solid var(--border)" }}>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          style={{ display: "none" }}
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) void onPickFile(f);
+          }}
+        />
 
         {(["field", "multi", "check", "table"] as FieldType[]).map((m) => {
           const labels: Record<FieldType, string> = {
@@ -158,31 +157,13 @@ export default function OcrAnnotator() {
             초기화
           </button>
         </div>
-
-        <div className="oc-toolbar-right">
-          <button
-            type="button"
-            onClick={() => void copyJson()}
-            className="ms-btn"
-            disabled={!loaded}
-          >
-            JSON 복사
-          </button>
-          <button
-            type="button"
-            onClick={() => void saveTemplateJson()}
-            className="ms-btn"
-            disabled={!loaded}
-          >
-            템플릿 저장
-          </button>
-        </div>
       </div>
 
       {/* Left: canvas */}
       <div style={{ gridColumn: 1, gridRow: 2, minHeight: 0 }}>
         <OcrCanvasPane
           imgRef={imgRef}
+          fileInputRef={fileInputRef}
           loaded={loaded}
           regions={regions}
           setRegions={setRegions}
@@ -198,8 +179,27 @@ export default function OcrAnnotator() {
         />
       </div>
 
-      {/* Right: panel */}
-      <div style={{ gridColumn: 2, gridRow: 2, minHeight: 0 }}>
+      {/* Right: 삭제/저장 박스 + 패널 (col 2, row 2) */}
+      <div style={{ gridColumn: 2, gridRow: 2, minHeight: 0, display: "flex", flexDirection: "column", gap: 8 }}>
+        {/* 삭제 / 저장 — 독립 박스 */}
+        <div style={{
+          flexShrink: 0,
+          display: "flex", gap: 8, justifyContent: "flex-end", alignItems: "center",
+          background: "var(--panel)",
+          border: "1px solid var(--border)",
+          borderRadius: 12,
+          padding: "10px 12px",
+        }}>
+          <button type="button" onClick={() => void copyJson()} disabled={!loaded} className="ms-btn">
+            삭제
+          </button>
+          <button type="button" onClick={() => void saveTemplateJson()} disabled={!loaded}
+            className="ms-btn"
+            style={{ background: "var(--accent)", color: "#fff", border: "none" }}>
+            저장
+          </button>
+        </div>
+        {/* 패널 */}
         <OcrRightPanel
           imgRef={imgRef}
           templateName={templateName}

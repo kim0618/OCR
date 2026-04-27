@@ -22,8 +22,17 @@ import {
 import { matchField, MatchResult } from "./core/match";
 import { extractFieldsFallback, normalizeEntry, parseAmounts } from "./core/extract";
 import { buildAutofillSuggestions, canAutoApply } from "./core/autofill";
-import { computeAllFieldViews, sourceLabel, sortSuggestions, scoreTriplet } from "./core/finalize";
+import {
+  computeAllFieldViews,
+  sourceLabel,
+  sortSuggestions,
+  scoreTriplet,
+  computeMatchStatus,
+  computeStatusPerField,
+  MatchStatus,
+} from "./core/finalize";
 import type { DatasetManifest, ManifestItem } from "@/lib/testsets";
+import { resolveProfile, FINANCE_COLUMNS, isNotApplicableField } from "@/lib/profiles";
 
 type ViewMode = "compare" | "ocr_only" | "autofill" | "gt_edit";
 
@@ -122,6 +131,8 @@ async function fetchOcr(filename: string, imageBaseUrl: string): Promise<OcrEntr
     scannedAt: new Date().toISOString(),
     status: deriveUiStatus(data),
     docType: data.doc_type,
+    financeFields: data.finance_fields,
+    financeReviewReasons: data.finance_review_reasons,
   };
 }
 
@@ -479,6 +490,11 @@ export default function TestWorkspace() {
     () => (selected ? (manifest?.items.find((item) => item.filename === selected) ?? null) : null),
     [selected, manifest],
   );
+  // 선택된 이미지의 profile — profile resolver 단일 진입점 (docs/TEST_PROFILE_SCHEMA §3)
+  const selProfile = useMemo(
+    () => resolveProfile(selMeta?.documentType),
+    [selMeta],
+  );
 
   // ── documentType별 집계 ──
   const docTypeSummary = useMemo((): DocTypeSummaryRow[] | null => {
@@ -567,7 +583,7 @@ export default function TestWorkspace() {
   // ── batch summary (OCR raw / normalized / final 3축 점수 + autofill 효과) ──
   type BatchRow = {
     img: string;
-    perField: Record<FieldKey, boolean | null>;       // final 기준 perField (요약표 표시용)
+    perField: Record<FieldKey, boolean | null>;       // final 기준 perField (KPI 누적용)
     okCount: number;
     gtCount: number;
     bizHit: boolean;
@@ -577,6 +593,11 @@ export default function TestWorkspace() {
     // 축별 요약
     rawPerField: Record<FieldKey, boolean | null>;
     normPerField: Record<FieldKey, boolean | null>;
+    // O / △ / X / -- 표기용 — exact match 와 policy adoption 분리
+    statusPerField: Record<FieldKey, MatchStatus>;
+    exactCount: number;
+    policyCount: number;
+    mismatchCount: number;
   };
   const batchRows: BatchRow[] = useMemo(() => {
     return images.filter((img) => ocr[img]).map((img) => {
@@ -589,6 +610,7 @@ export default function TestWorkspace() {
         finalSources[f.key] = v[f.key].finalSource;
       }
       const s = scoreTriplet(g, ocr[img].raw, ocr[img].normalized, finalValues, finalSources);
+      const status = computeStatusPerField(g, ocr[img], finalValues, finalSources);
       const hasBiz  = (autofill[img]?.suggestions ?? []).some((x) => x.source === "biz");
       const hasText = (autofill[img]?.suggestions ?? []).some((x) => x.source === "text");
       return {
@@ -602,9 +624,39 @@ export default function TestWorkspace() {
         worsenedByAutofill: s.worsenedByAutofill,
         rawPerField:  s.raw.perField,
         normPerField: s.normalized.perField,
+        statusPerField: status.statusPerField,
+        exactCount:    status.counts.exact,
+        policyCount:   status.counts.policy,
+        mismatchCount: status.counts.mismatch,
       };
     });
   }, [images, ocr, gt, autofill, activeDataset]);
+
+  // profile-based split: receipt vs finance (docs/TEST_PROFILE_SCHEMA_20260427.md §3)
+  const receiptBatchRows = useMemo(
+    () => batchRows.filter((r) => {
+      const dt = manifest?.items.find((i) => i.filename === r.img)?.documentType;
+      return resolveProfile(dt).base !== "finance";
+    }),
+    [batchRows, manifest],
+  );
+  const financeBatchRows = useMemo(
+    () => batchRows.filter((r) => {
+      const dt = manifest?.items.find((i) => i.filename === r.img)?.documentType;
+      return resolveProfile(dt).base === "finance";
+    }),
+    [batchRows, manifest],
+  );
+
+  // 영수증 계열 총 이미지 수 (미실행 포함) — receipt KPI 분모 (docs/TEST_PROFILE_SCHEMA §7.2)
+  const receiptImageCount = useMemo(
+    () => images.filter((img) => {
+      if (!manifest) return true; // manifest 없으면 전체를 영수증으로 처리 (안전 fallback)
+      const dt = manifest.items.find((i) => i.filename === img)?.documentType;
+      return resolveProfile(dt).base !== "finance";
+    }).length,
+    [images, manifest],
+  );
 
   // ── KPI: OCR 자체 성능 vs 채택값 성능 분리 ──
   type AxisStat = { fieldAcc: Record<FieldKey, { ok: number; total: number }>; overallOk: number; overallTotal: number };
@@ -646,7 +698,8 @@ export default function TestWorkspace() {
       }
     };
 
-    for (const row of batchRows) {
+    // receipt 계열만 집계 — finance_slip은 finance KPI로 별도 집계 (docs/TEST_PROFILE_SCHEMA §7.1)
+    for (const row of receiptBatchRows) {
       accum(raw,  row.rawPerField);
       accum(norm, row.normPerField);
       accum(fin,  row.perField);
@@ -660,15 +713,44 @@ export default function TestWorkspace() {
       if (row.gtCount > 0 && row.okCount < row.gtCount) needsHumanReview += 1;
     }
     return {
-      processed: batchRows.length,
-      total: images.length,
+      processed: receiptBatchRows.length,
+      total: receiptImageCount,
       raw, norm, final: fin,
       autofillBizApplied, autofillTextApplied,
       autofillBizHits, autofillTextHits,
       improvedByAutofill, worsenedByAutofill,
       needsHumanReview,
     };
-  }, [batchRows, images.length, autofill]);
+  }, [receiptBatchRows, receiptImageCount, autofill]);
+
+  // finance KPI — 단순 카운트 (parser 미구현 단계) (docs/TEST_SUPPRESSION_POLICY_NOTE §6.2)
+  type FinanceKpiSummary = {
+    total: number;      // 전체 finance 이미지 수 (미실행 포함)
+    processed: number;  // OCR 실행 완료 건수
+    selected: number;
+    review: number;
+    suppressed: number;
+  };
+  const financeKpi = useMemo((): FinanceKpiSummary => {
+    const total = images.filter((img) => {
+      const dt = manifest?.items.find((i) => i.filename === img)?.documentType;
+      return resolveProfile(dt).base === "finance";
+    }).length;
+    let selected = 0, review = 0, suppressed = 0;
+    for (const row of financeBatchRows) {
+      const status = ocr[row.img]?.status ?? "";
+      if (status === "selected") {
+        selected++;
+      } else if (status === "suppressed_bank_slip") {
+        review++;          // suppression policy note §6.2: bank_slip → review 재분류
+      } else if (status?.startsWith("suppressed_")) {
+        suppressed++;
+      } else {
+        review++;          // unknown / empty 등 → review
+      }
+    }
+    return { total, processed: financeBatchRows.length, selected, review, suppressed };
+  }, [financeBatchRows, images, manifest, ocr]);
 
   // ── qualityTags 필터 ──
   const availableQualityTags = useMemo(() => {
@@ -826,8 +908,37 @@ export default function TestWorkspace() {
             </button>
           ))}
         </div>
-        <div style={{ marginLeft: "auto", fontSize: 11, color: "var(--muted)" }}>
-          {images.length > 0 ? `${images.length} files` : "0 files"}
+        <div style={{ marginLeft: "auto", flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 5 }}>
+          <span style={{ fontSize: 11, color: "var(--muted)" }}>
+            {images.length > 0 ? `${images.length} files` : "0 files"}
+          </span>
+          <div style={{ display: "flex", gap: 5, flexWrap: "wrap", justifyContent: "flex-end" }}>
+            <TopStatChip
+              label="OCR 인식률"
+              value={pct(kpi.norm.overallOk, kpi.norm.overallTotal)}
+              sub={kpi.norm.overallTotal > 0 ? `${kpi.norm.overallOk}/${kpi.norm.overallTotal}` : undefined}
+              tone={toneOf(kpi.norm.overallOk, kpi.norm.overallTotal)}
+            />
+            <TopStatChip
+              label="최종 채택"
+              value={pct(kpi.final.overallOk, kpi.final.overallTotal)}
+              sub={kpi.final.overallTotal > 0 ? `${kpi.final.overallOk}/${kpi.final.overallTotal}` : undefined}
+              tone={toneOf(kpi.final.overallOk, kpi.final.overallTotal)}
+            />
+            <TopStatChip label="처리" value={`${batchRows.length}/${images.length}`} />
+            {kpi.norm.overallTotal > 0 && (
+              <>
+                <div style={{ width: 1, background: "rgba(255,255,255,0.1)", alignSelf: "stretch", margin: "0 2px" }} />
+                {FIELDS.map((f) => {
+                  const s = kpi.norm.fieldAcc[f.key];
+                  if (s.total === 0) return null;
+                  return (
+                    <TopStatChip key={f.key} label={f.label} value={pct(s.ok, s.total)} sub={`${s.ok}/${s.total}`} tone={toneOf(s.ok, s.total)} />
+                  );
+                })}
+              </>
+            )}
+          </div>
         </div>
         <div style={{ width: "100%", display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
           <span style={{ fontSize: 11, color: "var(--muted)", fontWeight: 800 }}>채택값 출처:</span>
@@ -1070,9 +1181,9 @@ export default function TestWorkspace() {
           </div>
 
           <KpiSection title="최종 채택값 성능" tone="green" icon="★"
-            subtitle="사용자에게 보여지는 값 · 서비스 품질 지표"
+            subtitle="영수증 계열 · 사용자에게 보여지는 값"
           >
-            <KpiChip label="처리" value={`${kpi.processed}/${kpi.total}`} />
+            <KpiChip label="영수증 처리" value={`${kpi.processed}/${kpi.total}`} />
             <KpiChip label="전체" value={pct(kpi.final.overallOk, kpi.final.overallTotal)} sub={`${kpi.final.overallOk}/${kpi.final.overallTotal}`} tone={toneOf(kpi.final.overallOk, kpi.final.overallTotal)} />
             {FIELDS.map((f) => {
               const s = kpi.final.fieldAcc[f.key];
@@ -1081,6 +1192,33 @@ export default function TestWorkspace() {
             })}
             <KpiChip label="사람 검토 필요" value={`${kpi.needsHumanReview}`} tone={kpi.needsHumanReview > 0 ? "amber" : "green"} />
           </KpiSection>
+
+          {/* ── 금융전표 현황 (finance_profile) ── */}
+          {financeKpi.total > 0 && (
+          <KpiSection title="금융전표 현황" tone="red" icon="🏦"
+            subtitle={`finance_profile · ${financeKpi.processed}/${financeKpi.total} 처리`}
+          >
+            <KpiChip label="전체" value={`${financeKpi.total}`} sub={`처리 ${financeKpi.processed}`} />
+            <KpiChip
+              label="selected"
+              value={String(financeKpi.selected)}
+              tone={financeKpi.selected > 0 ? "green" : "neutral"}
+            />
+            <KpiChip
+              label="review"
+              value={String(financeKpi.review)}
+              tone={financeKpi.review > 0 ? "amber" : "neutral"}
+            />
+            {financeKpi.suppressed > 0 && (
+              <KpiChip label="suppressed" value={String(financeKpi.suppressed)} tone="red" />
+            )}
+            <KpiChip
+              label="미처리"
+              value={String(financeKpi.total - financeKpi.processed)}
+              tone={financeKpi.total - financeKpi.processed > 0 ? "neutral" : "green"}
+            />
+          </KpiSection>
+          )}
         </div>
       )}
 
@@ -1102,7 +1240,10 @@ export default function TestWorkspace() {
             <span>
               전체 결과 요약 ({batchRows.length}건)
               <span style={{ marginLeft: 8, color: "var(--muted)", fontWeight: 500, fontSize: 10 }}>
-                O=채택값이 기준값과 일치 · X=불일치 · ·=기준값 없음
+                <span style={{ color: "#22c55e", fontWeight: 700 }}>O</span>=기준값과 정확히 일치 ·{" "}
+                <span style={{ color: "#f59e0b", fontWeight: 700 }}>△</span>=정규화/유사도/anchor/자동복원 채택 ·{" "}
+                <span style={{ color: "#ef4444", fontWeight: 700 }}>X</span>=불일치 ·{" "}
+                <span style={{ color: "rgba(255,255,255,0.45)", fontWeight: 700 }}>—</span>=기준값 없음
               </span>
             </span>
             <span style={{ fontSize: 10, color: "var(--muted)", marginLeft: 8, flexShrink: 0 }}>
@@ -1110,54 +1251,147 @@ export default function TestWorkspace() {
             </span>
           </div>
           {showBatchSummary && (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-              <thead>
-                <tr>
-                  <th style={th}>파일명</th>
-                  {FIELDS.map((f) => <th key={f.key} style={th}>{f.label}</th>)}
-                  <th style={{ ...th, textAlign: "center" }}>매칭률</th>
-                  <th style={{ ...th, textAlign: "center" }}>자동복원</th>
-                </tr>
-              </thead>
-              <tbody>
-                {batchRows.map((row) => {
-                  const applied = autofill[row.img]?.appliedSource ?? null;
-                  return (
-                    <tr key={row.img} onClick={() => setSelected(row.img)}
-                      style={{ cursor: "pointer", background: selected === row.img ? "var(--accentBg)" : undefined }}>
-                      <td style={td}>{row.img}</td>
-                      {FIELDS.map((f) => {
-                        const p = row.perField[f.key];
-                        return (
-                          <td key={f.key} style={{ ...td, textAlign: "center" }}>
-                            <span style={{ fontWeight: 700, color: p === null ? "rgba(255,255,255,0.2)" : p ? "#22c55e" : "#ef4444" }}>
-                              {p === null ? "·" : p ? "O" : "X"}
-                            </span>
-                          </td>
-                        );
-                      })}
-                      <td style={{ ...td, textAlign: "center", fontWeight: 700 }}>
-                        {row.gtCount > 0
-                          ? <span style={{ color: row.okCount === row.gtCount ? "#22c55e" : row.okCount > 0 ? "#f59e0b" : "#ef4444" }}>{row.okCount}/{row.gtCount}</span>
-                          : <span style={{ color: "rgba(255,255,255,0.2)" }}>-</span>}
-                      </td>
-                      <td style={{ ...td, textAlign: "center" }}>
-                        {applied === "biz"
-                          ? <span style={{ ...chip, background: "#6366f1" }}>사업자</span>
-                          : applied === "text"
-                            ? <span style={{ ...chip, background: "#a855f7" }}>유사</span>
-                            : row.bizHit
-                              ? <span style={{ ...chip, background: "#64748b" }}>biz 제안</span>
-                              : row.textHit
-                                ? <span style={{ ...chip, background: "#64748b" }}>text 제안</span>
-                                : <span style={{ color: "rgba(255,255,255,0.25)" }}>-</span>}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+
+            {/* ── 영수증 계열 섹션 (receipt_profile) ── */}
+            {receiptBatchRows.length > 0 && (
+            <div style={{ overflowX: "auto" }}>
+              {financeBatchRows.length > 0 && (
+                <div style={{ fontSize: 10, color: "var(--muted)", fontWeight: 700, marginBottom: 4, letterSpacing: 0.4 }}>
+                  영수증 계열 ({receiptBatchRows.length}건)
+                </div>
+              )}
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                <thead>
+                  <tr>
+                    <th style={th}>파일명</th>
+                    {FIELDS.map((f) => <th key={f.key} style={th}>{f.label}</th>)}
+                    <th style={{ ...th, textAlign: "center" }}>매칭률</th>
+                    <th style={{ ...th, textAlign: "center" }}>자동복원</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {receiptBatchRows.map((row) => {
+                    const applied = autofill[row.img]?.appliedSource ?? null;
+                    return (
+                      <tr key={row.img} onClick={() => setSelected(row.img)}
+                        style={{ cursor: "pointer", background: selected === row.img ? "var(--accentBg)" : undefined }}>
+                        <td style={td}>{row.img}</td>
+                        {FIELDS.map((f) => {
+                          const st = row.statusPerField[f.key];
+                          const meta = matchStatusMeta(st);
+                          return (
+                            <td key={f.key} style={{ ...td, textAlign: "center" }} title={meta.title}>
+                              <span style={{ fontWeight: 800, color: meta.color }}>{meta.symbol}</span>
+                            </td>
+                          );
+                        })}
+                        <td style={{ ...td, textAlign: "center", fontWeight: 700 }}
+                            title={row.gtCount > 0 ? `정확 ${row.exactCount} · 정책 ${row.policyCount} · 불일치 ${row.mismatchCount} / 기준값 ${row.gtCount}` : "기준값 없음"}>
+                          {row.gtCount > 0
+                            ? (
+                              <span style={{
+                                color: row.exactCount === row.gtCount
+                                  ? "#22c55e"
+                                  : (row.exactCount + row.policyCount) === row.gtCount
+                                    ? "#f59e0b"
+                                    : row.exactCount + row.policyCount > 0
+                                      ? "#f59e0b"
+                                      : "#ef4444",
+                              }}>
+                                {row.okCount}/{row.gtCount}
+                                {row.exactCount > 0 && row.exactCount < row.okCount && (
+                                  <span style={{ color: "rgba(255,255,255,0.5)", fontWeight: 500, fontSize: 10, marginLeft: 4 }}>
+                                    (정확 {row.exactCount})
+                                  </span>
+                                )}
+                              </span>
+                            )
+                            : <span style={{ color: "rgba(255,255,255,0.2)" }}>—</span>}
+                        </td>
+                        <td style={{ ...td, textAlign: "center" }}>
+                          {applied === "biz"
+                            ? <span style={{ ...chip, background: "#6366f1" }}>사업자</span>
+                            : applied === "text"
+                              ? <span style={{ ...chip, background: "#a855f7" }}>유사</span>
+                              : row.bizHit
+                                ? <span style={{ ...chip, background: "#64748b" }}>biz 제안</span>
+                                : row.textHit
+                                  ? <span style={{ ...chip, background: "#64748b" }}>text 제안</span>
+                                  : <span style={{ color: "rgba(255,255,255,0.25)" }}>-</span>}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            )}
+
+            {/* ── 금융전표 계열 섹션 (finance_profile) ── */}
+            {financeBatchRows.length > 0 && (
+            <div style={{ overflowX: "auto" }}>
+              <div style={{ fontSize: 10, color: "#dc2626", fontWeight: 700, marginBottom: 4, letterSpacing: 0.4 }}>
+                금융전표 계열 ({financeBatchRows.length}건) — finance_profile
+              </div>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                <thead>
+                  <tr>
+                    <th style={th}>파일명</th>
+                    {FINANCE_COLUMNS.map((c) => (
+                      <th key={c.key} style={{ ...th, color: c.required ? undefined : "var(--muted)" }}>
+                        {FINANCE_COL_LABELS[c.key] ?? c.key}
+                        {!c.required && (
+                          <span style={{ fontSize: 8, marginLeft: 3, opacity: 0.6, fontWeight: 500 }}>선택</span>
+                        )}
+                      </th>
+                    ))}
+                    <th style={{ ...th, textAlign: "center" }}>상태</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {financeBatchRows.map((row) => {
+                    const ocrEntry = ocr[row.img];
+                    const statusMeta = getFinanceStatusMeta(ocrEntry?.status ?? "");
+                    const finFields = ocrEntry?.financeFields ?? {};
+                    const reviewReasons = ocrEntry?.financeReviewReasons ?? [];
+                    return (
+                      <tr key={row.img} onClick={() => setSelected(row.img)}
+                        style={{ cursor: "pointer", background: selected === row.img ? "var(--accentBg)" : undefined }}>
+                        <td style={td}>{row.img}</td>
+                        {FINANCE_COLUMNS.map((c) => {
+                          const val = finFields[c.key] ?? "";
+                          const hasVal = val !== "";
+                          return (
+                            <td key={c.key} style={{
+                              ...td, textAlign: "center",
+                              color: hasVal
+                                ? (c.required ? "var(--text)" : "var(--muted)")
+                                : "rgba(255,255,255,0.22)",
+                            }}>
+                              {hasVal ? val : "—"}
+                            </td>
+                          );
+                        })}
+                        <td style={{ ...td, textAlign: "center" }}>
+                          <span
+                            title={reviewReasons.length > 0 ? reviewReasons.join(", ") : undefined}
+                            style={{ fontSize: 10, padding: "1px 6px", borderRadius: 4, background: statusMeta.bg, color: "#fff", fontWeight: 700 }}
+                          >
+                            {statusMeta.label}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              <div style={{ fontSize: 9, color: "var(--muted)", marginTop: 4, paddingLeft: 2 }}>
+                ※ finance_profile Tier-1 (은행명/거래유형/거래일시/거래금액). Tier-2 및 정밀 추출은 별도 단계.
+              </div>
+            </div>
+            )}
+
           </div>
           )}
         </div>
@@ -1268,12 +1502,43 @@ export default function TestWorkspace() {
           {/* Manifest metadata badges */}
           {selected && selMeta && <ManifestMetaBadges item={selMeta} />}
 
-          {/* Field cards */}
-          {selected && (
+          {/* Field cards — finance_profile: finance 전용 패널 / receipt_profile: 기존 FieldCard */}
+          {selected && selProfile.base === "finance" ? (
+            <FinanceDetailPanel
+              financeFields={selOcr?.financeFields ?? null}
+              reviewReasons={selOcr?.financeReviewReasons ?? []}
+              hasOcr={!!selOcr}
+            />
+          ) : selected ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {FIELDS.map(({ key, label, allowAutofill }) => {
+                // not_applicable: profile에 없는 필드는 X가 아니라 해당없음 (docs/TEST_PROFILE_SCHEMA §8)
+                const profileKey = FIELD_KEY_PROFILE_MAP[key] ?? key;
+                if (isNotApplicableField(selProfile.base, profileKey)) {
+                  return (
+                    <div key={key} style={{
+                      background: "var(--panel)", borderRadius: 10,
+                      border: "1px dashed rgba(255,255,255,0.08)",
+                      padding: "7px 12px",
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                      opacity: 0.38,
+                    }}>
+                      <span style={{ fontSize: 13, fontWeight: 800, color: "var(--muted)" }}>{label}</span>
+                      <span
+                        title={`이 문서 유형(${selMeta?.documentType ?? selProfile.base})에서는 해당 없는 필드 — KPI 분모 제외`}
+                        style={{ fontSize: 12, fontWeight: 800, color: "rgba(255,255,255,0.3)", userSelect: "none" }}
+                      >
+                        —
+                      </span>
+                    </div>
+                  );
+                }
+
                 const v = views[key];
                 const m: MatchResult = matchField(v.gt, v.finalValue);
+                const matchStatus = computeMatchStatus(
+                  key, v.gt, v.ocrRaw, v.ocrNormalized, v.finalValue, v.finalSource,
+                );
                 const isAmount = key === "총합계금액";
                 const bs = bizStatus[selected];
                 const bsText = bs === "active" ? "정상" : bs === "closed" ? "폐업" : bs ? "미확인" : undefined;
@@ -1291,13 +1556,14 @@ export default function TestWorkspace() {
                     bizStatusColor={bsColor}
                     isAmount={isAmount}
                     matchResult={m}
+                    matchStatus={matchStatus}
                     onGtChange={(val) => updateGtField(selected, key, val)}
                     onCommit={() => commitFieldToGt(selected, key, v.finalValue)}
                   />
                 );
               })}
             </div>
-          )}
+          ) : null}
 
           {/* timing */}
           {selOcr && (
@@ -1457,6 +1723,7 @@ function FieldCard({
   fieldKey, label, allowAutofill, view, viewMode, hasOcr,
   bizStatusText, bizStatusColor, isAmount,
   matchResult,
+  matchStatus,
   onGtChange, onCommit,
 }: {
   fieldKey: FieldKey;
@@ -1469,6 +1736,7 @@ function FieldCard({
   bizStatusColor?: string;
   isAmount: boolean;
   matchResult: MatchResult;
+  matchStatus: MatchStatus;
   onGtChange: (v: string) => void;
   onCommit: () => void;
 }) {
@@ -1547,6 +1815,20 @@ function FieldCard({
             }}>OCR 미실행</span>
           ) : (
             <>
+              {(() => {
+                const meta = matchStatusMeta(matchStatus);
+                return (
+                  <span title={meta.title} style={{
+                    display: "inline-flex", alignItems: "center", justifyContent: "center",
+                    width: 22, height: 22, borderRadius: 999,
+                    fontSize: 12, fontWeight: 800, color: "#fff",
+                    background: matchStatus === "exact" ? "#22c55e"
+                              : matchStatus === "policy" ? "#f59e0b"
+                              : matchStatus === "mismatch" ? "#ef4444"
+                              : "rgba(255,255,255,0.18)",
+                  }}>{meta.symbol}</span>
+                );
+              })()}
               {!matchResult.hasBoth ? (
                 <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", whiteSpace: "nowrap" }}>유사도 —</span>
               ) : (
@@ -1728,6 +2010,24 @@ function KpiChip({ label, value, sub, tone = "neutral" }: { label: string; value
   );
 }
 
+function TopStatChip({ label, value, sub, tone = "neutral" }: { label: string; value: string; sub?: string; tone?: KpiTone }) {
+  const toneColors: Record<KpiTone, string> = {
+    green: "#22c55e", amber: "#f59e0b", red: "#ef4444",
+    indigo: "#6366f1", sky: "#0ea5e9",
+    neutral: "rgba(255,255,255,0.55)",
+  };
+  return (
+    <div style={{
+      display: "flex", flexDirection: "column", padding: "3px 8px", borderRadius: 6,
+      background: "var(--panel2)", border: "1px solid rgba(255,255,255,0.08)",
+    }}>
+      <span style={{ fontSize: 9, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: 0.4, whiteSpace: "nowrap" }}>{label}</span>
+      <span style={{ fontSize: 11, fontWeight: 800, color: toneColors[tone], lineHeight: 1.2 }}>{value}</span>
+      {sub && <span style={{ fontSize: 9, color: "var(--muted)", whiteSpace: "nowrap" }}>{sub}</span>}
+    </div>
+  );
+}
+
 function SourceLegend({ label, color, note }: { label: string; color: string; note: string }) {
   return (
     <span title={note} style={{
@@ -1768,6 +2068,159 @@ function KpiSection({ title, subtitle, tone, icon, children }: { title: string; 
       <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 2 }}>{children}</div>
     </div>
   );
+}
+
+// ============================================================
+// FinanceDetailPanel — finance_profile 선택 시 상세 패널
+// ============================================================
+const FINANCE_FIELD_META: { key: string; label: string; required: boolean }[] = [
+  { key: "bankName",            label: "은행명",        required: true  },
+  { key: "transactionType",     label: "거래유형",      required: true  },
+  { key: "transactionDateTime", label: "거래일시",      required: true  },
+  { key: "amount",              label: "거래금액",      required: true  },
+  { key: "balanceAfter",        label: "거래후잔액",    required: false },
+  { key: "accountMasked",       label: "계좌(마스킹)",  required: false },
+  { key: "branchOrChannel",     label: "지점/채널",     required: false },
+  { key: "memo",                label: "적요",          required: false },
+];
+
+const REVIEW_REASON_LABELS: Record<string, string> = {
+  TIER1_PARTIAL:                "Tier-1 일부 미추출",
+  AMOUNT_AMBIGUOUS:             "거래금액·잔액 충돌",
+  AMOUNT_ANCHOR_NOT_FOUND:      "거래금액 anchor 없음",
+  DATETIME_FORMAT_UNSTABLE:     "날짜/시각 불완전",
+  DATETIME_NOT_FOUND:           "날짜 미탐지",
+  BANK_NAME_MULTIPLE_CANDIDATES:"은행명 복수 후보",
+  TRANSACTION_TYPE_AMBIGUOUS:   "거래유형 모호",
+  TRANSACTION_TYPE_NOT_FOUND:   "거래유형 미탐지",
+  EMPTY_TEXT:                   "OCR 텍스트 없음",
+};
+
+function FinanceDetailPanel({
+  financeFields,
+  reviewReasons,
+  hasOcr,
+}: {
+  financeFields: Record<string, string> | null;
+  reviewReasons: string[];
+  hasOcr: boolean;
+}) {
+  const hasData = financeFields !== null;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      {/* finance profile 안내 헤더 */}
+      <div style={{
+        display: "flex", alignItems: "center", gap: 8,
+        padding: "6px 12px", borderRadius: 8,
+        background: "rgba(220,38,38,0.08)", border: "1px solid rgba(220,38,38,0.2)",
+      }}>
+        <span style={{ fontSize: 10, fontWeight: 800, color: "#dc2626", letterSpacing: 0.5 }}>
+          🏦 FINANCE PROFILE
+        </span>
+        {!hasOcr && (
+          <span style={{ fontSize: 10, color: "var(--muted)" }}>OCR 미실행 — 실행 후 Tier-1 값 표시</span>
+        )}
+        {hasOcr && !hasData && (
+          <span style={{ fontSize: 10, color: "var(--muted)" }}>finance_fields 없음 (OCR 재실행 필요)</span>
+        )}
+        {hasOcr && hasData && reviewReasons.length > 0 && (
+          <span style={{ fontSize: 10, color: "#d97706" }}>
+            review: {reviewReasons.map((r) => REVIEW_REASON_LABELS[r] ?? r).join(" · ")}
+          </span>
+        )}
+      </div>
+
+      {/* Tier-1 / Tier-2 필드 카드 */}
+      {FINANCE_FIELD_META.map(({ key, label, required }) => {
+        const val = financeFields?.[key] ?? "";
+        const hasValue = val !== "";
+        const isTier1 = required;
+        return (
+          <div key={key} style={{
+            background: "var(--panel)", borderRadius: 10,
+            border: `1px solid ${hasValue ? (isTier1 ? "rgba(220,38,38,0.3)" : "rgba(255,255,255,0.08)") : "rgba(255,255,255,0.06)"}`,
+            overflow: "hidden",
+            opacity: hasOcr ? 1 : 0.5,
+          }}>
+            {/* 헤더 */}
+            <div style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "7px 12px", background: "var(--panel2)",
+              borderBottom: "1px solid rgba(255,255,255,0.05)",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: 13, fontWeight: 800, color: "var(--text)" }}>{label}</span>
+                {isTier1 && (
+                  <span style={{ fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 4, color: "#fff", background: "#dc2626" }}>
+                    Tier-1
+                  </span>
+                )}
+              </div>
+              {hasOcr && (
+                <span style={{
+                  display: "inline-flex", alignItems: "center", justifyContent: "center",
+                  width: 22, height: 22, borderRadius: 999,
+                  fontSize: 12, fontWeight: 800, color: "#fff",
+                  background: hasValue ? "#22c55e" : "rgba(255,255,255,0.18)",
+                }}>
+                  {hasValue ? "O" : "—"}
+                </span>
+              )}
+            </div>
+            {/* 값 영역 */}
+            <div style={{ padding: "8px 12px" }}>
+              {hasValue ? (
+                <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", wordBreak: "break-all" }}>
+                  {val}
+                </span>
+              ) : (
+                <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", fontStyle: "italic" }}>
+                  {hasOcr ? (isTier1 ? "미추출 (review)" : "—") : "OCR 미실행"}
+                </span>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function matchStatusMeta(status: MatchStatus): { symbol: string; color: string; title: string } {
+  switch (status) {
+    case "exact":
+      return { symbol: "O", color: "#22c55e", title: "기준값과 정확히 일치 (필드 표준 정규화 후 동일)" };
+    case "policy":
+      return { symbol: "△", color: "#f59e0b", title: "정규화/유사도/anchor/자동복원 등 정책 경로로 채택" };
+    case "mismatch":
+      return { symbol: "X", color: "#ef4444", title: "기준값과 불일치" };
+    case "no_baseline":
+    default:
+      return { symbol: "—", color: "rgba(255,255,255,0.35)", title: "기준값이 없음 — 채점 대상 아님" };
+  }
+}
+
+// finance_profile 컬럼 한국어 라벨 (docs/FINANCE_PARSER_TARGET_20260427.md §2)
+const FINANCE_COL_LABELS: Record<string, string> = {
+  bankName:            "은행명",
+  transactionType:     "거래유형",
+  transactionDateTime: "거래일시",
+  amount:              "거래금액",
+  balanceAfter:        "거래후잔액",
+  accountMasked:       "계좌(마스킹)",
+  branchOrChannel:     "지점/채널",
+  memo:                "적요",
+};
+
+// suppression_policy_note §6.2 status 문자열 → 1차 상태 표시 매핑
+function getFinanceStatusMeta(status: string): { label: string; bg: string } {
+  if (status === "selected")              return { label: "selected",    bg: "#16a34a" };
+  if (status === "suppressed_bank_slip")  return { label: "review",      bg: "#d97706" };
+  if (status?.startsWith("suppressed_")) return { label: "suppressed",   bg: "#dc2626" };
+  if (status === "unknown")              return { label: "unknown",      bg: "#6b7280" };
+  if (!status)                           return { label: "미실행",        bg: "#475569" };
+  return { label: status, bg: "#6b7280" };
 }
 
 function pct(ok: number, total: number): string {
@@ -1916,6 +2369,17 @@ function ManifestMetaBadges({ item }: { item: ManifestItem }) {
 // ============================================================
 const FIELD_SHORT: Record<FieldKey, string> = {
   회사명: "회사", 사업자번호: "사번", 대표자: "대표", tel: "전화", 주소: "주소", 총합계금액: "금액",
+};
+
+// 레거시 한국어 FieldKey → profiles.ts ReceiptFieldKey(영문 논리명) 어댑터
+// TestWorkspace의 기존 키 체계와 profiles.ts 키 체계를 연결하는 브리지.
+const FIELD_KEY_PROFILE_MAP: Record<FieldKey, string> = {
+  "회사명":    "companyName",
+  "사업자번호": "bizNumber",
+  "대표자":    "representative",
+  "tel":       "phone",
+  "주소":      "address",
+  "총합계금액": "totalAmount",
 };
 
 function DocTypeSummarySection({

@@ -32,6 +32,10 @@ export type OcrResponse = {
   fields: { name: string; field_type: string; value: string; confidence: number; bbox: number[] }[];
   full_text: string;
   receipt_fields?: Partial<Entry>;
+  /** finance_profile Tier-1 추출 결과 (doc_type=bank_slip일 때만 포함) */
+  finance_fields?: Record<string, string>;
+  /** finance_profile review 사유 코드 목록 (내부 감사용) */
+  finance_review_reasons?: string[];
   status?: string;
   doc_type?: string;
   processing_time: number;
@@ -47,6 +51,10 @@ export type OcrEntry = {
   scannedAt: string;
   status?: string;
   docType?: string;
+  /** finance_profile Tier-1 값 (bankName / transactionType / transactionDateTime / amount) */
+  financeFields?: Record<string, string>;
+  /** finance_profile review 사유 코드 목록 */
+  financeReviewReasons?: string[];
 };
 
 export type AutofillSource = "biz" | "text";
