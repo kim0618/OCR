@@ -14,9 +14,27 @@ const OcrCanvasPane = dynamic(() => import("../ocr/OcrCanvasPane"), { ssr: false
 type TemplateItem = {
   id: string;
   name: string;
+  regions?: Region[];
+  mode?: string;
+  fields?: { no?: number; enField?: string; koField?: string }[];
 };
 
 const DEFAULT_TEMPLATES: TemplateItem[] = [];
+const LOCAL_TEMPLATES_KEY = "mysuit_ocr_templates";
+
+type UploadWorkspaceVariant = "upload" | "runocr";
+type RunOcrTemplateMode = "template" | "unstructured";
+
+type UploadWorkspaceProps = {
+  variant?: UploadWorkspaceVariant;
+};
+
+const MODEL_OPTIONS = [
+  { id: "paddleocr", name: "PaddleOCR" },
+  { id: "easyocr", name: "EasyOCR" },
+  { id: "clova", name: "CLOVA OCR" },
+  { id: "tesseract", name: "Tesseract OCR" },
+];
 
 function isTiff(file: File) {
   return (
@@ -41,7 +59,7 @@ type PreprocessResult = {
   contrast: PreprocessDetail;
 } | null;
 
-export default function UploadWorkspace() {
+export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceProps) {
   const router = useRouter();
   const ui = useUi();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -49,6 +67,9 @@ export default function UploadWorkspace() {
 
   const [activeTemplateId, setActiveTemplateId] = useState<string>("");
   const [templates, setTemplates] = useState<TemplateItem[]>(DEFAULT_TEMPLATES);
+  const [selectedModelId, setSelectedModelId] = useState<string>(MODEL_OPTIONS[0].id);
+  const [runOcrTemplateMode, setRunOcrTemplateMode] = useState<RunOcrTemplateMode>("template");
+  const isRunOcr = variant === "runocr";
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -77,6 +98,34 @@ export default function UploadWorkspace() {
   const [canvasLoaded, setCanvasLoaded] = useState<LoadedImage | null>(null);
   const [resultTab, setResultTab] = useState<"preview" | "custom" | "validation">("custom");
 
+  function loadLocalTemplates(): TemplateItem[] {
+    try {
+      const list = JSON.parse(localStorage.getItem(LOCAL_TEMPLATES_KEY) || "[]");
+      if (!Array.isArray(list)) return [];
+      return list
+        .map((item: any) => ({
+          id: String(item?.template_id ?? ""),
+          name: String(item?.template_name ?? ""),
+          mode: String(item?.template_json?.mode ?? "template"),
+          regions: Array.isArray(item?.template_json?.regions) ? item.template_json.regions : [],
+          fields: Array.isArray(item?.template_json?.fields) ? item.template_json.fields : [],
+        }))
+        .filter((item) => item.id && item.name);
+    } catch {
+      return [];
+    }
+  }
+
+  function mergeTemplates(serverTemplates: TemplateItem[], localTemplates: TemplateItem[]) {
+    const seen = new Set<string>();
+    return [...localTemplates, ...serverTemplates].filter((item) => {
+      const key = item.id || item.name;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
   // canvasSelectedId ↔ selectedFieldIndex 연동
   useEffect(() => {
     if (!canvasSelectedId) { setSelectedFieldIndex(null); return; }
@@ -94,18 +143,28 @@ export default function UploadWorkspace() {
 
   useEffect(() => {
     (async () => {
+      const localTemplates = loadLocalTemplates();
+      if (isRunOcr) {
+        setTemplates(localTemplates);
+        return;
+      }
       try {
         const res = await fetch("/templates");
         const json = await res.json();
         const list = json.resultMap?.templateList ?? [];
-        const mapped = list.map((t: any) => ({ id: t.template_id, name: t.template_name }));
-        setTemplates(mapped);
+        const mapped = list.map((t: any) => ({
+          id: t.template_id,
+          name: t.template_name,
+          regions: Array.isArray(t.template_json?.regions) ? t.template_json.regions : t.regions,
+        }));
+        setTemplates(mergeTemplates(mapped, localTemplates));
         // 기본값: 전체 인식 (빈 값)
       } catch {
+        setTemplates(localTemplates);
         // 서버 미실행 시 무시 (기본값: 빈 목록)
       }
     })();
-  }, []);
+  }, [isRunOcr]);
 
   const hintSections = useMemo(
     () => [
@@ -275,6 +334,91 @@ export default function UploadWorkspace() {
     return file.name.split(".").pop()?.toUpperCase() ?? file.type;
   }
 
+  function buildRunOcrResult(raw: any, template?: TemplateItem): OcrResult {
+    if (template?.mode !== "unstructured") return raw;
+
+    const receiptFields = raw.receipt_fields ?? {};
+    const financeFields = raw.finance_fields ?? {};
+    const templateFields = template.fields ?? [];
+    const resultFields: OcrFieldResult[] = [];
+
+    if (templateFields.length > 0) {
+      templateFields.forEach((field, index) => {
+        const ko = String(field.koField ?? "").trim();
+        const en = String(field.enField ?? "").trim();
+        const value = (ko && receiptFields[ko])
+          || (en && receiptFields[en])
+          || (ko && financeFields[ko])
+          || (en && financeFields[en])
+          || "";
+        resultFields.push({
+          name: ko || en || `field_${index + 1}`,
+          field_type: "field",
+          value: String(value ?? ""),
+          confidence: value ? 1 : 0,
+          bbox: [0, 0, 0, 0],
+        });
+      });
+    } else if (Object.keys(receiptFields).length > 0) {
+      Object.entries(receiptFields).forEach(([name, value]) => {
+        resultFields.push({
+          name,
+          field_type: "field",
+          value: String(value ?? ""),
+          confidence: value ? 1 : 0,
+          bbox: [0, 0, 0, 0],
+        });
+      });
+    }
+
+    if (resultFields.length === 0 && Object.keys(financeFields).length > 0) {
+      Object.entries(financeFields).forEach(([name, value]) => {
+        resultFields.push({
+          name,
+          field_type: "field",
+          value: String(value ?? ""),
+          confidence: value ? 1 : 0,
+          bbox: [0, 0, 0, 0],
+        });
+      });
+    }
+
+    return {
+      ...raw,
+      fields: resultFields.length > 0 ? resultFields : (raw.fields ?? []),
+    };
+  }
+
+  function hasValidBbox(field: OcrFieldResult) {
+    return Array.isArray(field.bbox)
+      && field.bbox.length >= 4
+      && field.bbox[2] > 0
+      && field.bbox[3] > 0;
+  }
+
+  function buildResultRegions(runResult: OcrResult, template?: TemplateItem): Region[] {
+    if (isRunOcr && template?.regions?.length) {
+      return template.regions.map((region, index) => ({
+        ...region,
+        id: `ocr_${index}`,
+        name: region.name || runResult.fields?.[index]?.name || `field_${index + 1}`,
+        fieldType: (region.fieldType || runResult.fields?.[index]?.field_type || "field") as FieldType,
+      }));
+    }
+
+    return (runResult.fields ?? [])
+      .filter(hasValidBbox)
+      .map((field: OcrFieldResult, index: number) => ({
+        id: `ocr_${index}`,
+        name: field.name,
+        fieldType: (field.field_type || "field") as FieldType,
+        x: field.bbox[0],
+        y: field.bbox[1],
+        width: field.bbox[2],
+        height: field.bbox[3],
+      }));
+  }
+
   async function runOcr() {
     if (!selectedFile) return;
     setIsOcrRunning(true);
@@ -282,6 +426,11 @@ export default function UploadWorkspace() {
       const formData = new FormData();
       formData.append("file", selectedFile);
       if (activeTemplateId) formData.append("template_id", activeTemplateId);
+      const activeTemplate = templates.find((t) => t.id === activeTemplateId);
+      if (activeTemplate?.regions?.length) {
+        formData.append("regions", JSON.stringify(activeTemplate.regions));
+      }
+      if (isRunOcr) formData.append("model_id", selectedModelId);
       if (corners.length === 4) formData.append("corners", JSON.stringify(corners));
       const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || ""}/ocr/extract`, {
         method: "POST",
@@ -289,19 +438,12 @@ export default function UploadWorkspace() {
       });
       if (!res.ok) throw new Error("OCR 요청 실패");
       const json = await res.json();
-      setOcrResult(json);
-      if (json.processed_image) {
-        setProcessedImageUrl(json.processed_image);
+      const runResult = isRunOcr ? buildRunOcrResult(json, activeTemplate) : json;
+      setOcrResult(runResult);
+      if (runResult.processed_image) {
+        setProcessedImageUrl(runResult.processed_image);
       }
-      const ocrRegions: Region[] = (json.fields ?? []).map((f: OcrFieldResult, i: number) => ({
-        id: `ocr_${i}`,
-        name: f.name,
-        fieldType: (f.field_type || "field") as FieldType,
-        x: f.bbox[0],
-        y: f.bbox[1],
-        width: f.bbox[2],
-        height: f.bbox[3],
-      }));
+      const ocrRegions = buildResultRegions(runResult, activeTemplate);
       setCanvasRegions((prev) => {
         const userRegions = prev.filter((r) => !r.id.startsWith("ocr_"));
         return [...ocrRegions, ...userRegions];
@@ -449,28 +591,66 @@ export default function UploadWorkspace() {
   ].filter(Boolean).join(" ");
 
   return (
-    <div className="uw-root">
+    <div className={isRunOcr ? "uw-root uw-root-runocr" : "uw-root"}>
       {/* Top: Template bar */}
-      <div className="uw-topbar">
-        <span className="uw-topbar-label">Template</span>
+      <div className={isRunOcr ? "uw-topbar uw-runocr-topbar" : "uw-topbar"}>
+        {isRunOcr ? (
+          <>
+            <div className="uw-runocr-template-cards">
+              {templates.length > 0 ? (
+                templates.map((template) => (
+                  <button
+                    key={template.id}
+                    type="button"
+                    className={`uw-runocr-template-card ${activeTemplateId === template.id ? "uw-runocr-template-card-active" : ""}`}
+                    onClick={() => {
+                      setRunOcrTemplateMode("template");
+                      setActiveTemplateId(template.id);
+                    }}
+                    title={template.name}
+                  >
+                    {template.mode === "unstructured" ? (
+                      <span className="uw-runocr-template-card-preview">
+                        <img
+                          src="/images/unstructured-template-preview.svg"
+                          alt=""
+                          className="uw-template-card-img"
+                        />
+                      </span>
+                    ) : (
+                      <span className="uw-runocr-template-card-preview" />
+                    )}
+                    <span className="uw-runocr-template-card-name">{template.name}</span>
+                  </button>
+                ))
+              ) : (
+                <span className="uw-runocr-empty-template-text">저장된 템플릿이 없습니다.</span>
+              )}
+            </div>
+          </>
+        ) : (
+          <>
+            <span className="uw-topbar-label">Template</span>
 
-        <div className="uw-topbar-group uw-template-select-wrap">
-          <select
-            value={activeTemplateId}
-            onChange={(e) => setActiveTemplateId(e.target.value)}
-            className="ms-select uw-template-select"
-          >
-            <option value="">자동 인식</option>
-            {templates.map((t) => (
-              <option key={t.id} value={t.id}>{t.name}</option>
-            ))}
-          </select>
-          <span className="uw-select-arrow">▾</span>
-        </div>
+            <div className="uw-topbar-group uw-template-select-wrap">
+              <select
+                value={activeTemplateId}
+                onChange={(e) => setActiveTemplateId(e.target.value)}
+                className="ms-select uw-template-select"
+              >
+                <option value="">자동 인식</option>
+                {templates.map((t) => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
+              <span className="uw-select-arrow">▾</span>
+            </div>
 
-        <button type="button" className="hw-btn-primary" onClick={() => router.push("/ocr?mode=new")}>
-          + New Template
-        </button>
+            <button type="button" className="hw-btn-primary" onClick={() => router.push("/ocr?mode=new")}>
+              + New Template
+            </button>
+          </>
+        )}
       </div>
 
       {/* Left: upload panel */}
@@ -559,6 +739,21 @@ export default function UploadWorkspace() {
 
       {/* Right: guide or file info */}
       <aside className="uw-guide-panel">
+        {isRunOcr && (
+          <div className="uw-model-section">
+            <label className="uw-model-label" htmlFor="runocr-model-select">모델 선택</label>
+            <select
+              id="runocr-model-select"
+              value={selectedModelId}
+              onChange={(e) => setSelectedModelId(e.target.value)}
+              className="ms-select uw-model-select"
+            >
+              {MODEL_OPTIONS.map((model) => (
+                <option key={model.id} value={model.id}>{model.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
         {selectedFile ? (
           <div className="uw-guide-content">
             <div className="uw-file-section">

@@ -28,8 +28,25 @@ _REPRESENTATIVE_NOISE_RE = re.compile(
     r'cashier|server|guests|station|order|table|menu|item|qty|price|amount',
     re.I,
 )
+_REPRESENTATIVE_LABEL_ANCHOR_RE = re.compile(
+    r'(?:대표자\s*명|대표자|대표(?!\w)|성\s*명|공급자\s*성\s*명|공급자\s*명|예금주명|예금주)',
+    re.I,
+)
+_REPRESENTATIVE_COMPANYISH_RE = re.compile(
+    r'(?:주식회사|\(주\)|상사|철물|조명|전기|공구|볼트|약국|카페|마트|편의점|스토어|매장|툴|'
+    r'IBK|NH|KB|비씨|신한|국민|하나|우리|기업은행|cashnote|paykey|vankey)',
+    re.I,
+)
 _COMPANY_SUFFIX_HINT_RE = re.compile(
     r'(\(주\)|주식회사|상사|철물|조명|전기|공구|볼트|약국|카페|마트|편의점|스토어|매장|집|점|GS25|CU|세븐일레븐|코리아)$',
+    re.I,
+)
+_COMPANY_LABEL_RE = re.compile(
+    r'(?:상호\s*명?|가맹점\s*명|회사\s*명|업체\s*명|매장\s*명|브랜드\s*명|상점\s*명|사업장\s*명|판매자|공급자)(?!\s*(?:성명|명|번호|주소))\s*[:;]?',
+    re.I,
+)
+_COMPANY_CONTEXT_HINT_RE = re.compile(
+    r'(?:상사|철물|조명|전기|공구|볼트|약국|카페|마트|편의점|스토어|매장|식당|상회|집|점|툴|주식회사|\(주\)|㈜)$',
     re.I,
 )
 _CONVENIENCE_STORE_NAME_RE = re.compile(r'^(?:GS25|CU|세븐일레븐|이마트24|미니스톱)[가-힣A-Za-z0-9()]*점$', re.I)
@@ -40,22 +57,27 @@ _COMPANY_SLOGAN_RE = re.compile(
 _PERSON_LIKE_NAME_RE = re.compile(r'^[가-힣]{3}$')
 _REPRESENTATIVE_SURNAME_RE = re.compile(r'^[김이박최정강조윤장임한오서신권황안송전홍유고문양손배조백허남심노하곽성차주우구민류진나엄채원천방공현함변염여추도소석선설마길연위표명기반왕금옥육인맹제모장모국어은편용]')  # noqa: E501
 _ADDRESS_CUT_RE = re.compile(
-    r'\s*(?:TEL|Tel|tel|전화|사업자(?:등록)?번호|등록번호|대표자?|상호|가맹점명|'
-    r'가맹No|가맹점No|가맹점번호|승인번호|카드번호|거래일시|품목|수량|단가|금액|합계|총계|부가세|공급가액|'
-    r'결제|전표|테이블명|판매시간|판매사원|영수번호|작성년월일|공급대가|도매|소매|업태|업종)\s*[:;]?',
+    r'\s*(?:TEL|Tel|tel|전화|FAX|fax|사업자(?:등록)?번호|등록번호|대표자?|성명|상호|회사명|업체명|가맹점명|'
+    r'가맹No|가맹점No|가맹점번호|승인번호|카드번호|카드사|은행|매입사|거래일시|품목|상품명|수량|단가|금액|합계|총계|부가세|공급가액|'
+    r'판매금액|봉사료|결제|전표|테이블명|판매시간|판매사원|영수번호|작성년월일|공급대가|도매|소매|업태|업종|안내|고객센터)\s*[:;]?',
     re.I,
 )
-_ADDRESS_CORE_TOKEN_RE = re.compile(r'시|군|구|읍|면|동|로|길|층|호|번지|리')
+_ADDRESS_LABEL_RE = re.compile(
+    r'(?:사업장\s*)?(?:주소|소재지)|공급자\s*주소|업체\s*주소|본점\s*소재지|사업장\s*소재지',
+    re.I,
+)
+_ADDRESS_CORE_TOKEN_RE = re.compile(r'시|도|군|구|읍|면|동|리|가|로|길|번길|층|호|번지')
 _ADDRESS_STORE_NOISE_RE = re.compile(r'GS25|CU|세븐일레븐|편의점|카페|약국|마트|스토어|매장|점$', re.I)
 _LABEL_ONLY_RE = re.compile(
     r'^(?:사업자|사업자번호|등록|등록번호|공급자|가맹점명|가맹점번호|가맹점no|가맹점|상호|회사명|업체명|대표자|성명|주소|전화|tel|작성년월일)$',
     re.I,
 )
-_ADDRESS_CONTINUATION_RE = re.compile(r'(?:[가-힣A-Za-z0-9(),.\-\s]*(?:로|길|동|읍|면|리|층|호|번지)[가-힣A-Za-z0-9(),.\-\s]*)')
+_ADDRESS_CONTINUATION_RE = re.compile(r'(?:[가-힣A-Za-z0-9(),.\-\s]*(?:로|길|번길|동|읍|면|리|가|층|호|번지|[A-Z]\s*동|제\s*\d+\s*호)[가-힣A-Za-z0-9(),.\-\s]*)')
 _ADDRESS_BROAD_ONLY_RE = re.compile(r'^(?:서울|경기|경기도|인천|부산|대구|광주|대전|울산|세종|강원|충북|충남|전북|전남|경북|경남|제주)\s+[가-힣]+시\s+[가-힣]+구$')
 _ADDRESS_TRAILING_NOISE_RE = re.compile(
-    r'\s*(?:성명|상호|사업자|등록번호|공급자|도매|소매|업태|업종|일반목적|배\s*관|전\s*기|작성년월일|공급대가|'
-    r'테이블명|판매시간|판매사원|영수번호|카드종류|카드번호|승인|전표|TID|CAT|VANKEY|IBK|비씨|체크|신용|'
+    r'\s*(?:대표자|성명|상호|회사명|업체명|사업자|등록번호|공급자|도매|소매|업태|업종|일반목적|배\s*관|전\s*기|작성년월일|공급대가|'
+    r'테이블명|판매시간|판매사원|영수번호|카드종류|카드번호|카드사|은행|매입사|승인|전표|TID|CAT|VANKEY|IBK|비씨|체크|신용|'
+    r'품목|상품명|수량|단가|금액|합계|총계|판매금액|봉사료|안내|고객센터|'
     r'(?<![-\d])\b\d{1,3}[,.]\d{3}(?:[,.]\d{3})?|제\d{1,2}[-\s]?\d{2,}|[*A-Z]{2,}\d*)',
     re.I,
 )

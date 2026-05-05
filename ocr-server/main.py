@@ -11,7 +11,7 @@ from datetime import datetime
 import cv2
 import fitz  # PyMuPDF
 import numpy as np
-from fastapi import FastAPI, File, UploadFile, HTTPException, Request, Query
+from fastapi import FastAPI, File, Form, UploadFile, HTTPException, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from PIL import Image
@@ -27,6 +27,23 @@ from document_classifier import classify_document
 from utils.text_normalize import _clean_number, _clean_inline_field_value
 from utils.rows import _row_text, _single_line_rows, _is_merchant_notice_row, _group_rows
 from utils.io_json import _load_json, _save_json
+from extractors.ocr_lines import _parse_ocr_lines
+from extractors.address import (
+    _strip_address_label,
+    _extract_address_fragment,
+    _address_needs_continuation,
+    _address_continuation_candidate,
+    _clean_address_candidate,
+    _extend_address_with_following_lines,
+    _maybe_set_address,
+    _rescue_address_candidate,
+)
+from extractors.company import (
+    _is_bad_company_candidate,
+    _extract_company_near_biz,
+    _normalize_company_candidate,
+    _rescue_company_name,
+)
 from extractors.common import _bad_top_text_candidate, _extract_until_next_label
 from extractors.business_number import _validate_biz_number, _extract_biz_number
 from extractors.phone import (
@@ -39,38 +56,21 @@ from extractors.representative import (
     _extract_rep_phone_pair,
     _is_bad_representative_candidate,
     _extract_company_rep_from_slash,
+    _fill_lone_representative_from_lines,
 )
+from extractors.invoice_statement import extract_invoice_statement_fields
 from utils.regex_patterns import (
     _PHONE_RE,
     _ADDR_START_RE, _NEXT_LABEL_RE, _FIELD_NOISE_RE,
-    _COMPANY_SUFFIX_HINT_RE,
+    _COMPANY_SUFFIX_HINT_RE, _COMPANY_LABEL_RE, _COMPANY_CONTEXT_HINT_RE,
     _CONVENIENCE_STORE_NAME_RE, _COMPANY_SLOGAN_RE,
     _PERSON_LIKE_NAME_RE, _REPRESENTATIVE_SURNAME_RE,
     _ADDRESS_CUT_RE, _ADDRESS_CORE_TOKEN_RE, _ADDRESS_STORE_NOISE_RE,
-    _LABEL_ONLY_RE, _ADDRESS_CONTINUATION_RE,
+    _LABEL_ONLY_RE, _ADDRESS_LABEL_RE, _ADDRESS_CONTINUATION_RE,
     _ADDRESS_BROAD_ONLY_RE, _ADDRESS_TRAILING_NOISE_RE,
 )
 
 app = FastAPI(title="MySuit OCR Server")
-
-
-def _parse_ocr_lines(result):
-    """PaddleOCR 3.x 결과를 (pts, text, conf) 리스트로 정규화"""
-    lines = []
-    if not result or not result[0]:
-        return lines
-    r0 = result[0]
-    if isinstance(r0, dict):
-        for text, score, poly in zip(r0.get("rec_texts", []), r0.get("rec_scores", []), r0.get("rec_polys", [])):
-            pts = poly.tolist()
-            lines.append((pts, str(text).strip(), float(score)))
-    else:
-        for line in r0:
-            pts = line[0]
-            lines.append((pts, str(line[1][0]).strip(), float(line[1][1])))
-    return lines
-
-
 
 
 def _parse_amounts(s: str, keyword_context: bool = False) -> list:
@@ -110,148 +110,6 @@ def _parse_amounts(s: str, keyword_context: bool = False) -> list:
 
 
 
-def _extract_address_fragment(text: str) -> str:
-    match = _ADDR_START_RE.search(text or "")
-    if not match:
-        return ""
-    value = text[match.start():]
-    value = _ADDRESS_CUT_RE.split(value, maxsplit=1)[0]
-    value = _PHONE_RE.split(value, maxsplit=1)[0]
-    value = re.split(r'\s*\d{4}[./-]\d{1,2}[./-]\d{1,2}', value, maxsplit=1)[0]
-    value = re.sub(r'\d{2,3}[-\s.]?\d{2}[-\s.]?\d{5}.*$', '', value).strip()
-    return _clean_inline_field_value(value)
-
-
-def _is_bad_company_candidate(text: str, row_text: str = "") -> bool:
-    candidate = _clean_inline_field_value(text)
-    compact = re.sub(r'\s+', '', candidate)
-    row_compact = re.sub(r'\s+', '', row_text or '')
-    has_label = bool(re.search(r'상호|가맹점명|회사명|업체명|매장명|브랜드명', row_compact))
-    short_hangul_name = bool(re.fullmatch(r'[가-힣]{3,4}', compact))
-    short_standalone_ok = (
-        short_hangul_name
-        and not has_label
-        and not re.search(r'\d', row_compact)
-        and not _FIELD_NOISE_RE.search(row_compact)
-        and not _is_merchant_notice_row(row_text or "")
-    )
-    digits = sum(ch.isdigit() for ch in compact)
-    amount_like_count = len(re.findall(r'\d{1,3}(?:,\d{3})+|\d{4,}', row_text or ""))
-
-    if not compact:
-        return True
-    if _LABEL_ONLY_RE.fullmatch(compact):
-        return True
-    if _COMPANY_SLOGAN_RE.search(compact):
-        return True
-    if _bad_top_text_candidate(compact) or _FIELD_NOISE_RE.search(compact):
-        return True
-    if re.search(r'체크카드|신용매출|귀하', compact, re.I):
-        return True
-    if re.search(r'품명|상품명|상품|품목|수량|단가|금액|합계|승인|전표|TID|VAN|CAT|가맹', compact, re.I):
-        return True
-    if re.search(r'유통단지|호계동|오전동|고천동|동안구|의왕시|안양시|경기도|경기', compact):
-        return True
-    if re.search(r'다른경우|실제와|가맹점주소가|전기작업|작업지시|직원|식지|재발행|안내문|설명문구|예시문구|작성문구', compact, re.I):
-        return True
-    if re.search(r'표시|입니다|과세|면세|품목', compact):
-        return True
-    if re.search(r'응원합니다|감사합니다|유치|박람회', compact):
-        return True
-    if re.fullmatch(r'[가-힣]{2,8}(?:시|군|구|동|로|길|층|호|번지)', compact) and not _COMPANY_SUFFIX_HINT_RE.search(compact):
-        return True
-    if _ADDRESS_CORE_TOKEN_RE.search(compact) and _ADDR_START_RE.search(compact) and not _COMPANY_SUFFIX_HINT_RE.search(compact):
-        return True
-    if re.search(r'\d.*(?:\uC0AC\uC625|\uBE4C\uB529)|(?:\uC0AC\uC625|\uBE4C\uB529)\)?$', compact) and not _COMPANY_SUFFIX_HINT_RE.search(compact):
-        return True
-    if digits > 1 and not _CONVENIENCE_STORE_NAME_RE.search(compact):
-        return True
-    if len(compact) <= 2 and not _COMPANY_SUFFIX_HINT_RE.search(compact):
-        return True
-    if len(compact) <= 4 and not short_standalone_ok and not has_label and not _COMPANY_SUFFIX_HINT_RE.search(compact):
-        return True
-    if _PERSON_LIKE_NAME_RE.fullmatch(compact) and _REPRESENTATIVE_SURNAME_RE.search(compact) and not _COMPANY_SUFFIX_HINT_RE.search(compact):
-        return True
-    if _PERSON_LIKE_NAME_RE.fullmatch(compact) and not short_standalone_ok and not _COMPANY_SUFFIX_HINT_RE.search(compact):
-        return True
-    if _FIELD_NOISE_RE.search(row_compact) and not has_label and not _CONVENIENCE_STORE_NAME_RE.search(compact):
-        return True
-    if amount_like_count >= 2 and not has_label and not re.search(r'사업자|등록번호|주소|전화|TEL|Tel|tel', row_text or "", re.I):
-        return True
-    return False
-
-
-def _clean_address_candidate(text: str) -> str:
-    value = _clean_inline_field_value(text)
-    if not value:
-        return ""
-    value = _ADDRESS_CUT_RE.split(value, maxsplit=1)[0]
-    value = _PHONE_RE.split(value, maxsplit=1)[0]
-    value = re.split(r'\s*\d{4}[./-]\d{1,2}[./-]\d{1,2}', value, maxsplit=1)[0]
-    value = re.sub(r'\d{2,3}[-\s.]?\d{2}[-\s.]?\d{5}.*$', '', value).strip()
-    value = _ADDRESS_TRAILING_NOISE_RE.split(value, maxsplit=1)[0]
-    value = re.sub(r'\s+[일업전상공]$', '', value).strip()
-    value = _clean_inline_field_value(value)
-    has_region = bool(_ADDR_START_RE.search(value))
-    if not has_region:
-        return ""
-    if len(value) < 6:
-        return ""
-    tail = value[2:]
-    if not _ADDRESS_CORE_TOKEN_RE.search(tail):
-        return ""
-    if _ADDRESS_STORE_NOISE_RE.search(value) and not _ADDRESS_CORE_TOKEN_RE.search(tail):
-        return ""
-    value = re.sub(r'\s+[A-Z]{2,}\d+[A-Z0-9-]*$', '', value).strip()
-    value = re.sub(r'\s+[A-Za-z]{2,}\d{2,}[A-Za-z0-9-]*$', '', value).strip()
-    value = re.sub(r'(?<=\d)\s+[가-힣]{2,}(?:조명|전기|철물|공구|볼트|약국|집|툴)?$', '', value).strip()
-    return value
-
-
-def _address_needs_continuation(value: str) -> bool:
-    compact = re.sub(r'\s+', ' ', value or '').strip()
-    if not compact:
-        return False
-    if compact.count("(") > compact.count(")"):
-        return True
-    if _ADDRESS_BROAD_ONLY_RE.fullmatch(compact):
-        return True
-    return not bool(re.search(r'로|길|동|읍|면|리|층|호|번지|\d', compact[2:]))
-
-
-def _address_continuation_candidate(text: str) -> str:
-    raw = _ADDRESS_CUT_RE.split(text or "", maxsplit=1)[0]
-    raw = _PHONE_RE.split(raw, maxsplit=1)[0]
-    raw = _ADDRESS_TRAILING_NOISE_RE.split(raw, maxsplit=1)[0]
-    raw = _clean_inline_field_value(raw)
-    if not raw or _ADDR_START_RE.search(raw):
-        return ""
-    if _bad_top_text_candidate(raw) or _FIELD_NOISE_RE.search(raw):
-        return ""
-    if re.fullmatch(r'[가-힣A-Za-z0-9\s]{1,12}\)', raw):
-        return raw
-    if re.fullmatch(r'(?:\d+\s*)?층|[가-힣A-Za-z0-9(),.\-\s]{1,14}(?:동|층|호)', raw):
-        return raw
-    match = _ADDRESS_CONTINUATION_RE.search(raw)
-    if not match:
-        return ""
-    value = _clean_inline_field_value(match.group(0))
-    if len(value) < 3:
-        return ""
-    return value
-
-
-def _maybe_set_address(target: dict, candidate: str) -> None:
-    if not candidate:
-        return
-    current = target.get("주소", "")
-    if not current:
-        target["주소"] = candidate
-        return
-    if _address_needs_continuation(current) and len(candidate) > len(current):
-        target["주소"] = candidate
-
-
 def _repair_remaining_top_fields_from_text_lines(target: dict, text_lines: list[str]) -> None:
     """Final tiny repair for cases where OCR raw exists but bbox row grouping split it."""
     if not text_lines:
@@ -275,11 +133,8 @@ def _repair_remaining_top_fields_from_text_lines(target: dict, text_lines: list[
                 combined = _clean_address_candidate(f"{line_clean} {text_lines[idx + 1]}")
                 if combined:
                     addr = combined
-            if addr and _address_needs_continuation(addr) and idx + 1 < len(text_lines):
-                cont = _address_continuation_candidate(text_lines[idx + 1])
-                combined = _clean_address_candidate(f"{addr} {cont}") if cont else ""
-                if combined:
-                    addr = combined
+            if addr:
+                addr = _extend_address_with_following_lines(addr, text_lines, idx)
             if addr:
                 target["주소"] = addr
                 break
@@ -292,11 +147,7 @@ def _repair_remaining_top_fields_from_text_lines(target: dict, text_lines: list[
             addr = _clean_address_candidate(_extract_address_fragment(line_clean))
             if not addr or not _ADDR_START_RE.search(addr):
                 continue
-            if _address_needs_continuation(addr) and idx + 1 < len(text_lines):
-                cont = _address_continuation_candidate(text_lines[idx + 1])
-                combined = _clean_address_candidate(f"{addr} {cont}") if cont else ""
-                if combined:
-                    addr = combined
+            addr = _extend_address_with_following_lines(addr, text_lines, idx)
             if len(re.sub(r'\s+', '', addr)) >= current_len:
                 target["주소"] = addr
                 break
@@ -310,11 +161,7 @@ def _repair_remaining_top_fields_from_text_lines(target: dict, text_lines: list[
                 addr = _clean_address_candidate(_extract_address_fragment(line_clean))
                 if not addr or not _ADDR_START_RE.search(addr):
                     continue
-                if _address_needs_continuation(addr) and idx + 1 < len(text_lines):
-                    cont = _address_continuation_candidate(text_lines[idx + 1])
-                    combined = _clean_address_candidate(f"{addr} {cont}") if cont else ""
-                    if combined:
-                        addr = combined
+                addr = _extend_address_with_following_lines(addr, text_lines, idx)
                 addr_len = len(re.sub(r'\s+', '', addr))
                 if addr_len >= current_len + 6:
                     target["주소"] = addr
@@ -341,172 +188,20 @@ def _repair_remaining_top_fields_from_text_lines(target: dict, text_lines: list[
         for idx, line in enumerate(text_lines):
             if _bad_top_text_candidate(line):
                 continue
-            rest = _extract_until_next_label(line, r'(?:대표자명|대표자|대표|성명)\s*[:;]?')
+            rest = _extract_until_next_label(
+                line,
+                r'(?:대표자\s*명|대표자|대표(?!\w)|성\s*명|공급자\s*성\s*명|공급자\s*명)\s*[:;]?',
+            )
             if 1 <= len(rest) <= 20 and not _is_bad_representative_candidate(rest, line):
                 target["대표자"] = rest
                 break
-            if re.search(r'대표자명|대표자|대표|성명', re.sub(r'\s+', '', line)) and idx + 1 < len(text_lines):
+            if re.search(r'대표자명|대표자|대표|성명|공급자성명|공급자명', re.sub(r'\s+', '', line)) and idx + 1 < len(text_lines):
                 next_rep = _clean_inline_field_value(text_lines[idx + 1])
                 if not _is_bad_representative_candidate(next_rep, line):
                     target["대표자"] = next_rep
                     break
 
-
-def _extract_company_near_biz(text: str) -> str:
-    if not (_ADDR_START_RE.search(text or "") or re.search(r'TEL|Tel|tel|전화', text or "")):
-        return ""
-
-    biz = re.search(r'[1-9]\d{2}[-\s.]?\d{2}[-\s.]?\d{5}', text or "")
-    if not biz:
-        return ""
-
-    before = _clean_inline_field_value((text or "")[:biz.start()])
-    before_tokens = [
-        token for token in re.findall(r'[가-힣A-Za-z0-9()]{2,}', before)
-        if not _bad_top_text_candidate(token)
-    ]
-    if before_tokens and len(before_tokens[-1]) >= 3 and not _ADDR_START_RE.search(before_tokens[-1]):
-        return before_tokens[-1]
-
-    after = _clean_inline_field_value((text or "")[biz.end():])
-    after = _ADDRESS_CUT_RE.split(after, maxsplit=1)[0]
-    after = _PHONE_RE.split(after, maxsplit=1)[0]
-    addr_match = _ADDR_START_RE.search(after)
-    if addr_match and addr_match.start() > 0:
-        company = _clean_inline_field_value(after[:addr_match.start()])
-        if 2 <= len(company) <= 20:
-            return company
-    return ""
-
-
-def _normalize_company_candidate(text: str) -> str:
-    value = _clean_inline_field_value(text)
-    value = re.sub(r'^[\[\]{}<>]+', '', value)
-    value = re.sub(r'[\[\]{}<>]+$', '', value)
-    value = re.sub(r'^[^가-힣A-Za-z0-9(]+', '', value)
-    value = re.sub(r'[^가-힣A-Za-z0-9()&.\s]', '', value)
-    value = re.sub(r'\s+', '', value)
-    value = re.sub(r'은누리약국$', '온누리약국', value)
-    if value == "성울집":
-        return "서울집"
-    if value in {"화성들", "화성률"}:
-        return "화성툴"
-    return value
-
-
-def _company_candidate_score(text: str, row_text: str, y_ratio: float, source: str, near_info: bool) -> float:
-    candidate = _normalize_company_candidate(text)
-    if not candidate or _is_bad_company_candidate(candidate, row_text):
-        return -999.0
-    if len(candidate) < 2 or len(candidate) > 18:
-        return -999.0
-
-    hangul = sum(1 for ch in candidate if '가' <= ch <= '힣')
-    digits = sum(1 for ch in candidate if ch.isdigit())
-    hangul_ratio = hangul / max(len(candidate), 1)
-    convenience_store = bool(_CONVENIENCE_STORE_NAME_RE.search(candidate))
-    if digits > 1 and not convenience_store:
-        return -999.0
-
-    score = 0.0
-    score += hangul_ratio * 22
-    score += max(0.0, 1.0 - y_ratio) * 8
-    if source == "upper_block":
-        score += 2.0
-    if near_info:
-        score += 8.0
-    if _COMPANY_SUFFIX_HINT_RE.search(candidate):
-        score += 8.0
-    if convenience_store:
-        score += 18.0
-    if 2 <= hangul <= 6:
-        score += 3.0
-    return score
-
-
-def _company_candidate_texts(row_text: str) -> list[tuple[str, bool]]:
-    text = _clean_inline_field_value(row_text)
-    if not text:
-        return []
-    if _is_merchant_notice_row(text):
-        return []
-
-    candidates: list[tuple[str, bool]] = []
-    compact_text = re.sub(r'\s+', '', text)
-    if 3 <= len(compact_text) <= 18 and not re.search(r'\d', compact_text) and not _FIELD_NOISE_RE.search(compact_text) and not re.search(r'체크카드|신용매출|귀하|카드|^no\.?', compact_text, re.I):
-        candidates.append((text, False))
-    has_info = bool(re.search(r'주소|TEL|Tel|tel|전화|사업자|등록번호', text))
-
-    company, _ = _extract_company_rep_from_slash(text)
-    if company:
-        candidates.append((company, True))
-
-    labeled = _extract_until_next_label(text, r'(?:상호|가맹점명|회사명|업체명|매장명|브랜드명)\s*[:;]?')
-    if labeled and not _is_merchant_notice_row(text):
-        candidates.append((labeled, True))
-
-    near_biz = _extract_company_near_biz(text)
-    if near_biz:
-        candidates.append((near_biz, True))
-
-    for token in re.findall(r'[가-힣A-Za-z0-9()]{2,}', text):
-        candidates.append((token, has_info))
-
-    return candidates
-
-
-def _rescue_company_name(
-    full_rows,
-    upper_rows,
-    current: str = "",
-    representative: str = "",
-    doc_type: str = "unknown",
-) -> tuple[str, str]:
-    if doc_type == "bank_slip":
-        return "", ""
-
-    scored: list[tuple[float, str, str]] = []
-
-    def _row_y_ratio(row) -> float:
-        ys = [p[1] for line in row for p in line[0]]
-        if not ys:
-            return 0.5
-        return min(1.0, max(0.0, ((min(ys) + max(ys)) / 2) / 1000.0))
-
-    for source, rows in (("upper_block", upper_rows or []), ("full_ocr", full_rows or [])):
-        for idx, row in enumerate(rows):
-            row_text = _row_text(row)
-            y_ratio = _row_y_ratio(row)
-            prev_text = _row_text(rows[idx - 1]) if idx > 0 else ""
-            next_text = _row_text(rows[idx + 1]) if idx + 1 < len(rows) else ""
-            adjacent_blob = prev_text + " " + next_text
-            adjacent_info = bool(
-                _extract_biz_number(adjacent_blob)
-                or _extract_phone_candidate(adjacent_blob)
-                or _extract_address_fragment(adjacent_blob)
-            )
-            for candidate, near_info in _company_candidate_texts(row_text):
-                normalized = _normalize_company_candidate(candidate)
-                if representative and normalized == re.sub(r'\s+', '', representative):
-                    continue
-                score = _company_candidate_score(normalized, row_text, y_ratio, source, near_info or adjacent_info)
-                if score > -100:
-                    scored.append((score, normalized, source))
-
-    if current:
-        normalized = _normalize_company_candidate(current)
-        score = _company_candidate_score(normalized, current, 0.2, "current", True)
-        if score > -100 and normalized != re.sub(r'\s+', '', representative or ""):
-            scored.append((score + 1.0, normalized, "company_rescue"))
-
-    if not scored:
-        return "", ""
-
-    scored.sort(key=lambda item: (-item[0], len(item[1])))
-    best_score, best_value, best_source = scored[0]
-    if best_score < 12:
-        return "", ""
-    return best_value, best_source
+    _fill_lone_representative_from_lines(target, text_lines)
 
 
 def _extract_fields_from_rows(rows, target: dict) -> None:
@@ -533,10 +228,10 @@ def _extract_fields_from_rows(rows, target: dict) -> None:
                 target["tel"] = phone
 
         if not target.get("회사명"):
-            rest = _extract_until_next_label(row_text, r'(?:상호|가맹점명|회사명|업체명|매장명|브랜드명)\s*[:;]?')
+            rest = _extract_until_next_label(row_text, _COMPANY_LABEL_RE.pattern)
             if rest and not _is_bad_company_candidate(rest, row_text):
                 target["회사명"] = rest
-            elif re.search(r'상호|가맹점명|회사명|업체명|매장명|브랜드명', row_compact) and index + 1 < len(rows):
+            elif _COMPANY_LABEL_RE.search(row_text) and index + 1 < len(rows):
                 next_row = _clean_inline_field_value(_row_text(rows[index + 1]))
                 if next_row and not _is_bad_company_candidate(next_row, row_text):
                     target["회사명"] = next_row
@@ -552,38 +247,38 @@ def _extract_fields_from_rows(rows, target: dict) -> None:
                         target["회사명"] = near_biz
 
         if not target.get("대표자"):
-            rest = pair_rep or _extract_until_next_label(row_text, r'(?:대표자명|대표자|대표|성명)\s*[:;]?')
+            rest = pair_rep or _extract_until_next_label(
+                row_text,
+                r'(?:대표자\s*명|대표자|대표(?!\w)|성\s*명|공급자\s*성\s*명|공급자\s*명)\s*[:;]?',
+            )
             if 1 <= len(rest) <= 20 and not _is_bad_representative_candidate(rest, row_text):
                 target["대표자"] = rest
-            elif re.search(r'대표자명|대표자|대표|성명', row_compact) and index + 1 < len(rows):
+            elif re.search(r'대표자명|대표자|대표|성명|공급자성명|공급자명', row_compact) and index + 1 < len(rows):
                 next_rep = _clean_inline_field_value(_row_text(rows[index + 1]))
                 if not _is_bad_representative_candidate(next_rep, row_text):
                     target["대표자"] = next_rep
 
         if not target.get("주소") or _address_needs_continuation(target.get("주소", "")):
-            if re.match(r'^주소[:\s]|^주소$', row_compact):
-                rest = _clean_inline_field_value(re.sub(r'^주\s*소\s*[:\s]*', '', row_text))
+            if _ADDRESS_LABEL_RE.search(row_text) and re.match(r'^(?:공급자|업체|본점|사업장)?(?:주소|소재지)', row_compact):
+                rest = _clean_inline_field_value(_strip_address_label(row_text))
                 rest = _clean_address_candidate(rest)
-                if rest and _address_needs_continuation(rest) and index + 1 < len(rows):
-                    cont = _address_continuation_candidate(_row_text(rows[index + 1]))
-                    combined = _clean_address_candidate(f"{rest} {cont}") if cont else ""
-                    if combined:
-                        rest = combined
+                if rest:
+                    rest = _extend_address_with_following_lines(rest, [_row_text(r) for r in rows], index)
                 if rest:
                     _maybe_set_address(target, rest)
                 elif index + 1 < len(rows):
                     next_addr = _clean_address_candidate(_row_text(rows[index + 1]))
                     if next_addr:
+                        next_addr = _extend_address_with_following_lines(next_addr, [_row_text(r) for r in rows], index + 1)
                         _maybe_set_address(target, next_addr)
             else:
                 addr = _clean_address_candidate(_extract_address_fragment(row_text) or row_text)
-                if addr and _address_needs_continuation(addr) and index + 1 < len(rows):
-                    cont = _address_continuation_candidate(_row_text(rows[index + 1]))
-                    combined = _clean_address_candidate(f"{addr} {cont}") if cont else ""
-                    if combined:
-                        addr = combined
+                if addr:
+                    addr = _extend_address_with_following_lines(addr, [_row_text(r) for r in rows], index)
                 if addr:
                     _maybe_set_address(target, addr)
+
+    _fill_lone_representative_from_lines(target, [_row_text(r) for r in rows])
 
 
 # ============================================================
@@ -749,6 +444,15 @@ def extract_receipt_fields(
     for k, v in result.items():
         if v and not before.get(k) and not field_sources[k]:
             field_sources[k] = "full_ocr"
+
+    rescued_address, rescued_address_source = _rescue_address_candidate(
+        rows,
+        (upper_rows or []) + (upper_single_rows or []),
+        current=result.get("주소", ""),
+    )
+    if rescued_address and rescued_address != result.get("주소", ""):
+        result["주소"] = rescued_address
+        field_sources["주소"] = rescued_address_source or "address_rescue"
 
     rescued_company, rescued_source = _rescue_company_name(
         rows,
@@ -1003,6 +707,36 @@ if not os.path.exists(TEMPLATES_FILE):
 async def template_list():
     rows = _load_json(TEMPLATES_FILE, [])
     return {"resultMap": {"templateList": rows}}
+
+
+@app.post("/templates")
+async def template_save(request: Request):
+    body = await request.json()
+    name = (body.get("templateName") or body.get("template_name") or "").strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="templateName is required")
+
+    rows = _load_json(TEMPLATES_FILE, [])
+    template_id = body.get("template_id") or f"TPL-{uuid.uuid4().hex[:8].upper()}"
+    row = {
+        "template_id": template_id,
+        "template_name": name,
+        "template_json": body,
+        "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+    }
+
+    replaced = False
+    for idx, existing in enumerate(rows):
+        if existing.get("template_id") == template_id or existing.get("template_name") == name:
+            row["template_id"] = existing.get("template_id", template_id)
+            rows[idx] = row
+            replaced = True
+            break
+    if not replaced:
+        rows.insert(0, row)
+
+    _save_json(TEMPLATES_FILE, rows)
+    return {"resultMap": {"result": "success", "template": row}}
 
 
 @app.delete("/templates/{template_id}")
@@ -1486,6 +1220,139 @@ def _detect_amount_block_bbox(
     return (0, y1, ocr_w, max(1, y2 - y1))
 
 
+def _detect_handwritten_total_bbox(
+    ocr_lines: list,
+    ocr_h: int,
+    ocr_w: int,
+    doc_type: str = "unknown",
+) -> tuple[int, int, int, int] | None:
+    """수기 총액 후보가 있을 법한 하단 합계칸 ROI 를 보수적으로 추정."""
+    if ocr_h <= 0 or ocr_w <= 0 or doc_type == "bank_slip":
+        return None
+
+    def _bounds(line):
+        pts = line[0]
+        xs = [p[0] for p in pts]
+        ys = [p[1] for p in pts]
+        return int(min(xs)), int(min(ys)), int(max(xs)), int(max(ys))
+
+    anchor_re = re.compile(
+        r'위\s*금액|영수\s*\(?\s*청구\s*\)?|영수\s*함|영수금액|총액|총\s*계|합\s*계|공급대가\s*총액',
+        re.I,
+    )
+    table_re = re.compile(r'품\s*명|수\s*량|단\s*가|공급대가|금\s*액|비\s*고', re.I)
+    reject_re = re.compile(r'승인|전표|카드|거래일시|가맹|사업자|등록번호|TEL|전화|FAX|계좌|잔액|수수료', re.I)
+
+    anchors: list[tuple[int, int, int, int]] = []
+    amount_col_anchors: list[tuple[int, int, int, int]] = []
+    table_hits: list[int] = []
+    numeric_hits: list[tuple[int, int, int, int]] = []
+    for line in ocr_lines or []:
+        text = line[1] or ""
+        compact = re.sub(r'\s+', '', text)
+        x0, y0, x1, y1 = _bounds(line)
+        y_mid = (y0 + y1) / 2
+        if y_mid < ocr_h * 0.45:
+            continue
+        if reject_re.search(compact):
+            continue
+        if anchor_re.search(text) or anchor_re.search(compact):
+            anchors.append((x0, y0, x1, y1))
+        if re.search(r'공급대가|금\s*액|금액|총액|합계', text, re.I) and y_mid >= ocr_h * 0.45:
+            amount_col_anchors.append((x0, y0, x1, y1))
+        if table_re.search(text) or table_re.search(compact):
+            table_hits.append(y0)
+        if re.search(r'\d{1,3}(?:[,.:;]\d{3})+|\d{4,9}', compact):
+            numeric_hits.append((x0, y0, x1, y1))
+
+    if doc_type == "form_or_handwritten" and amount_col_anchors:
+        ax0 = min(a[0] for a in amount_col_anchors)
+        ay0 = min(a[1] for a in amount_col_anchors)
+        ay1 = max(a[3] for a in amount_col_anchors)
+        x1 = max(int(ocr_w * 0.48), ax0 - max(18, int(ocr_w * 0.025)))
+        x2 = min(ocr_w, max(int(ocr_w * 0.92), x1 + int(ocr_w * 0.28)))
+        y1 = max(int(ocr_h * 0.52), ay1 + max(4, int(ocr_h * 0.006)))
+        y2 = min(ocr_h, y1 + max(135, int(ocr_h * 0.20)))
+        return (x1, y1, max(1, x2 - x1), max(1, y2 - y1))
+
+    if anchors:
+        ax0 = min(a[0] for a in anchors)
+        ay0 = min(a[1] for a in anchors)
+        ay1 = max(a[3] for a in anchors)
+        y1 = max(int(ocr_h * 0.52), ay0 - max(18, int(ocr_h * 0.025)))
+        y2 = min(ocr_h, ay1 + max(95, int(ocr_h * 0.16)))
+        x1 = max(0, min(ax0 - max(20, int(ocr_w * 0.04)), int(ocr_w * 0.25)))
+        x2 = min(ocr_w, max(int(ocr_w * 0.72), ocr_w - max(8, int(ocr_w * 0.02))))
+        return (x1, y1, max(1, x2 - x1), max(1, y2 - y1))
+
+    if doc_type == "form_or_handwritten" and (table_hits or numeric_hits):
+        y_anchor = min(table_hits) if table_hits else min(n[1] for n in numeric_hits)
+        y1 = max(int(ocr_h * 0.58), y_anchor - max(20, int(ocr_h * 0.03)))
+        y2 = min(ocr_h, y1 + max(130, int(ocr_h * 0.24)))
+        x1 = int(ocr_w * 0.18)
+        x2 = int(ocr_w * 0.96)
+        return (x1, y1, max(1, x2 - x1), max(1, y2 - y1))
+
+    return None
+
+
+def _extract_handwritten_total_from_lines(lines: list) -> tuple[str, dict]:
+    """하단 합계칸 재OCR 결과에서 보수적으로 금액 하나를 고른다."""
+    digit_map = str.maketrans({
+        "O": "0", "o": "0", "Q": "0",
+        "I": "1", "l": "1", "|": "1",
+        "S": "5", "s": "5",
+        "B": "8",
+    })
+    anchor_re = re.compile(r'위금액|영수|청구|총액|총계|합계|공급대가총액', re.I)
+    reject_re = re.compile(r'사업자|등록번호|전화|TEL|FAX|승인|전표|카드|거래|계좌|잔액|수수료|일련번호|작성년월일', re.I)
+
+    scored: list[tuple[float, int, str, str]] = []
+    row_texts = [re.sub(r'\s+', '', line[1] or "") for line in lines or []]
+    for idx, (_, text, conf) in enumerate(lines or []):
+        raw = (text or "").translate(digit_map)
+        compact = re.sub(r'\s+', '', raw)
+        if not compact or reject_re.search(compact):
+            continue
+        nearby = "".join(row_texts[max(0, idx - 1):idx + 2])
+        for match in re.finditer(r'(?<!\d)[#*₩￦원\\\s]*([0-9][0-9,.:;\s]{2,12})(?:원)?(?!\d)', raw):
+            token = match.group(1)
+            digits = re.sub(r'\D', '', token)
+            if len(digits) < 4 or len(digits) > 9:
+                continue
+            if re.search(r'(?:19|20)\d{6,}|0\d{8,10}', digits):
+                continue
+            value = int(digits)
+            if value < 1000 or value > 500_000_000:
+                continue
+            score = 0.0
+            score += min(float(conf or 0), 1.0) * 10
+            score += 20 if anchor_re.search(nearby) else 0
+            score += 8 if re.search(r'[,.:;]\d{3}', token) else 0
+            score += 6 if idx >= max(0, len(lines) - 3) else 0
+            scored.append((score, value, f"{value:,}", raw))
+
+    if not scored:
+        return "", {"status": "no_handwritten_amount_candidate", "candidates": []}
+    scored.sort(key=lambda item: (-item[0], -item[1]))
+    best_score, best_value, best_formatted, best_raw = scored[0]
+    if best_score < 12:
+        return "", {
+            "status": "low_confidence_handwritten_amount",
+            "selected": {"value": best_formatted, "score": round(best_score, 2), "raw": best_raw},
+        }
+    return best_formatted, {
+        "status": "selected_handwritten_total",
+        "selected": {
+            "value": best_formatted,
+            "numeric": best_value,
+            "score": round(best_score, 2),
+            "raw": best_raw,
+            "source": "handwritten_total_reocr",
+        },
+    }
+
+
 def _reocr_block(
     img,
     ocr,
@@ -1519,7 +1386,7 @@ def _reocr_block(
     _t1 = _time.time()
     ch, cw = crop.shape[:2]
     # 업스케일: 작은 블록은 OCR 인식률에 직접 영향
-    target_min = 400 if mode == "amount" else (620 if mode == "upper" else 500)
+    target_min = 520 if mode == "hand_total" else (400 if mode == "amount" else (620 if mode == "upper" else 500))
     if ch < target_min:
         scale = target_min / ch
         if mode == "upper":
@@ -1531,6 +1398,8 @@ def _reocr_block(
     l, a, b = cv2.split(lab)
     if mode == "upper":
         clahe = cv2.createCLAHE(clipLimit=1.8, tileGridSize=(6, 6))
+    elif mode == "hand_total":
+        clahe = cv2.createCLAHE(clipLimit=2.8, tileGridSize=(8, 8))
     else:
         clahe = cv2.createCLAHE(clipLimit=3.0 if mode == "amount" else 2.5, tileGridSize=(8, 8))
     l = clahe.apply(l)
@@ -1539,6 +1408,19 @@ def _reocr_block(
     if mode == "upper":
         blur = cv2.GaussianBlur(crop, (0, 0), 0.8)
         crop = cv2.addWeighted(crop, 1.25, blur, -0.25, 0)
+    elif mode == "hand_total":
+        blur = cv2.GaussianBlur(crop, (0, 0), 1.0)
+        crop = cv2.addWeighted(crop, 1.35, blur, -0.35, 0)
+        gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
+        th = cv2.adaptiveThreshold(
+            gray,
+            255,
+            cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+            cv2.THRESH_BINARY,
+            31,
+            9,
+        )
+        crop = cv2.cvtColor(th, cv2.COLOR_GRAY2BGR)
     else:
         blur = cv2.GaussianBlur(crop, (0, 0), 1.2)
         crop = cv2.addWeighted(crop, 1.5, blur, -0.5, 0)
@@ -1711,9 +1593,10 @@ async def preprocess_corners(file: UploadFile = File(...)):
 @app.post("/ocr/extract")
 async def ocr_extract(
     file: UploadFile = File(...),
-    template_id: str = "",
-    regions: str = "",
-    corners: str = "",
+    template_id: str = Form(""),
+    regions: str = Form(""),
+    corners: str = Form(""),
+    model_id: str = Form(""),
 ):
     import time
     start = time.time()
@@ -1734,6 +1617,14 @@ async def ocr_extract(
 
     ocr = get_ocr_engine()
     region_list = json.loads(regions) if regions else []
+    if not region_list and template_id:
+        templates = _load_json(TEMPLATES_FILE, [])
+        selected_template = next(
+            (t for t in templates if str(t.get("template_id", "")) == template_id),
+            None,
+        )
+        template_json = selected_template.get("template_json", {}) if selected_template else {}
+        region_list = template_json.get("regions", []) if isinstance(template_json, dict) else []
     timings["engine_acquire_ms"] = _ms(time.time() - _t_decode)
 
     fields = []
@@ -1985,7 +1876,7 @@ async def ocr_extract(
         _t_ab0 = time.time()
         amount_bbox = None
         amount_lines = []
-        skip_by_doc = doc_type in ("bank_slip", "form_or_handwritten")
+        skip_by_doc = doc_type in ("bank_slip", "form_or_handwritten", "invoice_statement")
         if not skip_by_doc:
             amount_bbox = _detect_amount_block_bbox(ocr_lines_raw, ocr_h, ocr_w, doc_type=doc_type)
         timings["detect_amount_bbox_ms"] = _ms(time.time() - _t_ab0)
@@ -2006,7 +1897,7 @@ async def ocr_extract(
 
         # bbox 기반 구조화 필드 추출 (2단계 소스 주입)
         _t_extract0 = time.time()
-        extract_debug: dict = {"document_classification": doc_info}
+        extract_debug: dict = {"document_classification": doc_info, "doc_type": doc_type}
         receipt_fields = extract_receipt_fields(
             ocr_lines_raw,
             upper_lines=upper_lines,
@@ -2015,6 +1906,57 @@ async def ocr_extract(
             debug=extract_debug,
         )
         _repair_remaining_top_fields_from_text_lines(receipt_fields, full_lines)
+
+        handwritten_total_bbox = None
+        handwritten_total_lines = []
+        handwritten_total_debug = {}
+        total_blank = not receipt_fields.get("총합계금액")
+        ta_status = (extract_debug.get("total_amount") or {}).get("status", "")
+        hand_total_allowed = (
+            total_blank
+            and doc_type not in ("bank_slip", "invoice_statement")
+            and (ta_status in {"no_candidate", "all_rejected", "low_confidence", "suppressed_handwritten", "suppressed_unknown_bare", ""})
+        )
+        if hand_total_allowed:
+            _t_ht0 = time.time()
+            handwritten_total_bbox = _detect_handwritten_total_bbox(ocr_lines_raw, ocr_h, ocr_w, doc_type=doc_type)
+            timings["detect_handwritten_total_bbox_ms"] = _ms(time.time() - _t_ht0)
+            timings["handwritten_total_bbox_ocr_coords"] = list(handwritten_total_bbox) if handwritten_total_bbox else None
+            if handwritten_total_bbox:
+                t_ht1 = time.time()
+                handwritten_total_lines = _reocr_block(
+                    ocr_img,
+                    ocr,
+                    handwritten_total_bbox,
+                    mode="hand_total",
+                    timings=timings,
+                )
+                timings["handwritten_total_reocr_total_ms"] = _ms(time.time() - t_ht1)
+                timings["handwritten_total_reocr_ran"] = True
+                hand_value, handwritten_total_debug = _extract_handwritten_total_from_lines(handwritten_total_lines)
+                if hand_value:
+                    receipt_fields["총합계금액"] = hand_value
+                    extract_debug.setdefault("field_sources", {})["총합계금액"] = "handwritten_total_reocr"
+                    extract_debug["total_amount"] = {
+                        **(extract_debug.get("total_amount") or {}),
+                        **handwritten_total_debug,
+                        "policy": "handwritten_total_reocr_fallback",
+                    }
+                    extract_debug["total_amount_review_required"] = False
+                    extract_debug.pop("total_amount_review_code", None)
+                    extract_debug.pop("total_amount_review_reason", None)
+                print(
+                    f"[REOCR hand_total] bbox={handwritten_total_bbox} "
+                    f"lines={len(handwritten_total_lines)} value={hand_value or '-'} "
+                    f"took={time.time()-t_ht1:.2f}s"
+                )
+            else:
+                timings["handwritten_total_reocr_total_ms"] = 0.0
+                timings["handwritten_total_reocr_ran"] = False
+        else:
+            timings["detect_handwritten_total_bbox_ms"] = 0.0
+            timings["handwritten_total_reocr_total_ms"] = 0.0
+            timings["handwritten_total_reocr_ran"] = False
         timings["field_extract_ms"] = _ms(time.time() - _t_extract0)
         # 재OCR bbox 를 display 좌표계로도 남김 (프론트에서 시각화 시 활용 가능)
         if upper_bbox:
@@ -2029,6 +1971,14 @@ async def ocr_extract(
                                                    round(aw * bbox_sx), round(ah * bbox_sy)]
             extract_debug["amount_block_used"] = len(amount_lines) > 0
             extract_debug["amount_block_ocr_text"] = "\n".join(t for _, t, _ in amount_lines)
+        if handwritten_total_bbox:
+            hx, hy, hw, hh = handwritten_total_bbox
+            extract_debug["handwritten_total_bbox"] = [round(hx * bbox_sx), round(hy * bbox_sy),
+                                                        round(hw * bbox_sx), round(hh * bbox_sy)]
+            extract_debug["handwritten_total_used"] = bool(receipt_fields.get("총합계금액") and extract_debug.get("field_sources", {}).get("총합계금액") == "handwritten_total_reocr")
+            extract_debug["handwritten_total_ocr_text"] = "\n".join(t for _, t, _ in handwritten_total_lines)
+            if handwritten_total_debug:
+                extract_debug["handwritten_total_debug"] = handwritten_total_debug
 
         # 금액 추출 디버그 로그 (원인별 추적)
         #   status: no_candidate / low_confidence / all_rejected / selected /
@@ -2075,6 +2025,21 @@ async def ocr_extract(
                   f"review={_review}")
         except Exception as _fe:
             print(f"[finance_slip] extractor error (응답 영향 없음): {_fe}")
+
+    if doc_type == "invoice_statement":
+        try:
+            invoice_debug: dict = {}
+            document_fields = extract_invoice_statement_fields(ocr_lines_raw, debug=invoice_debug)
+            response["document_fields"] = document_fields
+            extract_debug["invoice_statement"] = invoice_debug.get("invoice_statement", invoice_debug)
+            print(
+                f"[invoice_statement] supplier={document_fields.get('supplierCompany')} "
+                f"buyer={document_fields.get('buyerCompany')} date={document_fields.get('issueDate')} "
+                f"total={document_fields.get('totalAmount')} table={document_fields.get('tableDetected')} "
+                f"rows={document_fields.get('rowCount')}"
+            )
+        except Exception as _ie:
+            print(f"[invoice_statement] extractor error (response unaffected): {_ie}")
 
     if processed_b64:
         response["processed_image"] = f"data:image/jpeg;base64,{processed_b64}"

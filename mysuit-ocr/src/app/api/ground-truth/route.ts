@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import { DATASET_FOLDERS } from "@/lib/testsets";
 
-type GtRecord = { fields: Record<string, string>; type: string; updated_at: string };
+type GtRecord = { fields: Record<string, string>; type: string; updated_at: string; financeFields?: Record<string, string>; documentFields?: Record<string, string> };
 type OcrCacheRecord = { ocr_text: string; scanned_at: string };
 
 function datasetPaths(req: Request) {
@@ -32,6 +32,12 @@ function parseAndMigrate(raw: Record<string, unknown>): {
       fields,
       type: (v.type as string) || "영수증",
       updated_at: (v.updated_at as string) || "",
+      ...(v.financeFields && typeof v.financeFields === "object"
+        ? { financeFields: v.financeFields as Record<string, string> }
+        : {}),
+      ...(v.documentFields && typeof v.documentFields === "object"
+        ? { documentFields: v.documentFields as Record<string, string> }
+        : {}),
     };
     if (typeof v.ocr_text === "string" && v.ocr_text) {
       extracted[key] = { ocr_text: v.ocr_text, scanned_at: (v.updated_at as string) || "" };

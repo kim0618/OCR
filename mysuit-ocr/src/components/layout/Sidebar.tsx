@@ -52,8 +52,9 @@ function NavIcon({ name, size = 16, color = "currentColor" }: { name: string; si
 }
 
 const DEFAULT_ITEMS: NavItem[] = [
-  { label: "Upload",    href: "/upload",    icon: "upload" },
   { label: "Template",  href: "/template",  icon: "template" },
+  { label: "RunOCR",    href: "/runocr",    icon: "upload" },
+  { label: "Upload",    href: "/upload",    icon: "upload" },
   { label: "BTemplate", href: "/btemplate", icon: "template" },
   { label: "History",   href: "/history",   icon: "history" },
   { label: "Test",      href: "/test",      icon: "test" },

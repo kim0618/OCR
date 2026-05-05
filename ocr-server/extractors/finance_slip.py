@@ -367,6 +367,234 @@ def _extract_amount(text: str, reasons: list) -> str:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Tier-2 추출 (balanceAfter / accountMasked / branchOrChannel(수취인 계좌) / memo(수취인명))
+#
+# 설계 원칙:
+#   - 보수적 추출: 명시적 anchor 가 있을 때만 추출. 없으면 빈값.
+#   - Tier-1 무영향: review reason 추가 안 함 (Tier-2 미추출이 selected → review 트리거하지 않음)
+#   - accountMasked: 마스킹된 형태(***, xxx)일 때만 저장. raw 계좌번호 저장 금지.
+#   - branchOrChannel: 수취인측 계좌만(수취/입금/받는 anchor). 일반 "계좌번호"와 분리.
+#   - 외부 try/except 로 Tier-2 오류가 Tier-1 결과를 가리지 않도록 보호 (extract_finance_fields 내).
+# ─────────────────────────────────────────────────────────────────────────────
+
+# balanceAfter: 명시적 잔액 anchor (잔액조회/수수료/한도는 제외 — _BALANCE_AFTER_RE 와 분리)
+_BALANCE_VALUE_ANCHOR_RE = re.compile(
+    r'거래\s*후\s*잔액|거래후\s*진액'        # 진액: 잔→진 OCR 노이즈 흡수
+    r'|출금\s*후\s*잔액|이체\s*후\s*잔액|인출\s*후\s*잔액'
+    r'|현재\s*잔액|이용\s*가능\s*잔액'
+    r'|거래\s*후\s*잔고|통장\s*잔고|통장\s*잔액',  # 잔고 synonym (잔액과 등가)
+    re.I,
+)
+
+# 마스킹 토큰 검사 (2개 이상 연속 *, x, X)
+_MASK_TOKEN_RE = re.compile(r'\*{2,}|[xX]{2,}')
+
+# 일반 계좌번호 anchor (자기/출금 계좌)
+_ACCT_NUM_ANCHOR_RE = re.compile(
+    r'계좌\s*번호|계좌\s*변호|계최\s*번호|계최\s*변호'  # 변/최: OCR 노이즈
+    r'|출금\s*계좌|보내는\s*계좌|보내는분\s*계좌',
+    re.I,
+)
+
+# 수취인 계좌 anchor (UI 라벨: 수취인 계좌 → branchOrChannel 슬롯에 저장)
+_BENEFICIARY_ACCT_ANCHOR_RE = re.compile(
+    r'수취\s*계좌|수취인\s*계좌|입금\s*계좌|받는\s*계좌|받는분\s*계좌'
+    r'|송금\s*받을\s*계좌|받으시는\s*계좌',  # 자연어 변형
+    re.I,
+)
+
+# 수취인명 anchor (UI 라벨: 수취인명 → memo 슬롯에 저장)
+_BENEFICIARY_NAME_ANCHOR_RE = re.compile(
+    r'수취인\s*(?:성명|명|이름)'
+    r'|받는\s*분\s*(?:성명|명|이름)'
+    r'|받는\s*사람\s*(?:성명|명|이름)'
+    r'|예금주(?:\s*성명|\s*명|\s*이름)?'
+    r'|입금\s*대상\s*(?:성명|명)'
+    r'|수취\s*고객\s*(?:성명|명)',  # 일부 은행 변형
+    re.I,
+)
+
+# balanceAfter 전용 lenient 숫자 패턴: ',' OCR 노이즈로 '.'이 들어와도 자릿수 구분자로 흡수
+# (amount 추출의 strict _NUM_EXTRACT_RE 는 변경하지 않음)
+_LENIENT_NUM_RE = re.compile(r'\d[\d,.\s]{1,14}\d(?:\s*[원₩])?')
+
+# 한글 이름 false-positive 방지 — 일반어/라벨/은행명 제외
+_NAME_BLACKLIST: set = {
+    "성명", "이름", "수취인", "수취인성명", "받는분", "받는분성명",
+    "예금주", "보내는분", "거래", "정보", "확인", "감사", "처리", "계좌",
+    "정상처리", "거래일시", "거래금액", "거래일자", "거래시간",
+}
+
+
+def _num_from_token_balance(token: str) -> str:
+    """balanceAfter 전용 — '.' 구분자도 흡수 (OCR 노이즈)."""
+    stripped = _NUM_PREFIX_NOISE_RE.sub("", token)
+    m = _LENIENT_NUM_RE.search(stripped)
+    if not m:
+        return ""
+    return _clean_number(m.group(0))
+
+
+def _extract_balance_after(lines: list, reasons: list) -> str:
+    """
+    balanceAfter (거래후잔액): 명시적 잔액 anchor 직후 숫자.
+    - 같은 줄 → 다음 1~2 줄 폴백
+    - amount 와 anchor 가 disjoint 하므로 자연스럽게 분리됨
+    """
+    for i, line in enumerate(lines):
+        anc = _BALANCE_VALUE_ANCHOR_RE.search(line)
+        if not anc:
+            continue
+        after = _value_after_anchor(line, anc, max_chars=40)
+        num = _num_from_token_balance(after)
+        if num and len(num) >= 3:
+            return num
+        for j in range(i + 1, min(i + 3, len(lines))):
+            nxt = lines[j].strip()
+            if not nxt:
+                continue
+            num = _num_from_token_balance(nxt)
+            if num and len(num) >= 3:
+                return num
+            break
+    return ""
+
+
+def _find_masked_acct_token(token: str) -> str:
+    """
+    마스킹된 계좌번호 후보 추출.
+      - 마스킹 토큰(***/xxx) 2개 이상 + 숫자 3개 이상 + 계좌 형태
+    """
+    if not token or not _MASK_TOKEN_RE.search(token):
+        return ""
+    m = re.search(r'(?:\[\d{2,4}\])?\d[\d\-\s\*xX]{4,40}', token)
+    if not m:
+        return ""
+    cand = m.group(0).strip().rstrip(' :,.원')
+    digit_count = sum(1 for c in cand if c.isdigit())
+    mask_count = sum(1 for c in cand if c in '*xX')
+    if digit_count < 3 or mask_count < 2:
+        return ""
+    return re.sub(r'\s+', '', cand)
+
+
+def _extract_account_masked(lines: list, reasons: list) -> str:
+    """
+    accountMasked: 계좌번호 anchor 직후 마스킹된 값일 때만.
+    - 마스킹 안 된 raw 계좌번호는 저장 안 함 (privacy)
+    - 다음 anchor 만나면 중단
+    """
+    for i, line in enumerate(lines):
+        anc = _ACCT_NUM_ANCHOR_RE.search(line)
+        if not anc:
+            continue
+        after = _value_after_anchor(line, anc, max_chars=80)
+        cand = _find_masked_acct_token(after)
+        if cand:
+            return cand
+        for j in range(i + 1, min(i + 4, len(lines))):
+            nxt = lines[j].strip()
+            if not nxt:
+                continue
+            if (_ACCT_NUM_ANCHOR_RE.search(nxt)
+                    or _BENEFICIARY_ACCT_ANCHOR_RE.search(nxt)
+                    or _BENEFICIARY_NAME_ANCHOR_RE.search(nxt)
+                    or _BALANCE_VALUE_ANCHOR_RE.search(nxt)):
+                break
+            cand = _find_masked_acct_token(nxt)
+            if cand:
+                return cand
+            break
+    return ""
+
+
+def _find_acct_value_token(token: str) -> str:
+    """
+    수취인 계좌 형태 값 (마스킹 여부 무관).
+    형식: [bank_code]nnn-nnnnnn-nn-nnn 또는 nnn-nnnn-nnnn 류.
+    """
+    if not token:
+        return ""
+    m = re.search(r'\[\d{2,4}\][\d\-\s]{6,30}|\d[\d\-\s\*xX]{6,40}', token)
+    if not m:
+        return ""
+    cand = m.group(0).strip().rstrip(' :,.원')
+    digit_count = sum(1 for c in cand if c.isdigit())
+    if digit_count < 6:
+        return ""
+    return re.sub(r'\s+', '', cand)
+
+
+def _extract_beneficiary_account(lines: list, reasons: list) -> str:
+    """
+    branchOrChannel (UI 라벨: 수취인 계좌): 수취/입금/받는 계좌 anchor 전용.
+    """
+    for i, line in enumerate(lines):
+        anc = _BENEFICIARY_ACCT_ANCHOR_RE.search(line)
+        if not anc:
+            continue
+        after = _value_after_anchor(line, anc, max_chars=80)
+        cand = _find_acct_value_token(after)
+        if cand:
+            return cand
+        for j in range(i + 1, min(i + 4, len(lines))):
+            nxt = lines[j].strip()
+            if not nxt:
+                continue
+            if (_ACCT_NUM_ANCHOR_RE.search(nxt)
+                    or _BENEFICIARY_NAME_ANCHOR_RE.search(nxt)
+                    or _BALANCE_VALUE_ANCHOR_RE.search(nxt)):
+                break
+            cand = _find_acct_value_token(nxt)
+            if cand:
+                return cand
+            break
+    return ""
+
+
+def _extract_name_value(token: str) -> str:
+    """anchor 뒤 한글 이름 후보 (2-10자, 블랙리스트/은행명 제외)."""
+    if not token:
+        return ""
+    s = token.strip().lstrip(':：').strip()
+    m = re.search(r'[가-힣]{2,10}', s)
+    if not m:
+        return ""
+    cand = m.group(0)
+    if cand in _NAME_BLACKLIST:
+        return ""
+    if any(b in cand for b in ['은행', '카드', '코리아']):
+        return ""
+    return cand
+
+
+def _extract_beneficiary_name(lines: list, reasons: list) -> str:
+    """
+    memo (UI 라벨: 수취인명): 명시적 수취인 anchor + 한글 이름.
+    'anchor:\\n:\\n이름' 같은 multi-line 라벨 분리 형식도 흡수.
+    """
+    for i, line in enumerate(lines):
+        anc = _BENEFICIARY_NAME_ANCHOR_RE.search(line)
+        if not anc:
+            continue
+        after = _value_after_anchor(line, anc, max_chars=40)
+        cand = _extract_name_value(after)
+        if cand:
+            return cand
+        for j in range(i + 1, min(i + 5, len(lines))):
+            nxt = lines[j].strip()
+            if not nxt:
+                continue
+            if re.fullmatch(r'[:\s：]+', nxt):
+                continue
+            cand = _extract_name_value(nxt)
+            if cand:
+                return cand
+            break
+    return ""
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # 공개 API
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -392,17 +620,37 @@ def extract_finance_fields(full_text: str) -> dict:
             "transactionType":     "unknown",
             "transactionDateTime": "",
             "amount":              "",
+            "balanceAfter":        "",
+            "accountMasked":       "",
+            "branchOrChannel":     "",
+            "memo":                "",
             "_reviewReasons":      ["EMPTY_TEXT"],
         }
 
     reasons: list[str] = []
+    lines = full_text.split('\n')
 
+    # Tier-1 (selected 판정 기준 4필드)
     bank_name   = _extract_bank_name(full_text, reasons)
     tx_type     = _extract_transaction_type(full_text, reasons)
     tx_datetime = _extract_transaction_datetime(full_text, reasons)
     amount      = _extract_amount(full_text, reasons)
 
-    # Tier-1 완전 추출 여부 확인
+    # Tier-2 (보조 4필드) — review reason 추가 안 함, 오류 시 Tier-1 보호
+    balance_after        = ""
+    account_masked       = ""
+    beneficiary_account  = ""
+    beneficiary_name     = ""
+    try:
+        balance_after        = _extract_balance_after(lines, reasons)
+        account_masked       = _extract_account_masked(lines, reasons)
+        beneficiary_account  = _extract_beneficiary_account(lines, reasons)
+        beneficiary_name     = _extract_beneficiary_name(lines, reasons)
+    except Exception as _e:
+        # Tier-2 추출 실패가 Tier-1 응답을 가리지 않도록 차단
+        print(f"[finance_slip:tier2] extraction error (Tier-1 보호): {_e}")
+
+    # Tier-1 완전 추출 여부 확인 (Tier-2 무관)
     tier1_ok = all([
         bank_name,
         tx_type not in ("", "unknown"),
@@ -417,5 +665,9 @@ def extract_finance_fields(full_text: str) -> dict:
         "transactionType":     tx_type,
         "transactionDateTime": tx_datetime,
         "amount":              amount,
+        "balanceAfter":        balance_after,
+        "accountMasked":       account_masked,
+        "branchOrChannel":     beneficiary_account,
+        "memo":                beneficiary_name,
         "_reviewReasons":      reasons,
     }

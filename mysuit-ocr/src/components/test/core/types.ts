@@ -29,6 +29,7 @@ export type GtRecord = {
   updated_at: string;
   /** finance_profile 기준값 (bankName / transactionType / transactionDateTime / amount 등) */
   financeFields?: Record<string, string>;
+  documentFields?: Record<string, string>;
 };
 export const EMPTY_GT = (): GtRecord => ({ fields: EMPTY_ENTRY(), type: "영수증", updated_at: "" });
 
@@ -40,6 +41,8 @@ export type OcrResponse = {
   receipt_fields?: Partial<Entry>;
   /** finance_profile Tier-1 추출 결과 (doc_type=bank_slip일 때만 포함) */
   finance_fields?: Record<string, string>;
+  document_fields?: Record<string, string>;
+  invoice_fields?: Record<string, string>;
   /** finance_profile review 사유 코드 목록 (내부 감사용) */
   finance_review_reasons?: string[];
   status?: string;
@@ -59,6 +62,7 @@ export type OcrEntry = {
   docType?: string;
   /** finance_profile Tier-1 값 (bankName / transactionType / transactionDateTime / amount) */
   financeFields?: Record<string, string>;
+  documentFields?: Record<string, string>;
   /** finance_profile review 사유 코드 목록 */
   financeReviewReasons?: string[];
 };

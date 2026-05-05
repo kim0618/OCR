@@ -1,12 +1,21 @@
 "use client";
 
-import React, { useMemo, useRef, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import type { FieldType, LoadedImage, Region } from "./core/types";
 import { buildExportPayload } from "./core/export";
 import OcrCanvasPane from "./OcrCanvasPane";
 import OcrRightPanel from "./OcrRightPanel";
 
-export default function OcrAnnotator() {
+const LOCAL_TEMPLATES_KEY = "mysuit_ocr_templates";
+
+export default function OcrAnnotator({
+  selectedTemplate = null,
+  selectedTemplateId = null,
+}: {
+  selectedTemplate?: any | null;
+  selectedTemplateId?: string | null;
+}) {
+  const isEditMode = !!selectedTemplateId;
   const imgRef = useRef<HTMLImageElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -35,6 +44,18 @@ export default function OcrAnnotator() {
     () => buildExportPayload({ templateName, loaded, regions }),
     [loaded, regions, templateName],
   );
+
+  useEffect(() => {
+    if (!selectedTemplate) return;
+    setTemplateName(String(selectedTemplate.templateName ?? selectedTemplate.template_name ?? ""));
+    if (Array.isArray(selectedTemplate.regions)) {
+      setRegions(selectedTemplate.regions);
+      setSelectedId(null);
+      setDrawMode(null);
+      setRowTemplateTargetId(null);
+      setColGuideTargetId(null);
+    }
+  }, [selectedTemplate]);
 
   async function onPickFile(file: File) {
     const url = URL.createObjectURL(file);
@@ -74,22 +95,48 @@ export default function OcrAnnotator() {
     }
   }
 
-  function saveTemplateJson() {
+  async function saveTemplateJson() {
+    if (!loaded) return;
+    const name = templateName.trim();
+    if (!name) {
+      alert("템플릿명을 입력해주세요.");
+      return;
+    }
     const txt = JSON.stringify(exportPayload, null, 2);
-    const safeBase = (templateName || "template")
-      .trim()
-      .replace(/[\\/:*?"<>|]+/g, "-")
-      .slice(0, 80);
 
-    const blob = new Blob([txt], { type: "application/json;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${safeBase}.json`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
+    const localTemplate = {
+      template_id: selectedTemplateId || `LOCAL-${Date.now()}`,
+      template_name: name,
+      template_json: exportPayload,
+      updated_at: new Date().toISOString(),
+    };
+    try {
+      const current = JSON.parse(localStorage.getItem(LOCAL_TEMPLATES_KEY) || "[]");
+      const list = Array.isArray(current) ? current : [];
+      const filtered = list.filter((item: any) =>
+        item?.template_id !== localTemplate.template_id &&
+        item?.template_name !== name,
+      );
+      const next = [localTemplate, ...filtered];
+      localStorage.setItem(LOCAL_TEMPLATES_KEY, JSON.stringify(next));
+      window.dispatchEvent(new Event("mysuit-ocr-template-saved"));
+    } catch (err) {
+      console.error("[local template save error]", err);
+    }
+
+    try {
+      const res = await fetch("/templates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: txt,
+      });
+      if (!res.ok) throw new Error("template save failed");
+      alert(isEditMode ? "템플릿이 수정되었습니다." : "템플릿이 저장되었습니다.");
+    } catch (err) {
+      console.error("[template save error]", err);
+      alert("임시 저장소에 저장되었습니다. 서버 저장은 아직 연결되지 않았습니다.");
+    }
+
   }
 
   return (
@@ -196,7 +243,7 @@ export default function OcrAnnotator() {
           <button type="button" onClick={() => void saveTemplateJson()} disabled={!loaded}
             className="ms-btn"
             style={{ background: "var(--accent)", color: "#fff", border: "none" }}>
-            저장
+            {isEditMode ? "수정" : "저장"}
           </button>
         </div>
         {/* 패널 */}

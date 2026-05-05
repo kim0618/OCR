@@ -7,7 +7,7 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const testset = getTestset(searchParams.get("dataset"));
   const dir = path.join(process.cwd(), "public", "data", "testsets", testset.folder);
-  const exts = [".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tif", ".tiff"];
+  const exts = [".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tif", ".tiff", ".pdf"];
   let files: string[] = [];
 
   try {

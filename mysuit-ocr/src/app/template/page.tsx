@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import AppShell from "../../components/layout/AppShell";
 import UnstructuredBuilder from "../../components/template/UnstructuredBuilder";
@@ -14,6 +14,31 @@ const OcrAnnotator = dynamic(
 );
 
 type Mode = "template" | "unstructured";
+type SavedTemplate = {
+  id: string;
+  name: string;
+  mode?: string;
+  templateJson?: any;
+};
+
+const LOCAL_TEMPLATES_KEY = "mysuit_ocr_templates";
+
+function readSavedTemplates(): SavedTemplate[] {
+  try {
+    const list = JSON.parse(localStorage.getItem(LOCAL_TEMPLATES_KEY) || "[]");
+    if (!Array.isArray(list)) return [];
+    return list
+      .map((item: any) => ({
+        id: String(item?.template_id ?? ""),
+        name: String(item?.template_name ?? ""),
+        mode: String(item?.template_json?.mode ?? "template"),
+        templateJson: item?.template_json ?? null,
+      }))
+      .filter((item) => item.id && item.name);
+  } catch {
+    return [];
+  }
+}
 
 function ModeCard({
   active,
@@ -26,17 +51,21 @@ function ModeCard({
   icon: React.ReactNode;
   label: string;
 }) {
+  const [hover, setHover] = useState(false);
+  const showAccent = active || hover;
   return (
     <button
       type="button"
       onClick={onClick}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
       style={{
         width: 120,
         height: 32,
         borderRadius: 8,
-        border: active ? "2px solid var(--accent)" : "1.5px solid rgba(255,255,255,0.12)",
-        background: active ? "var(--accentBg)" : "var(--panel2)",
-        color: active ? "var(--accent)" : "var(--muted)",
+        border: showAccent ? "1px solid var(--accent)" : "1px solid rgba(255,255,255,0.12)",
+        background: active ? "var(--accentBg)" : hover ? "var(--panel2)" : "var(--panel2)",
+        color: showAccent ? "var(--accent)" : "var(--muted)",
         cursor: "pointer",
         display: "flex",
         flexDirection: "row",
@@ -45,7 +74,7 @@ function ModeCard({
         gap: 6,
         transition: "all 0.15s",
         flexShrink: 0,
-        boxShadow: active ? "inset 0 0 0 1px var(--accent)" : "none",
+        boxShadow: hover && !active ? "0 0 0 2px var(--accentBg)" : "none",
       }}
     >
       <span style={{ fontSize: 14, lineHeight: 1 }}>{icon}</span>
@@ -57,6 +86,29 @@ function ModeCard({
 
 export default function Page() {
   const [mode, setMode] = useState<Mode>("template");
+  const [savedTemplates, setSavedTemplates] = useState<SavedTemplate[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<SavedTemplate | null>(null);
+  const [resetKey, setResetKey] = useState(0);
+
+  const handleModeChange = (next: Mode) => {
+    setSelectedTemplate(null);
+    setResetKey((k) => k + 1);
+    setMode(next);
+  };
+
+  useEffect(() => {
+    const refreshSavedTemplates = () => {
+      setSavedTemplates(readSavedTemplates());
+    };
+    refreshSavedTemplates();
+    const onRefresh = () => refreshSavedTemplates();
+    window.addEventListener("storage", onRefresh);
+    window.addEventListener("mysuit-ocr-template-saved", onRefresh);
+    return () => {
+      window.removeEventListener("storage", onRefresh);
+      window.removeEventListener("mysuit-ocr-template-saved", onRefresh);
+    };
+  }, []);
 
   return (
     <AppShell headerTitle="Template" scrollMode="fixed">
@@ -74,30 +126,30 @@ export default function Page() {
           flexShrink: 0,
           display: "flex",
           gap: 12,
-          alignItems: "stretch",
+          alignItems: "center",
           background: "var(--panel)",
           border: "1px solid var(--border)",
           borderRadius: 12,
-          padding: "10px 14px",
+          padding: "6px 14px",
         }}>
           {/* 모드 선택 (위/아래) */}
           <div style={{ display: "flex", flexDirection: "column", gap: 8, flexShrink: 0 }}>
             <ModeCard
-              active={mode === "template"}
-              onClick={() => setMode("template")}
+              active={mode === "template" && !selectedTemplate}
+              onClick={() => handleModeChange("template")}
               icon="＋"
               label="템플릿 생성"
             />
             <ModeCard
-              active={mode === "unstructured"}
-              onClick={() => setMode("unstructured")}
+              active={mode === "unstructured" && !selectedTemplate}
+              onClick={() => handleModeChange("unstructured")}
               icon="≡"
               label="비정형 생성"
             />
           </div>
 
           {/* 구분선 */}
-          <div style={{ width: 1, background: "var(--border)" }} />
+          <div style={{ width: 1, height: 68, background: "var(--border)", flexShrink: 0 }} />
 
           {/* 저장된 템플릿 (우측 — 추후 채워짐) */}
           <div style={{
@@ -105,21 +157,65 @@ export default function Page() {
             minWidth: 0,
             display: "flex",
             alignItems: "center",
-            gap: 10,
+            gap: 12,
             color: "var(--muted)",
             fontSize: 12,
+            overflowX: "auto",
           }}>
-            <span style={{ fontWeight: 700 }}>저장된 템플릿</span>
-            <span style={{ fontSize: 11, opacity: 0.7 }}>아직 저장된 템플릿이 없습니다.</span>
+            {savedTemplates.length > 0 ? (
+              <div className="uw-runocr-template-cards">
+                {savedTemplates.map((template) => {
+                  const isSelected = selectedTemplate?.id === template.id;
+                  return (
+                  <button
+                    key={template.id}
+                    type="button"
+                    className={`uw-runocr-template-card${isSelected ? " uw-runocr-template-card-active" : ""}`}
+                    onClick={() => {
+                      setSelectedTemplate(template);
+                      setMode(template.mode === "unstructured" ? "unstructured" : "template");
+                    }}
+                    title={template.name}
+                  >
+                    {template.mode === "unstructured" ? (
+                      <span className="uw-runocr-template-card-preview">
+                        <img
+                          src="/images/unstructured-template-preview.svg"
+                          alt=""
+                          className="uw-template-card-img"
+                        />
+                      </span>
+                    ) : (
+                      <span className="uw-runocr-template-card-preview" />
+                    )}
+                    <span className="uw-runocr-template-card-name">{template.name}</span>
+                  </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <>
+                <span style={{ fontWeight: 700, color: "var(--accent)", flexShrink: 0 }}>저장된 템플릿</span>
+                <span style={{ fontSize: 11, opacity: 0.7 }}>아직 저장된 템플릿이 없습니다.</span>
+              </>
+            )}
           </div>
         </div>
 
         {/* 모드 콘텐츠 */}
         <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
           {mode === "template" ? (
-            <OcrAnnotator />
+            <OcrAnnotator
+              key={selectedTemplate && selectedTemplate.mode !== "unstructured" ? `tpl-${selectedTemplate.id}` : `new-${resetKey}`}
+              selectedTemplate={selectedTemplate?.mode === "unstructured" ? null : selectedTemplate?.templateJson}
+              selectedTemplateId={selectedTemplate?.mode === "unstructured" ? null : selectedTemplate?.id ?? null}
+            />
           ) : (
-            <UnstructuredBuilder />
+            <UnstructuredBuilder
+              key={selectedTemplate && selectedTemplate.mode === "unstructured" ? `tpl-${selectedTemplate.id}` : `new-${resetKey}`}
+              selectedTemplate={selectedTemplate?.mode === "unstructured" ? selectedTemplate?.templateJson : null}
+              selectedTemplateId={selectedTemplate?.mode === "unstructured" ? selectedTemplate?.id ?? null : null}
+            />
           )}
         </div>
       </div>

@@ -59,6 +59,23 @@ export type FinanceFieldKey =
   | "branchOrChannel"
   | "memo";
 
+export type DocumentFieldKey =
+  | "supplierCompany"
+  | "supplierBizNumber"
+  | "supplierRepresentative"
+  | "supplierAddress"
+  | "buyerCompany"
+  | "buyerBizNumber"
+  | "buyerRepresentative"
+  | "buyerAddress"
+  | "issueDate"
+  | "supplyAmount"
+  | "taxAmount"
+  | "totalAmount"
+  | "tableDetected"
+  | "rowCount"
+  | "firstRowPreview";
+
 /** card overlay 추가 컬럼. */
 export type CardOverlayFieldKey =
   | "cardIssuer"
@@ -74,6 +91,7 @@ export type MedicalOverlayFieldKey = "department" | "insuranceType";
 export type AnyFieldKey =
   | ReceiptFieldKey
   | FinanceFieldKey
+  | DocumentFieldKey
   | CardOverlayFieldKey
   | MedicalOverlayFieldKey;
 
@@ -129,6 +147,24 @@ export const FINANCE_COLUMNS: readonly { key: FinanceFieldKey; required: boolean
   { key: "memo",                required: false },
 ] as const;
 
+export const DOCUMENT_COLUMNS: readonly { key: DocumentFieldKey; required: boolean }[] = [
+  { key: "supplierCompany",        required: true  },
+  { key: "supplierBizNumber",      required: true  },
+  { key: "supplierRepresentative", required: false },
+  { key: "supplierAddress",        required: false },
+  { key: "buyerCompany",           required: true  },
+  { key: "buyerBizNumber",         required: false },
+  { key: "buyerRepresentative",    required: false },
+  { key: "buyerAddress",           required: false },
+  { key: "issueDate",              required: true  },
+  { key: "supplyAmount",           required: false },
+  { key: "taxAmount",              required: false },
+  { key: "totalAmount",            required: true  },
+  { key: "tableDetected",          required: true  },
+  { key: "rowCount",               required: false },
+  { key: "firstRowPreview",        required: false },
+] as const;
+
 /** card overlay 추가 컬럼 (전부 선택). */
 export const CARD_OVERLAY_COLUMNS: readonly { key: CardOverlayFieldKey; required: boolean }[] = [
   { key: "cardIssuer",        required: false },
@@ -176,6 +212,10 @@ const RECEIPT_NOT_APPLICABLE: ReadonlySet<FinanceFieldKey> = new Set<FinanceFiel
   "memo",
 ]);
 
+const DOCUMENT_FIELD_SET: ReadonlySet<DocumentFieldKey> = new Set<DocumentFieldKey>(
+  DOCUMENT_COLUMNS.map((c) => c.key),
+);
+
 // ============================================================
 // documentType → profile 매핑 (docs/TEST_PROFILE_SCHEMA §3)
 // ============================================================
@@ -215,7 +255,7 @@ export function getBaseColumns(profile: Profile): readonly AnyFieldKey[] {
   switch (profile) {
     case "receipt":  return RECEIPT_COLUMNS.map((c) => c.key);
     case "finance":  return FINANCE_COLUMNS.map((c) => c.key);
-    case "document": return [];
+    case "document": return DOCUMENT_COLUMNS.map((c) => c.key);
     case "none":     return [];
   }
 }
@@ -257,6 +297,7 @@ export function isNotApplicableField(
     case "receipt":
       return RECEIPT_NOT_APPLICABLE.has(fieldKey as FinanceFieldKey);
     case "document":
+      return !DOCUMENT_FIELD_SET.has(fieldKey as DocumentFieldKey);
     case "none":
       return true; // 미구현 profile: 모든 필드 not_applicable
   }

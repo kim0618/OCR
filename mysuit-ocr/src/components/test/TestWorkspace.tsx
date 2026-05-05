@@ -32,7 +32,7 @@ import {
   MatchStatus,
 } from "./core/finalize";
 import type { DatasetManifest, ManifestItem } from "@/lib/testsets";
-import { resolveProfile, FINANCE_COLUMNS, FINANCE_TIER1_FIELDS, isNotApplicableField } from "@/lib/profiles";
+import { resolveProfile, FINANCE_COLUMNS, FINANCE_TIER1_FIELDS, DOCUMENT_COLUMNS, isNotApplicableField } from "@/lib/profiles";
 
 type ViewMode = "compare" | "ocr_only" | "autofill" | "gt_edit";
 
@@ -41,10 +41,12 @@ type DocTypeSummaryRow = {
   total: number;
   selected: number;
   suppressed: number;
-  unknown: number;
+  unknown: number;   // receipt: unknown status / finance: review status (재활용)
   error: number;
   notRun: number;
   fieldFilled: Record<FieldKey, number>;
+  documentFieldFilled: Record<string, number>;
+  financeFieldFilled: Record<string, number>;  // finance 전용 필드 채움 수
 };
 
 type QualityTagSummaryRow = {
@@ -67,7 +69,6 @@ type TestsetMeta = {
 
 const DEFAULT_TESTSETS: TestsetMeta[] = [
   { id: "baseline", label: "기존 검증셋", path: "/data/testsets/baseline", description: "기존 10장 회귀 테스트용" },
-  { id: "new_samples", label: "신규 샘플셋", path: "/data/testsets/new_samples", description: "공개 샘플 기반 일반화 검증용" },
   { id: "google", label: "Google 샘플셋", path: "/data/testsets/google", description: "사용자가 Google 폴더에 추가한 검증 이미지" },
 ];
 
@@ -83,8 +84,17 @@ DEFAULT_TESTSETS.push({
   description: "실전형 상단 필드 확인용 5장 미니셋",
 });
 
+DEFAULT_TESTSETS.push({
+  id: "invoice_statement",
+  label: "거래명세서 1차 검증셋",
+  path: "/data/testsets/invoice_statement",
+  description: "거래명세서 계열 헤더/합계/표 구조 1차 검증용",
+});
+
 const datasetQuery = (datasetId: string) => `dataset=${encodeURIComponent(datasetId)}`;
 const imageUrl = (baseUrl: string, filename: string) => `${baseUrl}/${encodeURIComponent(filename)}`;
+const fileExt = (filename: string) => filename.split(".").pop()?.toLowerCase() ?? "";
+const isPdfFile = (filename: string | null | undefined) => fileExt(filename ?? "") === "pdf";
 
 function deriveUiStatus(data: OcrResponse): string {
   if (data.status) return data.status;
@@ -92,6 +102,63 @@ function deriveUiStatus(data: OcrResponse): string {
   if (data.doc_type === "form_or_handwritten") return "suppressed_handwritten";
   if (data.doc_type === "unknown") return "unknown";
   return "selected";
+}
+
+function normalizeDocumentCompare(value: string): string {
+  return value.replace(/\s+/g, "").replace(/[,\-\/().]/g, "").toLowerCase();
+}
+
+function documentFieldMatches(gtVal: string, ocrVal: string): boolean {
+  const gtNorm = normalizeDocumentCompare(gtVal);
+  const ocrNorm = normalizeDocumentCompare(ocrVal);
+  if (!gtNorm || !ocrNorm) return false;
+  return gtNorm === ocrNorm || gtNorm.includes(ocrNorm) || ocrNorm.includes(gtNorm);
+}
+
+function documentMatchStatus(gtVal: string, ocrVal: string): "O" | "△" | "X" | "—" {
+  if (!gtVal) return "—";
+  if (!ocrVal) return "X";
+  if (gtVal === ocrVal || normalizeDocumentCompare(gtVal) === normalizeDocumentCompare(ocrVal)) return "O";
+  return documentFieldMatches(gtVal, ocrVal) ? "△" : "X";
+}
+
+function documentMatchMeta(status: "O" | "△" | "X" | "—"): { symbol: string; color: string; title: string } {
+  switch (status) {
+    case "O": return { symbol: "O", color: "#22c55e", title: "GT exact/normalized match" };
+    case "△": return { symbol: "△", color: "#f59e0b", title: "GT fuzzy/partial match" };
+    case "X": return { symbol: "X", color: "#ef4444", title: "GT mismatch or missing OCR value" };
+    default: return { symbol: "—", color: "rgba(255,255,255,0.35)", title: "No GT value" };
+  }
+}
+
+function inferInvoiceDocumentFields(data: OcrResponse): Record<string, string> {
+  const explicit = data.document_fields ?? data.invoice_fields;
+  if (explicit && Object.keys(explicit).length > 0) return explicit;
+
+  const text = data.full_text ?? "";
+  const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const joined = lines.join(" ");
+  const fields: Record<string, string> = {};
+  const dateMatch = joined.match(/(\d{4}[.\-\/]\d{1,2}[.\-\/]\d{1,2}|\d{2}[.\-\/]\d{1,2}[.\-\/]\d{1,2})/);
+  if (dateMatch) fields.issueDate = dateMatch[1];
+
+  const amountMatches = [...joined.matchAll(/\d{1,3}(?:,\d{3})+(?:원)?|\d{5,}(?:원)?/g)].map((m) => m[0]);
+  if (amountMatches.length > 0) fields.totalAmount = amountMatches[amountMatches.length - 1].replace(/원$/, "");
+  if (amountMatches.length > 1) fields.supplyAmount = amountMatches[Math.max(0, amountMatches.length - 3)].replace(/원$/, "");
+  if (amountMatches.length > 2) fields.taxAmount = amountMatches[Math.max(0, amountMatches.length - 2)].replace(/원$/, "");
+
+  const tableHeaderIndex = lines.findIndex((line) => /품명|규격|수량|단가|공급가액|세액|합계|금액/.test(line));
+  const tableDetected = tableHeaderIndex >= 0 || /품명|규격|수량|단가|공급가액|세액|합계|금액/.test(joined);
+  fields.tableDetected = tableDetected ? "Y" : "N";
+  if (tableDetected) {
+    const candidateRows = lines.filter((line) =>
+      /\d/.test(line) && /[,0-9]/.test(line) && !/사업자|등록|전화|주소/.test(line),
+    );
+    fields.rowCount = String(candidateRows.length);
+    const firstRow = tableHeaderIndex >= 0 ? lines.slice(tableHeaderIndex + 1).find((line) => line.length > 0) : candidateRows[0];
+    if (firstRow) fields.firstRowPreview = firstRow.slice(0, 120);
+  }
+  return fields;
 }
 
 async function readJsonResponse<T>(res: Response, label: string): Promise<T> {
@@ -132,8 +199,105 @@ async function fetchOcr(filename: string, imageBaseUrl: string): Promise<OcrEntr
     status: deriveUiStatus(data),
     docType: data.doc_type,
     financeFields: data.finance_fields,
+    documentFields: inferInvoiceDocumentFields(data),
     financeReviewReasons: data.finance_review_reasons,
   };
+}
+
+type PdfPagePreviewProps = {
+  url: string;
+  filename: string;
+  variant: "thumb" | "preview";
+};
+
+function PdfPagePreview({ url, filename, variant }: PdfPagePreviewProps) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+
+  useEffect(() => {
+    let cancelled = false;
+    let renderTask: { cancel: () => void; promise: Promise<unknown> } | null = null;
+
+    async function renderPdf() {
+      setStatus("loading");
+      try {
+        const pdfjs = await import("pdfjs-dist/legacy/build/pdf");
+        pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
+        const loadingTask = pdfjs.getDocument({ url });
+        const pdf = await loadingTask.promise;
+        if (cancelled) {
+          await pdf.destroy();
+          return;
+        }
+
+        const page = await pdf.getPage(1);
+        if (cancelled) {
+          await pdf.destroy();
+          return;
+        }
+
+        const pageRotation = typeof page.rotate === "number" ? page.rotate : 0;
+        const baseViewport = page.getViewport({ scale: 1, rotation: pageRotation });
+        const targetWidth = variant === "thumb" ? 128 : 980;
+        const scale = targetWidth / baseViewport.width;
+        const viewport = page.getViewport({ scale, rotation: pageRotation });
+        const canvas = canvasRef.current;
+        if (!canvas) {
+          await pdf.destroy();
+          return;
+        }
+
+        const context = canvas.getContext("2d");
+        if (!context) {
+          await pdf.destroy();
+          return;
+        }
+
+        canvas.width = Math.ceil(viewport.width);
+        canvas.height = Math.ceil(viewport.height);
+        renderTask = page.render({ canvasContext: context, viewport }) as { cancel: () => void; promise: Promise<unknown> };
+        await renderTask.promise;
+        await pdf.destroy();
+        if (!cancelled) setStatus("ready");
+      } catch (error) {
+        console.error("[TestWorkspace] PDF preview failed", { filename, url, variant, error });
+        if (!cancelled) setStatus("error");
+      }
+    }
+
+    renderPdf();
+    return () => {
+      cancelled = true;
+      renderTask?.cancel();
+    };
+  }, [url, variant]);
+
+  const fallback = variant === "thumb" ? (
+    <div style={styles.pdfThumb}>
+      <span style={styles.pdfBadge}>PDF</span>
+    </div>
+  ) : (
+    <div style={styles.pdfPreview}>
+      <span style={styles.pdfPreviewBadge}>PDF</span>
+      <strong style={{ fontSize: 14, color: "var(--text)", textAlign: "center", wordBreak: "break-all" }}>{filename}</strong>
+      {status === "loading" && <span style={{ fontSize: 11, color: "var(--muted)" }}>preview loading...</span>}
+      {status === "error" && <span style={{ fontSize: 11, color: "#fca5a5" }}>preview failed</span>}
+    </div>
+  );
+
+  return (
+    <div style={variant === "thumb" ? styles.pdfCanvasWrapThumb : styles.pdfCanvasWrapPreview}>
+      <canvas
+        ref={canvasRef}
+        aria-label={`${filename} PDF preview`}
+        style={{
+          ...(variant === "thumb" ? styles.pdfCanvasThumb : styles.pdfCanvasPreview),
+          opacity: status === "ready" ? 1 : 0,
+        }}
+      />
+      {status !== "ready" && fallback}
+    </div>
+  );
 }
 
 export default function TestWorkspace() {
@@ -279,6 +443,20 @@ export default function TestWorkspace() {
       [img]: {
         ...existing,
         financeFields: { ...(existing.financeFields ?? {}), [field]: value },
+        updated_at: new Date().toISOString(),
+      },
+    };
+    setGt(updated);
+    persistGt(updated);
+  };
+
+  const updateDocumentGtField = (img: string, field: string, value: string) => {
+    const existing = gt[img] ?? EMPTY_GT();
+    const updated: Record<string, GtRecord> = {
+      ...gt,
+      [img]: {
+        ...existing,
+        documentFields: { ...(existing.documentFields ?? {}), [field]: value },
         updated_at: new Date().toISOString(),
       },
     };
@@ -500,6 +678,7 @@ export default function TestWorkspace() {
   // ── 현재 선택 파일 기준 계산 ──
   const selGt       = selected ? (gt[selected]?.fields         ?? EMPTY_ENTRY()) : EMPTY_ENTRY();
   const selFinanceGt = selected ? (gt[selected]?.financeFields ?? {})            : {};
+  const selDocumentGt = selected ? (gt[selected]?.documentFields ?? {})          : {};
   const selOcr = selected ? (ocr[selected] ?? null)                : null;
   const selAuto = selected && selOcr ? (autofill[selected] ?? null) : null;
   const selMeta = useMemo(
@@ -520,7 +699,11 @@ export default function TestWorkspace() {
       if (!map.has(dt)) {
         const fieldFilled = {} as Record<FieldKey, number>;
         for (const f of FIELDS) fieldFilled[f.key] = 0;
-        map.set(dt, { documentType: dt, total: 0, selected: 0, suppressed: 0, unknown: 0, error: 0, notRun: 0, fieldFilled });
+        const financeFieldFilled: Record<string, number> = {};
+        for (const col of FINANCE_DISPLAY_COLS) financeFieldFilled[col.key] = 0;
+        const documentFieldFilled: Record<string, number> = {};
+        for (const col of DOCUMENT_FIELD_META) documentFieldFilled[col.key] = 0;
+        map.set(dt, { documentType: dt, total: 0, selected: 0, suppressed: 0, unknown: 0, error: 0, notRun: 0, fieldFilled, financeFieldFilled, documentFieldFilled });
       }
       return map.get(dt)!;
     };
@@ -533,14 +716,39 @@ export default function TestWorkspace() {
       if (!ocrEntry) {
         row.notRun++;
       } else {
-        const status = ocrEntry.status ?? "selected";
-        if (status === "selected") row.selected++;
-        else if (status.startsWith("suppressed_")) row.suppressed++;
-        else if (status === "unknown") row.unknown++;
-        else row.error++;
-        const g = gt[img]?.fields ?? EMPTY_ENTRY();
-        const v = computeAllFieldViews(g, ocrEntry, autofill[img] ?? null, activeDataset);
-        for (const f of FIELDS) { if (v[f.key].finalValue) row.fieldFilled[f.key]++; }
+        const baseProfile = resolveProfile(dt).base;
+        if (baseProfile === "finance") {
+          // finance: derived status 기반 집계 (raw suppressed_bank_slip 보정)
+          const fStatus = deriveFinanceStatus(ocrEntry, gt[img]?.financeFields);
+          if (fStatus === "selected")        row.selected++;
+          else if (fStatus === "review")     row.unknown++;   // unknown 슬롯을 review로 재활용
+          else                               row.suppressed++;
+          // finance 필드 채움 수
+          const finFields = ocrEntry.financeFields ?? {};
+          for (const col of FINANCE_DISPLAY_COLS) {
+            if (finFields[col.key]) row.financeFieldFilled[col.key]++;
+          }
+        } else if (baseProfile === "document") {
+          const status = ocrEntry.status ?? "selected";
+          if (status === "selected") row.selected++;
+          else if (status.startsWith("suppressed_")) row.suppressed++;
+          else if (status === "unknown") row.unknown++;
+          else row.error++;
+          const docFields = ocrEntry.documentFields ?? {};
+          for (const col of DOCUMENT_FIELD_META) {
+            if (docFields[col.key]) row.documentFieldFilled[col.key]++;
+          }
+        } else {
+          // receipt 기존 로직
+          const status = ocrEntry.status ?? "selected";
+          if (status === "selected") row.selected++;
+          else if (status.startsWith("suppressed_")) row.suppressed++;
+          else if (status === "unknown") row.unknown++;
+          else row.error++;
+          const g = gt[img]?.fields ?? EMPTY_ENTRY();
+          const v = computeAllFieldViews(g, ocrEntry, autofill[img] ?? null, activeDataset);
+          for (const f of FIELDS) { if (v[f.key].finalValue) row.fieldFilled[f.key]++; }
+        }
       }
     }
     return Array.from(map.values()).sort((a, b) => b.total - a.total);
@@ -652,7 +860,7 @@ export default function TestWorkspace() {
   const receiptBatchRows = useMemo(
     () => batchRows.filter((r) => {
       const dt = manifest?.items.find((i) => i.filename === r.img)?.documentType;
-      return resolveProfile(dt).base !== "finance";
+      return resolveProfile(dt).base === "receipt";
     }),
     [batchRows, manifest],
   );
@@ -663,13 +871,21 @@ export default function TestWorkspace() {
     }),
     [batchRows, manifest],
   );
+  const documentBatchRows = useMemo(
+    () => images.filter((img) => {
+      if (!ocr[img]) return false;
+      const dt = manifest?.items.find((i) => i.filename === img)?.documentType;
+      return resolveProfile(dt).base === "document";
+    }),
+    [images, ocr, manifest],
+  );
 
   // 영수증 계열 총 이미지 수 (미실행 포함) — receipt KPI 분모 (docs/TEST_PROFILE_SCHEMA §7.2)
   const receiptImageCount = useMemo(
     () => images.filter((img) => {
       if (!manifest) return true; // manifest 없으면 전체를 영수증으로 처리 (안전 fallback)
       const dt = manifest.items.find((i) => i.filename === img)?.documentType;
-      return resolveProfile(dt).base !== "finance";
+      return resolveProfile(dt).base === "receipt";
     }).length,
     [images, manifest],
   );
@@ -896,6 +1112,7 @@ export default function TestWorkspace() {
   // ── 렌더 ──
   const renderThumb = (img: string) => {
     const thumbMeta = manifest?.items.find((i) => i.filename === img) ?? null;
+    const pdf = isPdfFile(img);
     return (
       <button
         key={img}
@@ -907,7 +1124,11 @@ export default function TestWorkspace() {
           boxShadow: selected === img ? "0 0 0 2px var(--accentBg)" : undefined,
         }}
       >
-        <img src={imageUrl(activeTestset.path, img)} alt={img} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        {pdf ? (
+          <PdfPagePreview url={imageUrl(activeTestset.path, img)} filename={img} variant="thumb" />
+        ) : (
+          <img src={imageUrl(activeTestset.path, img)} alt={img} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        )}
         <div style={styles.thumbLabel}>{img}</div>
         {thumbMeta && (
           <span
@@ -979,38 +1200,6 @@ export default function TestWorkspace() {
             </button>
           ))}
         </div>
-        <div style={{ marginLeft: "auto", flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 5 }}>
-          <span style={{ fontSize: 11, color: "var(--muted)" }}>
-            {images.length > 0 ? `${images.length} files` : "0 files"}
-          </span>
-          <div style={{ display: "flex", gap: 5, flexWrap: "wrap", justifyContent: "flex-end" }}>
-            <TopStatChip
-              label="OCR 인식률"
-              value={pct(kpi.norm.overallOk, kpi.norm.overallTotal)}
-              sub={kpi.norm.overallTotal > 0 ? `${kpi.norm.overallOk}/${kpi.norm.overallTotal}` : undefined}
-              tone={toneOf(kpi.norm.overallOk, kpi.norm.overallTotal)}
-            />
-            <TopStatChip
-              label="최종 채택"
-              value={pct(kpi.final.overallOk, kpi.final.overallTotal)}
-              sub={kpi.final.overallTotal > 0 ? `${kpi.final.overallOk}/${kpi.final.overallTotal}` : undefined}
-              tone={toneOf(kpi.final.overallOk, kpi.final.overallTotal)}
-            />
-            <TopStatChip label="처리" value={`${batchRows.length}/${images.length}`} />
-            {kpi.norm.overallTotal > 0 && (
-              <>
-                <div style={{ width: 1, background: "rgba(255,255,255,0.1)", alignSelf: "stretch", margin: "0 2px" }} />
-                {FIELDS.map((f) => {
-                  const s = kpi.norm.fieldAcc[f.key];
-                  if (s.total === 0) return null;
-                  return (
-                    <TopStatChip key={f.key} label={f.label} value={pct(s.ok, s.total)} sub={`${s.ok}/${s.total}`} tone={toneOf(s.ok, s.total)} />
-                  );
-                })}
-              </>
-            )}
-          </div>
-        </div>
         <div style={{ width: "100%", display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
           <span style={{ fontSize: 11, color: "var(--muted)", fontWeight: 800 }}>채택값 출처:</span>
           <SourceLegend label="OCR" color="#0284c7" note="이번 OCR 결과" />
@@ -1035,93 +1224,7 @@ export default function TestWorkspace() {
         </div>
       )}
 
-      {/* ── qualityTags 필터 ── */}
-      {availableQualityTags.length > 0 && (
-        <div style={styles.filterBar}>
-          <span style={{ fontSize: 10, fontWeight: 800, color: "var(--muted)", textTransform: "uppercase", letterSpacing: 0.5, whiteSpace: "nowrap" }}>
-            태그 필터
-          </span>
-          <div style={{ display: "flex", gap: 5, flexWrap: "wrap", flex: 1 }}>
-            {availableQualityTags.map((tag) => {
-              const active = selectedQualityTags.includes(tag);
-              return (
-                <button
-                  key={tag}
-                  type="button"
-                  title={tag}
-                  onClick={() => toggleQualityTag(tag)}
-                  style={{
-                    fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4,
-                    cursor: "pointer", whiteSpace: "nowrap",
-                    background: active ? "#475569" : "var(--panel2)",
-                    color: active ? "#fff" : "var(--muted)",
-                    border: active ? "1px solid #94a3b8" : "1px solid rgba(255,255,255,0.08)",
-                    transition: "all 0.1s",
-                  }}
-                >
-                  {getQualityTagLabel(tag)}
-                </button>
-              );
-            })}
-          </div>
-          {selectedQualityTags.length > 0 && (
-            <>
-              <span style={{ fontSize: 10, fontWeight: 700, color: "#f59e0b", whiteSpace: "nowrap" }}>
-                {filteredImages.length} / {images.length} shown
-              </span>
-              <button
-                type="button"
-                onClick={() => setSelectedQualityTags([])}
-                style={{
-                  fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4,
-                  cursor: "pointer", whiteSpace: "nowrap",
-                  background: "var(--panel2)", color: "var(--muted)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                }}
-              >
-                전체 보기
-              </button>
-            </>
-          )}
-        </div>
-      )}
 
-      {/* ── 문서 유형/태그 안내 범례 ── */}
-      <details style={{ background: "var(--panel)", borderRadius: 8, padding: "6px 14px", flexShrink: 0 }}>
-        <summary style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", cursor: "pointer", letterSpacing: 0.4, userSelect: "none" }}>
-          문서 유형 / 품질 태그 안내 ▶
-        </summary>
-        <div style={{ display: "flex", gap: 24, flexWrap: "wrap", marginTop: 8, fontSize: 10, color: "var(--muted)" }}>
-          <div>
-            <div style={{ fontWeight: 800, marginBottom: 4, color: "var(--text)" }}>문서 유형</div>
-            {Object.entries(DOC_TYPE_LABEL).map(([k, v]) => (
-              <div key={k} style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 2 }}>
-                <span style={{ display: "inline-block", width: 6, height: 6, borderRadius: 2, background: DOC_TYPE_COLOR[k] ?? "#6b7280", flexShrink: 0 }} />
-                <span style={{ fontWeight: 700, color: "var(--text)", minWidth: 28 }}>{DOC_TYPE_ABBR[k]}</span>
-                <span>{v}</span>
-              </div>
-            ))}
-          </div>
-          <div>
-            <div style={{ fontWeight: 800, marginBottom: 4, color: "var(--text)" }}>품질 태그</div>
-            {Object.entries(QUALITY_TAG_LABELS).slice(0, 7).map(([k, v]) => (
-              <div key={k} style={{ marginBottom: 2 }}>
-                <span style={{ fontWeight: 700, color: "var(--text)" }}>{v}</span>
-                <span style={{ marginLeft: 4, opacity: 0.65 }}>({k})</span>
-              </div>
-            ))}
-          </div>
-          <div>
-            <div style={{ fontWeight: 800, marginBottom: 4, color: "var(--text)", opacity: 0 }}>-</div>
-            {Object.entries(QUALITY_TAG_LABELS).slice(7).map(([k, v]) => (
-              <div key={k} style={{ marginBottom: 2 }}>
-                <span style={{ fontWeight: 700, color: "var(--text)" }}>{v}</span>
-                <span style={{ marginLeft: 4, opacity: 0.65 }}>({k})</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </details>
 
       {/* ── Top bar: 썸네일 + 모드 + 실행 ── */}
       <div style={styles.topBar}>
@@ -1310,67 +1413,12 @@ export default function TestWorkspace() {
           </KpiSection>
           )}
 
-          {/* ── finance Tier-1 필드별 breakdown — 추출률 + GT 일치 (필드 기준) ── */}
-          {financeKpi.processed > 0 && (
-          <div style={{
-            flex: "1 1 100%",
-            display: "flex", flexDirection: "column", gap: 5,
-            padding: "8px 10px", borderRadius: 8,
-            background: "var(--panel)",
-            border: "1px solid rgba(220,38,38,0.12)",
-          }}>
-            <span style={{
-              fontSize: 9, fontWeight: 800, color: "#dc2626",
-              textTransform: "uppercase", letterSpacing: 0.5,
-            }}>
-              🏦 Tier-1 필드별 추출 / GT 일치
-            </span>
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              {FINANCE_TIER1_FIELDS.map((k) => {
-                const label     = FINANCE_COL_LABELS[k] ?? k;
-                const extracted = financeKpi.tier1FieldExtract[k] ?? 0;
-                const gtStat    = financeKpi.tier1FieldGtMatch[k] ?? { match: 0, total: 0 };
-                const hasGt     = gtStat.total > 0;
-
-                const exColor  = (() => { const t = toneOf(extracted, financeKpi.processed); return t === "green" ? "#22c55e" : t === "amber" ? "#f59e0b" : t === "red" ? "#ef4444" : "rgba(255,255,255,0.55)"; })();
-                const gtColor  = hasGt ? (() => { const t = toneOf(gtStat.match, gtStat.total); return t === "green" ? "#22c55e" : t === "amber" ? "#f59e0b" : t === "red" ? "#ef4444" : "rgba(255,255,255,0.55)"; })() : undefined;
-
-                return (
-                  <div key={k} style={{
-                    display: "flex", flexDirection: "column",
-                    padding: "5px 9px", borderRadius: 7,
-                    background: "var(--panel2)", minWidth: 72, flexShrink: 0,
-                  }}>
-                    <span style={{ fontSize: 9, fontWeight: 700, color: "var(--muted)", whiteSpace: "nowrap" }}>
-                      {label}
-                    </span>
-                    {/* 추출률 */}
-                    <span style={{ fontSize: 12, fontWeight: 800, lineHeight: 1.2, color: exColor }}>
-                      {extracted}/{financeKpi.processed}
-                    </span>
-                    <span style={{ fontSize: 8, color: "var(--muted)", whiteSpace: "nowrap" }}>추출</span>
-                    {/* GT 일치 (GT 입력된 경우만) */}
-                    {hasGt && gtColor && (<>
-                      <span style={{ fontSize: 11, fontWeight: 700, marginTop: 2, lineHeight: 1.2, color: gtColor }}>
-                        {gtStat.match}/{gtStat.total}
-                      </span>
-                      <span style={{ fontSize: 8, color: "var(--muted)", whiteSpace: "nowrap" }}>GT 일치</span>
-                    </>)}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-          )}
         </div>
       )}
 
       {/* ── documentType 집계 ── */}
       {docTypeSummary && (
         <DocTypeSummarySection rows={docTypeSummary} totalImages={images.length} />
-      )}
-      {qualityTagSummary && (
-        <QualityTagSummarySection rows={qualityTagSummary} />
       )}
 
       {/* ── Batch summary (접기/펼치기 토글) ── */}
@@ -1471,23 +1519,21 @@ export default function TestWorkspace() {
             </div>
             )}
 
-            {/* ── 금융전표 계열 섹션 (finance_profile) ── */}
+            {/* ── 금융전표 계열 섹션 (finance_profile) — O/△/X/— 비교형 ── */}
             {financeBatchRows.length > 0 && (
             <div style={{ overflowX: "auto" }}>
               <div style={{ fontSize: 10, color: "#dc2626", fontWeight: 700, marginBottom: 4, letterSpacing: 0.4 }}>
                 금융전표 계열 ({financeBatchRows.length}건) — finance_profile
+                <span style={{ marginLeft: 8, fontWeight: 500, color: "var(--muted)" }}>
+                  O=일치 · △=정규화일치 · X=불일치 · —=기준값없음
+                </span>
               </div>
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
                 <thead>
                   <tr>
                     <th style={th}>파일명</th>
-                    {FINANCE_COLUMNS.map((c) => (
-                      <th key={c.key} style={{ ...th, color: c.required ? undefined : "var(--muted)" }}>
-                        {FINANCE_COL_LABELS[c.key] ?? c.key}
-                        {!c.required && (
-                          <span style={{ fontSize: 8, marginLeft: 3, opacity: 0.6, fontWeight: 500 }}>선택</span>
-                        )}
-                      </th>
+                    {FINANCE_DISPLAY_COLS.map((col) => (
+                      <th key={col.key} style={th}>{col.label}</th>
                     ))}
                     <th style={{ ...th, textAlign: "center" }}>상태</th>
                   </tr>
@@ -1495,26 +1541,33 @@ export default function TestWorkspace() {
                 <tbody>
                   {financeBatchRows.map((row) => {
                     const ocrEntry = ocr[row.img];
-                    // derived finance status (Tier-1 추출 + GT 비교 반영)
                     const fStatus = deriveFinanceStatus(ocrEntry, gt[row.img]?.financeFields);
                     const statusMeta = getFinanceStatusMetaFromDerived(fStatus, !!ocrEntry);
                     const finFields = ocrEntry?.financeFields ?? {};
+                    const finGt     = gt[row.img]?.financeFields ?? {};
                     const reviewReasons = ocrEntry?.financeReviewReasons ?? [];
                     return (
                       <tr key={row.img} onClick={() => setSelected(row.img)}
                         style={{ cursor: "pointer", background: selected === row.img ? "var(--accentBg)" : undefined }}>
                         <td style={td}>{row.img}</td>
-                        {FINANCE_COLUMNS.map((c) => {
-                          const val = finFields[c.key] ?? "";
-                          const hasVal = val !== "";
+                        {FINANCE_DISPLAY_COLS.map((col) => {
+                          const gtVal  = finGt[col.key]    ?? "";
+                          const ocrVal = finFields[col.key] ?? "";
+                          const ms   = financeMatchStatus(col.key, gtVal, ocrVal);
+                          const meta = financeMatchMeta(ms);
+                          const tooltip = gtVal
+                            ? `GT: ${gtVal} / OCR: ${ocrVal || "없음"}`
+                            : ocrVal
+                              ? `OCR: ${ocrVal} (기준값 없음)`
+                              : "미추출";
                           return (
-                            <td key={c.key} style={{
-                              ...td, textAlign: "center",
-                              color: hasVal
-                                ? (c.required ? "var(--text)" : "var(--muted)")
-                                : "rgba(255,255,255,0.22)",
-                            }}>
-                              {hasVal ? val : "—"}
+                            <td key={col.key} style={{ ...td, textAlign: "center" }} title={tooltip}>
+                              <span style={{ fontWeight: 800, color: meta.color }}>{meta.symbol}</span>
+                              {ocrVal && ms !== "—" && (
+                                <span style={{ fontSize: 9, color: "var(--muted)", marginLeft: 2, display: "block", whiteSpace: "nowrap", overflow: "hidden", maxWidth: 70, textOverflow: "ellipsis" }}>
+                                  {ocrVal.length > 9 ? ocrVal.slice(0, 9) + "…" : ocrVal}
+                                </span>
+                              )}
                             </td>
                           );
                         })}
@@ -1532,7 +1585,7 @@ export default function TestWorkspace() {
                 </tbody>
               </table>
               <div style={{ fontSize: 9, color: "var(--muted)", marginTop: 4, paddingLeft: 2 }}>
-                ※ finance_profile Tier-1 (은행명/거래유형/거래일시/거래금액). Tier-2 및 정밀 추출은 별도 단계.
+                ※ finance_profile Tier-1 (은행명/거래일시/거래금액). Tier-2 및 정밀 추출은 별도 단계.
               </div>
             </div>
             )}
@@ -1542,14 +1595,73 @@ export default function TestWorkspace() {
         </div>
       )}
 
+      {showBatchSummary && documentBatchRows.length > 0 && (
+        <div style={styles.batchBox}>
+          <div style={{ fontSize: 10, color: "#ca8a04", fontWeight: 700, marginBottom: 4, letterSpacing: 0.4 }}>
+            거래명세서 계열 ({documentBatchRows.length}건)
+            <span style={{ marginLeft: 8, fontWeight: 500, color: "var(--muted)" }}>
+              O=일치 · △=부분일치 · X=불일치 · —=GT 없음
+            </span>
+          </div>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+              <thead>
+                <tr>
+                  <th style={th}>파일명</th>
+                  {DOCUMENT_FIELD_META.map((col) => (
+                    <th key={col.key} style={th}>{col.shortLabel}</th>
+                  ))}
+                  <th style={{ ...th, textAlign: "center" }}>상태</th>
+                </tr>
+              </thead>
+              <tbody>
+                {documentBatchRows.map((img) => {
+                  const docFields = ocr[img]?.documentFields ?? {};
+                  const docGt = gt[img]?.documentFields ?? {};
+                  const status = ocr[img]?.status ?? "selected";
+                  return (
+                    <tr key={img} onClick={() => setSelected(img)}
+                      style={{ cursor: "pointer", background: selected === img ? "var(--accentBg)" : undefined }}>
+                      <td style={td}>{img}</td>
+                      {DOCUMENT_FIELD_META.map((col) => {
+                        const gtVal = docGt[col.key] ?? "";
+                        const ocrVal = docFields[col.key] ?? "";
+                        const meta = documentMatchMeta(documentMatchStatus(gtVal, ocrVal));
+                        return (
+                          <td key={col.key} style={{ ...td, textAlign: "center" }} title={`GT: ${gtVal || "-"} / OCR: ${ocrVal || "-"}`}>
+                            <span style={{ fontWeight: 800, color: meta.color }}>{meta.symbol}</span>
+                            {ocrVal && (
+                              <span style={{ fontSize: 9, color: "var(--muted)", marginLeft: 2, display: "block", whiteSpace: "nowrap", overflow: "hidden", maxWidth: 70, textOverflow: "ellipsis" }}>
+                                {ocrVal.length > 9 ? ocrVal.slice(0, 9) + "…" : ocrVal}
+                              </span>
+                            )}
+                          </td>
+                        );
+                      })}
+                      <td style={{ ...td, textAlign: "center" }}>
+                        <span style={{ fontSize: 10, padding: "1px 6px", borderRadius: 4, background: status === "selected" ? "#16a34a" : "#6b7280", color: "#fff", fontWeight: 700 }}>
+                          {status}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {/* ── Main: image + compare ── */}
       <div style={{ display: "flex", flex: 1, gap: 12, overflow: "hidden", minHeight: 0 }}>
         {/* Left: image */}
         <div style={{ ...styles.imagePane, position: "relative" }}>
-          {selOcr?.displayUrl
+          {selOcr?.displayUrl && !isPdfFile(selected)
             ? <img key={selOcr.displayUrl} src={selOcr.displayUrl} alt="OCR" style={styles.previewImage} />
             : selected
-              ? <img key={selected} src={imageUrl(activeTestset.path, selected)} alt="original" style={styles.previewImage} />
+              ? isPdfFile(selected)
+                ? <PdfPagePreview key={selected} url={imageUrl(activeTestset.path, selected)} filename={selected} variant="preview" />
+                : <img key={selected} src={imageUrl(activeTestset.path, selected)} alt="original" style={styles.previewImage} />
               : <p style={{ color: "var(--muted)", fontSize: 13 }}>이미지를 선택하세요</p>}
           {(running || runningAll) && <div className="uw-scan-overlay"><div className="uw-scan-line" /></div>}
         </div>
@@ -1656,6 +1768,13 @@ export default function TestWorkspace() {
               financeGt={selFinanceGt}
               onFinanceGtChange={(field, value) => updateFinanceGtField(selected!, field, value)}
               derivedStatus={selOcr ? deriveFinanceStatus(selOcr, selFinanceGt) : undefined}
+            />
+          ) : selected && selProfile.base === "document" ? (
+            <DocumentDetailPanel
+              documentFields={selOcr?.documentFields ?? null}
+              hasOcr={!!selOcr}
+              documentGt={selDocumentGt}
+              onDocumentGtChange={(field, value) => updateDocumentGtField(selected!, field, value)}
             />
           ) : selected ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -2223,14 +2342,57 @@ function KpiSection({ title, subtitle, tone, icon, children }: { title: string; 
 // ============================================================
 const FINANCE_FIELD_META: { key: string; label: string; required: boolean }[] = [
   { key: "bankName",            label: "은행명",        required: true  },
-  { key: "transactionType",     label: "거래유형",      required: true  },
   { key: "transactionDateTime", label: "거래일시",      required: true  },
   { key: "amount",              label: "거래금액",      required: true  },
   { key: "balanceAfter",        label: "거래후잔액",    required: false },
   { key: "accountMasked",       label: "계좌(마스킹)",  required: false },
-  { key: "branchOrChannel",     label: "지점/채널",     required: false },
-  { key: "memo",                label: "적요",          required: false },
+  { key: "branchOrChannel",     label: "수취인 계좌",   required: false },
+  { key: "memo",                label: "수취인명",      required: false },
 ];
+
+const DOCUMENT_FIELD_LABELS: Record<string, string> = {
+  supplierCompany: "공급자 상호",
+  supplierBizNumber: "공급자 사업자번호",
+  supplierRepresentative: "공급자 대표자",
+  supplierAddress: "공급자 주소",
+  buyerCompany: "공급받는자 상호",
+  buyerBizNumber: "공급받는자 사업자번호",
+  buyerRepresentative: "공급받는자 대표자",
+  buyerAddress: "공급받는자 주소",
+  issueDate: "작성/거래일자",
+  supplyAmount: "공급가액",
+  taxAmount: "세액",
+  totalAmount: "합계금액",
+  tableDetected: "품목표 존재",
+  rowCount: "행 수",
+  firstRowPreview: "첫 행 미리보기",
+};
+
+const DOCUMENT_FIELD_SHORT: Record<string, string> = {
+  supplierCompany: "공급자",
+  supplierBizNumber: "공급자 사업자",
+  supplierRepresentative: "공급자 대표",
+  supplierAddress: "공급자 주소",
+  buyerCompany: "공급받는자",
+  buyerBizNumber: "받는자 사업자",
+  buyerRepresentative: "받는자 대표",
+  buyerAddress: "받는자 주소",
+  issueDate: "일자",
+  supplyAmount: "공급가",
+  taxAmount: "세액",
+  totalAmount: "합계",
+  tableDetected: "표",
+  rowCount: "행",
+  firstRowPreview: "첫 행",
+};
+
+const DOCUMENT_FIELD_META: { key: string; label: string; shortLabel: string; required: boolean }[] =
+  DOCUMENT_COLUMNS.map((col) => ({
+    key: col.key,
+    label: DOCUMENT_FIELD_LABELS[col.key] ?? col.key,
+    shortLabel: DOCUMENT_FIELD_SHORT[col.key] ?? DOCUMENT_FIELD_LABELS[col.key] ?? col.key,
+    required: col.required,
+  }));
 
 // finance GT vs OCR 비교용 정규화 — 보수적 최소 정규화
 // 너무 공격적인 fuzzy 매칭 금지. 명백히 같은 값을 다른 표기로 입력한 경우만 흡수.
@@ -2245,7 +2407,12 @@ function normalizeFinanceValue(field: string, value: string): string {
     // 구분자 정규화: '/' '.' → '-' / 다중 공백 → 단일 공백
     return trimmed.replace(/[./]/g, "-").replace(/\s+/g, " ").trim();
   }
-  // bankName / transactionType / accountMasked / 기타: 공백 제거 + 소문자
+  if (field === "branchOrChannel" || field === "accountMasked") {
+    // 맨 앞 [xxx] 기관 코드 prefix 제거 (예: [003]480-... → 480-...) + 공백 제거
+    // 하이픈은 유지 (계좌 형식 가독성 보존 + GT 입력 패턴과 일치)
+    return trimmed.replace(/^\[\d{2,4}\]/, "").replace(/\s+/g, "").toLowerCase();
+  }
+  // bankName / transactionType / 기타: 공백 제거 + 소문자
   return trimmed.replace(/\s+/g, "").toLowerCase();
 }
 
@@ -2401,31 +2568,39 @@ function FinanceFieldCard({
   gtValue: string;
   onGtChange: (v: string) => void;
 }) {
-  const hasValue = value !== "";
-  const hasGt    = gtValue !== "";
-  // 정규화 비교 (콤마/공백/구분자/은행명 substring 흡수)
-  const gtMatch  = hasGt && hasValue && financeFieldMatches(fieldKey, gtValue, value);
+  const hasValue      = value !== "";
+  const hasGt         = gtValue !== "";
+  const normalizedVal = hasValue ? normalizeFinanceValue(fieldKey, value) : "";
+  const displayVal    = hasValue ? displayFinanceValue(fieldKey, value) : "";
 
-  // 상태 아이콘: GT 있으면 정규화 비교, GT 없으면 추출 성공 여부 기준
-  //   GT 있고 정규화 비교 일치 → O (green)
-  //   GT 있고 정규화 비교 불일치 → △ (amber, OCR 추출됨) / X (red, OCR 미추출)
-  //   GT 없고 OCR 값 있음 → O (green, 추출됨)
-  //   GT 없고 Tier-1 미추출 → X (red)
-  //   GT 없고 Tier-2 미추출 → — (gray)
+  // 상태 아이콘 — financeMatchStatus 기반으로 배치 테이블과 동일 기준 적용
+  //   GT 있음: financeMatchStatus 결과 (O/△/X) 직접 사용
+  //   GT 없음: 추출 여부 기준 (O=추출됨 / X=Tier-1 미추출 / —=Tier-2 미추출)
+  const ms = (hasGt && hasValue) ? financeMatchStatus(fieldKey, gtValue, value)
+           : (hasGt && !hasValue) ? "X"
+           : null;  // no GT
+
   const statusSymbol =
-    hasGt ? (gtMatch ? "O" : (hasValue ? "△" : "X")) :
-    hasValue ? "O" :
-    isTier1  ? "X" : "—";
+    ms === "O"  ? "O"  :
+    ms === "△"  ? "△"  :
+    ms === "X"  ? "X"  :
+    ms === null ? (hasValue ? "O" : isTier1 ? "X" : "—")
+    : "X";
   const statusBg =
-    hasGt ? (gtMatch ? "#22c55e" : (hasValue ? "#f59e0b" : "#ef4444")) :
-    hasValue ? "#22c55e" :
-    isTier1  ? "#ef4444" :
-               "rgba(255,255,255,0.18)";
+    statusSymbol === "O"  ? "#22c55e" :
+    statusSymbol === "△"  ? "#f59e0b" :
+    statusSymbol === "X"  ? "#ef4444" :
+                            "rgba(255,255,255,0.18)";
   const statusTitle =
-    hasGt ? (gtMatch ? "기준값과 일치 (정규화 비교)" : (hasValue ? "기준값과 불일치" : "OCR 미추출")) :
-    hasValue ? "정상 추출됨 (기준값 없음)" :
-    isTier1  ? "필수 필드(Tier-1) 미추출" :
-               "선택 필드(Tier-2) 미추출";
+    ms === "O"  ? "기준값과 일치 (정규화 동일 포함)" :
+    ms === "△"  ? "canonical/유사 일치 (은행명 변형 등)" :
+    ms === "X"  ? (hasValue ? "기준값과 불일치" : "OCR 미추출") :
+    hasValue    ? "정상 추출됨 (기준값 없음)" :
+    isTier1     ? "필수 필드(Tier-1) 미추출" :
+                  "선택 필드(Tier-2) 미추출";
+
+  // gtMatch: 채택값 테두리 색 등 기타 용도 (O 또는 △ 이면 "일치 계열")
+  const gtMatch = statusSymbol === "O" || statusSymbol === "△";
 
   // 채택값 슬롯 강조색 (finance 전용 — receipt의 source 기반 색과 별개)
   const emphasisBg     = hasValue ? "rgba(220,38,38,0.10)" : "rgba(255,255,255,0.03)";
@@ -2496,12 +2671,16 @@ function FinanceFieldCard({
       <FieldSlot color="#94a3b8" label="OCR">
         <div style={{ display: "grid", gridTemplateColumns: "68px 1fr", rowGap: 3, columnGap: 8 }}>
           <span style={{ fontSize: 9, fontWeight: 800, color: "#94a3b8", letterSpacing: 0.5, textTransform: "uppercase" }}>원본</span>
-          <span style={{ fontSize: 12, color: hasValue ? "var(--text)" : "rgba(255,255,255,0.25)", wordBreak: "break-all" }}>
-            {value || "—"}
+          <span style={{
+            fontSize: 12, wordBreak: "break-all",
+            color: hasValue ? "var(--text)" : (hasOcr ? "#ef4444" : "rgba(255,255,255,0.25)"),
+            fontWeight: (!hasValue && hasOcr && isTier1) ? 700 : undefined,
+          }}>
+            {hasValue ? value : (hasOcr ? "미추출" : "—")}
           </span>
           <span style={{ fontSize: 9, fontWeight: 800, color: "#0ea5e9", letterSpacing: 0.5, textTransform: "uppercase" }}>정규화</span>
-          <span style={{ fontSize: 12, color: hasValue ? "var(--text)" : "rgba(255,255,255,0.25)", wordBreak: "break-all" }}>
-            {value || "—"}
+          <span style={{ fontSize: 12, color: normalizedVal ? "#93c5fd" : "rgba(255,255,255,0.18)", wordBreak: "break-all" }}>
+            {normalizedVal || "—"}
           </span>
         </div>
       </FieldSlot>
@@ -2539,7 +2718,7 @@ function FinanceFieldCard({
                 fontSize: 15, fontWeight: 800,
                 color: hasValue ? "var(--text)" : "rgba(255,255,255,0.25)",
                 wordBreak: "break-all", flex: 1, letterSpacing: -0.2,
-              }}>{value || "—"}</span>
+              }}>{displayVal || value || "—"}</span>
               {!hasValue && isTier1 && (
                 <span style={{ fontSize: 11, color: "#ef4444", fontWeight: 800 }}>
                   Tier-1 미추출 · review
@@ -2626,6 +2805,208 @@ function FinanceDetailPanel({
   );
 }
 
+function DocumentDetailPanel({
+  documentFields,
+  hasOcr,
+  documentGt,
+  onDocumentGtChange,
+}: {
+  documentFields: Record<string, string> | null;
+  hasOcr: boolean;
+  documentGt: Record<string, string>;
+  onDocumentGtChange: (field: string, value: string) => void;
+}) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={{
+        display: "flex", alignItems: "center", gap: 8,
+        padding: "6px 12px", borderRadius: 8,
+        background: "rgba(202,138,4,0.08)", border: "1px solid rgba(202,138,4,0.24)",
+      }}>
+        <span style={{ fontSize: 10, fontWeight: 800, color: "#facc15", letterSpacing: 0.5 }}>
+          DOCUMENT PROFILE · invoice_statement
+        </span>
+        {!hasOcr && (
+          <span style={{ fontSize: 10, color: "var(--muted)" }}>OCR 미실행 · GT 선입력 가능</span>
+        )}
+      </div>
+
+      {DOCUMENT_FIELD_META.map(({ key, label, required }) => (
+        <DocumentFieldCard
+          key={key}
+          fieldKey={key}
+          label={label}
+          required={required}
+          value={documentFields?.[key] ?? ""}
+          hasOcr={hasOcr}
+          gtValue={documentGt[key] ?? ""}
+          onGtChange={(v) => onDocumentGtChange(key, v)}
+        />
+      ))}
+    </div>
+  );
+}
+
+function DocumentFieldCard({
+  fieldKey,
+  label,
+  required,
+  value,
+  hasOcr,
+  gtValue,
+  onGtChange,
+}: {
+  fieldKey: string;
+  label: string;
+  required: boolean;
+  value: string;
+  hasOcr: boolean;
+  gtValue: string;
+  onGtChange: (v: string) => void;
+}) {
+  const hasValue = value !== "";
+  const hasGt = gtValue !== "";
+  const status = documentMatchStatus(gtValue, value);
+  const meta = documentMatchMeta(status);
+  const statusSymbol = hasGt ? meta.symbol : (hasValue ? "O" : required ? "X" : "—");
+  const statusBg =
+    statusSymbol === "O" ? "#22c55e" :
+    statusSymbol === "△" ? "#f59e0b" :
+    statusSymbol === "X" ? "#ef4444" :
+    "rgba(255,255,255,0.18)";
+
+  // 채택값 결정 — baseline 패턴: GT vs OCR 비교로 source/value 선택
+  //   OCR 미실행                              → empty
+  //   GT 없음 + OCR 없음                       → empty
+  //   GT 없음 + OCR 있음                       → OCR (source=ocr)
+  //   GT 있음 + OCR 없음                       → GT  (source=gt_anchor_empty: 확정값 채택)
+  //   둘 다 있음 · O(정규화 일치)              → OCR (source=ocr)
+  //   둘 다 있음 · △(부분/유사 일치)           → GT  (source=gt_similarity: 확정값 우선)
+  //   둘 다 있음 · X(불일치)                   → OCR (source=ocr · 불일치 표시)
+  const finalView = (() => {
+    if (!hasOcr)              return { value: "",       source: "empty"            as const, reason: "OCR 미실행" };
+    if (!hasGt && !hasValue)  return { value: "",       source: "empty"            as const, reason: required ? "Tier-1 미추출" : "값 없음" };
+    if (!hasGt && hasValue)   return { value: value,    source: "ocr"              as const, reason: "OCR 결과 채택" };
+    if (hasGt && !hasValue)   return { value: gtValue,  source: "gt_anchor_empty"  as const, reason: "OCR 공란 → GT 채택" };
+    // both
+    if (status === "O")       return { value: value,    source: "ocr"              as const, reason: "OCR=GT 정규화 일치" };
+    if (status === "△")       return { value: gtValue,  source: "gt_similarity"    as const, reason: "GT/OCR 부분일치 · GT 우선 채택" };
+    return                           { value: value,    source: "ocr"              as const, reason: "GT 불일치 · OCR 결과 채택" };
+  })();
+
+  const srcMeta: Record<typeof finalView.source, { label: string; color: string; bg: string; border: string }> = {
+    empty:            { label: "EMPTY",            color: "#64748b", bg: "rgba(255,255,255,0.03)", border: "rgba(255,255,255,0.12)" },
+    ocr:              { label: "OCR",              color: "#0ea5e9", bg: "rgba(14,165,233,0.10)",  border: "rgba(14,165,233,0.35)" },
+    gt_anchor_empty:  { label: "GT_ANCHOR_EMPTY",  color: "#15803d", bg: "rgba(21,128,61,0.13)",   border: "rgba(21,128,61,0.45)" },
+    gt_similarity:    { label: "GT_SIMILARITY",    color: "#16a34a", bg: "rgba(22,163,74,0.13)",   border: "rgba(22,163,74,0.45)" },
+  };
+  const fSrc = srcMeta[finalView.source];
+  const isGtAdopted = finalView.source === "gt_similarity" || finalView.source === "gt_anchor_empty";
+
+  return (
+    <div style={{
+      background: "var(--panel)", borderRadius: 10,
+      boxShadow: "var(--shadowSoft)", overflow: "hidden",
+      border: `1px solid ${hasValue ? "rgba(202,138,4,0.28)" : "rgba(255,255,255,0.05)"}`,
+    }}>
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "7px 12px",
+        background: "var(--panel2)",
+        borderBottom: "1px solid rgba(255,255,255,0.05)",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ fontSize: 13, fontWeight: 800, color: "var(--text)" }}>{label}</span>
+          <span style={{
+            fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 4,
+            color: "#fff", background: required ? "#ca8a04" : "#475569",
+          }}>
+            {required ? "Tier-1" : "optional"}
+          </span>
+        </div>
+        <span title={meta.title} style={{
+          display: "inline-flex", alignItems: "center", justifyContent: "center",
+          width: 22, height: 22, borderRadius: 999,
+          fontSize: 12, fontWeight: 800, color: "#fff",
+          background: statusBg,
+        }}>{statusSymbol}</span>
+      </div>
+
+      <FieldSlot color="#22c55e" label="GT">
+        <input
+          type="text"
+          value={gtValue}
+          onChange={(e) => onGtChange(e.target.value)}
+          placeholder="거래명세서 기준값 입력"
+          style={{
+            ...styles.gtInput,
+            background: hasGt ? "rgba(34,197,94,0.06)" : "var(--panel2)",
+            borderColor: hasGt ? "rgba(34,197,94,0.3)" : "rgba(255,255,255,0.07)",
+          }}
+        />
+      </FieldSlot>
+
+      <FieldSlot color="#94a3b8" label="OCR">
+        <span style={{
+          fontSize: 12,
+          color: hasValue ? "var(--text)" : (hasOcr ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.22)"),
+          fontWeight: hasValue ? 700 : 500,
+          wordBreak: "break-all",
+        }}>
+          {hasValue ? value : (hasOcr ? "미추출" : "—")}
+        </span>
+      </FieldSlot>
+
+      {/* 채택값 슬롯 (강조) — GT vs OCR 비교 결과로 source/value 결정 (baseline 패턴) */}
+      <FieldSlot color={hasOcr ? fSrc.color : "rgba(255,255,255,0.2)"} label="채택값" emphasis>
+        <div style={{
+          display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
+          padding: "8px 10px",
+          background: hasOcr ? fSrc.bg : "rgba(255,255,255,0.02)",
+          border: `1px ${hasOcr ? "solid" : "dashed"} ${hasOcr ? fSrc.border : "rgba(255,255,255,0.12)"}`,
+          borderRadius: 6,
+        }}>
+          {!hasOcr ? (
+            <span style={{
+              fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.45)",
+              fontStyle: "italic", flex: 1,
+            }}>
+              OCR 미실행 · Run OCR 실행 후 채택값이 결정됩니다
+            </span>
+          ) : (
+            <>
+              <span title={finalView.reason} style={{
+                fontSize: 10, fontWeight: 900, padding: "3px 8px", borderRadius: 999,
+                color: "#fff", background: fSrc.color, whiteSpace: "nowrap",
+              }}>{fSrc.label}</span>
+              <span style={{
+                fontSize: 15, fontWeight: 800,
+                color: finalView.value ? "var(--text)" : "rgba(255,255,255,0.25)",
+                wordBreak: "break-all", flex: 1, letterSpacing: -0.2,
+              }}>{finalView.value || "—"}</span>
+              {finalView.reason && (
+                <span title={finalView.reason} style={{ fontSize: 10, color: "var(--muted)", fontWeight: 700 }}>
+                  {finalView.reason}
+                </span>
+              )}
+              {finalView.source === "empty" && required && (
+                <span style={{ fontSize: 11, color: "#ef4444", fontWeight: 800 }}>
+                  Tier-1 미추출
+                </span>
+              )}
+              {isGtAdopted && hasValue && status === "X" && (
+                <span style={{ fontSize: 11, color: "#ef4444", fontWeight: 800 }}>
+                  ⚠ OCR 불일치
+                </span>
+              )}
+            </>
+          )}
+        </div>
+      </FieldSlot>
+    </div>
+  );
+}
+
 function matchStatusMeta(status: MatchStatus): { symbol: string; color: string; title: string } {
   switch (status) {
     case "exact":
@@ -2648,9 +3029,57 @@ const FINANCE_COL_LABELS: Record<string, string> = {
   amount:              "거래금액",
   balanceAfter:        "거래후잔액",
   accountMasked:       "계좌(마스킹)",
-  branchOrChannel:     "지점/채널",
-  memo:                "적요",
+  branchOrChannel:     "수취인 계좌",
+  memo:                "수취인명",
 };
+
+// 배치 요약 / docType 집계에서 finance에 표시할 컬럼 (거래유형 제외)
+const FINANCE_DISPLAY_COLS: readonly { key: string; label: string }[] = [
+  { key: "bankName",            label: "은행명" },
+  { key: "transactionDateTime", label: "거래일시" },
+  { key: "amount",              label: "거래금액" },
+  { key: "balanceAfter",        label: "잔액" },
+  { key: "accountMasked",       label: "계좌" },
+  { key: "branchOrChannel",     label: "수취계좌" },
+  { key: "memo",                label: "수취인명" },
+];
+
+// finance 필드별 비교 상태 (receipt의 MatchStatus/matchStatusMeta 와 동일 의미 체계)
+//
+// O: raw exact 일치 OR 보수적 정규화(숫자/구분자/prefix 차이) 후 동일 → "사실상 같은 값"
+// △: canonical/fuzzy 일치 (bankName 한정: substring/canonical 매핑) → "의미상 유사"
+// X: GT 있으나 핵심 값 불일치
+// —: GT 없음
+function financeMatchStatus(field: string, gtVal: string, ocrVal: string): "O" | "△" | "X" | "—" {
+  if (!gtVal) return "—";
+  if (!ocrVal) return "X";
+  if (gtVal === ocrVal) return "O";
+  const gn = normalizeFinanceValue(field, gtVal);
+  const on = normalizeFinanceValue(field, ocrVal);
+  // 정규화 후 동일: 형식 차이(쉼표/구분자/[xxx]prefix)만 있고 핵심값 같음 → O
+  if (gn && on && gn === on) return "O";
+  // bankName canonical/substring fallback → △ (의미상 유사하나 완전 동일은 아님)
+  if (financeFieldMatches(field, gtVal, ocrVal)) return "△";
+  return "X";
+}
+
+function financeMatchMeta(status: "O" | "△" | "X" | "—"): { symbol: string; color: string; title: string } {
+  switch (status) {
+    case "O":  return { symbol: "O", color: "#22c55e", title: "기준값과 일치 (정규화 동일 포함)" };
+    case "△":  return { symbol: "△", color: "#f59e0b", title: "canonical/유사 일치 (은행명 변형 등)" };
+    case "X":  return { symbol: "X", color: "#ef4444", title: "기준값과 불일치" };
+    default:   return { symbol: "—", color: "rgba(255,255,255,0.35)", title: "기준값 없음" };
+  }
+}
+
+// 채택값 슬롯 표시용 — [xxx] 기관 코드 prefix 등 표시용 노이즈만 제거 (비교 정규화와 별개)
+function displayFinanceValue(field: string, value: string): string {
+  if (!value) return "";
+  if (field === "branchOrChannel" || field === "accountMasked") {
+    return value.trim().replace(/^\[\d{2,4}\]/, "").trim();
+  }
+  return value;
+}
 
 // suppression_policy_note §6.2 status 문자열 → 1차 상태 표시 매핑
 function getFinanceStatusMeta(status: string): { label: string; bg: string } {
@@ -2828,6 +3257,15 @@ function DocTypeSummarySection({
   rows: DocTypeSummaryRow[];
   totalImages: number;
 }) {
+  const receiptRows = rows.filter((r) => resolveProfile(r.documentType).base === "receipt");
+  const financeRows = rows.filter((r) => resolveProfile(r.documentType).base === "finance");
+  const documentRows = rows.filter((r) => resolveProfile(r.documentType).base === "document");
+  const otherRows   = rows.filter((r) => !["receipt", "finance", "document"].includes(resolveProfile(r.documentType).base));
+
+  const receiptTotal = receiptRows.reduce((s, r) => s + r.total, 0);
+  const financeTotal = financeRows.reduce((s, r) => s + r.total, 0);
+  const documentTotal = documentRows.reduce((s, r) => s + r.total, 0);
+
   const thSm: React.CSSProperties = {
     padding: "4px 8px", textAlign: "left", fontSize: 10, fontWeight: 700,
     color: "var(--muted)", letterSpacing: 0.4, whiteSpace: "nowrap",
@@ -2837,71 +3275,196 @@ function DocTypeSummarySection({
     padding: "4px 8px", fontSize: 11,
     borderBottom: "1px solid rgba(255,255,255,0.04)", verticalAlign: "middle",
   };
+
+  const renderSubGroupHeader = (label: string, count: number, color: string) => (
+    <div style={{ fontSize: 10, fontWeight: 800, color, padding: "6px 2px 3px", letterSpacing: 0.4 }}>
+      {label} · {count}장
+    </div>
+  );
+
+  // 공통 상태 셀들 (documentType 배지 + total/selected/suppressed/review/not_run/선택률)
+  const renderStatusCells = (row: DocTypeSummaryRow, mode: "receipt" | "finance" | "document") => {
+    const runCount = row.total - row.notRun;
+    const selRate  = row.total > 0 ? Math.round((row.selected / row.total) * 100) : null;
+    const selColor = selRate === 100 ? "#22c55e" : selRate !== null && selRate >= 50 ? "#f59e0b" : "#ef4444";
+    const isFinance = mode === "finance";
+    const reviewCount = isFinance ? row.unknown : null;  // finance 전용: unknown 슬롯 = review
+    return (
+      <>
+        <td style={tdSm}>
+          <span title={row.documentType} style={{ ...chip, background: DOC_TYPE_COLOR[row.documentType] ?? "#6b7280", fontSize: 9 }}>
+            {DOC_TYPE_LABEL[row.documentType] ?? row.documentType}
+          </span>
+        </td>
+        <td style={{ ...tdSm, textAlign: "center" }}>{row.total}</td>
+        <td style={{ ...tdSm, textAlign: "center", fontWeight: 700, color: row.selected > 0 ? "#22c55e" : "rgba(255,255,255,0.25)" }}>
+          {row.selected || "—"}
+        </td>
+        {isFinance ? (
+          <td style={{ ...tdSm, textAlign: "center", color: reviewCount! > 0 ? "#f59e0b" : "rgba(255,255,255,0.25)", fontWeight: 700 }}>
+            {reviewCount! || "—"}
+          </td>
+        ) : (
+          <td style={{ ...tdSm, textAlign: "center", fontWeight: 700, color: row.suppressed > 0 ? "#ef4444" : "rgba(255,255,255,0.25)" }}>
+            {row.suppressed || "—"}
+          </td>
+        )}
+        <td style={{ ...tdSm, textAlign: "center", color: row.notRun > 0 ? "#94a3b8" : "rgba(255,255,255,0.25)" }}>
+          {row.notRun || "—"}
+        </td>
+        <td style={{ ...tdSm, textAlign: "center", fontWeight: 800, color: selColor }}>
+          {selRate !== null ? `${selRate}%` : "—"}
+        </td>
+        {/* 필드 채움 수 (profile 별 분기) */}
+        {mode === "finance"
+          ? FINANCE_DISPLAY_COLS.map((col) => {
+              const filled = row.financeFieldFilled[col.key] ?? 0;
+              return (
+                <td key={col.key} style={{
+                  ...tdSm, textAlign: "center",
+                  color: runCount === 0 ? "rgba(255,255,255,0.2)"
+                       : filled === runCount ? "#22c55e"
+                       : filled > 0 ? "#f59e0b"
+                       : "rgba(255,255,255,0.2)",
+                }}>
+                  {runCount > 0 ? `${filled}/${runCount}` : "—"}
+                </td>
+              );
+            })
+          : mode === "document"
+          ? DOCUMENT_FIELD_META.map((col) => {
+              const filled = row.documentFieldFilled[col.key] ?? 0;
+              return (
+                <td key={col.key} style={{
+                  ...tdSm, textAlign: "center",
+                  color: runCount === 0 ? "rgba(255,255,255,0.2)"
+                       : filled === runCount ? "#22c55e"
+                       : filled > 0 ? "#f59e0b"
+                       : "rgba(255,255,255,0.2)",
+                }}>
+                  {runCount > 0 ? `${filled}/${runCount}` : "—"}
+                </td>
+              );
+            })
+          : FIELDS.map((f) => (
+              <td key={f.key} style={{
+                ...tdSm, textAlign: "center",
+                color: runCount === 0 ? "rgba(255,255,255,0.2)"
+                     : row.fieldFilled[f.key] === runCount ? "#22c55e"
+                     : row.fieldFilled[f.key] > 0 ? "#f59e0b"
+                     : "#ef4444",
+              }}>
+                {runCount > 0 ? `${row.fieldFilled[f.key]}/${runCount}` : "—"}
+              </td>
+            ))
+        }
+      </>
+    );
+  };
+
   return (
     <details style={{ background: "var(--panel)", borderRadius: 8, padding: "8px 14px" }}>
       <summary style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", cursor: "pointer", letterSpacing: 0.5, userSelect: "none" }}>
-        documentType 집계 ({totalImages}장) ▶
+        documentType 집계 ▶
+        {receiptTotal > 0 && (
+          <span style={{ marginLeft: 10, fontWeight: 800, color: "#0ea5e9" }}>영수증 {receiptTotal}장</span>
+        )}
+        {financeTotal > 0 && (
+          <span style={{ marginLeft: 8, fontWeight: 800, color: "#dc2626" }}>금융전표 {financeTotal}장</span>
+        )}
+        {documentTotal > 0 && (
+          <span style={{ marginLeft: 8, fontWeight: 800, color: "#ca8a04" }}>거래명세서 {documentTotal}장</span>
+        )}
+
+        {otherRows.length > 0 && (
+          <span style={{ marginLeft: 8, fontWeight: 600, color: "var(--muted)" }}>기타 {otherRows.reduce((s, r) => s + r.total, 0)}장</span>
+        )}
+        <span style={{ marginLeft: 8, fontWeight: 500, color: "var(--muted)", fontSize: 10 }}>(총 {totalImages}장)</span>
       </summary>
-      <div style={{ marginTop: 8, overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
-          <thead>
-            <tr>
-              <th style={thSm}>documentType</th>
-              <th style={{ ...thSm, textAlign: "center" }}>total</th>
-              <th style={{ ...thSm, textAlign: "center" }}>selected</th>
-              <th style={{ ...thSm, textAlign: "center" }}>suppressed</th>
-              <th style={{ ...thSm, textAlign: "center" }}>unknown</th>
-              <th style={{ ...thSm, textAlign: "center" }}>not_run</th>
-              <th style={{ ...thSm, textAlign: "center" }}>선택률</th>
-              {FIELDS.map((f) => (
-                <th key={f.key} style={{ ...thSm, textAlign: "center" }}>{FIELD_SHORT[f.key]}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => {
-              const runCount = row.total - row.notRun;
-              const selRate = row.total > 0 ? Math.round((row.selected / row.total) * 100) : null;
-              const selColor = selRate === 100 ? "#22c55e" : selRate !== null && selRate >= 50 ? "#f59e0b" : "#ef4444";
-              return (
-                <tr key={row.documentType}>
-                  <td style={tdSm}>
-                    <span title={row.documentType} style={{ ...chip, background: DOC_TYPE_COLOR[row.documentType] ?? "#6b7280", fontSize: 9 }}>
-                      {DOC_TYPE_LABEL[row.documentType] ?? row.documentType}
-                    </span>
-                  </td>
-                  <td style={{ ...tdSm, textAlign: "center" }}>{row.total}</td>
-                  <td style={{ ...tdSm, textAlign: "center", fontWeight: 700, color: row.selected > 0 ? "#22c55e" : "rgba(255,255,255,0.25)" }}>
-                    {row.selected || "—"}
-                  </td>
-                  <td style={{ ...tdSm, textAlign: "center", fontWeight: 700, color: row.suppressed > 0 ? "#ef4444" : "rgba(255,255,255,0.25)" }}>
-                    {row.suppressed || "—"}
-                  </td>
-                  <td style={{ ...tdSm, textAlign: "center", color: row.unknown > 0 ? "#f59e0b" : "rgba(255,255,255,0.25)" }}>
-                    {row.unknown || "—"}
-                  </td>
-                  <td style={{ ...tdSm, textAlign: "center", color: row.notRun > 0 ? "#94a3b8" : "rgba(255,255,255,0.25)" }}>
-                    {row.notRun || "—"}
-                  </td>
-                  <td style={{ ...tdSm, textAlign: "center", fontWeight: 800, color: selColor }}>
-                    {selRate !== null ? `${selRate}%` : "—"}
-                  </td>
+
+      <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 12 }}>
+
+        {/* ── 영수증 계열 sub-table ── */}
+        {receiptRows.length > 0 && (
+          <div style={{ overflowX: "auto" }}>
+            {renderSubGroupHeader("영수증 계열", receiptTotal, "#0ea5e9")}
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+              <thead>
+                <tr>
+                  <th style={thSm}>documentType</th>
+                  <th style={{ ...thSm, textAlign: "center" }}>total</th>
+                  <th style={{ ...thSm, textAlign: "center" }}>selected</th>
+                  <th style={{ ...thSm, textAlign: "center" }}>suppressed</th>
+                  <th style={{ ...thSm, textAlign: "center" }}>not_run</th>
+                  <th style={{ ...thSm, textAlign: "center" }}>선택률</th>
                   {FIELDS.map((f) => (
-                    <td key={f.key} style={{
-                      ...tdSm, textAlign: "center",
-                      color: runCount === 0 ? "rgba(255,255,255,0.2)"
-                           : row.fieldFilled[f.key] === runCount ? "#22c55e"
-                           : row.fieldFilled[f.key] > 0 ? "#f59e0b"
-                           : "#ef4444",
-                    }}>
-                      {runCount > 0 ? `${row.fieldFilled[f.key]}/${runCount}` : "—"}
-                    </td>
+                    <th key={f.key} style={{ ...thSm, textAlign: "center" }}>{FIELD_SHORT[f.key]}</th>
                   ))}
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
+              </thead>
+              <tbody>
+                {receiptRows.map((row) => (
+                  <tr key={row.documentType}>{renderStatusCells(row, "receipt")}</tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* ── 금융전표 sub-table (finance 전용 컬럼) ── */}
+        {financeRows.length > 0 && (
+          <div style={{ overflowX: "auto" }}>
+            {renderSubGroupHeader("금융전표", financeTotal, "#dc2626")}
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+              <thead>
+                <tr>
+                  <th style={thSm}>documentType</th>
+                  <th style={{ ...thSm, textAlign: "center" }}>total</th>
+                  <th style={{ ...thSm, textAlign: "center", color: "#22c55e" }}>selected</th>
+                  <th style={{ ...thSm, textAlign: "center", color: "#f59e0b" }}>review</th>
+                  <th style={{ ...thSm, textAlign: "center" }}>not_run</th>
+                  <th style={{ ...thSm, textAlign: "center" }}>선택률</th>
+                  {FINANCE_DISPLAY_COLS.map((col) => (
+                    <th key={col.key} style={{ ...thSm, textAlign: "center" }}>{col.label}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {financeRows.map((row) => (
+                  <tr key={row.documentType}>{renderStatusCells(row, "finance")}</tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* ── 기타 sub-table ── */}
+        {otherRows.length > 0 && (
+          <div style={{ overflowX: "auto" }}>
+            {renderSubGroupHeader("기타", otherRows.reduce((s, r) => s + r.total, 0), "#6b7280")}
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+              <thead>
+                <tr>
+                  <th style={thSm}>documentType</th>
+                  <th style={{ ...thSm, textAlign: "center" }}>total</th>
+                  <th style={{ ...thSm, textAlign: "center" }}>selected</th>
+                  <th style={{ ...thSm, textAlign: "center" }}>suppressed</th>
+                  <th style={{ ...thSm, textAlign: "center" }}>not_run</th>
+                  <th style={{ ...thSm, textAlign: "center" }}>선택률</th>
+                  {FIELDS.map((f) => (
+                    <th key={f.key} style={{ ...thSm, textAlign: "center" }}>{FIELD_SHORT[f.key]}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {otherRows.map((row) => (
+                  <tr key={row.documentType}>{renderStatusCells(row, "receipt")}</tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
       </div>
     </details>
   );
@@ -3078,10 +3641,84 @@ const styles: Record<string, React.CSSProperties> = {
     textShadow: "0 1px 2px rgba(0,0,0,0.5)",
     pointerEvents: "none",
   },
+  pdfThumb: {
+    width: "100%",
+    height: "100%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    background: "linear-gradient(135deg, rgba(239,68,68,0.22), rgba(255,255,255,0.06))",
+  },
+  pdfBadge: {
+    fontSize: 14,
+    fontWeight: 900,
+    color: "#fecaca",
+    letterSpacing: 0.4,
+  },
+  pdfCanvasWrapThumb: {
+    width: "100%",
+    height: "100%",
+    position: "relative",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    background: "var(--panel2)",
+  },
+  pdfCanvasThumb: {
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+    display: "block",
+    background: "#fff",
+  },
   imagePane: {
     flex: "0 0 40%", background: "var(--panel)", borderRadius: 10,
     boxShadow: "var(--shadowSoft)", overflow: "hidden",
     display: "flex", alignItems: "center", justifyContent: "center", padding: 12,
+  },
+  pdfCanvasWrapPreview: {
+    width: "100%",
+    height: "100%",
+    minHeight: 220,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+    borderRadius: 6,
+    background: "rgba(255,255,255,0.03)",
+  },
+  pdfCanvasPreview: {
+    display: "block",
+    maxWidth: "100%",
+    maxHeight: "100%",
+    width: "auto",
+    height: "auto",
+    objectFit: "contain" as const,
+    borderRadius: 6,
+    background: "#fff",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.28)",
+  },
+  pdfPreview: {
+    width: "100%",
+    height: "100%",
+    minHeight: 220,
+    display: "flex",
+    flexDirection: "column" as const,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    borderRadius: 6,
+    border: "1px solid rgba(255,255,255,0.08)",
+    background: "linear-gradient(135deg, rgba(239,68,68,0.12), rgba(255,255,255,0.03))",
+  },
+  pdfPreviewBadge: {
+    padding: "6px 12px",
+    borderRadius: 6,
+    background: "rgba(239,68,68,0.18)",
+    color: "#fecaca",
+    fontSize: 18,
+    fontWeight: 900,
+    letterSpacing: 0.6,
   },
   previewImage: {
     display: "block",

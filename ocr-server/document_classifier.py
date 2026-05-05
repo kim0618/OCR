@@ -146,6 +146,30 @@ def _detect_supply_vat_total_triple(text: str) -> bool:
     return False
 
 
+def _invoice_statement_evidence(text: str) -> tuple[bool, dict]:
+    compact = re.sub(r'\s+', '', text or '')
+    if not compact:
+        return False, {}
+
+    title_hits = len(re.findall(r'\uac70\ub798\uba85\uc138\uc11c|\uac70\ub798\uba85\uc138\ud45c|\ub798\uba85\uc138\uc11c|\uba85\uc138\uc11c|\uc138\ud45c', compact))
+    party_hits = len(re.findall(r'\uacf5\uae09\uc790|\uacf5\uae09\ubc1b\ub294\uc790|\uacf5\uae09\ubc1b\ub294|\uacf5\uae09\ubc1b\ub208|\uacf5\uae09\ubc1b\ub294\uc790\ubcf4\uad00\uc6a9', compact))
+    header_hits = len(re.findall(r'\uc0ac\uc5c5\uc790\ubc88\ud638|\ub4f1\ub85d\ubc88\ud638|\uc0c1\ud638|\ub300\ud45c\uc790|\uc131\uba85|\uc8fc\uc18c|\uc0ac\uc5c5\uc7a5', compact))
+    table_hits = len(re.findall(r'\ud488\uba85|\ud488\ubaa9|\uaddc\uaca9|\uc218\ub7c9|\ub2e8\uac00|\ube44\uace0|\uc81c\uc870\ubc88\ud638|\uc720\ud6a8\uae30\uac04|\ubcf4\ud5d8\ucf54\ub4dc|\uc81c\uc870\ud68c\uc0ac', compact))
+    amount_hits = len(re.findall(r'\uacf5\uae09\uac00\uc561|\uc138\uc561|\ud569\uacc4\uae08\uc561|\uacf5\uae09\ub300\uac00|\uae08\uc561', compact))
+    ok = (
+        (title_hits >= 1 and header_hits >= 1 and (table_hits >= 2 or amount_hits >= 1))
+        or (party_hits >= 1 and header_hits >= 2 and (table_hits >= 1 or amount_hits >= 1))
+        or (table_hits >= 3 and amount_hits >= 1 and header_hits >= 2)
+    )
+    return ok, {
+        "title": title_hits,
+        "party": party_hits,
+        "header": header_hits,
+        "table": table_hits,
+        "amount": amount_hits,
+    }
+
+
 # ============================================================
 # 보조: 카드 브랜드 prefix 로 쓰이는 은행명 차감
 #
@@ -200,6 +224,7 @@ def classify_document(full_text: str) -> dict:
     # --- 구조/가드 시그널 ---
     layout_svt_triple = _detect_supply_vat_total_triple(full_text or '')
     bank_subtract     = _bank_to_card_disambig(text)
+    invoice_ok, invoice_evidence = _invoice_statement_evidence(full_text or '')
 
     # --- 종합 ---
     # card_n: strict + fuzzy + brand + (layout +1 if triplet)
@@ -230,7 +255,10 @@ def classify_document(full_text: str) -> dict:
     #   - layout_svt_triple(+공급가액/VAT/합계 검산)이 있으면 card 측에 이미 +1 가산되어
     #     bank 와의 우선순위 다툼에서 카드/영수증 쪽이 유리하다.
 
-    if form_n >= 2 and form_n >= max(pos_n, card_n, bank_n, medical_n):
+    if invoice_ok:
+        doc_type = "invoice_statement"
+
+    elif form_n >= 2 and form_n >= max(pos_n, card_n, bank_n, medical_n):
         doc_type = "form_or_handwritten"
 
     # bank_slip 강한 결정: 구조 시그널 ≥ 2 또는 (구조 ≥ 1 + 브랜드 ≥ 1)
@@ -301,6 +329,7 @@ def classify_document(full_text: str) -> dict:
         "guards": {
             "bank_to_card_subtract":   bank_subtract,
             "layout_supply_vat_total": layout_svt_triple,
+            "invoice_statement":       invoice_evidence,
         },
         "receipt_like_unknown_evidence": receipt_like_evidence,
     }

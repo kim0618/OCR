@@ -49,6 +49,13 @@ export const TESTSETS: TestsetMeta[] = [
     path: "/data/testsets/receipt_generalization",
     description: "baseline/google 이후 신규 영수증 샘플 일반화 검증용",
   },
+  {
+    id: "invoice_statement",
+    label: "거래명세서 1차 검증셋",
+    folder: "invoice_statement",
+    path: "/data/testsets/invoice_statement",
+    description: "거래명세서 계열 헤더/합계/표 구조 1차 검증용",
+  },
 ];
 
 export const DATASET_FOLDERS: Record<string, string> = Object.fromEntries(

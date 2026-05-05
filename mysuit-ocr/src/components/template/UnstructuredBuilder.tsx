@@ -1,10 +1,18 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 type Field = { no: number; enField: string; koField: string };
+const LOCAL_TEMPLATES_KEY = "mysuit_ocr_templates";
 
-export default function UnstructuredBuilder() {
+export default function UnstructuredBuilder({
+  selectedTemplate = null,
+  selectedTemplateId = null,
+}: {
+  selectedTemplate?: any | null;
+  selectedTemplateId?: string | null;
+}) {
+  const isEditMode = !!selectedTemplateId;
   const [templateName, setTemplateName] = useState("");
   const [fields, setFields] = useState<Field[]>([]);
   const [selectedNo, setSelectedNo] = useState<number | null>(null);
@@ -16,9 +24,43 @@ export default function UnstructuredBuilder() {
   const updateField = (no: number, key: "enField" | "koField", v: string) =>
     setFields(fields.map((f) => (f.no === no ? { ...f, [key]: v } : f)));
 
+  useEffect(() => {
+    if (!selectedTemplate) return;
+    setTemplateName(String(selectedTemplate.templateName ?? selectedTemplate.template_name ?? ""));
+    if (Array.isArray(selectedTemplate.fields)) {
+      setFields(selectedTemplate.fields);
+      setSelectedNo(null);
+    }
+  }, [selectedTemplate]);
+
   const handleSave = () => {
     if (!templateName.trim()) { alert("템플릿명을 입력해주세요."); return; }
-    alert(`[Mock] "${templateName}" 저장 완료`);
+    const name = templateName.trim();
+    const localTemplate = {
+      template_id: selectedTemplateId || `LOCAL-${Date.now()}`,
+      template_name: name,
+      template_json: {
+        templateName: name,
+        mode: "unstructured",
+        fields,
+        regions: [],
+      },
+      updated_at: new Date().toISOString(),
+    };
+    try {
+      const current = JSON.parse(localStorage.getItem(LOCAL_TEMPLATES_KEY) || "[]");
+      const list = Array.isArray(current) ? current : [];
+      const filtered = list.filter((item: any) =>
+        item?.template_id !== localTemplate.template_id &&
+        item?.template_name !== name,
+      );
+      const next = [localTemplate, ...filtered];
+      localStorage.setItem(LOCAL_TEMPLATES_KEY, JSON.stringify(next));
+      window.dispatchEvent(new Event("mysuit-ocr-template-saved"));
+    } catch (err) {
+      console.error("[local unstructured template save error]", err);
+    }
+    alert(`[Mock] "${templateName}" ${isEditMode ? "수정" : "저장"} 완료`);
   };
   const handleDelete = () => {
     if (confirm("초기화할까요?")) {
@@ -119,7 +161,7 @@ export default function UnstructuredBuilder() {
           <button onClick={handleDelete} className="ms-btn">삭제</button>
           <button onClick={handleSave} className="ms-btn"
             style={{ background: "var(--accent)", color: "#fff", border: "none" }}>
-            저장
+            {isEditMode ? "수정" : "저장"}
           </button>
         </div>
 
