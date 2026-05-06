@@ -176,9 +176,11 @@ export default function OcrCanvasPane(props: Props) {
   }, []);
 
   // ===== 렌더 스케일(표시용) =====
+  // OcrDocViewer 와 동일하게 컨테이너 폭에 맞춰 채움 (자연 크기보다 컨테이너가 크면 업스케일).
+  // 탭 간 좌측 이미지 표시 크기를 통일하기 위해.
   const scale = useMemo(() => {
     if (!loaded) return 1;
-    const base = Math.min(1, containerW / loaded.naturalWidth);
+    const base = containerW / loaded.naturalWidth;
     const zoom = clamp(zoomPct, 10, 200) / 100;
     return base * zoom;
   }, [containerW, loaded, zoomPct]);

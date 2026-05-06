@@ -4,10 +4,24 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useUi } from "../common/AppProviders";
-import OcrResultPanel, { type OcrResult, type OcrFieldResult } from "./OcrResultPanel";
+import OcrResultPanel, { type FieldOverlayAdoption, type FieldSourceBox, type OcrResult, type OcrFieldResult } from "./OcrResultPanel";
 import OcrDocViewer from "./OcrDocViewer";
 import CornerAdjust, { type Corner } from "./CornerAdjust";
 import type { Region, FieldType, LoadedImage } from "../ocr/core/types";
+import { appendHistoryRun, type HistoryOcrField, type HistoryOutputField } from "@/lib/historyStore";
+import { extractBizNumber } from "@/lib/bizNumber";
+import {
+  applyAutofillToOutputFields,
+  buildAutofillSuggestionsFromCandidates,
+  canAutoApplySuggestion,
+  collectInternalAutofillCandidates,
+  isAutofillableField,
+  isEmptyOcrValue,
+  normalizeAutofillFieldKey,
+  suggestionsForHistoryField,
+  type AutofillRunSummary,
+  type AutofillSuggestion,
+} from "@/lib/autofillEngine";
 
 const OcrCanvasPane = dynamic(() => import("../ocr/OcrCanvasPane"), { ssr: false });
 
@@ -28,6 +42,8 @@ type RunOcrTemplateMode = "template" | "unstructured";
 type UploadWorkspaceProps = {
   variant?: UploadWorkspaceVariant;
 };
+
+type BboxLikeField = OcrFieldResult & Record<string, unknown>;
 
 const MODEL_OPTIONS = [
   { id: "paddleocr", name: "PaddleOCR" },
@@ -316,10 +332,11 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
     setSelectedFile(f);
     setOcrResult(null);
     setProcessedImageUrl(null);
-    setCorners([]);
-    setShowCornerAdjust(false);
-    void runPreprocess(f);
-    void detectCorners(f);
+    // 코너/전처리 자동 호출 비활성화 — Test 탭과 동일하게 백엔드 detect_document 에 위임
+    // setCorners([]);
+    // setShowCornerAdjust(false);
+    // void runPreprocess(f);
+    // void detectCorners(f);
   }
 
   function onDrop(e: React.DragEvent<HTMLDivElement>) {
@@ -335,22 +352,42 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
   }
 
   function buildRunOcrResult(raw: any, template?: TemplateItem): OcrResult {
-    if (template?.mode !== "unstructured") return raw;
+    // 템플릿이 없거나 mode 가 "unstructured" 인 경우 Test 탭과 동일하게
+    // receipt_fields / finance_fields 기반으로 fields 를 재구성한다.
+    // 템플릿이 있고 region-based(mode !== "unstructured") 이면 백엔드가 region 별로
+    // 추출해 둔 raw.fields 를 그대로 사용한다.
+    if (template && template.mode !== "unstructured") return raw;
 
     const receiptFields = raw.receipt_fields ?? {};
     const financeFields = raw.finance_fields ?? {};
-    const templateFields = template.fields ?? [];
+    const templateFields = template?.fields ?? [];
     const resultFields: OcrFieldResult[] = [];
+
+    // 한글 라벨 ↔ 백엔드 키(영문 short form) alias.
+    // 백엔드 receipt_fields 키: 회사명, 사업자번호, 대표자, tel, 주소, 총합계금액
+    // 템플릿이 koField="전화번호" 로 정의되어 있어도 receipt_fields["tel"] 을 가져오게 함.
+    const RECEIPT_ALIAS: Record<string, string> = {
+      "전화번호": "tel",
+      "Tel": "tel",
+      "TEL": "tel",
+    };
+    const pickValue = (map: Record<string, unknown>, label: string): unknown => {
+      if (!label) return undefined;
+      if (label in map) return map[label];
+      const alias = RECEIPT_ALIAS[label];
+      if (alias && alias in map) return map[alias];
+      return undefined;
+    };
 
     if (templateFields.length > 0) {
       templateFields.forEach((field, index) => {
         const ko = String(field.koField ?? "").trim();
         const en = String(field.enField ?? "").trim();
-        const value = (ko && receiptFields[ko])
-          || (en && receiptFields[en])
-          || (ko && financeFields[ko])
-          || (en && financeFields[en])
-          || "";
+        const value = pickValue(receiptFields, ko)
+          ?? pickValue(receiptFields, en)
+          ?? pickValue(financeFields, ko)
+          ?? pickValue(financeFields, en)
+          ?? "";
         resultFields.push({
           name: ko || en || `field_${index + 1}`,
           field_type: "field",
@@ -396,6 +433,220 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
       && field.bbox[3] > 0;
   }
 
+  function normalizeBbox(raw: unknown): FieldSourceBox | null {
+    const finite = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
+    if (!raw) return null;
+    if (Array.isArray(raw)) {
+      if (raw.length >= 4 && raw.every(finite)) {
+        const [x, y, width, height] = raw;
+        return width > 0 && height > 0 ? { x, y, width, height } : null;
+      }
+      if (raw.length >= 4 && raw.every((p) => Array.isArray(p) && p.length >= 2 && finite(p[0]) && finite(p[1]))) {
+        const points = raw as number[][];
+        const xs = points.map((p) => p[0]);
+        const ys = points.map((p) => p[1]);
+        const x = Math.min(...xs);
+        const y = Math.min(...ys);
+        const width = Math.max(...xs) - x;
+        const height = Math.max(...ys) - y;
+        return width > 0 && height > 0 ? { x, y, width, height } : null;
+      }
+      return null;
+    }
+    if (typeof raw !== "object") return null;
+    const box = raw as Record<string, unknown>;
+    const x = box.x ?? box.left;
+    const y = box.y ?? box.top;
+    const width = box.width;
+    const height = box.height;
+    if (finite(x) && finite(y) && finite(width) && finite(height)) {
+      return width > 0 && height > 0 ? { x, y, width, height } : null;
+    }
+    if (finite(box.x1) && finite(box.y1) && finite(box.x2) && finite(box.y2)) {
+      const bx = Math.min(box.x1, box.x2);
+      const by = Math.min(box.y1, box.y2);
+      const bw = Math.abs(box.x2 - box.x1);
+      const bh = Math.abs(box.y2 - box.y1);
+      return bw > 0 && bh > 0 ? { x: bx, y: by, width: bw, height: bh } : null;
+    }
+    return null;
+  }
+
+  function normalizeTextForMatch(value: string) {
+    return String(value ?? "")
+      .toLowerCase()
+      .replace(/[₩￦원,\s\-()./\\[\]{}:;'"`_*~!@#$%^&+=|<>?]/g, "");
+  }
+
+  function normalizeTextWithIndexMap(value: string) {
+    const chars: string[] = [];
+    const indexMap: number[] = [];
+    const text = String(value ?? "").toLowerCase();
+    for (let i = 0; i < text.length; i += 1) {
+      const ch = text[i];
+      if (/[₩￦원,\s\-()./\\[\]{}:;'"`_*~!@#$%^&+=|<>?]/.test(ch)) continue;
+      chars.push(ch);
+      indexMap.push(i);
+    }
+    return { text: chars.join(""), indexMap };
+  }
+
+  function digitsOnly(value: string) {
+    return String(value ?? "").replace(/\D/g, "");
+  }
+
+  function rawTextOf(field: OcrFieldResult) {
+    return String(field.value || field.name || "");
+  }
+
+  function matchScore(fieldValue: string, rawValue: string) {
+    const fieldNorm = normalizeTextForMatch(fieldValue);
+    const rawNorm = normalizeTextForMatch(rawValue);
+    if (!fieldNorm || !rawNorm) return 0;
+    if (fieldNorm === rawNorm) return 100;
+    if (rawNorm.includes(fieldNorm)) return 90;
+    if (fieldNorm.includes(rawNorm) && rawNorm.length >= Math.min(4, fieldNorm.length)) return 70;
+    const fieldDigits = digitsOnly(fieldValue);
+    const rawDigits = digitsOnly(rawValue);
+    if (fieldDigits && rawDigits) {
+      if (fieldDigits === rawDigits) return 95;
+      if (rawDigits.includes(fieldDigits)) return 85;
+      if (fieldDigits.includes(rawDigits) && rawDigits.length >= 4) return 65;
+    }
+    return 0;
+  }
+
+  function findSegmentRange(lineText: string, fieldValue: string): { start: number; end: number } | null {
+    const rawLine = String(lineText ?? "");
+    const rawField = String(fieldValue ?? "");
+    if (!rawLine.trim() || !rawField.trim()) return null;
+
+    const exactIndex = rawLine.indexOf(rawField);
+    if (exactIndex >= 0) return { start: exactIndex, end: exactIndex + rawField.length };
+
+    const lineNorm = normalizeTextWithIndexMap(rawLine);
+    const fieldNorm = normalizeTextForMatch(rawField);
+    if (fieldNorm) {
+      const normIndex = lineNorm.text.indexOf(fieldNorm);
+      if (normIndex >= 0) {
+        const start = lineNorm.indexMap[normIndex] ?? 0;
+        const end = (lineNorm.indexMap[normIndex + fieldNorm.length - 1] ?? start) + 1;
+        return { start, end };
+      }
+    }
+
+    const fieldDigits = digitsOnly(rawField);
+    if (fieldDigits.length >= 3) {
+      const digitLine = rawLine.split("").reduce<{ text: string; indexMap: number[] }>((acc, ch, index) => {
+        if (/\d/.test(ch)) {
+          acc.text += ch;
+          acc.indexMap.push(index);
+        }
+        return acc;
+      }, { text: "", indexMap: [] });
+      const digitIndex = digitLine.text.indexOf(fieldDigits);
+      if (digitIndex >= 0) {
+        const start = digitLine.indexMap[digitIndex] ?? 0;
+        const end = (digitLine.indexMap[digitIndex + fieldDigits.length - 1] ?? start) + 1;
+        return { start, end };
+      }
+    }
+
+    return null;
+  }
+
+  function clampBbox(box: FieldSourceBox, outer: FieldSourceBox): FieldSourceBox | null {
+    const minWidth = Math.min(Math.max(10, outer.height * 0.7), outer.width);
+    const x = Math.max(outer.x, Math.min(box.x, outer.x + outer.width));
+    const y = Math.max(outer.y, Math.min(box.y, outer.y + outer.height));
+    const right = Math.min(outer.x + outer.width, Math.max(x + minWidth, box.x + box.width));
+    const bottom = Math.min(outer.y + outer.height, Math.max(y + 2, box.y + box.height));
+    const width = right - x;
+    const height = bottom - y;
+    return width > 0 && height > 0 ? { x, y, width, height } : null;
+  }
+
+  function estimatePartialBboxFromLine(lineText: string, fieldValue: string, lineBox: FieldSourceBox): FieldSourceBox | null {
+    const range = findSegmentRange(lineText, fieldValue);
+    if (!range) return null;
+    const lineLength = Math.max(1, String(lineText ?? "").length);
+    const startRatio = Math.max(0, Math.min(1, range.start / lineLength));
+    const endRatio = Math.max(startRatio, Math.min(1, range.end / lineLength));
+    const padRatio = Math.min(0.015, 1 / lineLength);
+    const x = lineBox.x + Math.max(0, startRatio - padRatio) * lineBox.width;
+    const width = Math.max(lineBox.height * 0.8, (endRatio - startRatio + padRatio * 2) * lineBox.width);
+    return clampBbox({ x, y: lineBox.y, width, height: lineBox.height }, lineBox);
+  }
+
+  function shouldAllowLineFallback(lineText: string, fieldValue: string, lineBox: FieldSourceBox) {
+    const lineLen = normalizeTextForMatch(lineText).length;
+    const fieldLen = normalizeTextForMatch(fieldValue).length;
+    if (!lineLen || !fieldLen) return false;
+    const ratio = fieldLen / lineLen;
+    return lineLen <= 12 || ratio >= 0.6 || lineBox.width <= lineBox.height * 8;
+  }
+
+  function isAddressField(field: OcrFieldResult) {
+    return normalizeAutofillFieldKey(field.ko || field.name || field.en || "") === "주소";
+  }
+
+  function isBadAddressLine(lineText: string) {
+    const text = String(lineText ?? "");
+    return (
+      /\d{2,3}-?\d{3,4}-?\d{4}/.test(text) ||
+      /\d{3}-?\d{2}-?\d{5}/.test(text) ||
+      /\d{1,3},\d{3}/.test(text) ||
+      /(승인|거래일시|전표|가맹no|가맹NO|판매금액|부가가치세|합계)/i.test(text)
+    );
+  }
+
+  function adoptionOfField(field: OcrFieldResult): FieldOverlayAdoption {
+    if (field.autofillAction === "corrected" || field.autofillAction === "filled") return "restored";
+    if (field.value && String(field.value).trim()) return "ocr";
+    return "unknown";
+  }
+
+  function attachSourceBboxes(fields: OcrFieldResult[], rawFields: OcrFieldResult[]): OcrFieldResult[] {
+    const rawCandidates = rawFields
+      .map((raw) => {
+        const flexible = raw as BboxLikeField;
+        const box = normalizeBbox(flexible.bbox ?? flexible.boundingBox ?? flexible.box ?? flexible);
+        return box ? { raw, box, text: rawTextOf(raw) } : null;
+      })
+      .filter((item): item is { raw: OcrFieldResult; box: FieldSourceBox; text: string } => !!item);
+
+    return fields.map((field) => {
+      const adoption = adoptionOfField(field);
+      const lookupValue = field.autofillAction === "corrected"
+        ? field.original || field.value
+        : field.value;
+      if (field.autofillAction === "filled" && !field.original) {
+        return { ...field, sourceBboxes: [], overlayAdoption: adoption };
+      }
+      const boxes = rawCandidates
+        .filter((candidate) => !isAddressField(field) || !isBadAddressLine(candidate.text))
+        .map((candidate) => {
+          const lookupText = String(lookupValue ?? "");
+          const score = matchScore(lookupText, candidate.text);
+          const partial = score > 0 ? estimatePartialBboxFromLine(candidate.text, lookupText, candidate.box) : null;
+          const box = partial ?? (shouldAllowLineFallback(candidate.text, lookupText, candidate.box) ? candidate.box : null);
+          return { box, score };
+        })
+        .filter((candidate): candidate is { box: FieldSourceBox; score: number } => !!candidate.box)
+        .filter((candidate) => candidate.score >= 65)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, isAddressField(field) ? 2 : 1)
+        .map((candidate) => candidate.box);
+      const first = boxes[0];
+      return {
+        ...field,
+        bbox: first ? [first.x, first.y, first.width, first.height] : field.bbox,
+        sourceBboxes: boxes,
+        overlayAdoption: adoption,
+      };
+    });
+  }
+
   function buildResultRegions(runResult: OcrResult, template?: TemplateItem): Region[] {
     if (isRunOcr && template?.regions?.length) {
       return template.regions.map((region, index) => ({
@@ -421,24 +672,133 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
 
   async function runOcr() {
     if (!selectedFile) return;
+    if (isRunOcr && !activeTemplateId) {
+      await ui.alert("상단에서 템플릿을 선택한 뒤 Run OCR을 실행하세요.");
+      return;
+    }
     setIsOcrRunning(true);
+    const activeTemplate = templates.find((t) => t.id === activeTemplateId);
     try {
       const formData = new FormData();
       formData.append("file", selectedFile);
       if (activeTemplateId) formData.append("template_id", activeTemplateId);
-      const activeTemplate = templates.find((t) => t.id === activeTemplateId);
       if (activeTemplate?.regions?.length) {
         formData.append("regions", JSON.stringify(activeTemplate.regions));
       }
       if (isRunOcr) formData.append("model_id", selectedModelId);
-      if (corners.length === 4) formData.append("corners", JSON.stringify(corners));
+      // 코너 페이로드 비활성화 — 백엔드 detect_document 자동 경로 사용 (Test 와 동일)
+      // if (corners.length === 4) formData.append("corners", JSON.stringify(corners));
       const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || ""}/ocr/extract`, {
         method: "POST",
         body: formData,
       });
       if (!res.ok) throw new Error("OCR 요청 실패");
       const json = await res.json();
+      const rawOcrFields: OcrFieldResult[] = Array.isArray(json?.fields) ? (json.fields as OcrFieldResult[]) : [];
       const runResult = isRunOcr ? buildRunOcrResult(json, activeTemplate) : json;
+      runResult.raw_ocr_fields = rawOcrFields;
+      const originalRunFields: OcrFieldResult[] = ((runResult.fields ?? []) as OcrFieldResult[]).map((field) => ({
+        ...field,
+        source: field.value && String(field.value).trim() ? "ocr" : field.source,
+      }));
+      let autofillSuggestions: AutofillSuggestion[] = [];
+      let autofillSummary: AutofillRunSummary = {
+        status: "not_run",
+        candidateCount: 0,
+        confirmedCount: 0,
+        correctedCount: 0,
+        filledCount: 0,
+        message: "자동복원: 미실행",
+      };
+      try {
+        const businessText = [
+          json?.full_text,
+          runResult?.full_text,
+          ...originalRunFields.map((f: OcrFieldResult) => f.value),
+          ...rawOcrFields.map((f) => f.value),
+          json?.receipt_fields?.["사업자번호"],
+        ].filter(Boolean).join("\n");
+        const businessNumber = extractBizNumber(businessText);
+        if (!businessNumber) {
+          runResult.fields = originalRunFields;
+          autofillSummary = {
+            status: "no_business_number",
+            candidateCount: 0,
+            confirmedCount: 0,
+            correctedCount: 0,
+            filledCount: 0,
+            message: "자동복원: 사업자번호 없음",
+          };
+        } else {
+          const internalSuggestions = buildAutofillSuggestionsFromCandidates({
+            businessNumber,
+            candidates: collectInternalAutofillCandidates(),
+            templateName: activeTemplate?.name ?? null,
+            fileName: selectedFile.name,
+          });
+          const hasBusinessNumberField = originalRunFields.some((field) => {
+            const key = normalizeAutofillFieldKey(field.ko || field.en || field.name);
+            return key === "사업자번호";
+          });
+          const businessNumberSuggestion: AutofillSuggestion[] = hasBusinessNumberField
+            ? [{
+                field: "사업자번호",
+                value: businessNumber,
+                source: "biz",
+                confidence: 0.99,
+                label: "매칭복원",
+                reason: "현재 OCR 전체 텍스트에서 추출한 사업자번호",
+              }]
+            : [];
+          autofillSuggestions = [...businessNumberSuggestion, ...internalSuggestions];
+          runResult.fields = applyAutofillToOutputFields({
+            fields: originalRunFields,
+            suggestions: autofillSuggestions,
+          });
+          const resultFields = ((runResult.fields ?? []) as OcrFieldResult[]);
+          const confirmedCount = resultFields.filter((field) => field.autofillAction === "confirmed").length;
+          const correctedCount = resultFields.filter((field) => field.autofillAction === "corrected").length;
+          const filledCount = resultFields.filter((field) => field.autofillAction === "filled").length;
+          const skippedCount = originalRunFields.filter((field) => {
+            const key = normalizeAutofillFieldKey(field.ko || field.en || field.name);
+            if (isAutofillableField(key)) return false;
+            return autofillSuggestions.some((suggestion) => normalizeAutofillFieldKey(suggestion.field) === key && canAutoApplySuggestion(suggestion));
+          }).length;
+          const status: AutofillRunSummary["status"] =
+            autofillSuggestions.length === 0 ? "no_candidates" :
+            correctedCount > 0 && filledCount === 0 ? "corrected" :
+            filledCount > 0 ? "applied" :
+            confirmedCount > 0 ? "confirmed" :
+            "no_candidates";
+          autofillSummary = {
+            status,
+            businessNumber,
+            candidateCount: autofillSuggestions.length,
+            confirmedCount,
+            correctedCount,
+            filledCount,
+            skippedCount,
+            message:
+              status === "no_candidates" ? "자동복원: 같은 사업자번호의 저장 기록 없음" :
+              status === "corrected" ? `자동복원: 보정 ${correctedCount}건 · 확인 ${confirmedCount}건` :
+              status === "applied" ? `자동복원: 채움 ${filledCount}건 · 보정 ${correctedCount}건 · 확인 ${confirmedCount}건` :
+              `자동복원: 확인 ${confirmedCount}건 · 보정 0건`,
+          };
+        }
+      } catch (err) {
+        console.warn("[autofill] skipped", err);
+        runResult.fields = originalRunFields;
+        autofillSummary = {
+          status: "not_run",
+          candidateCount: 0,
+          confirmedCount: 0,
+          correctedCount: 0,
+          filledCount: 0,
+          message: "자동복원: 미실행",
+        };
+      }
+      runResult.fields = attachSourceBboxes((runResult.fields ?? []) as OcrFieldResult[], rawOcrFields);
+      runResult.autofill_summary = autofillSummary;
       setOcrResult(runResult);
       if (runResult.processed_image) {
         setProcessedImageUrl(runResult.processed_image);
@@ -449,8 +809,88 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
         return [...ocrRegions, ...userRegions];
       });
       setCanvasSelectedId(null);
+      // OCR 데이터 표는 백엔드 raw OCR 결과를 그대로 보여준다 (정제된 receipt_fields 가 아님).
+      // 출력 필드 표는 runResult.fields(receipt_fields/template 매핑) 를 사용 → 명확한 분리.
+      const isRegionBased =
+        !!activeTemplate &&
+        activeTemplate.mode !== "unstructured" &&
+        (activeTemplate.regions?.length ?? 0) > 0;
+      const ocrFieldsForHistory: HistoryOcrField[] = rawOcrFields.map((f: OcrFieldResult, idx: number) => {
+        // region-based 템플릿일 때만 raw OCR 라인 i 가 template.fields[i] 와 1:1 대응됨.
+        // unstructured / 템플릿 없음 일 때 raw 라인은 template.fields 와 무관하므로 enrich 안 함.
+        const tf = isRegionBased ? activeTemplate?.fields?.[idx] : undefined;
+        return {
+          name: f.name,
+          en: tf?.enField,
+          ko: tf?.koField,
+          field_type: f.field_type,
+          value: f.value,
+          confidence: f.confidence,
+          bbox: f.bbox,
+        };
+      });
+      // 출력 필드 표 데이터 — 정제된 결과(runResult.fields = template/receipt_fields 매핑) 기반.
+      const tplFields = activeTemplate?.fields ?? [];
+      const structuredFields: OcrFieldResult[] = (runResult.fields ?? []) as OcrFieldResult[];
+      const outputFieldsForHistory: HistoryOutputField[] = tplFields.length
+        ? tplFields.map((tf, idx) => {
+            const ocrF = structuredFields[idx];
+            const original = originalRunFields[idx]?.value ?? "";
+            const modified = ocrF?.value ?? original;
+            const suggestions = suggestionsForHistoryField(
+              { en: tf.enField ?? `field_${idx + 1}`, ko: tf.koField ?? "" },
+              autofillSuggestions,
+            );
+            return {
+              no: tf.no ?? idx + 1,
+              en: tf.enField ?? `field_${idx + 1}`,
+              ko: tf.koField ?? "",
+              original,
+              modified,
+              confidence: Number(ocrF?.confidence ?? 0),
+              source: ocrF?.source,
+              applied: ocrF?.applied,
+              autofillAction: ocrF?.autofillAction,
+              suggestions: suggestions.length > 0 ? suggestions : undefined,
+            };
+          })
+        : structuredFields.map((f: OcrFieldResult, idx: number) => {
+            const isKorean = /[가-힯]/.test(f.name);
+            const en = isKorean ? "" : f.name;
+            const ko = isKorean ? f.name : "";
+            const original = originalRunFields[idx]?.value ?? "";
+            const suggestions = suggestionsForHistoryField({ en, ko }, autofillSuggestions);
+            return {
+              no: idx + 1,
+              en,
+              ko,
+              original,
+              modified: f.value,
+              confidence: f.confidence,
+              source: f.source,
+              applied: f.applied,
+              autofillAction: f.autofillAction,
+              suggestions: suggestions.length > 0 ? suggestions : undefined,
+            };
+          });
+      appendHistoryRun({
+        file_name: selectedFile.name,
+        template_name: activeTemplate?.name ?? null,
+        processing_time: Number(json?.processing_time) || 0,
+        status: "success",
+        image_url: runResult.processed_image,
+        ocr_fields: ocrFieldsForHistory,
+        output_fields: outputFieldsForHistory,
+        autofill_summary: autofillSummary,
+      });
     } catch (err) {
       console.error("[OCR error]", err);
+      appendHistoryRun({
+        file_name: selectedFile.name,
+        template_name: activeTemplate?.name ?? null,
+        processing_time: 0,
+        status: "fail",
+      });
       await ui.alert("OCR 처리 중 오류가 발생했습니다.");
     } finally {
       setIsOcrRunning(false);
@@ -482,9 +922,11 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
 
   const displayUrl = needsRender ? renderedUrl : previewUrl;
   const isRendering = needsRender && !renderedUrl && !!previewUrl;
+  const canRunOcr = !!selectedFile && !isPreprocessing && !isOcrRunning && (!isRunOcr || !!activeTemplateId);
 
   // OCR 결과 화면에서 사용할 URL (전처리 이미지 우선)
   const ocrDisplayUrl = processedImageUrl ?? displayUrl;
+  const activeTemplateForPanel = templates.find((t) => t.id === activeTemplateId);
 
   // OCR 결과 화면
   if (ocrResult && selectedFile) {
@@ -514,6 +956,7 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
               fields={ocrResult.fields}
               selectedIndex={selectedFieldIndex}
               onSelectField={setSelectedFieldIndex}
+              enableFieldOverlay={resultTab === "preview"}
             />
           ) : (
             <span style={{ color: "var(--muted)" }}>문서 영역</span>
@@ -544,6 +987,8 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
             }}
             selectedIndex={selectedFieldIndex}
             onSelectField={setSelectedFieldIndex}
+            templateName={activeTemplateForPanel?.name ?? null}
+            fileName={selectedFile?.name ?? ""}
             onTabChange={setResultTab}
             drawMode={canvasDrawMode}
             onDrawModeChange={(mode) => setCanvasDrawMode(mode as FieldType | null)}
@@ -670,15 +1115,17 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
                     {isTiff(selectedFile) ? "TIFF" : "PDF"} 렌더링 중...
                   </div>
                 ) : displayUrl ? (
-                  showCornerAdjust ? (
-                    <CornerAdjust
-                      imageUrl={displayUrl}
-                      corners={corners}
-                      onCornersChange={setCorners}
-                    />
-                  ) : (
-                    <img src={displayUrl} alt="preview" className="uw-preview-img" />
-                  )
+                  // 코너 조정 UI 비활성화 — Test 동일 흐름. 항상 원본 미리보기.
+                  // showCornerAdjust ? (
+                  //   <CornerAdjust
+                  //     imageUrl={displayUrl}
+                  //     corners={corners}
+                  //     onCornersChange={setCorners}
+                  //   />
+                  // ) : (
+                  //   <img src={displayUrl} alt="preview" className="uw-preview-img" />
+                  // )
+                  <img src={displayUrl} alt="preview" className="uw-preview-img" />
                 ) : null}
                 {isOcrRunning && <div className="uw-scan-overlay"><div className="uw-scan-line" /></div>}
               </div>
@@ -686,6 +1133,7 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
                 <div className="uw-filename-chip" title={selectedFile.name}>
                   {selectedFile.name}
                 </div>
+                {/* 코너 지정 버튼 비활성화 — Test 동일 흐름
                 <button
                   type="button"
                   onClick={() => {
@@ -703,6 +1151,7 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
                     ? corners.length < 4 ? `코너 지정 중 (${corners.length}/4)` : "✓ 조정 완료"
                     : "코너 지정"}
                 </button>
+                */}
                 <button type="button" onClick={openFilePicker} className="ms-btn-sm">
                   파일 변경
                 </button>
@@ -772,6 +1221,7 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
               </div>
             </div>
 
+            {/* 자동 처리 결과 패널 비활성화 — /preprocess/info 호출 안 함, Test 와 동일 흐름
             <div className="uw-file-section">
               <div className="uw-file-section-title">자동 처리 결과</div>
               {isPreprocessing ? (
@@ -820,6 +1270,7 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
                 </div>
               )}
             </div>
+            */}
           </div>
         ) : (
           <div className="uw-guide-content">
@@ -841,9 +1292,10 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
 
         <button
           type="button"
-          disabled={!selectedFile || isPreprocessing || isOcrRunning}
+          disabled={!canRunOcr}
           className={`uw-run-btn ${isOcrRunning ? "uw-run-btn-loading" : ""}`}
           onClick={() => void runOcr()}
+          title={isRunOcr && selectedFile && !activeTemplateId ? "상단 템플릿을 선택해야 실행할 수 있습니다." : undefined}
         >
           {isOcrRunning ? (
             <>
