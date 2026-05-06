@@ -112,7 +112,7 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
   const [rowTemplateTargetId, setRowTemplateTargetId] = useState<string | null>(null);
   const [colGuideTargetId, setColGuideTargetId] = useState<string | null>(null);
   const [canvasLoaded, setCanvasLoaded] = useState<LoadedImage | null>(null);
-  const [resultTab, setResultTab] = useState<"preview" | "custom" | "validation">("custom");
+  const [resultTab, setResultTab] = useState<"preview" | "custom" | "validation">("preview");
 
   function loadLocalTemplates(): TemplateItem[] {
     try {
@@ -371,11 +371,15 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
       "Tel": "tel",
       "TEL": "tel",
     };
-    const pickValue = (map: Record<string, unknown>, label: string): unknown => {
+    const pickValue = (map: Record<string, unknown>, label: string): { key: string; value: unknown } | undefined => {
       if (!label) return undefined;
-      if (label in map) return map[label];
+      if (label in map) return { key: label, value: map[label] };
       const alias = RECEIPT_ALIAS[label];
-      if (alias && alias in map) return map[alias];
+      if (alias && alias in map) return { key: alias, value: map[alias] };
+      const normalizedLabel = normalizeAutofillFieldKey(label);
+      for (const [key, value] of Object.entries(map)) {
+        if (normalizeAutofillFieldKey(key) === normalizedLabel) return { key, value };
+      }
       return undefined;
     };
 
@@ -383,11 +387,12 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
       templateFields.forEach((field, index) => {
         const ko = String(field.koField ?? "").trim();
         const en = String(field.enField ?? "").trim();
-        const value = pickValue(receiptFields, ko)
+        const picked = pickValue(receiptFields, ko)
           ?? pickValue(receiptFields, en)
           ?? pickValue(financeFields, ko)
           ?? pickValue(financeFields, en)
-          ?? "";
+          ?? { key: "", value: "" };
+        const value = picked.value;
         resultFields.push({
           name: ko || en || `field_${index + 1}`,
           field_type: "field",
@@ -590,6 +595,30 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
     return normalizeAutofillFieldKey(field.ko || field.name || field.en || "") === "주소";
   }
 
+  function isRepresentativeField(field: OcrFieldResult) {
+    return normalizeAutofillFieldKey(field.ko || field.name || field.en || "") === "대표자";
+  }
+
+  function hangulNameDistance(a: string, b: string) {
+    if (a.length !== b.length) return Number.POSITIVE_INFINITY;
+    let distance = 0;
+    for (let i = 0; i < a.length; i++) {
+      if (a[i] !== b[i]) distance++;
+    }
+    return distance;
+  }
+
+  function representativeLineScore(fieldValue: string, rawValue: string) {
+    const target = String(fieldValue ?? "").replace(/\s+/g, "");
+    if (!/^[가-힣]{2,4}$/.test(target)) return 0;
+    const candidates = String(rawValue ?? "").match(/[가-힣]{2,4}/g) ?? [];
+    for (const candidate of candidates) {
+      if (candidate === target) return 90;
+      if (hangulNameDistance(candidate, target) === 1) return 72;
+    }
+    return 0;
+  }
+
   function isBadAddressLine(lineText: string) {
     const text = String(lineText ?? "");
     return (
@@ -627,9 +656,13 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
         .filter((candidate) => !isAddressField(field) || !isBadAddressLine(candidate.text))
         .map((candidate) => {
           const lookupText = String(lookupValue ?? "");
-          const score = matchScore(lookupText, candidate.text);
+          const score = Math.max(
+            matchScore(lookupText, candidate.text),
+            isRepresentativeField(field) ? representativeLineScore(lookupText, candidate.text) : 0,
+          );
           const partial = score > 0 ? estimatePartialBboxFromLine(candidate.text, lookupText, candidate.box) : null;
-          const box = partial ?? (shouldAllowLineFallback(candidate.text, lookupText, candidate.box) ? candidate.box : null);
+          const allowFuzzyRepresentativeLine = isRepresentativeField(field) && representativeLineScore(lookupText, candidate.text) > 0;
+          const box = partial ?? (allowFuzzyRepresentativeLine || shouldAllowLineFallback(candidate.text, lookupText, candidate.box) ? candidate.box : null);
           return { box, score };
         })
         .filter((candidate): candidate is { box: FieldSourceBox; score: number } => !!candidate.box)
@@ -678,11 +711,12 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
     }
     setIsOcrRunning(true);
     const activeTemplate = templates.find((t) => t.id === activeTemplateId);
+    const useRegionTemplate = !!activeTemplate && activeTemplate.mode !== "unstructured";
     try {
       const formData = new FormData();
       formData.append("file", selectedFile);
       if (activeTemplateId) formData.append("template_id", activeTemplateId);
-      if (activeTemplate?.regions?.length) {
+      if (useRegionTemplate && activeTemplate?.regions?.length) {
         formData.append("regions", JSON.stringify(activeTemplate.regions));
       }
       if (isRunOcr) formData.append("model_id", selectedModelId);

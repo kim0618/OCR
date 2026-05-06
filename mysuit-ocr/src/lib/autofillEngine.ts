@@ -246,6 +246,15 @@ function getHistoryFieldValue(field: unknown): string {
   return String(valueOfObjectField(field, "original") ?? "").trim();
 }
 
+function isUserEditedHistoryField(field: unknown): boolean {
+  const source = String(valueOfObjectField(field, "source") ?? "").trim();
+  if (source === "text") return true;
+  if (source === "biz" || source === "gt") return false;
+  const original = String(valueOfObjectField(field, "original") ?? "").trim();
+  const modified = String(valueOfObjectField(field, "modified") ?? "").trim();
+  return !!modified && modified !== original;
+}
+
 function getHistoryFieldKey(field: unknown): string {
   const candidates = ["ko", "en", "name", "label", "field"];
   for (const key of candidates) {
@@ -286,18 +295,25 @@ function readGroundTruthCandidateRecords(): AutofillCandidateRecord[] {
 }
 
 function readHistoryCandidateRecords(): AutofillCandidateRecord[] {
+  const candidateFields = ["companyName", "businessNumber", "representative", "tel", "address"].map(normalizeAutofillFieldKey);
+  const businessNumberKey = normalizeAutofillFieldKey("businessNumber");
+
   return readHistoryRuns().flatMap((run) => {
     const fields: Record<string, string> = {};
+    let businessNumber = "";
     for (const row of run.output_fields ?? []) {
       const key = getHistoryFieldKey(row);
       const value = getHistoryFieldValue(row);
       if (!key || !value) continue;
-      if (["회사명", "사업자번호", "대표자", "tel", "주소"].includes(key)) {
+      if (key === businessNumberKey) {
+        businessNumber = normalizeBusinessNumber(value);
+      }
+      if (!isUserEditedHistoryField(row)) continue;
+      if (candidateFields.includes(key)) {
         fields[key] = value;
       }
     }
-    const businessNumber = normalizeBusinessNumber(fields["사업자번호"] ?? "");
-    if (!businessNumber) return [];
+    if (!businessNumber || Object.keys(fields).length === 0) return [];
     return [{
       businessNumber,
       fields,
@@ -312,10 +328,7 @@ function readHistoryCandidateRecords(): AutofillCandidateRecord[] {
 }
 
 export function collectInternalAutofillCandidates(): AutofillCandidateRecord[] {
-  return [
-    ...readGroundTruthCandidateRecords(),
-    ...readHistoryCandidateRecords(),
-  ];
+  return readHistoryCandidateRecords();
 }
 
 function confidenceForCandidate(candidate: AutofillCandidateRecord, templateName?: string | null): number {

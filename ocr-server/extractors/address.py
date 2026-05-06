@@ -98,6 +98,62 @@ def _address_candidate_score(candidate: str, row_text: str = "", adjacent_text: 
     return score
 
 
+def _is_split_gyeonggi_prefix_line(text: str) -> bool:
+    return (text or "").strip() == "경"
+
+
+def _is_split_gyeonggi_address_tail(text: str) -> bool:
+    raw = (text or "").strip()
+    if len(raw) < 8 or not raw.startswith("기"):
+        return False
+
+    compact = re.sub(r"\s+", "", raw)
+    if re.search(
+        r"승인|승인번호|카드|전표|거래일시|가맹|가맹NO|가맹No|판매금액|부가세|부가가치세|합계|총액|TEL|Tel|tel|전화",
+        compact,
+        re.I,
+    ):
+        return False
+    if _extract_biz_number(raw) or _extract_phone_candidate(raw):
+        return False
+    if re.fullmatch(r"기?\s*\d{1,3}(?:,\d{3})+(?:원)?", raw):
+        return False
+
+    body = raw[1:].strip()
+    if len(body) < 6:
+        return False
+    has_admin = bool(re.search(r"시|군|구", body))
+    has_core = bool(re.search(r"번길|동|읍|면|리|로|길", body))
+    return has_admin and has_core
+
+
+def _merge_split_gyeonggi_address_candidate(prefix_line: str, tail_line: str) -> str:
+    if not _is_split_gyeonggi_prefix_line(prefix_line) or not _is_split_gyeonggi_address_tail(tail_line):
+        return ""
+    body = (tail_line or "").strip()[1:].strip()
+    if not body:
+        return ""
+    return re.sub(r"\s+", " ", f"경기 {body}").strip()
+
+
+def _split_gyeonggi_address_repairs(row_texts: list[str]) -> dict[int, list[str]]:
+    repairs: dict[int, list[str]] = {}
+    for idx in range(len(row_texts) - 1):
+        current = row_texts[idx]
+        nxt = row_texts[idx + 1]
+
+        merged = _merge_split_gyeonggi_address_candidate(current, nxt)
+        if merged:
+            repairs.setdefault(idx, []).append(merged)
+            continue
+
+        # Some OCR row grouping returns the visual pair in reverse order.
+        merged = _merge_split_gyeonggi_address_candidate(nxt, current)
+        if merged:
+            repairs.setdefault(idx, []).append(merged)
+    return repairs
+
+
 
 
 def _clean_address_candidate(text: str) -> str:
@@ -218,6 +274,7 @@ def _best_address_from_rows(rows, source: str = "full_ocr") -> tuple[str, float,
         return "", -999.0, ""
 
     row_texts = [_row_text(r) for r in rows]
+    split_gyeonggi_repairs = _split_gyeonggi_address_repairs(row_texts)
 
     def _row_y_ratio(row) -> float:
         ys = [p[1] for line in row for p in line[0]]
@@ -239,6 +296,7 @@ def _best_address_from_rows(rows, source: str = "full_ocr") -> tuple[str, float,
             _extract_address_fragment(row_text),
             row_text,
         ]
+        raw_candidates.extend(split_gyeonggi_repairs.get(idx, []))
         if idx + 1 < len(row_texts):
             raw_candidates.append(f"{row_text} {row_texts[idx + 1]}")
         if idx + 2 < len(row_texts):

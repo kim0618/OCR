@@ -309,7 +309,7 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
   };
 
   const autofillDetailRows = useMemo(() => editedFields.map((field) => {
-    const candidate = field.applied || field.suggestions?.[0]?.value || (field.autofillAction === "confirmed" ? field.value : "");
+    const candidate = field.applied || field.suggestions?.[0]?.value || "";
     const action = field.autofillAction && field.autofillAction !== "none"
       ? field.autofillAction
       : isAmountLikeField(field)

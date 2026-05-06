@@ -220,7 +220,7 @@ export default function DetailHistoryPopup({ open, item, onClose, onSaved }: Pro
     setOutputs((prev) => {
       const next = [...prev];
       if (!next[idx]) return prev;
-      next[idx] = { ...next[idx], modified: value };
+      next[idx] = { ...next[idx], modified: value, source: "text" };
       return next;
     });
   };
