@@ -170,6 +170,30 @@ def _invoice_statement_evidence(text: str) -> tuple[bool, dict]:
     }
 
 
+def _invoice_statement_score(evidence: dict) -> int:
+    """은행 거래명세표와 충돌할 때 invoice evidence의 구조 강도를 비교한다."""
+    return (
+        int(evidence.get("title") or 0)
+        + int(evidence.get("party") or 0) * 3
+        + int(evidence.get("header") or 0)
+        + int(evidence.get("table") or 0) * 2
+        + int(evidence.get("amount") or 0)
+    )
+
+
+def _has_invoice_business_structure(evidence: dict) -> bool:
+    """공급자/표 헤더처럼 세금계산서·거래명세서 고유 구조가 충분한지 확인."""
+    party_hits = int(evidence.get("party") or 0)
+    header_hits = int(evidence.get("header") or 0)
+    table_hits = int(evidence.get("table") or 0)
+    amount_hits = int(evidence.get("amount") or 0)
+    return (
+        party_hits >= 1
+        or (header_hits >= 2 and table_hits >= 2)
+        or (header_hits >= 2 and table_hits >= 1 and amount_hits >= 2)
+    )
+
+
 # ============================================================
 # 보조: 카드 브랜드 prefix 로 쓰이는 은행명 차감
 #
@@ -235,6 +259,20 @@ def classify_document(full_text: str) -> dict:
 
     # bank_struct_n: 단독 변수로 분류 임계 조건에 사용
     bank_struct_n = bs_n
+    bank_slip_strong = (
+        (bank_struct_n >= 2 or (bank_struct_n >= 1 and bb_n >= 1))
+        and bank_n > card_n
+        and bank_n > pos_n
+        and bank_n > medical_n
+    )
+    invoice_score = _invoice_statement_score(invoice_evidence)
+    invoice_has_business_structure = _has_invoice_business_structure(invoice_evidence)
+    invoice_blocked_by_bank = bool(
+        invoice_ok
+        and bank_slip_strong
+        and bank_n > invoice_score
+        and not invoice_has_business_structure
+    )
 
     # --- 결정 트리 ---
     #
@@ -255,19 +293,14 @@ def classify_document(full_text: str) -> dict:
     #   - layout_svt_triple(+공급가액/VAT/합계 검산)이 있으면 card 측에 이미 +1 가산되어
     #     bank 와의 우선순위 다툼에서 카드/영수증 쪽이 유리하다.
 
-    if invoice_ok:
+    if invoice_ok and not invoice_blocked_by_bank:
         doc_type = "invoice_statement"
 
     elif form_n >= 2 and form_n >= max(pos_n, card_n, bank_n, medical_n):
         doc_type = "form_or_handwritten"
 
     # bank_slip 강한 결정: 구조 시그널 ≥ 2 또는 (구조 ≥ 1 + 브랜드 ≥ 1)
-    elif (
-        (bank_struct_n >= 2 or (bank_struct_n >= 1 and bb_n >= 1))
-        and bank_n > card_n
-        and bank_n > pos_n
-        and bank_n > medical_n
-    ):
+    elif bank_slip_strong:
         doc_type = "bank_slip"
 
     # 의료 영수증
@@ -329,7 +362,12 @@ def classify_document(full_text: str) -> dict:
         "guards": {
             "bank_to_card_subtract":   bank_subtract,
             "layout_supply_vat_total": layout_svt_triple,
-            "invoice_statement":       invoice_evidence,
+            "invoice_statement":       {
+                **invoice_evidence,
+                "score": invoice_score,
+                "has_business_structure": invoice_has_business_structure,
+                "blocked_by_bank": invoice_blocked_by_bank,
+            },
         },
         "receipt_like_unknown_evidence": receipt_like_evidence,
     }

@@ -18,16 +18,28 @@ _DATE_RE = re.compile(
     r"|(?<!\d)(\d{4})[.\-/]\s*(\d{1,2})[.\-/]\s*(\d{1,2})(?!\d)"
     r"|(?<!\d)(\d{2})[.\-/]\s*(\d{1,2})[.\-/]\s*(\d{1,2})(?!\d)"
 )
-_SUPPLY_AMOUNT_ANCHOR_RE = re.compile(r"\uacf5\uae09\s*\uac00\uc561")
-_TAX_AMOUNT_ANCHOR_RE = re.compile(r"\uc138\s*\uc561|\ubd80\uac00\s*\uc138|\ubd80\uac00\s*\uc11c")
+_SUPPLY_AMOUNT_ANCHOR_RE = re.compile(
+    r"\uacf5\s*\uae09\s*\uac00\s*\uc561|\uacf5\s*\uae09\s*\uc561|\uacf5\s*\uae09\s*\uae08\s*\uc561|"
+    r"\uacf5\s*\uae09\s*\ub300\s*\uac00|\uacf5\s*\uae09\s*\uac00(?![\uac00-\ud7a3])"
+)
+_TAX_AMOUNT_ANCHOR_RE = re.compile(
+    r"\uc138\s*\uc561|\uc0c8\s*\uc561|\uc138\s*\uc775|\uc138\s*\uc545|"
+    r"\ubd80\s*\uac00\s*\uc138|\ubd80\s*\uac00\s*\uc11c|\ubd80\s*\uac00\s*\uac00\s*\uce58\s*\uc138|"
+    r"\bVAT\b|\bV\.A\.T\b",
+    re.I,
+)
 _TOTAL_AMOUNT_ANCHOR_RE = re.compile(
-    r"\ud569\uacc4\s*\uae08\uc561|\ucd1d\s*\uacb0\uc81c\uc561|\uacf5\uae09\s*\ub300\uac00|"
-    r"\uccad\uad6c\s*\uae08\uc561|\ucd1d\s*\ud569\uacc4"
+    r"\ud569\s*\uacc4|\ucd1d\s*\uacc4|\ucd1d\s*\ud569\s*\uacc4|\ucd1d\s*\uae08\s*\uc561|"
+    r"\ucd1d\s*\uacb0\s*\uc81c\s*\uc561|\uacf5\s*\uae09\s*\ub300\s*\uac00|"
+    r"\uccad\s*\uad6c\s*\uae08\s*\uc561|\uacb0\s*\uc81c\s*\uae08\s*\uc561|\bTOTAL\b",
+    re.I,
 )
 _TABLE_SUMMARY_RE = re.compile(
-    r"\uacf5\uae09\s*\uae08\uc561|\uacf5\uae09\s*\uac00\uc561|\uacf5\uae09\s*\uac00\ub825|\uc138\s*\uc561|\ubd80\uac00\s*\uc138|"
-    r"\ud569\s*\uacc4|\ud568\s*\uacc4|\ud569\uacc4\s*\uae08\uc561|\ucd1d\s*\uacb0\uc81c\uc561|"
-    r"\uacf5\uae09\s*\ub300\uac00|\uccad\uad6c\s*\uae08\uc561|\uc794\s*\uc561|\ub204\s*\uacc4|"
+    r"\uacf5\s*\uae09\s*\uae08\s*\uc561|\uacf5\s*\uae09\s*\uac00\s*\uc561|\uacf5\s*\uae09\s*\uc561|"
+    r"\uacf5\s*\uae09\s*\uac00\ub825|\uacf5\s*\uae09\s*\ub300\s*\uac00|\uc138\s*\uc561|\uc0c8\s*\uc561|"
+    r"\uc138\s*\uc775|\uc138\s*\uc545|\ubd80\s*\uac00\s*\uc138|\ubd80\s*\uac00\s*\uc11c|VAT|"
+    r"\ud569\s*\uacc4|\ud568\s*\uacc4|\ud569\s*\uacc4\s*\uae08\s*\uc561|\ucd1d\s*\uacb0\s*\uc81c\s*\uc561|"
+    r"\uccad\s*\uad6c\s*\uae08\s*\uc561|\uacb0\s*\uc81c\s*\uae08\s*\uc561|\uc794\s*\uc561|\ub204\s*\uacc4|"
     r"\uc778\uc218\s*\ud655\uc778|\uc778\uc218\uc790|\ucc3d\s*\uace0|Page|Fa:|\ud398\uc774\uc9c0|TOTAL",
     re.I,
 )
@@ -70,6 +82,20 @@ class OcrLine:
     h: float
     cx: float
     cy: float
+
+
+@dataclass
+class SummaryAmountCandidate:
+    value: str
+    numeric: int
+    row_idx: int
+    cy: float
+    x: float
+    text: str
+    context: str
+    supply_anchor: bool
+    tax_anchor: bool
+    total_anchor: bool
 
 
 def _line_from_raw(raw: tuple) -> OcrLine | None:
@@ -711,6 +737,250 @@ def _row_has_item_context(text: str) -> bool:
     )
 
 
+def _row_has_non_summary_noise(text: str) -> bool:
+    compact = re.sub(r"\s+", "", text or "")
+    return bool(
+        _ADDRESS_HINT_RE.search(text)
+        or _BIZ_RE.search(_canonical_digits(text))
+        or _PHONE_RE.search(text)
+        or _DATE_RE.search(text)
+        or re.search(r"\uc0ac\uc5c5\uc790|\ub4f1\ub85d\ubc88\ud638|\uc804\s*\ud654|FAX|TEL|\uacc4\uc88c|\uc740\ud589|Page|\ud398\uc774\uc9c0", text, re.I)
+        or re.fullmatch(r"(?:\d{1,3}[-./]){2,}\d{1,5}", compact)
+    )
+
+
+def _summary_anchor_flags(text: str) -> tuple[bool, bool, bool]:
+    return (
+        bool(_SUPPLY_AMOUNT_ANCHOR_RE.search(text)),
+        bool(_TAX_AMOUNT_ANCHOR_RE.search(text)),
+        bool(_TOTAL_AMOUNT_ANCHOR_RE.search(text) or re.search(r"\ud568\s*\uacc4", text)),
+    )
+
+
+def _nearby_summary_context(rows: list[list[OcrLine]], idx: int, page_h: float) -> str:
+    base_y = _row_center_y(rows[idx])
+    parts: list[str] = []
+    for near_idx in range(max(0, idx - 1), min(len(rows), idx + 2)):
+        near_y = _row_center_y(rows[near_idx])
+        if abs(near_y - base_y) <= page_h * 0.045:
+            parts.append(_row_text(rows[near_idx]))
+    return " ".join(parts)
+
+
+def _footer_summary_candidates(
+    lines: list[OcrLine],
+    page_h: float,
+    table_header_y: float | None,
+) -> tuple[list[SummaryAmountCandidate], float]:
+    rows = _group_rows(lines)
+    footer_start = max(page_h * 0.68, (table_header_y or 0) + page_h * 0.18)
+    if not rows:
+        return [], footer_start
+
+    candidates: list[SummaryAmountCandidate] = []
+    for idx, row in enumerate(rows):
+        text = _row_text(row)
+        cy = _row_center_y(row)
+        if cy < footer_start or cy > page_h * 0.94:
+            continue
+        if _row_has_non_summary_noise(text):
+            continue
+        context = _nearby_summary_context(rows, idx, page_h)
+        has_summary_anchor = bool(_TABLE_SUMMARY_RE.search(context) or _TOTAL_AMOUNT_ANCHOR_RE.search(context))
+        if _row_has_item_context(text) and not has_summary_anchor:
+            continue
+        supply_anchor, tax_anchor, total_anchor = _summary_anchor_flags(context)
+        if not (has_summary_anchor or supply_anchor or tax_anchor or total_anchor):
+            continue
+        for line in row:
+            if _row_has_non_summary_noise(line.text):
+                continue
+            for value in _amount_values(line.text):
+                numeric = int(value.replace(",", ""))
+                if numeric < 10_000:
+                    continue
+                candidates.append(
+                    SummaryAmountCandidate(
+                        value=value,
+                        numeric=numeric,
+                        row_idx=idx,
+                        cy=cy,
+                        x=line.x,
+                        text=line.text,
+                        context=context,
+                        supply_anchor=supply_anchor,
+                        tax_anchor=tax_anchor,
+                        total_anchor=total_anchor,
+                    )
+                )
+        if not any(item.row_idx == idx for item in candidates):
+            for value in _amount_values(text):
+                numeric = int(value.replace(",", ""))
+                if numeric >= 10_000:
+                    candidates.append(
+                        SummaryAmountCandidate(
+                            value=value,
+                            numeric=numeric,
+                            row_idx=idx,
+                            cy=cy,
+                            x=min(item.x for item in row),
+                            text=text,
+                            context=context,
+                            supply_anchor=supply_anchor,
+                            tax_anchor=tax_anchor,
+                            total_anchor=total_anchor,
+                        )
+                    )
+    return candidates, footer_start
+
+
+def _summary_candidate_base_score(candidate: SummaryAmountCandidate, footer_start: float, page_h: float, role: str) -> float:
+    score = 0.0
+    if footer_start <= candidate.cy <= page_h * 0.94:
+        score += 8
+        score += min(max((candidate.cy - footer_start) / max(page_h * 0.24, 1), 0), 1) * 4
+    if _TABLE_SUMMARY_RE.search(candidate.context):
+        score += 6
+    if role == "supply" and candidate.supply_anchor:
+        score += 13
+    if role == "tax" and candidate.tax_anchor:
+        score += 13
+    if role == "total" and candidate.total_anchor:
+        score += 13
+    if _row_has_item_context(candidate.text) and not _TABLE_SUMMARY_RE.search(candidate.context):
+        score -= 18
+    if _row_has_non_summary_noise(candidate.context):
+        score -= 24
+    if candidate.cy < page_h * 0.55:
+        score -= 20
+    return score
+
+
+def _amounts_close(left: int, right: int) -> bool:
+    tolerance = max(2_500, int(max(left, right) * 0.001))
+    return abs(left - right) <= tolerance
+
+
+def _extract_footer_summary_triple(
+    lines: list[OcrLine],
+    page_h: float,
+    table_header_y: float | None,
+    existing_total: str = "",
+) -> tuple[dict[str, str], dict[str, Any]]:
+    candidates, footer_start = _footer_summary_candidates(lines, page_h, table_header_y)
+    debug: dict[str, Any] = {"source": "", "candidateCount": len(candidates)}
+    if len(candidates) < 2:
+        return {}, debug
+
+    existing_total_num = int(existing_total.replace(",", "")) if existing_total else 0
+    scored: list[tuple[float, SummaryAmountCandidate, SummaryAmountCandidate, SummaryAmountCandidate | None, int]] = []
+    for supply_candidate in candidates:
+        for tax_candidate in candidates:
+            if supply_candidate is tax_candidate:
+                continue
+            supply_num = supply_candidate.numeric
+            tax_num = tax_candidate.numeric
+            if supply_num <= 0 or tax_num <= 0 or supply_num <= tax_num:
+                continue
+            tax_ratio = tax_num / supply_num
+            if not 0.05 <= tax_ratio <= 0.15:
+                continue
+            synthesized_num = supply_num + tax_num
+            if existing_total_num and synthesized_num > existing_total_num * 5:
+                continue
+            total_matches = [
+                item
+                for item in candidates
+                if _amounts_close(item.numeric, synthesized_num) and item is not supply_candidate and item is not tax_candidate
+            ]
+            if existing_total_num and _amounts_close(synthesized_num, existing_total_num):
+                total_matches.append(
+                    SummaryAmountCandidate(
+                        value=f"{existing_total_num:,}",
+                        numeric=existing_total_num,
+                        row_idx=max(supply_candidate.row_idx, tax_candidate.row_idx),
+                        cy=max(supply_candidate.cy, tax_candidate.cy),
+                        x=max(supply_candidate.x, tax_candidate.x),
+                        text="existing_total",
+                        context=f"{supply_candidate.context} {tax_candidate.context}",
+                        supply_anchor=False,
+                        tax_anchor=False,
+                        total_anchor=True,
+                    )
+                )
+            if not total_matches and not existing_total_num:
+                total_matches.append(None)
+            for total_candidate in total_matches:
+                total_num = total_candidate.numeric if total_candidate else synthesized_num
+                if existing_total_num and total_num < existing_total_num * 0.2:
+                    continue
+                row_span = max(supply_candidate.row_idx, tax_candidate.row_idx, total_candidate.row_idx if total_candidate else tax_candidate.row_idx) - min(
+                    supply_candidate.row_idx, tax_candidate.row_idx, total_candidate.row_idx if total_candidate else tax_candidate.row_idx
+                )
+                y_values = [supply_candidate.cy, tax_candidate.cy]
+                if total_candidate:
+                    y_values.append(total_candidate.cy)
+                y_span = max(y_values) - min(y_values)
+                if row_span > 3 or y_span > page_h * 0.08:
+                    continue
+
+                score = 40.0
+                score += _summary_candidate_base_score(supply_candidate, footer_start, page_h, "supply")
+                score += _summary_candidate_base_score(tax_candidate, footer_start, page_h, "tax")
+                if total_candidate:
+                    score += _summary_candidate_base_score(total_candidate, footer_start, page_h, "total")
+                else:
+                    score += 6
+                if row_span <= 1:
+                    score += 12
+                elif row_span == 2:
+                    score += 6
+                if y_span <= page_h * 0.035:
+                    score += 8
+                if supply_candidate.supply_anchor and tax_candidate.tax_anchor:
+                    score += 10
+                if total_candidate and total_candidate.total_anchor:
+                    score += 8
+                if existing_total_num and _amounts_close(total_num, existing_total_num):
+                    score += 18
+                if total_num == synthesized_num:
+                    score += 5
+                if abs(tax_ratio - 0.1) <= 0.015:
+                    score += 8
+                scored.append((score, supply_candidate, tax_candidate, total_candidate, synthesized_num))
+
+    if not scored:
+        return {}, debug
+    scored.sort(key=lambda item: (-item[0], -item[4]))
+    score, supply_candidate, tax_candidate, total_candidate, synthesized_num = scored[0]
+    if score < 78:
+        debug["bestScore"] = round(score, 2)
+        return {}, debug
+
+    result = {
+        "supplyAmount": supply_candidate.value,
+        "taxAmount": tax_candidate.value,
+        "totalAmount": total_candidate.value if total_candidate else f"{synthesized_num:,}",
+    }
+    debug.update(
+        {
+            "source": "footer_summary_triple",
+            "bestScore": round(score, 2),
+            "supplySource": "footer_supply_anchor" if supply_candidate.supply_anchor else "footer_summary_amount",
+            "taxSource": "footer_tax_anchor" if tax_candidate.tax_anchor else "footer_summary_amount",
+            "totalSource": "footer_total_anchor" if total_candidate and total_candidate.total_anchor else "synthesized_supply_tax",
+            "supply": [supply_candidate.value, round(supply_candidate.x), round(supply_candidate.cy), supply_candidate.text],
+            "tax": [tax_candidate.value, round(tax_candidate.x), round(tax_candidate.cy), tax_candidate.text],
+            "total": (
+                [total_candidate.value, round(total_candidate.x), round(total_candidate.cy), total_candidate.text]
+                if total_candidate
+                else [f"{synthesized_num:,}", None, None, "synthesized_supply_tax"]
+            ),
+        }
+    )
+    return result, debug
+
+
 def _extract_footer_total_amount(lines: list[OcrLine], page_h: float, table_header_y: float | None) -> str:
     rows = _group_rows(lines)
     if not rows:
@@ -769,7 +1039,12 @@ def _extract_footer_total_amount(lines: list[OcrLine], page_h: float, table_head
     return candidates[0][2]
 
 
-def _extract_amount_fields(lines: list[OcrLine], page_h: float, table_header_y: float | None) -> dict[str, str]:
+def _extract_amount_fields(
+    lines: list[OcrLine],
+    page_h: float,
+    table_header_y: float | None,
+    debug: dict[str, Any] | None = None,
+) -> dict[str, str]:
     start_y = max((table_header_y or page_h * 0.45), page_h * 0.35)
     bottom = [line for line in lines if line.cy >= start_y]
     if not bottom:
@@ -786,6 +1061,20 @@ def _extract_amount_fields(lines: list[OcrLine], page_h: float, table_header_y: 
         tax = ""
     footer_total = _extract_footer_total_amount(lines, page_h, table_header_y)
     total = footer_total or _extract_amount_near(bottom, _TOTAL_AMOUNT_ANCHOR_RE)
+    summary_triple, summary_debug = _extract_footer_summary_triple(lines, page_h, table_header_y, existing_total=total)
+    used_summary_triple = False
+    if summary_triple:
+        triple_total_num = int(summary_triple["totalAmount"].replace(",", ""))
+        total_num = int(total.replace(",", "")) if total else 0
+        if not total or _amounts_close(triple_total_num, total_num) or triple_total_num > total_num:
+            supply = summary_triple["supplyAmount"]
+            tax = summary_triple["taxAmount"]
+            total = summary_triple["totalAmount"]
+            used_summary_triple = True
+        elif total_num and triple_total_num <= total_num * 5:
+            supply = summary_triple["supplyAmount"]
+            tax = summary_triple["taxAmount"]
+            used_summary_triple = True
     values = _amount_values("\n".join(line.text for line in bottom))
     tail_max = max(values, key=lambda item: int(item.replace(",", ""))) if values else ""
     synthesized_total = ""
@@ -812,6 +1101,13 @@ def _extract_amount_fields(lines: list[OcrLine], page_h: float, table_header_y: 
             supply = ""
         if supply_absurd and tax and int(tax.replace(",", "")) > total_num * 0.5:
             tax = ""
+        if not used_summary_triple:
+            if tax and int(tax.replace(",", "")) >= total_num * 0.3:
+                tax = ""
+            if supply and int(supply.replace(",", "")) >= total_num * 0.98:
+                supply = ""
+    if debug is not None:
+        debug["amount_summary_triple"] = summary_debug
     return {"supplyAmount": supply, "taxAmount": tax, "totalAmount": total}
 
 
@@ -977,7 +1273,8 @@ def extract_invoice_statement_fields(ocr_lines_raw: list[tuple], debug: dict[str
     header_lines = [line for line in lines if line.cy <= header_limit_y]
 
     supplier, buyer, party_debug = _extract_party_fields(header_lines, lines, page_w, page_h, header_limit_y)
-    amounts = _extract_amount_fields(lines, page_h, table_header_y)
+    amount_debug: dict[str, Any] = {}
+    amounts = _extract_amount_fields(lines, page_h, table_header_y, debug=amount_debug)
     table = _detect_table(lines, page_h, table_header_y)
     full_text = "\n".join(line.text for line in lines)
 
@@ -1010,6 +1307,7 @@ def extract_invoice_statement_fields(ocr_lines_raw: list[tuple], debug: dict[str
             "supplier_nonempty": [key for key, value in supplier.items() if value],
             "buyer_nonempty": [key for key, value in buyer.items() if value],
             "amount_nonempty": [key for key, value in amounts.items() if value],
+            "amount_summary_triple": amount_debug.get("amount_summary_triple", {}),
             "table": table,
         }
 
