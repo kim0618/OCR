@@ -32,7 +32,7 @@ import {
   MatchStatus,
 } from "./core/finalize";
 import type { DatasetManifest, ManifestItem } from "@/lib/testsets";
-import { resolveProfile, FINANCE_COLUMNS, FINANCE_TIER1_FIELDS, DOCUMENT_COLUMNS, isNotApplicableField } from "@/lib/profiles";
+import { resolveProfile, FINANCE_COLUMNS, FINANCE_TIER1_FIELDS, DOCUMENT_COLUMNS, DOCUMENT_PARTY_FIELDS, isNotApplicableField } from "@/lib/profiles";
 
 type ViewMode = "compare" | "ocr_only" | "autofill" | "gt_edit";
 
@@ -260,8 +260,11 @@ function PdfPagePreview({ url, filename, variant }: PdfPagePreviewProps) {
         await pdf.destroy();
         if (!cancelled) setStatus("ready");
       } catch (error) {
+        // StrictMode 재마운트로 인한 의도적 cancel은 PDF.js가 RenderingCancelledException으로 reject함
+        // 이 경우 console.error 노이즈 방지 + setStatus 스킵
+        if (cancelled) return;
         console.error("[TestWorkspace] PDF preview failed", { filename, url, variant, error });
-        if (!cancelled) setStatus("error");
+        setStatus("error");
       }
     }
 
@@ -1039,6 +1042,85 @@ export default function TestWorkspace() {
     };
   }, [financeBatchRows, images, manifest, ocr, gt]);
 
+  // document(invoice_statement) KPI — 거래 당사자(공급자/공급받는자) 필드 추출률 + GT 정확도
+  // 형태는 financeKpi와 동일 (3개 receipt KPI 대신 거래명세서 dataset 전용으로 표시)
+  type DocumentKpiSummary = {
+    total: number;        // 전체 document 이미지 수 (미실행 포함)
+    processed: number;    // OCR 실행 완료 건수
+    selected: number;
+    suppressed: number;
+    // 거래 당사자 필드 추출률 (DOCUMENT_PARTY_FIELDS 8개 기준)
+    partyFull: number;
+    partyPartial: number;
+    partyFieldExtract: Record<string, number>;
+    // GT 기반 정확도 (GT 있는 필드-이미지 쌍만 분모)
+    gtImageCount: number;
+    gtFieldTotal: number;
+    gtFieldMatch: number;
+    partyFieldGtMatch: Record<string, { match: number; total: number }>;
+  };
+  const documentKpi = useMemo((): DocumentKpiSummary => {
+    const total = images.filter((img) => {
+      const dt = manifest?.items.find((i) => i.filename === img)?.documentType;
+      return resolveProfile(dt).base === "document";
+    }).length;
+
+    let selected = 0, suppressed = 0;
+    let partyFull = 0, partyPartial = 0;
+    let gtImageCount = 0, gtFieldTotal = 0, gtFieldMatch = 0;
+    const partyFieldExtract: Record<string, number> = {};
+    const partyFieldGtMatch: Record<string, { match: number; total: number }> = {};
+    for (const k of DOCUMENT_PARTY_FIELDS) {
+      partyFieldExtract[k] = 0;
+      partyFieldGtMatch[k] = { match: 0, total: 0 };
+    }
+
+    for (const img of documentBatchRows) {
+      const ocrEntry = ocr[img];
+      const status = ocrEntry?.status ?? "selected";
+      if (status === "selected") selected++;
+      else if (status.startsWith("suppressed_")) suppressed++;
+      else selected++; // 기타 상태(예: unknown)는 selected에 포함 — finance와 동일한 보수적 처리
+
+      const docFields = ocrEntry?.documentFields ?? {};
+      let extractCount = 0;
+      for (const k of DOCUMENT_PARTY_FIELDS) {
+        if (docFields[k]) {
+          partyFieldExtract[k] += 1;
+          extractCount++;
+        }
+      }
+      if (extractCount === DOCUMENT_PARTY_FIELDS.length) partyFull++;
+      else if (extractCount > 0) partyPartial++;
+
+      const docGt = gt[img]?.documentFields ?? {};
+      const hasAnyGt = DOCUMENT_PARTY_FIELDS.some((k) => docGt[k]);
+      if (hasAnyGt) {
+        gtImageCount++;
+        for (const k of DOCUMENT_PARTY_FIELDS) {
+          const gtVal  = docGt[k]    ?? "";
+          const ocrVal = docFields[k] ?? "";
+          if (gtVal) {
+            gtFieldTotal++;
+            partyFieldGtMatch[k].total++;
+            if (documentFieldMatches(gtVal, ocrVal) || gtVal === ocrVal) {
+              gtFieldMatch++;
+              partyFieldGtMatch[k].match++;
+            }
+          }
+        }
+      }
+    }
+
+    return {
+      total, processed: documentBatchRows.length,
+      selected, suppressed,
+      partyFull, partyPartial, partyFieldExtract,
+      gtImageCount, gtFieldTotal, gtFieldMatch,
+      partyFieldGtMatch,
+    };
+  }, [documentBatchRows, images, manifest, ocr, gt]);
+
   // ── qualityTags 필터 ──
   const availableQualityTags = useMemo(() => {
     if (!manifest) return [];
@@ -1332,6 +1414,7 @@ export default function TestWorkspace() {
 
       {batchRows.length > 0 && (
         <div style={styles.kpiWrapper}>
+          {receiptBatchRows.length > 0 && (
           <KpiSection title="OCR 자체 성능" tone="sky" icon="🔎"
             subtitle="autofill 배제 · 모델 개선 지표"
           >
@@ -1342,7 +1425,9 @@ export default function TestWorkspace() {
               return <KpiChip key={f.key} label={f.label} value={pct(s.ok, s.total)} sub={`${s.ok}/${s.total}`} tone={toneOf(s.ok, s.total)} />;
             })}
           </KpiSection>
+          )}
 
+          {receiptBatchRows.length > 0 && (
           <div style={{ flex: "0.8 1 0", minWidth: 0 }}>
           <KpiSection title="자동복원 효과" tone="indigo" icon="⚡"
             subtitle="OCR 대비 개선 / 악화 카운트"
@@ -1353,7 +1438,9 @@ export default function TestWorkspace() {
             <KpiChip label="악화"     value={String(kpi.worsenedByAutofill)} sub="OCR→채택 −" tone={kpi.worsenedByAutofill > 0 ? "red" : "neutral"} />
           </KpiSection>
           </div>
+          )}
 
+          {receiptBatchRows.length > 0 && (
           <KpiSection title="최종 채택값 성능" tone="green" icon="★"
             subtitle="영수증 계열 · 사용자에게 보여지는 값"
           >
@@ -1366,6 +1453,7 @@ export default function TestWorkspace() {
             })}
             <KpiChip label="사람 검토 필요" value={`${kpi.needsHumanReview}`} tone={kpi.needsHumanReview > 0 ? "amber" : "green"} />
           </KpiSection>
+          )}
 
           {/* ── 금융전표 현황 (finance_profile) ── */}
           {financeKpi.total > 0 && (
@@ -1408,6 +1496,44 @@ export default function TestWorkspace() {
                 value={pct(financeKpi.gtFieldMatch, financeKpi.gtFieldTotal)}
                 sub={`${financeKpi.gtFieldMatch}/${financeKpi.gtFieldTotal} 필드`}
                 tone={toneOf(financeKpi.gtFieldMatch, financeKpi.gtFieldTotal)}
+              />
+            )}
+          </KpiSection>
+          )}
+
+          {/* ── 거래명세서 현황 (document profile) ── */}
+          {documentKpi.total > 0 && (
+          <KpiSection title="거래명세서 현황" tone="amber" icon="📄"
+            subtitle={`document profile · ${documentKpi.processed}/${documentKpi.total} 처리`}
+          >
+            <KpiChip label="전체" value={`${documentKpi.total}`} sub={`처리 ${documentKpi.processed}`} />
+            <KpiChip
+              label="selected"
+              value={String(documentKpi.selected)}
+              tone={documentKpi.selected > 0 ? "green" : "neutral"}
+            />
+            {documentKpi.suppressed > 0 && (
+              <KpiChip label="suppressed" value={String(documentKpi.suppressed)} tone="red" />
+            )}
+            <KpiChip
+              label="미처리"
+              value={String(documentKpi.total - documentKpi.processed)}
+              tone={documentKpi.total - documentKpi.processed > 0 ? "neutral" : "green"}
+            />
+            {documentKpi.processed > 0 && (
+              <KpiChip
+                label="거래처 완전"
+                value={`${documentKpi.partyFull}/${documentKpi.processed}`}
+                sub={pct(documentKpi.partyFull, documentKpi.processed)}
+                tone={toneOf(documentKpi.partyFull, documentKpi.processed)}
+              />
+            )}
+            {documentKpi.gtFieldTotal > 0 && (
+              <KpiChip
+                label="GT 일치"
+                value={pct(documentKpi.gtFieldMatch, documentKpi.gtFieldTotal)}
+                sub={`${documentKpi.gtFieldMatch}/${documentKpi.gtFieldTotal} 필드`}
+                tone={toneOf(documentKpi.gtFieldMatch, documentKpi.gtFieldTotal)}
               />
             )}
           </KpiSection>
@@ -3432,6 +3558,33 @@ function DocTypeSummarySection({
               <tbody>
                 {financeRows.map((row) => (
                   <tr key={row.documentType}>{renderStatusCells(row, "finance")}</tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* ── 거래명세서 sub-table (document 전용 컬럼) ── */}
+        {documentRows.length > 0 && (
+          <div style={{ overflowX: "auto" }}>
+            {renderSubGroupHeader("거래명세서", documentTotal, "#ca8a04")}
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+              <thead>
+                <tr>
+                  <th style={thSm}>documentType</th>
+                  <th style={{ ...thSm, textAlign: "center" }}>total</th>
+                  <th style={{ ...thSm, textAlign: "center" }}>selected</th>
+                  <th style={{ ...thSm, textAlign: "center" }}>suppressed</th>
+                  <th style={{ ...thSm, textAlign: "center" }}>not_run</th>
+                  <th style={{ ...thSm, textAlign: "center" }}>선택률</th>
+                  {DOCUMENT_FIELD_META.map((col) => (
+                    <th key={col.key} style={{ ...thSm, textAlign: "center" }}>{col.shortLabel}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {documentRows.map((row) => (
+                  <tr key={row.documentType}>{renderStatusCells(row, "document")}</tr>
                 ))}
               </tbody>
             </table>

@@ -13,6 +13,14 @@ _COMPANY_ANCHOR_RE = re.compile(
 )
 _REP_ANCHOR_RE = re.compile(r"\uc131\s*\uba85|\ub300\ud45c\uc790(?:\uba85)?")
 _ADDR_ANCHOR_RE = re.compile(r"\uc8fc\s*\uc18c|\uc18c\uc7ac\uc9c0|\uc0ac\uc5c5\uc7a5")
+_BUYER_PARTY_LABEL_RE = re.compile(r"\uacf5\s*\uae09\s*\ubc1b|\uacf5.{0,4}\ub294\s*\uc790|\ubc1b\s*\ub294\s*\uc790|\uac70\s*\ub798\s*\ucc98|\uadc0\s*\ud558|\uc218\s*\uc2e0")
+_SUPPLIER_PARTY_LABEL_RE = re.compile(r"\uacf5\s*\uae09\s*\uc790|\ubc1c\s*\ud589\s*\ucc98|\ub9e4\s*\ucd9c\s*\ucc98")
+_ADDRESS_TOKEN_RE = re.compile(
+    r"\uc11c\uc6b8|\uacbd\uae30|\uc778\ucc9c|\ubd80\uc0b0|\ub300\uad6c|\uad11\uc8fc|\ub300\uc804|"
+    r"\uc6b8\uc0b0|\uc138\uc885|\uac15\uc6d0|\ucda9\ubd81|\ucda9\ub0a8|\uc804\ubd81|\uc804\ub0a8|"
+    r"\uacbd\ubd81|\uacbd\ub0a8|\uc81c\uc8fc|[\uac00-\ud7a3]{1,10}(?:\uc2dc|\uad70|\uad6c|\ub3d9|\uc74d|\uba74|\ub9ac)|"
+    r"[\uac00-\ud7a3]{1,16}(?:\ub85c|\uae38|\ubc88\uae38)"
+)
 _DATE_RE = re.compile(
     r"(?<!\d)(\d{4})\s*\ub144\s*(\d{1,2})\s*\uc6d4\s*(\d{1,2})\s*\uc77c"
     r"|(?<!\d)(\d{4})[.\-/]\s*(\d{1,2})[.\-/]\s*(\d{1,2})(?!\d)"
@@ -69,6 +77,44 @@ _ADDRESS_HINT_RE = re.compile(
     r"\uc6b8\uc0b0|\uc138\uc885|\uac15\uc6d0|\ucda9\ubd81|\ucda9\ub0a8|\uc804\ubd81|\uc804\ub0a8|"
     r"\uacbd\ubd81|\uacbd\ub0a8|\uc81c\uc8fc"
 )
+_HANGUL_RE = re.compile(r"[\uac00-\ud7a3]")
+_ASCII_WORD_RE = re.compile(r"[A-Za-z]{2,}")
+_TABLE_BUSINESS_CONTACT_RE = re.compile(
+    r"\uc0ac\s*\uc5c5\s*\uc790\s*\ubc88\s*\ud638|\ub4f1\s*\ub85d\s*\ubc88\s*\ud638|"
+    r"\ub300\s*\ud45c\s*\uc790|\uc8fc\s*\uc18c|\uc804\s*\ud654|\uc774\s*\uba54\s*\uc77c|"
+    r"\uc5c5\s*\ud0dc|\uc885\s*\ubaa9|\uacf5\s*\uae09\s*\uc790|\uacf5\s*\uae09\s*\ubc1b\s*\ub294\s*\uc790|"
+    r"\uac70\s*\ub798\s*\ucc98|\uadc0\s*\ud558|\uc0ac\s*\uc5c5\s*\uc7a5|\uacc4\s*\uc88c\s*\ubc88\s*\ud638|"
+    r"\uc601\s*\uc5c5\s*\uc9c0\s*\uc810|\uc601\s*\uc5c5\s*\uc0ac\s*\uc6d0|\ub2f4\s*\ub2f9\s*\uc790|"
+    r"\uc0c1\s*\ud638|\ubc95\s*\uc778\s*\uba85|"
+    r"\uc5f0\s*\ub77d\s*\ucc98|TEL|FAX|E-?mail|Page|Fa:",
+    re.I,
+)
+_TABLE_SUMMARY_STRONG_RE = re.compile(
+    r"\ud569\s*\uacc4|\ucd1d\s*\uacc4|\ucd1d\s*\ud569\s*\uacc4|\uacf5\s*\uae09\s*\uac00\s*\uc561|"
+    r"\uacf5\s*\uae09\s*\uae08\s*\uc561|\uacf5\s*\uae09\s*\ub300\s*\uac00|\uc138\s*\uc561|"
+    r"\ubd80\s*\uac00\s*\uc138|\ubd80\s*\uac00\s*\uac00\s*\uce58\s*\uc138|\uc138\s*\uc5ed|\uccad\s*\uad6c\s*\uae08\s*\uc561|"
+    r"\uacb0\s*\uc81c\s*\uae08\s*\uc561|\ucd1d\s*\uacb0\s*\uc81c\s*\uc561|\uc794\s*\uc561|\ub204\s*\uacc4|"
+    r"\ubbf8\s*\uc218|\uc778\s*\uc218\s*\ud655\s*\uc778|\ub2f4\s*\ub2f9\s*\uc790|TOTAL",
+    re.I,
+)
+_TABLE_HEADER_STRONG_RE = re.compile(
+    r"\ud488\s*\uba85|\ud488\s*\ubaa9|\ud488\s*\ubaa9\s*\uba85|\uaddc\s*\uaca9|\uc218\s*\ub7c9|"
+    r"\ub2e8\s*\uc704|\ub2e8\s*\uac00|\uacf5\s*\uae09\s*\uac00\s*\uc561|\uacf5\s*\uae09\s*\uae08\s*\uc561|"
+    r"\uae08\s*\uc561|\uc138\s*\uc561|\ubd80\s*\uac00\s*\uc138|\ud569\s*\uacc4|\ube44\s*\uace0|"
+    r"\uc81c\s*\uc870\s*\ubc88\s*\ud638|\uc720\s*\ud6a8\s*\uae30\s*\uac04|\ubcf4\s*\ud5d8\s*\ucf54\s*\ub4dc|"
+    r"\ud488\s*\ubaa9\s*\ucf54\s*\ub4dc",
+    re.I,
+)
+_TABLE_STANDALONE_LABEL_RE = re.compile(
+    r"^(?:\ud488\s*\uba85|\ud488\s*\ubaa9|\ud488\s*\ubaa9\s*\uba85|\uaddc\s*\uaca9|\uc218\s*\ub7c9|"
+    r"\ub2e8\s*\uc704|\ub2e8\s*\uac00|\uacf5\s*\uae09\s*\uac00\s*\uc561|\uacf5\s*\uae09\s*\uae08\s*\uc561|"
+    r"\uae08\s*\uc561|\uc138\s*\uc561|\ubd80\s*\uac00\s*\uc138|\ud569\s*\uacc4|\ube44\s*\uace0|"
+    r"\uc0c1\s*\ud638|\uc8fc\s*\uc18c|\uc131\s*\uba85|\uc0ac\s*\uc5c5\s*\uc790\s*\ubc88\s*\ud638|"
+    r"\uac70\s*\ub798\s*\uc77c\s*\uc790|\uc8fc\s*\ubb38\s*\uc77c\s*\uc790|\uc5f0\s*\ub77d\s*\ucc98|"
+    r"\ucc3d\s*\uace0|\uc601\s*\uc5c5\s*\uc0ac\s*\uc6d0|\uc601\s*\uc5c5\s*\uc9c0\s*\uc810)$",
+    re.I,
+)
+_SPEC_ONLY_RE = re.compile(r"^\d+(?:[.,]\d+)?(?:mg|ml|g|kg|t|tab|cap|caps?|c|\uc815|\ucea1\uc290|\ud3ec|\ubcd1|box|ea|p|dose|mI)(?:\([^)]+\))?$", re.I)
 
 
 @dataclass
@@ -236,10 +282,60 @@ def _table_token_count(text: str) -> int:
     return len(_TABLE_HEADER_TOKEN_RE.findall(compact))
 
 
+def _text_has_name_signal(text: str) -> bool:
+    return bool(_HANGUL_RE.search(text or "") or _ASCII_WORD_RE.search(text or ""))
+
+
+def _is_business_contact_line(text: str) -> bool:
+    compact = re.sub(r"\s+", "", text or "")
+    if not compact:
+        return True
+    if _TABLE_STANDALONE_LABEL_RE.fullmatch(compact):
+        return True
+    return bool(
+        _TABLE_BUSINESS_CONTACT_RE.search(text)
+        or _ADDRESS_HINT_RE.search(text)
+        or re.search(r"[\uac00-\ud7a3]{1,12}(?:\ub85c|\uae38)\s*\d", compact)
+        or re.search(r"\d+\s*\([\uac00-\ud7a3]{1,12}\ub3d9\)", compact)
+        or _BIZ_RE.search(_canonical_digits(text))
+        or _PHONE_RE.search(text)
+        or re.fullmatch(r"(?:\d{1,4}[-./]){2,}\d{1,6}", compact)
+    )
+
+
+def _is_table_header_row(text: str) -> bool:
+    compact = re.sub(r"\s+", "", text or "")
+    if not compact:
+        return True
+    if _TABLE_STANDALONE_LABEL_RE.fullmatch(compact):
+        return True
+    token_count = len(_TABLE_HEADER_STRONG_RE.findall(compact))
+    digit_count = len(re.findall(r"\d", compact))
+    return token_count >= 2 and digit_count <= 2
+
+
+def _is_summary_row_for_items(text: str) -> bool:
+    compact = re.sub(r"\s+", "", text or "")
+    if not compact:
+        return True
+    if not _TABLE_SUMMARY_STRONG_RE.search(text):
+        return False
+    if _is_table_header_row(text):
+        return True
+    name_chars = len(re.findall(r"[\uac00-\ud7a3A-Za-z]", compact))
+    amount_count = len(_amount_values(text))
+    # A strong summary label with mostly numeric content should not become an item row.
+    if amount_count >= 1 and name_chars <= 14:
+        return True
+    return bool(re.fullmatch(r"(?:TOTAL|[\uac00-\ud7a3\s]*(?:\ud569\uacc4|\ucd1d\uacc4|VAT|TOTAL)[\uac00-\ud7a3\s]*)[:\-\s0-9,.]*", text, re.I))
+
+
 def _is_bad_table_data_row(text: str) -> bool:
     compact = re.sub(r"\s+", "", text or "")
     return bool(
         not compact
+        or _is_business_contact_line(text)
+        or _is_summary_row_for_items(text)
         or _HEADER_LABEL_RE.search(text)
         or _ADDRESS_HINT_RE.search(text)
         or _TOTAL_AMOUNT_ANCHOR_RE.search(text)
@@ -255,13 +351,53 @@ def _is_table_header_only_row(text: str) -> bool:
     compact = re.sub(r"\s+", "", text or "")
     if not compact:
         return True
+    if _is_table_header_row(text):
+        return True
     token_count = _table_token_count(compact)
     digit_count = len(re.findall(r"\d", compact))
     return token_count >= 2 and digit_count <= 1
 
 
+def _is_numeric_detail_line(text: str) -> bool:
+    compact = re.sub(r"\s+", "", text or "")
+    if not compact or _is_business_contact_line(text) or _is_table_header_row(text) or _is_summary_row_for_items(text):
+        return False
+    digit_count = len(re.findall(r"\d", compact))
+    if digit_count == 0:
+        return False
+    alpha_count = len(re.findall(r"[A-Za-z\uac00-\ud7a3]", compact))
+    if _amount_values(text):
+        return True
+    if _SPEC_ONLY_RE.fullmatch(compact):
+        return True
+    if re.fullmatch(r"[A-Z0-9][A-Z0-9_\-/.]{1,24}", compact, re.I):
+        return True
+    return digit_count >= max(1, alpha_count)
+
+
+def _is_probable_item_name_line(text: str) -> bool:
+    compact = re.sub(r"\s+", "", text or "")
+    if len(compact) < 2 or len(compact) > 90:
+        return False
+    if _is_business_contact_line(text) or _is_table_header_row(text) or _is_summary_row_for_items(text):
+        return False
+    if _COMPANY_HINT_RE.search(text) and not re.search(r"mg|ml|g|T|C|BOX|CAP|TAB|\uc815|\ucea1|\uc561|\ud06c\ub9bc", text, re.I):
+        return False
+    if re.fullmatch(r"[0-9,.\-_/()]+", compact):
+        return False
+    if _SPEC_ONLY_RE.fullmatch(compact):
+        return False
+    if _is_code_only_table_row(text):
+        return False
+    if re.fullmatch(r"[A-Z0-9_\-/.]{2,24}", compact, re.I) and not re.search(r"TABLET|CAPSULE|CAPS?|ABLET|TAB|CAP", compact, re.I):
+        return False
+    return _text_has_name_signal(text)
+
+
 def _is_item_name_like(text: str) -> bool:
     compact = re.sub(r"\s+", "", text or "")
+    if _is_probable_item_name_line(text):
+        return True
     if len(compact) < 3 or len(compact) > 70:
         return False
     if _is_bad_table_data_row(text) or _is_table_header_only_row(text):
@@ -279,8 +415,11 @@ def _is_item_name_like(text: str) -> bool:
 
 def _is_code_only_table_row(text: str) -> bool:
     compact = re.sub(r"\s+", "", text or "")
+    if re.search(r"TABLET|ABLET|CAPSULE|CAPS?|TAB|CAP|\ucea1\uc290|\ucea1\uc2ac|mg|ml", text or "", re.I):
+        return False
     return bool(
         re.fullmatch(r"[A-Z]{2,}[A-Z0-9_\-/.]{2,18}", compact)
+        or re.fullmatch(r"[A-Z]+-[A-Z0-9_\-/.]{2,18}", compact)
         or re.fullmatch(r"\d{2,5}[-/.]\d{2,5}", compact)
     )
 
@@ -358,6 +497,194 @@ def _summarize_table_row(text: str) -> str:
     head = parts[:4]
     tail = [p for p in parts[4:] if re.search(r"\d|,|[A-Za-z]", p)][:8]
     return " ".join(head + tail)[:120]
+
+
+def _has_product_hint(text: str) -> bool:
+    return bool(
+        re.search(
+            r"(?:\uc815|\uc561|\ud06c\ub9bc|\uc2dc\ub7fd|\uac94)$|"
+            r"\ucea1\uc290|\ucea1\uc2ac|TABLET|ABLET|CAPSULE|CAPS?|"
+            r"\d+(?:[.,]\d+)?\s*(?:mg|ml|g|kg|t|c|p|tab|cap|dose)",
+            text or "",
+            re.I,
+        )
+    )
+
+
+def _is_compact_catalog_code(text: str) -> bool:
+    compact = re.sub(r"[\s._\-/]+", "", text or "")
+    return bool(
+        not _HANGUL_RE.search(compact)
+        and re.fullmatch(r"[A-Z]{2,}\d+[A-Z0-9]{0,10}", compact, re.I)
+        and not re.search(r"TABLET|ABLET|CAPSULE|CAPS?|TAB|CAP", text or "", re.I)
+    )
+
+
+def _dedupe_table_rows(rows: list[str]) -> list[str]:
+    result: list[str] = []
+    seen: set[str] = set()
+    for text in rows:
+        value = _clean_value(text)
+        if not value:
+            continue
+        key = re.sub(r"[\s,._/\-]+", "", _canonical_digits(value)).lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        result.append(value)
+    return result
+
+
+def _item_name_from_row_text(text: str) -> str:
+    parts = [part for part in re.split(r"\s+", text or "") if part]
+    name_parts: list[str] = []
+    for part in parts:
+        compact = re.sub(r"[^\w\uac00-\ud7a3]", "", part)
+        if not compact:
+            continue
+        if _amount_values(part) or re.fullmatch(r"\d+(?:[.,]\d+)?", compact):
+            break
+        if re.fullmatch(r"[A-Z0-9][A-Z0-9_\-/.]{1,24}", compact, re.I) and name_parts:
+            break
+        name_parts.append(part)
+        if len(" ".join(name_parts)) >= 60:
+            break
+    value = _clean_value(" ".join(name_parts))
+    return value or _clean_value(text)[:60]
+
+
+def _numbers_from_row_text(text: str) -> list[str]:
+    values: list[str] = []
+    for match in re.finditer(r"(?<!\d)(?:\u20a9\s*)?(\d+(?:[,.]\d{3})+|\d+(?:[.]\d+)?)(?:\s*\uc6d0)?(?!\d)", _canonical_digits(text or "")):
+        raw = match.group(1)
+        digits = re.sub(r"\D", "", raw)
+        if not digits:
+            continue
+        if re.fullmatch(r"(?:19|20)\d{6}", digits):
+            continue
+        values.append(f"{int(digits):,}" if len(digits) >= 4 else raw)
+    return values
+
+
+def _item_dict_from_row_text(text: str) -> dict[str, str]:
+    amounts = _amount_values(text)
+    numbers = _numbers_from_row_text(text)
+    quantity = ""
+    unit_price = ""
+    if numbers:
+        small_numbers = [value for value in numbers if int(re.sub(r"\D", "", value) or "0") <= 10000]
+        if small_numbers:
+            quantity = small_numbers[0]
+    if len(amounts) >= 2:
+        unit_price = amounts[-2]
+    return {
+        "itemName": _item_name_from_row_text(text),
+        "quantity": quantity,
+        "unitPrice": unit_price,
+        "amount": amounts[-1] if amounts else "",
+        "rawText": _summarize_table_row(text),
+    }
+
+
+def _is_valid_final_item_text(text: str) -> bool:
+    value = _clean_value(text)
+    if not value:
+        return False
+    name = _item_name_from_row_text(value)
+    compact_name = re.sub(r"\s+", "", name)
+    if len(compact_name) < 2:
+        return False
+    product_hint = _has_product_hint(value)
+    if _is_compact_catalog_code(value) or _is_compact_catalog_code(name):
+        return False
+    if _COMPANY_HINT_RE.search(value) and not product_hint:
+        return False
+    if re.search(r"\(\s*\uc8fc\s*\)|\uc8fc\s*\)|\uc8fc\uc2dd|\ud68c\uc0ac", value):
+        return False
+    if _is_table_header_row(name) or _is_business_contact_line(name) or _is_summary_row_for_items(name):
+        return False
+    if _is_code_only_table_row(value) or (_is_code_only_table_row(name) and not product_hint):
+        return False
+    if _is_numeric_detail_line(value) and not (product_hint or _is_probable_item_name_line(name)):
+        return False
+    if re.search(
+        r"^(?:\uc804?\uc77c?\uc794\uc561|\uc794\uc561|\uc8fc\ubb38\uc11c|\uc8fc\ubb38NO|\ub2e8\uac00|\ub2e8\ubb50|"
+        r"\uc218\ub7c9|\uacf5\uae09|\uc138\uc561|\ud569\uacc4|\uac70\ub798\uc77c\uc790|\uc8fc\ubb38\uc77c\uc790|"
+        r"\ud488\ubaa9\ucf54\ub4dc|\uacc4\uc57d\ucf54\ub4dc|\uac70\ub798\uba85\uc138|\ub2f4\uac00|\ub204\uacc4|"
+        r".*(?:\uac70\ub798\uae08\uc561|\uc794\uc561|\uc794\uace0|\uae08\uc561)$)",
+        compact_name,
+        re.I,
+    ):
+        return False
+    if re.search(r"[\uac00-\ud7a3]{2,4}[,/][\uac00-\ud7a3]{2,4}", name):
+        return False
+    if len(compact_name) <= 4 and not product_hint:
+        return False
+    if re.fullmatch(r"[0-9A-Za-z\uac00-\ud7a3]{1,3}", compact_name) and not _amount_values(value):
+        return False
+    if re.fullmatch(r"[\uac00-\ud7a3]{1,3}", compact_name) and not re.search(
+        r"(?:\uc815|\uc561|\ud06c\ub9bc)$|\ucea1\uc290|\ucea1\uc2ac|mg|ml|\d\s*g|tab|cap|box|dose",
+        value,
+        re.I,
+    ):
+        return False
+    if re.search(r"^(?:\uc138\s*[\uc561\uc5ed\ud45c]|\uacf5\s*\uae09|\ud569\s*\uacc4|TOTAL)$", compact_name, re.I):
+        return False
+    return _text_has_name_signal(name) and (product_hint or bool(_amount_values(value)) or len(re.findall(r"\d", value)) >= 2)
+
+
+def _collect_numeric_tail_rows(rows: list[list[OcrLine]], start_idx: int, page_h: float) -> list[tuple[int, str]]:
+    tail: list[tuple[int, str]] = []
+    base_y = _row_center_y(rows[start_idx])
+    for idx in range(start_idx + 1, min(len(rows), start_idx + 8)):
+        row_y = _row_center_y(rows[idx])
+        if row_y - base_y > page_h * 0.16:
+            break
+        text = _row_text(rows[idx])
+        if _is_table_header_row(text) or _is_business_contact_line(text) or _is_summary_row_for_items(text):
+            break
+        if _has_product_hint(text) and _is_probable_item_name_line(text):
+            break
+        if _is_numeric_detail_line(text):
+            tail.append((idx, text))
+            if len(tail) >= 5 or _amount_values(text):
+                # Continue one more nearby numeric row for unit price/amount pairs.
+                if len(tail) >= 2:
+                    break
+        elif tail:
+            break
+    return tail
+
+
+def _extract_table_row_texts(rows: list[list[OcrLine]], page_h: float, header_index: int) -> list[str]:
+    data_rows: list[str] = []
+    consumed_indices: set[int] = set()
+    start_idx = max(header_index + 1, 0) if header_index >= 0 else 0
+    for idx in range(start_idx, len(rows)):
+        if idx in consumed_indices:
+            continue
+        row = rows[idx]
+        row_y = _row_center_y(row)
+        if row_y < page_h * 0.16 or row_y > page_h * 0.92:
+            continue
+        text = _row_text(row)
+        if _is_table_header_row(text) or _is_business_contact_line(text) or _is_summary_row_for_items(text):
+            continue
+        candidate = ""
+        if _is_probable_item_name_line(text):
+            tail = _collect_numeric_tail_rows(rows, idx, page_h)
+            tail_texts = [item[1] for item in tail]
+            if tail_texts or re.search(r"\d", text) or _has_product_hint(text):
+                candidate = " ".join([text] + tail_texts)
+                consumed_indices.update(item[0] for item in tail)
+        elif re.search(r"\d", text) and _text_has_name_signal(text) and _table_row_score(text) > 1:
+            candidate = text
+        if not candidate:
+            continue
+        if not _has_product_hint(candidate) and not _amount_values(candidate) and not any(_is_numeric_detail_line(part) for part in candidate.splitlines()):
+            continue
+        data_rows.append(_summarize_table_row(candidate))
+    return [text for text in _dedupe_table_rows(data_rows) if _is_valid_final_item_text(text)]
 
 
 def _find_table_header_y(lines: list[OcrLine], page_h: float) -> float | None:
@@ -563,10 +890,10 @@ def _assign_unique_fallbacks(
         remaining.sort(key=lambda item: item[0])
         supplier["company"] = remaining[0][1]
         buyer["company"] = remaining[-1][1]
-    elif not supplier["company"] and len(remaining) >= 2:
+    elif not supplier["company"] and remaining:
         remaining.sort(key=lambda item: item[0])
         supplier["company"] = remaining[0][1]
-    elif not buyer["company"] and len(remaining) >= 2:
+    elif not buyer["company"] and remaining:
         remaining.sort(key=lambda item: item[0])
         buyer["company"] = remaining[-1][1]
 
@@ -590,6 +917,252 @@ def _rep_near(lines: list[OcrLine], x_center: float, y_center: float, page_w: fl
         if abs(line.cx - x_center) / max(page_w, 1) <= 0.35 and abs(line.cy - y_center) / max(page_h, 1) <= 0.22
     ]
     return _value_after_anchor(scoped, _REP_ANCHOR_RE, "representative")
+
+
+def _is_representative_candidate(text: str) -> bool:
+    value = _clean_value(text)
+    value = re.sub(r"^(?:\ub300\s*\ud45c(?:\uc790|\uc790\uba85)?|\uc131\s*\uba85|\ub300\s*\ud45c\s*\uc774\s*\uc0ac)\s*[:：]?", "", value).strip()
+    compact = re.sub(r"\s+", "", value)
+    if not compact or re.search(r"\d", compact):
+        return False
+    if _TABLE_STANDALONE_LABEL_RE.fullmatch(compact) or _TABLE_BUSINESS_CONTACT_RE.search(value):
+        return False
+    if _COMPANY_HINT_RE.search(value) or _ADDRESS_HINT_RE.search(value) or re.search(r"(?:\ub85c|\uae38|\ubc88\uae38)\s*\d*|\d+\s*\([\uac00-\ud7a3]{1,12}\ub3d9\)", value):
+        return False
+    if re.search(
+        r"\ud2b9\uae30|\uae30\ud0c0|\uc5f0\ub77d|\ubd80\uac00|\ubc30\uc1a1|\ud488\ubaa9|\ub2f4\ub2f9|\ucf54\ub4dc|"
+        r"\uacc4\uc57d|\uc794\uc561|\uc138\ud45c|\uac70\ub798\uba85\uc138|\uc0c1\ud750|\uc0c1\ud638|\uc5c5\ud14c|\uc5c5\ud0dc|\ucd1d\ubaa9|\ud1b5\ubaa9|"
+        r"\uc591\uc57d|\ub3c4\uba54|\uc6d4\ub9d0|\ub9e4\uc7a5|\uc74c\uc2dd|\uc678\uc57d|\uacf5\uae09",
+        value,
+    ):
+        return False
+    if re.fullmatch(r"[\uac00-\ud7a3]{2,5}(?:[,/][\uac00-\ud7a3]{2,5})?", compact):
+        return True
+    return bool(re.fullmatch(r"[A-Z][A-Z\s.]{3,30}", value))
+
+
+def _clean_representative_candidate(text: str) -> str:
+    value = _clean_value(text)
+    match = _REP_ANCHOR_RE.search(value)
+    if match:
+        value = value[match.end() :]
+    value = re.sub(r"^(?:\ub300\s*\ud45c(?:\uc790|\uc790\uba85)?|\uc131\s*\uba85|\ub300\s*\ud45c\s*\uc774\s*\uc0ac)\s*[:：]?", "", value).strip()
+    value = re.sub(r"\(\s*\uc778\s*\)|[\[\]()]|[:：]", "", value).strip()
+    value = re.sub(r"^([\uac00-\ud7a3]{2,5})\s*\uc778$", r"\1", value).strip()
+    return value if _is_representative_candidate(value) else ""
+
+
+def _representative_from_scope(lines: list[OcrLine]) -> str:
+    ordered = sorted(lines, key=lambda item: (item.y, item.x))
+    for idx, line in enumerate(ordered):
+        if not _REP_ANCHOR_RE.search(line.text):
+            continue
+        same = _clean_representative_candidate(_REP_ANCHOR_RE.sub("", line.text, count=1))
+        if same:
+            return same
+        for peer in _same_row_candidates(ordered, line):
+            candidate = _clean_representative_candidate(peer.text)
+            if candidate:
+                return candidate
+        for nxt in ordered[idx + 1 : idx + 5]:
+            candidate = _clean_representative_candidate(nxt.text)
+            if candidate:
+                return candidate
+    candidates: list[tuple[int, str]] = []
+    for line in ordered:
+        candidate = _clean_representative_candidate(line.text)
+        if candidate:
+            score = 10
+            if "," in candidate or "/" in candidate:
+                score += 12
+            if re.fullmatch(r"[\uac00-\ud7a3]{2,3}", candidate):
+                score += 4
+            candidates.append((score, candidate))
+    if not candidates:
+        return ""
+    candidates.sort(key=lambda item: -item[0])
+    return candidates[0][1]
+
+
+def _should_replace_representative(current: str, candidate: str) -> bool:
+    if not candidate:
+        return False
+    if not current:
+        return True
+    return not _is_representative_candidate(current)
+
+
+def _is_address_candidate_line(text: str) -> bool:
+    value = _clean_value(text)
+    compact = re.sub(r"\s+", "", value)
+    if len(compact) < 5:
+        return False
+    if _BIZ_RE.search(_canonical_digits(value)) or _PHONE_RE.search(value):
+        return False
+    if _COMPANY_HINT_RE.search(value) or _REP_ANCHOR_RE.search(value):
+        return False
+    if _TABLE_SUMMARY_RE.search(value) or _TABLE_HEADER_TOKEN_RE.search(value) or _has_product_hint(value):
+        return False
+    if _amount_values(value) and not _ADDRESS_TOKEN_RE.search(value):
+        return False
+    return bool(_ADDRESS_TOKEN_RE.search(value) or re.search(r"\d+\s*\([\uac00-\ud7a3]{1,12}\ub3d9\)", compact))
+
+
+def _clean_address_candidate_line(text: str) -> str:
+    value = _clean_value(text)
+    value = re.sub(r"^(?:\uc8fc\s*\uc18c|\uc18c\s*\uc7ac\s*\uc9c0|\uc0ac\s*\uc5c5\s*\uc7a5(?:\s*\uc8fc\s*\uc18c)?)\s*[:：]?", "", value).strip()
+    return value if _is_address_candidate_line(value) else ""
+
+
+def _address_from_scope(lines: list[OcrLine]) -> str:
+    ordered = sorted(lines, key=lambda item: (item.y, item.x))
+    candidates: list[tuple[int, int, str]] = []
+    for idx, line in enumerate(ordered):
+        candidate = _clean_address_candidate_line(line.text)
+        if not candidate:
+            continue
+        score = len(_ADDRESS_TOKEN_RE.findall(candidate)) * 4 + min(len(candidate), 50)
+        if _ADDR_ANCHOR_RE.search(line.text):
+            score += 10
+        candidates.append((score, idx, candidate))
+    if not candidates:
+        return ""
+    candidates.sort(key=lambda item: (-item[0], item[1]))
+    _, idx, first = candidates[0]
+    parts = [first]
+    for near in ordered[idx + 1 : idx + 3]:
+        extra = _clean_address_candidate_line(near.text)
+        if extra and extra not in parts:
+            parts.append(extra)
+    if len(parts) == 1:
+        for near in reversed(ordered[max(0, idx - 2) : idx]):
+            extra = _clean_address_candidate_line(near.text)
+            if extra and extra not in parts:
+                parts.insert(0, extra)
+                break
+    if len(parts) >= 2 and _ADDRESS_HINT_RE.search(parts[1]) and not _ADDRESS_HINT_RE.search(parts[0]):
+        parts[0], parts[1] = parts[1], parts[0]
+    return _clean_value(" ".join(parts))
+
+
+def _party_for_biz_value(
+    supplier: dict[str, str],
+    buyer: dict[str, str],
+    value: str,
+    fallback_role: str,
+) -> tuple[str, dict[str, str]]:
+    if supplier.get("bizNumber") == value:
+        return "supplier", supplier
+    if buyer.get("bizNumber") == value:
+        return "buyer", buyer
+    return (fallback_role, supplier if fallback_role == "supplier" else buyer)
+
+
+def _looks_like_customer_company(company: str) -> bool:
+    value = company or ""
+    return bool(re.search(r"\uc9c0\s*\uc810|\uac70\s*\ub798\s*\ucc98|\ub0a9\s*\ud488\s*\ucc98|\uadc0\s*\ud558|\uc601\s*\uc5c5\s*\uc18c", value))
+
+
+def _rebalance_customer_company_hint(supplier: dict[str, str], buyer: dict[str, str], debug: dict[str, Any]) -> None:
+    supplier_company = supplier.get("company", "")
+    buyer_company = buyer.get("company", "")
+    if not supplier_company or not _looks_like_customer_company(supplier_company):
+        return
+    if buyer_company and _looks_like_customer_company(buyer_company):
+        return
+
+    if buyer.get("bizNumber"):
+        supplier["company"], buyer["company"] = buyer_company, supplier_company
+        debug["applied"].append("company.swap_customer_hint")
+        return
+
+    moved = {
+        "company": supplier.get("company", ""),
+        "bizNumber": supplier.get("bizNumber", ""),
+        "representative": supplier.get("representative", ""),
+        "address": supplier.get("address", ""),
+    }
+    supplier["company"] = buyer_company
+    supplier["bizNumber"] = ""
+    supplier["representative"] = ""
+    supplier["address"] = ""
+    buyer.update(moved)
+    debug["applied"].append("party.move_customer_hint")
+
+
+def _ordered_scope(lines: list[OcrLine], start_idx: int, end_idx: int) -> list[OcrLine]:
+    ordered = sorted(lines, key=lambda item: (item.y, item.x))
+    return ordered[max(0, start_idx) : min(len(ordered), end_idx)]
+
+
+def _line_indices(lines: list[OcrLine]) -> dict[int, int]:
+    return {id(line): idx for idx, line in enumerate(sorted(lines, key=lambda item: (item.y, item.x)))}
+
+
+def _apply_party_block_refinements(
+    supplier: dict[str, str],
+    buyer: dict[str, str],
+    all_lines: list[OcrLine],
+    bizs: list[tuple[float, float, str, OcrLine]],
+    page_h: float,
+) -> dict[str, Any]:
+    ordered = sorted(all_lines, key=lambda item: (item.y, item.x))
+    index_by_id = _line_indices(all_lines)
+    debug: dict[str, Any] = {"mode": "", "applied": []}
+    if not bizs:
+        return debug
+    sorted_bizs = sorted(bizs, key=lambda item: index_by_id.get(id(item[3]), 0))
+    biz_indices = [index_by_id.get(id(item[3]), 0) for item in sorted_bizs]
+
+    if len(sorted_bizs) >= 2 and biz_indices[1] - biz_indices[0] <= 6:
+        scope_end = min(len(ordered), biz_indices[1] + 26)
+        header_scope = ordered[biz_indices[0] : scope_end]
+        blob = " ".join(line.text for line in header_scope)
+        role_order = ["buyer", "supplier"] if _BUYER_PARTY_LABEL_RE.search(blob) and not _SUPPLIER_PARTY_LABEL_RE.search(blob) else ["supplier", "buyer"]
+        reps = [_clean_representative_candidate(line.text) for line in header_scope]
+        reps = [item for item in reps if item]
+        addresses = [_clean_address_candidate_line(line.text) for line in header_scope]
+        addresses = [item for item in addresses if item]
+        debug.update({"mode": "shared_stacked_block", "roleOrder": role_order, "reps": reps, "addresses": addresses})
+        role_to_party = {"supplier": supplier, "buyer": buyer}
+        for role, biz in zip(role_order, sorted_bizs[:2]):
+            role_to_party[role]["bizNumber"] = biz[2]
+        for pos, role in enumerate(role_order):
+            party = role_to_party[role]
+            duplicate_rep = party.get("representative", "") and any(
+                party.get("representative") == other.get("representative")
+                for other_role, other in role_to_party.items()
+                if other_role != role
+            )
+            if pos < len(reps) and (_should_replace_representative(party.get("representative", ""), reps[pos]) or duplicate_rep):
+                party["representative"] = reps[pos]
+                debug["applied"].append(f"{role}.representative")
+            if pos < len(addresses):
+                party["address"] = addresses[pos]
+                debug["applied"].append(f"{role}.address")
+        _rebalance_customer_company_hint(supplier, buyer, debug)
+        return debug
+
+    for pos, biz in enumerate(sorted_bizs[:2]):
+        idx = biz_indices[pos]
+        prev_idx = biz_indices[pos - 1] if pos > 0 else -1
+        next_idx = biz_indices[pos + 1] if pos + 1 < len(biz_indices) else len(ordered)
+        start = max(prev_idx + 1, idx - 12)
+        end = min(next_idx, idx + 18)
+        scope = ordered[start:end]
+        fallback_role = "supplier" if pos == 0 else "buyer"
+        role, party = _party_for_biz_value(supplier, buyer, biz[2], fallback_role)
+        rep = _representative_from_scope(scope)
+        addr = _address_from_scope(scope)
+        if _should_replace_representative(party.get("representative", ""), rep):
+            party["representative"] = rep
+            debug["applied"].append(role + ".representative")
+        if addr:
+            party["address"] = addr
+            debug["applied"].append(role + ".address")
+    debug["mode"] = "per_biz_window"
+    _rebalance_customer_company_hint(supplier, buyer, debug)
+    return debug
 
 
 def _extract_party_fields(
@@ -666,10 +1239,13 @@ def _extract_party_fields(
     if not buyer["address"]:
         buyer["address"] = _value_after_anchor([l for l in header_lines if l.cx > split_x], _ADDR_ANCHOR_RE, "address")
 
+    block_debug = _apply_party_block_refinements(supplier, buyer, all_lines, bizs, page_h)
+
     return supplier, buyer, {
         "companies": companies,
         "bizs": [(round(x), round(y), value) for x, y, value, _ in bizs],
         "split_x": split_x,
+        "block_refinement": block_debug,
     }
 
 
@@ -859,6 +1435,110 @@ def _summary_candidate_base_score(candidate: SummaryAmountCandidate, footer_star
 def _amounts_close(left: int, right: int) -> bool:
     tolerance = max(2_500, int(max(left, right) * 0.001))
     return abs(left - right) <= tolerance
+
+
+def _summary_amount_pool(lines: list[OcrLine], min_value: int = 10_000) -> list[tuple[int, str, int, float, str]]:
+    rows = _group_rows(lines)
+    pool: list[tuple[int, str, int, float, str]] = []
+    seen: set[tuple[int, int]] = set()
+    for idx, row in enumerate(rows):
+        text = _row_text(row)
+        if _row_has_non_summary_noise(text):
+            continue
+        context_parts = [
+            _row_text(rows[near_idx])
+            for near_idx in range(max(0, idx - 4), min(len(rows), idx + 5))
+        ]
+        context = " ".join(context_parts)
+        cy = _row_center_y(row)
+        for value in _amount_values(text):
+            numeric = int(value.replace(",", ""))
+            if numeric < min_value:
+                continue
+            key = (idx, numeric)
+            if key in seen:
+                continue
+            seen.add(key)
+            pool.append((numeric, value, idx, cy, context))
+    return pool
+
+
+def _infer_summary_pair_from_amount_pool(
+    lines: list[OcrLine],
+    total: str = "",
+    allow_synthesized_total: bool = False,
+) -> tuple[dict[str, str], dict[str, Any]]:
+    total_num = int(total.replace(",", "")) if total else 0
+    pool = _summary_amount_pool(lines)
+    debug: dict[str, Any] = {"source": "", "candidateCount": len(pool)}
+    if len(pool) < 2:
+        return {}, debug
+
+    scored: list[tuple[float, int, int, int, str, str, str, str]] = []
+    for supply_num, supply_value, supply_idx, supply_y, supply_text in pool:
+        for tax_num, tax_value, tax_idx, tax_y, tax_text in pool:
+            if supply_num <= tax_num or supply_idx == tax_idx and supply_num == tax_num:
+                continue
+            ratio = tax_num / supply_num
+            if not 0.05 <= ratio <= 0.15:
+                continue
+            synthesized = supply_num + tax_num
+            if total_num and not _amounts_close(synthesized, total_num):
+                continue
+            row_span = abs(supply_idx - tax_idx)
+            if row_span > 24:
+                continue
+            score = 40.0
+            if total_num:
+                score += 35
+            elif allow_synthesized_total:
+                score += 12
+            if abs(ratio - 0.1) <= 0.015:
+                score += 14
+            if row_span <= 4:
+                score += 10
+            elif row_span <= 12:
+                score += 4
+            context = f"{supply_text} {tax_text}"
+            if _SUPPLY_AMOUNT_ANCHOR_RE.search(context):
+                score += 10
+            if _TAX_AMOUNT_ANCHOR_RE.search(context):
+                score += 10
+            if _row_has_item_context(supply_text):
+                score -= 8
+            if _row_has_item_context(tax_text):
+                score -= 8
+            scored.append((score, synthesized, supply_num, tax_num, supply_value, tax_value, supply_text, tax_text))
+
+    if not scored:
+        return {}, debug
+    scored.sort(key=lambda item: (-item[0], -item[1]))
+    score, synthesized, _, _, supply_value, tax_value, supply_text, tax_text = scored[0]
+    if total_num and score < 62:
+        debug["bestScore"] = round(score, 2)
+        return {}, debug
+    if not total_num and (not allow_synthesized_total or score < 58):
+        debug["bestScore"] = round(score, 2)
+        return {}, debug
+
+    result = {
+        "supplyAmount": supply_value,
+        "taxAmount": tax_value,
+    }
+    if total_num:
+        result["totalAmount"] = f"{total_num:,}"
+    elif allow_synthesized_total:
+        result["totalAmount"] = f"{synthesized:,}"
+    debug.update(
+        {
+            "source": "amount_pair_checksum",
+            "bestScore": round(score, 2),
+            "supply": [supply_value, supply_text],
+            "tax": [tax_value, tax_text],
+            "total": result.get("totalAmount", ""),
+        }
+    )
+    return result, debug
 
 
 def _extract_footer_summary_triple(
@@ -1062,6 +1742,7 @@ def _extract_amount_fields(
     footer_total = _extract_footer_total_amount(lines, page_h, table_header_y)
     total = footer_total or _extract_amount_near(bottom, _TOTAL_AMOUNT_ANCHOR_RE)
     summary_triple, summary_debug = _extract_footer_summary_triple(lines, page_h, table_header_y, existing_total=total)
+    pair_debug: dict[str, Any] = {}
     used_summary_triple = False
     if summary_triple:
         triple_total_num = int(summary_triple["totalAmount"].replace(",", ""))
@@ -1088,6 +1769,21 @@ def _extract_amount_fields(
         total_num = int(total.replace(",", "")) if total else 0
         if not total or (synth_num > total_num and synth_num <= total_num * 5):
             total = synthesized_total
+    total_num_for_pair = int(total.replace(",", "")) if total else 0
+    weak_total = bool(total_num_for_pair and total_num_for_pair < 10_000 and not used_summary_triple)
+    pair_summary, pair_debug = _infer_summary_pair_from_amount_pool(
+        lines,
+        total="" if weak_total else total,
+        allow_synthesized_total=weak_total,
+    )
+    if pair_summary:
+        pair_total_num = int(pair_summary.get("totalAmount", "0").replace(",", ""))
+        current_total_num = int(total.replace(",", "")) if total else 0
+        if weak_total or not total or (current_total_num and _amounts_close(pair_total_num, current_total_num)):
+            supply = pair_summary.get("supplyAmount", supply)
+            tax = pair_summary.get("taxAmount", tax)
+            total = pair_summary.get("totalAmount", total)
+            used_summary_triple = True
     if tail_max and (
         not total
         or (not synthesized_total and int(tail_max.replace(",", "")) > int(total.replace(",", "")) * 1.5)
@@ -1102,12 +1798,19 @@ def _extract_amount_fields(
         if supply_absurd and tax and int(tax.replace(",", "")) > total_num * 0.5:
             tax = ""
         if not used_summary_triple:
+            if supply and tax:
+                supply_num = int(supply.replace(",", ""))
+                tax_num = int(tax.replace(",", ""))
+                if supply_num > tax_num > 0 and not _amounts_close(supply_num + tax_num, total_num):
+                    supply = ""
+                    tax = ""
             if tax and int(tax.replace(",", "")) >= total_num * 0.3:
                 tax = ""
             if supply and int(supply.replace(",", "")) >= total_num * 0.98:
                 supply = ""
     if debug is not None:
         debug["amount_summary_triple"] = summary_debug
+        debug["amount_pair_checksum"] = pair_debug
     return {"supplyAmount": supply, "taxAmount": tax, "totalAmount": total}
 
 
@@ -1124,7 +1827,7 @@ def _detect_table(lines: list[OcrLine], page_h: float, table_header_y: float | N
             break
 
     table_detected = header_index >= 0
-    data_rows: list[str] = []
+    data_rows: list[str] = _extract_table_row_texts(rows, page_h, header_index)
     if table_detected:
         header_y = max(item.cy for item in rows[header_index])
         for idx in range(header_index + 1, len(rows)):
@@ -1133,13 +1836,14 @@ def _detect_table(lines: list[OcrLine], page_h: float, table_header_y: float | N
             row_y = sum(item.cy for item in row) / len(row)
             if row_y <= header_y or row_y >= page_h * 0.90:
                 continue
-            if _TOTAL_AMOUNT_ANCHOR_RE.search(text) or _TABLE_SUMMARY_RE.search(text):
+            if _is_summary_row_for_items(text):
                 break
             if _is_table_header_only_row(text):
                 continue
             candidate = _table_data_candidate_text(rows, idx, page_h)
             if candidate:
                 data_rows.append(candidate)
+        data_rows = [text for text in _dedupe_table_rows(data_rows) if _is_valid_final_item_text(text)]
 
     if not data_rows:
         body_start = min((table_header_y or page_h * 0.25), page_h * 0.25)
@@ -1159,10 +1863,12 @@ def _detect_table(lines: list[OcrLine], page_h: float, table_header_y: float | N
                 for _, text in body_rows
                 if re.search(r"\d", text)
                 and len(text) >= 3
+                and not _is_code_only_table_row(text)
+                and not _is_numeric_detail_line(text)
                 and not _is_table_header_only_row(text)
                 and _table_row_score(text) > 0
             ]
-        data_rows.sort(key=lambda text: _table_row_score(text), reverse=True)
+        data_rows = [text for text in _dedupe_table_rows(data_rows) if _is_valid_final_item_text(text)]
         table_detected = table_detected or len(data_rows) >= 2
 
     if not data_rows:
@@ -1209,6 +1915,8 @@ def _detect_table(lines: list[OcrLine], page_h: float, table_header_y: float | N
             text = _clean_value(line.text)
             if len(text) < 3 or not re.search(r"\d", text):
                 continue
+            if _is_code_only_table_row(text) or _is_numeric_detail_line(text):
+                continue
             if _is_bad_table_data_row(text) or _is_table_header_only_row(text):
                 continue
             if not re.search(r"[가-힣]", text) and not re.search(r"TABLET|CAPSULE|CAPS?|ABLET", text, re.I):
@@ -1235,11 +1943,35 @@ def _detect_table(lines: list[OcrLine], page_h: float, table_header_y: float | N
     if not data_rows:
         data_rows = _text_order_table_fallback(lines)
         table_detected = table_detected or bool(data_rows)
+    if not data_rows:
+        data_rows = [
+            _clean_value(line.text)
+            for line in lines
+            if 0 <= line.cy <= page_h * 0.92
+            and _has_product_hint(line.text)
+            and not _is_business_contact_line(line.text)
+            and not _is_table_header_row(line.text)
+            and not _is_summary_row_for_items(line.text)
+        ]
+        table_detected = table_detected or bool(data_rows)
 
+    data_rows = [text for text in _dedupe_table_rows(data_rows) if _is_valid_final_item_text(text)]
+    if not data_rows:
+        data_rows = [
+            _clean_value(line.text)
+            for line in lines
+            if 0 <= line.cy <= page_h * 0.92
+            and _has_product_hint(line.text)
+            and _is_valid_final_item_text(line.text)
+        ]
+    table_items = [_item_dict_from_row_text(text) for text in data_rows]
+    table_detected = table_detected or bool(data_rows)
     return {
         "tableDetected": "Y" if table_detected else "N",
         "rowCount": str(len(data_rows)) if data_rows else "",
         "firstRowPreview": _summarize_table_row(data_rows[0]) if data_rows else "",
+        "tableRows": table_items,
+        "items": table_items,
     }
 
 
@@ -1308,6 +2040,7 @@ def extract_invoice_statement_fields(ocr_lines_raw: list[tuple], debug: dict[str
             "buyer_nonempty": [key for key, value in buyer.items() if value],
             "amount_nonempty": [key for key, value in amounts.items() if value],
             "amount_summary_triple": amount_debug.get("amount_summary_triple", {}),
+            "amount_pair_checksum": amount_debug.get("amount_pair_checksum", {}),
             "table": table,
         }
 

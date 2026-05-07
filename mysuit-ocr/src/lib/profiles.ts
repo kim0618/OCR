@@ -115,6 +115,18 @@ export const FINANCE_TIER2_FIELDS: readonly FinanceFieldKey[] = [
   "memo",
 ] as const;
 
+/** document(invoice_statement) 거래 당사자 필드 — 공급자/공급받는자 회사·사업자·대표·주소. */
+export const DOCUMENT_PARTY_FIELDS: readonly DocumentFieldKey[] = [
+  "supplierCompany",
+  "supplierBizNumber",
+  "supplierRepresentative",
+  "supplierAddress",
+  "buyerCompany",
+  "buyerBizNumber",
+  "buyerRepresentative",
+  "buyerAddress",
+] as const;
+
 // ============================================================
 // 컬럼 세트 상수
 // ============================================================
