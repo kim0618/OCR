@@ -44,6 +44,12 @@ type Props = {
   drawMode: FieldType | null;
   setDrawMode: React.Dispatch<React.SetStateAction<FieldType | null>>;
   zoomPct: number;
+  visibleRegionIds?: string[];
+  emptySelectionHint?: string;
+  drawTargetRegionId?: string | null;
+  drawTargetName?: string;
+  drawTargetFieldType?: FieldType;
+  onClearSelection?: () => void;
 };
 
 export default function OcrCanvasPane(props: Props) {
@@ -64,12 +70,25 @@ export default function OcrCanvasPane(props: Props) {
     drawMode,
     setDrawMode,
     zoomPct,
+    visibleRegionIds,
+    emptySelectionHint,
+    drawTargetRegionId,
+    drawTargetName,
+    drawTargetFieldType,
+    onClearSelection,
   } = props;
 
   // ===== 상태 =====
   const [containerW, setContainerW] = useState<number>(900);
 
   const [drag, setDrag] = useState<DragKind>(null);
+  const visibleRegionSet = useMemo(
+    () => (visibleRegionIds ? new Set(visibleRegionIds) : null),
+    [visibleRegionIds],
+  );
+  const visibleRegions = visibleRegionSet
+    ? regions.filter((region) => visibleRegionSet.has(region.id))
+    : regions;
 
   // ===== 최신 값 refs (rAF에서 stale 방지) =====
   const loadedRef = useRef<LoadedImage | null>(null);
@@ -323,12 +342,12 @@ export default function OcrCanvasPane(props: Props) {
     }
 
     if (drawMode) {
-      const id = uid("draft");
-      const type = drawMode;
+      const id = drawTargetRegionId || uid("draft");
+      const type = drawTargetFieldType || drawMode;
 
       const newDraft: Region = {
         id,
-        name: nextAutoName(type),
+        name: drawTargetName || nextAutoName(type),
         fieldType: type,
         x: p.x,
         y: p.y,
@@ -340,11 +359,17 @@ export default function OcrCanvasPane(props: Props) {
         table: type === "table" ? { mode: "auto" } : undefined,
       };
 
-      setRegions((prev) => [...prev, newDraft]);
+      setRegions((prev) => {
+        const exists = prev.some((region) => region.id === id);
+        return exists
+          ? prev.map((region) => (region.id === id ? { ...region, ...newDraft } : region))
+          : [...prev, newDraft];
+      });
       setSelectedId(id);
       setDragBoth({ type: "draw", startX: p.x, startY: p.y, draftId: id });
     } else {
       setSelectedId(null);
+      onClearSelection?.();
     }
   }
 
@@ -819,10 +844,7 @@ export default function OcrCanvasPane(props: Props) {
     <div
       ref={wrapRef}
       style={{
-        border: "1px solid rgba(255,255,255,0.08)",
-        borderRadius: 12,
         background: "var(--panel2)",
-        padding: loaded ? 18 : 0,
         height: "100%",
         minHeight: 0,
         minWidth: 0,
@@ -1116,7 +1138,30 @@ export default function OcrCanvasPane(props: Props) {
             )}
 
             {/* Overlay Regions (너가 올린 그대로) */}
-            {regions.map((r) => {
+            {emptySelectionHint && visibleRegions.length === 0 && (
+              <div
+                style={{
+                  position: "absolute",
+                  left: 12,
+                  top: 12,
+                  zIndex: 20,
+                  maxWidth: "calc(100% - 24px)",
+                  padding: "7px 10px",
+                  borderRadius: 6,
+                  border: "1px solid rgba(34,211,238,0.28)",
+                  background: "rgba(15,23,42,0.84)",
+                  color: "#cbd5e1",
+                  fontSize: 12,
+                  fontWeight: 800,
+                  lineHeight: 1.35,
+                  pointerEvents: "none",
+                }}
+              >
+                {emptySelectionHint}
+              </div>
+            )}
+
+            {visibleRegions.map((r) => {
               const isSel = r.id === selectedId;
               const left = r.x * scale;
               const top = r.y * scale;

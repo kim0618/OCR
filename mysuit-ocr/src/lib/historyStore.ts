@@ -201,3 +201,17 @@ export function clearHistoryRuns() {
     window.localStorage.removeItem(STORAGE_KEY);
   }
 }
+
+export function deleteHistoryRun(jobId: string): boolean {
+  if (typeof window === "undefined") return false;
+  const prev = readHistoryRuns();
+  const next = prev.filter((r) => r.job_id !== jobId);
+  if (next.length === prev.length) return false;
+  try {
+    tryWriteHistory(next);
+    return true;
+  } catch (e) {
+    console.warn("[historyStore] delete failed", e instanceof Error ? e.message : e);
+    return false;
+  }
+}

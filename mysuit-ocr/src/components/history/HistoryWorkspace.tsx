@@ -6,7 +6,7 @@ import api from "@/lib/axios";
 import CreateHistoryPopup, { type HistoryPopupForm } from "./popup/CreateHistoryPopup";
 import EditHistoryPopup, { type HistoryPopupRow } from "./popup/EditHistoryPopup";
 import DetailHistoryView from "./DetailHistoryView";
-import { readHistoryRuns, type RunStatus, type HistoryRunRecord } from "@/lib/historyStore";
+import { readHistoryRuns, deleteHistoryRun, type RunStatus, type HistoryRunRecord } from "@/lib/historyStore";
 
 type HistoryRow = HistoryPopupRow & { status?: RunStatus };
 
@@ -241,12 +241,13 @@ export default function HistoryWorkspace() {
                   <th className="hw-th">상태</th>
                   <th className="hw-th">파일명</th>
                   <th className="hw-th-action">상세보기</th>
+                  <th className="hw-th-action">삭제</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredRows.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="hw-empty-td">
+                    <td colSpan={7} className="hw-empty-td">
                       <svg width="36" height="36" viewBox="0 0 36 36" fill="none" style={{ margin: "0 auto 10px", display: "block", opacity: 0.35 }}>
                         <circle cx="18" cy="18" r="15" stroke="var(--muted)" strokeWidth="2"/>
                         <path d="M12 18h12M18 12v12" stroke="var(--muted)" strokeWidth="2" strokeLinecap="round" opacity="0.5"/>
@@ -277,6 +278,28 @@ export default function HistoryWorkspace() {
                           }}
                         >
                           상세보기
+                        </button>
+                      </td>
+                      <td className="hw-td-center">
+                        <button
+                          type="button"
+                          className="ms-btn-sm"
+                          onClick={async () => {
+                            const ok = await ui.confirm({
+                              title: "삭제",
+                              message: `이 히스토리 행을 삭제할까요?\n${row.file_name} · ${row.created_at}`,
+                              okText: "삭제",
+                              cancelText: "취소",
+                            });
+                            if (!ok) return;
+                            if (deleteHistoryRun(row.job_id)) {
+                              await boardList();
+                            } else {
+                              await ui.alert("삭제 중 오류가 발생했습니다.");
+                            }
+                          }}
+                        >
+                          삭제
                         </button>
                       </td>
                     </tr>

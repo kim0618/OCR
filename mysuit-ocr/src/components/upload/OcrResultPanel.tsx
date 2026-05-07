@@ -57,28 +57,70 @@ type Props = {
   onScanChange?: (scanning: boolean) => void;
   onPartialOcr?: (targets: { index: number; bbox: number[] }[]) => Promise<OcrFieldResult[]>;
   canvasRegions?: { id: string; name: string; fieldType: string; x: number; y: number; width: number; height: number }[];
+  jobId?: string | null;
+  createdAt?: string | null;
+  onClose?: () => void;
+  onPersist?: (fields: OcrFieldResult[]) => void;
 };
 
 type TabKey = "preview" | "custom" | "validation";
 
-export default function OcrResultPanel({ result, onRerun, onRevalidate, selectedIndex, onSelectField, templateName, fileName, onTabChange, drawMode, onDrawModeChange, isScanning, onScanChange, onPartialOcr, canvasRegions }: Props) {
+export default function OcrResultPanel({ result, onRerun, onRevalidate, selectedIndex, onSelectField, templateName, fileName, onTabChange, drawMode, onDrawModeChange, isScanning, onScanChange, onPartialOcr, canvasRegions, jobId, createdAt, onClose, onPersist }: Props) {
   const ui = useUi();
   const [activeTab, setActiveTab] = useState<TabKey>("preview");
   const [previewMode, setPreviewMode] = useState<"markdown" | "json">("markdown");
   const [editedFields, setEditedFields] = useState<OcrFieldResult[]>(result.fields);
-  const [validationFilter, setValidationFilter] = useState<"all" | "success" | "warning" | "error">("success");
-  const [confRange, setConfRange] = useState<number | null>(null); // null=전체, 0=0~10%, 10=10~20%, ... 90=90~100%
-  const [editingIdx, setEditingIdx] = useState<number | null>(null);
-  const [editValue, setEditValue] = useState("");
   const [activeFieldType, setActiveFieldType] = useState<string>("field");
-  const [isRevalidating, setIsRevalidating] = useState(false);
   const [rawOcrOpen, setRawOcrOpen] = useState(true);
   const [autofillDetailOpen, setAutofillDetailOpen] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const editedFieldsRef = useRef<OcrFieldResult[]>(editedFields);
+  useEffect(() => { editedFieldsRef.current = editedFields; }, [editedFields]);
+
+  // onBlur/구조변경 시 호출되는 자동저장. jobId 가 있을 때만 동작.
+  const flushSave = () => {
+    if (!jobId || !onPersist) return;
+    onPersist(editedFieldsRef.current);
+    setLastSavedAt(new Date());
+  };
+
+  // 컴포넌트 unmount 또는 jobId 변경(다음 OCR) 직전에 미저장분 flush.
+  useEffect(() => {
+    return () => {
+      if (jobId && onPersist) {
+        onPersist(editedFieldsRef.current);
+      }
+    };
+  }, [jobId, onPersist]);
 
   // canvasRegions에서 새로 그린 영역을 editedFields에 동기화
   useEffect(() => {
     if (!canvasRegions) return;
+    setEditedFields((prev) => {
+      let changed = false;
+      const next = [...prev];
+      canvasRegions.forEach((r) => {
+        if (!r.id.startsWith("ocr_")) return;
+        const index = Number(r.id.slice("ocr_".length));
+        if (!Number.isInteger(index) || index < 0 || !next[index]) return;
+        const bbox = [Math.round(r.x), Math.round(r.y), Math.round(r.width), Math.round(r.height)];
+        const current = next[index];
+        const sameBbox =
+          Array.isArray(current.bbox) &&
+          current.bbox.length >= 4 &&
+          current.bbox.slice(0, 4).every((value, i) => value === bbox[i]);
+        if (sameBbox && current.sourceBboxes?.length === 1) return;
+        next[index] = {
+          ...current,
+          field_type: r.fieldType || current.field_type,
+          bbox,
+          sourceBboxes: [{ x: bbox[0], y: bbox[1], width: bbox[2], height: bbox[3] }],
+        };
+        changed = true;
+      });
+      return changed ? next : prev;
+    });
     const newRegions = canvasRegions.filter((r) => !r.id.startsWith("ocr_"));
     const existingIds = new Set(editedFields.map((f) => f.name));
     const toAdd: OcrFieldResult[] = [];
@@ -105,6 +147,13 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
     { key: "table", label: "테이블필드" },
   ];
 
+  const FIELD_TYPE_DESCRIPTIONS: Record<string, string> = {
+    field: "단일 영역에서 하나의 값을 읽습니다.",
+    multi: "여러 영역 또는 여러 줄을 합쳐 하나의 값으로 사용합니다.",
+    check: "체크 여부나 선택 상태를 판정합니다.",
+    table: "반복되는 표 영역을 읽습니다.",
+  };
+
   const deleteField = (index: number) => {
     setEditedFields((prev) => prev.filter((_, i) => i !== index));
     if (selectedIndex === index) onSelectField(-1);
@@ -129,21 +178,6 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
   // 선택된 필드로 스크롤 + Validation 탭에서 편집 연동
   useEffect(() => {
     if (selectedIndex == null) return;
-    if (activeTab === "validation") {
-      // 현재 필터에 선택된 필드가 없으면 전체 보기로 전환
-      const field = editedFields[selectedIndex];
-      if (field) {
-        const status = getValidationStatus(field);
-        const inCurrentFilter = validationFilter === "all" || validationFilter === status;
-        const inConfRange = confRange === null || (field.confidence * 100 >= confRange && field.confidence * 100 < confRange + 10);
-        if (!inCurrentFilter || !inConfRange) {
-          setValidationFilter("all");
-          setConfRange(null);
-        }
-      }
-      setEditingIdx(selectedIndex);
-      setEditValue(editedFields[selectedIndex]?.value ?? "");
-    }
     // 스크롤은 DOM 업데이트 후 실행
     setTimeout(() => {
       if (contentRef.current) {
@@ -170,6 +204,31 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
     warning: editedFields.filter((f) => getValidationStatus(f) === "warning").length,
     error: editedFields.filter((f) => getValidationStatus(f) === "error").length,
   };
+
+  const goToCustomField = (index: number) => {
+    setActiveTab("custom");
+    onTabChange?.("custom");
+    onDrawModeChange?.(null);
+    onSelectField(index);
+    setTimeout(() => {
+      const el = contentRef.current?.querySelector(`[data-field-idx="${index}"]`) as HTMLElement | null;
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 80);
+  };
+
+  const validationSummaryMessage =
+    validationCounts.error > 0
+      ? "\uC800\uC7A5 \uC804 \uC218\uC815\uC774 \uD544\uC694\uD55C \uD544\uB4DC\uAC00 \uC788\uC2B5\uB2C8\uB2E4."
+      : validationCounts.warning > 0
+        ? "\uC800\uC7A5\uC740 \uAC00\uB2A5\uD558\uC9C0\uB9CC \uD655\uC778\uC774 \uD544\uC694\uD55C \uD544\uB4DC\uAC00 \uC788\uC2B5\uB2C8\uB2E4."
+        : "\uC800\uC7A5 \uAC00\uB2A5\uD55C \uC0C1\uD0DC\uC785\uB2C8\uB2E4.";
+
+  const validationState =
+    validationCounts.error > 0
+      ? { key: "error", label: "\uC218\uC815 \uD544\uC694" }
+      : validationCounts.warning > 0
+        ? { key: "warning", label: "\uD655\uC778 \uD544\uC694" }
+        : { key: "success", label: "\uC800\uC7A5 \uAC00\uB2A5" };
   const rawOcrFields = Array.isArray(result.raw_ocr_fields) ? result.raw_ocr_fields : [];
   const gtMap = useMemo(
     () => (templateName && fileName ? getGroundTruth(templateName, fileName) : {}),
@@ -222,18 +281,32 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
     return { matched, total, pct };
   }, [editedFields, gtMap, hasGt]);
 
-  const getAdoptionLabel = (field: OcrFieldResult): "OCR" | "복원" | "-" => {
+  const getAdoptionLabel = (field: OcrFieldResult): "OCR" | "복원" | "직접입력" | "-" => {
     if (field.autofillAction === "confirmed") return "OCR";
     if (field.autofillAction === "corrected") return "복원";
     if (field.autofillAction === "filled") return "복원";
+    if (field.source === "text") return "직접입력";
+    if (field.source === "biz" || field.source === "gt") return "복원";
     if (field.value && String(field.value).trim()) return "OCR";
     return "-";
   };
 
   const renderAdoption = (field: OcrFieldResult) => {
     const label = getAdoptionLabel(field);
-    const color = label === "OCR" ? "#2563eb" : label === "복원" ? "#4f46e5" : "var(--muted)";
+    const color =
+      label === "OCR" ? "#2563eb" :
+      label === "복원" ? "#4f46e5" :
+      label === "직접입력" ? "#a855f7" :
+      "var(--muted)";
     return <span style={{ color, fontWeight: 900 }}>{label}</span>;
+  };
+
+  const getOriginalOcrValue = (field: OcrFieldResult) => {
+    if (typeof field.original === "string" && field.original.trim()) return field.original.trim();
+    if ((!field.source || field.source === "ocr") && field.value && String(field.value).trim()) {
+      return String(field.value).trim();
+    }
+    return "-";
   };
 
   const renderSourceBadge = (source?: OutputValueSource) => {
@@ -421,10 +494,6 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
     );
   };
 
-  const filteredValidation = editedFields.filter((f) => {
-    if (validationFilter === "all") return true;
-    return getValidationStatus(f) === validationFilter;
-  });
 
   const toMarkdown = () => {
     const esc = (s: string) => s.replace(/\|/g, "\\|").replace(/\n/g, " ");
@@ -461,13 +530,111 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
   const updateFieldValue = (index: number, value: string) => {
     setEditedFields((prev) => {
       const next = [...prev];
-      next[index] = { ...next[index], value, source: "text" };
+      const current = next[index];
+      const original =
+        current.original ??
+        (!current.source || current.source === "ocr" ? current.value : undefined);
+      next[index] = { ...current, value, source: "text", original };
       return next;
     });
   };
 
+  const formatHHMM = (d: Date) => {
+    const h = String(d.getHours()).padStart(2, "0");
+    const m = String(d.getMinutes()).padStart(2, "0");
+    return `${h}:${m}`;
+  };
+  const headerCreatedAt = createdAt ?? "";
+
   return (
     <div className="or-root">
+      {/* Detail header — 템플릿/파일 컨텍스트 + 자동저장 인디케이터 + 닫기 */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 10,
+          padding: "8px 12px",
+          background: "var(--panel2)",
+          flexShrink: 0,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0, flex: 1 }}>
+          {templateName && (
+            <span
+              title="템플릿 이름"
+              style={{
+                fontSize: 12,
+                fontWeight: 800,
+                color: "var(--accent)",
+                padding: "2px 9px",
+                border: "1px solid var(--border)",
+                borderRadius: 999,
+                background: "var(--panel2)",
+                whiteSpace: "nowrap",
+                flexShrink: 0,
+              }}
+            >
+              {templateName}
+            </span>
+          )}
+          {fileName && (
+            <span
+              title={fileName}
+              style={{
+                fontSize: 12,
+                fontWeight: 700,
+                color: "var(--text)",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                minWidth: 0,
+              }}
+            >
+              {fileName}
+            </span>
+          )}
+          {headerCreatedAt && (
+            <span style={{ fontSize: 11, color: "var(--muted)", whiteSpace: "nowrap" }}>
+              {headerCreatedAt}
+            </span>
+          )}
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+          {jobId && lastSavedAt && (
+            <span style={{ fontSize: 11, color: "var(--muted)", whiteSpace: "nowrap" }}>
+              저장됨 · {formatHHMM(lastSavedAt)}
+            </span>
+          )}
+          {onClose && (
+            <button
+              type="button"
+              aria-label="닫기"
+              onClick={onClose}
+              style={{
+                width: 26,
+                height: 26,
+                borderRadius: 8,
+                border: "1px solid var(--border)",
+                background: "var(--panel2)",
+                color: "var(--text)",
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                lineHeight: 1,
+                flexShrink: 0,
+              }}
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Tab bar */}
       <div className="or-tabs">
         {tabs.map((tab) => (
@@ -475,7 +642,7 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
             key={tab.key}
             type="button"
             className={`or-tab ${activeTab === tab.key ? "or-tab-active" : ""}`}
-            onClick={() => { setActiveTab(tab.key); onTabChange?.(tab.key); if (tab.key !== "validation") { onSelectField(-1); setEditingIdx(null); } }}
+            onClick={() => { setActiveTab(tab.key); onTabChange?.(tab.key); if (tab.key !== "validation") onSelectField(-1); }}
           >
             {tab.label}
             {tab.key === "validation" && validationCounts.error > 0 && (
@@ -639,6 +806,10 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
         {/* Custom Tab */}
         {activeTab === "custom" && (
           <div className="or-custom">
+            <div className="or-custom-guide">
+              <span>필드 영역 수정, 필드 추가, OCR 재실행, 최종값 입력을 진행하는 작업 공간입니다.</span>
+              <span>직접 입력한 값은 최종값으로 사용되며 Validation에 자동 반영됩니다.</span>
+            </div>
             {/* 필드 타입 버튼 + OCR 재실행 */}
             <div className="or-custom-toolbar">
               <div className="or-custom-types">
@@ -647,7 +818,12 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                     key={ft.key}
                     type="button"
                     className={`or-type-btn ${drawMode === ft.key ? "or-type-btn-active" : ""}`}
-                    onClick={() => onDrawModeChange?.(drawMode === ft.key ? null : ft.key)}
+                    title={FIELD_TYPE_DESCRIPTIONS[ft.key]}
+                    onClick={() => {
+                      const nextMode = drawMode === ft.key ? null : ft.key;
+                      setActiveFieldType(nextMode ?? "field");
+                      onDrawModeChange?.(nextMode);
+                    }}
                   >
                     {ft.label}
                   </button>
@@ -677,7 +853,7 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                     updated.forEach((f: any, i: number) => {
                       const targetIdx = targets[i]?.index;
                       if (targetIdx != null && f) {
-                        next[targetIdx] = { ...next[targetIdx], value: f.value, confidence: f.confidence };
+                        next[targetIdx] = { ...next[targetIdx], value: f.value, confidence: f.confidence, source: "ocr" };
                       }
                     });
                     return next;
@@ -691,6 +867,9 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
               }}>
                 OCR 재실행
               </button>
+            </div>
+            <div className="or-custom-type-help">
+              {FIELD_TYPE_DESCRIPTIONS[drawMode ?? activeFieldType] ?? FIELD_TYPE_DESCRIPTIONS.field}
             </div>
 
             {/* 필드 목록 */}
@@ -713,11 +892,13 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                       value={field.name}
                       onChange={(e) => updateFieldName(i, e.target.value)}
                       onClick={(e) => e.stopPropagation()}
+                      onFocus={() => onSelectField(i)}
+                      onBlur={flushSave}
                     />
                     <select
                       className="or-field-type-select"
                       value={field.field_type}
-                      onChange={(e) => updateFieldType(i, e.target.value)}
+                      onChange={(e) => { updateFieldType(i, e.target.value); flushSave(); }}
                       onClick={(e) => e.stopPropagation()}
                     >
                       {FIELD_TYPES.map((ft) => (
@@ -748,7 +929,7 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                     <button
                       type="button"
                       className="or-field-delete"
-                      onClick={(e) => { e.stopPropagation(); deleteField(i); }}
+                      onClick={(e) => { e.stopPropagation(); deleteField(i); flushSave(); }}
                       title="삭제"
                     >
                       ✕
@@ -758,36 +939,52 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                     let rows: { value: string; confidence: number }[][] = [];
                     try { rows = JSON.parse(field.value); } catch { /* ignore */ }
                     return rows.length > 0 ? (
-                      <div className="or-table-wrap" onClick={(e) => e.stopPropagation()}>
-                        <table className="or-table-result">
-                          <tbody>
-                            {rows.map((row, ri) => (
-                              <tr key={ri}>
-                                {row.map((cell, ci) => (
-                                  <td
-                                    key={ci}
-                                    className={`or-table-cell ${cell.confidence < 0.7 ? "or-table-cell-low" : ""}`}
-                                    title={`신뢰도: ${(cell.confidence * 100).toFixed(1)}%`}
-                                  >
-                                    {cell.value || "-"}
-                                  </td>
-                                ))}
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
+                      <>
+                        <div className="or-field-value-meta" onClick={(e) => e.stopPropagation()}>
+                          <span>OCR 원본: {getOriginalOcrValue(field)}</span>
+                          <span>최종값: 테이블 데이터</span>
+                          <span>채택: {getAdoptionLabel(field)}</span>
+                        </div>
+                        <div className="or-table-wrap" onClick={(e) => e.stopPropagation()}>
+                          <table className="or-table-result">
+                            <tbody>
+                              {rows.map((row, ri) => (
+                                <tr key={ri}>
+                                  {row.map((cell, ci) => (
+                                    <td
+                                      key={ci}
+                                      className={`or-table-cell ${cell.confidence < 0.7 ? "or-table-cell-low" : ""}`}
+                                      title={`신뢰도: ${(cell.confidence * 100).toFixed(1)}%`}
+                                    >
+                                      {cell.value || "-"}
+                                    </td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </>
                     ) : (
                       <div className="or-empty" style={{ fontSize: 12 }}>테이블 데이터 없음</div>
                     );
                   })() : (
-                    <input
-                      className="or-field-input"
-                      value={field.value}
-                      onChange={(e) => updateFieldValue(i, e.target.value)}
-                      onClick={(e) => e.stopPropagation()}
-                      placeholder="인식된 값"
-                    />
+                    <div className="or-field-value-editor" onClick={(e) => e.stopPropagation()}>
+                      <div className="or-field-value-meta">
+                        <span>OCR 원본: {getOriginalOcrValue(field)}</span>
+                        <span>채택: {getAdoptionLabel(field)}</span>
+                      </div>
+                      <label className="or-field-final-label" htmlFor={`or-field-final-${i}`}>최종값</label>
+                      <input
+                        id={`or-field-final-${i}`}
+                        className="or-field-input"
+                        value={field.value}
+                        onChange={(e) => updateFieldValue(i, e.target.value)}
+                        onFocus={() => onSelectField(i)}
+                        onBlur={flushSave}
+                        placeholder="최종값 입력"
+                      />
+                    </div>
                   )}
                   {field.source && field.source !== "ocr" && (
                     <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 6 }}>
@@ -810,210 +1007,74 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
 
         {/* Validation Tab */}
         {activeTab === "validation" && (() => {
-          const errorFields = editedFields
-            .map((f, i) => ({ field: f, idx: i, status: getValidationStatus(f) }))
-            .filter((item) => {
-              // 신뢰도 구간 필터
-              if (confRange !== null) {
-                const pct = item.field.confidence * 100;
-                return pct >= confRange && pct < confRange + 10;
-              }
-              if (validationFilter === "all") return true;
-              return item.status === validationFilter;
-            });
-
-          const currentEditing = editingIdx != null ? editedFields[editingIdx] : null;
-
-          const navigateError = (direction: "prev" | "next") => {
-            const targets = editedFields
-              .map((f, i) => ({ idx: i, status: getValidationStatus(f) }))
-              .filter((item) => item.status === "warning" || item.status === "error");
-            if (targets.length === 0) return;
-
-            if (editingIdx == null) {
-              setEditingIdx(targets[0].idx);
-              setEditValue(editedFields[targets[0].idx].value);
-              onSelectField(targets[0].idx);
-              return;
-            }
-
-            const curPos = targets.findIndex((t) => t.idx === editingIdx);
-            let nextPos: number;
-            if (direction === "next") {
-              nextPos = curPos < targets.length - 1 ? curPos + 1 : 0;
-            } else {
-              nextPos = curPos > 0 ? curPos - 1 : targets.length - 1;
-            }
-            setEditingIdx(targets[nextPos].idx);
-            setEditValue(editedFields[targets[nextPos].idx].value);
-            onSelectField(targets[nextPos].idx);
-          };
-
-          const applyEdit = () => {
-            if (editingIdx == null) return;
-            updateFieldValue(editingIdx, editValue);
-          };
+          const rows = editedFields.map((field, idx) => {
+            const status = getValidationStatus(field);
+            return { field, idx, status };
+          });
+          const sections = [
+            { status: "error", title: "\uC624\uB958 \uB0B4\uC5ED", rows: rows.filter((item) => item.status === "error") },
+            { status: "warning", title: "\uACBD\uACE0 \uB0B4\uC5ED", rows: rows.filter((item) => item.status === "warning") },
+            { status: "success", title: "\uC131\uACF5 \uB0B4\uC5ED", rows: rows.filter((item) => item.status === "success") },
+          ] as const;
 
           return (
             <div className="or-validation">
-              {/* 상태 필터 */}
-              <div className="or-validation-filters">
-                {(["success", "warning", "error"] as const).map((filter) => (
-                  <button
-                    key={filter}
-                    type="button"
-                    className={`or-vf-btn or-vf-${filter} ${validationFilter === filter && confRange === null ? "or-vf-active" : ""}`}
-                    onClick={() => { setValidationFilter(filter); setConfRange(null); }}
-                  >
-                    {filter === "success" ? `성공` : filter === "warning" ? `경고` : `오류`}
-                  </button>
+              <div className="or-val-summary">
+                <div className="or-val-summary-main">
+                  <div className="or-val-summary-heading">
+                    <span className="or-val-summary-title">{"\uAC80\uC218 \uACB0\uACFC"}</span>
+                    <span className={"or-val-state-badge or-val-state-" + validationState.key}>
+                      {validationState.label}
+                    </span>
+                  </div>
+                  <span className="or-val-summary-text">
+                    {"\uC624\uB958"} <b>{validationCounts.error}</b>{"\uAC74 / \uACBD\uACE0"} <b>{validationCounts.warning}</b>{"\uAC74 / \uC131\uACF5"} <b>{validationCounts.success}</b>{"\uAC74"}
+                  </span>
+                  <span className="or-val-summary-guide">{validationSummaryMessage}</span>
+                </div>
+              </div>
+
+              <div className="or-val-review-list">
+                {sections.map((section) => (
+                  <section key={section.status} className="or-val-review-section">
+                    <div className="or-val-section-title">
+                      <span>
+                        {section.title}: {section.rows.length === 0 ? "\uC5C6\uC74C" : section.rows.length + "\uAC74"}
+                      </span>
+                      {section.status === "error" && section.rows.length > 0 && (
+                        <button type="button" className="ms-btn-sm" onClick={() => goToCustomField(section.rows[0].idx)}>
+                          {"\uC624\uB958 \uC218\uC815"}
+                        </button>
+                      )}
+                      {section.status === "warning" && section.rows.length > 0 && (
+                        <button type="button" className="ms-btn-sm" onClick={() => goToCustomField(section.rows[0].idx)}>
+                          {"\uACBD\uACE0 \uD655\uC778"}
+                        </button>
+                      )}
+                    </div>
+                    {section.rows.length === 0 ? (
+                      <div className="or-val-empty-line">{"\uD574\uB2F9 \uD56D\uBAA9\uC774 \uC5C6\uC2B5\uB2C8\uB2E4."}</div>
+                    ) : (
+                      <div className="or-val-error-list">
+                        {section.rows.map((item) => (
+                          <div
+                            key={item.idx}
+                            data-field-idx={item.idx}
+                            className={"or-val-error-row or-val-review-row or-val-" + item.status}
+                            onClick={() => onSelectField(item.idx)}
+                          >
+                            <span className={"or-val-dot or-dot-" + item.status} />
+                            <span className="or-val-error-name">{item.field.name}</span>
+                            <span className="or-val-error-value">{item.field.value || "-"}</span>
+                            <span className={"or-val-adoption or-val-adoption-" + getAdoptionLabel(item.field)}>{getAdoptionLabel(item.field)}</span>
+                            <span className="or-val-error-conf">{formatConfidence(item.field.confidence)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </section>
                 ))}
               </div>
-
-              {/* 신뢰도 구간 필터 */}
-              <div className="or-conf-range-filters">
-                <button
-                  type="button"
-                  className={`or-conf-range-btn ${confRange === null && validationFilter === "all" ? "or-conf-range-active" : ""}`}
-                  onClick={() => { setConfRange(null); setValidationFilter("all"); }}
-                >
-                  전체
-                </button>
-                {[70, 80, 90].map((r) => {
-                  const count = editedFields.filter((f) => {
-                    const pct = f.confidence * 100;
-                    return pct >= r && pct < r + 10;
-                  }).length;
-                  return (
-                    <button
-                      key={r}
-                      type="button"
-                      className={`or-conf-range-btn ${confRange === r ? "or-conf-range-active" : ""} ${count === 0 ? "or-conf-range-empty" : ""}`}
-                      onClick={() => { setConfRange(r); setValidationFilter("all"); }}
-                    >
-                      {r}~{r + 10}%
-                      {count > 0 && <span className="or-conf-range-count">{count}</span>}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* 건수 + 재검증 */}
-              <div className="or-val-summary">
-                {validationFilter === "success" ? (
-                  <span className="or-val-summary-text">
-                    성공 <b>{validationCounts.success}</b>건 / 경고 <b>{validationCounts.warning}</b>건 / 오류 <b>{validationCounts.error}</b>건
-                  </span>
-                ) : (
-                  <span className="or-val-summary-text">
-                    {validationFilter === "warning" ? "경고" : "오류"}{" "}
-                    <b>{errorFields.length}</b>건
-                  </span>
-                )}
-                {validationFilter !== "success" && (
-                  <button type="button" className="ms-btn-sm" disabled={isRevalidating} onClick={async () => {
-                    if (isRevalidating) return;
-                    try {
-                      const targets = errorFields.map((item) => ({
-                        index: item.idx,
-                        bbox: item.field.bbox,
-                      }));
-                      if (targets.length === 0) return;
-                      setIsRevalidating(true);
-                      onScanChange?.(true);
-                      const updated = await onRevalidate(targets);
-                      onScanChange?.(false);
-                      setIsRevalidating(false);
-                      if (!updated || updated.length === 0) {
-                        await ui.alert("재검증 결과가 없습니다.");
-                        return;
-                      }
-                      setEditedFields((prev) => {
-                        const next = [...prev];
-                        updated.forEach((f: any, i: number) => {
-                          const targetIdx = targets[i]?.index;
-                          if (targetIdx != null && f) {
-                            next[targetIdx] = { ...next[targetIdx], value: f.value, confidence: f.confidence };
-                          }
-                        });
-                        return next;
-                      });
-                      await ui.alert(`재검증 완료: ${targets.length}개 필드 처리됨`);
-                    } catch (err) {
-                      onScanChange?.(false);
-                      setIsRevalidating(false);
-                      console.error("[Revalidate error]", err);
-                      await ui.alert("재검증 중 오류가 발생했습니다.");
-                    }
-                  }}>
-                    {isRevalidating
-                      ? `재검증 중... (${errorFields.length}건)`
-                      : validationFilter === "warning" ? "경고 재검증" : "오류 재검증"}
-                  </button>
-                )}
-              </div>
-
-              {/* 내역 */}
-              <div className="or-val-section-title">
-                {validationFilter === "success" ? "성공 내역" : validationFilter === "warning" ? "경고 내역" : "오류 내역"}
-              </div>
-              <div className="or-val-error-list">
-                {errorFields.length === 0 ? (
-                  <div className="or-empty">해당 항목이 없습니다.</div>
-                ) : (
-                  errorFields.map((item) => (
-                    <div
-                      key={item.idx}
-                      data-field-idx={item.idx}
-                      className={`or-val-error-row ${editingIdx === item.idx ? "or-val-error-row-active" : ""}`}
-                      onClick={() => {
-                        setEditingIdx(item.idx);
-                        setEditValue(item.field.value);
-                        onSelectField(item.idx);
-                      }}
-                    >
-                      <span className={`or-val-dot or-dot-${item.status}`} />
-                      <span className="or-val-error-name">{item.field.name}</span>
-                      <span className="or-val-error-value">{item.field.value || "(빈값)"}</span>
-                      <span className="or-val-error-conf">{(item.field.confidence * 100).toFixed(1)}%</span>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              {/* 선택 필드 수정 */}
-              {currentEditing && (
-                <div className="or-val-edit-section">
-                  <div className="or-val-section-title">필드 수정</div>
-                  <div className="or-val-edit-info">
-                    <span className="or-val-edit-field">{currentEditing.name}</span>
-                    <span className="or-field-type">{currentEditing.field_type}</span>
-                  </div>
-                  <div className="or-val-edit-info" style={{ fontSize: 11, color: "var(--muted)" }}>
-                    위치: [{currentEditing.bbox.join(", ")}]
-                  </div>
-
-                  <div className="or-val-edit-row">
-                    <span className="or-val-label">현재 값:</span>
-                    <input className="or-field-input" value={currentEditing.value} readOnly />
-                  </div>
-
-                  <div className="or-val-edit-row">
-                    <span className="or-val-label">수정 값:</span>
-                    <input
-                      className="or-field-input"
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                    />
-                    <button type="button" className="ms-btn-sm" onClick={applyEdit}>수정</button>
-                  </div>
-
-                  <div className="or-val-edit-nav">
-                    <button type="button" className="ms-btn-sm" onClick={() => navigateError("prev")}>이전</button>
-                    <button type="button" className="ms-btn-sm" onClick={() => navigateError("next")}>다음</button>
-                  </div>
-                </div>
-              )}
             </div>
           );
         })()}

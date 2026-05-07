@@ -8,7 +8,7 @@ import OcrResultPanel, { type FieldOverlayAdoption, type FieldSourceBox, type Oc
 import OcrDocViewer from "./OcrDocViewer";
 import CornerAdjust, { type Corner } from "./CornerAdjust";
 import type { Region, FieldType, LoadedImage } from "../ocr/core/types";
-import { appendHistoryRun, type HistoryOcrField, type HistoryOutputField } from "@/lib/historyStore";
+import { appendHistoryRun, updateHistoryRun, type HistoryOcrField, type HistoryOutputField } from "@/lib/historyStore";
 import { extractBizNumber } from "@/lib/bizNumber";
 import {
   applyAutofillToOutputFields,
@@ -44,6 +44,31 @@ type UploadWorkspaceProps = {
 };
 
 type BboxLikeField = OcrFieldResult & Record<string, unknown>;
+const OCR_REGION_ID_PREFIX = "ocr_";
+
+function ocrRegionIdForField(index: number) {
+  return `${OCR_REGION_ID_PREFIX}${index}`;
+}
+
+function fieldIndexFromOcrRegionId(id: string | null) {
+  if (!id?.startsWith(OCR_REGION_ID_PREFIX)) return null;
+  const index = Number(id.slice(OCR_REGION_ID_PREFIX.length));
+  return Number.isInteger(index) && index >= 0 ? index : null;
+}
+
+function unionSourceBoxes(boxes: FieldSourceBox[]) {
+  if (boxes.length === 0) return null;
+  const left = Math.min(...boxes.map((box) => box.x));
+  const top = Math.min(...boxes.map((box) => box.y));
+  const right = Math.max(...boxes.map((box) => box.x + box.width));
+  const bottom = Math.max(...boxes.map((box) => box.y + box.height));
+  return {
+    x: left,
+    y: top,
+    width: Math.max(1, right - left),
+    height: Math.max(1, bottom - top),
+  };
+}
 
 const MODEL_OPTIONS = [
   { id: "paddleocr", name: "PaddleOCR" },
@@ -114,6 +139,14 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
   const [canvasLoaded, setCanvasLoaded] = useState<LoadedImage | null>(null);
   const [resultTab, setResultTab] = useState<"preview" | "custom" | "validation">("preview");
 
+  // 현재 OCR 결과의 history 레코드 컨텍스트 — Custom 탭 자동저장용.
+  const [currentJobId, setCurrentJobId] = useState<string | null>(null);
+  const [currentCreatedAt, setCurrentCreatedAt] = useState<string | null>(null);
+  // appendHistoryRun 시점의 immutable 메타(no/en/ko/original/applied/autofillAction/suggestions)
+  // 를 그대로 보존하기 위해 별도 보관. modified 만 onBlur 마다 덮어씀.
+  // 이 값이 null 이면 fail 레코드(또는 미실행) 라서 자동저장이 비활성화된다.
+  const [initialOutputFields, setInitialOutputFields] = useState<HistoryOutputField[] | null>(null);
+
   function loadLocalTemplates(): TemplateItem[] {
     try {
       const list = JSON.parse(localStorage.getItem(LOCAL_TEMPLATES_KEY) || "[]");
@@ -144,18 +177,23 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
 
   // canvasSelectedId ↔ selectedFieldIndex 연동
   useEffect(() => {
-    if (!canvasSelectedId) { setSelectedFieldIndex(null); return; }
-    const idx = canvasRegions.findIndex((r) => r.id === canvasSelectedId);
-    setSelectedFieldIndex(idx >= 0 ? idx : null);
-  }, [canvasSelectedId, canvasRegions]);
+    const fieldIndex = fieldIndexFromOcrRegionId(canvasSelectedId);
+    if (fieldIndex != null) setSelectedFieldIndex(fieldIndex);
+  }, [canvasSelectedId]);
 
   useEffect(() => {
-    if (selectedFieldIndex == null) return;
-    const region = canvasRegions[selectedFieldIndex];
-    if (region && region.id !== canvasSelectedId) {
-      setCanvasSelectedId(region.id);
+    if (selectedFieldIndex == null || selectedFieldIndex < 0) {
+      if (fieldIndexFromOcrRegionId(canvasSelectedId) != null) setCanvasSelectedId(null);
+      return;
     }
-  }, [selectedFieldIndex]);
+    const regionId = ocrRegionIdForField(selectedFieldIndex);
+    const region = canvasRegions.find((item) => item.id === regionId);
+    if (region) {
+      if (region.id !== canvasSelectedId) setCanvasSelectedId(region.id);
+      return;
+    }
+    if (fieldIndexFromOcrRegionId(canvasSelectedId) != null) setCanvasSelectedId(null);
+  }, [selectedFieldIndex, canvasRegions, canvasSelectedId]);
 
   useEffect(() => {
     (async () => {
@@ -681,26 +719,51 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
   }
 
   function buildResultRegions(runResult: OcrResult, template?: TemplateItem): Region[] {
+    const ocrFieldRegions = (runResult.fields ?? [])
+      .flatMap((field: OcrFieldResult, index: number) => {
+        const sourceBox = unionSourceBoxes(field.sourceBboxes ?? []);
+        const bboxBox = hasValidBbox(field)
+          ? { x: field.bbox[0], y: field.bbox[1], width: field.bbox[2], height: field.bbox[3] }
+          : null;
+        const box = sourceBox ?? bboxBox;
+        if (!box) return [];
+        return [{
+          id: ocrRegionIdForField(index),
+          name: field.name,
+          fieldType: (field.field_type || "field") as FieldType,
+          x: box.x,
+          y: box.y,
+          width: box.width,
+          height: box.height,
+        }];
+      });
+    if (ocrFieldRegions.length > 0) return ocrFieldRegions;
+
     if (isRunOcr && template?.regions?.length) {
       return template.regions.map((region, index) => ({
         ...region,
-        id: `ocr_${index}`,
+        id: ocrRegionIdForField(index),
         name: region.name || runResult.fields?.[index]?.name || `field_${index + 1}`,
         fieldType: (region.fieldType || runResult.fields?.[index]?.field_type || "field") as FieldType,
       }));
     }
 
     return (runResult.fields ?? [])
-      .filter(hasValidBbox)
-      .map((field: OcrFieldResult, index: number) => ({
-        id: `ocr_${index}`,
-        name: field.name,
-        fieldType: (field.field_type || "field") as FieldType,
-        x: field.bbox[0],
-        y: field.bbox[1],
-        width: field.bbox[2],
-        height: field.bbox[3],
-      }));
+      .flatMap((field: OcrFieldResult, index: number) => {
+        const box = hasValidBbox(field)
+          ? { x: field.bbox[0], y: field.bbox[1], width: field.bbox[2], height: field.bbox[3] }
+          : null;
+        if (!box) return [];
+        return [{
+          id: ocrRegionIdForField(index),
+          name: field.name,
+          fieldType: (field.field_type || "field") as FieldType,
+          x: box.x,
+          y: box.y,
+          width: box.width,
+          height: box.height,
+        }];
+      });
   }
 
   async function runOcr() {
@@ -907,7 +970,7 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
               suggestions: suggestions.length > 0 ? suggestions : undefined,
             };
           });
-      appendHistoryRun({
+      const successRecord = appendHistoryRun({
         file_name: selectedFile.name,
         template_name: activeTemplate?.name ?? null,
         processing_time: Number(json?.processing_time) || 0,
@@ -917,14 +980,20 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
         output_fields: outputFieldsForHistory,
         autofill_summary: autofillSummary,
       });
+      setCurrentJobId(successRecord.job_id);
+      setCurrentCreatedAt(successRecord.created_at);
+      setInitialOutputFields(outputFieldsForHistory);
     } catch (err) {
       console.error("[OCR error]", err);
-      appendHistoryRun({
+      const failRecord = appendHistoryRun({
         file_name: selectedFile.name,
         template_name: activeTemplate?.name ?? null,
         processing_time: 0,
         status: "fail",
       });
+      setCurrentJobId(failRecord.job_id);
+      setCurrentCreatedAt(failRecord.created_at);
+      setInitialOutputFields(null);
       await ui.alert("OCR 처리 중 오류가 발생했습니다.");
     } finally {
       setIsOcrRunning(false);
@@ -962,6 +1031,84 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
   const ocrDisplayUrl = processedImageUrl ?? displayUrl;
   const activeTemplateForPanel = templates.find((t) => t.id === activeTemplateId);
 
+  useEffect(() => {
+    if (!ocrResult) return;
+    const ocrRegions = buildResultRegions(ocrResult, activeTemplateForPanel);
+    if (ocrRegions.length === 0) return;
+    setCanvasRegions((prev) => {
+      const existingIds = new Set(prev.map((region) => region.id));
+      const missing = ocrRegions.filter((region) => !existingIds.has(region.id));
+      if (missing.length === 0) return prev;
+      return [...missing, ...prev];
+    });
+  }, [ocrResult, activeTemplateForPanel]);
+
+  const customSelectedFieldIndex =
+    selectedFieldIndex != null && selectedFieldIndex >= 0 ? selectedFieldIndex : null;
+  const customHasSelectedFieldRegion =
+    customSelectedFieldIndex != null
+      ? canvasRegions.some((region) => region.id === ocrRegionIdForField(customSelectedFieldIndex))
+      : false;
+  const customSelectedUserRegionId =
+    canvasSelectedId && fieldIndexFromOcrRegionId(canvasSelectedId) == null ? canvasSelectedId : null;
+  const customDrawTargetRegionId =
+    resultTab === "custom" && customSelectedFieldIndex != null
+      ? ocrRegionIdForField(customSelectedFieldIndex)
+      : null;
+  const customDrawTargetField = customSelectedFieldIndex != null
+    ? ocrResult?.fields?.[customSelectedFieldIndex]
+    : undefined;
+  const customVisibleRegionIds =
+    resultTab !== "custom"
+      ? undefined
+      : customSelectedFieldIndex != null
+        ? customHasSelectedFieldRegion
+          ? [ocrRegionIdForField(customSelectedFieldIndex)]
+          : customSelectedUserRegionId
+            ? [customSelectedUserRegionId]
+            : []
+        : canvasSelectedId
+          ? [canvasSelectedId]
+          : [];
+  const customEmptySelectionHint =
+    resultTab === "custom" && customSelectedFieldIndex != null && !customHasSelectedFieldRegion && !customSelectedUserRegionId
+      ? "선택한 필드의 OCR 원본 영역이 없습니다. 좌측 이미지에서 영역을 지정하거나 최종값을 직접 입력하세요."
+      : undefined;
+
+  // Custom 탭 onBlur 자동저장 — 사용자 편집을 history.output_fields.modified 에 반영.
+  // immutable 메타(no/en/ko/original/applied/autofillAction/suggestions)는 initialOutputFields 에서 보존.
+  // initialOutputFields 가 null 이면 success 레코드가 아니므로 자동저장을 건너뛴다.
+  const handlePersistEdits = (edited: OcrFieldResult[]) => {
+    if (!currentJobId || !initialOutputFields) return;
+    const initial = initialOutputFields;
+    const merged: HistoryOutputField[] = edited.map((field, idx) => {
+      const base = initial[idx];
+      return {
+        no: base?.no ?? idx + 1,
+        en: base?.en ?? field.en ?? "",
+        ko: base?.ko ?? field.ko ?? "",
+        original: base?.original ?? "",
+        modified: field.value,
+        confidence: Number(field.confidence ?? base?.confidence ?? 0),
+        source: field.source ?? base?.source,
+        applied: field.applied ?? base?.applied,
+        autofillAction: field.autofillAction ?? base?.autofillAction,
+        suggestions: base?.suggestions,
+      };
+    });
+    updateHistoryRun(currentJobId, { output_fields: merged });
+  };
+
+  const handleResultClose = () => {
+    setOcrResult(null);
+    setProcessedImageUrl(null);
+    setCurrentJobId(null);
+    setCurrentCreatedAt(null);
+    setInitialOutputFields(null);
+    setSelectedFieldIndex(null);
+    setCanvasSelectedId(null);
+  };
+
   // OCR 결과 화면
   if (ocrResult && selectedFile) {
     return (
@@ -983,6 +1130,15 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
               setRowTemplateTargetId={setRowTemplateTargetId}
               colGuideTargetId={colGuideTargetId}
               setColGuideTargetId={setColGuideTargetId}
+              visibleRegionIds={customVisibleRegionIds}
+              emptySelectionHint={customEmptySelectionHint}
+              drawTargetRegionId={customDrawTargetRegionId}
+              drawTargetName={customDrawTargetField?.name}
+              drawTargetFieldType={(canvasDrawMode || customDrawTargetField?.field_type || "field") as FieldType}
+              onClearSelection={() => {
+                setSelectedFieldIndex(null);
+                setCanvasSelectedId(null);
+              }}
             />
           ) : ocrDisplayUrl ? (
             <OcrDocViewer
@@ -1029,6 +1185,10 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
             isScanning={isOcrRunning}
             onScanChange={setIsOcrRunning}
             canvasRegions={canvasRegions}
+            jobId={currentJobId}
+            createdAt={currentCreatedAt}
+            onClose={handleResultClose}
+            onPersist={handlePersistEdits}
             onPartialOcr={async (targets) => {
               if (!selectedFile) return [];
               const formData = new FormData();
