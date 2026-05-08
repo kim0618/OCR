@@ -43,6 +43,7 @@ export type OcrResponse = {
   finance_fields?: Record<string, string>;
   document_fields?: Record<string, string>;
   invoice_fields?: Record<string, string>;
+  extract_debug?: Record<string, unknown>;
   /** finance_profile review 사유 코드 목록 (내부 감사용) */
   finance_review_reasons?: string[];
   status?: string;
@@ -63,6 +64,7 @@ export type OcrEntry = {
   /** finance_profile Tier-1 값 (bankName / transactionType / transactionDateTime / amount) */
   financeFields?: Record<string, string>;
   documentFields?: Record<string, string>;
+  extractDebug?: Record<string, unknown>;
   /** finance_profile review 사유 코드 목록 */
   financeReviewReasons?: string[];
 };

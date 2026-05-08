@@ -131,6 +131,325 @@ function documentMatchMeta(status: "O" | "△" | "X" | "—"): { symbol: string;
   }
 }
 
+type NormalizationRule = {
+  rule?: string;
+  before?: string;
+  after?: string;
+  confidence?: string;
+  reason?: string;
+};
+
+type NormalizationFieldRecord = {
+  field?: string;
+  fieldType?: string;
+  role?: string;
+  rawValue?: string;
+  normalizedValue?: string;
+  valueChanged?: boolean;
+  appliedRules?: NormalizationRule[];
+};
+
+type InvoiceNormalization = {
+  valueDirectChange?: boolean;
+  normalizedFields?: Record<string, string>;
+  fields?: NormalizationFieldRecord[];
+};
+
+type NormalizedAuxStatus = "O" | "△" | "X" | "—";
+
+type SummaryTotalRisk = {
+  value: string;
+  source: string;
+  score: string;
+  reason: string;
+  evidenceText: string;
+  flags: string[];
+};
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" ? value as Record<string, unknown> : null;
+}
+
+function getInvoiceNormalization(entry?: OcrEntry | null): InvoiceNormalization | null {
+  const root = asRecord(entry?.extractDebug);
+  const invoice = asRecord(root?.invoice_statement);
+  const normalization = asRecord(invoice?.normalization);
+  return normalization as InvoiceNormalization | null;
+}
+
+function getInvoiceDebug(entry?: OcrEntry | null): Record<string, unknown> | null {
+  const root = asRecord(entry?.extractDebug);
+  return asRecord(root?.invoice_statement);
+}
+
+function unknownToText(value: unknown): string {
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  return "";
+}
+
+function unknownToNumberText(value: unknown): string {
+  return typeof value === "number" && Number.isFinite(value) ? String(value) : unknownToText(value);
+}
+
+function normalizedMoneyText(value: string): string {
+  return (value ?? "").replace(/[^\d]/g, "");
+}
+
+function getSelectedSummaryRisk(invoiceDebug: Record<string, unknown> | null, selectedValue: string): Record<string, unknown> | null {
+  const blocks = Array.isArray(invoiceDebug?.amount_summary_blocks) ? invoiceDebug?.amount_summary_blocks : [];
+  const selectedDigits = normalizedMoneyText(selectedValue);
+
+  for (const item of blocks) {
+    const block = asRecord(item);
+    const selected = asRecord(block?.selected);
+    const total = asRecord(selected?.totalAmount);
+    if (!total) continue;
+
+    const value = unknownToText(total.value);
+    if (!selectedDigits || normalizedMoneyText(value) === selectedDigits) {
+      return asRecord(total.risk);
+    }
+  }
+
+  return null;
+}
+
+function getSummaryTotalRisk(invoiceDebug: Record<string, unknown> | null, fieldKey: string, value: string): SummaryTotalRisk | null {
+  if (fieldKey !== "totalAmount") return null;
+
+  const evidence = asRecord(invoiceDebug?.amount_total_evidence);
+  if (!evidence) return null;
+
+  const evidenceValue = unknownToText(evidence.value);
+  if (value && evidenceValue && normalizedMoneyText(value) !== normalizedMoneyText(evidenceValue)) return null;
+
+  const source = unknownToText(evidence.source);
+  const score = unknownToNumberText(evidence.score);
+  const reason = unknownToText(evidence.reason);
+  const bestOccurrence = asRecord(evidence.bestOccurrence);
+  const evidenceText = unknownToText(bestOccurrence?.text);
+  const selectedRisk = getSelectedSummaryRisk(invoiceDebug, value || evidenceValue);
+  const flags: string[] = [];
+
+  if (/low_confidence/i.test(source) || /low_confidence|low confidence/i.test(reason) || (Number(score) > 0 && Number(score) < 50)) {
+    flags.push("low confidence");
+  }
+  if (selectedRisk?.codeLotLike === true || /code|lot/i.test(reason + " " + evidenceText)) flags.push("code/lot risk");
+  if (selectedRisk?.embeddedCode === true) flags.push("embedded code");
+  if (selectedRisk?.dateLike === true) flags.push("date-like");
+  if (selectedRisk?.tableBodyLike === true || /table_body_like/i.test(reason)) flags.push("table/body-like");
+  if (reason && /party_or_noise/i.test(reason)) flags.push("party/noise context");
+
+  if (flags.length === 0 && !source && !reason) return null;
+
+  return {
+    value: evidenceValue,
+    source,
+    score,
+    reason,
+    evidenceText,
+    flags: Array.from(new Set(flags)),
+  };
+}
+
+function getNormalizationRecord(normalization: InvoiceNormalization | null, fieldKey: string): NormalizationFieldRecord | null {
+  const direct = normalization?.fields?.find((item) => item.field === fieldKey);
+  if (direct) return direct;
+  const alias = fieldKey.startsWith("buyer") ? fieldKey.replace(/^buyer/, "customer") : fieldKey.replace(/^customer/, "buyer");
+  return normalization?.fields?.find((item) => item.field === alias) ?? null;
+}
+
+function getNormalizedFieldValue(normalization: InvoiceNormalization | null, fieldKey: string): string {
+  const direct = normalization?.normalizedFields?.[fieldKey];
+  if (typeof direct === "string") return direct;
+  const alias = fieldKey.startsWith("buyer") ? fieldKey.replace(/^buyer/, "customer") : fieldKey.replace(/^customer/, "buyer");
+  return normalization?.normalizedFields?.[alias] ?? "";
+}
+
+function compactForNormalizedCompare(fieldType: string, value: string): string {
+  const raw = (value ?? "").trim();
+  if (!raw) return "";
+  if (fieldType === "business_number") return raw.replace(/\D/g, "");
+  if (fieldType === "representative") return raw.replace(/\s*[,/]\s*/g, ",").replace(/\s+/g, "").toLowerCase();
+  if (fieldType === "company") return raw.replace(/[\s().,\-_/]/g, "").toLowerCase();
+  if (fieldType === "address") return raw.replace(/\s+/g, "").replace(/[(),.\-_/]/g, "").toLowerCase();
+  return normalizeDocumentCompare(raw);
+}
+
+function digitSignature(value: string): string {
+  return (value ?? "").match(/\d+/g)?.join("|") ?? "";
+}
+
+function computeNormalizedAuxStatus(args: {
+  normalizedValue: string;
+  gtValue: string;
+  fieldType: string;
+  rules: NormalizationRule[];
+}): NormalizedAuxStatus {
+  const { normalizedValue, gtValue, fieldType, rules } = args;
+  if (!normalizedValue || !gtValue) return "—";
+  const hasDebugOnly = rules.some((rule) => /debug_only|low/i.test(rule.confidence ?? ""));
+  const gtNorm = compactForNormalizedCompare(fieldType, gtValue);
+  const normalizedNorm = compactForNormalizedCompare(fieldType, normalizedValue);
+  if (!gtNorm || !normalizedNorm) return "—";
+  if (gtNorm === normalizedNorm) return hasDebugOnly ? "△" : "O";
+  if (fieldType === "address" && digitSignature(gtValue) && digitSignature(normalizedValue) && digitSignature(gtValue) !== digitSignature(normalizedValue)) {
+    return "X";
+  }
+  if (!hasDebugOnly && (gtNorm.includes(normalizedNorm) || normalizedNorm.includes(gtNorm))) return "△";
+  return hasDebugOnly ? "△" : "X";
+}
+
+function normalizedStatusLabel(status: NormalizedAuxStatus): string {
+  if (status === "O") return "정규화 기준 일치 가능";
+  if (status === "△") return "normalized △";
+  if (status === "X") return "normalized X";
+  return "정규화 후보";
+}
+
+function normalizedStatusColor(status: NormalizedAuxStatus): string {
+  if (status === "O") return "#22c55e";
+  if (status === "△") return "#f59e0b";
+  if (status === "X") return "#64748b";
+  return "#0ea5e9";
+}
+
+type EntryNormalizationFieldSummary = {
+  fieldKey: string;
+  rawValue: string;
+  normalizedValue: string;
+  gtValue: string;
+  exactStatus: ReturnType<typeof documentMatchStatus>;
+  normalizedStatus: NormalizedAuxStatus;
+  rules: NormalizationRule[];
+  hasRiskRule: boolean;
+};
+
+type EntryNormalizationSummary = {
+  candidateCount: number;
+  normPassCandidateCount: number;
+  normPartialCount: number;
+  normFailCount: number;
+  debugOnlyCount: number;
+  overcorrectionRiskCount: number;
+  unknownCount: number;
+  fields: EntryNormalizationFieldSummary[];
+};
+
+type DatasetNormalizationSummary = EntryNormalizationSummary & {
+  entryCountWithCandidates: number;
+};
+
+const EMPTY_ENTRY_NORMALIZATION_SUMMARY: EntryNormalizationSummary = {
+  candidateCount: 0,
+  normPassCandidateCount: 0,
+  normPartialCount: 0,
+  normFailCount: 0,
+  debugOnlyCount: 0,
+  overcorrectionRiskCount: 0,
+  unknownCount: 0,
+  fields: [],
+};
+
+function hasNormalizationRiskRule(rules: NormalizationRule[]): boolean {
+  return rules.some((rule) => {
+    const haystack = `${rule.rule ?? ""} ${rule.confidence ?? ""} ${rule.reason ?? ""}`.toLowerCase();
+    return /debug_only|low_confidence|\blow\b|possible_overcorrection|overcorrection|company_ocr_confusion|representative_spelling|skipped_low_confidence|skipped_possible/.test(haystack);
+  });
+}
+
+function collectEntryNormalizationSummary(
+  entry: OcrEntry | undefined,
+  docGt: Record<string, string>,
+): EntryNormalizationSummary {
+  const normalization = getInvoiceNormalization(entry);
+  if (!normalization) return EMPTY_ENTRY_NORMALIZATION_SUMMARY;
+
+  const docFields = entry?.documentFields ?? {};
+  const summary: EntryNormalizationSummary = {
+    candidateCount: 0,
+    normPassCandidateCount: 0,
+    normPartialCount: 0,
+    normFailCount: 0,
+    debugOnlyCount: 0,
+    overcorrectionRiskCount: 0,
+    unknownCount: 0,
+    fields: [],
+  };
+
+  for (const col of DOCUMENT_FIELD_META) {
+    const record = getNormalizationRecord(normalization, col.key);
+    const normalizedValue = getNormalizedFieldValue(normalization, col.key);
+    const rawValue = docFields[col.key] ?? "";
+    const gtValue = docGt[col.key] ?? "";
+    const rules = record?.appliedRules ?? [];
+    const hasCandidate = Boolean(rules.length > 0 || (normalizedValue && normalizedValue !== rawValue));
+    if (!hasCandidate) continue;
+
+    const exactStatus = documentMatchStatus(gtValue, rawValue);
+    const normalizedStatus = computeNormalizedAuxStatus({
+      normalizedValue,
+      gtValue,
+      fieldType: record?.fieldType ?? "",
+      rules,
+    });
+    const hasRiskRule = hasNormalizationRiskRule(rules);
+
+    summary.candidateCount += 1;
+    if (rules.some((rule) => /debug_only/i.test(`${rule.rule ?? ""} ${rule.confidence ?? ""} ${rule.reason ?? ""}`))) {
+      summary.debugOnlyCount += 1;
+    }
+    if (hasRiskRule) summary.overcorrectionRiskCount += 1;
+
+    if (!gtValue || !normalizedValue) {
+      summary.unknownCount += 1;
+    } else if (exactStatus !== "O" && normalizedStatus === "O" && !hasRiskRule) {
+      summary.normPassCandidateCount += 1;
+    } else if (normalizedStatus === "△" || hasRiskRule) {
+      summary.normPartialCount += 1;
+    } else if (normalizedStatus === "X") {
+      summary.normFailCount += 1;
+    }
+
+    summary.fields.push({
+      fieldKey: col.key,
+      rawValue,
+      normalizedValue,
+      gtValue,
+      exactStatus,
+      normalizedStatus,
+      rules,
+      hasRiskRule,
+    });
+  }
+
+  return summary;
+}
+
+function mergeNormalizationSummary(target: DatasetNormalizationSummary, item: EntryNormalizationSummary): void {
+  if (item.candidateCount > 0) target.entryCountWithCandidates += 1;
+  target.candidateCount += item.candidateCount;
+  target.normPassCandidateCount += item.normPassCandidateCount;
+  target.normPartialCount += item.normPartialCount;
+  target.normFailCount += item.normFailCount;
+  target.debugOnlyCount += item.debugOnlyCount;
+  target.overcorrectionRiskCount += item.overcorrectionRiskCount;
+  target.unknownCount += item.unknownCount;
+  target.fields.push(...item.fields);
+}
+
+function normalizationSummaryTitle(summary: EntryNormalizationSummary): string {
+  if (summary.candidateCount <= 0) return "No normalization candidates";
+  return [
+    `candidate ${summary.candidateCount}`,
+    `Norm O ${summary.normPassCandidateCount}`,
+    `Norm partial ${summary.normPartialCount}`,
+    `risk ${summary.overcorrectionRiskCount}`,
+    `unknown ${summary.unknownCount}`,
+  ].join(" · ");
+}
+
 function inferInvoiceDocumentFields(data: OcrResponse): Record<string, string> {
   const explicit = data.document_fields ?? data.invoice_fields;
   if (explicit && Object.keys(explicit).length > 0) return explicit;
@@ -164,7 +483,15 @@ function inferInvoiceDocumentFields(data: OcrResponse): Record<string, string> {
 async function readJsonResponse<T>(res: Response, label: string): Promise<T> {
   const text = await res.text();
   if (!res.ok) {
-    throw new Error(`${label} 실패 (${res.status}): ${text.slice(0, 180) || res.statusText}`);
+    let detail = text;
+    try {
+      const payload = JSON.parse(text) as { detail?: unknown; message?: unknown; error?: unknown };
+      const picked = payload.detail ?? payload.message ?? payload.error;
+      detail = typeof picked === "string" ? picked : JSON.stringify(picked ?? payload);
+    } catch {
+      detail = text;
+    }
+    throw new Error(`${label} 실패 (${res.status}): ${detail.slice(0, 260) || res.statusText}`);
   }
   try {
     return (text ? JSON.parse(text) : {}) as T;
@@ -182,7 +509,9 @@ async function fetchOcr(filename: string, imageBaseUrl: string): Promise<OcrEntr
   const blob = await imageRes.blob();
   const form = new FormData();
   form.append("file", new File([blob], filename, { type: blob.type || "image/jpeg" }));
-  const ocrRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || ""}/ocr/extract`, { method: "POST", body: form });
+  const backendBase = process.env.NEXT_PUBLIC_BACKEND_URL;
+  const ocrEndpoint = backendBase ? `${backendBase}/ocr/extract` : "/api/ocr-extract";
+  const ocrRes = await fetch(ocrEndpoint, { method: "POST", body: form });
   const data = await readJsonResponse<OcrResponse>(ocrRes, `${filename} OCR`);
 
   const raw: Entry = data.receipt_fields
@@ -200,6 +529,7 @@ async function fetchOcr(filename: string, imageBaseUrl: string): Promise<OcrEntr
     docType: data.doc_type,
     financeFields: data.finance_fields,
     documentFields: inferInvoiceDocumentFields(data),
+    extractDebug: data.extract_debug,
     financeReviewReasons: data.finance_review_reasons,
   };
 }
@@ -1121,6 +1451,28 @@ export default function TestWorkspace() {
     };
   }, [documentBatchRows, images, manifest, ocr, gt]);
 
+  const documentNormalizationKpi = useMemo((): DatasetNormalizationSummary => {
+    const summary: DatasetNormalizationSummary = {
+      candidateCount: 0,
+      normPassCandidateCount: 0,
+      normPartialCount: 0,
+      normFailCount: 0,
+      debugOnlyCount: 0,
+      overcorrectionRiskCount: 0,
+      unknownCount: 0,
+      fields: [],
+      entryCountWithCandidates: 0,
+    };
+
+    for (const img of documentBatchRows) {
+      const entry = ocr[img];
+      if (!getInvoiceNormalization(entry)) continue;
+      mergeNormalizationSummary(summary, collectEntryNormalizationSummary(entry, gt[img]?.documentFields ?? {}));
+    }
+
+    return summary;
+  }, [documentBatchRows, ocr, gt]);
+
   // ── qualityTags 필터 ──
   const availableQualityTags = useMemo(() => {
     if (!manifest) return [];
@@ -1536,6 +1888,37 @@ export default function TestWorkspace() {
                 tone={toneOf(documentKpi.gtFieldMatch, documentKpi.gtFieldTotal)}
               />
             )}
+            {documentNormalizationKpi.candidateCount > 0 && (
+              <>
+                <KpiChip
+                  label="Norm 후보"
+                  value={String(documentNormalizationKpi.candidateCount)}
+                  sub={`${documentNormalizationKpi.entryCountWithCandidates} files`}
+                  tone="neutral"
+                  title="Normalized candidates from extract_debug.invoice_statement.normalization. Existing exact O/X is unchanged."
+                />
+                <KpiChip
+                  label="Norm O 가능"
+                  value={String(documentNormalizationKpi.normPassCandidateCount)}
+                  sub="exact X 보조"
+                  tone={documentNormalizationKpi.normPassCandidateCount > 0 ? "green" : "neutral"}
+                  title="Raw/exact X fields whose normalized candidate may match GT. This is only an auxiliary marker."
+                />
+                <KpiChip
+                  label="Norm △"
+                  value={String(documentNormalizationKpi.normPartialCount)}
+                  tone={documentNormalizationKpi.normPartialCount > 0 ? "amber" : "neutral"}
+                  title="Partial normalized candidates or candidates that need human review."
+                />
+                <KpiChip
+                  label="주의"
+                  value={String(documentNormalizationKpi.overcorrectionRiskCount)}
+                  sub={documentNormalizationKpi.unknownCount > 0 ? `판정불가 ${documentNormalizationKpi.unknownCount}` : undefined}
+                  tone={documentNormalizationKpi.overcorrectionRiskCount > 0 ? "amber" : "neutral"}
+                  title="debug_only, low-confidence, or possible overcorrection rules. These are not counted as pass."
+                />
+              </>
+            )}
           </KpiSection>
           )}
 
@@ -1737,14 +2120,17 @@ export default function TestWorkspace() {
                   {DOCUMENT_FIELD_META.map((col) => (
                     <th key={col.key} style={th}>{col.shortLabel}</th>
                   ))}
+                  <th style={{ ...th, textAlign: "center" }} title="Normalized auxiliary counts. Existing exact O/X is not changed.">Norm</th>
                   <th style={{ ...th, textAlign: "center" }}>상태</th>
                 </tr>
               </thead>
               <tbody>
                 {documentBatchRows.map((img) => {
-                  const docFields = ocr[img]?.documentFields ?? {};
+                  const entry = ocr[img];
+                  const docFields = entry?.documentFields ?? {};
                   const docGt = gt[img]?.documentFields ?? {};
-                  const status = ocr[img]?.status ?? "selected";
+                  const status = entry?.status ?? "selected";
+                  const normSummary = collectEntryNormalizationSummary(entry, docGt);
                   return (
                     <tr key={img} onClick={() => setSelected(img)}
                       style={{ cursor: "pointer", background: selected === img ? "var(--accentBg)" : undefined }}>
@@ -1764,6 +2150,22 @@ export default function TestWorkspace() {
                           </td>
                         );
                       })}
+                      <td style={{ ...td, textAlign: "center" }} title={normalizationSummaryTitle(normSummary)}>
+                        {normSummary.candidateCount > 0 ? (
+                          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                            <span style={{ fontSize: 10, color: "#38bdf8", fontWeight: 800, whiteSpace: "nowrap" }}>
+                              O {normSummary.normPassCandidateCount} · △ {normSummary.normPartialCount}
+                            </span>
+                            {(normSummary.overcorrectionRiskCount > 0 || normSummary.unknownCount > 0) && (
+                              <span style={{ fontSize: 9, color: "#f59e0b", fontWeight: 700, whiteSpace: "nowrap" }}>
+                                주의 {normSummary.overcorrectionRiskCount} · — {normSummary.unknownCount}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span style={{ color: "rgba(255,255,255,0.35)" }}>—</span>
+                        )}
+                      </td>
                       <td style={{ ...td, textAlign: "center" }}>
                         <span style={{ fontSize: 10, padding: "1px 6px", borderRadius: 4, background: status === "selected" ? "#16a34a" : "#6b7280", color: "#fff", fontWeight: 700 }}>
                           {status}
@@ -1898,6 +2300,8 @@ export default function TestWorkspace() {
           ) : selected && selProfile.base === "document" ? (
             <DocumentDetailPanel
               documentFields={selOcr?.documentFields ?? null}
+              normalization={getInvoiceNormalization(selOcr)}
+              invoiceDebug={getInvoiceDebug(selOcr)}
               hasOcr={!!selOcr}
               documentGt={selDocumentGt}
               onDocumentGtChange={(field, value) => updateDocumentGtField(selected!, field, value)}
@@ -2388,14 +2792,14 @@ function FieldSlot({ color, label, emphasis, children }: { color: string; label:
 
 type KpiTone = "green" | "amber" | "red" | "indigo" | "sky" | "neutral";
 
-function KpiChip({ label, value, sub, tone = "neutral" }: { label: string; value: string; sub?: string; tone?: KpiTone }) {
+function KpiChip({ label, value, sub, tone = "neutral", title }: { label: string; value: string; sub?: string; tone?: KpiTone; title?: string }) {
   const toneColors: Record<KpiTone, string> = {
     green: "#22c55e", amber: "#f59e0b", red: "#ef4444",
     indigo: "#6366f1", sky: "#0ea5e9",
     neutral: "rgba(255,255,255,0.55)",
   };
   return (
-    <div style={{ display: "flex", flexDirection: "column", padding: "6px 10px", borderRadius: 8, background: "var(--panel2)", minWidth: 60 }}>
+    <div title={title} style={{ display: "flex", flexDirection: "column", padding: "6px 10px", borderRadius: 8, background: "var(--panel2)", minWidth: 60 }}>
       <span style={{ fontSize: 9, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: 0.4, whiteSpace: "nowrap" }}>{label}</span>
       <span style={{ fontSize: 14, fontWeight: 800, color: toneColors[tone], lineHeight: 1.1 }}>{value}</span>
       {sub && <span style={{ fontSize: 9, color: "var(--muted)", whiteSpace: "nowrap" }}>{sub}</span>}
@@ -2933,11 +3337,15 @@ function FinanceDetailPanel({
 
 function DocumentDetailPanel({
   documentFields,
+  normalization,
+  invoiceDebug,
   hasOcr,
   documentGt,
   onDocumentGtChange,
 }: {
   documentFields: Record<string, string> | null;
+  normalization: InvoiceNormalization | null;
+  invoiceDebug: Record<string, unknown> | null;
   hasOcr: boolean;
   documentGt: Record<string, string>;
   onDocumentGtChange: (field: string, value: string) => void;
@@ -2964,6 +3372,8 @@ function DocumentDetailPanel({
           label={label}
           required={required}
           value={documentFields?.[key] ?? ""}
+          normalization={normalization}
+          invoiceDebug={invoiceDebug}
           hasOcr={hasOcr}
           gtValue={documentGt[key] ?? ""}
           onGtChange={(v) => onDocumentGtChange(key, v)}
@@ -2978,6 +3388,8 @@ function DocumentFieldCard({
   label,
   required,
   value,
+  normalization,
+  invoiceDebug,
   hasOcr,
   gtValue,
   onGtChange,
@@ -2986,6 +3398,8 @@ function DocumentFieldCard({
   label: string;
   required: boolean;
   value: string;
+  normalization: InvoiceNormalization | null;
+  invoiceDebug: Record<string, unknown> | null;
   hasOcr: boolean;
   gtValue: string;
   onGtChange: (v: string) => void;
@@ -2994,6 +3408,20 @@ function DocumentFieldCard({
   const hasGt = gtValue !== "";
   const status = documentMatchStatus(gtValue, value);
   const meta = documentMatchMeta(status);
+  const normalizationRecord = getNormalizationRecord(normalization, fieldKey);
+  const normalizedValue = getNormalizedFieldValue(normalization, fieldKey);
+  const normalizationRules = normalizationRecord?.appliedRules ?? [];
+  const fieldType = normalizationRecord?.fieldType ?? "";
+  const showNormalization = Boolean(
+    hasOcr &&
+    (normalizationRules.length > 0 || (normalizedValue && normalizedValue !== value))
+  );
+  const normalizedStatus = showNormalization
+    ? computeNormalizedAuxStatus({ normalizedValue, gtValue, fieldType, rules: normalizationRules })
+    : "—";
+  const hasDebugOnlyRule = normalizationRules.some((rule) => /debug_only|low/i.test(rule.confidence ?? ""));
+  const ruleNames = normalizationRules.map((rule) => rule.rule).filter(Boolean).join(", ");
+  const summaryTotalRisk = getSummaryTotalRisk(invoiceDebug, fieldKey, value);
   const statusSymbol = hasGt ? meta.symbol : (hasValue ? "O" : required ? "X" : "—");
   const statusBg =
     statusSymbol === "O" ? "#22c55e" :
@@ -3084,6 +3512,82 @@ function DocumentFieldCard({
       </FieldSlot>
 
       {/* 채택값 슬롯 (강조) — GT vs OCR 비교 결과로 source/value 결정 (baseline 패턴) */}
+      {showNormalization && (
+        <FieldSlot color={normalizedStatusColor(normalizedStatus)} label="NORM">
+          <div style={{ display: "flex", flexDirection: "column", gap: 5, minWidth: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+              <span style={{
+                fontSize: 12,
+                color: normalizedValue ? "var(--text)" : "rgba(255,255,255,0.35)",
+                fontWeight: 700,
+                wordBreak: "break-all",
+              }}>
+                {normalizedValue || "—"}
+              </span>
+              <span title="기존 exact O/X는 유지하고 normalized 후보 기준 보조 상태만 표시합니다." style={{
+                fontSize: 9, fontWeight: 900, padding: "2px 7px", borderRadius: 999,
+                color: "#fff", background: normalizedStatusColor(normalizedStatus), whiteSpace: "nowrap",
+              }}>
+                {normalizedStatusLabel(normalizedStatus)}
+              </span>
+              {normalizedValue && normalizedValue !== value && (
+                <span style={{
+                  fontSize: 9, fontWeight: 800, padding: "2px 7px", borderRadius: 999,
+                  color: "#bae6fd", background: "rgba(14,165,233,0.15)",
+                  border: "1px solid rgba(14,165,233,0.25)", whiteSpace: "nowrap",
+                }}>정규화 후보</span>
+              )}
+              {hasDebugOnlyRule && (
+                <span style={{
+                  fontSize: 9, fontWeight: 800, padding: "2px 7px", borderRadius: 999,
+                  color: "#fde68a", background: "rgba(245,158,11,0.14)",
+                  border: "1px solid rgba(245,158,11,0.3)", whiteSpace: "nowrap",
+                }}>과보정 주의</span>
+              )}
+            </div>
+            {normalizationRules.length > 0 && (
+              <div style={{ fontSize: 10, color: "var(--muted)", lineHeight: 1.45, wordBreak: "break-word" }}>
+                규칙 {normalizationRules.length}개{ruleNames ? ` · ${ruleNames}` : ""}
+              </div>
+            )}
+          </div>
+        </FieldSlot>
+      )}
+
+      {summaryTotalRisk && (
+        <FieldSlot color="#f59e0b" label="SUMMARY">
+          <div style={{ display: "flex", flexDirection: "column", gap: 5, minWidth: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+              {summaryTotalRisk.flags.map((flag) => (
+                <span key={flag} style={{
+                  fontSize: 9, fontWeight: 900, padding: "2px 7px", borderRadius: 999,
+                  color: "#fde68a", background: "rgba(245,158,11,0.14)",
+                  border: "1px solid rgba(245,158,11,0.3)", whiteSpace: "nowrap",
+                }}>
+                  {flag}
+                </span>
+              ))}
+              {summaryTotalRisk.source && (
+                <span style={{ fontSize: 10, color: "var(--muted)", fontWeight: 800 }}>
+                  {summaryTotalRisk.source}{summaryTotalRisk.score ? ` · score ${summaryTotalRisk.score}` : ""}
+                </span>
+              )}
+            </div>
+            {(summaryTotalRisk.reason || summaryTotalRisk.evidenceText) && (
+              <div style={{ fontSize: 10, color: "var(--muted)", lineHeight: 1.45, wordBreak: "break-word" }}>
+                {summaryTotalRisk.reason && <span>{summaryTotalRisk.reason}</span>}
+                {summaryTotalRisk.evidenceText && (
+                  <span title={summaryTotalRisk.evidenceText}>
+                    {summaryTotalRisk.reason ? " · " : ""}evidence: {summaryTotalRisk.evidenceText.slice(0, 120)}
+                    {summaryTotalRisk.evidenceText.length > 120 ? "..." : ""}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        </FieldSlot>
+      )}
+
       <FieldSlot color={hasOcr ? fSrc.color : "rgba(255,255,255,0.2)"} label="채택값" emphasis>
         <div style={{
           display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
