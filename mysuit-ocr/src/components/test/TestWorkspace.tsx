@@ -147,6 +147,12 @@ type NormalizationFieldRecord = {
   normalizedValue?: string;
   valueChanged?: boolean;
   appliedRules?: NormalizationRule[];
+  addressSimilarityAnalysis?: {
+    addressSimilarityStatus?: string;
+    matchedTokenTypes?: string[];
+    appearsTruncated?: boolean;
+    partialReason?: string;
+  };
 };
 
 type InvoiceNormalization = {
@@ -295,7 +301,13 @@ function computeNormalizedAuxStatus(args: {
   if (!gtNorm || !normalizedNorm) return "—";
   if (gtNorm === normalizedNorm) return hasDebugOnly ? "△" : "O";
   if (fieldType === "address" && digitSignature(gtValue) && digitSignature(normalizedValue) && digitSignature(gtValue) !== digitSignature(normalizedValue)) {
-    return "X";
+    // Allow △ only when normalized digits are a proper subset of GT digits AND
+    // normalized text is a substring of GT (prefix/tail truncation, not a different address)
+    const gtDigitParts = new Set(digitSignature(gtValue).split("|").filter(Boolean));
+    const normDigitParts = digitSignature(normalizedValue).split("|").filter(Boolean);
+    const normIsDigitSubset = normDigitParts.length > 0 && normDigitParts.every(d => gtDigitParts.has(d));
+    if (!normIsDigitSubset || !gtNorm.includes(normalizedNorm)) return "X";
+    // Fall through: normalized is both a digit-subset and text-substring of GT → △
   }
   if (!hasDebugOnly && (gtNorm.includes(normalizedNorm) || normalizedNorm.includes(gtNorm))) return "△";
   return hasDebugOnly ? "△" : "X";
@@ -3412,6 +3424,7 @@ function DocumentFieldCard({
   const normalizedValue = getNormalizedFieldValue(normalization, fieldKey);
   const normalizationRules = normalizationRecord?.appliedRules ?? [];
   const fieldType = normalizationRecord?.fieldType ?? "";
+  const addrPartialStatus = normalizationRecord?.addressSimilarityAnalysis?.addressSimilarityStatus ?? "";
   const showNormalization = Boolean(
     hasOcr &&
     (normalizationRules.length > 0 || (normalizedValue && normalizedValue !== value))
@@ -3537,7 +3550,14 @@ function DocumentFieldCard({
                   border: "1px solid rgba(14,165,233,0.25)", whiteSpace: "nowrap",
                 }}>정규화 후보</span>
               )}
-              {hasDebugOnlyRule && (
+              {addrPartialStatus && addrPartialStatus !== "complete" && (
+                <span title={normalizationRecord?.addressSimilarityAnalysis?.partialReason ?? ""} style={{
+                  fontSize: 9, fontWeight: 800, padding: "2px 7px", borderRadius: 999,
+                  color: "#c4b5fd", background: "rgba(139,92,246,0.13)",
+                  border: "1px solid rgba(139,92,246,0.3)", whiteSpace: "nowrap",
+                }}>partial: {addrPartialStatus.replace(/_/g, " ")}</span>
+              )}
+              {hasDebugOnlyRule && !addrPartialStatus && (
                 <span style={{
                   fontSize: 9, fontWeight: 800, padding: "2px 7px", borderRadius: 999,
                   color: "#fde68a", background: "rgba(245,158,11,0.14)",

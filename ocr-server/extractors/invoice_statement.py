@@ -1358,6 +1358,79 @@ def _clean_address_candidate_line(text: str) -> str:
     return value if _is_address_candidate_line(value) else ""
 
 
+def _is_address_tail_fragment(text: str) -> bool:
+    """Return True if text looks like an address tail continuation.
+
+    Accepts lines like '302호(당산동4가, SK V1 센터)' that follow an address
+    ending with a unit number, but rejects table rows, phone-only lines, etc.
+    """
+    value = _clean_value(text or "")
+    if not value or len(re.sub(r"\s+", "", value)) < 3:
+        return False
+    if _BIZ_RE.search(_canonical_digits(value)) or _PHONE_RE.search(value):
+        return False
+    if _TABLE_SUMMARY_RE.search(value) or _TABLE_HEADER_TOKEN_RE.search(value):
+        return False
+    if _has_product_hint(value):
+        return False
+    if re.search(r"인수|확인|서명|주문|담당자|영업|팀지점", value):
+        return False
+    has_addr_token = bool(_ADDRESS_TOKEN_RE.search(value))
+    has_unit = bool(re.search(r"\d+\s*(?:층|호|번지)", value))
+    has_building = bool(re.search(r"\([가-힣A-Za-z0-9\s]{2,20}\)", value))
+    return has_addr_token or has_unit or has_building
+
+
+def _extract_address_from_mixed_company_line(text: str) -> str:
+    """Extract address portion from a line mixing company name and address.
+
+    Handles patterns like:
+      '백제약품(주)영등포지점 : (17811) 경기도 평택시 청북읍 청북로 175 (현곡리)'
+    Returns only the address portion, or '' if not safely extractable.
+    Note: avoids _clean_value to preserve leading parentheses (postal codes).
+    """
+    value = (text or "").strip()
+    if not value:
+        return ""
+
+    def _safe_strip_addr(v: str) -> str:
+        v = _PHONE_RE.split(v, maxsplit=1)[0]
+        v = re.sub(r"\s+[A-Za-z]\.\s*$", "", v)  # strip trailing "T." "F." etc.
+        v = re.sub(r"[\s:；.,]+$", "", v).strip()
+        return v
+
+    def _is_valid_addr_fragment(v: str) -> bool:
+        compact = re.sub(r"\s+", "", v)
+        return (re.match(r"^\(\d{5}\)", v) or _CITY_PREFIX_RE.match(compact)) and len(compact) > 5
+
+    # Strategy 1: after colon separator
+    colon_match = re.search(r"[:：]\s*", value)
+    if colon_match:
+        after_colon = _safe_strip_addr(value[colon_match.end():])
+        if _is_valid_addr_fragment(after_colon):
+            return after_colon
+
+    # Strategy 2: from postal code pattern
+    postal_match = re.search(r"\(\d{5}\)", value)
+    if postal_match:
+        candidate = _safe_strip_addr(value[postal_match.start():])
+        if len(re.sub(r"\s+", "", candidate)) > 5:
+            return candidate
+
+    # Strategy 3: from first city/region prefix occurrence (must be after some prefix)
+    compact_value = re.sub(r"\s+", "", value)
+    city_match = _CITY_PREFIX_RE.search(compact_value)
+    if city_match and city_match.start() > 0:
+        city_token = city_match.group(0)
+        pos = value.find(city_token[:2])
+        if pos > 0:
+            candidate = _safe_strip_addr(value[pos:])
+            if len(re.sub(r"\s+", "", candidate)) > 5:
+                return candidate
+
+    return ""
+
+
 def _address_from_scope(lines: list[OcrLine]) -> str:
     ordered = sorted(lines, key=lambda item: (item.y, item.x))
     candidates: list[tuple[int, int, str]] = []
@@ -1618,6 +1691,171 @@ def _apply_party_block_refinements(
     return debug
 
 
+def _apply_address_continuation_post(
+    supplier: dict[str, str],
+    buyer: dict[str, str],
+    all_lines: list[OcrLine],
+    bizs: list[tuple[float, float, str, OcrLine]],
+    page_w: float,
+    page_h: float,
+) -> dict[str, Any]:
+    """Post-extraction: extend partial addresses with continuation fragments.
+
+    Runs after all party assignments and cross-party cleanup.
+    Prevents cross-party mixing via x-zone and proximity checks.
+    Returns debug dict with addressContinuationDecisions.
+    """
+    ordered = sorted(all_lines, key=lambda item: (item.y, item.x))
+
+    biz_pos: dict[str, tuple[float, float]] = {}
+    for bx, by, bval, _ in bizs:
+        if bval == supplier.get("bizNumber") and "supplier" not in biz_pos:
+            biz_pos["supplier"] = (bx, by)
+        elif bval == buyer.get("bizNumber") and "buyer" not in biz_pos:
+            biz_pos["buyer"] = (bx, by)
+
+    debug: dict[str, Any] = {"decisions": []}
+
+    for role in ("supplier", "buyer"):
+        party = supplier if role == "supplier" else buyer
+        opposite = buyer if role == "supplier" else supplier
+        current_addr = party.get("address", "")
+        if not current_addr:
+            continue
+
+        role_pos = biz_pos.get(role)
+        opp_pos = biz_pos.get("buyer" if role == "supplier" else "supplier")
+        biz_x = role_pos[0] if role_pos else (page_w * 0.25 if role == "buyer" else page_w * 0.75)
+        x_zone = page_w * 0.42
+        x_min = biz_x - x_zone
+        x_max = biz_x + x_zone
+        opp_x = opp_pos[0] if opp_pos else None
+
+        decision: dict[str, Any] = {
+            "role": role,
+            "beforeAddress": current_addr,
+            "accepted": [],
+            "rejected": [],
+        }
+
+        # Find the OCR source line of current address
+        compact_addr = re.sub(r"\s+", "", current_addr)
+        addr_prefix = compact_addr[:min(len(compact_addr), 12)]
+        addr_source_idx = -1
+        for i, line in enumerate(ordered):
+            compact_line = re.sub(r"\s+", "", _clean_value(line.text))
+            if addr_prefix[:8] and addr_prefix[:8] in compact_line:
+                addr_source_idx = i
+                break
+
+        if addr_source_idx < 0:
+            decision["rejected"].append({"reason": "source_line_not_found", "prefix": addr_prefix[:20]})
+            debug["decisions"].append(decision)
+            continue
+
+        addr_source_line = ordered[addr_source_idx]
+
+        # --- TAIL continuation: look AFTER source line ---
+        for offset in range(1, 5):
+            next_idx = addr_source_idx + offset
+            if next_idx >= len(ordered):
+                break
+            nxt = ordered[next_idx]
+            nxt_text = _clean_value(nxt.text)
+
+            reject_reason = None
+            if nxt.cx < x_min or nxt.cx > x_max:
+                reject_reason = "x_zone_mismatch"
+            elif opp_x is not None and abs(nxt.cx - opp_x) < abs(nxt.cx - biz_x) - page_w * 0.04:
+                reject_reason = "closer_to_opposite"
+            elif abs(nxt.cy - addr_source_line.cy) > page_h * 0.10:
+                reject_reason = "y_too_far"
+            elif opposite.get("bizNumber") and opposite["bizNumber"].replace("-", "") in re.sub(r"\D", "", nxt_text):
+                reject_reason = "contains_opposite_biz"
+            elif re.sub(r"\s+", "", nxt_text)[:8] in compact_addr:
+                reject_reason = "already_in_address"
+
+            if reject_reason:
+                decision["rejected"].append({"type": "tail", "offset": offset, "line": nxt_text[:40], "reason": reject_reason})
+                if reject_reason in ("closer_to_opposite", "y_too_far", "contains_opposite_biz"):
+                    break
+                continue
+
+            if _is_address_tail_fragment(nxt_text):
+                combined = _clean_value(f"{party['address']} {nxt_text}")
+                if len(re.sub(r"\s+", "", combined)) <= 130:
+                    party["address"] = combined
+                    current_addr = combined
+                    compact_addr = re.sub(r"\s+", "", current_addr)
+                    decision["accepted"].append({"type": "tail", "offset": offset, "line": nxt_text[:50]})
+            else:
+                decision["rejected"].append({"type": "tail", "offset": offset, "line": nxt_text[:40], "reason": "not_tail_fragment"})
+                if not _is_address_candidate_line(nxt_text):
+                    break
+
+        # --- PREFIX continuation: look BEFORE source line (only for prefix_missing) ---
+        struct_status = _classify_address_partial_status(current_addr).get("addressSimilarityStatus", "")
+        if struct_status == "prefix_missing":
+            for offset in range(1, 6):
+                prev_idx = addr_source_idx - offset
+                if prev_idx < 0:
+                    break
+                prv = ordered[prev_idx]
+                prv_text = _clean_value(prv.text)
+
+                if prv.cx < x_min - page_w * 0.08 or prv.cx > x_max + page_w * 0.08:
+                    decision["rejected"].append({"type": "prefix", "offset": -offset, "line": prv_text[:40], "reason": "x_zone_mismatch"})
+                    continue
+                if _TABLE_SUMMARY_RE.search(prv_text) or _TABLE_HEADER_TOKEN_RE.search(prv_text):
+                    decision["rejected"].append({"type": "prefix", "offset": -offset, "line": prv_text[:40], "reason": "table_noise"})
+                    continue
+                if _BIZ_RE.search(_canonical_digits(prv_text)):
+                    decision["rejected"].append({"type": "prefix", "offset": -offset, "line": prv_text[:40], "reason": "biz_line"})
+                    continue
+
+                extracted = ""
+
+                # Try as a direct clean address line (handles standalone postal/city prefix lines)
+                clean_addr = _clean_address_candidate_line(prv_text)
+                if clean_addr:
+                    compact_clean = re.sub(r"\s+", "", clean_addr)
+                    if (_CITY_PREFIX_RE.match(compact_clean) or re.match(r"^\(\d{5}\)", clean_addr)) and compact_clean[:8] not in compact_addr:
+                        extracted = clean_addr
+
+                # Try extracting from company-mixed or phone-mixed lines
+                if not extracted and (_COMPANY_HINT_RE.search(prv_text) or _PHONE_RE.search(prv_text)):
+                    ext_candidate = _extract_address_from_mixed_company_line(prv_text)
+                    if ext_candidate:
+                        compact_ext = re.sub(r"\s+", "", ext_candidate)
+                        if (_CITY_PREFIX_RE.match(compact_ext) or re.match(r"^\(\d{5}\)", ext_candidate)) and compact_ext[:6] not in compact_addr:
+                            extracted = ext_candidate
+
+                if extracted:
+                    opp_biz_val = opposite.get("bizNumber", "")
+                    if opp_biz_val and opp_biz_val.replace("-", "") in re.sub(r"\D", "", extracted):
+                        decision["rejected"].append({"type": "prefix", "offset": -offset, "line": prv_text[:40], "reason": "extracted_has_opposite_biz"})
+                        continue
+                    compact_ext = re.sub(r"\s+", "", extracted)
+                    if compact_ext[:6] not in compact_addr:
+                        # Use simple strip to preserve leading ( in postal codes
+                        combined = re.sub(r"\s+", " ", f"{extracted} {party['address']}").strip()
+                        if len(re.sub(r"\s+", "", combined)) <= 130:
+                            party["address"] = combined
+                            current_addr = combined
+                            compact_addr = re.sub(r"\s+", "", current_addr)
+                            decision["accepted"].append({"type": "prefix", "offset": -offset, "line": prv_text[:40], "extracted": extracted[:50]})
+                            break
+                    else:
+                        decision["rejected"].append({"type": "prefix", "offset": -offset, "line": prv_text[:40], "reason": "already_in_address"})
+                else:
+                    decision["rejected"].append({"type": "prefix", "offset": -offset, "line": prv_text[:40], "reason": "no_prefix_extracted"})
+
+        decision["afterAddress"] = party.get("address", "")
+        debug["decisions"].append(decision)
+
+    return debug
+
+
 def _extract_party_fields(
     header_lines: list[OcrLine],
     all_lines: list[OcrLine],
@@ -1727,12 +1965,14 @@ def _extract_party_fields(
         block_debug.setdefault("preRefine", pre_refine_debug)
     _dedupe_cross_party_representative(supplier, buyer, block_debug)
     _remove_cross_party_address_fragments(supplier, buyer, block_debug)
+    continuation_debug = _apply_address_continuation_post(supplier, buyer, all_lines, bizs, page_w, page_h)
 
     return supplier, buyer, {
         "companies": companies,
         "bizs": [(round(x), round(y), value) for x, y, value, _ in bizs],
         "split_x": split_x,
         "block_refinement": block_debug,
+        "addressContinuation": continuation_debug,
     }
 
 
@@ -3306,8 +3546,9 @@ def _normalization_record(
     raw: str,
     normalized: str,
     rules: list[dict[str, str]],
+    address_analysis: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    return {
+    record: dict[str, Any] = {
         "field": field,
         "fieldType": field_type,
         "role": role,
@@ -3316,6 +3557,9 @@ def _normalization_record(
         "valueChanged": False,
         "appliedRules": rules,
     }
+    if address_analysis:
+        record["addressSimilarityAnalysis"] = address_analysis
+    return record
 
 
 def _add_norm_rule(rules: list[dict[str, str]], rule: str, before: str, after: str, confidence: str, reason: str) -> None:
@@ -3398,6 +3642,79 @@ def _normalize_invoice_representative(value: str) -> tuple[str, list[dict[str, s
     return normalized, rules
 
 
+_CITY_PREFIX_RE = re.compile(
+    r"^(?:서울특별시|서울특발시|서울|경기도|인천광역시|인천|부산광역시|부산|"
+    r"대구광역시|대구|광주광역시|광주|대전광역시|대전|울산광역시|울산|"
+    r"세종특별자치시|세종|강원도|강원|충청북도|충북|충청남도|충남|"
+    r"전라북도|전북|전라남도|전남|경상북도|경북|경상남도|경남|제주특별자치도|제주)"
+)
+
+
+def _classify_address_partial_status(normalized: str) -> dict[str, Any]:
+    """Structural analysis of normalized OCR address (no GT required).
+
+    Returns addressSimilarityStatus indicating how structurally complete the
+    address appears, helping downstream debug display distinguish genuine
+    mismatches from prefix/tail truncations.
+    """
+    v = (normalized or "").strip()
+    compact = re.sub(r"\s+", "", v)
+    if not compact:
+        return {"addressSimilarityStatus": "fragment_only", "matchedTokenTypes": [], "appearsTruncated": False, "partialReason": "empty value"}
+
+    has_postal = bool(re.match(r"^\(\d{5}\)", v))
+    has_city = bool(_CITY_PREFIX_RE.match(compact))
+    has_district = bool(re.search(r"[가-힣]{1,8}(?:시|군|구)", compact))
+    has_subdistrict = bool(re.search(r"[가-힣]{1,8}(?:읍|면|동|리)", compact))
+    has_road = bool(re.search(r"[가-힣]{2,16}(?:로|길)", compact))
+    has_unit = bool(re.search(r"\d+(?:층|호)|번지", compact))
+    has_bldg_paren = bool(re.search(r"\([가-힣A-Za-z0-9\s]{2,18}\)", v))
+    appears_truncated = bool(
+        re.search(r",\s*$", v)
+        or (v.count("(") > v.count(")"))
+        or re.search(r"(?:로|길)\s*\d+(?:-\d+)?\s*$", v.rstrip(","))
+    )
+
+    token_types: list[str] = []
+    if has_postal:
+        token_types.append("postal_code")
+    if has_city:
+        token_types.append("city_prefix")
+    if has_district:
+        token_types.append("district")
+    if has_subdistrict:
+        token_types.append("subdistrict")
+    if has_road:
+        token_types.append("road")
+    if has_unit:
+        token_types.append("unit_detail")
+    if has_bldg_paren:
+        token_types.append("building_parenthesis")
+
+    has_prefix = has_city or has_postal
+    has_core = has_subdistrict or has_road
+
+    if not has_prefix and has_core:
+        status = "prefix_missing"
+        reason = "city/region prefix absent; starts from subdistrict or road level"
+    elif has_prefix and appears_truncated:
+        status = "tail_truncated"
+        reason = "city prefix present but address appears truncated"
+    elif has_prefix and has_core:
+        status = "complete"
+        reason = "address appears structurally complete"
+    else:
+        status = "fragment_only"
+        reason = "only minimal address fragment detected"
+
+    return {
+        "addressSimilarityStatus": status,
+        "matchedTokenTypes": token_types,
+        "appearsTruncated": appears_truncated,
+        "partialReason": reason,
+    }
+
+
 def _space_invoice_address(value: str) -> str:
     result = value
     result = re.sub(r"^\(?(\d{5})\)?\s*", r"(\1) ", result)
@@ -3452,7 +3769,19 @@ def _normalize_invoice_party_fields(fields: dict[str, Any]) -> dict[str, Any]:
         normalized, rules = normalizer(raw)
         normalized_fields[field] = normalized
         if raw or rules:
-            field_records.append(_normalization_record(field, field_type, role, raw, normalized, rules))
+            addr_analysis: dict[str, Any] | None = None
+            if field_type == "address" and raw:
+                addr_analysis = _classify_address_partial_status(normalized)
+                partial_status = addr_analysis.get("addressSimilarityStatus", "")
+                if partial_status in ("prefix_missing", "tail_truncated", "fragment_only"):
+                    rules = list(rules) + [{
+                        "rule": f"address_partial_{partial_status}",
+                        "before": normalized,
+                        "after": normalized,
+                        "confidence": "debug_only",
+                        "reason": addr_analysis.get("partialReason", f"address structure: {partial_status}"),
+                    }]
+            field_records.append(_normalization_record(field, field_type, role, raw, normalized, rules, addr_analysis))
     return {
         "strategy": "debug_only_raw_fields_preserved",
         "valueDirectChange": False,
@@ -3534,6 +3863,7 @@ def extract_invoice_statement_fields(ocr_lines_raw: list[tuple], debug: dict[str
             "totalSuppressionDecision": amount_debug.get("totalSuppressionDecision", {}),
             "suppressedTotalCandidates": amount_debug.get("suppressedTotalCandidates", []),
             "normalization": normalization_debug,
+            "addressContinuation": party_debug.get("addressContinuation", {}),
             "table": table,
         }
 
