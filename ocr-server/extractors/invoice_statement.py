@@ -62,6 +62,36 @@ _SUMMARY_TOTAL_LABEL_RE = re.compile(
     r"\uacf5\s*\uae09\s*\ub300\s*\uac00|\ud569\s*\uacc4\s*\uae08\s*\uc561|\bTOTAL\b",
     re.I,
 )
+_PROFILE_SUMMARY_FIELD_LABELS: dict[str, re.Pattern] = {
+    "subtotal": re.compile(r"\uc18c\s*\uacc4"),
+    "cumulativeAmount": re.compile(r"(?:\ub204|ㄴ)\s*\uacc4(?!\s*\uc794\s*\uc561)"),
+    "previousBalance": re.compile(r"\uc804\s*\uc77c\s*\uc794\s*\uc561"),
+    "transactionAmount": re.compile(r"(?:\ub2f9\s*\uc77c|\uae08\s*\uc77c)\s*\uac70\s*\ub798\s*\uae08\s*\uc561"),
+    "cumulativeBalance": re.compile(r"\ub204\s*\uacc4\s*\uc794\s*\uc561"),
+    "totalQuantity": re.compile(r"\ucd1d\s*\uc218\s*\ub7c9"),
+}
+_PROFILE_SUMMARY_AMOUNT_FIELDS = {
+    "subtotal",
+    "cumulativeAmount",
+    "previousBalance",
+    "transactionAmount",
+    "cumulativeBalance",
+}
+_SUMMARY_FIELD_KEYS = (
+    "subtotal",
+    "cumulativeAmount",
+    "previousBalance",
+    "transactionAmount",
+    "cumulativeBalance",
+    "totalQuantity",
+)
+_CODE_LOT_SERIAL_RE = re.compile(
+    r"\bLot\s*No\b|\bSerial\b|\uc2dc\s*\ub9ac\s*\uc5bc|\ub85c\s*\ud2b8|"
+    r"\uc81c\s*\uc870\s*\ubc88\s*\ud638|\uc720\s*\ud6a8\s*(?:\uae30\s*\uac04|\uc77c\s*\uc790)|"
+    r"\ud488\s*\ubaa9\s*\ucf54\s*\ub4dc|\uc81c\s*\ud488\s*\ucf54\s*\ub4dc|"
+    r"[A-Z]\d{5,}|\d{5,}\s*[-/]\s*\d{5,}|\d{6,}\s*[-/]\s*\d{6,}\s*[-/]\s*\d{6,}",
+    re.I,
+)
 _TABLE_SUMMARY_RE = re.compile(
     r"\uacf5\s*\uae09\s*\uae08\s*\uc561|\uacf5\s*\uae09\s*\uac00\s*\uc561|\uacf5\s*\uae09\s*\uc561|"
     r"\uacf5\s*\uae09\s*\uac00\ub825|\uacf5\s*\uae09\s*\ub300\s*\uac00|\uc138\s*\uc561|\uc0c8\s*\uc561|"
@@ -1856,6 +1886,181 @@ def _apply_address_continuation_post(
     return debug
 
 
+def _recover_missing_supplier_fields(
+    supplier: dict[str, str],
+    buyer: dict[str, str],
+    all_lines: list[OcrLine],
+    page_w: float,
+    page_h: float,
+) -> dict[str, Any]:
+    """Post-extraction fallback: when supplierCompany is set but bizNumber/
+    representative/address are blank, search OCR lines near the supplier company
+    anchor to recover the missing fields. Only modifies supplier dict."""
+    debug: dict[str, Any] = {
+        "enabled": False,
+        "supplierCompany": supplier.get("company", ""),
+        "anchorLine": None,
+        "anchorBbox": None,
+        "searchWindow": None,
+        "selected": {"supplierBizNumber": "", "supplierRepresentative": "", "supplierAddress": ""},
+        "candidates": {"bizNumbers": [], "representatives": [], "addresses": []},
+        "rejected": [],
+        "finalDecision": "",
+    }
+
+    supplier_company = supplier.get("company", "")
+    if not supplier_company:
+        debug["finalDecision"] = "skip: supplierCompany blank"
+        return debug
+
+    missing_fields = [f for f in ("bizNumber", "representative", "address") if not supplier.get(f, "")]
+    if not missing_fields:
+        debug["finalDecision"] = "skip: all supplier fields already filled"
+        return debug
+
+    debug["enabled"] = True
+
+    buyer_biz_digits = (buyer.get("bizNumber") or "").replace("-", "")
+    buyer_rep_norm = _party_norm(buyer.get("representative", "") or "")
+    buyer_addr = buyer.get("address", "")
+    buyer_addr_prefix = re.sub(r"\s+", "", buyer_addr)[:8] if buyer_addr else ""
+    buyer_company_compact = re.sub(r"\s+", "", buyer.get("company", "") or "")
+
+    ordered = sorted(all_lines, key=lambda item: (item.y, item.x))
+    company_compact = re.sub(r"\s+", "", supplier_company)
+
+    anchor_line: OcrLine | None = None
+    anchor_idx = -1
+    best_anchor_score = -1
+    for idx, line in enumerate(ordered):
+        line_compact = re.sub(r"\s+", "", line.text)
+        for n in (6, 4, 3):
+            if len(company_compact) >= n and company_compact[:n] in line_compact:
+                # Score: match_len * 100 + bonus if company fills most of the line (cleaner anchor)
+                fill_ratio = min(len(company_compact), len(line_compact)) / max(len(line_compact), 1)
+                score = n * 100 + int(fill_ratio * 80)
+                if score > best_anchor_score:
+                    best_anchor_score = score
+                    best_match_len = n
+                    anchor_line = line
+                    anchor_idx = idx
+                break
+
+    if anchor_line is None or best_match_len < 3:
+        debug["finalDecision"] = "skip: anchor line not found"
+        return debug
+
+    debug["anchorLine"] = anchor_line.text[:60]
+    debug["anchorBbox"] = {
+        "x": round(anchor_line.x, 1), "y": round(anchor_line.y, 1),
+        "cx": round(anchor_line.cx, 1), "cy": round(anchor_line.cy, 1),
+    }
+
+    window_start = max(0, anchor_idx - 15)
+    window_end = min(len(ordered), anchor_idx + 15)
+    window_lines = ordered[window_start:window_end]
+    debug["searchWindow"] = {"start": window_start, "end": window_end, "count": len(window_lines)}
+
+    buyer_anchor_x: float | None = None
+    if buyer_biz_digits:
+        for line in ordered:
+            if buyer_biz_digits in re.sub(r"\D", "", _canonical_digits(line.text)):
+                buyer_anchor_x = line.cx
+                break
+    if buyer_anchor_x is None and buyer_company_compact and len(buyer_company_compact) >= 4:
+        for line in ordered:
+            if buyer_company_compact[:min(6, len(buyer_company_compact))] in re.sub(r"\s+", "", line.text):
+                buyer_anchor_x = line.cx
+                break
+
+    anchor_cx = anchor_line.cx
+
+    def _is_contaminated(line: OcrLine, text: str) -> tuple[bool, str]:
+        t_digits = re.sub(r"\D", "", _canonical_digits(text))
+        if buyer_biz_digits and buyer_biz_digits in t_digits:
+            return True, "contains_buyer_biz"
+        t_compact = re.sub(r"\s+", "", text)
+        if buyer_company_compact and len(buyer_company_compact) >= 4 and buyer_company_compact[:min(6, len(buyer_company_compact))] in t_compact:
+            return True, "contains_buyer_company"
+        if buyer_anchor_x is not None:
+            d_sup = abs(line.cx - anchor_cx)
+            d_buy = abs(line.cx - buyer_anchor_x)
+            if d_buy < d_sup - page_w * 0.10:
+                return True, "closer_to_buyer_anchor"
+        return False, ""
+
+    safe_window = [line for line in window_lines if not _is_contaminated(line, line.text)[0]]
+
+    # bizNumber recovery
+    if "bizNumber" in missing_fields:
+        biz_cands: list[tuple[float, str]] = []
+        for line in safe_window:
+            value = _format_biz(line.text)
+            if not value:
+                continue
+            if buyer_biz_digits and value.replace("-", "") == buyer_biz_digits:
+                debug["rejected"].append({"candidate": value, "field": "bizNumber", "reason": "same_as_buyer_biz"})
+                continue
+            dist = abs(line.cy - anchor_line.cy) / max(page_h, 1)
+            biz_cands.append((dist, value))
+        debug["candidates"]["bizNumbers"] = [v for _, v in biz_cands[:5]]
+        if biz_cands:
+            biz_cands.sort(key=lambda item: item[0])
+            supplier["bizNumber"] = biz_cands[0][1]
+            debug["selected"]["supplierBizNumber"] = biz_cands[0][1]
+
+    # representative recovery
+    if "representative" in missing_fields:
+        recovered_rep = _representative_from_scope(safe_window)
+        if recovered_rep:
+            if buyer_rep_norm and _party_norm(recovered_rep) == buyer_rep_norm:
+                debug["rejected"].append({"candidate": recovered_rep, "field": "representative", "reason": "same_as_buyer_rep"})
+                recovered_rep = ""
+        if not recovered_rep:
+            # Label-anchored fallback: x-zone contamination을 우회하고 window 전체에서
+            # REP_ANCHOR 레이블이 있는 라인을 탐색 (레이블 자체가 strong evidence)
+            for win_line in sorted(window_lines, key=lambda l: abs(l.cy - anchor_line.cy)):
+                if not _REP_ANCHOR_RE.search(win_line.text):
+                    continue
+                # 여전히 buyer biz 포함 라인은 reject
+                if buyer_biz_digits and buyer_biz_digits in re.sub(r"\D", "", _canonical_digits(win_line.text)):
+                    debug["rejected"].append({"candidate": win_line.text[:30], "field": "representative", "reason": "contains_buyer_biz_label_anchored"})
+                    continue
+                c = _clean_representative_candidate(win_line.text)
+                if not c:
+                    continue
+                if buyer_rep_norm and _party_norm(c) == buyer_rep_norm:
+                    debug["rejected"].append({"candidate": c, "field": "representative", "reason": "same_as_buyer_rep_label_anchored"})
+                    continue
+                recovered_rep = c
+                break
+        if recovered_rep:
+            supplier["representative"] = recovered_rep
+            debug["selected"]["supplierRepresentative"] = recovered_rep
+        debug["candidates"]["representatives"] = [recovered_rep] if recovered_rep else []
+
+    # address recovery
+    if "address" in missing_fields:
+        safe_window_addr = [
+            line for line in safe_window
+            if not (buyer_addr_prefix and re.sub(r"\s+", "", line.text)[:len(buyer_addr_prefix)] == buyer_addr_prefix)
+        ]
+        recovered_addr = _address_from_scope(safe_window_addr)
+        if recovered_addr:
+            recovered_prefix = re.sub(r"\s+", "", recovered_addr)[:8]
+            if buyer_addr_prefix and recovered_prefix == buyer_addr_prefix:
+                debug["rejected"].append({"candidate": recovered_addr[:40], "field": "address", "reason": "same_prefix_as_buyer_address"})
+                recovered_addr = ""
+        if recovered_addr:
+            supplier["address"] = recovered_addr
+            debug["selected"]["supplierAddress"] = recovered_addr
+        debug["candidates"]["addresses"] = [recovered_addr[:50]] if recovered_addr else []
+
+    now_filled = [f for f in missing_fields if supplier.get(f, "")]
+    debug["finalDecision"] = f"recovered {len(now_filled)}/{len(missing_fields)}: {now_filled}"
+    return debug
+
+
 def _extract_party_fields(
     header_lines: list[OcrLine],
     all_lines: list[OcrLine],
@@ -1966,6 +2171,7 @@ def _extract_party_fields(
     _dedupe_cross_party_representative(supplier, buyer, block_debug)
     _remove_cross_party_address_fragments(supplier, buyer, block_debug)
     continuation_debug = _apply_address_continuation_post(supplier, buyer, all_lines, bizs, page_w, page_h)
+    supplier_recovery_debug = _recover_missing_supplier_fields(supplier, buyer, all_lines, page_w, page_h)
 
     return supplier, buyer, {
         "companies": companies,
@@ -1973,6 +2179,7 @@ def _extract_party_fields(
         "split_x": split_x,
         "block_refinement": block_debug,
         "addressContinuation": continuation_debug,
+        "supplierCompanyAnchorFallback": supplier_recovery_debug,
     }
 
 
@@ -2499,6 +2706,219 @@ def _summary_label_window_amounts(
         for role, items in scored.items()
     }
     debug["checksumOk"] = checksum_ok
+    return result, debug
+
+
+def _quantity_values(text: str) -> list[str]:
+    values: list[str] = []
+    for match in re.finditer(r"(?<![\dA-Za-z])(\d{1,3}(?:[,.]\d{3})+|\d{1,6})(?![\dA-Za-z])", _canonical_digits(text or "")):
+        raw = match.group(1)
+        digits = re.sub(r"\D", "", raw)
+        if not digits:
+            continue
+        numeric = int(digits)
+        if 1 <= numeric <= 10_000_000:
+            values.append(f"{numeric:,}")
+    return values
+
+
+def _summary_field_values_for_text(field_key: str, text: str) -> list[str]:
+    if field_key == "totalQuantity":
+        return _quantity_values(text)
+    return [
+        value
+        for value in _amount_values(text)
+        if int(value.replace(",", "")) >= 100
+    ]
+
+
+def _summary_field_candidate_reject_reason(field_key: str, text: str, has_exact_label: bool) -> str:
+    compact = re.sub(r"\s+", "", text or "")
+    if field_key in _PROFILE_SUMMARY_AMOUNT_FIELDS and len(_amount_values(text)) > 5:
+        return "dense_mixed_amount_row"
+    if _BIZ_RE.search(_canonical_digits(text)) or _PHONE_RE.search(text):
+        return "business_or_phone_context"
+    if _CODE_LOT_SERIAL_RE.search(text):
+        return "code_lot_serial_context"
+    if field_key == "totalQuantity":
+        if not has_exact_label and re.search(r"\d{5,}|[A-Z]{2,}\d+|\d+\s*(?:T|C|mg|ml|g|ea|BOX)", text, re.I):
+            return "quantity_without_total_quantity_label"
+        if re.search(r"\d{5,}\s*[-/]\s*\d{5,}", compact):
+            return "hyphen_serial_context"
+        return ""
+    if _DATE_RE.search(text) and not has_exact_label:
+        return "date_context_without_exact_label"
+    if _row_has_item_context(text) and not has_exact_label:
+        return "table_body_without_exact_label"
+    return ""
+
+
+def _extract_profile_summary_fields(
+    lines: list[OcrLine],
+    page_h: float,
+    table_header_y: float | None,
+) -> tuple[dict[str, str], dict[str, Any]]:
+    rows = _group_rows(lines)
+    debug: dict[str, Any] = {
+        "source": "summary_field_label_window",
+        "enabled": True,
+        "fields": {},
+        "candidates": [],
+        "rejected": [],
+    }
+    if not rows:
+        return {}, debug
+
+    scored: dict[str, list[tuple[float, str, str, str, int, int, dict[str, Any]]]] = {
+        key: [] for key in _SUMMARY_FIELD_KEYS
+    }
+
+    def add_candidate(
+        field_key: str,
+        value: str,
+        label: str,
+        label_text: str,
+        amount_text: str,
+        label_idx: int,
+        amount_idx: int,
+        path: str,
+        same_row: bool,
+        source_line: OcrLine | None,
+    ) -> None:
+        has_exact_label = bool(_PROFILE_SUMMARY_FIELD_LABELS[field_key].search(amount_text))
+        reject_reason = _summary_field_candidate_reject_reason(field_key, amount_text, has_exact_label or same_row)
+        if field_key == "cumulativeAmount" and not re.search(r"\uc18c\s*\uacc4", f"{label_text} {amount_text}"):
+            reject_reason = "cumulative_amount_without_subtotal_context"
+        if (
+            field_key in _PROFILE_SUMMARY_AMOUNT_FIELDS
+            and path == "ocr_order"
+            and not has_exact_label
+        ):
+            reject_reason = "amount_line_without_summary_field_label"
+        meta = {
+            "path": path,
+            "sameVisualRow": same_row,
+            "rowDistance": abs(amount_idx - label_idx),
+            "sourceLineIndex": amount_idx,
+            "bbox": (
+                [round(source_line.x), round(source_line.y), round(source_line.w), round(source_line.h)]
+                if source_line is not None
+                else None
+            ),
+        }
+        record = {
+            "fieldKey": field_key,
+            "label": label,
+            "value": value,
+            "sourceText": amount_text,
+            "sourceLineIndex": amount_idx,
+            "reason": "label_window",
+            "meta": meta,
+        }
+        if reject_reason:
+            debug["rejected"].append({**record, "reason": reject_reason})
+            return
+        numeric = int(value.replace(",", ""))
+        if field_key in _PROFILE_SUMMARY_AMOUNT_FIELDS and numeric < 1_000:
+            debug["rejected"].append({**record, "reason": "amount_too_small"})
+            return
+        score = 60.0
+        distance = abs(amount_idx - label_idx)
+        if same_row:
+            score += 22
+        elif distance <= 1:
+            score += 16
+        elif distance <= 3:
+            score += 10
+        elif distance <= 6:
+            score += 4
+        else:
+            score -= 10
+        if "," in value:
+            score += 5
+        if _PROFILE_SUMMARY_FIELD_LABELS[field_key].search(amount_text):
+            score += 12
+        if table_header_y is not None and source_line is not None and source_line.cy >= table_header_y:
+            score -= 8
+        if source_line is not None and source_line.cy >= page_h * 0.88:
+            score -= 3
+        debug["candidates"].append({**record, "score": round(score, 2)})
+        scored[field_key].append((score, value, label, amount_text, label_idx, amount_idx, meta))
+
+    for label_idx, row in enumerate(rows):
+        row_text = _row_text(row)
+        label_context = " ".join(
+            _row_text(rows[near_idx])
+            for near_idx in range(max(0, label_idx - 1), min(len(rows), label_idx + 2))
+        )
+        for field_key, label_re in _PROFILE_SUMMARY_FIELD_LABELS.items():
+            label_match = label_re.search(label_context)
+            if not label_match:
+                continue
+            label = label_match.group(0)
+            for near_idx in range(max(0, label_idx - 3), min(len(rows), label_idx + 4)):
+                near_row = rows[near_idx]
+                near_text = _row_text(near_row)
+                values = _summary_field_values_for_text(field_key, near_text)
+                for value in values:
+                    source_line = next((line for line in near_row if value.replace(",", "") in re.sub(r"\D", "", line.text)), None)
+                    add_candidate(
+                        field_key,
+                        value,
+                        label,
+                        row_text,
+                        near_text,
+                        label_idx,
+                        near_idx,
+                        "visual_row",
+                        near_idx == label_idx,
+                        source_line,
+                    )
+
+    for label_idx, line in enumerate(lines):
+        label_context = " ".join(item.text for item in lines[max(0, label_idx - 1) : min(len(lines), label_idx + 2)])
+        for field_key, label_re in _PROFILE_SUMMARY_FIELD_LABELS.items():
+            label_match = label_re.search(label_context)
+            if not label_match:
+                continue
+            label = label_match.group(0)
+            for near_idx in range(max(0, label_idx - 8), min(len(lines), label_idx + 9)):
+                amount_line = lines[near_idx]
+                values = _summary_field_values_for_text(field_key, amount_line.text)
+                for value in values:
+                    add_candidate(
+                        field_key,
+                        value,
+                        label,
+                        line.text,
+                        amount_line.text,
+                        label_idx,
+                        near_idx,
+                        "ocr_order",
+                        abs(amount_line.cy - line.cy) <= max(line.h, amount_line.h) * 1.5,
+                        amount_line,
+                    )
+
+    result: dict[str, str] = {}
+    for field_key, items in scored.items():
+        items.sort(key=lambda item: (-item[0], abs(item[5] - item[4]), -int(item[1].replace(",", ""))))
+        selected = items[0] if items else None
+        if selected and selected[0] >= 55:
+            result[field_key] = selected[1]
+            debug["fields"][field_key] = {
+                "value": selected[1],
+                "label": selected[2],
+                "sourceText": selected[3],
+                "sourceLineIndex": selected[5],
+                "confidence": round(selected[0], 2),
+                "reason": "label_window",
+                "meta": selected[6],
+            }
+        else:
+            debug["fields"][field_key] = None
+    debug["selectedFieldKeys"] = [key for key in _SUMMARY_FIELD_KEYS if result.get(key)]
+    debug["candidateCount"] = len(debug["candidates"])
+    debug["rejectedCount"] = len(debug["rejected"])
     return result, debug
 
 
@@ -3805,6 +4225,12 @@ def extract_invoice_statement_fields(ocr_lines_raw: list[tuple], debug: dict[str
         "supplyAmount": "",
         "taxAmount": "",
         "totalAmount": "",
+        "subtotal": "",
+        "cumulativeAmount": "",
+        "previousBalance": "",
+        "transactionAmount": "",
+        "cumulativeBalance": "",
+        "totalQuantity": "",
         "tableDetected": "N",
         "rowCount": "",
         "firstRowPreview": "",
@@ -3822,6 +4248,7 @@ def extract_invoice_statement_fields(ocr_lines_raw: list[tuple], debug: dict[str
     supplier, buyer, party_debug = _extract_party_fields(header_lines, lines, page_w, page_h, header_limit_y)
     amount_debug: dict[str, Any] = {}
     amounts = _extract_amount_fields(lines, page_h, table_header_y, debug=amount_debug)
+    summary_fields, summary_fields_debug = _extract_profile_summary_fields(lines, page_h, table_header_y)
     table = _detect_table(lines, page_h, table_header_y)
     full_text = "\n".join(line.text for line in lines)
 
@@ -3837,6 +4264,7 @@ def extract_invoice_statement_fields(ocr_lines_raw: list[tuple], debug: dict[str
             "buyerAddress": buyer["address"],
             "issueDate": _normalize_date(full_text),
             **amounts,
+            **summary_fields,
             **table,
         }
     )
@@ -3855,6 +4283,8 @@ def extract_invoice_statement_fields(ocr_lines_raw: list[tuple], debug: dict[str
             "supplier_nonempty": [key for key, value in supplier.items() if value],
             "buyer_nonempty": [key for key, value in buyer.items() if value],
             "amount_nonempty": [key for key, value in amounts.items() if value],
+            "summaryFields_nonempty": [key for key, value in summary_fields.items() if value],
+            "summaryFieldsMapping": summary_fields_debug,
             "amount_label_window": amount_debug.get("amount_label_window", {}),
             "amount_total_evidence": amount_debug.get("amount_total_evidence", {}),
             "amount_summary_blocks": amount_debug.get("amount_summary_blocks", {}),
@@ -3864,6 +4294,7 @@ def extract_invoice_statement_fields(ocr_lines_raw: list[tuple], debug: dict[str
             "suppressedTotalCandidates": amount_debug.get("suppressedTotalCandidates", []),
             "normalization": normalization_debug,
             "addressContinuation": party_debug.get("addressContinuation", {}),
+            "supplierCompanyAnchorFallback": party_debug.get("supplierCompanyAnchorFallback", {}),
             "table": table,
         }
 

@@ -74,7 +74,13 @@ export type DocumentFieldKey =
   | "totalAmount"
   | "tableDetected"
   | "rowCount"
-  | "firstRowPreview";
+  | "firstRowPreview"
+  | "subtotal"
+  | "cumulativeAmount"
+  | "previousBalance"
+  | "transactionAmount"
+  | "cumulativeBalance"
+  | "totalQuantity";
 
 /** card overlay 추가 컬럼. */
 export type CardOverlayFieldKey =
@@ -176,6 +182,9 @@ export const DOCUMENT_COLUMNS: readonly { key: DocumentFieldKey; required: boole
   { key: "rowCount",               required: false },
   { key: "firstRowPreview",        required: false },
 ] as const;
+// Note: summaryField keys (subtotal, cumulativeAmount, previousBalance, transactionAmount,
+// cumulativeBalance, totalQuantity) are in DocumentFieldKey for type completeness but are
+// NOT in DOCUMENT_COLUMNS. They are rendered dynamically based on amountProfile (P-2).
 
 /** card overlay 추가 컬럼 (전부 선택). */
 export const CARD_OVERLAY_COLUMNS: readonly { key: CardOverlayFieldKey; required: boolean }[] = [

@@ -93,9 +93,66 @@ export type QualityTag =
   | "rotated"
   | "ocr_noise"
   | "small_text"
-  | "long_receipt";
+  | "long_receipt"
+  | "ocr_garbled"
+  | "party_block_garbled"
+  | "address_garbled"
+  | "no_amount_summary"
+  | "lot_serial_table"
+  | "buyer_only_document"
+  | "optional_supplier"
+  | "address_tail_missing"
+  | string;
 
 export type Difficulty = "easy" | "medium" | "hard";
+
+// ---------------------------------------------------------------------------
+// Invoice Statement profile types (P-1)
+// ---------------------------------------------------------------------------
+
+export type InvoiceSubType =
+  | "standard_amount_statement"
+  | "balance_statement"
+  | "subtotal_cumulative_statement"
+  | "detail_lot_statement"
+  | "quantity_serial_statement"
+  | "ocr_garbled_statement";
+
+export type AmountProfile =
+  | "supply_tax_total"
+  | "total_only"
+  | "subtotal_cumulative"
+  | "balance_cumulative"
+  | "no_amount_summary"
+  | "quantity_total_only"
+  | "ambiguous_amount";
+
+export type PartyProfile =
+  | "supplier_buyer"
+  | "buyer_only"
+  | "supplier_weak"
+  | "buyer_rep_optional"
+  | "party_garbled";
+
+export type TableProfile =
+  | "item_amount_table"
+  | "multi_item_table"
+  | "single_item_table"
+  | "lot_serial_quantity_table"
+  | "serial_quantity_table"
+  | "item_quantity_table";
+
+export interface InvoiceProfile {
+  invoiceSubType?: InvoiceSubType;
+  amountProfile?: AmountProfile;
+  partyProfile?: PartyProfile;
+  tableProfile?: TableProfile;
+  summaryFields?: Record<string, { label: string; appliesToAmount: boolean }>;
+  /** P-2b: sample별 visible amount/summary field 목록 override (amountProfile 기본값보다 우선) */
+  visibleAmountFields?: string[];
+  /** P-2b: sample별 field 라벨 override (e.g. taxAmount → "부가세") */
+  fieldLabels?: Record<string, string>;
+}
 
 export type DatasetRole =
   | "fast_check"
@@ -113,6 +170,7 @@ export type ManifestItem = {
   difficulty: Difficulty;
   expectedStatus: string;
   notes?: string;
+  invoiceProfile?: InvoiceProfile;
 };
 
 export type DatasetManifest = {

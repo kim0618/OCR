@@ -31,10 +31,36 @@ import {
   computeStatusPerField,
   MatchStatus,
 } from "./core/finalize";
-import type { DatasetManifest, ManifestItem } from "@/lib/testsets";
+import type { DatasetManifest, ManifestItem, InvoiceProfile, AmountProfile, PartyProfile, TableProfile } from "@/lib/testsets";
 import { resolveProfile, FINANCE_COLUMNS, FINANCE_TIER1_FIELDS, DOCUMENT_COLUMNS, DOCUMENT_PARTY_FIELDS, isNotApplicableField } from "@/lib/profiles";
 
 type ViewMode = "compare" | "ocr_only" | "autofill" | "gt_edit";
+
+type PartyMasterField = "company" | "representative" | "address";
+
+type PartyMasterEntry = Partial<Record<PartyMasterField, string>>;
+
+type PartyMasterMap = Record<string, PartyMasterEntry>;
+
+type PartyMasterCandidate = {
+  role: "supplier" | "buyer";
+  fieldKey: string;
+  masterField: PartyMasterField;
+  bizField: "supplierBizNumber" | "buyerBizNumber";
+  bizNumber: string;
+  bizSource: "ocr" | "norm";
+  value: string;
+  source: "master_by_supplierBizNumber" | "master_by_buyerBizNumber";
+  matchesGt: boolean;
+};
+
+type PartyMasterPromotion = {
+  promoted: boolean;
+  selectedValue: string;
+  selectedSource: "gt_reference" | "ocr" | "norm" | "existing";
+  reason: string;
+  conflict?: boolean;
+};
 
 type DocTypeSummaryRow = {
   documentType: string;
@@ -124,11 +150,38 @@ function documentMatchStatus(gtVal: string, ocrVal: string): "O" | "△" | "X" |
 
 function documentMatchMeta(status: "O" | "△" | "X" | "—"): { symbol: string; color: string; title: string } {
   switch (status) {
-    case "O": return { symbol: "O", color: "#22c55e", title: "GT exact/normalized match" };
-    case "△": return { symbol: "△", color: "#f59e0b", title: "GT fuzzy/partial match" };
+    case "O": return { symbol: "O", color: "#22c55e", title: "OCR/NORM direct match" };
+    case "△": return { symbol: "△", color: "#f59e0b", title: "Corrected match (MASTER/GT-similarity/anchor)" };
     case "X": return { symbol: "X", color: "#ef4444", title: "GT mismatch or missing OCR value" };
     default: return { symbol: "—", color: "rgba(255,255,255,0.35)", title: "No GT value" };
   }
+}
+
+// M-2f: 통일된 final status 계산 함수 (GT/reference 기반 보정 기준으로 재정렬)
+// O   = OCR/NORM이 GT와 직접 일치
+// △   = GT/reference 자동채움(biz exact+reference) 또는 partial/similarity 보정
+// X   = 실패 (불일치·미추출·reference도 없음)
+// —   = GT 없음
+function computeFieldFinalStatus(args: {
+  gtValue: string;
+  ocrValue: string;
+  normalizedValue: string;
+  masterSelected: boolean;   // true = biz exact 기반 GT/reference 자동채움 성공
+  hasOcr: boolean;
+}): "O" | "△" | "X" | "—" {
+  const { gtValue, ocrValue, normalizedValue, masterSelected, hasOcr } = args;
+  if (!gtValue) return "—";
+  if (!hasOcr) return "X";
+  // OCR/NORM 직접 일치 → O
+  if (ocrValue && documentMatchStatus(gtValue, ocrValue) === "O") return "O";
+  if (normalizedValue && documentMatchStatus(gtValue, normalizedValue) === "O") return "O";
+  // GT/reference 자동채움 성공 → △
+  if (masterSelected) return "△";
+  // OCR/NORM 부분 일치 (GT_SIMILARITY 성격) → △
+  if (ocrValue && documentMatchStatus(gtValue, ocrValue) === "△") return "△";
+  if (normalizedValue && documentMatchStatus(gtValue, normalizedValue) === "△") return "△";
+  // 그 외 (미추출·불일치·reference 없음) → X
+  return "X";
 }
 
 type NormalizationRule = {
@@ -671,6 +724,7 @@ export default function TestWorkspace() {
   const [showDebug, setShowDebug] = useState(false);
   const [showReasons, setShowReasons] = useState(false);
   const [manifest, setManifest] = useState<DatasetManifest | null>(null);
+  const [partyMaster, setPartyMaster] = useState<PartyMasterMap>({});
   const [selectedQualityTags, setSelectedQualityTags] = useState<string[]>([]);
   const [showBatchSummary, setShowBatchSummary] = useState(true);
   const activeTestset = useMemo(
@@ -701,6 +755,7 @@ export default function TestWorkspace() {
     setCurrentRunningFile(null);
     setUiError(null);
     setManifest(null);
+    setPartyMaster({});
     setSelectedQualityTags([]);
 
     // manifest.json fetch (non-blocking, silent fallback if not present)
@@ -708,6 +763,11 @@ export default function TestWorkspace() {
       .then((r) => (r.ok ? (r.json() as Promise<DatasetManifest>) : Promise.resolve(null)))
       .then((data) => { if (!cancelled) setManifest(data); })
       .catch(() => { if (!cancelled) setManifest(null); });
+
+    fetch(`/data/testsets/${activeDataset}/party_master.json`)
+      .then((r) => (r.ok ? (r.json() as Promise<unknown>) : Promise.resolve({})))
+      .then((data) => { if (!cancelled) setPartyMaster(normalizePartyMasterMap(data)); })
+      .catch(() => { if (!cancelled) setPartyMaster({}); });
 
     Promise.all([
       fetch(`/api/test-images?${query}`).then((r) => readJsonResponse<any>(r, "테스트 이미지 목록")),
@@ -1424,30 +1484,69 @@ export default function TestWorkspace() {
       else if (status.startsWith("suppressed_")) suppressed++;
       else selected++; // 기타 상태(예: unknown)는 selected에 포함 — finance와 동일한 보수적 처리
 
+      // P-3: invoiceProfile 기반 평가 대상 필드 동적 결정
+      const invProfile = manifest?.items.find((i) => i.filename === img)?.invoiceProfile;
+      const isBuyerOnly = invProfile?.partyProfile === "buyer_only";
+
+      // buyer_only: supplier fields 제외 (4개 buyer fields만 평가)
+      const evalPartyFields: string[] = isBuyerOnly
+        ? Array.from(DOCUMENT_PARTY_FIELDS).filter(k => !SUPPLIER_FIELD_KEYS.has(k as string))
+        : Array.from(DOCUMENT_PARTY_FIELDS);
+
       const docFields = ocrEntry?.documentFields ?? {};
       let extractCount = 0;
-      for (const k of DOCUMENT_PARTY_FIELDS) {
+      for (const k of evalPartyFields) {
         if (docFields[k]) {
-          partyFieldExtract[k] += 1;
+          partyFieldExtract[k] = (partyFieldExtract[k] ?? 0) + 1;
           extractCount++;
         }
       }
-      if (extractCount === DOCUMENT_PARTY_FIELDS.length) partyFull++;
+      // buyer_only는 evalPartyFields.length(4) 기준으로 partyFull 판정
+      if (extractCount === evalPartyFields.length) partyFull++;
       else if (extractCount > 0) partyPartial++;
 
+      // amountProfile / visibleAmountFields 기반 평가 대상 amount/summary fields
+      const evalAmountKeys = getAmountFieldKeysForProfile(invProfile);
+
+      // 전체 평가 대상: evaluable party fields + evaluable amount/summary fields
+      const allEvalFields = [...evalPartyFields, ...evalAmountKeys];
+
       const docGt = gt[img]?.documentFields ?? {};
-      const hasAnyGt = DOCUMENT_PARTY_FIELDS.some((k) => docGt[k]);
+      const hasAnyGt = allEvalFields.some(k => docGt[k]);
       if (hasAnyGt) {
         gtImageCount++;
-        for (const k of DOCUMENT_PARTY_FIELDS) {
-          const gtVal  = docGt[k]    ?? "";
+        // M-2f: GT/reference 보정 포함 통일 판정
+        const kpiInvNorm = getInvoiceNormalization(ocrEntry);
+        for (const k of allEvalFields) {
+          const gtVal  = docGt[k] ?? "";
           const ocrVal = docFields[k] ?? "";
           if (gtVal) {
             gtFieldTotal++;
-            partyFieldGtMatch[k].total++;
-            if (documentFieldMatches(gtVal, ocrVal) || gtVal === ocrVal) {
+            const isPartyField = Object.prototype.hasOwnProperty.call(partyFieldGtMatch, k);
+            if (isPartyField) {
+              partyFieldGtMatch[k].total++;
+            }
+            const kpiNormVal = getNormalizedFieldValue(kpiInvNorm, k);
+            const kpiCandidate = getPartyMasterCandidateForField(k, docFields, kpiInvNorm, partyMaster, gtVal);
+            const kpiPromotion = getPartyMasterPromotion({
+              candidate: kpiCandidate,
+              rawValue: ocrVal,
+              normalizedValue: kpiNormVal,
+              gtValue: gtVal,
+              normalizationRecord: getNormalizationRecord(kpiInvNorm, k),
+              fieldKey: k,
+            });
+            const kpiStatus = computeFieldFinalStatus({
+              gtValue: gtVal,
+              ocrValue: ocrVal,
+              normalizedValue: kpiNormVal,
+              masterSelected: kpiPromotion.promoted,
+              hasOcr: Boolean(ocrEntry),
+            });
+            // O = direct match (exact accuracy), O+△ = coverage (보정 포함)
+            if (kpiStatus === "O") {
               gtFieldMatch++;
-              partyFieldGtMatch[k].match++;
+              if (isPartyField) partyFieldGtMatch[k].match++;
             }
           }
         }
@@ -1461,7 +1560,7 @@ export default function TestWorkspace() {
       gtImageCount, gtFieldTotal, gtFieldMatch,
       partyFieldGtMatch,
     };
-  }, [documentBatchRows, images, manifest, ocr, gt]);
+  }, [documentBatchRows, images, manifest, ocr, gt, partyMaster]);
 
   const documentNormalizationKpi = useMemo((): DatasetNormalizationSummary => {
     const summary: DatasetNormalizationSummary = {
@@ -1484,6 +1583,24 @@ export default function TestWorkspace() {
 
     return summary;
   }, [documentBatchRows, ocr, gt]);
+
+  // ── invoice profile 집계 (P-1) — manifest 전체 기준 (OCR 미실행 이미지 포함) ──
+  const invoiceProfileCounts = useMemo(() => {
+    const amounts: Record<string, number> = {};
+    const parties: Record<string, number> = {};
+    const tables: Record<string, number> = {};
+    if (!manifest) return { amounts, parties, tables, hasAny: false };
+    for (const item of manifest.items) {
+      if (resolveProfile(item.documentType).base !== "document") continue;
+      const profile = item.invoiceProfile;
+      if (!profile) continue;
+      if (profile.amountProfile) amounts[profile.amountProfile] = (amounts[profile.amountProfile] ?? 0) + 1;
+      if (profile.partyProfile) parties[profile.partyProfile] = (parties[profile.partyProfile] ?? 0) + 1;
+      if (profile.tableProfile) tables[profile.tableProfile] = (tables[profile.tableProfile] ?? 0) + 1;
+    }
+    const hasAny = Object.keys(amounts).length > 0 || Object.keys(parties).length > 0;
+    return { amounts, parties, tables, hasAny };
+  }, [manifest]);
 
   // ── qualityTags 필터 ──
   const availableQualityTags = useMemo(() => {
@@ -1650,6 +1767,7 @@ export default function TestWorkspace() {
           <span style={{ fontSize: 11, color: "var(--muted)", fontWeight: 800 }}>채택값 출처:</span>
           <SourceLegend label="OCR" color="#0284c7" note="이번 OCR 결과" />
           <SourceLegend label="GT_*" color="#16a34a" note="baseline 전용 기준값 채택" />
+          <SourceLegend label="GT_REF" color="#f97316" note="siz exact 기반 GT/reference 자동채움" />
           <SourceLegend label="AUTO" color="#6366f1" note="자동복원" />
           <SourceLegend label="GT_ONLY" color="#f59e0b" note="기준값만 있음 · 실행 결과 아님" />
           <SourceLegend label="EMPTY" color="#64748b" note="값 없음" />
@@ -1900,6 +2018,7 @@ export default function TestWorkspace() {
                 tone={toneOf(documentKpi.gtFieldMatch, documentKpi.gtFieldTotal)}
               />
             )}
+            {/* M-RESET: MASTER KPI chips removed — Test 단계에서는 GT vs OCR/NORM 기준만 표시 */}
             {documentNormalizationKpi.candidateCount > 0 && (
               <>
                 <KpiChip
@@ -1930,6 +2049,9 @@ export default function TestWorkspace() {
                   title="debug_only, low-confidence, or possible overcorrection rules. These are not counted as pass."
                 />
               </>
+            )}
+            {invoiceProfileCounts.hasAny && (
+              <InvoiceProfileKpi counts={invoiceProfileCounts} />
             )}
           </KpiSection>
           )}
@@ -2132,6 +2254,8 @@ export default function TestWorkspace() {
                   {DOCUMENT_FIELD_META.map((col) => (
                     <th key={col.key} style={th}>{col.shortLabel}</th>
                   ))}
+                  <th style={{ ...th, textAlign: "center" }} title="amountProfile: 금액 구조 유형 (P-1)">Amount</th>
+                  <th style={{ ...th, textAlign: "center" }} title="partyProfile: 거래 당사자 구조 (P-1)">Party</th>
                   <th style={{ ...th, textAlign: "center" }} title="Normalized auxiliary counts. Existing exact O/X is not changed.">Norm</th>
                   <th style={{ ...th, textAlign: "center" }}>상태</th>
                 </tr>
@@ -2143,25 +2267,74 @@ export default function TestWorkspace() {
                   const docGt = gt[img]?.documentFields ?? {};
                   const status = entry?.status ?? "selected";
                   const normSummary = collectEntryNormalizationSummary(entry, docGt);
+                  const invProfile = manifest?.items.find((i) => i.filename === img)?.invoiceProfile;
+                  const amtLabel = getAmountProfileLabel(invProfile?.amountProfile);
+                  const partyLabel = getPartyProfileLabel(invProfile?.partyProfile);
+                  const amtNoAmount = invProfile?.amountProfile === "no_amount_summary" || invProfile?.amountProfile === "quantity_total_only";
                   return (
                     <tr key={img} onClick={() => setSelected(img)}
                       style={{ cursor: "pointer", background: selected === img ? "var(--accentBg)" : undefined }}>
                       <td style={td}>{img}</td>
                       {DOCUMENT_FIELD_META.map((col) => {
+                        // P-3: not_applicable 필드 판정 (amount: amountProfile 기준, supplier: buyer_only 기준)
+                        const isAmtNotApplicable = STANDARD_AMOUNT_KEYS_IN_META.has(col.key) &&
+                          !getAmountFieldKeysForProfile(invProfile).includes(col.key);
+                        const isSupplierNotApplicable = SUPPLIER_FIELD_KEYS.has(col.key) &&
+                          invProfile?.partyProfile === "buyer_only";
+                        if (isAmtNotApplicable || isSupplierNotApplicable) {
+                          return (
+                            <td key={col.key} style={{ ...td, textAlign: "center" }}
+                              title={`평가 제외 · amountProfile: ${invProfile?.amountProfile ?? "unknown"} / partyProfile: ${invProfile?.partyProfile ?? "-"}`}>
+                              <span style={{ fontSize: 9, color: "rgba(255,255,255,0.2)", fontWeight: 600 }}>N/A</span>
+                            </td>
+                          );
+                        }
                         const gtVal = docGt[col.key] ?? "";
                         const ocrVal = docFields[col.key] ?? "";
-                        const meta = documentMatchMeta(documentMatchStatus(gtVal, ocrVal));
+                        // M-2f: GT/reference 보정 포함 통일 판정
+                        const batchInvNorm = getInvoiceNormalization(entry);
+                        const batchNormVal = getNormalizedFieldValue(batchInvNorm, col.key);
+                        const batchCandidate = getPartyMasterCandidateForField(col.key, docFields, batchInvNorm, partyMaster, gtVal);
+                        const batchPromotion = getPartyMasterPromotion({
+                          candidate: batchCandidate,
+                          rawValue: ocrVal,
+                          normalizedValue: batchNormVal,
+                          gtValue: gtVal,
+                          normalizationRecord: getNormalizationRecord(batchInvNorm, col.key),
+                          fieldKey: col.key,
+                        });
+                        const batchFieldStatus = computeFieldFinalStatus({
+                          gtValue: gtVal,
+                          ocrValue: ocrVal,
+                          normalizedValue: batchNormVal,
+                          masterSelected: batchPromotion.promoted,
+                          hasOcr: Boolean(entry),
+                        });
+                        const meta = documentMatchMeta(batchFieldStatus);
+                        const displayVal = ocrVal;
                         return (
-                          <td key={col.key} style={{ ...td, textAlign: "center" }} title={`GT: ${gtVal || "-"} / OCR: ${ocrVal || "-"}`}>
+                          <td key={col.key} style={{ ...td, textAlign: "center" }} title={`GT: ${gtVal || "-"} / 최종: ${displayVal || "-"} / OCR: ${ocrVal || "-"}`}>
                             <span style={{ fontWeight: 800, color: meta.color }}>{meta.symbol}</span>
-                            {ocrVal && (
+                            {displayVal && (
                               <span style={{ fontSize: 9, color: "var(--muted)", marginLeft: 2, display: "block", whiteSpace: "nowrap", overflow: "hidden", maxWidth: 70, textOverflow: "ellipsis" }}>
-                                {ocrVal.length > 9 ? ocrVal.slice(0, 9) + "…" : ocrVal}
+                                {displayVal.length > 9 ? displayVal.slice(0, 9) + "…" : displayVal}
                               </span>
                             )}
                           </td>
                         );
                       })}
+                      <td style={{ ...td, textAlign: "center" }}
+                        title={invProfile?.amountProfile ? `amountProfile: ${invProfile.amountProfile}` : "invoiceProfile 없음"}>
+                        <span style={{ fontSize: 9, padding: "1px 5px", borderRadius: 3, background: amtNoAmount ? "#7c3aed" : "#0369a1", color: "#fff", fontWeight: 700, whiteSpace: "nowrap" }}>
+                          {amtLabel}
+                        </span>
+                      </td>
+                      <td style={{ ...td, textAlign: "center" }}
+                        title={invProfile?.partyProfile ? `partyProfile: ${invProfile.partyProfile}` : "invoiceProfile 없음"}>
+                        <span style={{ fontSize: 9, padding: "1px 5px", borderRadius: 3, background: "#374151", color: "#d1d5db", fontWeight: 600, whiteSpace: "nowrap" }}>
+                          {partyLabel}
+                        </span>
+                      </td>
                       <td style={{ ...td, textAlign: "center" }} title={normalizationSummaryTitle(normSummary)}>
                         {normSummary.candidateCount > 0 ? (
                           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
@@ -2317,6 +2490,8 @@ export default function TestWorkspace() {
               hasOcr={!!selOcr}
               documentGt={selDocumentGt}
               onDocumentGtChange={(field, value) => updateDocumentGtField(selected!, field, value)}
+              invoiceProfile={selMeta?.invoiceProfile}
+              partyMaster={partyMaster}
             />
           ) : selected ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -2908,6 +3083,12 @@ const DOCUMENT_FIELD_LABELS: Record<string, string> = {
   tableDetected: "품목표 존재",
   rowCount: "행 수",
   firstRowPreview: "첫 행 미리보기",
+  subtotal: "소계",
+  cumulativeAmount: "누계",
+  previousBalance: "전일잔액",
+  transactionAmount: "당일거래금액",
+  cumulativeBalance: "누계잔액",
+  totalQuantity: "총수량",
 };
 
 const DOCUMENT_FIELD_SHORT: Record<string, string> = {
@@ -2926,6 +3107,12 @@ const DOCUMENT_FIELD_SHORT: Record<string, string> = {
   tableDetected: "표",
   rowCount: "행",
   firstRowPreview: "첫 행",
+  subtotal: "소계",
+  cumulativeAmount: "누계",
+  previousBalance: "전일잔액",
+  transactionAmount: "거래금액",
+  cumulativeBalance: "누계잔액",
+  totalQuantity: "총수량",
 };
 
 const DOCUMENT_FIELD_META: { key: string; label: string; shortLabel: string; required: boolean }[] =
@@ -2935,6 +3122,250 @@ const DOCUMENT_FIELD_META: { key: string; label: string; shortLabel: string; req
     shortLabel: DOCUMENT_FIELD_SHORT[col.key] ?? DOCUMENT_FIELD_LABELS[col.key] ?? col.key,
     required: col.required,
   }));
+
+// ── amountProfile별 표시 금액/summary 필드 (P-2/P-2b) ──
+const AMOUNT_PROFILE_AMOUNT_FIELDS: Record<string, string[]> = {
+  supply_tax_total:    ["supplyAmount", "taxAmount", "totalAmount"],
+  total_only:          ["totalAmount"],
+  subtotal_cumulative: ["subtotal", "cumulativeAmount"],
+  balance_cumulative:  ["previousBalance", "transactionAmount", "cumulativeBalance"],
+  no_amount_summary:   [],
+  quantity_total_only: ["totalQuantity"],
+  ambiguous_amount:    [],
+};
+// DOCUMENT_COLUMNS에 포함된 standard amount keys
+const STANDARD_AMOUNT_KEYS_IN_META = new Set(["supplyAmount", "taxAmount", "totalAmount"]);
+// supplier 전용 필드 (partyProfile=buyer_only 시 숨김)
+const SUPPLIER_FIELD_KEYS = new Set(["supplierCompany", "supplierBizNumber", "supplierRepresentative", "supplierAddress"]);
+const PARTY_MASTER_SUPPLIER_FIELDS: Record<string, PartyMasterField> = {
+  supplierCompany: "company",
+  supplierRepresentative: "representative",
+  supplierAddress: "address",
+};
+const PARTY_MASTER_BUYER_FIELDS: Record<string, PartyMasterField> = {
+  buyerCompany: "company",
+  buyerRepresentative: "representative",
+  buyerAddress: "address",
+};
+// M-2d: address 필드는 MASTER 자동채택 제외 — 배송지/납품처/물류센터 등 주소 유형이 다를 수 있음
+const PARTY_ADDRESS_FIELDS = new Set(["supplierAddress", "buyerAddress"]);
+
+function normalizePartyMasterBizNumber(value: unknown): string {
+  const digits = String(value ?? "").replace(/\D/g, "");
+  if (digits.length !== 10) return "";
+  return `${digits.slice(0, 3)}-${digits.slice(3, 5)}-${digits.slice(5)}`;
+}
+
+function normalizePartyMasterMap(data: unknown): PartyMasterMap {
+  if (!data || typeof data !== "object" || Array.isArray(data)) return {};
+  const out: PartyMasterMap = {};
+  Object.entries(data as Record<string, unknown>).forEach(([rawBiz, rawEntry]) => {
+    const bizNumber = normalizePartyMasterBizNumber(rawBiz);
+    if (!bizNumber || !rawEntry || typeof rawEntry !== "object" || Array.isArray(rawEntry)) return;
+    const entry = rawEntry as Record<string, unknown>;
+    const normalized: PartyMasterEntry = {};
+    (["company", "representative", "address"] as const).forEach((key) => {
+      const value = entry[key];
+      if (typeof value === "string" && value.trim()) normalized[key] = value.trim();
+    });
+    if (Object.keys(normalized).length > 0) out[bizNumber] = normalized;
+  });
+  return out;
+}
+
+function normalizeComparableText(value: string): string {
+  return value.replace(/\s+/g, "").trim().toLowerCase();
+}
+
+function normalizedEditSimilarity(a: string, b: string): number {
+  if (!a || !b) return 0;
+  const m = a.length;
+  const n = b.length;
+  const dp = Array.from({ length: m + 1 }, (_, i) => {
+    const row = new Array<number>(n + 1).fill(0);
+    row[0] = i;
+    return row;
+  });
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost);
+    }
+  }
+  return 1 - dp[m][n] / Math.max(m, n);
+}
+
+function compactPartyMasterValue(field: PartyMasterField, value: string): string {
+  if (field === "address") return value.replace(/\s+/g, "").replace(/[(),.\-_/]/g, "").toLowerCase();
+  if (field === "company") return value.replace(/[\s().,\-_/]/g, "").toLowerCase();
+  return value.replace(/\s+/g, "").replace(/[(),.\-_/]/g, "").toLowerCase();
+}
+
+function hasSharedAddressDigit(a: string, b: string): boolean {
+  const left = new Set((a.match(/\d+/g) ?? []).filter((part) => part.length >= 2));
+  return (b.match(/\d+/g) ?? []).some((part) => part.length >= 2 && left.has(part));
+}
+
+type AddressFamilyLabel = "same_address_family" | "address_type_differs" | "unknown";
+
+function compareAddressFamily(addrA: string, addrB: string): AddressFamilyLabel {
+  if (!addrA || !addrB) return "unknown";
+  const compact = (s: string) => s.replace(/\s+/g, "").replace(/[(),.\-_/]/g, "").toLowerCase();
+  const cA = compact(addrA);
+  const cB = compact(addrB);
+  if (cA === cB) return "same_address_family";
+  const sidoList = ["서울","부산","대구","인천","광주","대전","울산","세종","경기","강원","충북","충남","전북","전남","경북","경남","제주"];
+  const extractSido = (s: string) => sidoList.find(d => s.includes(d)) ?? "";
+  const extractGu = (s: string) => { const m = s.match(/([가-힣]+[구군])/); return m ? m[1] : ""; };
+  const sidoA = extractSido(cA), sidoB = extractSido(cB);
+  const guA = extractGu(cA), guB = extractGu(cB);
+  if (sidoA && sidoB && sidoA !== sidoB) return "address_type_differs";
+  if (guA && guB && guA !== guB) return "address_type_differs";
+  if ((sidoA && sidoA === sidoB) || (guA && guA === guB)) return "same_address_family";
+  return "unknown";
+}
+
+function getOcrOrNormBizNumberForSide(
+  documentFields: Record<string, string> | null,
+  normalization: InvoiceNormalization | null,
+  bizField: "supplierBizNumber" | "buyerBizNumber",
+): { bizNumber: string; bizSource: "ocr" | "norm" } | null {
+  const rawBiz = normalizePartyMasterBizNumber(documentFields?.[bizField]);
+  if (rawBiz) return { bizNumber: rawBiz, bizSource: "ocr" };
+  const normBiz = normalizePartyMasterBizNumber(getNormalizedFieldValue(normalization, bizField));
+  if (normBiz) return { bizNumber: normBiz, bizSource: "norm" };
+  return null;
+}
+
+function getPartyMasterCandidateForField(
+  fieldKey: string,
+  documentFields: Record<string, string> | null,
+  normalization: InvoiceNormalization | null,
+  partyMaster: PartyMasterMap,
+  gtValue: string,
+): PartyMasterCandidate | null {
+  const supplierMasterField = PARTY_MASTER_SUPPLIER_FIELDS[fieldKey];
+  const buyerMasterField = PARTY_MASTER_BUYER_FIELDS[fieldKey];
+  if (!supplierMasterField && !buyerMasterField) return null;
+
+  const role = supplierMasterField ? "supplier" : "buyer";
+  const masterField = supplierMasterField ?? buyerMasterField;
+  const bizField = role === "supplier" ? "supplierBizNumber" : "buyerBizNumber";
+  const bizKey = getOcrOrNormBizNumberForSide(documentFields, normalization, bizField);
+  if (!bizKey) return null;
+
+  const value = partyMaster[bizKey.bizNumber]?.[masterField];
+  if (!value) return null;
+
+  return {
+    role,
+    fieldKey,
+    masterField,
+    bizField,
+    bizNumber: bizKey.bizNumber,
+    bizSource: bizKey.bizSource,
+    value,
+    source: role === "supplier" ? "master_by_supplierBizNumber" : "master_by_buyerBizNumber",
+    matchesGt: Boolean(gtValue) && normalizeComparableText(gtValue) === normalizeComparableText(value),
+  };
+}
+
+function getPartyMasterPromotion(args: {
+  candidate: PartyMasterCandidate | null;
+  rawValue: string;
+  normalizedValue: string;
+  gtValue: string;
+  normalizationRecord: NormalizationFieldRecord | null;
+  invoiceProfile?: InvoiceProfile;
+  fieldKey?: string;
+}): PartyMasterPromotion {
+  // M-2f: GT/reference 기반 자동채움 로직 (MASTER 개념 제거, address 제외)
+  const { candidate, rawValue, normalizedValue, gtValue, fieldKey } = args;
+  const existingValue = normalizedValue || rawValue;
+
+  // address 필드는 자동채움 제외 (배송지/납품처/등록지 차이)
+  if (fieldKey && PARTY_ADDRESS_FIELDS.has(fieldKey)) {
+    return { promoted: false, selectedValue: existingValue, selectedSource: "existing", reason: "address: GT/reference 자동채움 제외" };
+  }
+
+  // reference candidate 없음 (biz 미추출 또는 party_master에 해당 항목 없음)
+  if (!candidate) {
+    return { promoted: false, selectedValue: existingValue, selectedSource: "existing", reason: "reference 없음 · biz 미추출 또는 미등록" };
+  }
+
+  // OCR/NORM이 이미 GT와 직접 일치 → reference 불필요, OCR/NORM 채택 유지
+  if (rawValue && documentMatchStatus(gtValue, rawValue) === "O") {
+    return { promoted: false, selectedValue: rawValue, selectedSource: "ocr", reason: "OCR direct match · reference 불필요" };
+  }
+  if (normalizedValue && documentMatchStatus(gtValue, normalizedValue) === "O") {
+    return { promoted: false, selectedValue: normalizedValue, selectedSource: "norm", reason: "NORM direct match · reference 불필요" };
+  }
+
+  // GT/reference 자동채움 적용 (biz exact + reference 값 존재)
+  return {
+    promoted: true,
+    selectedValue: candidate.value,
+    selectedSource: "gt_reference",
+    reason: `GT/reference 자동채움 · biz: ${candidate.bizNumber}`,
+  };
+}
+
+function getDocumentSelectedValueWithMaster(args: {
+  fieldKey: string;
+  documentFields: Record<string, string>;
+  normalization: InvoiceNormalization | null;
+  partyMaster: PartyMasterMap;
+  gtValue: string;
+  invoiceProfile?: InvoiceProfile;
+}): { value: string; source: "gt_reference" | "ocr"; candidate: PartyMasterCandidate | null; promotion: PartyMasterPromotion } {
+  const { fieldKey, documentFields, normalization, partyMaster, gtValue, invoiceProfile } = args;
+  const candidate = getPartyMasterCandidateForField(fieldKey, documentFields, normalization, partyMaster, gtValue);
+  const rawValue = documentFields[fieldKey] ?? "";
+  const normalizedValue = getNormalizedFieldValue(normalization, fieldKey);
+  const promotion = getPartyMasterPromotion({
+    candidate,
+    rawValue,
+    normalizedValue,
+    gtValue,
+    normalizationRecord: getNormalizationRecord(normalization, fieldKey),
+    invoiceProfile,
+    fieldKey,
+  });
+  if (promotion.promoted && candidate) return { value: candidate.value, source: "gt_reference", candidate, promotion };
+  if (promotion.selectedSource === "norm") return { value: normalizedValue, source: "ocr", candidate, promotion };
+  return { value: rawValue, source: "ocr", candidate, promotion };
+}
+
+// P-2b: visibleAmountFields override 지원
+function getAmountFieldKeysForProfile(invoiceProfile?: InvoiceProfile): string[] {
+  if (invoiceProfile?.visibleAmountFields?.length) {
+    return invoiceProfile.visibleAmountFields as string[];
+  }
+  const ap = invoiceProfile?.amountProfile;
+  if (!ap) return ["supplyAmount", "taxAmount", "totalAmount"];
+  return AMOUNT_PROFILE_AMOUNT_FIELDS[ap] ?? ["supplyAmount", "taxAmount", "totalAmount"];
+}
+
+// P-2b: sample별 field label override
+function getDocumentFieldLabel(fieldKey: string, invoiceProfile?: InvoiceProfile): string {
+  return invoiceProfile?.fieldLabels?.[fieldKey] ?? DOCUMENT_FIELD_LABELS[fieldKey] ?? fieldKey;
+}
+function getDocumentFieldShortLabel(fieldKey: string, invoiceProfile?: InvoiceProfile): string {
+  return invoiceProfile?.fieldLabels?.[fieldKey] ?? DOCUMENT_FIELD_SHORT[fieldKey] ?? DOCUMENT_FIELD_LABELS[fieldKey] ?? fieldKey;
+}
+
+// DocumentDetailPanel에서 summary field (DOCUMENT_COLUMNS 외부) 카드 메타 생성
+function buildSummaryFieldMeta(keys: string[], invoiceProfile?: InvoiceProfile): { key: string; label: string; shortLabel: string; required: boolean }[] {
+  return keys
+    .filter(k => !STANDARD_AMOUNT_KEYS_IN_META.has(k))
+    .map(k => ({
+      key: k,
+      label: getDocumentFieldLabel(k, invoiceProfile),
+      shortLabel: getDocumentFieldShortLabel(k, invoiceProfile),
+      required: false,
+    }));
+}
 
 // finance GT vs OCR 비교용 정규화 — 보수적 최소 정규화
 // 너무 공격적인 fuzzy 매칭 금지. 명백히 같은 값을 다른 표기로 입력한 경우만 흡수.
@@ -3354,6 +3785,8 @@ function DocumentDetailPanel({
   hasOcr,
   documentGt,
   onDocumentGtChange,
+  invoiceProfile,
+  partyMaster,
 }: {
   documentFields: Record<string, string> | null;
   normalization: InvoiceNormalization | null;
@@ -3361,11 +3794,18 @@ function DocumentDetailPanel({
   hasOcr: boolean;
   documentGt: Record<string, string>;
   onDocumentGtChange: (field: string, value: string) => void;
+  invoiceProfile?: InvoiceProfile;
+  partyMaster: PartyMasterMap;
 }) {
+  const amtLabel = getAmountProfileLabel(invoiceProfile?.amountProfile);
+  const partyLabel = getPartyProfileLabel(invoiceProfile?.partyProfile);
+  const tableLabel = getTableProfileLabel(invoiceProfile?.tableProfile);
+  const amtNoAmount = invoiceProfile?.amountProfile === "no_amount_summary" || invoiceProfile?.amountProfile === "quantity_total_only";
+  const summaryFieldEntries = invoiceProfile?.summaryFields ? Object.entries(invoiceProfile.summaryFields) : [];
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       <div style={{
-        display: "flex", alignItems: "center", gap: 8,
+        display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap",
         padding: "6px 12px", borderRadius: 8,
         background: "rgba(202,138,4,0.08)", border: "1px solid rgba(202,138,4,0.24)",
       }}>
@@ -3376,21 +3816,97 @@ function DocumentDetailPanel({
           <span style={{ fontSize: 10, color: "var(--muted)" }}>OCR 미실행 · GT 선입력 가능</span>
         )}
       </div>
+      {invoiceProfile && (
+        <div style={{
+          display: "flex", flexWrap: "wrap", gap: 6,
+          padding: "6px 12px", borderRadius: 8,
+          background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)",
+        }}>
+          <span style={{ fontSize: 9, fontWeight: 800, color: "var(--muted)", alignSelf: "center", marginRight: 2 }}>PROFILE</span>
+          <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 4, background: amtNoAmount ? "#7c3aed" : "#0369a1", color: "#fff", fontWeight: 700 }}
+            title={`amountProfile: ${invoiceProfile.amountProfile ?? "—"}`}>
+            Amount: {amtLabel}
+          </span>
+          <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 4, background: "#374151", color: "#d1d5db", fontWeight: 700 }}
+            title={`partyProfile: ${invoiceProfile.partyProfile ?? "—"}`}>
+            Party: {partyLabel}
+          </span>
+          <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 4, background: "#374151", color: "#d1d5db", fontWeight: 700 }}
+            title={`tableProfile: ${invoiceProfile.tableProfile ?? "—"}`}>
+            Table: {tableLabel}
+          </span>
+          {invoiceProfile.invoiceSubType && (
+            <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: "rgba(255,255,255,0.06)", color: "var(--muted)", fontWeight: 600 }}
+              title={`invoiceSubType: ${invoiceProfile.invoiceSubType}`}>
+              {invoiceProfile.invoiceSubType.replace(/_statement$/, "").replace(/_/g, "/")}
+            </span>
+          )}
+          {summaryFieldEntries.length > 0 && (
+            <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: "rgba(245,158,11,0.12)", color: "#fbbf24", fontWeight: 600 }}
+              title={summaryFieldEntries.map(([k, v]) => `${k}: ${v.label}`).join(", ")}>
+              Summary: {summaryFieldEntries.map(([, v]) => v.label).join(" / ")}
+            </span>
+          )}
+          {amtNoAmount && (
+            <span style={{ fontSize: 9, color: "#a78bfa", fontWeight: 600, alignSelf: "center" }}>
+              ※ 공급가/세액/합계 — 은 이 문서 유형 특성
+            </span>
+          )}
+        </div>
+      )}
 
-      {DOCUMENT_FIELD_META.map(({ key, label, required }) => (
-        <DocumentFieldCard
-          key={key}
-          fieldKey={key}
-          label={label}
-          required={required}
-          value={documentFields?.[key] ?? ""}
-          normalization={normalization}
-          invoiceDebug={invoiceDebug}
-          hasOcr={hasOcr}
-          gtValue={documentGt[key] ?? ""}
-          onGtChange={(v) => onDocumentGtChange(key, v)}
-        />
-      ))}
+      {(() => {
+        // amountProfile + visibleAmountFields override 기반 visible fields 계산 (P-2/P-2b)
+        const applicableKeys = getAmountFieldKeysForProfile(invoiceProfile);
+        const isBuyerOnly = invoiceProfile?.partyProfile === "buyer_only";
+
+        // DOCUMENT_FIELD_META 필터링: amount keys는 applicable만, supplier keys는 buyer_only 시 숨김
+        const visibleMeta = DOCUMENT_FIELD_META
+          .filter(({ key }) => {
+            if (STANDARD_AMOUNT_KEYS_IN_META.has(key)) return applicableKeys.includes(key);
+            if (isBuyerOnly && SUPPLIER_FIELD_KEYS.has(key)) return false;
+            return true;
+          })
+          .map(meta => ({
+            ...meta,
+            label: getDocumentFieldLabel(meta.key, invoiceProfile),
+            shortLabel: getDocumentFieldShortLabel(meta.key, invoiceProfile),
+          }));
+
+        // DOCUMENT_COLUMNS 밖의 summaryField 카드 메타 (label override 포함)
+        const summaryMeta = buildSummaryFieldMeta(applicableKeys, invoiceProfile);
+
+        return (
+          <>
+            {isBuyerOnly && (
+              <div style={{
+                display: "flex", alignItems: "center", gap: 6,
+                padding: "5px 12px", borderRadius: 6,
+                background: "rgba(107,114,128,0.12)", border: "1px solid rgba(107,114,128,0.24)",
+              }}>
+                <span style={{ fontSize: 9, color: "#9ca3af", fontWeight: 700 }}>공급자</span>
+                <span style={{ fontSize: 10, color: "#9ca3af" }}>공급자 정보 없음 · buyer-only 문서 · 평가 제외</span>
+              </div>
+            )}
+            {[...visibleMeta, ...summaryMeta].map(({ key, label, required }) => (
+              <DocumentFieldCard
+                key={key}
+                fieldKey={key}
+                label={label}
+                required={required}
+                value={documentFields?.[key] ?? ""}
+                normalization={normalization}
+                invoiceDebug={invoiceDebug}
+                hasOcr={hasOcr}
+                gtValue={documentGt[key] ?? ""}
+                onGtChange={(v) => onDocumentGtChange(key, v)}
+                masterCandidate={getPartyMasterCandidateForField(key, documentFields, normalization, partyMaster, documentGt[key] ?? "")}
+                invoiceProfile={invoiceProfile}
+              />
+            ))}
+          </>
+        );
+      })()}
     </div>
   );
 }
@@ -3405,6 +3921,8 @@ function DocumentFieldCard({
   hasOcr,
   gtValue,
   onGtChange,
+  masterCandidate,
+  invoiceProfile,
 }: {
   fieldKey: string;
   label: string;
@@ -3415,6 +3933,8 @@ function DocumentFieldCard({
   hasOcr: boolean;
   gtValue: string;
   onGtChange: (v: string) => void;
+  masterCandidate?: PartyMasterCandidate | null;
+  invoiceProfile?: InvoiceProfile;
 }) {
   const hasValue = value !== "";
   const hasGt = gtValue !== "";
@@ -3435,6 +3955,15 @@ function DocumentFieldCard({
   const hasDebugOnlyRule = normalizationRules.some((rule) => /debug_only|low/i.test(rule.confidence ?? ""));
   const ruleNames = normalizationRules.map((rule) => rule.rule).filter(Boolean).join(", ");
   const summaryTotalRisk = getSummaryTotalRisk(invoiceDebug, fieldKey, value);
+  const masterPromotion = getPartyMasterPromotion({
+    candidate: masterCandidate ?? null,
+    rawValue: value,
+    normalizedValue,
+    gtValue,
+    normalizationRecord,
+    invoiceProfile,
+    fieldKey,
+  });
   const statusSymbol = hasGt ? meta.symbol : (hasValue ? "O" : required ? "X" : "—");
   const statusBg =
     statusSymbol === "O" ? "#22c55e" :
@@ -3453,8 +3982,16 @@ function DocumentFieldCard({
   const finalView = (() => {
     if (!hasOcr)              return { value: "",       source: "empty"            as const, reason: "OCR 미실행" };
     if (!hasGt && !hasValue)  return { value: "",       source: "empty"            as const, reason: required ? "Tier-1 미추출" : "값 없음" };
+    // M-2f: GT/reference 자동채움 성공 시 reference 값 우선 채택
+    if (hasOcr && masterPromotion.promoted && masterCandidate) {
+      return { value: masterCandidate.value, source: "gt_reference" as const, reason: masterPromotion.reason };
+    }
     if (!hasGt && hasValue)   return { value: value,    source: "ocr"              as const, reason: "OCR 결과 채택" };
     if (hasGt && !hasValue)   return { value: gtValue,  source: "gt_anchor_empty"  as const, reason: "OCR 공란 → GT 채택" };
+    if (hasGt && status === "O") return { value: value, source: "ocr" as const, reason: "OCR matches GT" };
+    if (hasGt && normalizedValue && documentMatchStatus(gtValue, normalizedValue) === "O") {
+      return { value: normalizedValue, source: "norm" as const, reason: "NORM matches GT" };
+    }
     // both
     if (status === "O")       return { value: value,    source: "ocr"              as const, reason: "OCR=GT 정규화 일치" };
     if (status === "△")       return { value: gtValue,  source: "gt_similarity"    as const, reason: "GT/OCR 부분일치 · GT 우선 채택" };
@@ -3464,11 +4001,31 @@ function DocumentFieldCard({
   const srcMeta: Record<typeof finalView.source, { label: string; color: string; bg: string; border: string }> = {
     empty:            { label: "EMPTY",            color: "#64748b", bg: "rgba(255,255,255,0.03)", border: "rgba(255,255,255,0.12)" },
     ocr:              { label: "OCR",              color: "#0ea5e9", bg: "rgba(14,165,233,0.10)",  border: "rgba(14,165,233,0.35)" },
+    norm:             { label: "NORM",             color: "#38bdf8", bg: "rgba(56,189,248,0.10)",  border: "rgba(56,189,248,0.35)" },
+    gt_reference:     { label: "GT_REF",           color: "#f97316", bg: "rgba(249,115,22,0.12)",  border: "rgba(249,115,22,0.38)" },
     gt_anchor_empty:  { label: "GT_ANCHOR_EMPTY",  color: "#15803d", bg: "rgba(21,128,61,0.13)",   border: "rgba(21,128,61,0.45)" },
     gt_similarity:    { label: "GT_SIMILARITY",    color: "#16a34a", bg: "rgba(22,163,74,0.13)",   border: "rgba(22,163,74,0.45)" },
   };
   const fSrc = srcMeta[finalView.source];
   const isGtAdopted = finalView.source === "gt_similarity" || finalView.source === "gt_anchor_empty";
+  // M-2e: 통일된 final status — O=OCR/NORM 직접 일치, △=보정채택, X=불일치/미추출
+  const fieldFinalStatus = computeFieldFinalStatus({
+    gtValue,
+    ocrValue: value,
+    normalizedValue,
+    masterSelected: masterPromotion.promoted,
+    hasOcr,
+  });
+  const finalMeta = documentMatchMeta(fieldFinalStatus);
+  const finalStatusSymbol = hasGt ? finalMeta.symbol : (hasValue ? "O" : required ? "X" : "-");
+  const finalStatusBg =
+    hasGt ? finalMeta.color :
+    finalStatusSymbol === "O" ? "#22c55e" :
+    finalStatusSymbol === "X" ? "#ef4444" :
+    "rgba(255,255,255,0.18)";
+  // M-RESET: MASTER row/badge 비활성화 — Test 단계에서는 GT vs OCR/NORM만 표시
+  const showMasterRow = false;
+  const showCompactMasterBadge = false;
 
   return (
     <div style={{
@@ -3490,13 +4047,14 @@ function DocumentFieldCard({
           }}>
             {required ? "Tier-1" : "optional"}
           </span>
+          {/* M-RESET: MASTER compact badge removed */}
         </div>
-        <span title={meta.title} style={{
+        <span title={finalMeta.title} style={{
           display: "inline-flex", alignItems: "center", justifyContent: "center",
           width: 22, height: 22, borderRadius: 999,
           fontSize: 12, fontWeight: 800, color: "#fff",
-          background: statusBg,
-        }}>{statusSymbol}</span>
+          background: finalStatusBg,
+        }}>{finalStatusSymbol}</span>
       </div>
 
       <FieldSlot color="#22c55e" label="GT">
@@ -3574,6 +4132,8 @@ function DocumentFieldCard({
         </FieldSlot>
       )}
 
+      {/* M-RESET: MASTER row removed — party_master.json is not used in test stage judgment */}
+
       {summaryTotalRisk && (
         <FieldSlot color="#f59e0b" label="SUMMARY">
           <div style={{ display: "flex", flexDirection: "column", gap: 5, minWidth: 0 }}>
@@ -3637,6 +4197,11 @@ function DocumentFieldCard({
               {finalView.reason && (
                 <span title={finalView.reason} style={{ fontSize: 10, color: "var(--muted)", fontWeight: 700 }}>
                   {finalView.reason}
+                </span>
+              )}
+              {finalView.source === "gt_reference" && masterCandidate && (
+                <span title={`GT/reference 자동채움 · ${masterCandidate.bizNumber}`} style={{ fontSize: 10, color: "#fed7aa", fontWeight: 800 }}>
+                  biz: {masterCandidate.bizNumber}
                 </span>
               )}
               {finalView.source === "empty" && required && (
@@ -3827,6 +4392,80 @@ const DATASET_STATUS_LABELS: Record<string, string> = {
   draft:       "초안",
 };
 function getQualityTagLabel(tag: string) { return QUALITY_TAG_LABELS[tag] ?? tag; }
+
+// ── Invoice profile label maps (P-1) ──
+const AMOUNT_PROFILE_LABELS: Record<string, string> = {
+  supply_tax_total:    "공급가/세액/합계",
+  total_only:          "합계만",
+  subtotal_cumulative: "소계/누계",
+  balance_cumulative:  "잔액/거래금액",
+  no_amount_summary:   "금액 없음",
+  quantity_total_only: "총수량",
+  ambiguous_amount:    "금액 불명확",
+};
+const PARTY_PROFILE_LABELS: Record<string, string> = {
+  supplier_buyer:      "양쪽",
+  buyer_only:          "buyer only",
+  supplier_weak:       "supplier 약함",
+  buyer_rep_optional:  "대표 optional",
+  party_garbled:       "OCR 깨짐",
+};
+const TABLE_PROFILE_LABELS: Record<string, string> = {
+  multi_item_table:          "다품목",
+  single_item_table:         "단일품목",
+  lot_serial_quantity_table: "Lot/Serial/수량",
+  serial_quantity_table:     "Serial/수량",
+  item_quantity_table:       "품목/수량",
+  item_amount_table:         "품목+금액",
+};
+function getAmountProfileLabel(p: string | undefined) { return p ? (AMOUNT_PROFILE_LABELS[p] ?? p) : "—"; }
+function getPartyProfileLabel(p: string | undefined)  { return p ? (PARTY_PROFILE_LABELS[p]  ?? p) : "—"; }
+function getTableProfileLabel(p: string | undefined)  { return p ? (TABLE_PROFILE_LABELS[p]  ?? p) : "—"; }
+
+function InvoiceProfileKpi({ counts }: {
+  counts: { amounts: Record<string, number>; parties: Record<string, number>; tables: Record<string, number> };
+}) {
+  const [open, setOpen] = React.useState(false);
+  const chipSm: React.CSSProperties = { fontSize: 9, padding: "1px 6px", borderRadius: 3, fontWeight: 700, whiteSpace: "nowrap", display: "inline-block", margin: "0 2px" };
+  return (
+    <div style={{ flexBasis: "100%", marginTop: 4 }}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        style={{ background: "none", border: "none", cursor: "pointer", color: "#ca8a04", fontSize: 10, fontWeight: 700, padding: 0, letterSpacing: 0.4 }}
+      >
+        {open ? "▾" : "▸"} Profile 집계
+      </button>
+      {open && (
+        <div style={{ paddingTop: 6, display: "flex", flexDirection: "column", gap: 4 }}>
+          <div>
+            <span style={{ fontSize: 9, color: "var(--muted)", fontWeight: 700, marginRight: 6 }}>Amount</span>
+            {Object.entries(counts.amounts).sort((a, b) => b[1] - a[1]).map(([k, v]) => (
+              <span key={k} style={{ ...chipSm, background: k === "no_amount_summary" || k === "quantity_total_only" ? "#7c3aed" : "#0369a1", color: "#fff" }} title={k}>
+                {getAmountProfileLabel(k)} {v}
+              </span>
+            ))}
+          </div>
+          <div>
+            <span style={{ fontSize: 9, color: "var(--muted)", fontWeight: 700, marginRight: 6 }}>Party</span>
+            {Object.entries(counts.parties).sort((a, b) => b[1] - a[1]).map(([k, v]) => (
+              <span key={k} style={{ ...chipSm, background: "#374151", color: "#d1d5db" }} title={k}>
+                {getPartyProfileLabel(k)} {v}
+              </span>
+            ))}
+          </div>
+          <div>
+            <span style={{ fontSize: 9, color: "var(--muted)", fontWeight: 700, marginRight: 6 }}>Table</span>
+            {Object.entries(counts.tables).sort((a, b) => b[1] - a[1]).map(([k, v]) => (
+              <span key={k} style={{ ...chipSm, background: "#1e3a5f", color: "#bfdbfe" }} title={k}>
+                {getTableProfileLabel(k)} {v}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 function getExpectedStatusLabel(s: string): string {
   if (s === "selected") return "정상 선택";
   if (s.startsWith("suppressed_")) return "정상 억제";
