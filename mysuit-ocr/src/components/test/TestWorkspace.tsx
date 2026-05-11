@@ -32,7 +32,8 @@ import {
   MatchStatus,
 } from "./core/finalize";
 import type { DatasetManifest, ManifestItem, InvoiceProfile, AmountProfile, PartyProfile, TableProfile } from "@/lib/testsets";
-import { resolveProfile, FINANCE_COLUMNS, FINANCE_TIER1_FIELDS, DOCUMENT_COLUMNS, DOCUMENT_PARTY_FIELDS, isNotApplicableField } from "@/lib/profiles";
+import { resolveProfile, FINANCE_COLUMNS, FINANCE_TIER1_FIELDS, DOCUMENT_COLUMNS, DOCUMENT_PARTY_FIELDS, isNotApplicableField, getExpectedTableColumns, TABLE_COLUMN_META } from "@/lib/profiles";
+import type { TableColumnKey, TableRowsValidation, GridModeRecommendation } from "@/lib/profiles";
 
 type ViewMode = "compare" | "ocr_only" | "autofill" | "gt_edit";
 
@@ -239,6 +240,45 @@ function getInvoiceNormalization(entry?: OcrEntry | null): InvoiceNormalization 
 function getInvoiceDebug(entry?: OcrEntry | null): Record<string, unknown> | null {
   const root = asRecord(entry?.extractDebug);
   return asRecord(root?.invoice_statement);
+}
+
+function buildTableRowsValidation(
+  invoiceProfile: InvoiceProfile | undefined,
+  documentFields: Record<string, string> | null,
+  documentGt: Record<string, string>,
+): TableRowsValidation {
+  const { requiredColumns, optionalColumns, expectedColumns, recommendedGridMode } =
+    getExpectedTableColumns(invoiceProfile?.tableProfile);
+  // T-3 이후 실제 tableRows 컬럼 추출. 현재는 parser 미구현 → actualColumns=[]
+  const actualColumns: TableColumnKey[] = [];
+  const missingColumns = requiredColumns.filter((c) => !actualColumns.includes(c));
+  const extraColumns: TableColumnKey[] = [];
+  const hasRowCount = Boolean(documentFields?.rowCount || documentGt?.rowCount);
+  const extractionStatus: TableRowsValidation["extractionStatus"] =
+    hasRowCount ? "parser_not_ready" : "not_extracted";
+  const gtRowCount = documentGt["rowCount"] ?? "";
+  const ocrRowCount = documentFields?.["rowCount"] ?? "";
+  let rowCountStatus: "O" | "△" | "X" | "—";
+  if (!gtRowCount) rowCountStatus = "—";
+  else if (!ocrRowCount) rowCountStatus = "X";
+  else if (gtRowCount === ocrRowCount) rowCountStatus = "O";
+  else rowCountStatus = "X";
+  const gtPreview = documentGt["firstRowPreview"] ?? "";
+  const ocrPreview = documentFields?.["firstRowPreview"] ?? "";
+  const firstRowPreviewStatus = documentMatchStatus(gtPreview, ocrPreview);
+  return {
+    tableProfile: invoiceProfile?.tableProfile,
+    expectedColumns,
+    requiredColumns,
+    optionalColumns,
+    actualColumns,
+    missingColumns,
+    extraColumns,
+    rowCountStatus,
+    firstRowPreviewStatus,
+    extractionStatus,
+    recommendedGridMode,
+  };
 }
 
 function unknownToText(value: unknown): string {
@@ -2256,6 +2296,7 @@ export default function TestWorkspace() {
                   ))}
                   <th style={{ ...th, textAlign: "center" }} title="amountProfile: 금액 구조 유형 (P-1)">Amount</th>
                   <th style={{ ...th, textAlign: "center" }} title="partyProfile: 거래 당사자 구조 (P-1)">Party</th>
+                  <th style={{ ...th, textAlign: "center" }} title="tableProfile/gridMode · rowCount/firstRowPreview 판정 (T-1/T-2)">Table</th>
                   <th style={{ ...th, textAlign: "center" }} title="Normalized auxiliary counts. Existing exact O/X is not changed.">Norm</th>
                   <th style={{ ...th, textAlign: "center" }}>상태</th>
                 </tr>
@@ -2335,6 +2376,32 @@ export default function TestWorkspace() {
                           {partyLabel}
                         </span>
                       </td>
+                      {/* T-2: Table column — tableProfile + rowCount/firstRowPreview status */}
+                      {(() => {
+                        if (!invProfile?.tableProfile) {
+                          return (
+                            <td style={{ ...td, textAlign: "center" }}>
+                              <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 9 }}>—</span>
+                            </td>
+                          );
+                        }
+                        const tblV = buildTableRowsValidation(invProfile, docFields, docGt);
+                        return (
+                          <td style={{ ...td, textAlign: "center" }}
+                            title={`tableProfile: ${invProfile.tableProfile} · rows: ${tblV.rowCountStatus} · preview: ${tblV.firstRowPreviewStatus} · ${TABLE_ROWS_EXTRACTION_LABEL[tblV.extractionStatus]}`}>
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}>
+                              <span style={{ fontSize: 9, padding: "1px 4px", borderRadius: 3, background: "#1e3a5f", color: "#bfdbfe", fontWeight: 700, whiteSpace: "nowrap" }}>
+                                {TABLE_PROFILE_LABELS[invProfile.tableProfile ?? ""] ?? invProfile.tableProfile}
+                              </span>
+                              <span style={{ fontSize: 9, color: "var(--muted)", whiteSpace: "nowrap" }}>
+                                행<span style={{ color: tableStatusColor(tblV.rowCountStatus), fontWeight: 800 }}>{tblV.rowCountStatus}</span>
+                                {" · "}
+                                첫행<span style={{ color: tableStatusColor(tblV.firstRowPreviewStatus), fontWeight: 800 }}>{tblV.firstRowPreviewStatus}</span>
+                              </span>
+                            </div>
+                          </td>
+                        );
+                      })()}
                       <td style={{ ...td, textAlign: "center" }} title={normalizationSummaryTitle(normSummary)}>
                         {normSummary.candidateCount > 0 ? (
                           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
@@ -3778,6 +3845,123 @@ function FinanceDetailPanel({
   );
 }
 
+const TABLE_ROWS_GRID_LABEL: Record<string, string> = {
+  fixed: "고정그리드", variable: "가변그리드", either: "고정/가변",
+  "single-row": "단일행", "manual-review": "수동확인",
+};
+const TABLE_ROWS_GRID_COLOR: Record<string, string> = {
+  fixed: "#0369a1", variable: "#15803d", either: "#6b7280",
+  "single-row": "#7c3aed", "manual-review": "#c2410c",
+};
+const TABLE_ROWS_EXTRACTION_BG: Record<string, string> = {
+  ready: "#16a34a", partial: "#ca8a04",
+  parser_not_ready: "#374151", not_extracted: "#1f2937",
+};
+const TABLE_ROWS_EXTRACTION_LABEL: Record<string, string> = {
+  ready: "추출 완료", partial: "부분 추출",
+  parser_not_ready: "parser 미구현", not_extracted: "미추출",
+};
+
+function tableStatusColor(s: string): string {
+  return s === "O" ? "#22c55e" : s === "△" ? "#f59e0b" : s === "X" ? "#ef4444" : "rgba(255,255,255,0.35)";
+}
+
+function TableRowsValidationPanel({
+  invoiceProfile,
+  documentFields,
+  documentGt,
+}: {
+  invoiceProfile?: InvoiceProfile;
+  documentFields: Record<string, string> | null;
+  documentGt: Record<string, string>;
+}) {
+  const [open, setOpen] = React.useState(false);
+  if (!invoiceProfile?.tableProfile) return null;
+  const validation = buildTableRowsValidation(invoiceProfile, documentFields, documentGt);
+  const colLabelMap = Object.fromEntries(TABLE_COLUMN_META.map((m) => [m.key, m.labelKo]));
+  return (
+    <div style={{ borderRadius: 8, border: "1px solid rgba(99,102,241,0.25)", background: "rgba(99,102,241,0.04)", marginBottom: 4 }}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        style={{ width: "100%", background: "none", border: "none", cursor: "pointer", padding: "6px 12px", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", textAlign: "left" }}
+      >
+        <span style={{ fontSize: 10, fontWeight: 800, color: "#a5b4fc", letterSpacing: 0.5 }}>
+          {open ? "▾" : "▸"} TABLE ROWS PROFILE
+        </span>
+        <span style={{ fontSize: 9, padding: "1px 6px", borderRadius: 3, background: "#1e3a5f", color: "#bfdbfe", fontWeight: 700 }}>
+          {TABLE_PROFILE_LABELS[validation.tableProfile ?? ""] ?? validation.tableProfile ?? "—"}
+        </span>
+        {validation.recommendedGridMode && (
+          <span style={{ fontSize: 9, padding: "1px 6px", borderRadius: 3, background: TABLE_ROWS_GRID_COLOR[validation.recommendedGridMode] ?? "#374151", color: "#fff", fontWeight: 600 }}>
+            {TABLE_ROWS_GRID_LABEL[validation.recommendedGridMode] ?? validation.recommendedGridMode}
+          </span>
+        )}
+        <span style={{ fontSize: 9, padding: "1px 6px", borderRadius: 3, background: TABLE_ROWS_EXTRACTION_BG[validation.extractionStatus], color: "#d1d5db", fontWeight: 600 }}>
+          {TABLE_ROWS_EXTRACTION_LABEL[validation.extractionStatus]}
+        </span>
+        <span style={{ fontSize: 9, fontWeight: 800, color: tableStatusColor(validation.rowCountStatus) }}>
+          행:{validation.rowCountStatus}
+        </span>
+        <span style={{ fontSize: 9, fontWeight: 800, color: tableStatusColor(validation.firstRowPreviewStatus) }}>
+          첫행:{validation.firstRowPreviewStatus}
+        </span>
+      </button>
+      {open && (
+        <div style={{ padding: "0 12px 10px", display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 4, alignItems: "center" }}>
+            <span style={{ fontSize: 9, color: "#86efac", fontWeight: 800, minWidth: 52 }}>Required</span>
+            {validation.requiredColumns.map((c) => (
+              <span key={c} style={{ fontSize: 9, padding: "1px 6px", borderRadius: 3, background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.3)", color: "#86efac", fontWeight: 700 }}>
+                {colLabelMap[c] ?? c}
+              </span>
+            ))}
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 4, alignItems: "center" }}>
+            <span style={{ fontSize: 9, color: "var(--muted)", fontWeight: 800, minWidth: 52 }}>Optional</span>
+            {validation.optionalColumns.map((c) => (
+              <span key={c} style={{ fontSize: 9, padding: "1px 6px", borderRadius: 3, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", color: "var(--muted)", fontWeight: 600 }}>
+                {colLabelMap[c] ?? c}
+              </span>
+            ))}
+          </div>
+          {validation.actualColumns.length > 0 ? (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 4, alignItems: "center" }}>
+              <span style={{ fontSize: 9, color: "#7dd3fc", fontWeight: 800, minWidth: 52 }}>Actual</span>
+              {validation.actualColumns.map((c) => (
+                <span key={c} style={{ fontSize: 9, padding: "1px 6px", borderRadius: 3, background: "rgba(56,189,248,0.12)", border: "1px solid rgba(56,189,248,0.25)", color: "#7dd3fc", fontWeight: 600 }}>
+                  {colLabelMap[c] ?? c}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <div style={{ fontSize: 9, color: "var(--muted)" }}>
+              Actual: 추출 없음 · tableRows 컬럼 추출은 T-3 이후 구현
+            </div>
+          )}
+          {validation.missingColumns.length > 0 && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 4, alignItems: "center" }}>
+              <span style={{ fontSize: 9, color: "#fca5a5", fontWeight: 800, minWidth: 52 }}>Missing</span>
+              {validation.missingColumns.map((c) => (
+                <span key={c} style={{ fontSize: 9, padding: "1px 6px", borderRadius: 3, background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.28)", color: "#fca5a5", fontWeight: 600 }}>
+                  {colLabelMap[c] ?? c}
+                </span>
+              ))}
+            </div>
+          )}
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 2 }}>
+            <span style={{ fontSize: 9, color: "var(--muted)" }}>
+              rowCount <span style={{ color: tableStatusColor(validation.rowCountStatus), fontWeight: 800 }}>{validation.rowCountStatus}</span>
+            </span>
+            <span style={{ fontSize: 9, color: "var(--muted)" }}>
+              firstRowPreview <span style={{ color: tableStatusColor(validation.firstRowPreviewStatus), fontWeight: 800 }}>{validation.firstRowPreviewStatus}</span>
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function DocumentDetailPanel({
   documentFields,
   normalization,
@@ -3854,6 +4038,12 @@ function DocumentDetailPanel({
           )}
         </div>
       )}
+
+      <TableRowsValidationPanel
+        invoiceProfile={invoiceProfile}
+        documentFields={documentFields}
+        documentGt={documentGt}
+      />
 
       {(() => {
         // amountProfile + visibleAmountFields override 기반 visible fields 계산 (P-2/P-2b)

@@ -369,3 +369,114 @@ export function resolveKpiFamily(documentType: string | undefined | null): KpiFa
   const { base } = resolveProfile(documentType);
   return base as KpiFamily;
 }
+
+// ============================================================
+// Table Column Types and Policy (T-1/T-2: tableProfile별 tableRows 컬럼 정책)
+// ============================================================
+
+export type TableColumnKey =
+  | "rowIndex" | "itemCode" | "itemName" | "spec" | "lotNo"
+  | "serialNo" | "manufacturingNo" | "expiryDate" | "quantity"
+  | "unit" | "unitPrice" | "supplyAmount" | "taxAmount" | "amount"
+  | "totalAmount" | "manufacturer" | "insuranceCode" | "remark";
+
+export type GridModeRecommendation =
+  | "fixed" | "variable" | "either" | "single-row" | "manual-review";
+
+export type TableColumnMeta = {
+  key: TableColumnKey;
+  labelKo: string;
+  valueType: "text" | "number" | "amount" | "date" | "quantity" | "code";
+};
+
+export const TABLE_COLUMN_META: readonly TableColumnMeta[] = [
+  { key: "rowIndex",        labelKo: "행",        valueType: "number"   },
+  { key: "itemCode",        labelKo: "품목코드",  valueType: "code"     },
+  { key: "itemName",        labelKo: "품목명",    valueType: "text"     },
+  { key: "spec",            labelKo: "규격",      valueType: "text"     },
+  { key: "lotNo",           labelKo: "LOT/제조번호", valueType: "code"  },
+  { key: "serialNo",        labelKo: "Serial",    valueType: "code"     },
+  { key: "manufacturingNo", labelKo: "제조번호",  valueType: "code"     },
+  { key: "expiryDate",      labelKo: "유효기간",  valueType: "date"     },
+  { key: "quantity",        labelKo: "수량",      valueType: "quantity" },
+  { key: "unit",            labelKo: "단위",      valueType: "text"     },
+  { key: "unitPrice",       labelKo: "단가",      valueType: "amount"   },
+  { key: "supplyAmount",    labelKo: "공급가액",  valueType: "amount"   },
+  { key: "taxAmount",       labelKo: "세액",      valueType: "amount"   },
+  { key: "amount",          labelKo: "금액",      valueType: "amount"   },
+  { key: "totalAmount",     labelKo: "합계금액",  valueType: "amount"   },
+  { key: "manufacturer",    labelKo: "제조사",    valueType: "text"     },
+  { key: "insuranceCode",   labelKo: "보험코드",  valueType: "code"     },
+  { key: "remark",          labelKo: "비고",      valueType: "text"     },
+] as const;
+
+export type TableProfilePolicyResult = {
+  requiredColumns: TableColumnKey[];
+  optionalColumns: TableColumnKey[];
+  expectedColumns: TableColumnKey[];
+  recommendedGridMode: GridModeRecommendation | null;
+};
+
+type TableProfilePolicy = {
+  required: TableColumnKey[];
+  optional: TableColumnKey[];
+  gridMode: GridModeRecommendation;
+};
+
+const TABLE_PROFILE_POLICY: Record<string, TableProfilePolicy> = {
+  multi_item_table: {
+    required: ["itemName", "quantity"],
+    optional: ["spec", "lotNo", "expiryDate", "itemCode", "unitPrice", "amount", "supplyAmount", "manufacturer", "taxAmount", "insuranceCode", "unit", "rowIndex"],
+    gridMode: "either",
+  },
+  single_item_table: {
+    required: ["itemName", "quantity"],
+    optional: ["lotNo", "unitPrice", "supplyAmount", "taxAmount", "amount", "expiryDate", "manufacturer", "insuranceCode", "unit", "spec"],
+    gridMode: "single-row",
+  },
+  item_quantity_table: {
+    required: ["itemCode", "itemName", "quantity"],
+    optional: ["supplyAmount", "unitPrice", "insuranceCode", "taxAmount", "amount", "remark"],
+    gridMode: "variable",
+  },
+  lot_serial_quantity_table: {
+    required: ["itemName", "quantity", "lotNo"],
+    optional: ["expiryDate", "itemCode", "serialNo", "unit", "rowIndex", "remark"],
+    gridMode: "fixed",
+  },
+  serial_quantity_table: {
+    required: ["itemName", "serialNo", "quantity"],
+    optional: ["unit", "lotNo", "itemCode", "spec", "remark"],
+    gridMode: "variable",
+  },
+};
+
+export function getExpectedTableColumns(tableProfile: string | undefined): TableProfilePolicyResult {
+  if (!tableProfile) {
+    return { requiredColumns: [], optionalColumns: [], expectedColumns: [], recommendedGridMode: null };
+  }
+  const policy = TABLE_PROFILE_POLICY[tableProfile];
+  if (!policy) {
+    return { requiredColumns: [], optionalColumns: [], expectedColumns: [], recommendedGridMode: null };
+  }
+  return {
+    requiredColumns: policy.required,
+    optionalColumns: policy.optional,
+    expectedColumns: [...policy.required, ...policy.optional],
+    recommendedGridMode: policy.gridMode,
+  };
+}
+
+export type TableRowsValidation = {
+  tableProfile?: string;
+  expectedColumns: TableColumnKey[];
+  requiredColumns: TableColumnKey[];
+  optionalColumns: TableColumnKey[];
+  actualColumns: TableColumnKey[];
+  missingColumns: TableColumnKey[];
+  extraColumns: TableColumnKey[];
+  rowCountStatus: "O" | "△" | "X" | "—";
+  firstRowPreviewStatus: "O" | "△" | "X" | "—";
+  extractionStatus: "ready" | "partial" | "not_extracted" | "parser_not_ready";
+  recommendedGridMode: GridModeRecommendation | null;
+};
