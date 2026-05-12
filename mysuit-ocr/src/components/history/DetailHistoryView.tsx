@@ -5,6 +5,8 @@ import {
   type HistoryRunRecord,
   type HistoryOutputField,
   updateHistoryRun,
+  getOriginalHistoryImage,
+  getProcessedHistoryImage,
 } from "@/lib/historyStore";
 import {
   getGroundTruth,
@@ -84,14 +86,49 @@ const bodyStyle: React.CSSProperties = {
 
 const leftPaneStyle: React.CSSProperties = {
   flex: "0 0 44%",
+  display: "flex",
+  flexDirection: "column",
+  gap: 8,
+  minWidth: 0,
+  overflow: "hidden",
+};
+
+const imageCardStyle: React.CSSProperties = {
+  flex: 1,
   border: "1px solid var(--border)",
   borderRadius: 12,
   background: "var(--panel2)",
   display: "flex",
+  flexDirection: "column",
+  overflow: "hidden",
+  minHeight: 0,
+};
+
+const imageCardHeaderStyle: React.CSSProperties = {
+  fontSize: 11,
+  fontWeight: 700,
+  color: "var(--muted)",
+  padding: "6px 10px",
+  borderBottom: "1px solid var(--border)",
+  background: "var(--panel)",
+  flexShrink: 0,
+};
+
+const imageCardBodyStyle: React.CSSProperties = {
+  flex: 1,
+  display: "flex",
   alignItems: "center",
   justifyContent: "center",
   overflow: "hidden",
-  minWidth: 0,
+  minHeight: 0,
+  padding: 4,
+};
+
+const imagePlaceholderStyle: React.CSSProperties = {
+  color: "var(--muted)",
+  fontSize: 12,
+  textAlign: "center",
+  padding: "12px 8px",
 };
 
 const rightPaneStyle: React.CSSProperties = {
@@ -230,33 +267,36 @@ function fmtConf(value: number | undefined) {
   return `${v.toFixed(1)}%`;
 }
 
-function SourceBadge({ source }: { source?: HistoryOutputField["source"] }) {
-  if (!source || source === "ocr") return null;
-  const meta =
-    source === "biz" ? { label: "매칭복원", bg: "#6366f1", title: "사업자번호 기반 내부 매칭복원" } :
-    source === "gt" ? { label: "정답", bg: "#16a34a", title: "저장된 정답" } :
-    source === "text" ? { label: "직접입력", bg: "#a855f7", title: "직접 입력값" } :
-    null;
-  if (!meta) return null;
+type ImagePanelProps = {
+  title: string;
+  imageUrl: string | null;
+  emptyText: string;
+  alt: string;
+};
+
+function ImagePanel({ title, imageUrl, emptyText, alt }: ImagePanelProps) {
   return (
-    <span
-      title={meta.title}
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        width: "fit-content",
-        fontSize: 9,
-        fontWeight: 800,
-        padding: "2px 6px",
-        borderRadius: 4,
-        color: "#fff",
-        background: meta.bg,
-        whiteSpace: "nowrap",
-      }}
-    >
-      {meta.label}
-    </span>
+    <div style={imageCardStyle}>
+      <div style={imageCardHeaderStyle}>{title}</div>
+      <div style={imageCardBodyStyle}>
+        {imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={imageUrl}
+            alt={alt}
+            style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
+            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+          />
+        ) : (
+          <span style={imagePlaceholderStyle}>{emptyText}</span>
+        )}
+      </div>
+    </div>
   );
+}
+
+function SourceBadge(_: { source?: HistoryOutputField["source"] }) {
+  return null;
 }
 
 export default function DetailHistoryView({ item, onBack, onSaved }: Props) {
@@ -348,16 +388,20 @@ export default function DetailHistoryView({ item, onBack, onSaved }: Props) {
 
       <div style={bodyStyle}>
         <div style={leftPaneStyle}>
-          {item.image_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={item.image_url}
-              alt={item.file_name}
-              style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
-            />
-          ) : (
-            <span style={{ color: "var(--muted)", fontSize: 13 }}>OCR 영역지정된 이미지</span>
-          )}
+          {/* 상단: 전처리 전 원본 이미지 */}
+          <ImagePanel
+            title="전처리 전 이미지"
+            imageUrl={getOriginalHistoryImage(item)}
+            emptyText="원본 이미지 없음"
+            alt={`원본 - ${item.file_name}`}
+          />
+          {/* 하단: 전처리 후 이미지 (processed_image_url → image_url legacy fallback) */}
+          <ImagePanel
+            title="전처리 후 이미지"
+            imageUrl={getProcessedHistoryImage(item)}
+            emptyText="전처리 후 이미지 없음"
+            alt={`전처리 - ${item.file_name}`}
+          />
         </div>
 
         <div style={rightPaneStyle}>

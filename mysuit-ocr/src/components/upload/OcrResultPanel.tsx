@@ -39,6 +39,7 @@ export type OcrResult = {
   processing_time: number;
   raw_ocr_fields?: OcrFieldResult[];
   processed_image?: string;
+  original_image?: string;
   autofill_summary?: AutofillRunSummary;
 };
 

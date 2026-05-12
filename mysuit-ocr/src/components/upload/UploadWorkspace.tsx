@@ -7,6 +7,7 @@ import { useUi } from "../common/AppProviders";
 import OcrResultPanel, { type FieldOverlayAdoption, type FieldSourceBox, type OcrResult, type OcrFieldResult } from "./OcrResultPanel";
 import OcrDocViewer from "./OcrDocViewer";
 import CornerAdjust, { type Corner } from "./CornerAdjust";
+import FileDropzone from "../common/FileDropzone";
 import type { Region, FieldType, LoadedImage } from "../ocr/core/types";
 import { appendHistoryRun, updateHistoryRun, type HistoryOcrField, type HistoryOutputField } from "@/lib/historyStore";
 import { extractBizNumber } from "@/lib/bizNumber";
@@ -115,7 +116,6 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [renderedUrl, setRenderedUrl] = useState<string | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
   const [uploadDuration, setUploadDuration] = useState<string | null>(null);
   const [preprocessResult, setPreprocessResult] = useState<PreprocessResult>(null);
   const [isPreprocessing, setIsPreprocessing] = useState(false);
@@ -375,14 +375,6 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
     // setShowCornerAdjust(false);
     // void runPreprocess(f);
     // void detectCorners(f);
-  }
-
-  function onDrop(e: React.DragEvent<HTMLDivElement>) {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-    const f = e.dataTransfer.files?.[0];
-    if (f) pickFile(f);
   }
 
   function formatFileType(file: File) {
@@ -975,7 +967,12 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
         template_name: activeTemplate?.name ?? null,
         processing_time: Number(json?.processing_time) || 0,
         status: "success",
+        // legacy 호환: image_url 유지
         image_url: runResult.processed_image,
+        // H-2: 명시적 이미지 URL 필드
+        processed_image_url: runResult.processed_image ?? null,
+        original_image_url: runResult.original_image ?? null,
+        image_storage_mode: "url",
         ocr_fields: ocrFieldsForHistory,
         output_fields: outputFieldsForHistory,
         autofill_summary: autofillSummary,
@@ -1222,13 +1219,6 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
     );
   }
 
-  // 업로드 화면 (기존)
-  const dropzoneClass = [
-    "uw-dropzone",
-    isDragging ? "uw-dropzone-drag" : "",
-    selectedFile ? "uw-dropzone-filled" : "",
-  ].filter(Boolean).join(" ");
-
   return (
     <div className={isRunOcr ? "uw-root uw-root-runocr" : "uw-root"}>
       {/* Top: Template bar */}
@@ -1294,14 +1284,12 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
 
       {/* Left: upload panel */}
       <div className="uw-upload-panel">
-        <div
-          className={dropzoneClass}
-          onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
-          onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
-          onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); }}
-          onDrop={onDrop}
+        <FileDropzone
+          onPickFile={pickFile}
+          fileInputRef={fileInputRef}
+          hasFile={!!(previewUrl && selectedFile)}
         >
-          {previewUrl && selectedFile ? (
+          {selectedFile && (
             <div className="uw-preview-wrap">
               <div className="uw-preview-img-area" style={{ position: "relative" }}>
                 {isRendering ? (
@@ -1309,16 +1297,6 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
                     {isTiff(selectedFile) ? "TIFF" : "PDF"} 렌더링 중...
                   </div>
                 ) : displayUrl ? (
-                  // 코너 조정 UI 비활성화 — Test 동일 흐름. 항상 원본 미리보기.
-                  // showCornerAdjust ? (
-                  //   <CornerAdjust
-                  //     imageUrl={displayUrl}
-                  //     corners={corners}
-                  //     onCornersChange={setCorners}
-                  //   />
-                  // ) : (
-                  //   <img src={displayUrl} alt="preview" className="uw-preview-img" />
-                  // )
                   <img src={displayUrl} alt="preview" className="uw-preview-img" />
                 ) : null}
                 {isOcrRunning && <div className="uw-scan-overlay"><div className="uw-scan-line" /></div>}
@@ -1327,57 +1305,13 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
                 <div className="uw-filename-chip" title={selectedFile.name}>
                   {selectedFile.name}
                 </div>
-                {/* 코너 지정 버튼 비활성화 — Test 동일 흐름
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (showCornerAdjust) {
-                      setShowCornerAdjust(false);
-                    } else {
-                      setCorners([]); // 빈 상태로 시작 - 직접 클릭
-                      setShowCornerAdjust(true);
-                    }
-                  }}
-                  className="ms-btn-sm"
-                  style={showCornerAdjust ? { background: "var(--accent)", color: "white", borderColor: "var(--accent)" } : {}}
-                >
-                  {showCornerAdjust
-                    ? corners.length < 4 ? `코너 지정 중 (${corners.length}/4)` : "✓ 조정 완료"
-                    : "코너 지정"}
-                </button>
-                */}
                 <button type="button" onClick={openFilePicker} className="ms-btn-sm">
                   파일 변경
                 </button>
               </div>
             </div>
-          ) : (
-            <div className="uw-empty-state">
-              <div className="uw-empty-icon">
-                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M16 22V10M16 10L11 15M16 10L21 15" stroke="#0891b2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M7 26h18" stroke="#0891b2" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-              </div>
-              <div className="uw-empty-title">문서를 드래그하거나 업로드하세요</div>
-              <div className="uw-empty-sub">이미지(.jpeg .jpg .png .tif .tiff) 및 PDF 지원</div>
-              <button type="button" onClick={openFilePicker} className="uw-upload-btn">
-                파일 선택
-              </button>
-            </div>
           )}
-
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*,application/pdf,.tif,.tiff"
-            style={{ display: "none" }}
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) pickFile(f);
-            }}
-          />
-        </div>
+        </FileDropzone>
       </div>
 
       {/* Right: guide or file info */}

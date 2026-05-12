@@ -242,36 +242,125 @@ function getInvoiceDebug(entry?: OcrEntry | null): Record<string, unknown> | nul
   return asRecord(root?.invoice_statement);
 }
 
+// ── T-4: canonical tableRows / tableMeta 타입 ─────────────────────────────────
+type CanonicalTableRow = {
+  rowIndex?: number | string;
+  itemCode?: string;
+  itemName?: string;
+  spec?: string;
+  lotNo?: string;
+  serialNo?: string;
+  manufacturingNo?: string;
+  expiryDate?: string;
+  quantity?: string;
+  unit?: string;
+  unitPrice?: string;
+  supplyAmount?: string;
+  taxAmount?: string;
+  amount?: string;
+  totalAmount?: string;
+  manufacturer?: string;
+  insuranceCode?: string;
+  remark?: string;
+  _rawText?: string;
+};
+
+type CanonicalTableMeta = {
+  tableProfile?: string;
+  gridMode?: string;
+  rowCount?: number;
+  columns?: string[];
+  firstRowPreview?: string;
+  extractionStatus?: string;
+};
+
+function getInvoiceTableRows(documentFields: Record<string, string> | null): CanonicalTableRow[] {
+  const raw = (documentFields as Record<string, unknown> | null)?.tableRows;
+  if (Array.isArray(raw)) return raw as CanonicalTableRow[];
+  return [];
+}
+
+function getInvoiceTableMeta(documentFields: Record<string, string> | null): CanonicalTableMeta | null {
+  const raw = (documentFields as Record<string, unknown> | null)?.tableMeta;
+  if (raw && typeof raw === "object" && !Array.isArray(raw)) return raw as CanonicalTableMeta;
+  return null;
+}
+
 function buildTableRowsValidation(
   invoiceProfile: InvoiceProfile | undefined,
   documentFields: Record<string, string> | null,
   documentGt: Record<string, string>,
 ): TableRowsValidation {
-  const { requiredColumns, optionalColumns, expectedColumns, recommendedGridMode } =
+  const { requiredColumns: profileRequired, optionalColumns: profileOptional, recommendedGridMode } =
     getExpectedTableColumns(invoiceProfile?.tableProfile);
-  // T-3 이후 실제 tableRows 컬럼 추출. 현재는 parser 미구현 → actualColumns=[]
-  const actualColumns: TableColumnKey[] = [];
-  const missingColumns = requiredColumns.filter((c) => !actualColumns.includes(c));
+
+  // T-6b: 샘플별 tableExpectedColumns override — tableProfile 전역 기준보다 우선
+  const allColumnKeySet = new Set<string>(TABLE_COLUMN_META.map((m) => m.key));
+  function toValidColKeys(keys: string[] | undefined): TableColumnKey[] {
+    return (keys ?? []).filter((k) => allColumnKeySet.has(k)) as TableColumnKey[];
+  }
+  const sampleOverride = invoiceProfile?.tableExpectedColumns;
+  const requiredColumns: TableColumnKey[] = sampleOverride?.required
+    ? toValidColKeys(sampleOverride.required)
+    : profileRequired;
+  const optionalColumns: TableColumnKey[] = sampleOverride?.optional
+    ? toValidColKeys(sampleOverride.optional)
+    : profileOptional;
+  const expectedColumns: TableColumnKey[] = [...requiredColumns, ...optionalColumns];
+
+  // T-4: 실제 tableMeta/tableRows에서 actualColumns 및 extractionStatus를 읽음
+  const tableMeta = getInvoiceTableMeta(documentFields);
+  const tableRows = getInvoiceTableRows(documentFields);
+  const actualColumns: TableColumnKey[] = (tableMeta?.columns ?? [])
+    .filter((c) => allColumnKeySet.has(c)) as TableColumnKey[];
+  // Actual fallback: tableRows에 값이 있는 컬럼도 Actual로 간주
+  const rowValueCols = new Set(
+    actualColumns.length > 0
+      ? actualColumns
+      : TABLE_COLUMN_META
+          .filter((m) => tableRows.some((row) => {
+            const v = row[m.key as keyof CanonicalTableRow];
+            return v != null && v !== "" && v !== 0;
+          }))
+          .map((m) => m.key as TableColumnKey)
+  );
+  const effectiveActualColumns: TableColumnKey[] = actualColumns.length > 0
+    ? actualColumns
+    : [...rowValueCols];
+  const missingColumns = requiredColumns.filter((c) => !rowValueCols.has(c));
   const extraColumns: TableColumnKey[] = [];
-  const hasRowCount = Boolean(documentFields?.rowCount || documentGt?.rowCount);
-  const extractionStatus: TableRowsValidation["extractionStatus"] =
-    hasRowCount ? "parser_not_ready" : "not_extracted";
+
+  // extractionStatus: tableMeta 우선, 없으면 tableRows 유무로 판정
+  let extractionStatus: TableRowsValidation["extractionStatus"];
+  const metaStatus = tableMeta?.extractionStatus;
+  if (metaStatus === "partial") {
+    extractionStatus = "partial";
+  } else if (metaStatus === "not_extracted") {
+    extractionStatus = "not_extracted";
+  } else if (tableRows.length > 0) {
+    extractionStatus = "partial";
+  } else {
+    const hasRowCount = Boolean(documentFields?.rowCount || documentGt?.rowCount);
+    extractionStatus = hasRowCount ? "parser_not_ready" : "not_extracted";
+  }
+
   const gtRowCount = documentGt["rowCount"] ?? "";
-  const ocrRowCount = documentFields?.["rowCount"] ?? "";
+  // rowCount: tableMeta 우선, 없으면 documentFields fallback
+  const ocrRowCount = tableMeta?.rowCount != null ? String(tableMeta.rowCount) : (documentFields?.["rowCount"] ?? "");
   let rowCountStatus: "O" | "△" | "X" | "—";
   if (!gtRowCount) rowCountStatus = "—";
   else if (!ocrRowCount) rowCountStatus = "X";
   else if (gtRowCount === ocrRowCount) rowCountStatus = "O";
   else rowCountStatus = "X";
   const gtPreview = documentGt["firstRowPreview"] ?? "";
-  const ocrPreview = documentFields?.["firstRowPreview"] ?? "";
+  const ocrPreview = tableMeta?.firstRowPreview ?? documentFields?.["firstRowPreview"] ?? "";
   const firstRowPreviewStatus = documentMatchStatus(gtPreview, ocrPreview);
   return {
     tableProfile: invoiceProfile?.tableProfile,
     expectedColumns,
     requiredColumns,
     optionalColumns,
-    actualColumns,
+    actualColumns: effectiveActualColumns,
     missingColumns,
     extraColumns,
     rowCountStatus,
@@ -3908,8 +3997,15 @@ function TableRowsValidationPanel({
       </button>
       {open && (
         <div style={{ padding: "0 12px 10px", display: "flex", flexDirection: "column", gap: 8 }}>
+          {/* T-6b: sample override 사용 여부 표시 */}
+          {invoiceProfile?.tableExpectedColumns && (
+            <div style={{ fontSize: 8, color: "rgba(165,180,252,0.6)", marginBottom: 2 }}>
+              ※ Required/Optional은 이 샘플의 실제 품목표 기준 (T-6b)
+            </div>
+          )}
           <div style={{ display: "flex", flexWrap: "wrap", gap: 4, alignItems: "center" }}>
-            <span style={{ fontSize: 9, color: "#86efac", fontWeight: 800, minWidth: 52 }}>Required</span>
+            <span style={{ fontSize: 9, color: "#86efac", fontWeight: 800, minWidth: 52 }}
+              title="이 샘플의 실제 품목표에서 필수 컬럼">Required</span>
             {validation.requiredColumns.map((c) => (
               <span key={c} style={{ fontSize: 9, padding: "1px 6px", borderRadius: 3, background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.3)", color: "#86efac", fontWeight: 700 }}>
                 {colLabelMap[c] ?? c}
@@ -3917,7 +4013,8 @@ function TableRowsValidationPanel({
             ))}
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 4, alignItems: "center" }}>
-            <span style={{ fontSize: 9, color: "var(--muted)", fontWeight: 800, minWidth: 52 }}>Optional</span>
+            <span style={{ fontSize: 9, color: "var(--muted)", fontWeight: 800, minWidth: 52 }}
+              title="이 샘플의 실제 품목표에서 선택 컬럼">Optional</span>
             {validation.optionalColumns.map((c) => (
               <span key={c} style={{ fontSize: 9, padding: "1px 6px", borderRadius: 3, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", color: "var(--muted)", fontWeight: 600 }}>
                 {colLabelMap[c] ?? c}
@@ -3926,7 +4023,8 @@ function TableRowsValidationPanel({
           </div>
           {validation.actualColumns.length > 0 ? (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 4, alignItems: "center" }}>
-              <span style={{ fontSize: 9, color: "#7dd3fc", fontWeight: 800, minWidth: 52 }}>Actual</span>
+              <span style={{ fontSize: 9, color: "#7dd3fc", fontWeight: 800, minWidth: 52 }}
+                title="OCR/표 분석에서 감지된 컬럼 (tableMeta.columns 또는 값 존재 기준)">Actual</span>
               {validation.actualColumns.map((c) => (
                 <span key={c} style={{ fontSize: 9, padding: "1px 6px", borderRadius: 3, background: "rgba(56,189,248,0.12)", border: "1px solid rgba(56,189,248,0.25)", color: "#7dd3fc", fontWeight: 600 }}>
                   {colLabelMap[c] ?? c}
@@ -3935,12 +4033,13 @@ function TableRowsValidationPanel({
             </div>
           ) : (
             <div style={{ fontSize: 9, color: "var(--muted)" }}>
-              Actual: 추출 없음 · tableRows 컬럼 추출은 T-3 이후 구현
+              추출 컬럼 없음
             </div>
           )}
           {validation.missingColumns.length > 0 && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 4, alignItems: "center" }}>
-              <span style={{ fontSize: 9, color: "#fca5a5", fontWeight: 800, minWidth: 52 }}>Missing</span>
+              <span style={{ fontSize: 9, color: "#fca5a5", fontWeight: 800, minWidth: 52 }}
+                title="실제 표에는 있으나 아직 감지되지 않은 컬럼">Missing</span>
               {validation.missingColumns.map((c) => (
                 <span key={c} style={{ fontSize: 9, padding: "1px 6px", borderRadius: 3, background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.28)", color: "#fca5a5", fontWeight: 600 }}>
                   {colLabelMap[c] ?? c}
@@ -3956,6 +4055,235 @@ function TableRowsValidationPanel({
               firstRowPreview <span style={{ color: tableStatusColor(validation.firstRowPreviewStatus), fontWeight: 800 }}>{validation.firstRowPreviewStatus}</span>
             </span>
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── T-4/T-6a: 거래명세서 표 추출 결과 패널 ──────────────────────────────────────
+// canonical 18개 전체 순서 (fallback 표시 기준)
+const ALL_CANONICAL_COLS: readonly TableColumnKey[] = [
+  "rowIndex", "itemCode", "itemName", "spec", "lotNo", "serialNo",
+  "manufacturingNo", "expiryDate", "quantity", "unit", "unitPrice",
+  "supplyAmount", "taxAmount", "amount", "totalAmount",
+  "manufacturer", "insuranceCode", "remark",
+];
+const ALL_COL_KEY_SET = new Set<string>(ALL_CANONICAL_COLS);
+
+// T-6a: 표시 모드
+type TableDisplayMode = "detected" | "all" | "hasValue";
+
+// T-6a: 문서별 실제 감지 컬럼을 동적으로 계산
+function getDisplayTableColumns(
+  tableMeta: CanonicalTableMeta | null,
+  tableRows: CanonicalTableRow[],
+  mode: TableDisplayMode,
+): TableColumnKey[] {
+  if (mode === "all") return [...ALL_CANONICAL_COLS];
+
+  if (mode === "hasValue") {
+    const withValue = ALL_CANONICAL_COLS.filter((col) =>
+      tableRows.some((row) => {
+        const v = row[col as keyof CanonicalTableRow];
+        return v != null && v !== "" && v !== 0;
+      })
+    );
+    return withValue.length > 0 ? withValue : ["rowIndex" as TableColumnKey, "itemName" as TableColumnKey];
+  }
+
+  // mode === "detected": tableMeta.columns 우선
+  if (tableMeta?.columns && tableMeta.columns.length > 0) {
+    const metaCols = tableMeta.columns
+      .filter((c) => ALL_COL_KEY_SET.has(c))
+      .map((c) => c as TableColumnKey);
+    // rowIndex를 항상 첫 번째로
+    const result: TableColumnKey[] = metaCols.includes("rowIndex")
+      ? metaCols
+      : (["rowIndex" as TableColumnKey, ...metaCols]);
+    return result;
+  }
+
+  // fallback: 값이 있는 컬럼
+  const withValue = ALL_CANONICAL_COLS.filter((col) =>
+    tableRows.some((row) => {
+      const v = row[col as keyof CanonicalTableRow];
+      return v != null && v !== "" && v !== 0;
+    })
+  );
+  return withValue.length > 0 ? withValue : ["rowIndex" as TableColumnKey, "itemName" as TableColumnKey, "quantity" as TableColumnKey];
+}
+
+function InvoiceTableRowsPanel({
+  tableRows,
+  tableMeta,
+  documentFields,
+}: {
+  tableRows: CanonicalTableRow[];
+  tableMeta: CanonicalTableMeta | null;
+  documentFields: Record<string, string> | null;
+}) {
+  const [showRaw, setShowRaw] = React.useState(false);
+  const [showMeta, setShowMeta] = React.useState(false);
+  const [displayMode, setDisplayMode] = React.useState<TableDisplayMode>("detected");
+
+  const tableDetected = documentFields?.tableDetected === "Y";
+  const rowCount = tableMeta?.rowCount ?? (tableRows.length > 0 ? tableRows.length : Number(documentFields?.rowCount ?? 0) || 0);
+  const firstRowPreview = tableMeta?.firstRowPreview ?? documentFields?.firstRowPreview ?? "";
+  const metaStatus = tableMeta?.extractionStatus ?? "";
+  const extractionStatus: string = metaStatus || (tableRows.length > 0 ? "partial" : tableDetected ? "parser_not_ready" : "not_extracted");
+
+  const colLabelMap = Object.fromEntries(TABLE_COLUMN_META.map((m) => [m.key, m.labelKo]));
+
+  // T-6a: 동적 컬럼 결정
+  const displayCols = getDisplayTableColumns(tableMeta, tableRows, displayMode);
+  const detectedCount = tableMeta?.columns?.length ?? 0;
+
+  const statusBg = TABLE_ROWS_EXTRACTION_BG[extractionStatus] ?? "#374151";
+  const statusLabel = TABLE_ROWS_EXTRACTION_LABEL[extractionStatus] ?? extractionStatus;
+
+  // T-6a: 모드 버튼 스타일
+  const modeBtn = (mode: TableDisplayMode, label: string) => (
+    <button
+      key={mode}
+      onClick={() => setDisplayMode(mode)}
+      style={{
+        fontSize: 9, cursor: "pointer", padding: "2px 7px", borderRadius: 3,
+        border: `1px solid ${displayMode === mode ? "rgba(165,180,252,0.7)" : "rgba(255,255,255,0.15)"}`,
+        background: displayMode === mode ? "rgba(99,102,241,0.25)" : "none",
+        color: displayMode === mode ? "#a5b4fc" : "var(--muted)",
+        fontWeight: displayMode === mode ? 700 : 400,
+      }}
+    >
+      {label}
+    </button>
+  );
+
+  return (
+    <div style={{ borderRadius: 8, border: "1px solid rgba(99,102,241,0.3)", background: "rgba(30,30,60,0.3)", marginBottom: 4 }}>
+      {/* 헤더 */}
+      <div style={{ padding: "7px 12px", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+        <span style={{ fontSize: 10, fontWeight: 800, color: "#a5b4fc", letterSpacing: 0.5 }}>표 추출 결과</span>
+        <span style={{ fontSize: 9, padding: "1px 7px", borderRadius: 3, background: statusBg, color: "#e5e7eb", fontWeight: 700 }}>
+          {statusLabel}
+          {metaStatus && metaStatus !== statusLabel && (
+            <span style={{ opacity: 0.7, fontWeight: 400, marginLeft: 4 }}>({metaStatus})</span>
+          )}
+        </span>
+        {tableDetected && (
+          <span style={{ fontSize: 9, padding: "1px 6px", borderRadius: 3, background: "rgba(34,197,94,0.15)", color: "#86efac", fontWeight: 600 }}>표 감지</span>
+        )}
+        {rowCount > 0 && (
+          <span style={{ fontSize: 9, color: "var(--muted)" }}>
+            행 수: <b style={{ color: "#e5e7eb" }}>{rowCount}</b>
+          </span>
+        )}
+        {detectedCount > 0 && (
+          <span style={{ fontSize: 9, color: "var(--muted)" }}>감지 컬럼 {detectedCount}개</span>
+        )}
+      </div>
+
+      {/* 첫 행 미리보기 */}
+      {firstRowPreview && (
+        <div style={{ padding: "0 12px 6px", fontSize: 9, color: "var(--muted)" }}>
+          첫 행 미리보기: <span style={{ color: "#d1d5db" }}>{firstRowPreview}</span>
+        </div>
+      )}
+
+      {tableRows.length > 0 ? (
+        <div style={{ padding: "0 12px 10px" }}>
+          {/* T-6a: 표시 모드 선택 */}
+          <div style={{ display: "flex", gap: 4, marginBottom: 6, alignItems: "center", flexWrap: "wrap" }}>
+            <span style={{ fontSize: 9, color: "var(--muted)", marginRight: 2 }}>표시:</span>
+            {modeBtn("detected", "실제 감지 컬럼")}
+            {modeBtn("hasValue", "값 있는 컬럼")}
+            {modeBtn("all", "전체 canonical 18개")}
+            <span style={{ fontSize: 9, color: "var(--muted)", marginLeft: 4 }}>
+              ({displayCols.length}개 표시)
+            </span>
+          </div>
+
+          {/* 표 본체 */}
+          <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch", borderRadius: 6, border: "1px solid rgba(255,255,255,0.07)" }}>
+            <table style={{ borderCollapse: "collapse", fontSize: 9, width: "100%" }}>
+              <thead>
+                <tr>
+                  {displayCols.map((col) => (
+                    <th key={col} style={{
+                      padding: "3px 7px", background: "rgba(99,102,241,0.18)",
+                      border: "1px solid rgba(255,255,255,0.08)", color: "#a5b4fc",
+                      fontWeight: 700, whiteSpace: "nowrap", textAlign: "left",
+                    }}>
+                      {colLabelMap[col] ?? col}
+                      {/* T-6a: canonical key를 작게 보조 표시 */}
+                      {displayMode === "all" && (
+                        <span style={{ display: "block", fontWeight: 400, opacity: 0.55, fontSize: 7 }}>{col}</span>
+                      )}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {tableRows.map((row, rowIdx) => (
+                  <tr key={rowIdx} style={{ background: rowIdx % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent" }}>
+                    {displayCols.map((col) => {
+                      const val = row[col as keyof CanonicalTableRow];
+                      const text = val != null && val !== "" ? String(val) : "";
+                      return (
+                        <td key={col} style={{
+                          padding: "3px 7px", border: "1px solid rgba(255,255,255,0.06)",
+                          color: text ? "#e5e7eb" : "rgba(255,255,255,0.18)",
+                          whiteSpace: "nowrap", maxWidth: 200,
+                          overflow: "hidden", textOverflow: "ellipsis",
+                        }}>
+                          {text || "—"}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* raw 보기 버튼 */}
+          <div style={{ marginTop: 6, display: "flex", gap: 6, flexWrap: "wrap" }}>
+            <button onClick={() => setShowMeta((v) => !v)}
+              style={{ fontSize: 9, background: "none", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 4, color: "var(--muted)", cursor: "pointer", padding: "2px 8px" }}>
+              {showMeta ? "tableMeta 숨기기" : "원본 tableMeta 보기"}
+            </button>
+            <button onClick={() => setShowRaw((v) => !v)}
+              style={{ fontSize: 9, background: "none", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 4, color: "var(--muted)", cursor: "pointer", padding: "2px 8px" }}>
+              {showRaw ? "tableRows JSON 숨기기" : "원본 tableRows JSON 보기"}
+            </button>
+          </div>
+          {showMeta && tableMeta && (
+            <pre style={{ fontSize: 8, color: "var(--muted)", background: "rgba(0,0,0,0.35)", borderRadius: 4, padding: "6px 8px", marginTop: 6, overflowX: "auto" }}>
+              {JSON.stringify(tableMeta, null, 2)}
+            </pre>
+          )}
+          {showRaw && (
+            <pre style={{ fontSize: 8, color: "var(--muted)", background: "rgba(0,0,0,0.35)", borderRadius: 4, padding: "6px 8px", marginTop: 6, overflowX: "auto", maxHeight: 240 }}>
+              {JSON.stringify(tableRows, null, 2)}
+            </pre>
+          )}
+        </div>
+      ) : (
+        <div style={{ padding: "0 12px 10px" }}>
+          <div style={{ fontSize: 9, color: "var(--muted)", padding: "4px 0" }}>
+            {extractionStatus === "parser_not_ready" && "parser 미연동 · 표가 감지되었으나 행 추출 없음"}
+            {extractionStatus === "not_extracted" && "표 없음 또는 미추출"}
+            {extractionStatus === "empty" && "데이터 없음"}
+            {!["parser_not_ready", "not_extracted", "empty"].includes(extractionStatus) && "표 데이터 없음"}
+          </div>
+          {tableMeta && (
+            <details style={{ marginTop: 4 }}>
+              <summary style={{ cursor: "pointer", fontSize: 9, color: "var(--muted)" }}>원본 tableMeta 보기</summary>
+              <pre style={{ fontSize: 8, color: "var(--muted)", background: "rgba(0,0,0,0.35)", borderRadius: 4, padding: "6px 8px", marginTop: 4, overflowX: "auto" }}>
+                {JSON.stringify(tableMeta, null, 2)}
+              </pre>
+            </details>
+          )}
         </div>
       )}
     </div>
@@ -4044,6 +4372,15 @@ function DocumentDetailPanel({
         documentFields={documentFields}
         documentGt={documentGt}
       />
+
+      {/* T-4: 표 추출 결과 — tableRows/tableMeta 표시 */}
+      {invoiceProfile?.tableProfile && (
+        <InvoiceTableRowsPanel
+          tableRows={getInvoiceTableRows(documentFields)}
+          tableMeta={getInvoiceTableMeta(documentFields)}
+          documentFields={documentFields}
+        />
+      )}
 
       {(() => {
         // amountProfile + visibleAmountFields override 기반 visible fields 계산 (P-2/P-2b)

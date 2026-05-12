@@ -19,6 +19,10 @@
         "summaryFields": {
           "subtotal": { "label": "소계", "appliesToAmount": false },
           "cumulativeAmount": { "label": "누계", "appliesToAmount": false }
+        },
+        "tableExpectedColumns": {
+          "required": ["itemName", "spec", "manufacturingNo", "expiryDate", "quantity", "unitPrice", "amount"],
+          "optional": ["lotNo", "unit", "supplyAmount", "taxAmount", "totalAmount", "remark"]
         }
       }
     },
@@ -39,7 +43,11 @@
           "transactionAmount": { "label": "당일거래금액", "appliesToAmount": false },
           "cumulativeBalance": { "label": "누계잔액", "appliesToAmount": false }
         },
-        "visibleAmountFields": ["previousBalance", "transactionAmount", "cumulativeBalance", "totalAmount"]
+        "visibleAmountFields": ["previousBalance", "transactionAmount", "cumulativeBalance", "totalAmount"],
+        "tableExpectedColumns": {
+          "required": ["itemCode", "itemName", "quantity", "unitPrice", "supplyAmount", "insuranceCode"],
+          "optional": ["amount", "totalAmount", "remark"]
+        }
       }
     },
     {
@@ -53,7 +61,11 @@
         "invoiceSubType": "standard_amount_statement",
         "amountProfile": "supply_tax_total",
         "partyProfile": "supplier_weak",
-        "tableProfile": "single_item_table"
+        "tableProfile": "single_item_table",
+        "tableExpectedColumns": {
+          "required": ["insuranceCode", "itemName", "spec", "quantity", "unitPrice", "amount", "manufacturer", "manufacturingNo", "expiryDate"],
+          "optional": ["lotNo", "serialNo", "remark"]
+        }
       }
     },
     {
@@ -67,7 +79,11 @@
         "invoiceSubType": "ocr_garbled_statement",
         "amountProfile": "supply_tax_total",
         "partyProfile": "party_garbled",
-        "tableProfile": "single_item_table"
+        "tableProfile": "single_item_table",
+        "tableExpectedColumns": {
+          "required": ["itemName", "lotNo", "unit", "quantity", "unitPrice", "supplyAmount", "taxAmount"],
+          "optional": ["amount", "totalAmount", "remark"]
+        }
       }
     },
     {
@@ -82,7 +98,11 @@
         "amountProfile": "supply_tax_total",
         "partyProfile": "supplier_buyer",
         "tableProfile": "multi_item_table",
-        "fieldLabels": { "taxAmount": "부가세" }
+        "fieldLabels": { "taxAmount": "부가세" },
+        "tableExpectedColumns": {
+          "required": ["itemName", "itemCode", "quantity", "unitPrice", "amount"],
+          "optional": ["supplyAmount", "taxAmount", "totalAmount", "remark"]
+        }
       }
     },
     {
@@ -96,7 +116,11 @@
         "invoiceSubType": "detail_lot_statement",
         "amountProfile": "no_amount_summary",
         "partyProfile": "buyer_only",
-        "tableProfile": "lot_serial_quantity_table"
+        "tableProfile": "lot_serial_quantity_table",
+        "tableExpectedColumns": {
+          "required": ["itemCode", "itemName", "quantity", "lotNo", "expiryDate"],
+          "optional": ["serialNo", "manufacturingNo", "unit", "remark"]
+        }
       }
     },
     {
@@ -113,6 +137,10 @@
         "tableProfile": "serial_quantity_table",
         "summaryFields": {
           "totalQuantity": { "label": "총수량", "appliesToAmount": false }
+        },
+        "tableExpectedColumns": {
+          "required": ["itemName", "serialNo", "unit", "quantity"],
+          "optional": ["lotNo", "manufacturingNo", "remark"]
         }
       }
     }

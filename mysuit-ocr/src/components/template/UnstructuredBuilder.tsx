@@ -2,7 +2,12 @@
 
 import React, { useEffect, useState } from "react";
 
-type Field = { no: number; enField: string; koField: string };
+type Field = {
+  no: number;
+  enField: string;
+  koField: string;
+};
+
 const LOCAL_TEMPLATES_KEY = "mysuit_ocr_templates";
 
 export default function UnstructuredBuilder({
@@ -21,8 +26,10 @@ export default function UnstructuredBuilder({
     const nextNo = fields.length > 0 ? Math.max(...fields.map((f) => f.no)) + 1 : 1;
     setFields([...fields, { no: nextNo, enField: "", koField: "" }]);
   };
-  const updateField = (no: number, key: "enField" | "koField", v: string) =>
-    setFields(fields.map((f) => (f.no === no ? { ...f, [key]: v } : f)));
+
+  const updateField = (no: number, key: "enField" | "koField", v: string) => {
+    setFields(fields.map((f) => f.no === no ? { ...f, [key]: v } : f));
+  };
 
   useEffect(() => {
     if (!selectedTemplate) return;
@@ -62,23 +69,31 @@ export default function UnstructuredBuilder({
     }
     alert(`[Mock] "${templateName}" ${isEditMode ? "수정" : "저장"} 완료`);
   };
+
   const handleDelete = () => {
-    if (confirm("초기화할까요?")) {
+    if (selectedTemplateId) {
+      // 편집 모드 — 저장된 템플릿 삭제
+      if (!confirm(`"${templateName || selectedTemplateId}" 템플릿을 삭제하시겠습니까?`)) return;
+      try {
+        const current = JSON.parse(localStorage.getItem(LOCAL_TEMPLATES_KEY) || "[]");
+        const list = Array.isArray(current) ? current : [];
+        const next = list.filter((item: any) => item?.template_id !== selectedTemplateId);
+        localStorage.setItem(LOCAL_TEMPLATES_KEY, JSON.stringify(next));
+        window.dispatchEvent(new Event("mysuit-ocr-template-saved"));
+      } catch (err) {
+        console.error("[unstructured template delete error]", err);
+      }
       setTemplateName("");
       setFields([]);
+      setSelectedNo(null);
+      alert("템플릿이 삭제되었습니다.");
+    } else {
+      // 새 비정형 작성 중 — 폼 초기화
+      if (!confirm("작성 중인 내용을 초기화하시겠습니까?")) return;
+      setTemplateName("");
+      setFields([]);
+      setSelectedNo(null);
     }
-  };
-
-  const inputStyle: React.CSSProperties = {
-    background: "var(--panel2)",
-    border: "1px solid rgba(255,255,255,0.09)",
-    borderRadius: 5,
-    padding: "5px 8px",
-    color: "var(--text)",
-    fontSize: 12,
-    outline: "none",
-    width: "100%",
-    boxSizing: "border-box",
   };
 
   const CARDS = [
@@ -90,35 +105,32 @@ export default function UnstructuredBuilder({
   return (
     <div style={{ display: "flex", flex: 1, gap: 8, minHeight: 0, height: "100%" }}>
 
-      {/* ── 좌측: 비정형 설명 ── */}
-      <div
-        style={{
-          flex: 1,
-          background: "var(--panel)",
-          borderRadius: 10,
-          border: "1px solid rgba(255,255,255,0.07)",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 24,
-          padding: "32px 40px",
-          overflow: "hidden",
-        }}
-      >
+      {/* ── 좌측: 비정형 설명 (Template 처럼 외곽 panel + 내부 점선 dropzone) ── */}
+      <div className="uw-upload-panel" style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
+        <div
+          className="uw-dropzone"
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 24,
+            padding: "32px 40px",
+            overflow: "hidden",
+          }}
+        >
         <div style={{ fontSize: 40, opacity: 0.25 }}>📋</div>
-
         <div style={{ textAlign: "center", maxWidth: 460 }}>
           <div style={{ fontSize: 17, fontWeight: 800, color: "var(--text)", marginBottom: 10 }}>
             비정형 생성이란?
           </div>
           <div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.85 }}>
             고정된 양식이 없는 문서에서 원하는 정보를 자유롭게 추출하는 방식입니다.
+            <br />
             우측에서 <strong style={{ color: "var(--text)" }}>출력 필드</strong>를 정의하면
-            AI가 문서 내 해당 정보를 자동으로 찾아 반환합니다.
+            문서 내 해당 정보를 자동으로 찾아 반환합니다.
           </div>
         </div>
-
         <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
           {CARDS.map((c) => (
             <div
@@ -142,12 +154,13 @@ export default function UnstructuredBuilder({
             </div>
           ))}
         </div>
+        </div>
       </div>
 
       {/* ── 우측: 편집 패널 ── */}
-      <div style={{ width: 380, flexShrink: 0, display: "flex", flexDirection: "column", gap: 8, minHeight: 0 }}>
+      <div style={{ width: 420, flexShrink: 0, display: "flex", flexDirection: "column", gap: 8, minHeight: 0 }}>
 
-        {/* ① 삭제 / 저장 — 독립 박스 */}
+        {/* 삭제 / 저장 */}
         <div style={{
           flexShrink: 0,
           background: "var(--panel)",
@@ -165,19 +178,20 @@ export default function UnstructuredBuilder({
           </button>
         </div>
 
-        {/* ② 나머지 (템플릿명 + 출력 필드) — 남은 공간 전부 차지 */}
+        {/* 템플릿명 + 문서유형 + 출력 필드 — Template oc-panel처럼 padding: 12px */}
         <div style={{
           flex: 1,
           minHeight: 0,
           background: "var(--panel)",
           border: "1px solid var(--border)",
           borderRadius: 12,
+          padding: 12,
           display: "flex",
           flexDirection: "column",
           overflow: "auto",
         }}>
-          {/* 템플릿명 — oc-label 스타일 */}
-          <div className="oc-template-input-wrap" style={{ padding: "0 12px 10px" }}>
+          {/* 템플릿명 */}
+          <div className="oc-template-input-wrap">
             <h2 className="oc-label">템플릿 명</h2>
             <input
               value={templateName}
@@ -188,49 +202,41 @@ export default function UnstructuredBuilder({
             />
           </div>
 
-          {/* 출력 필드 헤더 — OcrRightPanel oc-section 스타일 (위쪽 구분선) */}
-          <div style={{
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            padding: "10px 12px 0",
-            marginTop: 4,
-            borderTop: "1px solid var(--border)",
-            flexShrink: 0,
-          }}>
-            <h3 className="oc-section-title" style={{ margin: 0 }}>출력 필드 정의</h3>
-            <div style={{ display: "flex", gap: 5 }}>
-              <button onClick={addField} className="ms-btn-sm">추가</button>
-              <button
-                onClick={() => {
-                  if (selectedNo == null) return;
-                  setFields(fields.filter((f) => f.no !== selectedNo));
-                  setSelectedNo(null);
-                }}
-                className="ms-btn-sm"
-                style={{ color: "#ef4444", borderColor: "rgba(239,68,68,0.4)" }}>
-                삭제
-              </button>
+          {/* 출력 필드 정의 — Template과 동일한 oc-section */}
+          <div className="oc-section">
+            <div className="oc-section-header">
+              <h3 className="oc-section-title" style={{ margin: 0 }}>출력 필드 정의</h3>
+              <div style={{ display: "flex", gap: 5 }}>
+                <button onClick={addField} className="ms-btn-sm">추가</button>
+                <button
+                  onClick={() => {
+                    if (selectedNo == null) return;
+                    setFields(fields.filter((f) => f.no !== selectedNo));
+                    setSelectedNo(null);
+                  }}
+                  className="ms-btn-sm"
+                  style={{ color: "#ef4444", borderColor: "rgba(239,68,68,0.4)" }}>
+                  삭제
+                </button>
+              </div>
             </div>
-          </div>
 
-          {/* 헤더 + 행 (모두 동일 카드 스타일) */}
-          <div style={{ padding: "10px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
-            {/* 컬럼 헤더 — 카드 스타일 */}
+          {/* 필드 목록 */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {/* 헤더 — No / 영문 필드명 / 한글 필드명 */}
             <div style={{
-              display: "grid", gridTemplateColumns: "32px 1fr 1fr",
-              gap: 8,
-              alignItems: "center",
+              display: "grid", gridTemplateColumns: "28px 1fr 1fr",
+              gap: 6, alignItems: "center",
               padding: "8px 8px",
               background: "rgba(255,255,255,0.04)",
               border: "1px solid var(--border)",
-              borderRadius: 10,
-              boxSizing: "border-box",
+              borderRadius: 8,
             }}>
               <span style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", textAlign: "center" }}>No</span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", paddingLeft: 8 }}>영문 필드명</span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", paddingLeft: 8 }}>한글 필드명</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", textAlign: "center" }}>영문 필드명</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", textAlign: "center" }}>한글 필드명</span>
             </div>
 
-            {/* 필드 행 */}
             {fields.length === 0 ? (
               <div style={{ fontSize: 13, color: "var(--muted)", padding: "4px 0" }}>필드가 없습니다.</div>
             ) : (
@@ -241,14 +247,12 @@ export default function UnstructuredBuilder({
                     key={f.no}
                     onClick={() => setSelectedNo(isSel ? null : f.no)}
                     style={{
-                      display: "grid", gridTemplateColumns: "32px 1fr 1fr",
-                      gap: 8,
-                      alignItems: "center",
-                      padding: "6px 8px",
+                      display: "grid", gridTemplateColumns: "28px 1fr 1fr",
+                      gap: 6, alignItems: "center",
+                      padding: "7px 8px",
                       background: isSel ? "var(--accentBg)" : "var(--panel2)",
                       border: isSel ? "1px solid var(--accent)" : "1px solid var(--border)",
                       borderRadius: 10,
-                      boxSizing: "border-box",
                       cursor: "pointer",
                     }}
                   >
@@ -275,6 +279,7 @@ export default function UnstructuredBuilder({
                 );
               })
             )}
+          </div>
           </div>
         </div>
       </div>

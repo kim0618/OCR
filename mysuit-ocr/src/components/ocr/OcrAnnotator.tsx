@@ -17,7 +17,6 @@ export default function OcrAnnotator({
 }) {
   const isEditMode = !!selectedTemplateId;
   const imgRef = useRef<HTMLImageElement | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const DEFAULT_ZOOM_PCT = 100;
 
@@ -48,6 +47,18 @@ export default function OcrAnnotator({
   useEffect(() => {
     if (!selectedTemplate) return;
     setTemplateName(String(selectedTemplate.templateName ?? selectedTemplate.template_name ?? ""));
+
+    // 저장된 이미지 dataURL이 있으면 loaded 상태 복원
+    const savedSrc = selectedTemplate.image?.src;
+    if (savedSrc) {
+      setLoaded({
+        src: savedSrc,
+        fileName: String(selectedTemplate.file?.name ?? ""),
+        naturalWidth: Number(selectedTemplate.image?.width ?? 0),
+        naturalHeight: Number(selectedTemplate.image?.height ?? 0),
+      });
+    }
+
     if (Array.isArray(selectedTemplate.regions)) {
       setRegions(selectedTemplate.regions);
       setSelectedId(null);
@@ -58,40 +69,65 @@ export default function OcrAnnotator({
   }, [selectedTemplate]);
 
   async function onPickFile(file: File) {
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => {
-      setLoaded({
-        src: url,
-        fileName: file.name,
-        naturalWidth: img.naturalWidth,
-        naturalHeight: img.naturalHeight,
-      });
-      setRegions([]);
-      setSelectedId(null);
-      setDrawMode(null);
-      setZoomPct(DEFAULT_ZOOM_PCT);
-      setRowTemplateTargetId(null);
-      setColGuideTargetId(null);
+    // base64 dataURL로 읽어서 localStorage에 영속 가능하도록 처리
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      const img = new Image();
+      img.onload = () => {
+        setLoaded({
+          src: dataUrl,
+          fileName: file.name,
+          naturalWidth: img.naturalWidth,
+          naturalHeight: img.naturalHeight,
+        });
+        setRegions([]);
+        setSelectedId(null);
+        setDrawMode(null);
+        setZoomPct(DEFAULT_ZOOM_PCT);
+        setRowTemplateTargetId(null);
+        setColGuideTargetId(null);
+      };
+      img.onerror = () => alert("이미지 로딩에 실패했습니다.");
+      img.src = dataUrl;
     };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      alert("이미지 로딩에 실패했습니다.");
-    };
-    img.src = url;
+    reader.onerror = () => alert("이미지 파일을 읽을 수 없습니다.");
+    reader.readAsDataURL(file);
   }
 
   function toggleMode(m: FieldType) {
     setDrawMode((cur) => (cur === m ? null : m));
   }
 
-  async function copyJson() {
-    const txt = JSON.stringify(exportPayload, null, 2);
-    try {
-      await navigator.clipboard.writeText(txt);
-      alert("JSON이 클립보드에 복사되었습니다.");
-    } catch {
-      prompt("복사가 실패했습니다. 아래 텍스트를 복사하세요.", txt);
+  function resetForm() {
+    setTemplateName("");
+    setLoaded(null);
+    setRegions([]);
+    setSelectedId(null);
+    setDrawMode(null);
+    setRowTemplateTargetId(null);
+    setColGuideTargetId(null);
+  }
+
+  function handleDelete() {
+    if (selectedTemplateId) {
+      // 편집 모드 — 저장된 템플릿 삭제
+      if (!confirm(`"${templateName || selectedTemplateId}" 템플릿을 삭제하시겠습니까?`)) return;
+      try {
+        const current = JSON.parse(localStorage.getItem(LOCAL_TEMPLATES_KEY) || "[]");
+        const list = Array.isArray(current) ? current : [];
+        const next = list.filter((item: any) => item?.template_id !== selectedTemplateId);
+        localStorage.setItem(LOCAL_TEMPLATES_KEY, JSON.stringify(next));
+        window.dispatchEvent(new Event("mysuit-ocr-template-saved"));
+      } catch (err) {
+        console.error("[template delete error]", err);
+      }
+      resetForm();
+      alert("템플릿이 삭제되었습니다.");
+    } else {
+      // 새 템플릿 작성 중 — 폼 초기화
+      if (!confirm("작성 중인 내용을 초기화하시겠습니까?")) return;
+      resetForm();
     }
   }
 
@@ -143,7 +179,7 @@ export default function OcrAnnotator({
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "minmax(0, 1fr) 380px",
+        gridTemplateColumns: "minmax(0, 1fr) 420px",
         gridTemplateRows: "auto 1fr",
         gap: 8,
         width: "100%",
@@ -154,17 +190,6 @@ export default function OcrAnnotator({
     >
       {/* Toolbar — full width */}
       <div className="oc-toolbar" style={{ gridColumn: "1 / -1", gridRow: 1, border: "1px solid var(--border)" }}>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          style={{ display: "none" }}
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) void onPickFile(f);
-          }}
-        />
-
         {(["field", "multi", "check", "table"] as FieldType[]).map((m) => {
           const labels: Record<FieldType, string> = {
             field: "필드",
@@ -210,7 +235,7 @@ export default function OcrAnnotator({
       <div style={{ gridColumn: 1, gridRow: 2, minHeight: 0 }}>
         <OcrCanvasPane
           imgRef={imgRef}
-          fileInputRef={fileInputRef}
+          onPickFile={(f) => void onPickFile(f)}
           loaded={loaded}
           regions={regions}
           setRegions={setRegions}
@@ -237,7 +262,7 @@ export default function OcrAnnotator({
           borderRadius: 12,
           padding: "10px 12px",
         }}>
-          <button type="button" onClick={() => void copyJson()} disabled={!loaded} className="ms-btn">
+          <button type="button" onClick={handleDelete} className="ms-btn">
             삭제
           </button>
           <button type="button" onClick={() => void saveTemplateJson()} disabled={!loaded}

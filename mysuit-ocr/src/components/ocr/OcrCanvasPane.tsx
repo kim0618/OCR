@@ -18,11 +18,14 @@ import {
   uid,
 } from "./core/ops";
 import { buildTableRows, normalizeColGuides } from "./core/table";
+import FileDropzone from "../common/FileDropzone";
 
 type Props = {
   // ✅ 여기 중요: RefObject 제네릭에 | null 넣지 마세요
   imgRef: React.RefObject<HTMLImageElement>;
   fileInputRef?: React.RefObject<HTMLInputElement | null>;
+  /** Called when user drops or picks a file (replaces the legacy fileInputRef change handler) */
+  onPickFile?: (file: File) => void;
 
   loaded: LoadedImage | null;
 
@@ -268,6 +271,24 @@ export default function OcrCanvasPane(props: Props) {
     return `${prefix}_${max + 1}`;
   }
 
+  // ===== 자동 ID 생성(타입별) — field_1, multi_1, check_1, table_1 =====
+  function nextAutoId(type: FieldType) {
+    const prefix =
+      type === "field"
+        ? "field"
+        : type === "multi"
+          ? "multi"
+          : type === "check"
+            ? "check"
+            : "table";
+    let max = 0;
+    for (const r of regionsRef.current) {
+      const idx = parseIndex(r.id, prefix);
+      if (idx != null) max = Math.max(max, idx);
+    }
+    return `${prefix}_${max + 1}`;
+  }
+
   // ===== 포인터 이벤트 =====
   function onPointerDown(e: React.PointerEvent) {
     if (!loadedRef.current) return;
@@ -342,8 +363,8 @@ export default function OcrCanvasPane(props: Props) {
     }
 
     if (drawMode) {
-      const id = drawTargetRegionId || uid("draft");
       const type = drawTargetFieldType || drawMode;
+      const id = drawTargetRegionId || nextAutoId(type);
 
       const newDraft: Region = {
         id,
@@ -843,14 +864,12 @@ export default function OcrCanvasPane(props: Props) {
   return (
     <div
       ref={wrapRef}
+      className="uw-upload-panel"
       style={{
-        background: "var(--panel2)",
-        height: "100%",
+        background: loaded ? "var(--panel2)" : "var(--panel)",
         minHeight: 0,
         minWidth: 0,
         overflow: "auto",
-        display: "flex",
-        flexDirection: "column",
       }}
     >
       {/*
@@ -860,66 +879,22 @@ export default function OcrCanvasPane(props: Props) {
         바닥 여백이 체감되지 않는 케이스가 있어 스페이서를 안전장치로 추가.
       */}
       {!loaded ? (
-        <div
-          style={{
-            width: "100%",
-            height: "100%",
-            minHeight: 400,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 14,
-            border: "1.5px dashed rgba(255,255,255,0.18)",
-            borderRadius: 8,
-            cursor: "pointer",
-            boxSizing: "border-box",
-          }}
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={(e) => {
-            e.preventDefault();
-            const file = e.dataTransfer.files?.[0];
-            if (file && fileInputRef?.current) {
+        <FileDropzone
+          onPickFile={(file) => {
+            if (props.onPickFile) {
+              props.onPickFile(file);
+              return;
+            }
+            // 레거시 경로: fileInputRef change 이벤트로 위임
+            if (fileInputRef?.current) {
               const dt = new DataTransfer();
               dt.items.add(file);
               fileInputRef.current.files = dt.files;
               fileInputRef.current.dispatchEvent(new Event("change", { bubbles: true }));
             }
           }}
-          onClick={() => fileInputRef?.current?.click()}
-        >
-          {/* 업로드 아이콘 */}
-          <div style={{
-            width: 56, height: 56, borderRadius: 999,
-            background: "rgba(255,255,255,0.06)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
-            <svg width="26" height="26" viewBox="0 0 20 20" fill="none">
-              <path d="M10 14V4M10 4L6 8M10 4L14 8" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M4 16h12" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round"/>
-            </svg>
-          </div>
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text)", marginBottom: 5 }}>
-              문서를 드래그하거나 업로드하세요
-            </div>
-            <div style={{ fontSize: 12, color: "var(--muted)" }}>
-              이미지(.jpeg .jpg .png .tif .tiff) 및 PDF 지원
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); fileInputRef?.current?.click(); }}
-            style={{
-              padding: "9px 28px", borderRadius: 8,
-              background: "var(--accent)", color: "#fff",
-              border: "none", fontWeight: 700, fontSize: 13,
-              cursor: "pointer",
-            }}
-          >
-            파일 선택
-          </button>
-        </div>
+          fileInputRef={fileInputRef}
+        />
       ) : (
         <>
           <div

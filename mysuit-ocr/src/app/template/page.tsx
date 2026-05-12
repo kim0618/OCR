@@ -166,6 +166,7 @@ export default function Page() {
               <div className="uw-runocr-template-cards">
                 {savedTemplates.map((template) => {
                   const isSelected = selectedTemplate?.id === template.id;
+                  const imgSrc = template.templateJson?.image?.src as string | undefined;
                   return (
                   <button
                     key={template.id}
@@ -183,6 +184,15 @@ export default function Page() {
                           src="/images/unstructured-template-preview.svg"
                           alt=""
                           className="uw-template-card-img"
+                        />
+                      </span>
+                    ) : imgSrc ? (
+                      <span className="uw-runocr-template-card-preview">
+                        <img
+                          src={imgSrc}
+                          alt=""
+                          className="uw-template-card-img"
+                          style={{ objectFit: "cover" }}
                         />
                       </span>
                     ) : (

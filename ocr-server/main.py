@@ -1615,6 +1615,21 @@ async def ocr_extract(
     timings["image_decode_ms"] = _ms(_t_decode - _t_read)
     timings["original_image_wh"] = [orig_w, orig_h]
 
+    # 원본 이미지 base64 (History 상세보기 "전처리 전" 표시용)
+    original_b64 = None
+    try:
+        _orig_max_w = 1200
+        if orig_w > _orig_max_w:
+            _os = _orig_max_w / orig_w
+            _orig_disp = cv2.resize(img, (_orig_max_w, int(orig_h * _os)), interpolation=cv2.INTER_LANCZOS4)
+        else:
+            _orig_disp = img
+        _ok, _orig_enc = cv2.imencode('.jpg', _orig_disp, [cv2.IMWRITE_JPEG_QUALITY, 80])
+        if _ok and _orig_enc is not None:
+            original_b64 = base64.b64encode(_orig_enc.tobytes()).decode('utf-8')
+    except Exception as _orig_e:
+        print(f"[original_image] encode error (ignored): {_orig_e}")
+
     ocr = get_ocr_engine()
     region_list = json.loads(regions) if regions else []
     if not region_list and template_id:
@@ -2043,6 +2058,8 @@ async def ocr_extract(
 
     if processed_b64:
         response["processed_image"] = f"data:image/jpeg;base64,{processed_b64}"
+    if original_b64:
+        response["original_image"] = f"data:image/jpeg;base64,{original_b64}"
     # 금액 추출 디버그 메타 (프론트 TEST 탭에서 활용 가능)
     if not region_list:
         # 계측 메타 주입: 구간 시간/차원/디바이스

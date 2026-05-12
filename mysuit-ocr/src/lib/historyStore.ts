@@ -53,6 +53,11 @@ export type HistoryAutofillRunSummary = {
   message?: string;
 };
 
+// 이미지 저장 모드.
+// "legacy": image_url 단일 필드 (H-0/H-1 이전 데이터)
+// "url": original_image_url + processed_image_url 분리 (H-2 이후 신규)
+export type HistoryImageStorageMode = "legacy" | "url";
+
 export type HistoryRunRecord = {
   job_id: string;
   file_name: string;
@@ -60,8 +65,12 @@ export type HistoryRunRecord = {
   processing_time: number;
   created_at: string; // "YYYY-MM-DD HH:mm:ss"
   status: RunStatus;
+  // 이미지 필드 — DB 전환 시 URL/path만 저장하는 구조를 미리 맞춤
+  image_url?: string;               // legacy: 전처리 후 이미지 단일 URL (이전 데이터 호환)
+  original_image_url?: string | null;  // 전처리 전 원본 이미지 URL (서버 저장 후 채움)
+  processed_image_url?: string | null; // 전처리 후 이미지 URL (H-2 이후 명시적 저장)
+  image_storage_mode?: HistoryImageStorageMode; // 저장 모드 구분
   // 상세보기용 (선택)
-  image_url?: string;
   ocr_fields?: HistoryOcrField[];
   output_fields?: HistoryOutputField[];
   autofill_summary?: HistoryAutofillRunSummary;
@@ -94,7 +103,28 @@ function isQuotaExceededError(error: unknown) {
 }
 
 function withoutStoredImages(records: HistoryRunRecord[]): HistoryRunRecord[] {
-  return records.map((record) => ({ ...record, image_url: undefined }));
+  return records.map((record) => ({
+    ...record,
+    image_url: undefined,
+    original_image_url: undefined,
+    processed_image_url: undefined,
+  }));
+}
+
+/**
+ * 전처리 전 원본 이미지 URL 반환.
+ * original_image_url이 없으면 null (placeholder 표시용).
+ */
+export function getOriginalHistoryImage(record: HistoryRunRecord): string | null {
+  return record.original_image_url ?? null;
+}
+
+/**
+ * 전처리 후 이미지 URL 반환.
+ * processed_image_url 우선, 없으면 image_url (legacy) fallback.
+ */
+export function getProcessedHistoryImage(record: HistoryRunRecord): string | null {
+  return record.processed_image_url ?? record.image_url ?? null;
 }
 
 function tryWriteHistory(records: HistoryRunRecord[]) {
@@ -128,6 +158,9 @@ export function appendHistoryRun(
     created_at: partial.created_at ?? nowTimestamp(),
     status: partial.status,
     image_url: partial.image_url,
+    original_image_url: partial.original_image_url ?? null,
+    processed_image_url: partial.processed_image_url ?? null,
+    image_storage_mode: partial.image_storage_mode ?? "url",
     ocr_fields: partial.ocr_fields,
     output_fields: partial.output_fields,
     autofill_summary: partial.autofill_summary,

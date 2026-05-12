@@ -25,7 +25,8 @@ export function buildExportPayload(params: {
   return {
     templateName,
     file: { name: loaded.fileName },
-    image: { width: loaded.naturalWidth, height: loaded.naturalHeight },
+    // src 포함 — 템플릿 재로드 시 이미지 복원에 사용
+    image: { width: loaded.naturalWidth, height: loaded.naturalHeight, src: loaded.src },
     regions: regions.map((r) => {
       const base: any = {
         id: r.id,
@@ -36,6 +37,13 @@ export function buildExportPayload(params: {
         width: Math.round(r.width),
         height: Math.round(r.height),
       };
+
+      // koField/enField 등 메타 — 모든 타입(table 포함)에 포함
+      if (r.koField !== undefined) base.koField = r.koField;
+      if (r.enField !== undefined) base.enField = r.enField;
+      if (r.canonicalField !== undefined) base.canonicalField = r.canonicalField;
+      if (r.mappingStatus !== undefined) base.mappingStatus = r.mappingStatus;
+      if (r.valueType !== undefined) base.valueType = r.valueType;
 
       if (r.fieldType === "multi") {
         const parts = r.parts ?? 2;
@@ -68,6 +76,9 @@ export function buildExportPayload(params: {
           stopKeywords: Array.isArray(r.table?.stopKeywords)
             ? r.table!.stopKeywords!.slice(0, 30)
             : [],
+          // OP-2: 테이블 이름 + 컬럼 canonical 매핑
+          ...(r.table?.tableName ? { tableName: r.table.tableName } : {}),
+          ...(Array.isArray(r.table?.columns) ? { columns: r.table!.columns } : {}),
         };
       }
 

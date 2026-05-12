@@ -152,6 +152,11 @@ export interface InvoiceProfile {
   visibleAmountFields?: string[];
   /** P-2b: sample별 field 라벨 override (e.g. taxAmount → "부가세") */
   fieldLabels?: Record<string, string>;
+  /** T-6b: sample별 실제 품목표 컬럼 override (tableProfile 전역 기준보다 우선, 검증 기준으로 사용) */
+  tableExpectedColumns?: {
+    required: string[];
+    optional: string[];
+  };
 }
 
 export type DatasetRole =

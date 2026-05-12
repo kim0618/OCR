@@ -166,6 +166,64 @@ _TABLE_STANDALONE_LABEL_RE = re.compile(
 )
 _SPEC_ONLY_RE = re.compile(r"^\d+(?:[.,]\d+)?(?:mg|ml|g|kg|t|tab|cap|caps?|c|\uc815|\ucea1\uc290|\ud3ec|\ubcd1|box|ea|p|dose|mI)(?:\([^)]+\))?$", re.I)
 
+# T-3: canonical tableRows
+_TABLE_ROW_COLUMNS = [
+    "rowIndex", "itemCode", "itemName", "spec", "lotNo", "serialNo",
+    "manufacturingNo", "expiryDate", "quantity", "unit", "unitPrice",
+    "supplyAmount", "taxAmount", "amount", "totalAmount", "manufacturer",
+    "insuranceCode", "remark",
+]
+_TR_EXPIRY_YYYYMMDD_RE = re.compile(r"(?<!\d)(20\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01]))(?!\d)")
+_TR_EXPIRY_YYMMDD_RE = re.compile(r"(?<!\d)(\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01]))(?!\d)")
+_TR_EXPIRY_YMDASH_RE = re.compile(r"(?<!\d)(20\d{2}[-./](?:0[1-9]|1[0-2])[-./](?:0[1-9]|[12]\d|3[01]))(?!\d)")
+_TR_SERIAL_HYPHEN_RE = re.compile(r"(?<![A-Z0-9])(\d{6,}[-/]\d{6,}[-/]\d{6,})(?![A-Z0-9])", re.I)
+_TR_ITEM_CODE_RE = re.compile(r"\b((?:[A-Z]{2,6}-)?[A-Z]{1,5}\d{3,}[A-Z0-9]*)\b")
+_TR_AMOUNT_COMMA_RE = re.compile(r"\d{1,3}(?:,\d{3})+")
+_TR_UNIT_RE = re.compile(r"\b(BOX|EA)\b", re.I)
+
+# T-6/T-6c: header cell text → canonical table column mapping
+# 순서 중요: 더 specific한 패턴을 먼저 (품목코드 > 품명, 합계금액 > 금액, 소비자단가 > 단가)
+_HEADER_CANONICAL_MAP: list[tuple[re.Pattern[str], str]] = [
+    # rowIndex — NO/순번 column (leftmost, must be first to prevent itemCode pollution)
+    (re.compile(r"^(?:NO|No|no)\.?$|^순\s*번$|^번\s*호$|^N[Oo]$", re.I), "rowIndex"),
+    # itemCode — 품목코드/제품코드/상품코드 (먼저 확인해 '품목' 단독보다 우선)
+    (re.compile(r"품\s*목\s*코\s*드|제\s*품\s*코\s*드|상\s*품\s*코\s*드|item\s*code|product\s*code", re.I), "itemCode"),
+    # insuranceCode — 보험코드/보험No 계열 (보험약가 포함, 공급가액보다 먼저)
+    (re.compile(r"보\s*험\s*No|보\s*험\s*NO|보\s*험\s*번\s*호|보\s*험\s*코\s*드|보\s*험\s*약\s*가", re.I), "insuranceCode"),
+    # manufacturer — 제조회사/제조사/제조원/제조업체
+    (re.compile(r"제\s*조\s*회\s*사|제\s*조\s*사|제\s*조\s*원|제\s*조\s*업\s*체", re.I), "manufacturer"),
+    # manufacturingNo — 제조번호 계열 (composite 헤더 포함: 제조번호/유효기간)
+    (re.compile(r"제\s*조\s*번\s*호[/·\s]*유\s*효|유\s*효[/·\s]*제\s*조\s*번\s*호", re.I), "manufacturingNo"),  # composite 먼저
+    (re.compile(r"제\s*조\s*번\s*호|제\s*조\s*No", re.I), "manufacturingNo"),
+    # expiryDate — 유효기간/유효일자/사용기한
+    (re.compile(r"유\s*효\s*기\s*간|유\s*효\s*일\s*자|사\s*용\s*기\s*한|유\s*효\s*기\s*한", re.I), "expiryDate"),
+    # serialNo — Serial/S/N/시리얼 (composite 포함: 시리얼/로트No.)
+    (re.compile(r"시\s*리\s*얼[/·\s]*로\s*트|Serial\s*[/·]\s*[Ll]ot", re.I), "serialNo"),  # composite 먼저
+    (re.compile(r"Serial\s*(?:No|번\s*호)?|S\s*/\s*N|시\s*리\s*얼", re.I), "serialNo"),
+    # lotNo — Lot/LOT/로트 계열 (LotNo, LOTNO 포함)
+    (re.compile(r"Lot\s*[./]?\s*No|LOT\s*[./]?\s*No|LOTNO|LotNo|LOT[./\s]*제\s*조|로\s*트\s*[Nn][Oo]?|로\s*트|(?<!\w)LOT(?!\w)|(?<!\w)Lot(?!\w)", re.I), "lotNo"),
+    # itemName — 품목/품명/제품명/상품명 (품목코드 다음에 위치)
+    (re.compile(r"품\s*목\s*명|품\s*목(?!\s*[코코드])|품\s*명|제\s*품\s*명|상\s*품\s*명|명\s*칭|제\s*품(?!\s*[코])", re.I), "itemName"),
+    # spec — 규격/모델
+    (re.compile(r"규\s*격|모\s*델\s*명?", re.I), "spec"),
+    # quantity — 수량/Qty
+    (re.compile(r"수\s*량|(?<!\w)Qty(?!\w)|(?<!\w)QTY(?!\w)", re.I), "quantity"),
+    # unit — 단위
+    (re.compile(r"단\s*위|(?<!\w)Unit(?!\w)", re.I), "unit"),
+    # unitPrice — 소비자단가/공급단가/판매단가/단가 (specific 먼저)
+    (re.compile(r"소\s*비\s*자\s*단\s*가|공\s*급\s*단\s*가|판\s*매\s*단\s*가|단\s*가", re.I), "unitPrice"),
+    # supplyAmount — 공급가액/공급금액/공급가 (summary와 헷갈리지 않도록 row context 기준)
+    (re.compile(r"공\s*급\s*가\s*액|공\s*급\s*금\s*액|공\s*급\s*가(?![가-힣])", re.I), "supplyAmount"),
+    # taxAmount — 세액/부가세/VAT
+    (re.compile(r"세\s*액|부\s*가\s*세|(?<!\w)VAT(?!\w)|(?<!\w)TAX(?!\w)", re.I), "taxAmount"),
+    # totalAmount — 합계금액/총금액 (금액보다 먼저)
+    (re.compile(r"합\s*계\s*금\s*액|총\s*금\s*액|총\s*합\s*계", re.I), "totalAmount"),
+    # amount — 금액/판매금액 (합계금액 다음에 위치)
+    (re.compile(r"금\s*액|판\s*매\s*금\s*액", re.I), "amount"),
+    # remark — 비고/적요
+    (re.compile(r"비\s*고|적\s*요|메\s*모|참\s*고", re.I), "remark"),
+]
+
 
 @dataclass
 class OcrLine:
@@ -883,7 +941,8 @@ def _nearby_detail_lines_for_item(
 
 
 def _structured_text_order_items(lines: list[OcrLine]) -> list[dict[str, Any]]:
-    ordered = [line for line in lines if _clean_value(line.text)]
+    # T-6: sort by (cy, x) so text-order follows visual top-to-bottom order
+    ordered = sorted([line for line in lines if _clean_value(line.text)], key=lambda l: (l.cy, l.x))
     items: list[dict[str, Any]] = []
     for idx, line in enumerate(ordered):
         text = _clean_value(line.text)
@@ -1063,6 +1122,330 @@ def _find_table_header_y(lines: list[OcrLine], page_h: float) -> float | None:
         if row_y >= page_h * 0.22 and _table_token_count(text) >= 2:
             return min(item.y for item in row)
     return None
+
+
+# ── T-6: header-based column structure mapping ────────────────────────────────
+
+def _match_header_to_canonical(text: str) -> str | None:
+    """Map a header cell text to a canonical column key. Returns None if not matched."""
+    t = re.sub(r"\s+", " ", (text or "").strip())
+    for pattern, key in _HEADER_CANONICAL_MAP:
+        if pattern.search(t):
+            return key
+    return None
+
+
+def _find_structured_header_row(
+    rows: list[list[OcrLine]], page_h: float
+) -> tuple[int, list[OcrLine]] | None:
+    """Find the header row (index, merged lines) with ≥2 canonical column matches.
+    Handles multi-line headers by merging adjacent candidate rows.
+    """
+    # Collect candidate rows with at least 1 canonical match
+    # (idx, row_y, score, row)
+    candidates: list[tuple[int, float, int, list[OcrLine]]] = []
+    for idx, row in enumerate(rows):
+        row_y = _row_center_y(row)
+        if row_y < page_h * 0.08 or row_y > page_h * 0.85:
+            continue
+        score = 0
+        for line in row:
+            # T-6d-fix: count canonical matches including multi-canonical composite tokens
+            parts = re.split(r"\s+", line.text.strip())
+            matched_keys: set[str] = set()
+            for part in parts:
+                k = _match_header_to_canonical(part)
+                if k is not None:
+                    matched_keys.add(k)
+            if not matched_keys:
+                k = _match_header_to_canonical(line.text)
+                if k is not None:
+                    matched_keys.add(k)
+            for k in matched_keys:
+                score += 1
+                if k in ("itemName", "quantity"):
+                    score += 1  # bonus for key columns
+        if score >= 1:
+            candidates.append((idx, row_y, score, row))
+
+    if not candidates:
+        return None
+
+    # 1) Best single row with ≥2 matches
+    best_single = max(candidates, key=lambda c: c[2])
+    if best_single[2] >= 2:
+        return best_single[0], best_single[3]
+
+    # 2) Merge adjacent rows (multi-line header) to reach ≥2 matches
+    for i in range(len(candidates) - 1):
+        idx_a, y_a, score_a, row_a = candidates[i]
+        idx_b, y_b, score_b, row_b = candidates[i + 1]
+        if abs(y_b - y_a) > page_h * 0.06:
+            continue
+        merged = row_a + row_b
+        merged_score = 0
+        for line in merged:
+            parts = re.split(r"\s+", line.text.strip())
+            matched_keys_m: set[str] = set()
+            for part in parts:
+                k = _match_header_to_canonical(part)
+                if k is not None:
+                    matched_keys_m.add(k)
+            if not matched_keys_m:
+                k = _match_header_to_canonical(line.text)
+                if k is not None:
+                    matched_keys_m.add(k)
+            merged_score += len(matched_keys_m)
+        if merged_score >= 2:
+            return idx_a, merged
+
+    return None
+
+
+def _extract_multi_canonical_from_token(text: str, line: "OcrLine") -> list[dict[str, Any]]:
+    """For a composite header token (e.g. '소비자단가 공급단가'), extract all canonical keys.
+    Returns a list of virtual cell dicts with approximate x positions split within the token.
+    """
+    parts = re.split(r"\s+", (text or "").strip())
+    matches: list[tuple[str, float]] = []  # (canonical_key, approx_x)
+    for i, part in enumerate(parts):
+        canon = _match_header_to_canonical(part)
+        if canon is not None:
+            # Approximate x as evenly spaced within the token
+            frac = (i + 0.5) / max(len(parts), 1)
+            matches.append((canon, line.x + line.w * frac))
+    if len(matches) <= 1:
+        return []  # not composite
+    cells = []
+    for canon, approx_x in matches:
+        w_frac = line.w / max(len(matches), 1)
+        cells.append({
+            "canonical_key": canon,
+            "cx": approx_x,
+            "x1": approx_x - w_frac * 0.4,
+            "x2": approx_x + w_frac * 0.4,
+        })
+    return cells
+
+
+def _build_column_boundaries(
+    header_row: list[OcrLine], page_w: float
+) -> list[dict[str, Any]]:
+    """Build sorted column boundaries from header cells. Returns [] if < 2 columns found.
+    T-6c: uses cell edges for more accurate boundaries; first column starts at header x1.
+    T-6d-fix: handles composite header tokens (e.g. '소비자단가 공급단가').
+    """
+    cells: list[dict[str, Any]] = []
+    for line in sorted(header_row, key=lambda l: l.cx):
+        # Try composite split first
+        multi = _extract_multi_canonical_from_token(line.text, line)
+        if multi:
+            cells.extend(multi)
+            continue
+        canonical = _match_header_to_canonical(line.text)
+        if canonical is None:
+            continue
+        cells.append({
+            "canonical_key": canonical,
+            "cx": line.cx,
+            "x1": line.x,
+            "x2": line.x + line.w,
+        })
+    # Deduplicate: keep leftmost occurrence of each canonical key
+    seen: set[str] = set()
+    deduped: list[dict[str, Any]] = []
+    for cell in cells:
+        if cell["canonical_key"] not in seen:
+            seen.add(cell["canonical_key"])
+            deduped.append(cell)
+    if len(deduped) < 2:
+        return []
+
+    # Build boundaries: use edge midpoints (more accurate than center midpoints)
+    # First column: start at header cell's left edge (not 0) to avoid unmatched left columns
+    boundaries: list[dict[str, Any]] = []
+    for i, cell in enumerate(deduped):
+        if i == 0:
+            # Start near the first canonical header's left edge
+            x_start = max(0.0, cell["x1"] - cell.get("w", 20) * 0.8)
+        else:
+            prev = deduped[i - 1]
+            gap_mid = (prev["x2"] + cell["x1"]) / 2.0
+            # Fallback to center midpoint if cells overlap
+            if gap_mid <= prev["cx"]:
+                gap_mid = (prev["cx"] + cell["cx"]) / 2.0
+            x_start = gap_mid
+
+        if i == len(deduped) - 1:
+            x_end = page_w
+        else:
+            nxt = deduped[i + 1]
+            gap_mid = (cell["x2"] + nxt["x1"]) / 2.0
+            if gap_mid >= nxt["cx"]:
+                gap_mid = (cell["cx"] + nxt["cx"]) / 2.0
+            x_end = gap_mid
+
+        boundaries.append({
+            "canonical_key": cell["canonical_key"],
+            "x_start": x_start,
+            "x_end": x_end,
+            "header_cx": cell["cx"],
+        })
+    return boundaries
+
+
+def _assign_canonical_by_x(cx: float, boundaries: list[dict[str, Any]]) -> str | None:
+    """Return canonical key for a center_x within column boundaries.
+    T-6c: falls back to nearest column when slightly outside boundary (OCR positional variance).
+    """
+    for b in boundaries:
+        if b["x_start"] <= cx < b["x_end"]:
+            return b["canonical_key"]
+    # Proximity fallback: find nearest header center
+    if not boundaries:
+        return None
+    nearest = min(boundaries, key=lambda b: abs(cx - b.get("header_cx", (b["x_start"] + b["x_end"]) / 2.0)))
+    header_cx = nearest.get("header_cx", (nearest["x_start"] + nearest["x_end"]) / 2.0)
+    # Allow up to half average column width as tolerance
+    avg_col_w = (boundaries[-1]["x_end"] - boundaries[0]["x_start"]) / max(1, len(boundaries))
+    if abs(cx - header_cx) <= avg_col_w * 0.55:
+        return nearest["canonical_key"]
+    return None
+
+
+def _split_composite_cell_value(
+    canonical_key: str, value: str, item: dict[str, Any]
+) -> None:
+    """For composite canonical columns (e.g. manufacturingNo that includes expiryDate),
+    try to split the cell value and assign secondary canonical key."""
+    item[canonical_key] = value
+    if canonical_key == "manufacturingNo":
+        # Check if value contains a date-like component → split to expiryDate
+        expiry = _tr_extract_expiry_date(value)
+        if expiry and not item.get("expiryDate"):
+            item["expiryDate"] = expiry
+            # Remove date part from manufacturingNo
+            non_date = re.sub(r"20\d{6}|\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])", "", value).strip()
+            non_date = re.sub(r"[-/.\s]+", " ", non_date).strip()
+            if non_date:
+                item["manufacturingNo"] = _clean_value(non_date)
+    elif canonical_key == "serialNo":
+        # Check if value looks more like lotNo (short 4-6 digit number)
+        compact = re.sub(r"\D", "", value)
+        if compact and len(compact) <= 6 and not item.get("lotNo"):
+            item["lotNo"] = value  # put in lotNo as well (secondary)
+
+
+def _table_items_from_header_mapping(
+    lines: list[OcrLine], page_h: float, page_w: float,
+    debug: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
+    """Extract table items by x-position column mapping. Falls back to [] if header not found.
+    T-6c: multi-line header support, composite column handling, proximity-based assignment.
+    T-6d: debug info support.
+    """
+    rows = _group_rows(lines)
+    header_result = _find_structured_header_row(rows, page_h)
+    if debug is not None:
+        debug["headerFound"] = header_result is not None
+    if header_result is None:
+        return []
+    header_idx, header_row = header_result
+    boundaries = _build_column_boundaries(header_row, page_w)
+
+    if debug is not None:
+        debug["headerY"] = _row_center_y(header_row)
+        debug["headerScore"] = sum(1 for l in header_row if _match_header_to_canonical(l.text) is not None)
+        debug["headerLines"] = [l.text for l in sorted(header_row, key=lambda l: l.x)]
+        debug["boundaryCount"] = len(boundaries)
+        debug["boundaries"] = [
+            {"canonical_key": b["canonical_key"], "x_start": round(b["x_start"], 1), "x_end": round(b["x_end"], 1)}
+            for b in boundaries
+        ]
+        debug["rejectedRows"] = []
+
+    if len(boundaries) < 2:
+        return []
+    has_name_col = any(b["canonical_key"] == "itemName" for b in boundaries)
+    header_y = max(_row_center_y(header_row), _row_center_y(rows[header_idx]))
+    last_header_y = header_y
+
+    items: list[dict[str, Any]] = []
+    for idx in range(header_idx + 1, len(rows)):
+        row = rows[idx]
+        row_y = _row_center_y(row)
+        if row_y <= last_header_y or row_y > page_h * 0.93:
+            continue
+        text = _row_text(row)
+        if _is_summary_row_for_items(text):
+            if debug is not None:
+                debug["rejectedRows"].append({"reason": "summary_row", "text": text[:60], "y": round(row_y, 1)})
+            # T-6d-fix: Only break when items already found AND row is in lower page portion.
+            # Early-in-page summary rows (e.g. header-area totals in landscape docs) get skipped.
+            if items and row_y >= page_h * 0.72:
+                break
+            continue
+        if _is_table_header_row(text) or _is_business_contact_line(text):
+            if row_y < header_y + page_h * 0.04:
+                last_header_y = row_y
+            if debug is not None:
+                debug["rejectedRows"].append({"reason": "header_or_contact", "text": text[:60], "y": round(row_y, 1)})
+            continue
+
+        col_texts: dict[str, list[str]] = {}
+        for line in sorted(row, key=lambda l: l.x):
+            cv = _clean_value(line.text)
+            if not cv:
+                continue
+            key = _assign_canonical_by_x(line.cx, boundaries)
+            if key is not None:
+                col_texts.setdefault(key, []).append(cv)
+
+        item: dict[str, Any] = {k: "" for k in _TABLE_ROW_COLUMNS if k != "rowIndex"}
+        item["rawText"] = _summarize_table_row(text)
+        item["sourceBboxes"] = [_bbox_dict(l) for l in row]
+        item["source"] = "header_column_mapping"
+        item["_row_y"] = row_y
+
+        for key, texts in col_texts.items():
+            if key in item:
+                merged = _clean_value(" ".join(t for t in texts if t))
+                _split_composite_cell_value(key, merged, item)
+
+        if has_name_col:
+            if not item.get("itemName"):
+                # T-6d-fix: allow rows without itemName if other data fields are present
+                has_code = bool(item.get("itemCode"))
+                has_qty = bool(item.get("quantity"))
+                has_price = bool(item.get("unitPrice") or item.get("amount") or item.get("supplyAmount"))
+                has_ins = bool(item.get("insuranceCode"))
+                has_lot = bool(item.get("lotNo") or item.get("serialNo") or item.get("manufacturingNo"))
+                row_has_data = (
+                    (has_code and (has_qty or has_price))
+                    or (has_qty and has_price)
+                    or (has_ins and has_code)
+                    or (has_lot and has_qty)
+                )
+                if not row_has_data:
+                    if debug is not None:
+                        debug["rejectedRows"].append({"reason": "no_item_name", "text": text[:60], "y": round(row_y, 1)})
+                    continue
+                if debug is not None:
+                    debug["rejectedRows"].append({"reason": "no_item_name_allowed", "text": text[:60], "y": round(row_y, 1)})
+            elif _is_table_notice_or_party_line(item["itemName"]):
+                if debug is not None:
+                    debug["rejectedRows"].append({"reason": "notice_or_party", "itemName": item["itemName"][:40], "y": round(row_y, 1)})
+                continue
+        else:
+            has_val = any(item.get(k) for k in ("itemCode", "quantity", "unitPrice", "amount", "lotNo", "serialNo"))
+            if not has_val:
+                if debug is not None:
+                    debug["rejectedRows"].append({"reason": "no_meaningful_value", "text": text[:60], "y": round(row_y, 1)})
+                continue
+
+        items.append(item)
+
+    return items
 
 
 def _normalize_date(full_text: str) -> str:
@@ -3948,14 +4331,284 @@ def _detect_table(lines: list[OcrLine], page_h: float, table_header_y: float | N
     else:
         table_items = legacy_items
 
+    # T-6: try header-based column mapping — prefer if it finds at least as many rows
+    page_w = max((line.x + line.w for line in lines), default=1000.0) if lines else 1000.0
+    header_debug: dict[str, Any] = {}
+    header_items = _table_items_from_header_mapping(lines, page_h, page_w, debug=header_debug)
+    header_used = bool(header_items and (not table_items or len(header_items) >= len(table_items)))
+    if header_used:
+        table_items = header_items
+
+    # T-6: sort table_items by y-coordinate so rowIndex follows visual order
+    def _item_y_key(item: dict[str, Any]) -> float:
+        if "_row_y" in item:
+            return float(item["_row_y"])
+        bboxes = item.get("sourceBboxes") or []
+        if bboxes:
+            return min(float(b.get("y", 0)) for b in bboxes)
+        return 0.0
+
+    table_items = sorted(table_items, key=_item_y_key)
+
     data_rows = [str(item.get("rawText") or "") for item in table_items]
     table_detected = table_detected or bool(table_items)
+
+    # T-6d: tableDebug — 진단 정보
+    table_debug: dict[str, Any] = {
+        "headerUsed": header_used,
+        "headerRowFound": header_debug.get("headerFound", False),
+        "headerY": header_debug.get("headerY"),
+        "headerScore": header_debug.get("headerScore", 0),
+        "headerLines": header_debug.get("headerLines", []),
+        "boundaryCount": header_debug.get("boundaryCount", 0),
+        "boundaries": header_debug.get("boundaries", []),
+        "rowCandidateCount": len(table_items),
+        "rejectedRows": header_debug.get("rejectedRows", []),
+        "tableBoundsEstimate": {
+            "xMin": min((line.x for line in lines), default=0.0),
+            "xMax": max((line.x + line.w for line in lines), default=page_w),
+            "yHeader": header_debug.get("headerY"),
+            "yBottom": page_h * 0.93,
+        },
+        "fallbackSource": (
+            "header_column_mapping" if header_used else
+            "structured_items" if table_items is structured_items else
+            "legacy_text_items"
+        ),
+    }
+
     return {
         "tableDetected": "Y" if table_detected else "N",
         "rowCount": str(len(table_items)) if table_items else "",
         "firstRowPreview": _table_row_preview_from_item(table_items[0]) if table_items else "",
         "tableRows": table_items,
         "items": table_items,
+        "tableDebug": table_debug,
+    }
+
+
+# ── T-3: canonical tableRows helpers ─────────────────────────────────────────
+
+def _empty_table_row(row_index: int, raw_text: str = "") -> dict[str, Any]:
+    return {
+        "rowIndex": row_index,
+        "itemCode": "", "itemName": "", "spec": "", "lotNo": "", "serialNo": "",
+        "manufacturingNo": "", "expiryDate": "", "quantity": "", "unit": "",
+        "unitPrice": "", "supplyAmount": "", "taxAmount": "", "amount": "",
+        "totalAmount": "", "manufacturer": "", "insuranceCode": "", "remark": "",
+        "_rawText": raw_text,
+        "_confidence": None,
+        "_source": "invoice_statement_table_parser",
+    }
+
+
+def _tr_extract_expiry_date(text: str) -> str:
+    m = _TR_EXPIRY_YYYYMMDD_RE.search(text)
+    if m:
+        return m.group(1)
+    m = _TR_EXPIRY_YMDASH_RE.search(text)
+    if m:
+        return re.sub(r"[-./]", "", m.group(1))
+    m = _TR_EXPIRY_YYMMDD_RE.search(text)
+    if m:
+        return m.group(1)
+    return ""
+
+
+def _tr_extract_serial(text: str) -> str:
+    m = _TR_SERIAL_HYPHEN_RE.search(text)
+    return m.group(1) if m else ""
+
+
+def _tr_extract_unit(text: str) -> str:
+    m = _TR_UNIT_RE.search(text)
+    return m.group(1).upper() if m else ""
+
+
+def _tr_extract_item_code(text: str, item_name: str, spec: str) -> str:
+    rest = text
+    for part in (item_name, spec):
+        if part and rest.startswith(part):
+            rest = rest[len(part):].strip()
+    for m in _TR_ITEM_CODE_RE.finditer(rest):
+        candidate = m.group(1)
+        if _HANGUL_RE.search(candidate):
+            continue
+        compact = re.sub(r"\D", "", candidate)
+        if len(compact) < 3:
+            continue
+        return candidate
+    return ""
+
+
+def _tr_extract_lot(text: str, item_name: str, spec: str, expiry_str: str) -> str:
+    # Search full rawText for lot-like 4-6 digit numbers
+    amount_matches = {m.group() for m in _TR_AMOUNT_COMMA_RE.finditer(text)}
+    candidates: list[tuple[int, str]] = []
+    for m in re.finditer(r"(?<!\d)(\d{4,6})(?!\d)", text):
+        val = m.group(1)
+        if val == expiry_str:
+            continue
+        if val in amount_matches:
+            continue
+        if len(val) == 6:
+            try:
+                mm, dd = int(val[2:4]), int(val[4:6])
+                if 1 <= mm <= 12 and 1 <= dd <= 31:
+                    continue
+            except ValueError:
+                pass
+        num = int(val)
+        if num <= 100:
+            continue
+        if num > 999999:
+            continue
+        candidates.append((m.start(), val))
+    if not candidates:
+        return ""
+    # Prefer candidates after item_name
+    item_end = 0
+    if item_name and item_name in text:
+        item_end = text.index(item_name) + len(item_name)
+    after = [c for c in candidates if c[0] >= item_end]
+    return (after or candidates)[0][1]
+
+
+def _estimate_table_profile(rows: list[dict[str, Any]]) -> str:
+    if not rows:
+        return "unknown"
+    n = len(rows)
+    has_lot = any(r.get("lotNo") for r in rows)
+    has_serial = any(r.get("serialNo") for r in rows)
+    has_amount = any(r.get("amount") or r.get("supplyAmount") for r in rows)
+    has_code = any(r.get("itemCode") for r in rows)
+    if n == 1:
+        return "single_item_table"
+    if has_serial and not has_amount:
+        return "serial_quantity_table"
+    if has_lot and not has_amount:
+        return "lot_serial_quantity_table"
+    if has_code and not has_lot:
+        return "item_quantity_table" if n <= 3 else "multi_item_table"
+    return "multi_item_table"
+
+
+def _canonical_row_preview(row: dict[str, Any]) -> str:
+    parts = [
+        str(row.get("itemName") or ""),
+        str(row.get("spec") or ""),
+        str(row.get("lotNo") or row.get("serialNo") or ""),
+        str(row.get("quantity") or ""),
+        str(row.get("amount") or row.get("supplyAmount") or ""),
+    ]
+    return " ".join(p for p in parts if p)[:100]
+
+
+def _build_canonical_table_rows(table_items: list[dict[str, Any]]) -> dict[str, Any]:
+    canonical_rows: list[dict[str, Any]] = []
+    col_fill: dict[str, int] = {c: 0 for c in _TABLE_ROW_COLUMNS}
+
+    # T-6: sort items by y-coordinate before assigning rowIndex
+    def _item_y_key_inner(item: dict[str, Any]) -> float:
+        if "_row_y" in item:
+            return float(item["_row_y"])
+        bboxes = item.get("sourceBboxes") or []
+        if bboxes:
+            return min(float(b.get("y", 0)) for b in bboxes)
+        return 0.0
+
+    sorted_items = sorted(table_items, key=_item_y_key_inner)
+
+    # T-6: all canonical columns (except rowIndex) to copy from item
+    _ALL_COPY_KEYS = (
+        "itemName", "itemCode", "spec", "lotNo", "serialNo", "manufacturingNo",
+        "expiryDate", "quantity", "unit", "unitPrice",
+        "supplyAmount", "taxAmount", "amount", "totalAmount",
+        "manufacturer", "insuranceCode", "remark",
+    )
+
+    for idx, item in enumerate(sorted_items):
+        raw_text = str(item.get("rawText") or "")
+        row = _empty_table_row(idx + 1, raw_text)
+
+        # T-6: copy ALL pre-populated canonical columns from item (not just 8)
+        for key in _ALL_COPY_KEYS:
+            val = str(item.get(key) or "")
+            if val:
+                row[key] = val
+
+        # T-6: apply regex-based extraction only for columns still empty
+        if raw_text:
+            if not row.get("serialNo"):
+                serial = _tr_extract_serial(raw_text)
+                if serial:
+                    row["serialNo"] = serial
+            if not row.get("expiryDate"):
+                expiry = _tr_extract_expiry_date(raw_text)
+                if expiry:
+                    row["expiryDate"] = expiry
+            else:
+                expiry = row["expiryDate"]
+            if not row.get("lotNo"):
+                lot = _tr_extract_lot(raw_text, row["itemName"], row["spec"], expiry)
+                if lot:
+                    row["lotNo"] = lot
+            if not row.get("unit"):
+                unit = _tr_extract_unit(raw_text)
+                if unit:
+                    row["unit"] = unit
+            if not row.get("itemCode"):
+                code = _tr_extract_item_code(raw_text, row["itemName"], row["spec"])
+                if code:
+                    row["itemCode"] = code
+
+        for col in _TABLE_ROW_COLUMNS:
+            if row.get(col):
+                col_fill[col] += 1
+
+        canonical_rows.append(row)
+
+    required_filled = sum(
+        1 for r in canonical_rows if r.get("itemName") or r.get("quantity")
+    ) if canonical_rows else 0
+    if not canonical_rows:
+        extraction_status = "not_extracted"
+    elif required_filled == len(canonical_rows):
+        extraction_status = "partial"
+    elif required_filled > 0:
+        extraction_status = "partial"
+    else:
+        extraction_status = "parser_not_ready"
+
+    table_profile = _estimate_table_profile(canonical_rows)
+    actual_columns = [c for c in _TABLE_ROW_COLUMNS if col_fill.get(c, 0) > 0]
+
+    # T-6: detect source to aid debugging
+    sources = {str(item.get("source") or "legacy") for item in sorted_items}
+    debug_source = "header_column_mapping" if "header_column_mapping" in sources else "existing_table_detection"
+
+    table_meta: dict[str, Any] = {
+        "tableProfile": table_profile,
+        "gridMode": "",
+        "rowCount": len(canonical_rows),
+        "columns": actual_columns,
+        "firstRowPreview": _canonical_row_preview(canonical_rows[0]) if canonical_rows else "",
+        "endKeywordMatched": None,
+        "extractionStatus": extraction_status,
+    }
+
+    return {
+        "tableRows": canonical_rows,
+        "tableMeta": table_meta,
+        "tableRowsDebug": {
+            "enabled": True,
+            "source": debug_source,
+            "rowCandidateCount": len(table_items),
+            "generatedRowCount": len(canonical_rows),
+            "columnFillCounts": col_fill,
+            "rejectedRows": 0,
+            "notes": [],
+        },
     }
 
 
@@ -4251,6 +4904,7 @@ def extract_invoice_statement_fields(ocr_lines_raw: list[tuple], debug: dict[str
     summary_fields, summary_fields_debug = _extract_profile_summary_fields(lines, page_h, table_header_y)
     table = _detect_table(lines, page_h, table_header_y)
     full_text = "\n".join(line.text for line in lines)
+    canonical = _build_canonical_table_rows(table.get("tableRows") or table.get("items") or [])
 
     fields.update(
         {
@@ -4266,6 +4920,8 @@ def extract_invoice_statement_fields(ocr_lines_raw: list[tuple], debug: dict[str
             **amounts,
             **summary_fields,
             **table,
+            "tableRows": canonical["tableRows"],
+            "tableMeta": canonical["tableMeta"],
         }
     )
 
@@ -4296,6 +4952,7 @@ def extract_invoice_statement_fields(ocr_lines_raw: list[tuple], debug: dict[str
             "addressContinuation": party_debug.get("addressContinuation", {}),
             "supplierCompanyAnchorFallback": party_debug.get("supplierCompanyAnchorFallback", {}),
             "table": table,
+            "tableRowsDebug": canonical["tableRowsDebug"],
         }
 
     return fields

@@ -900,6 +900,31 @@ export function getCanonicalFieldsForDocType(
   );
 }
 
+// ============================================================
+// OP-2: Template 필드 매핑 컨텍스트
+// ============================================================
+
+/**
+ * Template 필드 종류별 context.
+ * - field: 정형 필드(field/multi/check region)
+ * - nonStructured: 비정형 출력 필드
+ * - tableColumn: 테이블 컬럼
+ */
+export type TemplateFieldContext = "field" | "nonStructured" | "tableColumn";
+
+/**
+ * Template UI에서 사용하는 통합 매핑 헬퍼.
+ * context="tableColumn"이면 isTableColumn=true로 resolveAliasMapping 호출.
+ */
+export function resolveTemplateFieldMapping(
+  label: string,
+  documentType: DocumentTypeKey,
+  context: TemplateFieldContext = "field",
+): FieldMappingResult {
+  const isTableCtx = context === "tableColumn";
+  return resolveAliasMapping(label, documentType, { isTableColumn: isTableCtx });
+}
+
 /**
  * 사용자 입력 라벨을 받아 documentType 컨텍스트에서 canonical 후보 목록 반환.
  * 영수증 → auto / 거래명세서 → side 토큰 없으면 ambiguous.
