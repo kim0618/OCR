@@ -45,7 +45,7 @@
         },
         "visibleAmountFields": ["previousBalance", "transactionAmount", "cumulativeBalance", "totalAmount"],
         "tableExpectedColumns": {
-          "required": ["itemCode", "itemName", "quantity", "unitPrice", "supplyAmount", "insuranceCode"],
+          "required": ["rowIndex", "itemCode", "itemName", "quantity", "consumerUnitPrice", "supplyUnitPrice", "supplyAmount", "insuranceCode"],
           "optional": ["amount", "totalAmount", "remark"]
         }
       }
@@ -63,7 +63,7 @@
         "partyProfile": "supplier_weak",
         "tableProfile": "single_item_table",
         "tableExpectedColumns": {
-          "required": ["insuranceCode", "itemName", "spec", "quantity", "unitPrice", "amount", "manufacturer", "manufacturingNo", "expiryDate"],
+          "required": ["rowIndex", "insuranceCode", "itemName", "spec", "quantity", "unitPrice", "amount", "manufacturer", "manufacturingExpiry"],
           "optional": ["lotNo", "serialNo", "remark"]
         }
       }
@@ -118,7 +118,7 @@
         "partyProfile": "buyer_only",
         "tableProfile": "lot_serial_quantity_table",
         "tableExpectedColumns": {
-          "required": ["itemCode", "itemName", "quantity", "lotNo", "expiryDate"],
+          "required": ["rowIndex", "itemCode", "itemName", "quantity", "lotNo", "expiryDate"],
           "optional": ["serialNo", "manufacturingNo", "unit", "remark"]
         }
       }
@@ -139,8 +139,8 @@
           "totalQuantity": { "label": "총수량", "appliesToAmount": false }
         },
         "tableExpectedColumns": {
-          "required": ["itemName", "serialNo", "unit", "quantity"],
-          "optional": ["lotNo", "manufacturingNo", "remark"]
+          "required": ["itemName", "serialLot", "unit", "quantity"],
+          "optional": ["manufacturingNo", "remark"]
         }
       }
     }

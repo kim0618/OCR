@@ -224,6 +224,29 @@ _HEADER_CANONICAL_MAP: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"비\s*고|적\s*요|메\s*모|참\s*고", re.I), "remark"),
 ]
 
+# T-6e: expected column aliases — reverse lookup for header band detection.
+# For each canonical key, these are the known OCR header text variants.
+_EXPECTED_COLUMN_ALIASES: dict[str, list[str]] = {
+    "rowIndex":        ["NO", "No", "순번", "번호"],
+    "itemCode":        ["품목코드", "제품코드", "상품코드", "코드"],
+    "itemName":        ["품목", "품명", "품목명", "제품명", "상품명", "명칭", "제품"],
+    "spec":            ["규격", "규 격"],
+    "lotNo":           ["LotNo", "Lot No", "LOTNO", "LOT", "로트", "로트No", "Lot"],
+    "serialNo":        ["시리얼", "Serial", "S/N", "시리얼/로트No", "Serial/Lot"],
+    "manufacturingNo": ["제조번호", "제조 No", "제조NO", "제조번호/유효기간"],
+    "expiryDate":      ["유효기간", "유효일자", "유효기한", "사용기한", "제조번호/유효기간"],
+    "quantity":        ["수량", "수 량", "Qty", "QTY"],
+    "unit":            ["단위", "Unit"],
+    "unitPrice":       ["단가", "소비자단가", "공급단가", "판매단가"],
+    "supplyAmount":    ["공급금액", "공급가액", "공급가"],
+    "taxAmount":       ["세액", "부가세", "VAT"],
+    "amount":          ["금액", "판매금액"],
+    "totalAmount":     ["합계금액", "합계", "총액"],
+    "manufacturer":    ["제조회사", "제조사", "제조원"],
+    "insuranceCode":   ["보험No", "보험NO", "보험번호", "보험코드"],
+    "remark":          ["비고", "적요", "참고"],
+}
+
 
 @dataclass
 class OcrLine:
@@ -1414,17 +1437,22 @@ def _table_items_from_header_mapping(
 
         if has_name_col:
             if not item.get("itemName"):
-                # T-6d-fix: allow rows without itemName if other data fields are present
+                # T-6d-fix / T-6g: allow rows without itemName if other data fields are present
                 has_code = bool(item.get("itemCode"))
                 has_qty = bool(item.get("quantity"))
                 has_price = bool(item.get("unitPrice") or item.get("amount") or item.get("supplyAmount"))
                 has_ins = bool(item.get("insuranceCode"))
                 has_lot = bool(item.get("lotNo") or item.get("serialNo") or item.get("manufacturingNo"))
+                has_exp = bool(item.get("expiryDate") or item.get("manufacturingNo"))
+                has_spec_val = bool(item.get("spec"))
                 row_has_data = (
                     (has_code and (has_qty or has_price))
                     or (has_qty and has_price)
                     or (has_ins and has_code)
                     or (has_lot and has_qty)
+                    or (has_lot and has_price)                    # T-6g
+                    or (has_exp and has_qty)                     # T-6g
+                    or (has_spec_val and (has_qty or has_price)) # T-6g
                 )
                 if not row_has_data:
                     if debug is not None:
@@ -1444,6 +1472,429 @@ def _table_items_from_header_mapping(
                 continue
 
         items.append(item)
+
+    return items
+
+
+# ── T-6e: expectedColumns-based header matching and extraction ────────────────
+
+
+def _score_row_for_expected_columns(
+    row: list["OcrLine"],
+    expected_keys: set[str],
+) -> tuple[int, dict[str, "OcrLine"]]:
+    """Score a row by how many expectedColumns headers are found.
+
+    Returns (score, {canonical_key: best_matching_line}).
+    +1 bonus for itemName or quantity match.
+    """
+    matched: dict[str, "OcrLine"] = {}
+
+    for line in row:
+        # Try full text first
+        key = _match_header_to_canonical(line.text)
+        if key and key in expected_keys and key not in matched:
+            matched[key] = line
+            continue
+        # Try individual space-split parts (handles composite tokens)
+        parts = re.split(r"\s+", line.text.strip())
+        if len(parts) > 1:
+            for part in parts:
+                k = _match_header_to_canonical(part)
+                if k and k in expected_keys and k not in matched:
+                    matched[k] = line
+
+    score = len(matched)
+    for k in matched:
+        if k in ("itemName", "quantity"):
+            score += 1  # bonus for essential columns
+    return score, matched
+
+
+def _find_expected_header_band(
+    rows: list[list["OcrLine"]],
+    page_h: float,
+    expected_keys: set[str],
+    table_bounds: dict[str, float] | None = None,
+) -> tuple[int, list["OcrLine"], dict[str, "OcrLine"], int] | None:
+    """Find the row with the most expectedColumns header matches.
+
+    Returns (row_idx, header_row, matched_dict, score) or None if < 2 matches.
+    Handles multi-line headers by checking adjacent row merges.
+    Excludes party/contact/address blocks from header candidates.
+    """
+    y_min = table_bounds.get("yMin", page_h * 0.05) if table_bounds else page_h * 0.05
+    y_max = table_bounds.get("yMax", page_h * 0.85) if table_bounds else page_h * 0.85
+
+    candidates: list[tuple[int, float, int, list["OcrLine"], dict[str, "OcrLine"]]] = []
+
+    for idx, row in enumerate(rows):
+        row_y = _row_center_y(row)
+        if row_y < y_min or row_y > y_max:
+            continue
+
+        text = _row_text(row)
+        # Skip party/contact/address rows
+        if _TABLE_BUSINESS_CONTACT_RE.search(text):
+            continue
+        if _BIZ_RE.search(_canonical_digits(text)):
+            continue
+
+        score, matched = _score_row_for_expected_columns(row, expected_keys)
+        if score >= 2:
+            candidates.append((idx, row_y, score, row, matched))
+
+    if not candidates:
+        return None
+
+    # Sort by score descending, then y ascending (prefer higher score, earlier row)
+    candidates.sort(key=lambda c: (-c[2], c[1]))
+    best_idx, best_y, best_score, best_row, best_matched = candidates[0]
+
+    # Try merging adjacent rows (multi-line header) to improve score
+    for i in range(len(candidates)):
+        idx_a, y_a, _sa, row_a, _ma = candidates[i]
+        for j in range(i + 1, len(candidates)):
+            idx_b, y_b, _sb, row_b, _mb = candidates[j]
+            if abs(y_b - y_a) > page_h * 0.06:
+                continue
+            merged_row = row_a + row_b
+            merged_score, merged_matched = _score_row_for_expected_columns(merged_row, expected_keys)
+            if merged_score > best_score:
+                best_score = merged_score
+                best_idx = min(idx_a, idx_b)
+                best_row = merged_row
+                best_matched = merged_matched
+
+    if best_score < 2:
+        return None
+
+    return best_idx, best_row, best_matched, best_score
+
+
+def _build_boundaries_from_expected_columns(
+    matched_dict: dict[str, "OcrLine"],
+    expected_keys_ordered: list[str],
+    page_w: float,
+    table_x_min: float = 0.0,
+    table_x_max: float | None = None,
+) -> list[dict[str, Any]]:
+    """Build column boundaries from matched expected header positions.
+
+    - Matched headers → source: "expected_header"
+    - Missing expected headers → source: "interpolated_expected"
+    - rowIndex columns are marked display_only=True and excluded from cell assignment.
+
+    Returns sorted list of boundary dicts.
+    """
+    if table_x_max is None:
+        table_x_max = page_w
+
+    if len(matched_dict) < 2:
+        return []
+
+    # Collect positions for matched expected keys
+    # (order_idx, key, x_left, cx, x_right, source)
+    all_positions: list[tuple[int, str, float, float, float, str]] = []
+
+    for key in expected_keys_ordered:
+        if key in matched_dict:
+            line = matched_dict[key]
+            i = expected_keys_ordered.index(key)
+            all_positions.append((i, key, line.x, line.cx, line.x + line.w, "expected_header"))
+
+    matched_pos = list(all_positions)  # copy of matched-only
+
+    # Interpolate missing expected keys
+    for key in expected_keys_ordered:
+        if key in matched_dict:
+            continue
+        idx = expected_keys_ordered.index(key)
+
+        prev_p = [(i, xl, cx, xr) for i, k, xl, cx, xr, _ in matched_pos if i < idx]
+        next_p = [(i, xl, cx, xr) for i, k, xl, cx, xr, _ in matched_pos if i > idx]
+
+        if not prev_p and not next_p:
+            continue
+
+        if not prev_p:
+            ni, nx_l, ncx, nx_r = min(next_p, key=lambda t: t[0])
+            span = (nx_r - table_x_min) / max(len(expected_keys_ordered), 1)
+            cx_est = max(table_x_min + span * 0.5, ncx - span * (ni - idx + 1))
+        elif not next_p:
+            pi, px_l, pcx, px_r = max(prev_p, key=lambda t: t[0])
+            span = (table_x_max - px_l) / max(len(expected_keys_ordered) - pi, 1)
+            cx_est = min(table_x_max - span * 0.5, pcx + span * (idx - pi))
+        else:
+            pi, px_l, pcx, px_r = max(prev_p, key=lambda t: t[0])
+            ni, nx_l, ncx, nx_r = min(next_p, key=lambda t: t[0])
+            gap = max(ni - pi, 1)
+            frac = (idx - pi) / gap
+            cx_est = pcx + frac * (ncx - pcx)
+
+        half = (table_x_max - table_x_min) / max(len(expected_keys_ordered), 1) * 0.4
+        all_positions.append((idx, key, cx_est - half, cx_est, cx_est + half, "interpolated_expected"))
+
+    all_positions.sort(key=lambda t: (t[0], t[3]))  # sort by order_idx then cx
+
+    if len(all_positions) < 2:
+        return []
+
+    # Build boundary edges using adjacent midpoints
+    boundaries: list[dict[str, Any]] = []
+    for i, (ord_idx, key, x_left, cx, x_right, source) in enumerate(all_positions):
+        if i == 0:
+            x_start = max(table_x_min, x_left - (x_right - x_left) * 0.5)
+        else:
+            prev_x_right = all_positions[i - 1][4]
+            gap_mid = (prev_x_right + x_left) / 2.0
+            if gap_mid <= all_positions[i - 1][3]:
+                gap_mid = (all_positions[i - 1][3] + cx) / 2.0
+            x_start = gap_mid
+
+        if i == len(all_positions) - 1:
+            x_end = table_x_max
+        else:
+            next_x_left = all_positions[i + 1][2]
+            gap_mid = (x_right + next_x_left) / 2.0
+            if gap_mid >= all_positions[i + 1][3]:
+                gap_mid = (cx + all_positions[i + 1][3]) / 2.0
+            x_end = gap_mid
+
+        boundaries.append({
+            "canonical_key": key,
+            "x_start": x_start,
+            "x_end": x_end,
+            "header_cx": cx,
+            "source": source,
+            "display_only": key == "rowIndex",
+        })
+
+    return boundaries
+
+
+def _table_items_with_expected_columns(
+    lines: list["OcrLine"],
+    page_h: float,
+    page_w: float,
+    expected_columns: dict[str, list[str]],
+    table_bounds: dict[str, float] | None = None,
+    debug: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
+    """Extract table rows using expectedColumns as header matching hint.
+
+    Flow:
+    1. Build ordered expected key list from required + optional
+    2. Find the y-band where expected headers cluster
+    3. Build column boundaries (with interpolation for missing headers)
+    4. Extract rows below the header band
+    5. Return [] on failure (caller falls back to auto-detection)
+    """
+    required = expected_columns.get("required") or []
+    optional = expected_columns.get("optional") or []
+    # Preserve order: required first, then optional, deduplicated
+    seen: set[str] = set()
+    all_keys: list[str] = []
+    for k in required + optional:
+        if k not in seen:
+            seen.add(k)
+            all_keys.append(k)
+    expected_set = set(all_keys)
+
+    if debug is not None:
+        debug["expectedColumns"] = all_keys
+        debug["extractionSource"] = "expected_columns_header_match"
+
+    if not all_keys:
+        return []
+
+    # Filter lines to table_bounds if provided
+    if table_bounds:
+        y_min_b = table_bounds.get("yMin", 0.0)
+        y_max_b = table_bounds.get("yMax", page_h)
+        x_min_b = table_bounds.get("xMin", 0.0)
+        x_max_b = table_bounds.get("xMax", page_w)
+        scope_lines = [
+            l for l in lines
+            if y_min_b <= l.cy <= y_max_b and x_min_b <= l.cx <= x_max_b
+        ]
+        tx_min = x_min_b
+        tx_max = x_max_b
+    else:
+        scope_lines = lines
+        tx_min = 0.0
+        tx_max = page_w
+
+    scope_rows = _group_rows(scope_lines)
+
+    # Find header band
+    header_result = _find_expected_header_band(scope_rows, page_h, expected_set, table_bounds)
+
+    if debug is not None:
+        debug["headerBandFound"] = header_result is not None
+
+    if header_result is None:
+        if debug is not None:
+            debug["fallbackReason"] = "expected_header_band_not_found"
+        return []
+
+    header_idx, header_row, matched_dict, header_score = header_result
+
+    if debug is not None:
+        debug["selectedHeaderBand"] = {
+            "y": round(_row_center_y(header_row), 1),
+            "score": header_score,
+            "matchedHeaders": {k: round(line.cx, 1) for k, line in matched_dict.items()},
+        }
+        debug["matchedHeaders"] = list(matched_dict.keys())
+        debug["missingExpectedHeaders"] = [k for k in required if k not in matched_dict]
+
+    # Build boundaries
+    boundaries = _build_boundaries_from_expected_columns(
+        matched_dict, all_keys, page_w, table_x_min=tx_min, table_x_max=tx_max,
+    )
+
+    if debug is not None:
+        debug["interpolatedColumns"] = [b["canonical_key"] for b in boundaries if b.get("source") == "interpolated_expected"]
+        debug["boundaries"] = [
+            {
+                "canonicalKey": b["canonical_key"],
+                "xStart": round(b["x_start"], 1),
+                "xEnd": round(b["x_end"], 1),
+                "source": b.get("source", "unknown"),
+                "displayOnly": b.get("display_only", False),
+            }
+            for b in boundaries
+        ]
+        debug["rejectedRows"] = []
+        debug["rowCandidates"] = []
+
+    if len(boundaries) < 2:
+        if debug is not None:
+            debug["fallbackReason"] = "boundary_build_failed"
+        return []
+
+    display_only_keys = {b["canonical_key"] for b in boundaries if b.get("display_only", False)}
+    has_name_col = any(b["canonical_key"] == "itemName" for b in boundaries)
+    # T-6g: data keys to count expected column hits (exclude displayOnly rowIndex)
+    data_expected_keys = [k for k in all_keys if k != "rowIndex"]
+    header_y = _row_center_y(header_row)
+    last_header_y = header_y
+
+    items: list[dict[str, Any]] = []
+
+    for idx in range(header_idx + 1, len(scope_rows)):
+        row = scope_rows[idx]
+        row_y = _row_center_y(row)
+        if row_y <= last_header_y or row_y > page_h * 0.93:
+            continue
+
+        text = _row_text(row)
+
+        if _is_summary_row_for_items(text):
+            if debug is not None:
+                debug["rejectedRows"].append({
+                    "reason": "summary_row", "text": text[:60], "y": round(row_y, 1),
+                })
+            # T-6g: only break on summary when body rows are accumulated AND well into page
+            # Using min(3, required_count) as minimum rows before break to protect long tables
+            min_before_break = min(3, len(required)) if required else 2
+            if items and len(items) >= min_before_break and row_y >= page_h * 0.65:
+                if debug is not None:
+                    debug["rowEndReason"] = f"summary_row at y={round(row_y,1)} after {len(items)} rows"
+                break
+            continue
+
+        if _is_table_header_row(text) or _is_business_contact_line(text):
+            if row_y < header_y + page_h * 0.04:
+                last_header_y = row_y
+            if debug is not None:
+                debug["rejectedRows"].append({
+                    "reason": "header_or_contact", "text": text[:60], "y": round(row_y, 1),
+                })
+            continue
+
+        col_texts: dict[str, list[str]] = {}
+        for line in sorted(row, key=lambda l: l.x):
+            cv = _clean_value(line.text)
+            if not cv:
+                continue
+            key = _assign_canonical_by_x(line.cx, boundaries)
+            if key is not None and key not in display_only_keys:
+                col_texts.setdefault(key, []).append(cv)
+
+        item: dict[str, Any] = {k: "" for k in _TABLE_ROW_COLUMNS if k != "rowIndex"}
+        item["rawText"] = _summarize_table_row(text)
+        item["sourceBboxes"] = [_bbox_dict(l) for l in row]
+        item["source"] = "expected_columns_header_match"
+        item["_row_y"] = row_y
+
+        for key, texts in col_texts.items():
+            if key in item:
+                merged = _clean_value(" ".join(t for t in texts if t))
+                _split_composite_cell_value(key, merged, item)
+
+        # T-6g: count expected column hits for smarter validity check
+        expected_col_hit_count = sum(1 for k in data_expected_keys if item.get(k))
+
+        # Row validity
+        if has_name_col:
+            if not item.get("itemName"):
+                has_code = bool(item.get("itemCode"))
+                has_qty = bool(item.get("quantity"))
+                has_price = bool(item.get("unitPrice") or item.get("amount") or item.get("supplyAmount"))
+                has_ins = bool(item.get("insuranceCode"))
+                has_lot = bool(item.get("lotNo") or item.get("serialNo") or item.get("manufacturingNo"))
+                has_exp = bool(item.get("expiryDate") or item.get("manufacturingNo"))
+                has_spec_val = bool(item.get("spec"))
+                row_has_data = (
+                    expected_col_hit_count >= 2                       # T-6g: primary: 2+ expected cols
+                    or (has_code and (has_qty or has_price))
+                    or (has_qty and has_price)
+                    or (has_ins and has_code)
+                    or (has_lot and has_qty)
+                    or (has_lot and has_price)                        # T-6g: lot + amount
+                    or (has_exp and has_qty)                          # T-6g: expiry + qty
+                    or (has_spec_val and (has_qty or has_price))      # T-6g: spec + qty/price
+                )
+                if not row_has_data:
+                    if debug is not None:
+                        debug["rejectedRows"].append({
+                            "reason": "no_item_name", "text": text[:60], "y": round(row_y, 1),
+                            "expectedColumnHitCount": expected_col_hit_count,
+                        })
+                    continue
+            elif _is_table_notice_or_party_line(item["itemName"]):
+                if debug is not None:
+                    debug["rejectedRows"].append({
+                        "reason": "notice_or_party", "text": text[:60], "y": round(row_y, 1),
+                        "expectedColumnHitCount": expected_col_hit_count,
+                    })
+                continue
+        else:
+            has_val = any(item.get(k) for k in ("itemCode", "quantity", "unitPrice", "amount", "lotNo", "serialNo"))
+            if not has_val and expected_col_hit_count < 2:
+                if debug is not None:
+                    debug["rejectedRows"].append({
+                        "reason": "no_meaningful_value", "text": text[:60], "y": round(row_y, 1),
+                        "expectedColumnHitCount": expected_col_hit_count,
+                    })
+                continue
+
+        if debug is not None:
+            debug["rowCandidates"].append({
+                "y": round(row_y, 1),
+                "itemName": item.get("itemName", "")[:30],
+                "quantity": item.get("quantity", ""),
+                "text": text[:40],
+                "expectedColumnHitCount": expected_col_hit_count,
+            })
+        items.append(item)
+
+    if debug is not None:
+        debug["finalRows"] = len(items)
+        if not items and "fallbackReason" not in debug:
+            debug["fallbackReason"] = "no_valid_rows_extracted"
 
     return items
 
@@ -4165,7 +4616,13 @@ def _extract_amount_fields(
     return {"supplyAmount": supply, "taxAmount": tax, "totalAmount": total}
 
 
-def _detect_table(lines: list[OcrLine], page_h: float, table_header_y: float | None) -> dict[str, str]:
+def _detect_table(
+    lines: list[OcrLine],
+    page_h: float,
+    table_header_y: float | None,
+    expected_columns: dict[str, list[str]] | None = None,
+    table_bounds: dict[str, float] | None = None,
+) -> dict[str, str]:
     rows = _group_rows(lines)
     header_index = -1
     for idx, row in enumerate(rows):
@@ -4331,13 +4788,27 @@ def _detect_table(lines: list[OcrLine], page_h: float, table_header_y: float | N
     else:
         table_items = legacy_items
 
-    # T-6: try header-based column mapping — prefer if it finds at least as many rows
     page_w = max((line.x + line.w for line in lines), default=1000.0) if lines else 1000.0
-    header_debug: dict[str, Any] = {}
-    header_items = _table_items_from_header_mapping(lines, page_h, page_w, debug=header_debug)
-    header_used = bool(header_items and (not table_items or len(header_items) >= len(table_items)))
-    if header_used:
-        table_items = header_items
+
+    # T-6e: expectedColumns-based header matching (preferred path when available)
+    expected_debug: dict[str, Any] = {}
+    expected_items: list[dict[str, Any]] = []
+    if expected_columns:
+        expected_items = _table_items_with_expected_columns(
+            lines, page_h, page_w, expected_columns, table_bounds, debug=expected_debug
+        )
+
+    if expected_items:
+        table_items = expected_items
+        header_debug: dict[str, Any] = expected_debug
+        header_used = True
+    else:
+        # T-6: try header-based column mapping (auto-detection fallback)
+        header_debug = {}
+        header_items = _table_items_from_header_mapping(lines, page_h, page_w, debug=header_debug)
+        header_used = bool(header_items and (not table_items or len(header_items) >= len(table_items)))
+        if header_used:
+            table_items = header_items
 
     # T-6: sort table_items by y-coordinate so rowIndex follows visual order
     def _item_y_key(item: dict[str, Any]) -> float:
@@ -4353,14 +4824,27 @@ def _detect_table(lines: list[OcrLine], page_h: float, table_header_y: float | N
     data_rows = [str(item.get("rawText") or "") for item in table_items]
     table_detected = table_detected or bool(table_items)
 
-    # T-6d: tableDebug — 진단 정보
+    # Determine extraction source for debug
+    first_source = str((table_items[0].get("source") or "") if table_items else "")
+    if first_source == "expected_columns_header_match":
+        extraction_source = "expected_columns_header_match"
+    elif first_source == "header_column_mapping":
+        extraction_source = "header_column_mapping"
+    elif table_items is structured_items:
+        extraction_source = "structured_items"
+    else:
+        extraction_source = "legacy_text_items"
+
+    # T-6d/T-6e: tableDebug — 진단 정보
     table_debug: dict[str, Any] = {
         "headerUsed": header_used,
-        "headerRowFound": header_debug.get("headerFound", False),
-        "headerY": header_debug.get("headerY"),
-        "headerScore": header_debug.get("headerScore", 0),
-        "headerLines": header_debug.get("headerLines", []),
-        "boundaryCount": header_debug.get("boundaryCount", 0),
+        "headerRowFound": header_debug.get("headerFound", header_debug.get("headerBandFound", False)),
+        "headerY": header_debug.get("headerY") or (
+            header_debug.get("selectedHeaderBand", {}).get("y") if isinstance(header_debug.get("selectedHeaderBand"), dict) else None
+        ),
+        "headerScore": header_debug.get("headerScore", header_debug.get("selectedHeaderBand", {}).get("score", 0) if isinstance(header_debug.get("selectedHeaderBand"), dict) else 0),
+        "headerLines": header_debug.get("headerLines", list(header_debug.get("matchedHeaders", []))),
+        "boundaryCount": header_debug.get("boundaryCount", len(header_debug.get("boundaries", []))),
         "boundaries": header_debug.get("boundaries", []),
         "rowCandidateCount": len(table_items),
         "rejectedRows": header_debug.get("rejectedRows", []),
@@ -4370,11 +4854,18 @@ def _detect_table(lines: list[OcrLine], page_h: float, table_header_y: float | N
             "yHeader": header_debug.get("headerY"),
             "yBottom": page_h * 0.93,
         },
-        "fallbackSource": (
-            "header_column_mapping" if header_used else
-            "structured_items" if table_items is structured_items else
-            "legacy_text_items"
-        ),
+        "fallbackSource": extraction_source,
+        # T-6e additions
+        "extractionSource": extraction_source,
+        "expectedColumnsUsed": bool(expected_items),
+        "tableBoundsUsed": bool(table_bounds),
+        "expectedColumns": header_debug.get("expectedColumns", []),
+        "matchedHeaders": header_debug.get("matchedHeaders", []),
+        "missingExpectedHeaders": header_debug.get("missingExpectedHeaders", []),
+        "interpolatedColumns": header_debug.get("interpolatedColumns", []),
+        "selectedHeaderBand": header_debug.get("selectedHeaderBand"),
+        "rowEndReason": header_debug.get("rowEndReason"),
+        "fallbackReason": header_debug.get("fallbackReason"),
     }
 
     return {
@@ -4504,7 +4995,11 @@ def _canonical_row_preview(row: dict[str, Any]) -> str:
     return " ".join(p for p in parts if p)[:100]
 
 
-def _build_canonical_table_rows(table_items: list[dict[str, Any]]) -> dict[str, Any]:
+def _build_canonical_table_rows(
+    table_items: list[dict[str, Any]],
+    expected_columns: dict[str, list[str]] | None = None,
+    matched_column_keys: list[str] | None = None,
+) -> dict[str, Any]:
     canonical_rows: list[dict[str, Any]] = []
     col_fill: dict[str, int] = {c: 0 for c in _TABLE_ROW_COLUMNS}
 
@@ -4583,6 +5078,29 @@ def _build_canonical_table_rows(table_items: list[dict[str, Any]]) -> dict[str, 
     table_profile = _estimate_table_profile(canonical_rows)
     actual_columns = [c for c in _TABLE_ROW_COLUMNS if col_fill.get(c, 0) > 0]
 
+    # T-6e-fix: expected schema processing
+    _valid_col_set = set(_TABLE_ROW_COLUMNS)
+    expected_required: list[str] = []
+    expected_all_keys: list[str] = []
+    if expected_columns:
+        req = expected_columns.get("required") or []
+        opt = expected_columns.get("optional") or []
+        _seen_exp: set[str] = set()
+        for k in req + opt:
+            if k not in _seen_exp and k in _valid_col_set:
+                _seen_exp.add(k)
+                expected_all_keys.append(k)
+        expected_required = [k for k in req if k in _valid_col_set]
+        # Ensure all expected keys exist in every canonical row (empty string if no value)
+        for row in canonical_rows:
+            for key in expected_all_keys:
+                if key not in row or row[key] is None:
+                    row[key] = ""
+
+    matched_keys_clean = [k for k in (matched_column_keys or []) if k in _valid_col_set]
+    value_column_keys = actual_columns  # columns with at least one filled value
+    missing_expected_required = [k for k in expected_required if k not in value_column_keys]
+
     # T-6: detect source to aid debugging
     sources = {str(item.get("source") or "legacy") for item in sorted_items}
     debug_source = "header_column_mapping" if "header_column_mapping" in sources else "existing_table_detection"
@@ -4597,6 +5115,13 @@ def _build_canonical_table_rows(table_items: list[dict[str, Any]]) -> dict[str, 
         "extractionStatus": extraction_status,
     }
 
+    # T-6e-fix: add expected schema fields to tableMeta when available
+    if expected_all_keys:
+        table_meta["expectedColumnKeys"] = expected_all_keys
+        table_meta["matchedColumnKeys"] = matched_keys_clean
+        table_meta["valueColumnKeys"] = value_column_keys
+        table_meta["missingExpectedColumnKeys"] = missing_expected_required
+
     return {
         "tableRows": canonical_rows,
         "tableMeta": table_meta,
@@ -4608,6 +5133,14 @@ def _build_canonical_table_rows(table_items: list[dict[str, Any]]) -> dict[str, 
             "columnFillCounts": col_fill,
             "rejectedRows": 0,
             "notes": [],
+            # T-6e-fix
+            "expectedColumnsApplied": bool(expected_all_keys),
+            "expectedColumnKeys": expected_all_keys,
+            "matchedColumnKeys": matched_keys_clean,
+            "valueColumnKeys": value_column_keys,
+            "missingExpectedColumnKeys": missing_expected_required,
+            "displaySchemaColumnKeys": expected_all_keys or actual_columns,
+            "columnSchemaSource": "expected_columns" if expected_all_keys else "actual_detected",
         },
     }
 
@@ -4863,7 +5396,12 @@ def _normalize_invoice_party_fields(fields: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def extract_invoice_statement_fields(ocr_lines_raw: list[tuple], debug: dict[str, Any] | None = None) -> dict[str, str]:
+def extract_invoice_statement_fields(
+    ocr_lines_raw: list[tuple],
+    debug: dict[str, Any] | None = None,
+    table_expected_columns: dict[str, list[str]] | None = None,
+    table_bounds: dict[str, float] | None = None,
+) -> dict[str, str]:
     lines = [line for raw in ocr_lines_raw if (line := _line_from_raw(raw))]
     fields = {
         "supplierCompany": "",
@@ -4902,9 +5440,24 @@ def extract_invoice_statement_fields(ocr_lines_raw: list[tuple], debug: dict[str
     amount_debug: dict[str, Any] = {}
     amounts = _extract_amount_fields(lines, page_h, table_header_y, debug=amount_debug)
     summary_fields, summary_fields_debug = _extract_profile_summary_fields(lines, page_h, table_header_y)
-    table = _detect_table(lines, page_h, table_header_y)
+    table = _detect_table(
+        lines, page_h, table_header_y,
+        expected_columns=table_expected_columns,
+        table_bounds=table_bounds,
+    )
     full_text = "\n".join(line.text for line in lines)
-    canonical = _build_canonical_table_rows(table.get("tableRows") or table.get("items") or [])
+    tdbg = table.get("tableDebug") or {}
+    _matched_keys = tdbg.get("matchedHeaders", [])
+    canonical = _build_canonical_table_rows(
+        table.get("tableRows") or table.get("items") or [],
+        expected_columns=table_expected_columns,
+        matched_column_keys=_matched_keys,
+    )
+
+    # T-6e: propagate extraction metadata into tableMeta
+    canonical["tableMeta"]["extractionSource"] = tdbg.get("extractionSource", "")
+    canonical["tableMeta"]["expectedColumnsUsed"] = tdbg.get("expectedColumnsUsed", False)
+    canonical["tableMeta"]["tableBoundsUsed"] = tdbg.get("tableBoundsUsed", False)
 
     fields.update(
         {

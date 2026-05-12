@@ -272,6 +272,13 @@ type CanonicalTableMeta = {
   columns?: string[];
   firstRowPreview?: string;
   extractionStatus?: string;
+  // T-6e-fix: expected schema fields
+  expectedColumnsUsed?: boolean;
+  extractionSource?: string;
+  expectedColumnKeys?: string[];
+  matchedColumnKeys?: string[];
+  valueColumnKeys?: string[];
+  missingExpectedColumnKeys?: string[];
 };
 
 function getInvoiceTableRows(documentFields: Record<string, string> | null): CanonicalTableRow[] {
@@ -694,7 +701,11 @@ async function readJsonResponse<T>(res: Response, label: string): Promise<T> {
   }
 }
 
-async function fetchOcr(filename: string, imageBaseUrl: string): Promise<OcrEntry> {
+async function fetchOcr(
+  filename: string,
+  imageBaseUrl: string,
+  tableExpectedColumns?: { required: string[]; optional?: string[] } | null,
+): Promise<OcrEntry> {
   const originalUrl = imageUrl(imageBaseUrl, filename);
   const imageRes = await fetch(originalUrl);
   if (!imageRes.ok) {
@@ -703,6 +714,10 @@ async function fetchOcr(filename: string, imageBaseUrl: string): Promise<OcrEntr
   const blob = await imageRes.blob();
   const form = new FormData();
   form.append("file", new File([blob], filename, { type: blob.type || "image/jpeg" }));
+  // T-6f: pass tableExpectedColumns from manifest invoiceProfile to backend extractor
+  if (tableExpectedColumns) {
+    form.append("tableExpectedColumns", JSON.stringify(tableExpectedColumns));
+  }
   const backendBase = process.env.NEXT_PUBLIC_BACKEND_URL;
   const ocrEndpoint = backendBase ? `${backendBase}/ocr/extract` : "/api/ocr-extract";
   const ocrRes = await fetch(ocrEndpoint, { method: "POST", body: form });
@@ -1111,7 +1126,10 @@ export default function TestWorkspace() {
     setCurrentRunningFile(filename);
     setUiError(null);
     try {
-      const entry = await fetchOcr(filename, activeTestset.path);
+      // T-6f: pass tableExpectedColumns from manifest invoiceProfile
+      const _runOneMeta = manifest?.items.find((item) => item.filename === filename);
+      const _runOneTec = _runOneMeta?.invoiceProfile?.tableExpectedColumns ?? null;
+      const entry = await fetchOcr(filename, activeTestset.path, _runOneTec);
       setOcr((prev) => ({ ...prev, [filename]: entry }));
 
       const currentGt    = gtRef.current;
@@ -1173,7 +1191,10 @@ export default function TestWorkspace() {
       setCurrentRunningFile(name);
       setSelected(name);
       try {
-        const entry = await fetchOcr(name, activeTestset.path);
+        // T-6f: pass tableExpectedColumns from manifest invoiceProfile
+        const _runAllMeta = manifest?.items.find((item) => item.filename === name);
+        const _runAllTec = _runAllMeta?.invoiceProfile?.tableExpectedColumns ?? null;
+        const entry = await fetchOcr(name, activeTestset.path, _runAllTec);
         setOcr((prev) => ({ ...prev, [name]: entry }));
 
         const suggestions = sortSuggestions(
@@ -4071,16 +4092,82 @@ const ALL_CANONICAL_COLS: readonly TableColumnKey[] = [
 ];
 const ALL_COL_KEY_SET = new Set<string>(ALL_CANONICAL_COLS);
 
-// T-6a: 표시 모드
-type TableDisplayMode = "detected" | "all" | "hasValue";
+// T-6a: 표시 모드 (T-6e-fix: "expected" 추가)
+type TableDisplayMode = "detected" | "all" | "hasValue" | "expected";
 
-// T-6a: 문서별 실제 감지 컬럼을 동적으로 계산
+// T-6e-fix2/static/T-6e-fix3: manifest tableExpectedColumns.required → ordered display column keys.
+// expected 모드는 required 컬럼만 표시한다.
+// optional은 detected/hasValue 모드에서 값이 있을 때 표시된다.
+// T-6e-fix3: 커스텀 display-only key(consumerUnitPrice, supplyUnitPrice, manufacturingExpiry, serialLot)도 허용.
+function getManifestExpectedColKeys(
+  tableExpectedColumns: InvoiceProfile["tableExpectedColumns"] | undefined
+): string[] {
+  if (!tableExpectedColumns) return [];
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const k of (tableExpectedColumns.required ?? [])) {
+    if (!k || seen.has(k)) continue;
+    seen.add(k);
+    result.push(k);
+  }
+  return result;
+}
+
+// T-6e-fix3: 커스텀 display key 라벨 (canonical TABLE_COLUMN_META에 없는 key)
+const CUSTOM_COL_LABELS: Record<string, string> = {
+  consumerUnitPrice:  "소비자단가",
+  supplyUnitPrice:    "공급단가",
+  manufacturingExpiry: "제조번호/유효기간",
+  serialLot:          "시리얼/로트No.",
+};
+
+// T-6e-fix3: 커스텀/composite key에 대한 셀 값 해석
+function resolveDisplayColValue(row: CanonicalTableRow, col: string): string {
+  switch (col) {
+    case "manufacturingExpiry": {
+      const mfg = row.manufacturingNo ?? "";
+      const exp = row.expiryDate ?? "";
+      if (mfg && exp) return `${mfg} / ${exp}`;
+      return mfg || exp || "";
+    }
+    case "serialLot":
+      return row.serialNo || row.lotNo || "";
+    case "consumerUnitPrice":
+    case "supplyUnitPrice":
+      return row.unitPrice ?? "";
+    default:
+      return String((row as Record<string, unknown>)[col] ?? "");
+  }
+}
+
+// T-6a/T-6e-fix/T-6e-fix2/T-6e-fix3: 문서별 실제 감지 컬럼을 동적으로 계산
+// T-6e-fix3: manifestExpectedColKeys와 반환값이 string[]로 확장 (커스텀 display key 허용)
 function getDisplayTableColumns(
   tableMeta: CanonicalTableMeta | null,
   tableRows: CanonicalTableRow[],
   mode: TableDisplayMode,
-): TableColumnKey[] {
+  manifestExpectedColKeys?: string[],  // T-6e-fix3: string[] (custom keys 포함)
+): string[] {
   if (mode === "all") return [...ALL_CANONICAL_COLS];
+
+  // T-6e-fix2: expected mode — manifest tableExpectedColumns를 최우선으로 사용
+  if (mode === "expected") {
+    // 1순위: manifest expected columns (custom key 포함 허용)
+    if (manifestExpectedColKeys && manifestExpectedColKeys.length > 0) {
+      return manifestExpectedColKeys;
+    }
+    // 2순위: backend tableMeta.expectedColumnKeys (T-6e에서 추가된 필드)
+    const expKeys = tableMeta?.expectedColumnKeys ?? [];
+    if (expKeys.length > 0) {
+      const validKeys = expKeys
+        .filter((k) => ALL_COL_KEY_SET.has(k))
+        .map((k) => k as TableColumnKey);
+      return validKeys.includes("rowIndex" as TableColumnKey)
+        ? validKeys
+        : (["rowIndex" as TableColumnKey, ...validKeys]);
+    }
+    // fallthrough to detected
+  }
 
   if (mode === "hasValue") {
     const withValue = ALL_CANONICAL_COLS.filter((col) =>
@@ -4097,7 +4184,6 @@ function getDisplayTableColumns(
     const metaCols = tableMeta.columns
       .filter((c) => ALL_COL_KEY_SET.has(c))
       .map((c) => c as TableColumnKey);
-    // rowIndex를 항상 첫 번째로
     const result: TableColumnKey[] = metaCols.includes("rowIndex")
       ? metaCols
       : (["rowIndex" as TableColumnKey, ...metaCols]);
@@ -4118,14 +4204,35 @@ function InvoiceTableRowsPanel({
   tableRows,
   tableMeta,
   documentFields,
+  invoiceProfile,
 }: {
   tableRows: CanonicalTableRow[];
   tableMeta: CanonicalTableMeta | null;
   documentFields: Record<string, string> | null;
+  invoiceProfile?: InvoiceProfile;
 }) {
   const [showRaw, setShowRaw] = React.useState(false);
   const [showMeta, setShowMeta] = React.useState(false);
   const [displayMode, setDisplayMode] = React.useState<TableDisplayMode>("detected");
+
+  // T-6e-fix2: manifest expected cols — ground truth for "expected" display mode
+  const manifestExpectedColKeys = React.useMemo(
+    () => getManifestExpectedColKeys(invoiceProfile?.tableExpectedColumns),
+    [invoiceProfile?.tableExpectedColumns]
+  );
+  const hasManifestExpected = manifestExpectedColKeys.length > 0;
+
+  // T-6e-fix2: auto-switch to "expected" mode when manifest expected cols OR tableMeta keys arrive
+  const prevExpKeyRef = React.useRef<string>("");
+  React.useEffect(() => {
+    const newKey = hasManifestExpected
+      ? manifestExpectedColKeys.join(",")
+      : (tableMeta?.expectedColumnKeys ?? []).join(",");
+    if (newKey && newKey !== prevExpKeyRef.current) {
+      setDisplayMode("expected");
+      prevExpKeyRef.current = newKey;
+    }
+  }, [hasManifestExpected, manifestExpectedColKeys, tableMeta?.expectedColumnKeys]);
 
   const tableDetected = documentFields?.tableDetected === "Y";
   const rowCount = tableMeta?.rowCount ?? (tableRows.length > 0 ? tableRows.length : Number(documentFields?.rowCount ?? 0) || 0);
@@ -4133,11 +4240,35 @@ function InvoiceTableRowsPanel({
   const metaStatus = tableMeta?.extractionStatus ?? "";
   const extractionStatus: string = metaStatus || (tableRows.length > 0 ? "partial" : tableDetected ? "parser_not_ready" : "not_extracted");
 
-  const colLabelMap = Object.fromEntries(TABLE_COLUMN_META.map((m) => [m.key, m.labelKo]));
+  // T-6e-fix3: canonical + custom labels merged
+  const colLabelMap: Record<string, string> = {
+    ...Object.fromEntries(TABLE_COLUMN_META.map((m) => [m.key, m.labelKo])),
+    ...CUSTOM_COL_LABELS,
+  };
 
-  // T-6a: 동적 컬럼 결정
-  const displayCols = getDisplayTableColumns(tableMeta, tableRows, displayMode);
+  // T-6e-fix2: 동적 컬럼 결정 — manifest expected cols 전달 (string[])
+  const displayCols = getDisplayTableColumns(tableMeta, tableRows, displayMode, manifestExpectedColKeys);
   const detectedCount = tableMeta?.columns?.length ?? 0;
+
+  // T-6e-fix2: expected 정보는 manifest 기준으로 계산
+  const manifestRequiredKeys = invoiceProfile?.tableExpectedColumns?.required ?? [];
+  const valueColSet = new Set(
+    tableRows.length > 0
+      ? ALL_CANONICAL_COLS.filter((col) => tableRows.some((row) => {
+          const v = row[col as keyof CanonicalTableRow];
+          return v != null && v !== "" && v !== 0;
+        }))
+      : []
+  );
+  // T-6e-fix3: composite/custom key의 missing 판정
+  const manifestMissingRequired = manifestRequiredKeys.filter((k) => {
+    if (ALL_COL_KEY_SET.has(k)) return !valueColSet.has(k as TableColumnKey);
+    if (k === "manufacturingExpiry") return !valueColSet.has("manufacturingNo") && !valueColSet.has("expiryDate");
+    if (k === "serialLot") return !valueColSet.has("serialNo") && !valueColSet.has("lotNo");
+    if (k === "consumerUnitPrice" || k === "supplyUnitPrice") return !valueColSet.has("unitPrice");
+    return false; // 알 수 없는 커스텀 key는 missing으로 표시하지 않음
+  });
+  const expectedDisplayCount = manifestExpectedColKeys.length || (tableMeta?.expectedColumnKeys?.length ?? 0);
 
   const statusBg = TABLE_ROWS_EXTRACTION_BG[extractionStatus] ?? "#374151";
   const statusLabel = TABLE_ROWS_EXTRACTION_LABEL[extractionStatus] ?? extractionStatus;
@@ -4181,6 +4312,17 @@ function InvoiceTableRowsPanel({
         {detectedCount > 0 && (
           <span style={{ fontSize: 9, color: "var(--muted)" }}>감지 컬럼 {detectedCount}개</span>
         )}
+        {/* T-6e-fix2: expected schema 요약 — manifest 기준 */}
+        {expectedDisplayCount > 0 && (
+          <span style={{ fontSize: 9, color: "var(--muted)" }}>
+            expected {expectedDisplayCount}개
+            {manifestMissingRequired.length > 0 && (
+              <span style={{ color: "#f87171", marginLeft: 3 }}>
+                missing: {manifestMissingRequired.join(", ")}
+              </span>
+            )}
+          </span>
+        )}
       </div>
 
       {/* 첫 행 미리보기 */}
@@ -4195,6 +4337,9 @@ function InvoiceTableRowsPanel({
           {/* T-6a: 표시 모드 선택 */}
           <div style={{ display: "flex", gap: 4, marginBottom: 6, alignItems: "center", flexWrap: "wrap" }}>
             <span style={{ fontSize: 9, color: "var(--muted)", marginRight: 2 }}>표시:</span>
+            {/* T-6e-fix2: expected 컬럼 모드 — manifest 또는 tableMeta expected 있을 때 표시 */}
+            {(hasManifestExpected || (tableMeta?.expectedColumnKeys && tableMeta.expectedColumnKeys.length > 0)) &&
+              modeBtn("expected", "expected 컬럼")}
             {modeBtn("detected", "실제 감지 컬럼")}
             {modeBtn("hasValue", "값 있는 컬럼")}
             {modeBtn("all", "전체 canonical 18개")}
@@ -4227,8 +4372,8 @@ function InvoiceTableRowsPanel({
                 {tableRows.map((row, rowIdx) => (
                   <tr key={rowIdx} style={{ background: rowIdx % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent" }}>
                     {displayCols.map((col) => {
-                      const val = row[col as keyof CanonicalTableRow];
-                      const text = val != null && val !== "" ? String(val) : "";
+                      // T-6e-fix3: composite/custom key 처리 포함
+                      const text = resolveDisplayColValue(row, col);
                       return (
                         <td key={col} style={{
                           padding: "3px 7px", border: "1px solid rgba(255,255,255,0.06)",
@@ -4379,6 +4524,7 @@ function DocumentDetailPanel({
           tableRows={getInvoiceTableRows(documentFields)}
           tableMeta={getInvoiceTableMeta(documentFields)}
           documentFields={documentFields}
+          invoiceProfile={invoiceProfile}
         />
       )}
 

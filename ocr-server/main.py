@@ -1597,6 +1597,8 @@ async def ocr_extract(
     regions: str = Form(""),
     corners: str = Form(""),
     model_id: str = Form(""),
+    tableExpectedColumns: str = Form(""),  # T-6f: from manifest invoiceProfile
+    tableBounds: str = Form(""),           # T-6f: future Template bounds (unused now)
 ):
     import time
     start = time.time()
@@ -2043,15 +2045,37 @@ async def ocr_extract(
 
     if doc_type == "invoice_statement":
         try:
+            # T-6f: parse tableExpectedColumns from request payload
+            _tec = None
+            if tableExpectedColumns:
+                try:
+                    _tec = json.loads(tableExpectedColumns)
+                except (json.JSONDecodeError, ValueError):
+                    _tec = None
+            _tbn = None
+            if tableBounds:
+                try:
+                    _tbn = json.loads(tableBounds)
+                except (json.JSONDecodeError, ValueError):
+                    _tbn = None
+
             invoice_debug: dict = {}
-            document_fields = extract_invoice_statement_fields(ocr_lines_raw, debug=invoice_debug)
+            document_fields = extract_invoice_statement_fields(
+                ocr_lines_raw,
+                debug=invoice_debug,
+                table_expected_columns=_tec,
+                table_bounds=_tbn,
+            )
             response["document_fields"] = document_fields
             extract_debug["invoice_statement"] = invoice_debug.get("invoice_statement", invoice_debug)
+            _tec_used = (document_fields.get("tableMeta") or {}).get("expectedColumnsUsed", False)
+            _src = (document_fields.get("tableMeta") or {}).get("extractionSource", "")
             print(
                 f"[invoice_statement] supplier={document_fields.get('supplierCompany')} "
                 f"buyer={document_fields.get('buyerCompany')} date={document_fields.get('issueDate')} "
                 f"total={document_fields.get('totalAmount')} table={document_fields.get('tableDetected')} "
-                f"rows={document_fields.get('rowCount')}"
+                f"rows={document_fields.get('rowCount')} tec={'yes' if _tec else 'no'} "
+                f"tec_used={_tec_used} src={_src}"
             )
         except Exception as _ie:
             print(f"[invoice_statement] extractor error (response unaffected): {_ie}")

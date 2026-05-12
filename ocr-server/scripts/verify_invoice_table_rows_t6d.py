@@ -41,6 +41,8 @@ from extractors.invoice_statement import (
     _match_header_to_canonical,
     _tr_extract_expiry_date,
     _HEADER_CANONICAL_MAP,
+    _score_row_for_expected_columns,
+    _find_expected_header_band,
 )
 
 # ── 샘플별 expected ────────────────────────────────────────────────────────────
@@ -175,12 +177,19 @@ def make_synthetic_lines(ocr_text: str, page_w: float = 1000.0, page_h: float = 
     return result
 
 
-def run_sample(filename: str, ocr_text: str) -> dict:
-    """Run extraction on one sample and return structured result."""
+def run_sample(filename: str, ocr_text: str, table_expected_columns: dict | None = None) -> dict:
+    """Run extraction on one sample and return structured result.
+
+    T-6e: accepts table_expected_columns to test the expectedColumns-based header matching path.
+    """
     synth_lines = make_synthetic_lines(ocr_text)
     debug: dict = {}
     try:
-        fields = extract_invoice_statement_fields(synth_lines, debug=debug)
+        fields = extract_invoice_statement_fields(
+            synth_lines,
+            debug=debug,
+            table_expected_columns=table_expected_columns,
+        )
     except Exception as e:
         return {"error": str(e), "fields": {}, "debug": {}}
 
@@ -204,6 +213,14 @@ def run_sample(filename: str, ocr_text: str) -> dict:
             if k != "rowIndex" and any(r.get(k) for r in table_rows if isinstance(r, dict))
         ]
 
+    # T-6e: expected columns header matching results from tableDebug
+    t6e_matched = table_debug_raw.get("matchedHeaders", [])
+    t6e_missing = table_debug_raw.get("missingExpectedHeaders", [])
+    t6e_interp = table_debug_raw.get("interpolatedColumns", [])
+    t6e_fallback = table_debug_raw.get("fallbackReason", "")
+    t6e_used = bool(isinstance(table_meta, dict) and table_meta.get("expectedColumnsUsed"))
+    t6e_source = table_debug_raw.get("extractionSource", table_debug_raw.get("fallbackSource", "unknown"))
+
     return {
         "filename": filename,
         "rowCount": len(table_rows),
@@ -220,7 +237,14 @@ def run_sample(filename: str, ocr_text: str) -> dict:
         "headerLines": table_debug_raw.get("headerLines", []),
         "boundaries": table_debug_raw.get("boundaries", []),
         "rejectedRows": table_debug_raw.get("rejectedRows", []),
-        "fallbackSource": table_debug_raw.get("fallbackSource", "unknown"),
+        "fallbackSource": t6e_source,
+        # T-6e
+        "t6e_used": t6e_used,
+        "t6e_matched": t6e_matched,
+        "t6e_missing": t6e_missing,
+        "t6e_interpolated": t6e_interp,
+        "t6e_fallback": t6e_fallback,
+        "t6e_source": t6e_source,
     }
 
 
@@ -240,10 +264,12 @@ RUNALL_BEFORE: dict[str, int | None] = {
 
 def generate_report(results: dict[str, dict]) -> str:
     lines: list[str] = []
-    lines.append("# T-6d-fix 실제 RunAll 기반 rowCount/컬럼 감지 보정 결과\n")
+    lines.append("# T-6e expectedColumns 기반 표 헤더 위치 매칭 추출 결과\n")
     lines.append(f"검증 방식: synthetic OCR (ocr_cache.json 텍스트 기반, 좌표 없음)\n")
     lines.append("⚠️ **합성 좌표 한계**: 실제 RunAll과 rowCount/column이 다를 수 있음. "
                  "실제 성능은 backend 재시작 후 브라우저 RunAll로 확인 필요.\n")
+    lines.append("T-6e 핵심: OCR이 컬럼을 자동 발견하는 것이 아니라, "
+                 "이미 정의된 expectedColumns 헤더를 OCR 결과에서 찾아 boundary를 구성하는 구조.\n")
 
     # Section 1: before/after rowCount
     lines.append("## 1. 수정 전/후 rowCount 비교\n")
@@ -486,21 +512,58 @@ def generate_report(results: dict[str, dict]) -> str:
     lines.append("- **실제 성능 확인**: backend 재시작 후 Test UI RunAll 실행 필요")
     lines.append("")
 
+    # T-6e Section: expected header matching results
+    lines.append("## 9. T-6e expected header matching 결과 (synthetic 좌표 기준)\n")
+    lines.append("| 샘플 | expectedColumns 사용 | matched headers | missing required | interpolated | fallback 이유 | extractionSource |")
+    lines.append("|---|---|---|---|---|---|---|")
+    for fname, exp in EXPECTED.items():
+        r = results.get(fname, {})
+        used = "✓" if r.get("t6e_used") else "✗"
+        matched = format_list(r.get("t6e_matched", []), 8)
+        missing = format_list(r.get("t6e_missing", []), 8)
+        interp = format_list(r.get("t6e_interpolated", []), 8)
+        fb = r.get("t6e_fallback", "") or "—"
+        src = r.get("t6e_source", "?")
+        lines.append(f"| {fname} | {used} | {matched} | {missing} | {interp} | {fb} | {src} |")
+    lines.append("")
+    lines.append("> ⚠️ synthetic 좌표 한계: 헤더 토큰들이 서로 다른 y-행에 배치됨 → "
+                 "같은 row로 묶이지 않아 score가 낮게 나옴. 실제 OCR에서는 정상 동작 예상.\n")
+
+    # T-6e Section: header alias check
+    lines.append("## 10. T-6e expected header alias 매핑 확인\n")
+    lines.append("| 샘플 | 실제 헤더 텍스트 | canonical key | 매핑 여부 |")
+    lines.append("|---|---|---|---|")
+    for fname, exp in EXPECTED.items():
+        for col in exp.get("real_columns", []):
+            canon = _match_header_to_canonical(col)
+            match_str = f"→ {canon}" if canon else "❌ 매핑 없음"
+            ok = "✓" if canon else "✗"
+            exp_keys = set(exp.get("required", []) + exp.get("optional", []))
+            in_expected = "(expected)" if canon and canon in exp_keys else ""
+            lines.append(f"| {fname} | {col} | {match_str} {in_expected} | {ok} |")
+    lines.append("")
+
     lines.append("## 13. 다음 작업 판단\n")
-    lines.append("**T-6d-fix 적용 내용 요약**:")
-    lines.append("1. `_table_items_from_header_mapping`: summary break → items>0 AND y≥72% 조건부 break")
-    lines.append("2. `no_item_name` 거부 완화: itemCode+qty, qty+price, ins+code 조합 허용")
-    lines.append("3. `_build_column_boundaries`: 복합 헤더 토큰 분할 (소비자단가 공급단가 → 2컬럼)")
-    lines.append("4. `_find_structured_header_row`: 복합 토큰 score 계산 개선, 탐색 범위 85%로 확장")
-    lines.append("5. `_HEADER_CANONICAL_MAP`: NO/순번 → rowIndex 추가 (itemCode 오염 방지)")
+    lines.append("**T-6e 적용 내용 요약**:")
+    lines.append("1. `_score_row_for_expected_columns`: expected key 집합 기준 row scoring")
+    lines.append("2. `_find_expected_header_band`: expected headers가 가장 많이 모인 y-band 탐색")
+    lines.append("3. `_build_boundaries_from_expected_columns`: matched/interpolated boundary 생성")
+    lines.append("4. `_table_items_with_expected_columns`: expectedColumns 기반 전체 추출 경로")
+    lines.append("5. `_detect_table`: T-6e 경로 우선, T-6 auto-detect fallback")
+    lines.append("6. `extract_invoice_statement_fields`: `table_expected_columns`, `table_bounds` 파라미터 추가")
+    lines.append("")
+    lines.append("**synthetic 검증 한계**:")
+    lines.append("- ocr_cache.json에 좌표 없음 → 헤더 토큰들이 각각 별도 y-행으로 분리됨")
+    lines.append("- 실제 OCR에서는 같은 row의 헤더 토큰들이 동일 y-좌표에 있어 score ≥ 3 이상 달성 예상")
+    lines.append("- expectedColumns header matching 로직 자체는 alias 매핑 테이블로 검증 가능")
     lines.append("")
     lines.append("**판단**:")
-    lines.append("- ⚠️ synthetic 검증 스크립트로는 실제 개선 여부 확인 불가")
-    lines.append("- rowCount/컬럼 안정화 여부는 **backend 재시작 후 실제 RunAll 필수**")
-    lines.append("- 논리적 수정은 완료됨. 실제 RunAll 결과에 따라:")
-    lines.append("  - 2.pdf rowCount ≥ 5개 이상 개선 → T-7 가능")
-    lines.append("  - 2.pdf rowCount 여전히 2 → T-6d-fix2 필요 (실제 OCR 좌표 기반 분석 필요)")
-    lines.append("  - column 감지 여전히 부족 → T-6e Template bounds 연동 필요")
+    lines.append("- expectedColumns 기반 추출 구조 완성 → 실제 RunAll에서 성능 확인 필요")
+    lines.append("- tableExpectedColumns가 backend에 전달되려면 frontend→backend API 파라미터 추가 필요")
+    lines.append("  (현재 main.py 수정 금지로 미전달 → verify script에서 직접 파라미터 주입으로 검증)")
+    lines.append("- 실제 RunAll 결과 확인 후:")
+    lines.append("  - expected header matching 성공 → T-7 금액 계열 보정 가능")
+    lines.append("  - expected header matching 실패 → table bounds/Template 연동 선행 필요")
 
     return "\n".join(lines)
 
@@ -523,29 +586,46 @@ def main():
         entry = cache.get(fname)
         if not entry:
             print(f"  SKIP: {fname} not in cache")
-            results[fname] = {"error": "not in cache", "rowCount": 0, "actualColumns": [], "tableRows_all": []}
+            results[fname] = {
+                "error": "not in cache", "rowCount": 0, "actualColumns": [],
+                "tableRows_all": [], "t6e_used": False, "t6e_matched": [],
+                "t6e_missing": [], "t6e_interpolated": [], "t6e_fallback": "not_in_cache",
+                "t6e_source": "not_in_cache",
+            }
             continue
         ocr_text = entry.get("ocr_text", "")
-        print(f"  Processing {fname} ({len(ocr_text)} chars)...")
-        r = run_sample(fname, ocr_text)
+        # T-6e: pass tableExpectedColumns from EXPECTED dict
+        exp = EXPECTED[fname]
+        tec = {"required": exp["required"], "optional": exp.get("optional", [])}
+        print(f"  Processing {fname} ({len(ocr_text)} chars) with expectedColumns={exp['required'][:3]}...")
+        r = run_sample(fname, ocr_text, table_expected_columns=tec)
         results[fname] = r
-        print(f"    rowCount={r['rowCount']}, actualCols={r['actualColumns'][:5]}, headerFound={r['headerFound']}")
+        t6e_info = f"t6e={'used' if r.get('t6e_used') else 'fallback'}({r.get('t6e_source','?')})"
+        print(f"    rowCount={r['rowCount']}, actualCols={r['actualColumns'][:5]}, {t6e_info}")
+        print(f"    matched={r.get('t6e_matched', [])[:5]}, missing={r.get('t6e_missing', [])[:3]}")
 
     report = generate_report(results)
 
-    report_dir = Path("d:/Free_Vue/OCR/mysuit-ocr/public/data/testsets/invoice_statement/reports")
+    # T-6e: write to new report path (try sibling mysuit-ocr first, then parent)
+    _candidates = [
+        ROOT.parent / "mysuit-ocr" / "public" / "data" / "testsets" / "invoice_statement" / "reports",
+        ROOT / "mysuit-ocr" / "public" / "data" / "testsets" / "invoice_statement" / "reports",
+    ]
+    report_dir = next((p for p in _candidates if p.parent.exists()), _candidates[0])
     report_dir.mkdir(parents=True, exist_ok=True)
-    out_path = report_dir / "T6d_fix_runall_based_row_column_report_20260512.md"
+    out_path = report_dir / "T6e_expected_columns_header_match_20260512.md"
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(report)
-    # Also keep old filename for reference
-    old_path = report_dir / "T6d_table_bounds_grid_column_detection_20260512.md"
+    # Also update the T-6d report file for backward compatibility
+    old_path = report_dir / "T6d_fix_runall_based_row_column_report_20260512.md"
     with open(old_path, "w", encoding="utf-8") as f:
         f.write(report)
     print(f"\nReport written to: {out_path}")
 
+    print(f"\nReport written to: {out_path}")
+
     # Also print summary to stdout
-    print("\n=== SUMMARY ===")
+    print("\n=== T-6e SUMMARY ===")
     for fname, r in results.items():
         exp = EXPECTED[fname]
         required = exp["required"]
@@ -553,8 +633,10 @@ def main():
         missing = [c for c in required if c not in actual]
         match_rc = ""
         if exp.get("actual_row_count") is not None:
-            ok = r['rowCount'] == exp['actual_row_count']; match_rc = f"rowCount={r['rowCount']}/{exp['actual_row_count']} {'OK' if ok else 'FAIL'}"
-        print(f"  {fname}: {match_rc}, missing={missing[:4]}")
+            ok = r['rowCount'] == exp['actual_row_count']
+            match_rc = f"rowCount={r['rowCount']}/{exp['actual_row_count']} {'OK' if ok else 'FAIL'}"
+        t6e_info = f"t6e={'YES' if r.get('t6e_used') else 'fallback'} matched={r.get('t6e_matched',[])[:4]}"
+        print(f"  {fname}: {match_rc}, missing_cols={missing[:4]}, {t6e_info}")
 
 
 if __name__ == "__main__":

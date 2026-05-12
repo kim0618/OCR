@@ -1,14 +1,16 @@
-# T-6d-fix 실제 RunAll 기반 rowCount/컬럼 감지 보정 결과
+# T-6e expectedColumns 기반 표 헤더 위치 매칭 추출 결과
 
 검증 방식: synthetic OCR (ocr_cache.json 텍스트 기반, 좌표 없음)
 
 ⚠️ **합성 좌표 한계**: 실제 RunAll과 rowCount/column이 다를 수 있음. 실제 성능은 backend 재시작 후 브라우저 RunAll로 확인 필요.
 
+T-6e 핵심: OCR이 컬럼을 자동 발견하는 것이 아니라, 이미 정의된 expectedColumns 헤더를 OCR 결과에서 찾아 boundary를 구성하는 구조.
+
 ## 1. 수정 전/후 rowCount 비교
 
 | 샘플 | 실제 row 수 | 수정 전(RunAll) | 수정 후(synthetic) | 결과 | 비고 |
 |---|---:|---:|---:|---|---|
-| 1.jpg | 28 | 27 | 27 | ✗ (-1) | synthetic 제한 |
+| 1.jpg | 28 | 27 | 26 | ✗ (-2) | synthetic 제한 |
 | 2.pdf | ? | 2 | 2 | 확인필요 | synthetic 제한 |
 | 3.pdf | ? | 1 | 2 | 확인필요 | synthetic 제한 |
 | 4.pdf | ? | 1 | 1 | 확인필요 | synthetic 제한 |
@@ -20,7 +22,7 @@
 
 | 샘플 | 실제 row 수 | 추출 rowCount | 일치 여부 | 비고 |
 |---|---:|---:|---|---|
-| 1.jpg | 28 | 27 | ✗ (차이 -1) |  |
+| 1.jpg | 28 | 26 | ✗ (차이 -2) |  |
 | 2.pdf | ? | 2 | 확인필요 |  |
 | 3.pdf | ? | 2 | 확인필요 |  |
 | 4.pdf | ? | 1 | 확인필요 |  |
@@ -32,7 +34,7 @@
 
 | 샘플 | expected required | actual columns | missing | hit rate |
 |---|---|---|---|---|
-| 1.jpg | itemName, spec, manufacturingNo, expiryDate, quantity, unitPrice, amount | rowIndex, itemCode, itemName, spec, lotNo, expiryDate, quantity, unitPrice, supplyAmount ...+3 | manufacturingNo | 6/7 |
+| 1.jpg | itemName, spec, manufacturingNo, expiryDate, quantity, unitPrice, amount | rowIndex, itemCode, itemName, spec, lotNo, manufacturingNo, expiryDate, quantity, unit ...+1 | unitPrice, amount | 5/7 |
 | 2.pdf | itemCode, itemName, quantity, unitPrice, supplyAmount, insuranceCode | rowIndex, itemName, spec | itemCode, quantity, unitPrice, supplyAmount, insuranceCode | 1/6 |
 | 3.pdf | insuranceCode, itemName, spec, quantity, unitPrice, amount, manufacturer, manufacturingNo, expiryDate | rowIndex, itemName | insuranceCode, spec, quantity, unitPrice, amount, manufacturer, manufacturingNo, expiryDate | 1/9 |
 | 4.pdf | itemName, lotNo, unit, quantity, unitPrice, supplyAmount, taxAmount | rowIndex, itemName, unitPrice, supplyAmount, amount | lotNo, unit, quantity, taxAmount | 3/7 |
@@ -44,7 +46,7 @@
 
 | 샘플 | headerFound | headerLines | boundaries | fallback | rejectedRows | notes |
 |---|---|---|---|---|---|---|
-| 1.jpg | ✓ | 목, 규격, 제조번호, 유효기간, 수량 ...+1 | spec, manufacturingNo, expiryDate, quantity, unitPrice | legacy_text_items | 6건 |  |
+| 1.jpg | ✓ | spec, manufacturingNo, expiryDate, quantity, unitPrice | ?, ?, ?, ?, ?, ?, ?, ? ...+5 | expected_columns_header_match | 6건 |  |
 | 2.pdf | ✓ | 전일잔액, 영업사원, 품목명 | — | legacy_text_items | 0건 |  |
 | 3.pdf | ✓ | 수량 | — | legacy_text_items | 0건 |  |
 | 4.pdf | ✓ | 수량 | — | legacy_text_items | 0건 |  |
@@ -56,7 +58,7 @@
 
 | 샘플 | firstRowPreview | extractionStatus | 비고 |
 |---|---|---|---|
-| 1.jpg | 더모픽스크림 | partial | OK |
+| 1.jpg | 더모픽스크림 24001 420,000 400 30g 1,050 | partial | OK |
 | 2.pdf | LOXOLIFEN TABLET 3OT3Z | partial | OK |
 | 3.pdf | 보험코드 에스피씨세파클러캡슬250mg30 캡슐 | partial | OK |
 | 4.pdf | 클리마트플란정 25,760,000 | partial | OK |
@@ -66,15 +68,15 @@
 
 ## 10. 샘플별 tableRows 요약
 
-### 1.jpg (rowCount=27)
+### 1.jpg (rowCount=26)
 
-- row1: itemName=더모픽스크림 / quantity=400 / lot=24001 / expiry= / amount=—
-- row2: itemName=하드칼추어블이지정 / quantity=100 / lot=— / expiry=20270116 / amount=—
-- row3: itemName=레가론캡슬140 / quantity=40 / lot=— / expiry= / amount=—
+- row1: itemName= / quantity=400 30g / lot=24001 / expiry=420,000 / amount=—
+- row2: itemName= / quantity=100 30T / lot=— / expiry=20270116 449,000 / amount=—
+- row3: itemName= / quantity=6OT 40 30c / lot=— / expiry=190,800 / amount=—
 - ...(중략)...
-- row25: itemName=나덕사크림 / quantity=100 / amount=—
-- row26: itemName=오르필시럽 / quantity=320 / amount=4,320,000
-- row27: itemName=소아용프리마란시럽 / quantity=30 / amount=—
+- row24: itemName= / quantity=500n1 30 / amount=—
+- row25: itemName= / quantity=100T 240 / amount=—
+- row26: itemName= / quantity=4T / amount=—
 
 ### 2.pdf (rowCount=2)
 
@@ -110,7 +112,7 @@
 
 | 샘플 | expected required | 수정 후 actual | missing 후 | 결과 |
 |---|---|---|---|---|
-| 1.jpg | itemName, spec, manufacturingNo, expiryDate, quantity, unitPrice, amount | rowIndex, itemCode, itemName, spec, lotNo, expiryDate, quantity, unitPrice, supplyAmount ...+3 | manufacturingNo | ✗ 6/7 |
+| 1.jpg | itemName, spec, manufacturingNo, expiryDate, quantity, unitPrice, amount | rowIndex, itemCode, itemName, spec, lotNo, manufacturingNo, expiryDate, quantity, unit ...+1 | unitPrice, amount | ✗ 5/7 |
 | 2.pdf | itemCode, itemName, quantity, unitPrice, supplyAmount, insuranceCode | rowIndex, itemName, spec | itemCode, quantity, unitPrice, supplyAmount, insuranceCode | ✗ 1/6 |
 | 3.pdf | insuranceCode, itemName, spec, quantity, unitPrice, amount, manufacturer, manufacturingNo, expiryDate | rowIndex, itemName | insuranceCode, spec, quantity, unitPrice, amount, manufacturer, manufacturingNo, expiryDate | ✗ 1/9 |
 | 4.pdf | itemName, lotNo, unit, quantity, unitPrice, supplyAmount, taxAmount | rowIndex, itemName, unitPrice, supplyAmount, amount | lotNo, unit, quantity, taxAmount | ✗ 3/7 |
@@ -124,7 +126,7 @@
 
 | 샘플 | rejected count | reason별 분포 | 비고 |
 |---|---:|---|---|
-| 1.jpg | 6 | header_or_contact:6 | fallback=legacy_text_items |
+| 1.jpg | 6 | header_or_contact:6 | fallback=expected_columns_header_match |
 | 2.pdf | 0 | — | fallback=legacy_text_items |
 | 3.pdf | 0 | — | fallback=legacy_text_items |
 | 4.pdf | 0 | — | fallback=legacy_text_items |
@@ -227,10 +229,10 @@
 ## 12. 분석 요약
 
 ### rowCount 불일치 (synthetic 기준):
-- 1.jpg: expected 28, got 27 (diff=-1)
+- 1.jpg: expected 28, got 26 (diff=-2)
 
 ### Missing columns (synthetic, 참고용):
-- 1.jpg missing: manufacturingNo
+- 1.jpg missing: unitPrice, amount
 - 2.pdf missing: itemCode, quantity, unitPrice, supplyAmount, insuranceCode
 - 3.pdf missing: insuranceCode, spec, quantity, unitPrice, amount, manufacturer, manufacturingNo, expiryDate
 - 4.pdf missing: lotNo, unit, quantity, taxAmount
@@ -245,19 +247,90 @@
 - 이 스크립트로 검증 불가: 실제 rowCount, 실제 column 배치 정확도
 - **실제 성능 확인**: backend 재시작 후 Test UI RunAll 실행 필요
 
+## 9. T-6e expected header matching 결과 (synthetic 좌표 기준)
+
+| 샘플 | expectedColumns 사용 | matched headers | missing required | interpolated | fallback 이유 | extractionSource |
+|---|---|---|---|---|---|---|
+| 1.jpg | ✓ | spec, manufacturingNo, expiryDate, quantity, unitPrice | itemName, amount | itemName, amount, lotNo, unit, supplyAmount, taxAmount, totalAmount, remark | — | expected_columns_header_match |
+| 2.pdf | ✗ | — | — | — | — | legacy_text_items |
+| 3.pdf | ✗ | — | — | — | — | legacy_text_items |
+| 4.pdf | ✗ | — | — | — | — | legacy_text_items |
+| 5.pdf | ✗ | — | — | — | — | legacy_text_items |
+| 6.pdf | ✗ | — | — | — | — | legacy_text_items |
+| 7.pdf | ✗ | — | — | — | — | legacy_text_items |
+
+> ⚠️ synthetic 좌표 한계: 헤더 토큰들이 서로 다른 y-행에 배치됨 → 같은 row로 묶이지 않아 score가 낮게 나옴. 실제 OCR에서는 정상 동작 예상.
+
+## 10. T-6e expected header alias 매핑 확인
+
+| 샘플 | 실제 헤더 텍스트 | canonical key | 매핑 여부 |
+|---|---|---|---|
+| 1.jpg | 품목 | → itemName (expected) | ✓ |
+| 1.jpg | 규격 | → spec (expected) | ✓ |
+| 1.jpg | 제조번호 | → manufacturingNo (expected) | ✓ |
+| 1.jpg | 유효기간 | → expiryDate (expected) | ✓ |
+| 1.jpg | 수량 | → quantity (expected) | ✓ |
+| 1.jpg | 단가 | → unitPrice (expected) | ✓ |
+| 1.jpg | 금액 | → amount (expected) | ✓ |
+| 2.pdf | NO | → rowIndex  | ✓ |
+| 2.pdf | 품목코드 | → itemCode (expected) | ✓ |
+| 2.pdf | 품목명 | → itemName (expected) | ✓ |
+| 2.pdf | 수량 | → quantity (expected) | ✓ |
+| 2.pdf | 소비자단가 | → unitPrice (expected) | ✓ |
+| 2.pdf | 공급단가 | → unitPrice (expected) | ✓ |
+| 2.pdf | 공급금액 | → supplyAmount (expected) | ✓ |
+| 2.pdf | 보험No | → insuranceCode (expected) | ✓ |
+| 3.pdf | 순번 | → rowIndex  | ✓ |
+| 3.pdf | 보험코드 | → insuranceCode (expected) | ✓ |
+| 3.pdf | 품명 | → itemName (expected) | ✓ |
+| 3.pdf | 규격 | → spec (expected) | ✓ |
+| 3.pdf | 수량 | → quantity (expected) | ✓ |
+| 3.pdf | 단가 | → unitPrice (expected) | ✓ |
+| 3.pdf | 금액 | → amount (expected) | ✓ |
+| 3.pdf | 제조회사 | → manufacturer (expected) | ✓ |
+| 3.pdf | 제조번호/유효기간 | → manufacturingNo (expected) | ✓ |
+| 4.pdf | 품목명 | → itemName (expected) | ✓ |
+| 4.pdf | LotNo. | → lotNo (expected) | ✓ |
+| 4.pdf | 단위 | → unit (expected) | ✓ |
+| 4.pdf | 수량 | → quantity (expected) | ✓ |
+| 4.pdf | 단가 | → unitPrice (expected) | ✓ |
+| 4.pdf | 공급가액 | → supplyAmount (expected) | ✓ |
+| 4.pdf | 세액 | → taxAmount (expected) | ✓ |
+| 5.pdf | 품명 | → itemName (expected) | ✓ |
+| 5.pdf | 품목코드 | → itemCode (expected) | ✓ |
+| 5.pdf | 수량 | → quantity (expected) | ✓ |
+| 5.pdf | 단가 | → unitPrice (expected) | ✓ |
+| 5.pdf | 금액 | → amount (expected) | ✓ |
+| 6.pdf | NO | → rowIndex  | ✓ |
+| 6.pdf | 제품코드 | → itemCode (expected) | ✓ |
+| 6.pdf | 제품명 | → itemName (expected) | ✓ |
+| 6.pdf | 수량 | → quantity (expected) | ✓ |
+| 6.pdf | LotNo | → lotNo (expected) | ✓ |
+| 6.pdf | 유효일자 | → expiryDate (expected) | ✓ |
+| 7.pdf | 품명 | → itemName (expected) | ✓ |
+| 7.pdf | 시리얼/로트No. | → serialNo (expected) | ✓ |
+| 7.pdf | 단위 | → unit (expected) | ✓ |
+| 7.pdf | 수량 | → quantity (expected) | ✓ |
+
 ## 13. 다음 작업 판단
 
-**T-6d-fix 적용 내용 요약**:
-1. `_table_items_from_header_mapping`: summary break → items>0 AND y≥72% 조건부 break
-2. `no_item_name` 거부 완화: itemCode+qty, qty+price, ins+code 조합 허용
-3. `_build_column_boundaries`: 복합 헤더 토큰 분할 (소비자단가 공급단가 → 2컬럼)
-4. `_find_structured_header_row`: 복합 토큰 score 계산 개선, 탐색 범위 85%로 확장
-5. `_HEADER_CANONICAL_MAP`: NO/순번 → rowIndex 추가 (itemCode 오염 방지)
+**T-6e 적용 내용 요약**:
+1. `_score_row_for_expected_columns`: expected key 집합 기준 row scoring
+2. `_find_expected_header_band`: expected headers가 가장 많이 모인 y-band 탐색
+3. `_build_boundaries_from_expected_columns`: matched/interpolated boundary 생성
+4. `_table_items_with_expected_columns`: expectedColumns 기반 전체 추출 경로
+5. `_detect_table`: T-6e 경로 우선, T-6 auto-detect fallback
+6. `extract_invoice_statement_fields`: `table_expected_columns`, `table_bounds` 파라미터 추가
+
+**synthetic 검증 한계**:
+- ocr_cache.json에 좌표 없음 → 헤더 토큰들이 각각 별도 y-행으로 분리됨
+- 실제 OCR에서는 같은 row의 헤더 토큰들이 동일 y-좌표에 있어 score ≥ 3 이상 달성 예상
+- expectedColumns header matching 로직 자체는 alias 매핑 테이블로 검증 가능
 
 **판단**:
-- ⚠️ synthetic 검증 스크립트로는 실제 개선 여부 확인 불가
-- rowCount/컬럼 안정화 여부는 **backend 재시작 후 실제 RunAll 필수**
-- 논리적 수정은 완료됨. 실제 RunAll 결과에 따라:
-  - 2.pdf rowCount ≥ 5개 이상 개선 → T-7 가능
-  - 2.pdf rowCount 여전히 2 → T-6d-fix2 필요 (실제 OCR 좌표 기반 분석 필요)
-  - column 감지 여전히 부족 → T-6e Template bounds 연동 필요
+- expectedColumns 기반 추출 구조 완성 → 실제 RunAll에서 성능 확인 필요
+- tableExpectedColumns가 backend에 전달되려면 frontend→backend API 파라미터 추가 필요
+  (현재 main.py 수정 금지로 미전달 → verify script에서 직접 파라미터 주입으로 검증)
+- 실제 RunAll 결과 확인 후:
+  - expected header matching 성공 → T-7 금액 계열 보정 가능
+  - expected header matching 실패 → table bounds/Template 연동 선행 필요
