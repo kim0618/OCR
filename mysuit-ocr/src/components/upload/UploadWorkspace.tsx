@@ -32,6 +32,8 @@ type TemplateItem = {
   regions?: Region[];
   mode?: string;
   fields?: { no?: number; enField?: string; koField?: string }[];
+  // T-9-fix: document type from template metadata (e.g. "invoice_statement")
+  documentType?: string;
 };
 
 const DEFAULT_TEMPLATES: TemplateItem[] = [];
@@ -158,6 +160,8 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
           mode: String(item?.template_json?.mode ?? "template"),
           regions: Array.isArray(item?.template_json?.regions) ? item.template_json.regions : [],
           fields: Array.isArray(item?.template_json?.fields) ? item.template_json.fields : [],
+          // T-9-fix: include documentType from template metadata for routing
+          documentType: String(item?.template_json?.documentType ?? ""),
         }))
         .filter((item) => item.id && item.name);
     } catch {
@@ -210,6 +214,8 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
           id: t.template_id,
           name: t.template_name,
           regions: Array.isArray(t.template_json?.regions) ? t.template_json.regions : t.regions,
+          // T-9-fix: include documentType from template metadata
+          documentType: String(t.template_json?.documentType ?? ""),
         }));
         setTemplates(mergeTemplates(mapped, localTemplates));
         // 기본값: 전체 인식 (빈 값)
@@ -775,6 +781,10 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
         formData.append("regions", JSON.stringify(activeTemplate.regions));
       }
       if (isRunOcr) formData.append("model_id", selectedModelId);
+      // T-9-fix: pass documentType from template metadata to backend for routing priority
+      if (activeTemplate?.documentType) {
+        formData.append("documentType", activeTemplate.documentType);
+      }
       // 코너 페이로드 비활성화 — 백엔드 detect_document 자동 경로 사용 (Test 와 동일)
       // if (corners.length === 4) formData.append("corners", JSON.stringify(corners));
       const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || ""}/ocr/extract`, {

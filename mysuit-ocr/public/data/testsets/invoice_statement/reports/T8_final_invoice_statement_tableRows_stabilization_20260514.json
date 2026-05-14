@@ -1,0 +1,147 @@
+{
+  "task": "T-8-final",
+  "date": "2026-05-14",
+  "title": "거래명세서 tableRows 1차 안정화 마감",
+  "decision": "거래명세서 tableRows 1차 안정화 마감",
+  "rowCountExact": "7/7",
+  "currentQualityPass": true,
+  "safeAdditionalRecoveryAvailable": false,
+  "samples": {
+    "1.jpg": {
+      "rowCount": { "gt": 28, "ocr": 28, "status": "exact" },
+      "displayFillRate": 98.5,
+      "majorAchievement": "display 핵심 컬럼 안정",
+      "remainingLimit": "optional amount/summary row columns empty",
+      "verdict": "pass",
+      "warnings": []
+    },
+    "2.pdf": {
+      "rowCount": { "gt": 13, "ocr": 13, "status": "exact" },
+      "displayFillRate": 61.5,
+      "majorAchievement": "OP-anchor reconstruction으로 13행 복구",
+      "remainingLimit": "insuranceCode OCR source missing",
+      "verdict": "pass_with_warning",
+      "warnings": ["insuranceCode:ocr_source_missing"]
+    },
+    "3.pdf": {
+      "rowCount": { "gt": 1, "ocr": 1, "status": "exact" },
+      "displayFillRate": 22.2,
+      "majorAchievement": "itemName 유지 및 garbage quantity 제거",
+      "remainingLimit": "OCR/구조 한계로 낮은 fill rate",
+      "verdict": "acceptable_limit",
+      "warnings": ["insuranceCode:ocr_source_missing"]
+    },
+    "4.pdf": {
+      "rowCount": { "gt": 1, "ocr": 1, "status": "exact" },
+      "displayFillRate": 100.0,
+      "majorAchievement": "taxAmount=2,576,000 및 totalAmount=28,338,000 복구",
+      "remainingLimit": "doc-level pushdown warning 추적",
+      "verdict": "pass_with_warning",
+      "warnings": ["taxAmount=doc_level_pushdown", "totalAmount=doc_level_pushdown"]
+    },
+    "5.pdf": {
+      "rowCount": { "gt": 6, "ocr": 6, "status": "exact" },
+      "displayFillRate": 86.7,
+      "majorAchievement": "itemName/itemCode/unitPrice/amount 6/6 복구",
+      "remainingLimit": "quantity 2/6, 후보 3/6 ambiguous",
+      "verdict": "pass_with_warning",
+      "warnings": ["multiline_layout_mapping_applied", "quantity:ambiguous_numeric_candidates"]
+    },
+    "6.pdf": {
+      "rowCount": { "gt": 6, "ocr": 6, "status": "exact" },
+      "displayFillRate": 83.3,
+      "majorAchievement": "ANDC300C row 및 핵심 display columns 유지",
+      "remainingLimit": "optional missing 정상",
+      "verdict": "pass",
+      "warnings": []
+    },
+    "7.pdf": {
+      "rowCount": { "gt": 1, "ocr": 1, "status": "exact" },
+      "displayFillRate": 100.0,
+      "majorAchievement": "serialLotComposite/unit/quantity=1,000 유지",
+      "remainingLimit": "optional missing 정상",
+      "verdict": "pass",
+      "warnings": []
+    }
+  },
+  "warningSummary": [
+    {
+      "sample": "2.pdf",
+      "warning": "insuranceCode:ocr_source_missing",
+      "meaning": "보험No/보험코드 후보가 OCR 원문에서 명확하지 않아 빈 값 유지",
+      "followup": "T-9c"
+    },
+    {
+      "sample": "3.pdf",
+      "warning": "insuranceCode:ocr_source_missing",
+      "meaning": "보험코드 OCR source가 명확하지 않음",
+      "followup": "T-9b/T-9c"
+    },
+    {
+      "sample": "4.pdf",
+      "warning": "taxAmount=doc_level_pushdown",
+      "meaning": "문서 레벨 taxAmount를 단일 row에 복사",
+      "followup": "monitor"
+    },
+    {
+      "sample": "4.pdf",
+      "warning": "totalAmount=doc_level_pushdown",
+      "meaning": "문서 레벨 totalAmount를 단일 row에 복사",
+      "followup": "monitor"
+    },
+    {
+      "sample": "5.pdf",
+      "warning": "multiline_layout_mapping_applied",
+      "meaning": "다단 OCR layout 후보를 기존 row에 안전 매핑",
+      "followup": "done"
+    },
+    {
+      "sample": "5.pdf",
+      "warning": "quantity:ambiguous_numeric_candidates",
+      "meaning": "quantity 후보 3/6만 확인되어 자동 복구 보류",
+      "followup": "future enhancement"
+    }
+  ],
+  "amountColumnAudit": {
+    "actualMisplacement": false,
+    "quantity1000ClassifiedAsQuantity": true,
+    "docLevelPushdownTrackedByWarnings": true,
+    "summaryAmountRowPollution": false
+  },
+  "fullFieldAudit": {
+    "supplierBuyerSwapFound": false,
+    "bizOrPhoneMisreadAsLotSerialFound": false,
+    "summaryAmountPollutionFound": false,
+    "sixPdfSupplierEmptyIsAcceptable": true
+  },
+  "verification": {
+    "pyCompile": "PASS",
+    "verifyScripts": "PASS",
+    "typecheck": "PASS",
+    "build": "PASS",
+    "buildWarning": "ESLint: nextVitals is not iterable (existing message, exit code 0)"
+  },
+  "followups": [
+    {
+      "id": "T-9b",
+      "title": "3.pdf 낮은 fill rate 원인 분석",
+      "scope": "OCR raw 구조 분석, 단일 row 후보 스코어링, garbage text guard"
+    },
+    {
+      "id": "T-9c",
+      "title": "2.pdf 보험No OCR source 개선",
+      "scope": "보험No/header 주변 OCR 품질 개선 또는 source missing 표시 UX 개선"
+    },
+    {
+      "id": "T-9d",
+      "title": "Template/RunOCR 저장 annotation 기반 end-to-end 검증",
+      "scope": "저장 annotation, template bounds/colGuides, UI 표시/저장 회귀 검증"
+    },
+    {
+      "id": "future-5pdf-quantity",
+      "title": "5.pdf quantity 추가 복구",
+      "scope": "수량 후보와 단가/금액 후보의 다단 layout 분리 고도화"
+    }
+  ],
+  "nextStep": "후속 T-9는 별도 고도화로 분리하고, Template/RunOCR E2E 검증 또는 다른 문서 유형 확장으로 이동 가능"
+}

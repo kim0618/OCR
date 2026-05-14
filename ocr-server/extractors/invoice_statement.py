@@ -1166,6 +1166,251 @@ def _op_anchor_reconstruct_table(
     return items
 
 
+# ── T-8a: Multiline column layout post-processing ────────────────────────────
+# Pharmaceutical supply invoices sometimes have a "column-per-field" layout:
+# all item names in one column, all item codes in another, etc.
+# OCR reads these column-by-column (or section-by-section), producing a flat
+# text where codes / prices / amounts appear as sequential blocks, separate from
+# item names. This post-processor reconnects them to the correct rows.
+
+_MULTILINE_ITEM_CODE_RE = re.compile(r"^[A-Z][A-Z0-9]{4,9}$")
+_MULTILINE_AMOUNT_RE = re.compile(r"^\d{1,3}(?:,\d{3})+$")
+_MULTILINE_LABEL_STRIP_RE = re.compile(r"\s+")
+
+
+def _ml_find_consecutive_code_block(texts: list[str], n: int) -> list[str]:
+    """Find a window of exactly N consecutive OCR lines all matching pharmaceutical
+    item-code pattern: all-uppercase alphanumeric, 5-10 chars, at least one digit.
+    """
+    _has_digit = re.compile(r"\d")
+    for start in range(len(texts) - n + 1):
+        window = texts[start : start + n]
+        if all(
+            _MULTILINE_ITEM_CODE_RE.match(t)
+            and _has_digit.search(t)
+            and not t.isdigit()
+            for t in window
+        ):
+            return list(window)
+    return []
+
+
+def _ml_find_values_after_label(
+    texts: list[str], label_exact: str, n: int, min_digit_len: int = 3
+) -> list[str]:
+    """Find N comma-formatted number values appearing after an exact label token."""
+    label_pos = -1
+    for i, t in enumerate(texts):
+        if _MULTILINE_LABEL_STRIP_RE.sub("", t) == label_exact and len(t) <= 6:
+            label_pos = i
+    if label_pos < 0:
+        return []
+    vals: list[str] = []
+    for text in texts[label_pos + 1 : label_pos + 1 + n * 8]:
+        if not text:
+            continue
+        if _MULTILINE_AMOUNT_RE.match(text):
+            digits = re.sub(r"\D", "", text)
+            if len(digits) >= min_digit_len:
+                vals.append(text)
+                if len(vals) == n:
+                    break
+    return vals if len(vals) == n else []
+
+
+def _ml_find_quantity_values_after_label(texts: list[str], n: int) -> list[str]:
+    """T-9a: Find a conservative quantity block in multiline layouts."""
+    label_pos = -1
+    for i, text in enumerate(texts):
+        compact = _MULTILINE_LABEL_STRIP_RE.sub("", text or "")
+        if compact in {"\uc218\ub7c9", "Qty", "QTY"} and len(text or "") <= 8:
+            label_pos = i
+            break
+    if label_pos < 0:
+        return []
+
+    stop_re = re.compile(
+        r"\ub2e8\s*\uac00|\uae08\s*\uc561|\uacf5\s*\uae09|\uc138\s*\uc561|"
+        r"\ud569\s*\uacc4|\ubd80\s*\uac00|\bVAT\b|\bTAX\b",
+        re.I,
+    )
+    vals: list[str] = []
+    for text in texts[label_pos + 1 : label_pos + 1 + n * 8]:
+        value = _clean_value(text)
+        if not value:
+            continue
+        if stop_re.search(value):
+            break
+        compact = re.sub(r"\s+", "", _canonical_digits(value))
+        if not re.fullmatch(r"\d{1,4}", compact):
+            continue
+        numeric = int(compact)
+        if 1 <= numeric <= 9999:
+            vals.append(str(numeric))
+            if len(vals) == n:
+                break
+    return vals if len(vals) == n else vals
+
+
+def _ml_build_name_to_ocr_order(
+    texts: list[str], row_names: list[str], n: int
+) -> list[int]:
+    """Map each tableRow (by row index) to its position in the OCR item-name sequence.
+
+    Returns a list of length n where result[row_idx] = ocr_seq_index (0-based),
+    or an empty list if mapping cannot be established for all rows.
+    """
+    seen_rows: set[int] = set()
+    ocr_order: list[tuple[int, int]] = []  # (ocr_pos, row_idx)
+
+    for ocr_pos, text in enumerate(texts):
+        if not text or len(text) < 3:
+            continue
+        for row_idx, name in enumerate(row_names):
+            if row_idx in seen_rows or not name:
+                continue
+            # Match by exact equality or significant substring
+            if text == name or (len(text) >= 6 and text in name) or (len(name) >= 6 and name in text):
+                ocr_order.append((ocr_pos, row_idx))
+                seen_rows.add(row_idx)
+                break
+        if len(ocr_order) == n:
+            break
+
+    if len(ocr_order) != n:
+        return []
+
+    ocr_order.sort(key=lambda x: x[0])
+    result = [n] * n  # sentinel = n means unmapped
+    for seq_idx, (_, row_idx) in enumerate(ocr_order):
+        result[row_idx] = seq_idx
+
+    return [] if any(v == n for v in result) else result
+
+
+def _postprocess_multiline_column_layout(
+    lines: list["OcrLine"],
+    rows: list[dict[str, Any]],
+    expected_columns: dict[str, list[str]] | None,
+) -> dict[str, Any]:
+    """T-8a: Recover itemCode / unitPrice / amount for multiline-column PDFs.
+
+    Guard conditions:
+      - rows >= 2
+      - expected columns include itemCode, unitPrice, or amount
+      - those columns are mostly empty (>= 50% rows missing)
+      - OCR contains exactly N-element code/price/amount blocks
+
+    Returns: {applied, filledKeys, warnings, candidateCounts}
+    """
+    out: dict[str, Any] = {"applied": False, "filledKeys": [], "warnings": [], "candidateCounts": {}}
+    n = len(rows)
+    if n < 2 or not expected_columns:
+        return out
+
+    required = set(expected_columns.get("required") or [])
+    optional = set(expected_columns.get("optional") or [])
+    all_exp = required | optional
+
+    want_code = "itemCode" in all_exp
+    want_quantity = "quantity" in all_exp
+    want_price = "unitPrice" in all_exp
+    want_amount = "amount" in all_exp
+
+    if not (want_code or want_quantity or want_price or want_amount):
+        return out
+
+    # Skip columns that are already mostly filled
+    def _mostly_missing(key: str) -> bool:
+        missing = sum(1 for r in rows if not str(r.get(key) or "").strip())
+        return missing >= max(1, n // 2)
+
+    want_code = want_code and _mostly_missing("itemCode")
+    want_quantity = want_quantity and _mostly_missing("quantity")
+    want_price = want_price and _mostly_missing("unitPrice")
+    want_amount = want_amount and _mostly_missing("amount")
+
+    if not (want_code or want_quantity or want_price or want_amount):
+        return out
+
+    # Sort OCR lines by (y, x) — spatial reading order
+    ocr_texts = [_clean_value(l.text) for l in sorted(lines, key=lambda l: (l.cy, l.x))]
+
+    # Establish OCR order of item names
+    row_names = [str(r.get("itemName") or "").strip() for r in rows]
+    row_to_ocr = _ml_build_name_to_ocr_order(ocr_texts, row_names, n)
+
+    if len(row_to_ocr) != n:
+        out["warnings"].append("multiline_layout_order_mismatch:item names not found in OCR order")
+        return out
+
+    # Extract candidate blocks
+    codes = _ml_find_consecutive_code_block(ocr_texts, n) if want_code else []
+    quantities = _ml_find_quantity_values_after_label(ocr_texts, n) if want_quantity else []
+    prices = _ml_find_values_after_label(ocr_texts, "단가", n, min_digit_len=2) if want_price else []
+    amounts = _ml_find_values_after_label(ocr_texts, "금액", n, min_digit_len=4) if want_amount else []
+
+    out["candidateCounts"] = {
+        "itemCode": len(codes),
+        "quantity": len(quantities),
+        "unitPrice": len(prices),
+        "amount": len(amounts),
+    }
+
+    applied = False
+
+    for row_idx, row in enumerate(rows):
+        ocr_i = row_to_ocr[row_idx]
+        if not (0 <= ocr_i < n):
+            continue
+        if want_code and len(codes) == n and not str(row.get("itemCode") or "").strip():
+            row["itemCode"] = codes[ocr_i]
+            applied = True
+        if want_quantity and len(quantities) == n and not str(row.get("quantity") or "").strip():
+            row["quantity"] = quantities[ocr_i]
+            applied = True
+        if want_price and len(prices) == n and not str(row.get("unitPrice") or "").strip():
+            row["unitPrice"] = prices[ocr_i]
+            applied = True
+        if want_amount and len(amounts) == n and not str(row.get("amount") or "").strip():
+            row["amount"] = amounts[ocr_i]
+            applied = True
+
+    # Collect missing-source warnings
+    if want_code and len(codes) != n:
+        out["warnings"].append(
+            f"itemCode:source_missing:품목코드 블록 {len(codes)}/{n}개 발견 (expected {n})"
+        )
+    if want_quantity and len(quantities) != n:
+        reason = "source_missing" if len(quantities) == 0 else "ambiguous_numeric_candidates"
+        out["warnings"].append(
+            f"quantity:{reason}:quantity candidates {len(quantities)}/{n}; kept existing empty values"
+        )
+    if want_price and len(prices) != n:
+        out["warnings"].append(
+            f"unitPrice:source_missing:단가 {len(prices)}/{n}개 발견 (expected {n})"
+        )
+    if want_amount and len(amounts) != n:
+        out["warnings"].append(
+            f"amount:source_missing:금액 {len(amounts)}/{n}개 발견 (expected {n})"
+        )
+
+    for key, cands in [("itemCode", codes), ("quantity", quantities), ("unitPrice", prices), ("amount", amounts)]:
+        if len(cands) == n and (
+            (key == "itemCode" and want_code)
+            or (key == "quantity" and want_quantity)
+            or (key == "unitPrice" and want_price)
+            or (key == "amount" and want_amount)
+        ):
+            out["filledKeys"].append(key)
+
+    if applied:
+        out["applied"] = True
+        out["warnings"].insert(0, "multiline_layout_mapping_applied")
+
+    return out
+
+
 def _item_start_score(text: str) -> float:
     value = _clean_value(text)
     compact = re.sub(r"\s+", "", value)
@@ -5918,6 +6163,24 @@ def _build_canonical_table_rows(
         table_meta["expectedMissingKeys"] = _missing_keys
         table_meta["valueMappingWarnings"] = []
 
+        # T-8b: Add OCR source missing warnings for required columns where
+        # every row is empty because the OCR source is absent or unclear.
+        # Distinguishes "not extracted yet" from "no OCR source available."
+        # Guard: column must be in required (not just optional), and must be
+        # ALL-missing across every row in this table.
+        _t8b_required_set = set(expected_columns.get("required") or [])
+        for _t8b_key, _t8b_label, _t8b_reason in [
+            (
+                "insuranceCode",
+                "보험No",
+                "OCR 원문에서 보험코드 후보를 찾지 못함 - 빈 값 유지",
+            ),
+        ]:
+            if _t8b_key in _t8b_required_set and _t8b_key in _missing_keys:
+                table_meta["valueMappingWarnings"].append(
+                    f"{_t8b_key}:ocr_source_missing:{_t8b_label} {_t8b_reason}"
+                )
+
     return {
         "tableRows": canonical_rows,
         "tableMeta": table_meta,
@@ -6301,6 +6564,48 @@ def extract_invoice_statement_fields(
                 _t7a_pushdown_warnings.append(f"{_t7a_key}=doc_level_pushdown")
         if _t7a_pushdown_warnings:
             canonical["tableMeta"].setdefault("valueMappingWarnings", []).extend(_t7a_pushdown_warnings)
+
+    # T-8a: Multiline column layout post-processing for legacy_text_items tables.
+    # Reconnects itemCode/unitPrice/amount from separate OCR blocks to existing rows.
+    # Guard: extractionSource==legacy_text_items, rowCount>=2, expected cols present.
+    if (
+        table_expected_columns
+        and canonical["tableMeta"].get("extractionSource") == "legacy_text_items"
+        and canonical["tableMeta"].get("rowCount", 0) >= 2
+    ):
+        _t8a = _postprocess_multiline_column_layout(
+            lines,
+            canonical["tableRows"],
+            table_expected_columns,
+        )
+        if _t8a.get("applied"):
+            canonical["tableMeta"]["multilineLayoutMappingApplied"] = True
+            canonical["tableMeta"]["multilineLayoutFilledKeys"] = _t8a.get("filledKeys", [])
+            canonical["tableMeta"]["multilineLayoutCandidateCounts"] = _t8a.get("candidateCounts", {})
+            # Re-compute fill stats after rows were enriched
+            _t8a_all_keys = list(dict.fromkeys(
+                (table_expected_columns.get("required") or [])
+                + (table_expected_columns.get("optional") or [])
+            ))
+            if _t8a_all_keys and canonical["tableRows"]:
+                _t8a_n = len(canonical["tableRows"])
+                _t8a_filled_keys = [
+                    k for k in _t8a_all_keys
+                    if sum(1 for r in canonical["tableRows"] if str(r.get(k) or "").strip()) > 0
+                ]
+                _t8a_missing_keys = [k for k in _t8a_all_keys if k not in _t8a_filled_keys]
+                _t8a_total = _t8a_n * len(_t8a_all_keys)
+                _t8a_filled_cells = sum(
+                    sum(1 for k in _t8a_all_keys if str(r.get(k) or "").strip())
+                    for r in canonical["tableRows"]
+                )
+                canonical["tableMeta"]["expectedValueFillRate"] = (
+                    round(_t8a_filled_cells / _t8a_total * 100, 1) if _t8a_total else 0.0
+                )
+                canonical["tableMeta"]["expectedFilledKeys"] = _t8a_filled_keys
+                canonical["tableMeta"]["expectedMissingKeys"] = _t8a_missing_keys
+        if _t8a.get("warnings"):
+            canonical["tableMeta"].setdefault("valueMappingWarnings", []).extend(_t8a["warnings"])
 
     fields.update(
         {

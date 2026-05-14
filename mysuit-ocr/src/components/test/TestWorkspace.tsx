@@ -279,6 +279,8 @@ type CanonicalTableMeta = {
   matchedColumnKeys?: string[];
   valueColumnKeys?: string[];
   missingExpectedColumnKeys?: string[];
+  // T-8b: value mapping warnings (e.g. ocr_source_missing)
+  valueMappingWarnings?: string[];
 };
 
 function getInvoiceTableRows(documentFields: Record<string, string> | null): CanonicalTableRow[] {
@@ -4373,6 +4375,20 @@ function InvoiceTableRowsPanel({
           </span>
         )}
       </div>
+
+      {/* T-8b: valueMappingWarnings — OCR source missing 등 값 매핑 진단 경고 */}
+      {tableMeta?.valueMappingWarnings && tableMeta.valueMappingWarnings.length > 0 && (
+        <div style={{ padding: "2px 12px 4px", display: "flex", flexWrap: "wrap", gap: 4, alignItems: "flex-start" }}>
+          <span style={{ fontSize: 9, color: "#fbbf24", fontWeight: 800, minWidth: 52, paddingTop: 1 }}>Warning</span>
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            {tableMeta.valueMappingWarnings.map((w, i) => (
+              <span key={i} style={{ fontSize: 9, color: "#fbbf24", padding: "1px 6px", borderRadius: 3, background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.2)" }}>
+                {w}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* 첫 행 미리보기 */}
       {firstRowPreview && (

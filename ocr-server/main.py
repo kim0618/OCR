@@ -1600,6 +1600,7 @@ async def ocr_extract(
     tableExpectedColumns: str = Form(""),  # T-6f: from manifest invoiceProfile
     tableBounds: str = Form(""),           # T-6i: Template table bounds
     columnGuides: str = Form(""),          # T-6j: Template column guide x-positions (OCR space)
+    documentType: str = Form(""),          # T-9-fix: explicit documentType override (e.g. "invoice_statement")
 ):
     import time
     start = time.time()
@@ -1635,6 +1636,7 @@ async def ocr_extract(
 
     ocr = get_ocr_engine()
     region_list = json.loads(regions) if regions else []
+    _template_doc_type = ""  # T-9-fix: documentType from template_json metadata
     if not region_list and template_id:
         templates = _load_json(TEMPLATES_FILE, [])
         selected_template = next(
@@ -1643,6 +1645,15 @@ async def ocr_extract(
         )
         template_json = selected_template.get("template_json", {}) if selected_template else {}
         region_list = template_json.get("regions", []) if isinstance(template_json, dict) else []
+        # T-9-fix: read stored documentType from template metadata (priority over classify_document)
+        _template_doc_type = (template_json.get("documentType", "") or "").strip() if isinstance(template_json, dict) else ""
+    elif region_list and template_id:
+        # regions provided directly but template_id also present — read metadata only
+        templates = _load_json(TEMPLATES_FILE, [])
+        _sel = next((t for t in templates if str(t.get("template_id", "")) == template_id), None)
+        if _sel:
+            _tj = _sel.get("template_json", {})
+            _template_doc_type = (_tj.get("documentType", "") or "").strip() if isinstance(_tj, dict) else ""
     timings["engine_acquire_ms"] = _ms(time.time() - _t_decode)
 
     fields = []
@@ -1702,13 +1713,22 @@ async def ocr_extract(
                 if text:
                     full_lines.append(text)
 
-        # T-6j-fix: classify doc_type from template region text so invoice_statement
-        # extractor and other doc-type checks can run correctly in the template path.
+        # T-6j-fix: classify doc_type from template region text.
+        # T-9-fix: explicit documentType payload > template metadata documentType > classify_document.
         if full_lines:
             _tmpl_doc_info = classify_document("\n".join(full_lines))
-            doc_type = _tmpl_doc_info.get("type", "unknown")
-            extract_debug = {"document_classification": _tmpl_doc_info, "doc_type": doc_type}
-            print(f"[template] classified doc_type={doc_type} from {len(full_lines)} lines")
+            _classified_doc_type = _tmpl_doc_info.get("type", "unknown")
+        else:
+            _tmpl_doc_info = {}
+            _classified_doc_type = "unknown"
+        _explicit_doc_type = (documentType or "").strip()
+        doc_type = _explicit_doc_type or _template_doc_type or _classified_doc_type
+        extract_debug = {"document_classification": _tmpl_doc_info, "doc_type": doc_type}
+        print(
+            f"[template] doc_type={doc_type} "
+            f"(explicit={_explicit_doc_type!r} template_meta={_template_doc_type!r} "
+            f"classified={_classified_doc_type} lines={len(full_lines)})"
+        )
 
         # T-6j-fix: for invoice_statement, run full-image OCR to obtain ocr_lines_raw
         # (needed by extract_invoice_statement_fields for field/table extraction).
