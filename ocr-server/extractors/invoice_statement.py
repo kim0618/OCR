@@ -807,8 +807,17 @@ def _item_dict_from_row_text(text: str) -> dict[str, str]:
 def _table_item_column_score(item: dict[str, Any]) -> int:
     score = 0
     for key in ("itemName", "spec", "quantity", "unitPrice", "supplyAmount", "taxAmount", "totalAmount"):
-        if item.get(key):
-            score += 1
+        val = str(item.get(key) or "").strip()
+        if not val:
+            continue
+        # T-7a: Don't count clearly garbled values in the score —
+        # e.g. quantity containing Korean text is a misassigned column cell.
+        if key == "quantity" and (
+            re.search(r"[가-힣]", val)
+            or (len(val) > 20 and not re.fullmatch(r"[\d,.\s]+", val))
+        ):
+            continue
+        score += 1
     if item.get("sourceBboxes"):
         score += 1
     return score
@@ -2455,6 +2464,37 @@ def _table_items_with_expected_columns(
                 has_lot = bool(item.get("lotNo") or item.get("serialNo") or item.get("manufacturingNo"))
                 has_exp = bool(item.get("expiryDate") or item.get("manufacturingNo"))
                 has_spec_val = bool(item.get("spec"))
+
+                # T-7a: Quantity-only row merger — when a row has ONLY a quantity value
+                # and no itemName, merge it into the preceding accepted item if:
+                #   (a) quantity is in expected columns
+                #   (b) the preceding item has serialLotComposite/unit but no quantity
+                #   (c) only the quantity column has a value in this row
+                #   (d) the quantity is a plausible numeric value (1–100,000)
+                # This handles PDFs where the quantity cell is on a slightly different y-band.
+                if (
+                    has_qty
+                    and expected_col_hit_count == 1
+                    and "quantity" in expected_set
+                    and items
+                    and not items[-1].get("quantity")
+                    and (
+                        items[-1].get("serialLotComposite")
+                        or (items[-1].get("unit") and items[-1].get("serialNo"))
+                    )
+                ):
+                    _qty_str = str(item["quantity"])
+                    _qty_digits = re.sub(r"\D", "", _qty_str)
+                    if _qty_digits and 1 <= int(_qty_digits) <= 100_000:
+                        items[-1]["quantity"] = _qty_str
+                        if debug is not None:
+                            debug["rejectedRows"].append({
+                                "reason": "quantity_merged_into_preceding",
+                                "text": text[:60], "y": round(row_y, 1),
+                                "mergedQty": _qty_str,
+                            })
+                        continue
+
                 row_has_data = (
                     expected_col_hit_count >= 2                       # T-6g: primary: 2+ expected cols
                     or (has_code and (has_qty or has_price))
@@ -5434,7 +5474,18 @@ def _detect_table(
         # Merge preserved colGuides debug into header_debug without overwriting header-mapping fields
         for k, v in _cg_debug_fields.items():
             header_debug.setdefault(k, v)
-        header_used = bool(header_items and (not table_items or len(header_items) >= len(table_items)))
+        # T-7a: compare score as well as count so garbled header_items (all-empty values)
+        # don't silently replace legacy items that already have itemName/amounts filled.
+        _header_score = sum(_table_item_column_score(item) for item in header_items)
+        _current_score = sum(_table_item_column_score(item) for item in table_items)
+        header_used = bool(
+            header_items
+            and (
+                not table_items
+                or len(header_items) > len(table_items)
+                or (len(header_items) == len(table_items) and _header_score >= _current_score)
+            )
+        )
         if header_used:
             table_items = header_items
 
@@ -5769,6 +5820,15 @@ def _build_canonical_table_rows(
             if _qty_unit_m:
                 row["unit"] = _qty_unit_m.group(1).upper()
                 row["quantity"] = _qty_unit_m.group(2).strip()
+
+        # T-7a: Validate quantity — if it contains Korean characters or is clearly
+        # a misassigned cell (long garbled text), clear it.
+        # Keeps numeric quantities like "1,000" (len of digits ≤ 7).
+        if row.get("quantity"):
+            _qty_v = str(row["quantity"])
+            _qty_clean = re.sub(r"[,.\s]", "", _qty_v)
+            if re.search(r"[가-힣]", _qty_v) or (len(_qty_v) > 20 and not re.fullmatch(r"[\d,.\s]+", _qty_v)):
+                row["quantity"] = ""
 
         for col in _TABLE_ROW_COLUMNS:
             if row.get(col):
@@ -6211,6 +6271,36 @@ def extract_invoice_statement_fields(
     canonical["tableMeta"]["opAnchorRowsBuilt"] = tdbg.get("opAnchorRowsBuilt")
     canonical["tableMeta"]["reconstructedRowCount"] = tdbg.get("reconstructedRowCount")
     canonical["tableMeta"]["previousRowCount"] = tdbg.get("previousRowCount")
+
+    # T-7a: For single-row tables, push document-level amounts into the row
+    # when the row-level column is empty AND the expected columns include it.
+    # Guard: rowCount==1, doc-level amount is non-empty, row-level is empty.
+    # Safe for single-item invoices where doc total == row total.
+    if (
+        table_expected_columns
+        and canonical["tableMeta"].get("rowCount") == 1
+        and canonical["tableRows"]
+    ):
+        _t7a_row = canonical["tableRows"][0]
+        _t7a_tec_all = set(
+            (table_expected_columns.get("required") or [])
+            + (table_expected_columns.get("optional") or [])
+        )
+        _t7a_pushdown_warnings: list[str] = []
+        for _t7a_key, _t7a_src in [
+            ("taxAmount", "taxAmount"),
+            ("supplyAmount", "supplyAmount"),
+            ("totalAmount", "totalAmount"),
+        ]:
+            if (
+                _t7a_key in _t7a_tec_all
+                and not _t7a_row.get(_t7a_key)
+                and amounts.get(_t7a_src)
+            ):
+                _t7a_row[_t7a_key] = amounts[_t7a_src]
+                _t7a_pushdown_warnings.append(f"{_t7a_key}=doc_level_pushdown")
+        if _t7a_pushdown_warnings:
+            canonical["tableMeta"].setdefault("valueMappingWarnings", []).extend(_t7a_pushdown_warnings)
 
     fields.update(
         {
