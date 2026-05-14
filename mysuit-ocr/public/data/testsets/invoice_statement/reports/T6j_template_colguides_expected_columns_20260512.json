@@ -1,0 +1,57 @@
+{
+  "task": "T-6j",
+  "generatedAt": "2026-05-13",
+  "modifiedFiles": [
+    "d:/Free_Vue/OCR/ocr-server/main.py",
+    "d:/Free_Vue/OCR/ocr-server/extractors/invoice_statement.py"
+  ],
+  "backupFiles": [
+    "d:/Free_Vue/OCR/ocr-server/backup/main_20260512_before_T6j_colguides.py",
+    "d:/Free_Vue/OCR/ocr-server/backup/invoice_statement_20260512_before_T6j_colguides.py"
+  ],
+  "newFunctions": [
+    "_build_boundaries_from_column_guides: builds column boundaries from colGuides dividers",
+    "_extract_items_using_boundaries: extracts rows using pre-built boundaries, no header detection"
+  ],
+  "changes": {
+    "main.py": [
+      "columnGuides: str = Form('') added",
+      "Parse columnGuides JSON -> _tcg list[float]",
+      "Auto-derive _tcg from region.table.colX when template region provided"
+    ],
+    "invoice_statement.py": [
+      "column_guides param added to: extract_invoice_statement_fields, _detect_table, _table_items_with_expected_columns",
+      "colGuides branch in _table_items_with_expected_columns: builds boundaries, extracts rows, returns if successful",
+      "extractionSource: template_colguides_expected_columns added to source check"
+    ]
+  },
+  "colGuidesFlow": {
+    "frontend": "region.table.colX (absolute pixel, img space)",
+    "main.py": "scale colX to OCR space -> _tcg",
+    "extractor": "_build_boundaries_from_column_guides(required_keys, column_guides_ocr, table_bounds) -> boundaries",
+    "extractor": "_extract_items_using_boundaries(scope_rows, boundaries, ...) -> items without header detection"
+  },
+  "regressionCheck": {
+    "1.jpg": { "rowCount": 29, "ok": true },
+    "5.pdf": { "rowCount": 6, "ok": true },
+    "6.pdf": { "rowCount": 5, "ok": true },
+    "7.pdf": { "rowCount": 1, "ok": true }
+  },
+  "colGuidesTestResult": {
+    "5.pdf_approximate_guides": {
+      "guides": [190, 350, 490, 650],
+      "columnGuidesReceived": true,
+      "extractionSource": "template_colguides_expected_columns",
+      "rowCount": 4,
+      "note": "4/6 rows captured — approximate test boundaries don't match actual column layout"
+    }
+  },
+  "verification": {
+    "mainPyCompile": "pass",
+    "invoiceStatementPyCompile": "pass",
+    "verifyScript": "7/7 success, no regression",
+    "frontendTypecheck": "pass",
+    "frontendBuild": "pass"
+  },
+  "nextTask": "T-7 금액 계열 OR Template/RunOCR colGuides 실제 연동"
+}

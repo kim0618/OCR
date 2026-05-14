@@ -1,0 +1,43 @@
+{
+  "task": "T-6i",
+  "generatedAt": "2026-05-13",
+  "modifiedFiles": [
+    "d:/Free_Vue/OCR/ocr-server/main.py",
+    "d:/Free_Vue/OCR/ocr-server/extractors/invoice_statement.py"
+  ],
+  "backupFiles": [
+    "d:/Free_Vue/OCR/ocr-server/backup/main_20260512_before_T6i_template_bounds.py",
+    "d:/Free_Vue/OCR/ocr-server/backup/invoice_statement_20260512_before_T6i_template_bounds.py"
+  ],
+  "changes": {
+    "main.py": "Auto-derive _tbn (tableBounds) from template region when not explicitly provided. Scales from img space to ocr_img space.",
+    "invoice_statement.py": [
+      "_find_expected_header_band: min_score=1 when table_bounds provided (was always 2)",
+      "_build_boundaries_from_expected_columns: allow_single_match parameter added",
+      "_table_items_with_expected_columns: pass allow_single_match=True when table_bounds provided",
+      "_table_items_with_expected_columns: row y_max from table_bounds.yMax instead of page_h*0.96",
+      "_table_items_with_expected_columns: tableBoundsUsed/tableBoundsSource debug info added"
+    ]
+  },
+  "findings": {
+    "tableBoundsPathway": "Already wired end-to-end from T-6f. T-6i adds auto-derivation from template region.",
+    "frontendGap": "UploadWorkspace.tsx sends only regions, not tableBounds. Auto-derivation in main.py fills this gap.",
+    "5pdf_limit": "OCR garbles table column headers entirely. Even with tableBounds and score=1, no candidates found.",
+    "2pdf_limit": "Same fundamental OCR quality issue.",
+    "tableBoundsUsedConfirmed": "tableBoundsUsed=True verified when bounds provided."
+  },
+  "regressionCheck": {
+    "1.jpg": { "rowCount": 29, "failures": "row_count_over", "ok": true },
+    "5.pdf": { "rowCount": 6, "ok": true },
+    "6.pdf": { "rowCount": 5, "ok": true },
+    "7.pdf": { "rowCount": 1, "ok": true }
+  },
+  "verification": {
+    "mainPyCompile": "pass",
+    "invoiceStatementPyCompile": "pass",
+    "verifyScript": "7/7 success",
+    "frontendTypecheck": "pass",
+    "frontendBuild": "pass"
+  },
+  "nextTask": "T-6j column guides (5.pdf/2.pdf OCR header bypass) OR T-7 amount fields"
+}

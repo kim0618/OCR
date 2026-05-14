@@ -1,0 +1,64 @@
+{
+  "task": "T-6h",
+  "generatedAt": "2026-05-13",
+  "modifiedFiles": [
+    "d:/Free_Vue/OCR/ocr-server/extractors/invoice_statement.py"
+  ],
+  "backupFiles": [
+    "d:/Free_Vue/OCR/ocr-server/backup/invoice_statement_20260512_before_T6h_expected_boundary_value_mapping.py"
+  ],
+  "keyChanges": [
+    "_build_boundaries_from_expected_columns: required_keys parameter, optional unmatched excluded",
+    "_build_boundaries_from_expected_columns: first column x_start = table_x_min (was interpolated)",
+    "_assign_canonical_by_x: proximity tolerance 0.55 -> 0.70",
+    "_table_items_with_expected_columns: y_max 0.93 -> 0.96",
+    "_table_items_with_expected_columns: non-canonical expected key initialization",
+    "_build_canonical_table_rows: non-canonical key copy from items",
+    "_build_canonical_table_rows: manufacturingExpiryComposite + serialLotComposite auto-generation",
+    "_build_canonical_table_rows: expected_all_keys includes non-canonical keys"
+  ],
+  "rowCount": {
+    "1.jpg": { "target": 28, "t6g": 29, "t6h": 29, "delta": 0, "verdict": "유지(value_mapping개선)" },
+    "2.pdf": { "target": null, "t6g": 2, "t6h": 2, "delta": 0, "verdict": "변화없음" },
+    "3.pdf": { "target": null, "t6g": 1, "t6h": 1, "delta": 0, "verdict": "유지" },
+    "4.pdf": { "target": null, "t6g": 3, "t6h": 4, "delta": 1, "verdict": "개선" },
+    "5.pdf": { "target": 6, "t6g": 6, "t6h": 6, "delta": 0, "verdict": "OK(유지)" },
+    "6.pdf": { "target": 6, "t6g": 5, "t6h": 5, "delta": 0, "verdict": "유지" },
+    "7.pdf": { "target": 1, "t6g": 1, "t6h": 1, "delta": 0, "verdict": "OK(유지)" }
+  },
+  "valueMapping": {
+    "1.jpg": {
+      "improved": ["itemName", "unitPrice", "amount", "lotNo"],
+      "stillEmpty": [],
+      "valueMappingWrongRemoved": true
+    },
+    "2.pdf": {
+      "improved": [],
+      "stillEmpty": ["consumerUnitPrice", "supplyUnitPrice", "itemCode", "quantity", "insuranceCode"]
+    },
+    "3.pdf": {
+      "improved": [],
+      "stillEmpty": ["manufacturingExpiryComposite"]
+    },
+    "5.pdf": {
+      "improved": [],
+      "stillEmpty": ["itemCode", "unitPrice", "amount"]
+    },
+    "7.pdf": {
+      "improved": [],
+      "stillEmpty": ["serialLotComposite", "unit", "quantity"]
+    }
+  },
+  "regressionCheck": {
+    "5.pdf": { "rowCount": 6, "ok": true },
+    "7.pdf": { "rowCount": 1, "ok": true },
+    "3.pdf": { "rowCount": 1, "ok": true, "note": "value mapping 복구됨 (auto-detection 오인식 방지)" }
+  },
+  "verification": {
+    "pyCompile": "pass",
+    "verifyScript": "7/7 success",
+    "frontendTypecheck": "pass",
+    "frontendBuild": "pass"
+  },
+  "nextTask": "T-6h-fix (2.pdf/7.pdf 별도) 또는 T-7 금액 계열"
+}

@@ -142,6 +142,12 @@ export type TableProfile =
   | "serial_quantity_table"
   | "item_quantity_table";
 
+/** T-6k: UI 표시 전용 컬럼 정의. 실제 문서 표 헤더명(label)과 canonical/custom key를 매핑한다. */
+export interface InvoiceTableExpectedDisplayColumn {
+  key: string;   // canonical / custom / composite key
+  label: string; // 실제 문서 표 헤더명 (예: "품목", "보험No", "제조번호/유효기간")
+}
+
 export interface InvoiceProfile {
   invoiceSubType?: InvoiceSubType;
   amountProfile?: AmountProfile;
@@ -156,6 +162,8 @@ export interface InvoiceProfile {
   tableExpectedColumns?: {
     required: string[];
     optional: string[];
+    /** T-6k: UI 표시 전용 — 실제 문서 표 헤더명 그대로 표시하기 위한 컬럼 순서/라벨 */
+    display?: InvoiceTableExpectedDisplayColumn[];
   };
 }
 

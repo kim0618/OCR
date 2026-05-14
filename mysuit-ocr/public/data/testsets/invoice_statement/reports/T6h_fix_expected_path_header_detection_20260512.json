@@ -1,0 +1,54 @@
+{
+  "task": "T-6h-fix",
+  "generatedAt": "2026-05-13",
+  "modifiedFiles": [
+    "d:/Free_Vue/OCR/ocr-server/extractors/invoice_statement.py"
+  ],
+  "backupFiles": [
+    "d:/Free_Vue/OCR/ocr-server/backup/invoice_statement_20260512_before_T6h_fix_expected_path_header_detection.py"
+  ],
+  "effectiveChange": "_PHONE_RE: added (?!\\d) trailing lookbehind",
+  "revertedChanges": [
+    "_find_expected_header_band score threshold 1 (caused 5.pdf 6->1 regression)",
+    "_build_boundaries_from_expected_columns min_matches=1 (co-reverted)"
+  ],
+  "rowCount": {
+    "1.jpg": { "target": 28, "t6h": 29, "t6h_fix": 29, "delta": 0, "verdict": "유지" },
+    "2.pdf": { "target": null, "t6h": 2, "t6h_fix": 2, "delta": 0, "verdict": "변화없음" },
+    "3.pdf": { "target": null, "t6h": 1, "t6h_fix": 1, "delta": 0, "verdict": "유지" },
+    "4.pdf": { "target": null, "t6h": 4, "t6h_fix": 3, "delta": -1, "verdict": "T6h 4행중 1개 false positive 제거" },
+    "5.pdf": { "target": 6, "t6h": 6, "t6h_fix": 6, "delta": 0, "verdict": "OK(유지)" },
+    "6.pdf": { "target": 6, "t6h": 5, "t6h_fix": 5, "delta": 0, "verdict": "유지" },
+    "7.pdf": { "target": 1, "t6h": 1, "t6h_fix": 1, "delta": 0, "verdict": "OK(유지)" }
+  },
+  "valueMapping": {
+    "7.pdf": {
+      "improved": ["serialNo", "unit", "serialLotComposite"],
+      "compositeFlagRemoved": "composite_display_empty",
+      "stillEmpty": ["quantity"],
+      "explanation": "PHONE_RE fix allowed serial number row to be accepted. quantity on separate OCR line rejected."
+    },
+    "5.pdf": {
+      "improved": [],
+      "stillEmpty": ["itemCode", "unitPrice", "amount"],
+      "explanation": "OCR garbles table header -> header detection fails -> expected_columns path not activated"
+    }
+  },
+  "regressionCheck": {
+    "1.jpg": { "itemName": "OK", "unitPrice": "OK", "rowCount": 29 },
+    "5.pdf": { "rowCount": 6, "ok": true },
+    "7.pdf": { "rowCount": 1, "ok": true }
+  },
+  "analysis": {
+    "2.pdf": "Footer/summary rows rejected as header_or_contact, legacy path used, rowCount=2",
+    "5.pdf": "OCR garbles table headers -> header_band_not_found -> cannot activate expected_columns path safely",
+    "6.pdf": "5/6 rows, 1 row merge issue, no safe tolerance fix found"
+  },
+  "verification": {
+    "pyCompile": "pass",
+    "verifyScript": "7/7 success",
+    "frontendTypecheck": "pass",
+    "frontendBuild": "pass"
+  },
+  "nextTask": "T-6i template bounds 연동 (5.pdf/2.pdf/6.pdf) 또는 T-7 금액 계열"
+}

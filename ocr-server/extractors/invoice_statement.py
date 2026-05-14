@@ -3,9 +3,9 @@ from dataclasses import dataclass
 from typing import Any
 
 
-_BIZ_RE = re.compile(r"(?<!\d)([0-9OIlSB]{3})[-\s.]?([0-9OIlSB]{2})[-\s.]?([0-9OIlSB]{5})(?!\d)")
+_BIZ_RE = re.compile(r"(?<!\d)([0-9OIlSB]{3})[-\s.]([0-9OIlSB]{2})[-\s.]([0-9OIlSB]{5})(?!\d)")
 _AMOUNT_RE = re.compile(r"(?<!\d)([0-9OIlSB]{1,3}(?:[,.][0-9OIlSB]{3})+|[0-9OIlSB]{4,})(?!\d)")
-_PHONE_RE = re.compile(r"(?:TEL|Tel|tel|\uc804\ud654)?[:\s(]*(?:0\d{1,2})[-)\s]?\d{3,4}[-\s]?\d{4}")
+_PHONE_RE = re.compile(r"(?:TEL|Tel|tel|\uc804\ud654)?[:\s(]*(?<!\d)(?:0\d{1,2})[-)\s]?\d{3,4}[-\s]?\d{4}(?!\d)")
 
 _COMPANY_ANCHOR_RE = re.compile(
     r"\uc0c1\s*\ud638(?:\uba85)?|\uc0c1\uc810\uba85|\uac70\ub798\ucc98\uba85|"
@@ -140,8 +140,8 @@ _TABLE_BUSINESS_CONTACT_RE = re.compile(
     re.I,
 )
 _TABLE_SUMMARY_STRONG_RE = re.compile(
-    r"\ud569\s*\uacc4|\ucd1d\s*\uacc4|\ucd1d\s*\ud569\s*\uacc4|\uacf5\s*\uae09\s*\uac00\s*\uc561|"
-    r"\uacf5\s*\uae09\s*\uae08\s*\uc561|\uacf5\s*\uae09\s*\ub300\s*\uac00|\uc138\s*\uc561|"
+    r"\ud569\s*\uacc4|\uc18c\s*\uacc4|\ucd1d\s*\uacc4|\ucd1d\s*\ud569\s*\uacc4|\uacf5\s*\uae09\s*\uac00\s*\uc561|"
+    r"\uacf5\s*\uae09\s*\uac00\s*\ub825|\uacf5\s*\uae09\s*\uae08\s*\uc561|\uacf5\s*\uae09\s*\ub300\s*\uac00|\uc138\s*\uc561|"
     r"\ubd80\s*\uac00\s*\uc138|\ubd80\s*\uac00\s*\uac00\s*\uce58\s*\uc138|\uc138\s*\uc5ed|\uccad\s*\uad6c\s*\uae08\s*\uc561|"
     r"\uacb0\s*\uc81c\s*\uae08\s*\uc561|\ucd1d\s*\uacb0\s*\uc81c\s*\uc561|\uc794\s*\uc561|\ub204\s*\uacc4|"
     r"\ubbf8\s*\uc218|\uc778\s*\uc218\s*\ud655\s*\uc778|\ub2f4\s*\ub2f9\s*\uc790|TOTAL",
@@ -165,6 +165,8 @@ _TABLE_STANDALONE_LABEL_RE = re.compile(
     re.I,
 )
 _SPEC_ONLY_RE = re.compile(r"^\d+(?:[.,]\d+)?(?:mg|ml|g|kg|t|tab|cap|caps?|c|\uc815|\ucea1\uc290|\ud3ec|\ubcd1|box|ea|p|dose|mI)(?:\([^)]+\))?$", re.I)
+# T-6n: OP-* pharmaceutical item code pattern (handles OCR noise like "0P", "11OP-", "120P-")
+_OP_ANCHOR_CODE_RE = re.compile(r"(?<![A-Za-z])((?:OP|0P)[-\s]?[A-Z][A-Za-z0-9]{2,})", re.I)
 
 # T-3: canonical tableRows
 _TABLE_ROW_COLUMNS = [
@@ -388,7 +390,7 @@ def _candidate_ok(value: str, kind: str) -> bool:
     return True
 
 
-def _group_rows(lines: list[OcrLine]) -> list[list[OcrLine]]:
+def _group_rows(lines: list[OcrLine], tolerance_factor: float = 0.75) -> list[list[OcrLine]]:
     rows: list[list[OcrLine]] = []
     for line in sorted(lines, key=lambda item: (item.cy, item.x)):
         if not rows:
@@ -397,7 +399,7 @@ def _group_rows(lines: list[OcrLine]) -> list[list[OcrLine]]:
         current = rows[-1]
         avg_y = sum(item.cy for item in current) / len(current)
         avg_h = sum(item.h for item in current) / len(current)
-        if abs(line.cy - avg_y) <= max(avg_h, line.h) * 0.75:
+        if abs(line.cy - avg_y) <= max(avg_h, line.h) * tolerance_factor:
             current.append(line)
         else:
             rows.append([line])
@@ -459,6 +461,26 @@ def _is_summary_row_for_items(text: str) -> bool:
     if amount_count >= 1 and name_chars <= 14:
         return True
     return bool(re.fullmatch(r"(?:TOTAL|[\uac00-\ud7a3\s]*(?:\ud569\uacc4|\ucd1d\uacc4|VAT|TOTAL)[\uac00-\ud7a3\s]*)[:\-\s0-9,.]*", text, re.I))
+
+
+def _has_non_name_table_anchor(item: dict[str, Any]) -> bool:
+    for key in (
+        "itemCode", "spec", "lotNo", "serialNo", "manufacturingNo", "expiryDate",
+        "quantity", "unit", "unitPrice", "supplyAmount", "taxAmount", "amount",
+        "totalAmount", "manufacturer", "insuranceCode", "remark",
+        "serialLotComposite", "manufacturingExpiryComposite",
+    ):
+        if str(item.get(key) or "").strip():
+            return True
+    return False
+
+
+def _is_item_name_only_split_row(item: dict[str, Any], accepted_count: int) -> bool:
+    if accepted_count <= 0:
+        return False
+    if not str(item.get("itemName") or "").strip():
+        return False
+    return not _has_non_name_table_anchor(item)
 
 
 def _is_bad_table_data_row(text: str) -> bool:
@@ -870,6 +892,269 @@ def _is_table_notice_or_party_line(text: str) -> bool:
     if _ADDRESS_HINT_RE.search(text or "") and re.search(r"(?:\ub85c|\uae38|\\d)", compact):
         return True
     return False
+
+
+def _has_strong_item_signal(text: str) -> bool:
+    """True if text has a strong positive signal of being a table item data row.
+
+    Used to override contact/notice filters in the colGuides path within tableBounds,
+    where the bounds already constrain the extraction area.
+    """
+    # OP- style pharmaceutical item code (allow for minor OCR noise)
+    if re.search(r"\bOP[-\s][A-Za-z0-9]{2,}", text, re.I):
+        return True
+    # Standalone row index 1-13 at start of text (whitespace-separated)
+    # Exclude page-count patterns like "1 /1" (page 1 of 1)
+    if re.match(r"^\s*(?:1[0-3]|[1-9])[\s\t]", text):
+        if not re.match(r"^\s*\d+\s*/", text):
+            return True
+    return False
+
+
+def _find_op_anchor_lines(lines: list["OcrLine"]) -> list["OcrLine"]:
+    """Find individual OCR lines that contain OP-* pharmaceutical item codes, sorted by x."""
+    return sorted(
+        [l for l in lines if _OP_ANCHOR_CODE_RE.search(l.text or "")],
+        key=lambda l: l.cx,
+    )
+
+
+def _extract_op_anchor_code(text: str) -> str:
+    """Extract and normalize the first OP-* code from OCR text."""
+    m = _OP_ANCHOR_CODE_RE.search(text or "")
+    if not m:
+        return ""
+    code = m.group(1).upper()
+    code = re.sub(r"^0P", "OP", code)
+    code = re.sub(r"\s+", "-", code)
+    return code
+
+
+def _op_anchor_reconstruct_table(
+    lines: list["OcrLine"],
+    page_h: float,
+    page_w: float,
+    expected_columns: dict[str, Any],
+    table_bounds: dict[str, float] | None = None,
+    debug: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
+    """T-6n: Reconstruct transposed invoice table using OP-* codes as column anchors.
+
+    For documents where items are laid out as horizontal columns (transposed table),
+    e.g. 2.pdf where 13 items each occupy one vertical column. Each OP-* code found
+    in the OCR output becomes one item row in the output.
+    """
+    # Scope: apply table_bounds if given, else full page (exclude footer)
+    y0 = table_bounds.get("yMin", 0.0) if table_bounds else 0.0
+    y1 = table_bounds.get("yMax", page_h * 0.92) if table_bounds else page_h * 0.92
+    x0 = table_bounds.get("xMin", 0.0) if table_bounds else 0.0
+    x1 = table_bounds.get("xMax", page_w) if table_bounds else page_w
+
+    scope = [l for l in lines if y0 <= l.cy <= y1 and x0 <= l.cx <= x1]
+
+    # Find OP-* anchor lines (each = one item column)
+    anchors = _find_op_anchor_lines(scope)
+    anchor_count = len(anchors)
+
+    if anchor_count < 3:
+        if debug is not None:
+            debug["opAnchorCount"] = anchor_count
+            debug["opAnchorSamples"] = []
+        return []
+
+    # Compute initial per-column half-width from minimum anchor spacing
+    anchor_xs = [a.cx for a in anchors]
+    if anchor_count >= 2:
+        min_spacing = min(anchor_xs[i + 1] - anchor_xs[i] for i in range(anchor_count - 1))
+        avg_spacing = (anchor_xs[-1] - anchor_xs[0]) / (anchor_count - 1)
+        col_half_w = max(min_spacing * 0.55, 8.0)
+    else:
+        avg_spacing = page_w / (anchor_count + 1)
+        col_half_w = max(avg_spacing * 0.45, 8.0)
+
+    # T-6n y-band expansion: some item columns may not have OP-* OCR-readable codes.
+    # Only expand RIGHTWARD from the last OP-* anchor — left-side non-OP lines are noise.
+    # Items 1-3 (rightmost in the transposed layout) appear after the last detected anchor.
+    avg_anchor_y = sum(a.cy for a in anchors) / anchor_count
+    max_anchor_h = max((a.h for a in anchors), default=20.0)
+    y_tol = max(max_anchor_h * 0.75, 12.0)
+    x_expand_left = anchor_xs[-1] + col_half_w * 0.3   # just past the last anchor
+    x_expand_right = anchor_xs[-1] + avg_spacing * 4.5  # up to 4 more columns
+
+    anchor_set = set(id(a) for a in anchors)
+    extra_anchors: list["OcrLine"] = []
+    for line in scope:
+        if id(line) in anchor_set:
+            continue
+        if not abs(line.cy - avg_anchor_y) <= y_tol:
+            continue
+        if not (x_expand_left <= line.cx <= x_expand_right):
+            continue
+        text = _clean_value(line.text)
+        if not text:
+            continue
+        # Quality gates for extra anchors: must look like an item code, not contact/noise
+        if len(text) < 2:
+            continue  # single chars (digits/letters) are noise
+        if re.search(r"[가-힣]", text):
+            continue  # Korean text → not item codes
+        if _is_business_contact_line(text):
+            continue  # company/address info
+        if _is_table_notice_or_party_line(text):
+            continue  # notice/party info
+        if re.search(r"\d{5,}", re.sub(r"[,.]", "", text)):
+            continue  # long number sequences (amounts, postal codes)
+        # Skip summary/header lines
+        if _is_summary_row_for_items(text) or _is_table_header_row(text):
+            continue
+        extra_anchors.append(line)
+        anchor_set.add(id(line))
+
+    if extra_anchors:
+        all_anchors = sorted(anchors + extra_anchors, key=lambda l: l.cx)
+        # Deduplicate anchors within half a column-width of each other
+        deduped: list["OcrLine"] = [all_anchors[0]]
+        for a in all_anchors[1:]:
+            if a.cx - deduped[-1].cx >= col_half_w * 0.7:
+                deduped.append(a)
+        anchors = deduped
+        anchor_xs = [a.cx for a in anchors]
+        anchor_count = len(anchors)
+        if anchor_count >= 2:
+            min_spacing = min(anchor_xs[i + 1] - anchor_xs[i] for i in range(anchor_count - 1))
+            col_half_w = max(min_spacing * 0.55, 8.0)
+
+    if debug is not None:
+        debug["opAnchorCount"] = anchor_count
+        debug["opAnchorSamples"] = [f"x={round(a.cx, 0)} '{a.text[:30]}'" for a in anchors[:8]]
+
+    # Anchor set for quick membership check
+    anchor_set = set(id(a) for a in anchors)
+
+    # Assign non-anchor scope lines to their nearest anchor column
+    column_lines: list[list["OcrLine"]] = [[] for _ in anchors]
+    for line in scope:
+        if id(line) in anchor_set:
+            continue
+        dists = [abs(line.cx - ax) for ax in anchor_xs]
+        nearest_i = min(range(anchor_count), key=lambda i: dists[i])
+        if dists[nearest_i] <= col_half_w * 2.5:
+            column_lines[nearest_i].append(line)
+
+    # Prepare expected-column key lists
+    required = expected_columns.get("required") or []
+    optional = expected_columns.get("optional") or []
+    all_keys = list(dict.fromkeys(required + optional))
+    canonical_set = set(_TABLE_ROW_COLUMNS)
+    non_can = [k for k in all_keys if k not in canonical_set and k != "rowIndex"]
+
+    # Summary y-cutoff: ignore lines clearly in document footer
+    summary_y_cut = page_h * 0.82
+
+    items: list[dict[str, Any]] = []
+
+    for i, anchor in enumerate(anchors):
+        col_lines = sorted(column_lines[i], key=lambda l: l.cy)
+
+        item: dict[str, Any] = {k: "" for k in _TABLE_ROW_COLUMNS if k != "rowIndex"}
+        for nck in non_can:
+            item[nck] = ""
+        item["source"] = "op_anchor_reconstructed_table"
+        item["_row_y"] = anchor.cy
+        item["rawText"] = _clean_value(anchor.text)
+        item["sourceBboxes"] = [_bbox_dict(anchor)] + [_bbox_dict(l) for l in col_lines[:4]]
+
+        # itemCode from the anchor itself
+        # T-6m: only use raw fallback if it looks like a valid code (≥3 chars); single chars are noise
+        _op_code_val = _extract_op_anchor_code(anchor.text)
+        if not _op_code_val:
+            _raw_fb = _clean_value(anchor.text)
+            _op_code_val = _raw_fb if len(_raw_fb) >= 3 else ""
+        item["itemCode"] = _op_code_val
+
+        # Classify other lines in this column
+        for line in col_lines:
+            if line.cy > summary_y_cut:
+                continue
+            text = _clean_value(line.text)
+            if not text:
+                continue
+            # Skip if another OP-* anchor (not the column's own code)
+            if _OP_ANCHOR_CODE_RE.search(text):
+                continue
+            # Skip summary/total lines
+            if _is_summary_row_for_items(text):
+                continue
+
+            # Korean text → itemName candidate (skip header-only tokens)
+            if re.search(r"[가-힣]", text) and not _is_table_header_row(text):
+                if not item.get("itemName"):
+                    item["itemName"] = text[:60]
+                continue
+
+            # T-6m: Latin multi-char drug names — allow digits (e.g. "CECLOR 500mg")
+            # Guard: not a pure code pattern [A-Za-z]{1-3}+digits (those go to insuranceCode below)
+            if re.search(r"[A-Za-z]{3,}", text) and not re.fullmatch(r"[A-Za-z]{1,3}\d{2,}", text.strip()):
+                if not item.get("itemName"):
+                    item["itemName"] = text[:60]
+                continue
+
+            # T-6m: Insurance/classification code — moved BEFORE amount check so "A123456"
+            # is not consumed by _amount_values (which finds "123456" in range 100-1B).
+            # Extended pattern: 1-3 letters + 2+ digits (e.g. "A123456", "B12345", "BJ12")
+            if re.fullmatch(r"[A-Za-z]{1,3}\d{2,}", text.strip()):
+                if not item.get("insuranceCode"):
+                    item["insuranceCode"] = text.strip()
+                continue
+
+            # Amount values (formatted numbers with commas, 100–1B range)
+            amt_vals = _amount_values(text)
+            if amt_vals:
+                for price_key in ("consumerUnitPrice", "supplyUnitPrice", "supplyAmount"):
+                    target_ok = price_key in canonical_set or price_key in non_can
+                    if target_ok and not item.get(price_key):
+                        item[price_key] = amt_vals[0]
+                        break
+                continue
+
+            # Small integer → quantity
+            compact_digits = re.sub(r"\D", "", text)
+            if compact_digits and 1 <= len(compact_digits) <= 4:
+                try:
+                    val = int(compact_digits)
+                    if 1 <= val <= 9999 and not item.get("quantity"):
+                        item["quantity"] = str(val)
+                        continue
+                except ValueError:
+                    pass
+
+        items.append(item)
+
+    # Gap-fill: if anchor texts embed a row count hint (e.g. "13 OP-NA0300" → 13 items),
+    # and actual anchors found < that count, add empty placeholder rows to reach the total.
+    max_row_hint = anchor_count
+    for a in anchors:
+        m = re.match(r"^\s*(\d{1,2})\s", _clean_value(a.text) or "")
+        if m:
+            val = int(m.group(1))
+            if 5 <= val <= 50:
+                max_row_hint = max(max_row_hint, val)
+
+    if max_row_hint > len(items):
+        for _ in range(max_row_hint - len(items)):
+            gap_item: dict[str, Any] = {k: "" for k in _TABLE_ROW_COLUMNS if k != "rowIndex"}
+            for nck in non_can:
+                gap_item[nck] = ""
+            gap_item["source"] = "op_anchor_reconstructed_table"
+            gap_item["_row_y"] = avg_anchor_y
+            gap_item["rawText"] = ""
+            gap_item["sourceBboxes"] = []
+            items.append(gap_item)
+
+    if debug is not None:
+        debug["opAnchorRowsBuilt"] = len(items)
+
+    return items
 
 
 def _item_start_score(text: str) -> float:
@@ -1329,9 +1614,10 @@ def _assign_canonical_by_x(cx: float, boundaries: list[dict[str, Any]]) -> str |
         return None
     nearest = min(boundaries, key=lambda b: abs(cx - b.get("header_cx", (b["x_start"] + b["x_end"]) / 2.0)))
     header_cx = nearest.get("header_cx", (nearest["x_start"] + nearest["x_end"]) / 2.0)
-    # Allow up to half average column width as tolerance
+    # T-6h: allow up to 70% of average column width as tolerance (was 55%)
+    # Wider tolerance handles OCR positional variance where value doesn't align with header.
     avg_col_w = (boundaries[-1]["x_end"] - boundaries[0]["x_start"]) / max(1, len(boundaries))
-    if abs(cx - header_cx) <= avg_col_w * 0.55:
+    if abs(cx - header_cx) <= avg_col_w * 0.70:
         return nearest["canonical_key"]
     return None
 
@@ -1367,7 +1653,8 @@ def _table_items_from_header_mapping(
     T-6c: multi-line header support, composite column handling, proximity-based assignment.
     T-6d: debug info support.
     """
-    rows = _group_rows(lines)
+    # T-6g-fix: use tighter row grouping (0.55) so adjacent table rows are not merged
+    rows = _group_rows(lines, tolerance_factor=0.55)
     header_result = _find_structured_header_row(rows, page_h)
     if debug is not None:
         debug["headerFound"] = header_result is not None
@@ -1403,9 +1690,9 @@ def _table_items_from_header_mapping(
         if _is_summary_row_for_items(text):
             if debug is not None:
                 debug["rejectedRows"].append({"reason": "summary_row", "text": text[:60], "y": round(row_y, 1)})
-            # T-6d-fix: Only break when items already found AND row is in lower page portion.
-            # Early-in-page summary rows (e.g. header-area totals in landscape docs) get skipped.
-            if items and row_y >= page_h * 0.72:
+            # T-6g-fix: raise break threshold to 0.85 so rolling subtotals mid-table
+            # don't terminate extraction too early for multi-group invoice tables.
+            if items and row_y >= page_h * 0.85:
                 break
             continue
         if _is_table_header_row(text) or _is_business_contact_line(text):
@@ -1453,6 +1740,9 @@ def _table_items_from_header_mapping(
                     or (has_lot and has_price)                    # T-6g
                     or (has_exp and has_qty)                     # T-6g
                     or (has_spec_val and (has_qty or has_price)) # T-6g
+                    or (has_lot and has_exp)                     # T-6g-fix: lot+expiry
+                    or (has_code and has_lot)                    # T-6g-fix: code+lot
+                    or (has_code and has_exp)                    # T-6g-fix: code+expiry
                 )
                 if not row_has_data:
                     if debug is not None:
@@ -1566,7 +1856,10 @@ def _find_expected_header_band(
                 best_row = merged_row
                 best_matched = merged_matched
 
-    if best_score < 2:
+    # T-6i: when table_bounds constrains the search area, lower the score threshold to 1.
+    # Within a bounded region noise is reduced, so a single matched header is sufficient.
+    min_score = 1 if table_bounds else 2
+    if best_score < min_score:
         return None
 
     return best_idx, best_row, best_matched, best_score
@@ -1578,11 +1871,14 @@ def _build_boundaries_from_expected_columns(
     page_w: float,
     table_x_min: float = 0.0,
     table_x_max: float | None = None,
+    required_keys: set[str] | None = None,
+    allow_single_match: bool = False,
 ) -> list[dict[str, Any]]:
     """Build column boundaries from matched expected header positions.
 
     - Matched headers → source: "expected_header"
-    - Missing expected headers → source: "interpolated_expected"
+    - Missing required headers → source: "interpolated_expected"
+    - Optional headers with no match are excluded (T-6h: avoids column compression).
     - rowIndex columns are marked display_only=True and excluded from cell assignment.
 
     Returns sorted list of boundary dicts.
@@ -1590,7 +1886,10 @@ def _build_boundaries_from_expected_columns(
     if table_x_max is None:
         table_x_max = page_w
 
-    if len(matched_dict) < 2:
+    # T-6i: when table_bounds constrains the search area, allow a single matched header
+    # to anchor boundary interpolation (reduced noise inside bounded region).
+    _min_matches = 1 if (allow_single_match and required_keys and len(required_keys) >= 3) else 2
+    if len(matched_dict) < _min_matches:
         return []
 
     # Collect positions for matched expected keys
@@ -1605,9 +1904,21 @@ def _build_boundaries_from_expected_columns(
 
     matched_pos = list(all_positions)  # copy of matched-only
 
+    # T-6h: count effective columns for half-width calculation
+    # Only count required unmatched columns (optional unmatched are skipped)
+    effective_count = len(matched_dict) + sum(
+        1 for k in expected_keys_ordered
+        if k not in matched_dict and (required_keys is None or k in required_keys)
+    )
+    half = (table_x_max - table_x_min) / max(effective_count, 1) * 0.4
+
     # Interpolate missing expected keys
     for key in expected_keys_ordered:
         if key in matched_dict:
+            continue
+        # T-6h: skip optional columns that have no matched header — interpolating them
+        # compresses required column widths and causes boundary misalignment.
+        if required_keys is not None and key not in required_keys:
             continue
         idx = expected_keys_ordered.index(key)
 
@@ -1619,11 +1930,11 @@ def _build_boundaries_from_expected_columns(
 
         if not prev_p:
             ni, nx_l, ncx, nx_r = min(next_p, key=lambda t: t[0])
-            span = (nx_r - table_x_min) / max(len(expected_keys_ordered), 1)
+            span = (nx_r - table_x_min) / max(effective_count, 1)
             cx_est = max(table_x_min + span * 0.5, ncx - span * (ni - idx + 1))
         elif not next_p:
             pi, px_l, pcx, px_r = max(prev_p, key=lambda t: t[0])
-            span = (table_x_max - px_l) / max(len(expected_keys_ordered) - pi, 1)
+            span = (table_x_max - px_l) / max(effective_count - pi, 1)
             cx_est = min(table_x_max - span * 0.5, pcx + span * (idx - pi))
         else:
             pi, px_l, pcx, px_r = max(prev_p, key=lambda t: t[0])
@@ -1632,7 +1943,6 @@ def _build_boundaries_from_expected_columns(
             frac = (idx - pi) / gap
             cx_est = pcx + frac * (ncx - pcx)
 
-        half = (table_x_max - table_x_min) / max(len(expected_keys_ordered), 1) * 0.4
         all_positions.append((idx, key, cx_est - half, cx_est, cx_est + half, "interpolated_expected"))
 
     all_positions.sort(key=lambda t: (t[0], t[3]))  # sort by order_idx then cx
@@ -1644,7 +1954,9 @@ def _build_boundaries_from_expected_columns(
     boundaries: list[dict[str, Any]] = []
     for i, (ord_idx, key, x_left, cx, x_right, source) in enumerate(all_positions):
         if i == 0:
-            x_start = max(table_x_min, x_left - (x_right - x_left) * 0.5)
+            # T-6h: first column always starts at the table left edge so leftmost
+            # tokens (e.g. item names) are captured even when the header is not found.
+            x_start = table_x_min
         else:
             prev_x_right = all_positions[i - 1][4]
             gap_mid = (prev_x_right + x_left) / 2.0
@@ -1673,6 +1985,230 @@ def _build_boundaries_from_expected_columns(
     return boundaries
 
 
+def _build_boundaries_from_column_guides(
+    required_keys: list[str],
+    all_keys: list[str],
+    column_guides_ocr: list[float],
+    table_bounds: dict[str, float],
+    page_w: float,
+    debug: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
+    """Build column boundaries directly from Template colGuides (absolute OCR-space x positions).
+
+    T-6j: Bypasses header OCR detection. Used when template provides explicit column dividers.
+
+    column_guides_ocr: sorted absolute x positions of column DIVIDERS in OCR coordinate space.
+    For N columns, expects N-1 dividers. Handles mismatches gracefully.
+    """
+    xMin = table_bounds.get("xMin", 0.0)
+    xMax = table_bounds.get("xMax", page_w)
+
+    n_cols = len(required_keys)
+    sorted_guides = sorted(g for g in column_guides_ocr if xMin <= g <= xMax)
+    n_guides = len(sorted_guides)
+    mismatch: str | None = None
+
+    # Build divider list: [xMin, ...guides..., xMax]
+    if n_guides == n_cols - 1:
+        # Perfect match: N-1 dividers for N columns
+        dividers = [xMin] + sorted_guides + [xMax]
+    elif n_guides >= n_cols:
+        # Too many guides: use first N-1
+        dividers = [xMin] + sorted_guides[: n_cols - 1] + [xMax]
+        mismatch = f"too_many:{n_guides}vs{n_cols - 1}"
+    elif n_guides > 0:
+        # Fewer guides than needed: split largest gap until we have N+1 dividers
+        dividers = [xMin] + sorted_guides + [xMax]
+        while len(dividers) - 1 < n_cols:
+            gaps = [(dividers[i + 1] - dividers[i], i) for i in range(len(dividers) - 1)]
+            _, split_at = max(gaps)
+            mid = (dividers[split_at] + dividers[split_at + 1]) / 2.0
+            dividers.insert(split_at + 1, mid)
+        mismatch = f"fewer:{n_guides}vs{n_cols - 1}"
+    else:
+        # No guides: distribute evenly
+        step = (xMax - xMin) / max(n_cols, 1)
+        dividers = [xMin + i * step for i in range(n_cols + 1)]
+        mismatch = "no_guides_even_split"
+
+    boundaries: list[dict[str, Any]] = []
+    for i, key in enumerate(required_keys):
+        x_start = dividers[i] if i < len(dividers) else xMin
+        x_end = dividers[i + 1] if i + 1 < len(dividers) else xMax
+        boundaries.append({
+            "canonical_key": key,
+            "x_start": x_start,
+            "x_end": x_end,
+            "header_cx": (x_start + x_end) / 2.0,
+            "source": "template_colguide",
+            "display_only": key == "rowIndex",
+        })
+
+    if debug is not None:
+        debug["columnGuideMode"] = "boundary_lines" if mismatch is None else "interpolated"
+        debug["columnGuideExpectedCount"] = n_cols - 1
+        debug["columnGuideActualCount"] = n_guides
+        debug["columnGuideOcrSpace"] = sorted_guides
+        debug["columnGuideMismatch"] = mismatch
+        debug["columnGuideBoundaries"] = [
+            {"key": b["canonical_key"], "x": [round(b["x_start"], 1), round(b["x_end"], 1)]}
+            for b in boundaries
+        ]
+
+    return boundaries
+
+
+def _extract_items_using_boundaries(
+    scope_rows: list[list["OcrLine"]],
+    boundaries: list[dict[str, Any]],
+    table_bounds: dict[str, float] | None,
+    page_h: float,
+    required: list[str],
+    all_keys: list[str],
+    non_canonical_expected_keys: list[str],
+    debug: dict[str, Any] | None = None,
+    skip_contact_filter: bool = False,
+) -> list[dict[str, Any]]:
+    """Extract table items using pre-built column boundaries.
+
+    T-6j: shared extraction logic used by both colGuides path and header-detection path.
+    Does NOT require a known header row — scans all rows in table_bounds area.
+    """
+    y_min_row = (table_bounds.get("yMin", 0.0)) if table_bounds else 0.0
+    # T-6l-fix: same 0.98 cutoff as _table_items_with_expected_columns
+    y_max_row = (table_bounds.get("yMax", page_h * 0.98)) if table_bounds else page_h * 0.98
+    display_only_keys = {b["canonical_key"] for b in boundaries if b.get("display_only", False)}
+    has_name_col = any(b["canonical_key"] == "itemName" for b in boundaries)
+    data_expected_keys = [k for k in all_keys if k != "rowIndex"]
+    _canonical_col_set = set(_TABLE_ROW_COLUMNS)
+    non_can = [k for k in all_keys if k not in _canonical_col_set and k != "rowIndex"]
+    items: list[dict[str, Any]] = []
+    _cand_before = 0
+    _cand_after = 0
+
+    for row in scope_rows:
+        row_y = _row_center_y(row)
+        if row_y < y_min_row or row_y > y_max_row:
+            continue
+        _cand_before += 1
+        text = _row_text(row)
+        if _is_table_header_row(text):
+            if debug is not None:
+                (debug.setdefault("rejectedRows", [])).append(
+                    {"reason": "header_or_contact", "text": text[:60], "y": round(row_y, 1)}
+                )
+            continue
+        # T-6j-fix: pre-compute strong item signal for colGuides bypass
+        _signal = skip_contact_filter and _has_strong_item_signal(text)
+        if _is_business_contact_line(text) and not _signal:
+            if debug is not None:
+                (debug.setdefault("rejectedRows", [])).append(
+                    {"reason": "header_or_contact", "text": text[:60], "y": round(row_y, 1)}
+                )
+            continue
+        if _is_summary_row_for_items(text):
+            if debug is not None:
+                (debug.setdefault("rejectedRows", [])).append(
+                    {"reason": "summary_row", "text": text[:60], "y": round(row_y, 1)}
+                )
+            continue
+        # T-6j-fix: notice_or_party filter also bypassed by strong item signal
+        if _is_table_notice_or_party_line(text) and not _signal:
+            if debug is not None:
+                (debug.setdefault("rejectedRows", [])).append(
+                    {"reason": "notice_or_party", "text": text[:60], "y": round(row_y, 1)}
+                )
+            continue
+
+        col_texts: dict[str, list[str]] = {}
+        for line in sorted(row, key=lambda l: l.x):
+            cv = _clean_value(line.text)
+            if not cv:
+                continue
+            key = _assign_canonical_by_x(line.cx, boundaries)
+            if key is not None and key not in display_only_keys:
+                col_texts.setdefault(key, []).append(cv)
+
+        item: dict[str, Any] = {k: "" for k in _TABLE_ROW_COLUMNS if k != "rowIndex"}
+        for _nck in non_can:
+            item[_nck] = ""
+        item["rawText"] = _summarize_table_row(text)
+        item["sourceBboxes"] = [_bbox_dict(l) for l in row]
+        item["source"] = "template_colguides_expected_columns"
+        item["_row_y"] = row_y
+
+        for key, texts in col_texts.items():
+            if key in item:
+                merged = _clean_value(" ".join(t for t in texts if t))
+                _split_composite_cell_value(key, merged, item)
+
+        # T-6g-fix: clear comma-formatted amounts from date/code fields
+        for _date_key in ("expiryDate", "manufacturingNo", "lotNo"):
+            _val = str(item.get(_date_key) or "")
+            if _val and re.search(r"\d{1,3}(?:,\d{3})+", _val) and not re.search(r"[가-힣A-Za-z]", _val):
+                item[_date_key] = ""
+
+        expected_col_hit_count = sum(1 for k in data_expected_keys if item.get(k))
+        if _is_item_name_only_split_row(item, len(items)):
+            if debug is not None:
+                (debug.setdefault("rejectedRows", [])).append(
+                    {"reason": "item_name_only_split", "text": text[:60], "y": round(row_y, 1),
+                     "expectedColumnHitCount": expected_col_hit_count}
+                )
+            continue
+
+        if not any(item.get(k) for k in (required + non_can)):
+            if debug is not None:
+                (debug.setdefault("rejectedRows", [])).append(
+                    {"reason": "no_meaningful_value", "text": text[:60], "y": round(row_y, 1)}
+                )
+            continue
+
+        if has_name_col and not item.get("itemName"):
+            has_code = bool(item.get("itemCode"))
+            has_qty = bool(item.get("quantity"))
+            has_price = bool(item.get("unitPrice") or item.get("amount") or item.get("supplyAmount"))
+            has_lot = bool(item.get("lotNo") or item.get("serialNo") or item.get("manufacturingNo"))
+            has_exp = bool(item.get("expiryDate") or item.get("manufacturingNo"))
+            has_spec_val = bool(item.get("spec"))
+            row_has_data = (
+                expected_col_hit_count >= 2
+                or (has_code and (has_qty or has_price))
+                or (has_qty and has_price)
+                or (has_lot and has_qty)
+                or (has_lot and has_price)
+                or (has_exp and has_qty)
+                or (has_spec_val and (has_qty or has_price))
+                or (has_lot and has_exp)
+                or (has_code and has_lot)
+                or (has_code and has_exp)
+            )
+            if not row_has_data:
+                if debug is not None:
+                    (debug.setdefault("rejectedRows", [])).append(
+                        {"reason": "no_item_name", "text": text[:60], "y": round(row_y, 1),
+                         "expectedColumnHitCount": expected_col_hit_count}
+                    )
+                continue
+
+        if debug is not None:
+            (debug.setdefault("rowCandidates", [])).append({
+                "y": round(row_y, 1),
+                "itemName": item.get("itemName", "")[:30],
+                "quantity": item.get("quantity", ""),
+                "expectedColumnHitCount": expected_col_hit_count,
+                "text": text[:40],
+            })
+        _cand_after += 1
+        items.append(item)
+
+    if debug is not None:
+        debug["rowCandidateCountBeforeFilter"] = _cand_before
+        debug["rowCandidateCountAfterFilter"] = _cand_after
+
+    return items
+
+
 def _table_items_with_expected_columns(
     lines: list["OcrLine"],
     page_h: float,
@@ -1680,10 +2216,13 @@ def _table_items_with_expected_columns(
     expected_columns: dict[str, list[str]],
     table_bounds: dict[str, float] | None = None,
     debug: dict[str, Any] | None = None,
+    column_guides: list[float] | None = None,
 ) -> list[dict[str, Any]]:
     """Extract table rows using expectedColumns as header matching hint.
 
-    Flow:
+    Flow (T-6j: column_guides path):
+    0. If column_guides provided: build boundaries directly, skip header detection.
+    Flow (standard):
     1. Build ordered expected key list from required + optional
     2. Find the y-band where expected headers cluster
     3. Build column boundaries (with interpolation for missing headers)
@@ -1725,13 +2264,47 @@ def _table_items_with_expected_columns(
         tx_min = 0.0
         tx_max = page_w
 
-    scope_rows = _group_rows(scope_lines)
+    # T-6g-fix: tighter row grouping so densely-spaced table rows are not merged
+    scope_rows = _group_rows(scope_lines, tolerance_factor=0.55)
+
+    # T-6j: colGuides path — bypass header detection entirely when template provides
+    # explicit column dividers. Works even when OCR garbles the column header text.
+    if column_guides and table_bounds and len(column_guides) > 0:
+        cg_debug: dict[str, Any] = {}
+        cg_boundaries = _build_boundaries_from_column_guides(
+            required, all_keys, column_guides, table_bounds, page_w, debug=cg_debug,
+        )
+        if debug is not None:
+            debug.update(cg_debug)
+            debug["headerSkippedBecauseColGuides"] = True
+            debug["extractionSource"] = "template_colguides_expected_columns"
+            debug["tableBoundsUsed"] = True
+            debug["tableBoundsSource"] = table_bounds.get("source", "template")
+            debug["headerBandFound"] = False
+            debug["columnGuidesReceived"] = True
+            debug["columnGuidesCount"] = len(column_guides)
+            debug["columnGuidesUsedAttempted"] = True
+            debug["rejectedRows"] = []
+            debug["rowCandidates"] = []
+        if len(cg_boundaries) >= 2:
+            result = _extract_items_using_boundaries(
+                scope_rows, cg_boundaries, table_bounds, page_h, required, all_keys,
+                non_canonical_expected_keys=[], debug=debug,
+                skip_contact_filter=True,
+            )
+            if result:
+                return result
+        if debug is not None:
+            debug["fallbackReason"] = "colguides_path_yielded_no_items"
 
     # Find header band
     header_result = _find_expected_header_band(scope_rows, page_h, expected_set, table_bounds)
 
     if debug is not None:
         debug["headerBandFound"] = header_result is not None
+        debug["tableBoundsUsed"] = bool(table_bounds)
+        debug["tableBoundsSource"] = (table_bounds.get("source", "explicit") if table_bounds else "none")
+        debug["tableBounds"] = table_bounds
 
     if header_result is None:
         if debug is not None:
@@ -1749,9 +2322,12 @@ def _table_items_with_expected_columns(
         debug["matchedHeaders"] = list(matched_dict.keys())
         debug["missingExpectedHeaders"] = [k for k in required if k not in matched_dict]
 
-    # Build boundaries
+    # Build boundaries — T-6h: pass required_keys so optional unmatched columns are excluded
+    # T-6i: allow_single_match when table_bounds provided (bounded area has less noise)
     boundaries = _build_boundaries_from_expected_columns(
         matched_dict, all_keys, page_w, table_x_min=tx_min, table_x_max=tx_max,
+        required_keys=set(required),
+        allow_single_match=bool(table_bounds),
     )
 
     if debug is not None:
@@ -1778,15 +2354,23 @@ def _table_items_with_expected_columns(
     has_name_col = any(b["canonical_key"] == "itemName" for b in boundaries)
     # T-6g: data keys to count expected column hits (exclude displayOnly rowIndex)
     data_expected_keys = [k for k in all_keys if k != "rowIndex"]
+    # T-6h: non-canonical expected keys (e.g. serialLotComposite, consumerUnitPrice)
+    _canonical_col_set = set(_TABLE_ROW_COLUMNS)
+    non_canonical_expected_keys = [k for k in all_keys if k not in _canonical_col_set and k != "rowIndex"]
     header_y = _row_center_y(header_row)
     last_header_y = header_y
 
     items: list[dict[str, Any]] = []
 
+    # T-6i: when table_bounds is provided, use its yMax as the row extraction limit.
+    # T-6l-fix: extend default cutoff from 0.96 to 0.98 to capture bottom-of-page rows
+    # (e.g. 6.pdf landscape page where row 6 center y ≈ 97% of page height).
+    _row_y_max = table_bounds.get("yMax", page_h * 0.98) if table_bounds else page_h * 0.98
+
     for idx in range(header_idx + 1, len(scope_rows)):
         row = scope_rows[idx]
         row_y = _row_center_y(row)
-        if row_y <= last_header_y or row_y > page_h * 0.93:
+        if row_y <= last_header_y or row_y > _row_y_max:
             continue
 
         text = _row_text(row)
@@ -1796,10 +2380,10 @@ def _table_items_with_expected_columns(
                 debug["rejectedRows"].append({
                     "reason": "summary_row", "text": text[:60], "y": round(row_y, 1),
                 })
-            # T-6g: only break on summary when body rows are accumulated AND well into page
-            # Using min(3, required_count) as minimum rows before break to protect long tables
+            # T-6g-fix: raise break threshold to 0.85 so rolling subtotals (소계/누계)
+            # mid-table don't trigger premature break for multi-group tables like 1.jpg.
             min_before_break = min(3, len(required)) if required else 2
-            if items and len(items) >= min_before_break and row_y >= page_h * 0.65:
+            if items and len(items) >= min_before_break and row_y >= page_h * 0.85:
                 if debug is not None:
                     debug["rowEndReason"] = f"summary_row at y={round(row_y,1)} after {len(items)} rows"
                 break
@@ -1813,6 +2397,12 @@ def _table_items_with_expected_columns(
                     "reason": "header_or_contact", "text": text[:60], "y": round(row_y, 1),
                 })
             continue
+        if _is_table_notice_or_party_line(text):
+            if debug is not None:
+                debug["rejectedRows"].append({
+                    "reason": "notice_or_party", "text": text[:60], "y": round(row_y, 1),
+                })
+            continue
 
         col_texts: dict[str, list[str]] = {}
         for line in sorted(row, key=lambda l: l.x):
@@ -1824,6 +2414,9 @@ def _table_items_with_expected_columns(
                 col_texts.setdefault(key, []).append(cv)
 
         item: dict[str, Any] = {k: "" for k in _TABLE_ROW_COLUMNS if k != "rowIndex"}
+        # T-6h: also initialize non-canonical expected keys so boundary tokens can be stored
+        for _nck in non_canonical_expected_keys:
+            item[_nck] = ""
         item["rawText"] = _summarize_table_row(text)
         item["sourceBboxes"] = [_bbox_dict(l) for l in row]
         item["source"] = "expected_columns_header_match"
@@ -1834,8 +2427,23 @@ def _table_items_with_expected_columns(
                 merged = _clean_value(" ".join(t for t in texts if t))
                 _split_composite_cell_value(key, merged, item)
 
+        # T-6g-fix: clear date/code fields that contain comma-formatted amounts
+        # e.g. expiryDate='18,098,750' is an amount, not a date → would falsely
+        # inflate expected_col_hit_count and cause summary rows to slip through.
+        for _date_key in ("expiryDate", "manufacturingNo", "lotNo"):
+            _val = str(item.get(_date_key) or "")
+            if _val and re.search(r"\d{1,3}(?:,\d{3})+", _val) and not re.search(r"[가-힣A-Za-z]", _val):
+                item[_date_key] = ""
+
         # T-6g: count expected column hits for smarter validity check
         expected_col_hit_count = sum(1 for k in data_expected_keys if item.get(k))
+        if _is_item_name_only_split_row(item, len(items)):
+            if debug is not None:
+                debug["rejectedRows"].append({
+                    "reason": "item_name_only_split", "text": text[:60], "y": round(row_y, 1),
+                    "expectedColumnHitCount": expected_col_hit_count,
+                })
+            continue
 
         # Row validity
         if has_name_col:
@@ -1856,6 +2464,9 @@ def _table_items_with_expected_columns(
                     or (has_lot and has_price)                        # T-6g: lot + amount
                     or (has_exp and has_qty)                          # T-6g: expiry + qty
                     or (has_spec_val and (has_qty or has_price))      # T-6g: spec + qty/price
+                    or (has_lot and has_exp)                          # T-6g-fix: lot+expiry (lot table)
+                    or (has_code and has_lot)                         # T-6g-fix: code+lot (lot table)
+                    or (has_code and has_exp)                         # T-6g-fix: code+expiry (lot table)
                 )
                 if not row_has_data:
                     if debug is not None:
@@ -4622,6 +5233,7 @@ def _detect_table(
     table_header_y: float | None,
     expected_columns: dict[str, list[str]] | None = None,
     table_bounds: dict[str, float] | None = None,
+    column_guides: list[float] | None = None,
 ) -> dict[str, str]:
     rows = _group_rows(lines)
     header_index = -1
@@ -4795,7 +5407,8 @@ def _detect_table(
     expected_items: list[dict[str, Any]] = []
     if expected_columns:
         expected_items = _table_items_with_expected_columns(
-            lines, page_h, page_w, expected_columns, table_bounds, debug=expected_debug
+            lines, page_h, page_w, expected_columns, table_bounds, debug=expected_debug,
+            column_guides=column_guides,
         )
 
     if expected_items:
@@ -4804,11 +5417,50 @@ def _detect_table(
         header_used = True
     else:
         # T-6: try header-based column mapping (auto-detection fallback)
+        # T-6j-fix-2pdf: preserve colGuides debug fields even when colGuides path yields nothing,
+        # so tableDebug shows columnGuidesUsedAttempted / rowCandidateCountBeforeFilter / AfterFilter.
+        _cg_debug_fields = {
+            k: expected_debug[k]
+            for k in ("columnGuidesUsedAttempted", "columnGuidesReceived", "columnGuidesCount",
+                      "rowCandidateCountBeforeFilter", "rowCandidateCountAfterFilter",
+                      "fallbackReason", "rowCandidates")
+            if k in expected_debug
+        }
+        # Store colGuides rejectedRows separately to avoid clobbering header_mapping's rejectedRows
+        if "rejectedRows" in expected_debug:
+            _cg_debug_fields["colGuidesRejectedRows"] = expected_debug["rejectedRows"]
         header_debug = {}
         header_items = _table_items_from_header_mapping(lines, page_h, page_w, debug=header_debug)
+        # Merge preserved colGuides debug into header_debug without overwriting header-mapping fields
+        for k, v in _cg_debug_fields.items():
+            header_debug.setdefault(k, v)
         header_used = bool(header_items and (not table_items or len(header_items) >= len(table_items)))
         if header_used:
             table_items = header_items
+
+    # T-6n: OP anchor reconstruction — for transposed/compressed tables where
+    # OP-* item codes far outnumber what standard extraction recovered.
+    # Guard: ≥3 OP-* anchors found AND anchors > current table_items count.
+    if expected_columns:
+        _op_anchors_quick = _find_op_anchor_lines(lines)
+        _op_anchor_count = len(_op_anchors_quick)
+        if _op_anchor_count >= 3 and _op_anchor_count > len(table_items):
+            _op_debug: dict[str, Any] = {}
+            _op_items = _op_anchor_reconstruct_table(
+                lines, page_h, page_w, expected_columns,
+                table_bounds=table_bounds, debug=_op_debug,
+            )
+            if _op_items and len(_op_items) > len(table_items):
+                _prev_source = str((table_items[0].get("source") or "") if table_items else "")
+                _prev_count = len(table_items)
+                table_items = _op_items
+                header_debug["opAnchorReconstructionAttempted"] = True
+                header_debug["opAnchorCount"] = _op_debug.get("opAnchorCount", _op_anchor_count)
+                header_debug["opAnchorSamples"] = _op_debug.get("opAnchorSamples", [])
+                header_debug["opAnchorRowsBuilt"] = _op_debug.get("opAnchorRowsBuilt", 0)
+                header_debug["previousExtractionSource"] = _prev_source
+                header_debug["previousRowCount"] = _prev_count
+                header_debug["reconstructedRowCount"] = len(_op_items)
 
     # T-6: sort table_items by y-coordinate so rowIndex follows visual order
     def _item_y_key(item: dict[str, Any]) -> float:
@@ -4826,7 +5478,11 @@ def _detect_table(
 
     # Determine extraction source for debug
     first_source = str((table_items[0].get("source") or "") if table_items else "")
-    if first_source == "expected_columns_header_match":
+    if first_source == "op_anchor_reconstructed_table":
+        extraction_source = "op_anchor_reconstructed_table"  # T-6n
+    elif first_source == "template_colguides_expected_columns":
+        extraction_source = "template_colguides_expected_columns"  # T-6j
+    elif first_source == "expected_columns_header_match":
         extraction_source = "expected_columns_header_match"
     elif first_source == "header_column_mapping":
         extraction_source = "header_column_mapping"
@@ -4866,6 +5522,27 @@ def _detect_table(
         "selectedHeaderBand": header_debug.get("selectedHeaderBand"),
         "rowEndReason": header_debug.get("rowEndReason"),
         "fallbackReason": header_debug.get("fallbackReason"),
+        # T-6j-fix: propagate colGuides debug from expected_debug/header_debug
+        "columnGuidesReceived": header_debug.get("columnGuidesReceived", False),
+        "columnGuidesCount": header_debug.get("columnGuidesCount", 0),
+        "columnGuidesOcrSpace": header_debug.get("columnGuideOcrSpace", []),
+        "columnGuideMode": header_debug.get("columnGuideMode", ""),
+        "columnGuideMismatch": header_debug.get("columnGuideMismatch"),
+        "tableBoundsSource": header_debug.get("tableBoundsSource", ""),
+        # T-6j-fix-2pdf: row filter debug
+        "columnGuidesUsedAttempted": header_debug.get("columnGuidesUsedAttempted", False),
+        "rowCandidateCountBeforeFilter": header_debug.get("rowCandidateCountBeforeFilter"),
+        "rowCandidateCountAfterFilter": header_debug.get("rowCandidateCountAfterFilter"),
+        "colGuidesRejectedRows": header_debug.get("colGuidesRejectedRows", []),
+        # T-6n: OP anchor reconstruction debug
+        "opAnchorReconstructionAttempted": header_debug.get("opAnchorReconstructionAttempted", False),
+        "opAnchorCount": header_debug.get("opAnchorCount"),
+        "opAnchorSamples": header_debug.get("opAnchorSamples", []),
+        "opAnchorRowsBuilt": header_debug.get("opAnchorRowsBuilt"),
+        "opAnchorRejectedReasonCounts": header_debug.get("opAnchorRejectedReasonCounts", {}),
+        "previousExtractionSource": header_debug.get("previousExtractionSource"),
+        "previousRowCount": header_debug.get("previousRowCount"),
+        "reconstructedRowCount": header_debug.get("reconstructedRowCount"),
     }
 
     return {
@@ -5032,6 +5709,13 @@ def _build_canonical_table_rows(
             if val:
                 row[key] = val
 
+        # T-6h: copy non-canonical expected keys (e.g. serialLotComposite, consumerUnitPrice)
+        for key, val in item.items():
+            if key not in row and key not in {
+                "rawText", "sourceBboxes", "source", "_row_y",
+            } and str(val or ""):
+                row[key] = str(val)
+
         # T-6: apply regex-based extraction only for columns still empty
         if raw_text:
             if not row.get("serialNo"):
@@ -5057,6 +5741,35 @@ def _build_canonical_table_rows(
                 if code:
                     row["itemCode"] = code
 
+        # T-6h: auto-populate composite display keys from component fields
+        if not row.get("manufacturingExpiryComposite"):
+            mfg = str(row.get("manufacturingNo") or "").strip()
+            exp = str(row.get("expiryDate") or "").strip()
+            if mfg or exp:
+                row["manufacturingExpiryComposite"] = " / ".join(filter(None, [mfg, exp]))
+        if not row.get("serialLotComposite"):
+            ser = str(row.get("serialNo") or "").strip()
+            lot = str(row.get("lotNo") or "").strip()
+            if ser or lot:
+                row["serialLotComposite"] = " / ".join(filter(None, [ser, lot]))
+
+        # T-6m: post-process unit column — if value looks like a lot-number pattern
+        # (e.g. "0350823-231024-200811"), move to lotNo and clear unit.
+        if row.get("unit") and not row.get("lotNo"):
+            _unit_chk = str(row["unit"])
+            if re.search(r"\d{6,}[-/]\d{6}", _unit_chk):
+                row["lotNo"] = _unit_chk
+                row["unit"] = ""
+
+        # T-6m: post-process quantity column — if it starts with a unit-prefix (BOX/EA/…),
+        # extract unit and leave only the numeric part as quantity.
+        if row.get("quantity") and not row.get("unit"):
+            _qty_chk = str(row["quantity"])
+            _qty_unit_m = re.match(r"^(BOX|EA|TAB|CAP|BOTTLE|AMP|VIAL)\s+(.+)$", _qty_chk, re.I)
+            if _qty_unit_m:
+                row["unit"] = _qty_unit_m.group(1).upper()
+                row["quantity"] = _qty_unit_m.group(2).strip()
+
         for col in _TABLE_ROW_COLUMNS:
             if row.get(col):
                 col_fill[col] += 1
@@ -5078,7 +5791,7 @@ def _build_canonical_table_rows(
     table_profile = _estimate_table_profile(canonical_rows)
     actual_columns = [c for c in _TABLE_ROW_COLUMNS if col_fill.get(c, 0) > 0]
 
-    # T-6e-fix: expected schema processing
+    # T-6e-fix / T-6h: expected schema processing — now includes non-canonical keys
     _valid_col_set = set(_TABLE_ROW_COLUMNS)
     expected_required: list[str] = []
     expected_all_keys: list[str] = []
@@ -5087,10 +5800,10 @@ def _build_canonical_table_rows(
         opt = expected_columns.get("optional") or []
         _seen_exp: set[str] = set()
         for k in req + opt:
-            if k not in _seen_exp and k in _valid_col_set:
+            if k not in _seen_exp:
                 _seen_exp.add(k)
-                expected_all_keys.append(k)
-        expected_required = [k for k in req if k in _valid_col_set]
+                expected_all_keys.append(k)  # T-6h: include non-canonical keys too
+        expected_required = list(req)  # T-6h: include non-canonical required keys
         # Ensure all expected keys exist in every canonical row (empty string if no value)
         for row in canonical_rows:
             for key in expected_all_keys:
@@ -5098,7 +5811,12 @@ def _build_canonical_table_rows(
                     row[key] = ""
 
     matched_keys_clean = [k for k in (matched_column_keys or []) if k in _valid_col_set]
-    value_column_keys = actual_columns  # columns with at least one filled value
+    # T-6h: value columns include non-canonical keys that have at least one value
+    non_canonical_filled = [
+        k for k in expected_all_keys
+        if k not in _valid_col_set and any(str(row.get(k) or "") for row in canonical_rows)
+    ]
+    value_column_keys = actual_columns + non_canonical_filled
     missing_expected_required = [k for k in expected_required if k not in value_column_keys]
 
     # T-6: detect source to aid debugging
@@ -5121,6 +5839,24 @@ def _build_canonical_table_rows(
         table_meta["matchedColumnKeys"] = matched_keys_clean
         table_meta["valueColumnKeys"] = value_column_keys
         table_meta["missingExpectedColumnKeys"] = missing_expected_required
+
+    # T-6m: value mapping diagnostics
+    if expected_all_keys and canonical_rows:
+        _n = len(canonical_rows)
+        _filled_keys = [
+            k for k in expected_all_keys
+            if sum(1 for r in canonical_rows if str(r.get(k) or "").strip()) > 0
+        ]
+        _missing_keys = [k for k in expected_all_keys if k not in _filled_keys]
+        _total_cells = _n * len(expected_all_keys)
+        _filled_cells = sum(
+            sum(1 for k in expected_all_keys if str(r.get(k) or "").strip())
+            for r in canonical_rows
+        )
+        table_meta["expectedValueFillRate"] = round(_filled_cells / _total_cells * 100, 1) if _total_cells else 0.0
+        table_meta["expectedFilledKeys"] = _filled_keys
+        table_meta["expectedMissingKeys"] = _missing_keys
+        table_meta["valueMappingWarnings"] = []
 
     return {
         "tableRows": canonical_rows,
@@ -5401,6 +6137,7 @@ def extract_invoice_statement_fields(
     debug: dict[str, Any] | None = None,
     table_expected_columns: dict[str, list[str]] | None = None,
     table_bounds: dict[str, float] | None = None,
+    column_guides: list[float] | None = None,
 ) -> dict[str, str]:
     lines = [line for raw in ocr_lines_raw if (line := _line_from_raw(raw))]
     fields = {
@@ -5444,6 +6181,7 @@ def extract_invoice_statement_fields(
         lines, page_h, table_header_y,
         expected_columns=table_expected_columns,
         table_bounds=table_bounds,
+        column_guides=column_guides,
     )
     full_text = "\n".join(line.text for line in lines)
     tdbg = table.get("tableDebug") or {}
@@ -5458,6 +6196,21 @@ def extract_invoice_statement_fields(
     canonical["tableMeta"]["extractionSource"] = tdbg.get("extractionSource", "")
     canonical["tableMeta"]["expectedColumnsUsed"] = tdbg.get("expectedColumnsUsed", False)
     canonical["tableMeta"]["tableBoundsUsed"] = tdbg.get("tableBoundsUsed", False)
+    # T-6j-fix: expose colGuides debug in tableMeta
+    canonical["tableMeta"]["columnGuidesReceived"] = tdbg.get("columnGuidesReceived", False)
+    canonical["tableMeta"]["columnGuidesUsed"] = bool(tdbg.get("columnGuidesReceived") and tdbg.get("extractionSource") == "template_colguides_expected_columns")
+    canonical["tableMeta"]["columnGuidesCount"] = tdbg.get("columnGuidesCount", 0)
+    canonical["tableMeta"]["tableBoundsSource"] = tdbg.get("tableBoundsSource", "")
+    # T-6j-fix-2pdf: row filter debug in tableMeta
+    canonical["tableMeta"]["columnGuidesUsedAttempted"] = tdbg.get("columnGuidesUsedAttempted", False)
+    canonical["tableMeta"]["rowCandidateCountBeforeFilter"] = tdbg.get("rowCandidateCountBeforeFilter")
+    canonical["tableMeta"]["rowCandidateCountAfterFilter"] = tdbg.get("rowCandidateCountAfterFilter")
+    # T-6n: OP anchor reconstruction debug in tableMeta
+    canonical["tableMeta"]["opAnchorReconstructionAttempted"] = tdbg.get("opAnchorReconstructionAttempted", False)
+    canonical["tableMeta"]["opAnchorCount"] = tdbg.get("opAnchorCount")
+    canonical["tableMeta"]["opAnchorRowsBuilt"] = tdbg.get("opAnchorRowsBuilt")
+    canonical["tableMeta"]["reconstructedRowCount"] = tdbg.get("reconstructedRowCount")
+    canonical["tableMeta"]["previousRowCount"] = tdbg.get("previousRowCount")
 
     fields.update(
         {

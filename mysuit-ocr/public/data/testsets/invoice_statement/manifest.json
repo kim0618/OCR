@@ -22,7 +22,16 @@
         },
         "tableExpectedColumns": {
           "required": ["itemName", "spec", "manufacturingNo", "expiryDate", "quantity", "unitPrice", "amount"],
-          "optional": ["lotNo", "unit", "supplyAmount", "taxAmount", "totalAmount", "remark"]
+          "optional": ["lotNo", "unit", "supplyAmount", "taxAmount", "totalAmount", "remark"],
+          "display": [
+            { "key": "itemName", "label": "품목" },
+            { "key": "spec", "label": "규격" },
+            { "key": "manufacturingNo", "label": "제조번호" },
+            { "key": "expiryDate", "label": "유효기간" },
+            { "key": "quantity", "label": "수량" },
+            { "key": "unitPrice", "label": "단가" },
+            { "key": "amount", "label": "금액" }
+          ]
         }
       }
     },
@@ -46,7 +55,17 @@
         "visibleAmountFields": ["previousBalance", "transactionAmount", "cumulativeBalance", "totalAmount"],
         "tableExpectedColumns": {
           "required": ["rowIndex", "itemCode", "itemName", "quantity", "consumerUnitPrice", "supplyUnitPrice", "supplyAmount", "insuranceCode"],
-          "optional": ["amount", "totalAmount", "remark"]
+          "optional": ["amount", "totalAmount", "remark"],
+          "display": [
+            { "key": "rowIndex", "label": "NO" },
+            { "key": "itemCode", "label": "품목코드" },
+            { "key": "itemName", "label": "품목명" },
+            { "key": "quantity", "label": "수량" },
+            { "key": "consumerUnitPrice", "label": "소비자단가" },
+            { "key": "supplyUnitPrice", "label": "공급단가" },
+            { "key": "supplyAmount", "label": "공급금액" },
+            { "key": "insuranceCode", "label": "보험No" }
+          ]
         }
       }
     },
@@ -63,8 +82,19 @@
         "partyProfile": "supplier_weak",
         "tableProfile": "single_item_table",
         "tableExpectedColumns": {
-          "required": ["rowIndex", "insuranceCode", "itemName", "spec", "quantity", "unitPrice", "amount", "manufacturer", "manufacturingExpiry"],
-          "optional": ["lotNo", "serialNo", "remark"]
+          "required": ["rowIndex", "insuranceCode", "itemName", "spec", "quantity", "unitPrice", "amount", "manufacturer", "manufacturingExpiryComposite"],
+          "optional": ["lotNo", "serialNo", "remark"],
+          "display": [
+            { "key": "rowIndex", "label": "순번" },
+            { "key": "insuranceCode", "label": "보험코드" },
+            { "key": "itemName", "label": "품명" },
+            { "key": "spec", "label": "규격" },
+            { "key": "quantity", "label": "수량" },
+            { "key": "unitPrice", "label": "단가" },
+            { "key": "amount", "label": "금액" },
+            { "key": "manufacturer", "label": "제조회사" },
+            { "key": "manufacturingExpiryComposite", "label": "제조번호/유효기간" }
+          ]
         }
       }
     },
@@ -82,7 +112,16 @@
         "tableProfile": "single_item_table",
         "tableExpectedColumns": {
           "required": ["itemName", "lotNo", "unit", "quantity", "unitPrice", "supplyAmount", "taxAmount"],
-          "optional": ["amount", "totalAmount", "remark"]
+          "optional": ["amount", "totalAmount", "remark"],
+          "display": [
+            { "key": "itemName", "label": "품목명" },
+            { "key": "lotNo", "label": "LotNo." },
+            { "key": "unit", "label": "단위" },
+            { "key": "quantity", "label": "수량" },
+            { "key": "unitPrice", "label": "단가" },
+            { "key": "supplyAmount", "label": "공급가액" },
+            { "key": "taxAmount", "label": "세액" }
+          ]
         }
       }
     },
@@ -101,7 +140,14 @@
         "fieldLabels": { "taxAmount": "부가세" },
         "tableExpectedColumns": {
           "required": ["itemName", "itemCode", "quantity", "unitPrice", "amount"],
-          "optional": ["supplyAmount", "taxAmount", "totalAmount", "remark"]
+          "optional": ["supplyAmount", "taxAmount", "totalAmount", "remark"],
+          "display": [
+            { "key": "itemName", "label": "품명" },
+            { "key": "itemCode", "label": "품목코드" },
+            { "key": "quantity", "label": "수량" },
+            { "key": "unitPrice", "label": "단가" },
+            { "key": "amount", "label": "금액" }
+          ]
         }
       }
     },
@@ -119,7 +165,15 @@
         "tableProfile": "lot_serial_quantity_table",
         "tableExpectedColumns": {
           "required": ["rowIndex", "itemCode", "itemName", "quantity", "lotNo", "expiryDate"],
-          "optional": ["serialNo", "manufacturingNo", "unit", "remark"]
+          "optional": ["serialNo", "manufacturingNo", "unit", "remark"],
+          "display": [
+            { "key": "rowIndex", "label": "NO" },
+            { "key": "itemCode", "label": "제품코드" },
+            { "key": "itemName", "label": "제품명" },
+            { "key": "quantity", "label": "수량" },
+            { "key": "lotNo", "label": "LotNo" },
+            { "key": "expiryDate", "label": "유효일자" }
+          ]
         }
       }
     },
@@ -139,8 +193,14 @@
           "totalQuantity": { "label": "총수량", "appliesToAmount": false }
         },
         "tableExpectedColumns": {
-          "required": ["itemName", "serialLot", "unit", "quantity"],
-          "optional": ["manufacturingNo", "remark"]
+          "required": ["itemName", "serialLotComposite", "unit", "quantity"],
+          "optional": ["manufacturingNo", "remark"],
+          "display": [
+            { "key": "itemName", "label": "품명" },
+            { "key": "serialLotComposite", "label": "시리얼/로트No." },
+            { "key": "unit", "label": "단위" },
+            { "key": "quantity", "label": "수량" }
+          ]
         }
       }
     }

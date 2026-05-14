@@ -1598,7 +1598,8 @@ async def ocr_extract(
     corners: str = Form(""),
     model_id: str = Form(""),
     tableExpectedColumns: str = Form(""),  # T-6f: from manifest invoiceProfile
-    tableBounds: str = Form(""),           # T-6f: future Template bounds (unused now)
+    tableBounds: str = Form(""),           # T-6i: Template table bounds
+    columnGuides: str = Form(""),          # T-6j: Template column guide x-positions (OCR space)
 ):
     import time
     start = time.time()
@@ -1648,6 +1649,13 @@ async def ocr_extract(
     full_lines = []
     processed_b64 = None
     receipt_fields = {}
+    # T-6j-fix: always initialize variables that are referenced after the region/full-OCR split.
+    # Without this, the template (region_list) path raises UnboundLocalError on doc_type etc.
+    doc_type: str = "unknown"
+    extract_debug: dict = {}
+    ocr_lines_raw: list = []
+    ocr_w: int = orig_w
+    ocr_h: int = orig_h
 
     if region_list:
         # === 템플릿 영역 기반 OCR ===
@@ -1693,6 +1701,28 @@ async def ocr_extract(
                 })
                 if text:
                     full_lines.append(text)
+
+        # T-6j-fix: classify doc_type from template region text so invoice_statement
+        # extractor and other doc-type checks can run correctly in the template path.
+        if full_lines:
+            _tmpl_doc_info = classify_document("\n".join(full_lines))
+            doc_type = _tmpl_doc_info.get("type", "unknown")
+            extract_debug = {"document_classification": _tmpl_doc_info, "doc_type": doc_type}
+            print(f"[template] classified doc_type={doc_type} from {len(full_lines)} lines")
+
+        # T-6j-fix: for invoice_statement, run full-image OCR to obtain ocr_lines_raw
+        # (needed by extract_invoice_statement_fields for field/table extraction).
+        # Coordinates are in img space; ocr_w/ocr_h default to orig_w/orig_h so
+        # the tableBounds scaling factor from regions is 1.0 (no transform applied).
+        if doc_type == "invoice_statement":
+            try:
+                _tmpl_inv_result = ocr.ocr(img)
+                ocr_lines_raw = _parse_ocr_lines(_tmpl_inv_result)
+                print(f"[template/invoice_statement] full OCR: {len(ocr_lines_raw)} lines")
+            except Exception as _tmpl_inv_e:
+                print(f"[template/invoice_statement] full OCR failed: {_tmpl_inv_e}")
+                ocr_lines_raw = []
+
     else:
         # === 전체 이미지 OCR ===
         t1 = time.time()
@@ -2059,12 +2089,55 @@ async def ocr_extract(
                 except (json.JSONDecodeError, ValueError):
                     _tbn = None
 
+            # T-6j: parse columnGuides Form param (absolute x positions in OCR space)
+            _tcg: list[float] | None = None
+            if columnGuides:
+                try:
+                    _tcg_raw = json.loads(columnGuides)
+                    if isinstance(_tcg_raw, list):
+                        _tcg = [float(v) for v in _tcg_raw if isinstance(v, (int, float))]
+                except (json.JSONDecodeError, ValueError):
+                    _tcg = None
+
+            # T-6i: derive table bounds from template region when tableBounds not provided.
+            # T-6j: also extract colX (absolute pixel column guides) from region.table.colX.
+            # Converts region coordinates (original img space) to OCR image space using
+            # a simple scale factor. Perspective/orientation corrections are approximated.
+            if not _tbn and region_list:
+                for _r in region_list:
+                    if _r.get("fieldType") == "table":
+                        _rx = float(_r.get("x", 0))
+                        _ry = float(_r.get("y", 0))
+                        _rw = float(_r.get("width", 0))
+                        _rh = float(_r.get("height", 0))
+                        if _rw > 10 and _rh > 10:
+                            _sx = float(ocr_w) / max(float(orig_w), 1)
+                            _sy = float(ocr_h) / max(float(orig_h), 1)
+                            _tbn = {
+                                "xMin": max(0.0, _rx * _sx),
+                                "yMin": max(0.0, _ry * _sy),
+                                "xMax": min(float(ocr_w), (_rx + _rw) * _sx),
+                                "yMax": min(float(ocr_h), (_ry + _rh) * _sy),
+                                "source": "template_region",
+                            }
+                            # T-6j: extract colX (pre-computed absolute pixel positions)
+                            # colX is in img space; scale to OCR space
+                            _col_x_img = (_r.get("table") or {}).get("colX", [])
+                            if isinstance(_col_x_img, list) and _col_x_img:
+                                _tcg = [
+                                    min(float(ocr_w), max(0.0, float(cx) * _sx))
+                                    for cx in _col_x_img
+                                    if isinstance(cx, (int, float))
+                                ]
+                        break
+
             invoice_debug: dict = {}
             document_fields = extract_invoice_statement_fields(
                 ocr_lines_raw,
                 debug=invoice_debug,
                 table_expected_columns=_tec,
                 table_bounds=_tbn,
+                column_guides=_tcg,
             )
             response["document_fields"] = document_fields
             extract_debug["invoice_statement"] = invoice_debug.get("invoice_statement", invoice_debug)
@@ -2084,6 +2157,14 @@ async def ocr_extract(
         response["processed_image"] = f"data:image/jpeg;base64,{processed_b64}"
     if original_b64:
         response["original_image"] = f"data:image/jpeg;base64,{original_b64}"
+
+    # T-6j-fix: expose extract_debug for template (region_list) path too
+    # so tableMeta/tableDebug with colGuides info is visible in the response.
+    if region_list and extract_debug:
+        extract_debug["template_path"] = True
+        response["extract_debug"] = extract_debug
+        response["doc_type"] = doc_type
+
     # 금액 추출 디버그 메타 (프론트 TEST 탭에서 활용 가능)
     if not region_list:
         # 계측 메타 주입: 구간 시간/차원/디바이스

@@ -1,0 +1,65 @@
+{
+  "task": "T-6g-fix",
+  "generatedAt": "2026-05-13",
+  "modifiedFiles": [
+    "d:/Free_Vue/OCR/ocr-server/extractors/invoice_statement.py",
+    "d:/Free_Vue/OCR/mysuit-ocr/public/data/testsets/invoice_statement/manifest.json"
+  ],
+  "backupFiles": [
+    "d:/Free_Vue/OCR/ocr-server/backup/invoice_statement_20260512_before_T6g_fix_row_grouping.py",
+    "d:/Free_Vue/OCR/mysuit-ocr/backup/invoice_statement_manifest_20260512_before_T6g_fix_schema_mismatch.json"
+  ],
+  "schemaMismatch": {
+    "3.pdf": { "before": "manufacturingExpiry", "after": "manufacturingExpiryComposite", "ok": true },
+    "7.pdf": { "before": "serialLot", "after": "serialLotComposite", "ok": true }
+  },
+  "schemaMatchCount": { "before": 5, "after": 7 },
+  "rowCount": {
+    "1.jpg": { "target": 28, "before": 22, "after": 29, "diff": 1, "verdict": "초과(목표 근접)" },
+    "2.pdf": { "target": null, "before": 2, "after": 2, "diff": 0, "verdict": "변화 없음" },
+    "3.pdf": { "target": null, "before": 1, "after": 1, "diff": 0, "verdict": "변화 없음" },
+    "4.pdf": { "target": null, "before": 1, "after": 3, "diff": 2, "verdict": "개선" },
+    "5.pdf": { "target": 6, "before": 6, "after": 6, "diff": 0, "verdict": "OK(회귀 없음)" },
+    "6.pdf": { "target": 6, "before": 2, "after": 5, "diff": -1, "verdict": "개선(목표 근접)" },
+    "7.pdf": { "target": 1, "before": 1, "after": 1, "diff": 0, "verdict": "OK(회귀 없음)" }
+  },
+  "rootCauses": [
+    {
+      "file": "invoice_statement.py",
+      "symbol": "_PHONE_RE",
+      "issue": "lot번호+유효기간 조합(24027 20270205)이 전화번호(027-2027-0205)로 오인식",
+      "fix": "(?<!\d) lookbehind 추가",
+      "impact": "1.jpg 7행 복구"
+    },
+    {
+      "file": "invoice_statement.py",
+      "symbol": "_BIZ_RE",
+      "issue": "연속된 lot번호(23001 24001)가 사업자번호(230-01-24001)로 오인식",
+      "fix": "[-\\s.]? → [-\\s.] (구분자 필수화)",
+      "impact": "6.pdf 1행 추가 복구"
+    },
+    {
+      "file": "invoice_statement.py",
+      "symbol": "_group_rows",
+      "issue": "tolerance_factor=0.75로 밀집 table에서 인접 row 병합",
+      "fix": "header 기반 추출 경로에서 tolerance_factor=0.55 적용",
+      "impact": "6.pdf 추가 분리(2→5행)"
+    }
+  ],
+  "otherFixes": [
+    "summary break threshold: 0.65/0.72 → 0.85",
+    "row_has_data: has_lot+has_exp, has_code+has_lot, has_code+has_exp 조건 추가",
+    "date field validation: comma-formatted amounts 자동 클리어"
+  ],
+  "regressionCheck": {
+    "5.pdf": { "rowCount": 6, "ok": true },
+    "7.pdf": { "rowCount": 1, "ok": true }
+  },
+  "verification": {
+    "pyCompile": "pass",
+    "verifyScript": "7/7 success",
+    "frontendTypecheck": "pass",
+    "frontendBuild": "pass"
+  },
+  "nextTask": "T-6h expected boundary/value mapping"
+}

@@ -4095,14 +4095,24 @@ const ALL_COL_KEY_SET = new Set<string>(ALL_CANONICAL_COLS);
 // T-6a: 표시 모드 (T-6e-fix: "expected" 추가)
 type TableDisplayMode = "detected" | "all" | "hasValue" | "expected";
 
-// T-6e-fix2/static/T-6e-fix3: manifest tableExpectedColumns.required → ordered display column keys.
+// T-6e-fix2/static/T-6e-fix3/T-6k: manifest tableExpectedColumns → ordered display column keys.
+// T-6k: display 배열이 있으면 그 순서/key를 우선 사용. 없으면 required 배열로 fallback.
 // expected 모드는 required 컬럼만 표시한다.
 // optional은 detected/hasValue 모드에서 값이 있을 때 표시된다.
-// T-6e-fix3: 커스텀 display-only key(consumerUnitPrice, supplyUnitPrice, manufacturingExpiry, serialLot)도 허용.
 function getManifestExpectedColKeys(
   tableExpectedColumns: InvoiceProfile["tableExpectedColumns"] | undefined
 ): string[] {
   if (!tableExpectedColumns) return [];
+  // T-6k: display 배열 우선 — 실제 문서 표 헤더 순서대로 표시
+  const displayArr = tableExpectedColumns.display;
+  if (displayArr && displayArr.length > 0) {
+    const seen = new Set<string>();
+    return displayArr.reduce<string[]>((acc, d) => {
+      if (d.key && !seen.has(d.key)) { seen.add(d.key); acc.push(d.key); }
+      return acc;
+    }, []);
+  }
+  // fallback: required 배열
   const seen = new Set<string>();
   const result: string[] = [];
   for (const k of (tableExpectedColumns.required ?? [])) {
@@ -4113,30 +4123,56 @@ function getManifestExpectedColKeys(
   return result;
 }
 
-// T-6e-fix3: 커스텀 display key 라벨 (canonical TABLE_COLUMN_META에 없는 key)
+// T-6k: manifest display 배열에서 key→label 맵 추출
+function getManifestDisplayLabelMap(
+  tableExpectedColumns: InvoiceProfile["tableExpectedColumns"] | undefined
+): Record<string, string> {
+  const displayArr = tableExpectedColumns?.display;
+  if (!displayArr || displayArr.length === 0) return {};
+  return Object.fromEntries(displayArr.map((d) => [d.key, d.label]));
+}
+
+// T-6e-fix3 / T-6k: 커스텀 display key 라벨 (canonical TABLE_COLUMN_META에 없는 key)
+// T-6k: composite key 추가 (manufacturingExpiryComposite, serialLotComposite)
 const CUSTOM_COL_LABELS: Record<string, string> = {
-  consumerUnitPrice:  "소비자단가",
-  supplyUnitPrice:    "공급단가",
-  manufacturingExpiry: "제조번호/유효기간",
-  serialLot:          "시리얼/로트No.",
+  consumerUnitPrice:            "소비자단가",
+  supplyUnitPrice:              "공급단가",
+  manufacturingExpiry:          "제조번호/유효기간",
+  manufacturingExpiryComposite: "제조번호/유효기간",
+  serialLot:                    "시리얼/로트No.",
+  serialLotComposite:           "시리얼/로트No.",
 };
 
-// T-6e-fix3: 커스텀/composite key에 대한 셀 값 해석
+// T-6e-fix3 / T-6k: 커스텀/composite key에 대한 셀 값 해석
 function resolveDisplayColValue(row: CanonicalTableRow, col: string): string {
+  const rowAny = row as Record<string, unknown>;
   switch (col) {
-    case "manufacturingExpiry": {
+    case "manufacturingExpiry":
+    case "manufacturingExpiryComposite": {
+      // T-6k: backend가 이미 composite 값을 넣었을 수 있음
+      const direct = String(rowAny[col] ?? "").trim();
+      if (direct) return direct;
       const mfg = row.manufacturingNo ?? "";
       const exp = row.expiryDate ?? "";
       if (mfg && exp) return `${mfg} / ${exp}`;
       return mfg || exp || "";
     }
     case "serialLot":
+    case "serialLotComposite": {
+      // T-6k: backend가 이미 composite 값을 넣었을 수 있음
+      const direct = String(rowAny[col] ?? "").trim();
+      if (direct) return direct;
       return row.serialNo || row.lotNo || "";
+    }
     case "consumerUnitPrice":
-    case "supplyUnitPrice":
+    case "supplyUnitPrice": {
+      // T-6k: backend에서 직접 값을 넣었을 수 있음
+      const direct = String(rowAny[col] ?? "").trim();
+      if (direct) return direct;
       return row.unitPrice ?? "";
+    }
     default:
-      return String((row as Record<string, unknown>)[col] ?? "");
+      return String(rowAny[col] ?? "");
   }
 }
 
@@ -4240,10 +4276,16 @@ function InvoiceTableRowsPanel({
   const metaStatus = tableMeta?.extractionStatus ?? "";
   const extractionStatus: string = metaStatus || (tableRows.length > 0 ? "partial" : tableDetected ? "parser_not_ready" : "not_extracted");
 
-  // T-6e-fix3: canonical + custom labels merged
+  // T-6k: manifest display labels (sample별 실제 문서 표 헤더명, 최우선)
+  const manifestDisplayLabelMap = React.useMemo(
+    () => getManifestDisplayLabelMap(invoiceProfile?.tableExpectedColumns),
+    [invoiceProfile?.tableExpectedColumns]
+  );
+  // T-6e-fix3 / T-6k: canonical + custom + manifest display labels (우선순위: manifest > custom > canonical)
   const colLabelMap: Record<string, string> = {
     ...Object.fromEntries(TABLE_COLUMN_META.map((m) => [m.key, m.labelKo])),
     ...CUSTOM_COL_LABELS,
+    ...manifestDisplayLabelMap,  // T-6k: 실제 문서 헤더명이 최우선
   };
 
   // T-6e-fix2: 동적 컬럼 결정 — manifest expected cols 전달 (string[])
@@ -4260,11 +4302,14 @@ function InvoiceTableRowsPanel({
         }))
       : []
   );
-  // T-6e-fix3: composite/custom key의 missing 판정
+  // T-6e-fix3 / T-6k: composite/custom key의 missing 판정
+  // T-6k: manufacturingExpiryComposite, serialLotComposite도 포함
   const manifestMissingRequired = manifestRequiredKeys.filter((k) => {
     if (ALL_COL_KEY_SET.has(k)) return !valueColSet.has(k as TableColumnKey);
-    if (k === "manufacturingExpiry") return !valueColSet.has("manufacturingNo") && !valueColSet.has("expiryDate");
-    if (k === "serialLot") return !valueColSet.has("serialNo") && !valueColSet.has("lotNo");
+    if (k === "manufacturingExpiry" || k === "manufacturingExpiryComposite")
+      return !valueColSet.has("manufacturingNo") && !valueColSet.has("expiryDate");
+    if (k === "serialLot" || k === "serialLotComposite")
+      return !valueColSet.has("serialNo") && !valueColSet.has("lotNo");
     if (k === "consumerUnitPrice" || k === "supplyUnitPrice") return !valueColSet.has("unitPrice");
     return false; // 알 수 없는 커스텀 key는 missing으로 표시하지 않음
   });
@@ -4318,7 +4363,11 @@ function InvoiceTableRowsPanel({
             expected {expectedDisplayCount}개
             {manifestMissingRequired.length > 0 && (
               <span style={{ color: "#f87171", marginLeft: 3 }}>
-                missing: {manifestMissingRequired.join(", ")}
+                {/* T-6k: label(key) 형식으로 표시 */}
+                missing: {manifestMissingRequired.map((k) => {
+                  const lbl = colLabelMap[k];
+                  return lbl && lbl !== k ? `${lbl}(${k})` : k;
+                }).join(", ")}
               </span>
             )}
           </span>
