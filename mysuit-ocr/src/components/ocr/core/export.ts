@@ -15,8 +15,9 @@ export function buildExportPayload(params: {
   templateName: string;
   loaded: LoadedImage | null;
   regions: Region[];
+  documentType?: string;
 }) {
-  const { templateName, loaded, regions } = params;
+  const { templateName, loaded, regions, documentType } = params;
 
   // ✅ tables 제거
   if (!loaded)
@@ -24,6 +25,7 @@ export function buildExportPayload(params: {
 
   return {
     templateName,
+    ...(documentType ? { documentType } : {}),
     file: { name: loaded.fileName },
     // src 포함 — 템플릿 재로드 시 이미지 복원에 사용
     image: { width: loaded.naturalWidth, height: loaded.naturalHeight, src: loaded.src },

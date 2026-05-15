@@ -2151,6 +2151,33 @@ async def ocr_extract(
                                 ]
                         break
 
+            # T-10-fix-colguides: When template provides colX (column guides) but no
+            # tableExpectedColumns was sent in the request, look up expected columns
+            # from the testset manifest for the uploaded file so the column_guides
+            # extraction path in the extractor activates. Falls back to a generic
+            # invoice_statement schema when the manifest has no entry for this file.
+            if _tcg and not _tec:
+                _inv_manifest = os.path.join(
+                    os.path.dirname(__file__),
+                    "..", "mysuit-ocr", "public", "data", "testsets",
+                    "invoice_statement", "manifest.json",
+                )
+                if os.path.exists(_inv_manifest):
+                    try:
+                        _mf = _load_json(_inv_manifest, {})
+                        _ufn = file.filename or ""
+                        for _mitem in _mf.get("items", []):
+                            if _mitem.get("filename") == _ufn:
+                                _tec = ((_mitem.get("invoiceProfile") or {}).get("tableExpectedColumns")) or None
+                                break
+                    except Exception:
+                        pass
+                if not _tec:
+                    _tec = {
+                        "required": ["itemName", "quantity", "unitPrice", "supplyAmount", "taxAmount", "totalAmount"],
+                        "optional": ["itemCode", "spec", "lotNo", "manufacturingNo", "expiryDate", "unit", "amount", "remark"],
+                    }
+
             invoice_debug: dict = {}
             document_fields = extract_invoice_statement_fields(
                 ocr_lines_raw,

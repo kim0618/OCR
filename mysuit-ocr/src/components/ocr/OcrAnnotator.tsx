@@ -21,6 +21,7 @@ export default function OcrAnnotator({
   const DEFAULT_ZOOM_PCT = 100;
 
   const [templateName, setTemplateName] = useState<string>("");
+  const [documentType, setDocumentType] = useState<string>("");
   const [loaded, setLoaded] = useState<LoadedImage | null>(null);
   const [regions, setRegions] = useState<Region[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -40,13 +41,14 @@ export default function OcrAnnotator({
   }
 
   const exportPayload = useMemo(
-    () => buildExportPayload({ templateName, loaded, regions }),
-    [loaded, regions, templateName],
+    () => buildExportPayload({ templateName, loaded, regions, documentType }),
+    [loaded, regions, templateName, documentType],
   );
 
   useEffect(() => {
     if (!selectedTemplate) return;
     setTemplateName(String(selectedTemplate.templateName ?? selectedTemplate.template_name ?? ""));
+    setDocumentType(String(selectedTemplate.documentType ?? ""));
 
     // 저장된 이미지 dataURL이 있으면 loaded 상태 복원
     const savedSrc = selectedTemplate.image?.src;
@@ -69,6 +71,48 @@ export default function OcrAnnotator({
   }, [selectedTemplate]);
 
   async function onPickFile(file: File) {
+    const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+
+    if (isPdf) {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdfjs = await import("pdfjs-dist/legacy/build/pdf");
+        pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
+        const loadingTask = pdfjs.getDocument({ data: arrayBuffer });
+        const pdf = await loadingTask.promise;
+        const page = await pdf.getPage(1);
+        const pageRotation = typeof page.rotate === "number" ? page.rotate : 0;
+        const baseViewport = page.getViewport({ scale: 1, rotation: pageRotation });
+        // backend(PyMuPDF 200 DPI)와 좌표계 일치: 72pt/inch 기준 200dpi = 200/72
+        const scale = 200 / 72;
+        const viewport = page.getViewport({ scale, rotation: pageRotation });
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.ceil(viewport.width);
+        canvas.height = Math.ceil(viewport.height);
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { alert("캔버스를 생성할 수 없습니다."); await pdf.destroy(); return; }
+        await page.render({ canvasContext: ctx, viewport }).promise;
+        await pdf.destroy();
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
+        setLoaded({
+          src: dataUrl,
+          fileName: file.name,
+          naturalWidth: canvas.width,
+          naturalHeight: canvas.height,
+        });
+        setRegions([]);
+        setSelectedId(null);
+        setDrawMode(null);
+        setZoomPct(DEFAULT_ZOOM_PCT);
+        setRowTemplateTargetId(null);
+        setColGuideTargetId(null);
+      } catch (e) {
+        console.error("[PDF render error]", e);
+        alert("PDF 렌더링에 실패했습니다.");
+      }
+      return;
+    }
+
     // base64 dataURL로 읽어서 localStorage에 영속 가능하도록 처리
     const reader = new FileReader();
     reader.onload = (ev) => {
@@ -138,7 +182,11 @@ export default function OcrAnnotator({
       alert("템플릿명을 입력해주세요.");
       return;
     }
-    const txt = JSON.stringify(exportPayload, null, 2);
+    // edit mode: include template_id so backend updates by ID instead of creating new
+    const serverPayload = selectedTemplateId
+      ? { ...exportPayload, template_id: selectedTemplateId }
+      : exportPayload;
+    const txt = JSON.stringify(serverPayload, null, 2);
 
     const localTemplate = {
       template_id: selectedTemplateId || `LOCAL-${Date.now()}`,
@@ -276,6 +324,8 @@ export default function OcrAnnotator({
           imgRef={imgRef}
           templateName={templateName}
           setTemplateName={setTemplateName}
+          documentType={documentType}
+          setDocumentType={setDocumentType}
           loaded={loaded}
           regions={regions}
           setRegions={setRegions}

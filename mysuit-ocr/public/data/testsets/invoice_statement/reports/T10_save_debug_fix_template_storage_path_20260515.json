@@ -1,0 +1,76 @@
+{
+  "task": "T-10-save-debug-fix",
+  "date": "2026-05-15",
+  "status": "fixed",
+  "additional_root_cause": {
+    "id": "D",
+    "title": "PDF 렌더링 DPI 불일치",
+    "description": "Frontend OcrAnnotator: scale=1800/baseWidth → 5.pdf 렌더링 1800×1271px. Backend PyMuPDF: dpi=200(=200/72 scale) → 5.pdf 렌더링 1654×1169px. 좌표계 9% 불일치 → template annotation 좌표가 backend OCR 좌표와 맞지 않음",
+    "fixed": true,
+    "fix_file": "mysuit-ocr/src/components/ocr/OcrAnnotator.tsx",
+    "fix_description": "PDF rendering scale: 1800/baseViewport.width → 200/72 (backend 200 DPI와 동일)"
+  },
+  "save_path_investigation": {
+    "frontend_endpoint": "POST /templates (relative)",
+    "proxy_config": "next.config.ts rewrites /templates → BACKEND_URL/templates",
+    "backend_url": "http://127.0.0.1:9099 (from .env.local BACKEND_URL)",
+    "proxy_test_result": "SUCCESS (TPL-9934F576 created via 8089, deleted after)",
+    "path_mismatch": false,
+    "save_path": "ocr-server/data/templates.json",
+    "t10_read_path": "BACKEND_DIR/data/templates.json",
+    "paths_match": true
+  },
+  "pdf_rendering_analysis": {
+    "5pdf_fitz_200dpi": "1654x1169",
+    "5pdf_frontend_old": "1800x1271 (scale=1800/595.28)",
+    "5pdf_frontend_new": "1654x1169 (scale=200/72)",
+    "2pdf_fitz_200dpi": "1654x2338",
+    "2pdf_frontend_new": "1654x2338 (scale=200/72)",
+    "backend_template_path_scale": "1.0 (ocr_w=orig_w for template path)"
+  },
+  "templates_created_via_api": [
+    {
+      "sample": "5.pdf",
+      "template_id": "TPL-A6B12CED",
+      "template_name": "거래_5pdf",
+      "method": "line-detection from fitz render",
+      "table_region": {"x": 68, "y": 39, "width": 1504, "height": 843},
+      "col_x": [141, 270, 332, 664, 732, 774, 946, 1070, 1257],
+      "col_guides_count": 9,
+      "e2e_mode_a_row_count": 9,
+      "expected_row_count": 6,
+      "note": "overcounts 3 summary rows. Precise UI annotation needed for exact 6/6"
+    },
+    {
+      "sample": "2.pdf",
+      "template_id": "TPL-A4585BC7",
+      "template_name": "거래_2pdf",
+      "method": "line-detection from fitz render",
+      "table_region": {"x": 111, "y": 136, "width": 1486, "height": 2112},
+      "col_x": [163, 276, 388, 560, 758, 914, 1178, 1440, 1578],
+      "col_guides_count": 9,
+      "note": "Complex portrait layout (13 expected rows). Approximate coordinates."
+    }
+  ],
+  "t10_after_save_debug_result": {
+    "samplesTotal": 7,
+    "apiExecuted": 3,
+    "rowCountExactAmongExecuted": "1/3",
+    "missingSavedAnnotations": 4,
+    "samples_with_template": ["1.jpg", "5.pdf", "2.pdf"],
+    "samples_without_template": ["3.pdf", "4.pdf", "6.pdf", "7.pdf"]
+  },
+  "validation": {
+    "typecheck": "PASS",
+    "proxy_test": "PASS",
+    "backend_health": "PASS",
+    "t10_after_save_debug": "EXECUTED (1/3 exact rowCount)"
+  },
+  "modified_files": [
+    "mysuit-ocr/src/components/ocr/OcrAnnotator.tsx"
+  ],
+  "backup_files": [
+    "mysuit-ocr/backup/OcrAnnotator_20260515_before_T10_save_debug_fix.tsx"
+  ],
+  "next_step": "dev server 재시작 후 UI에서 2~7.pdf 정밀 annotation 저장 → T-10-rerun"
+}

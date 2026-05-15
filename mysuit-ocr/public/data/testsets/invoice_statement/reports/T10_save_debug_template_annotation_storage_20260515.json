@@ -1,0 +1,95 @@
+{
+  "task": "T-10-save-debug",
+  "date": "2026-05-15",
+  "status": "fixed",
+  "root_causes": [
+    {
+      "id": "A",
+      "title": "OcrAnnotator PDF 렌더링 불가",
+      "description": "onPickFile()이 new Image(); img.src = pdfDataURL 방식으로 PDF를 로드하려 해서 실패. loaded=null → 저장 버튼 disabled. 2.pdf~7.pdf는 template annotation 자체가 불가능했음.",
+      "fixed": true,
+      "fix_file": "mysuit-ocr/src/components/ocr/OcrAnnotator.tsx",
+      "fix_description": "PDF 파일 감지 후 pdf.js로 1페이지 렌더링 → canvas.toDataURL로 이미지 생성 → loaded 상태 설정"
+    },
+    {
+      "id": "B",
+      "title": "documentType exportPayload 미포함",
+      "description": "export.ts의 buildExportPayload()가 documentType을 포함하지 않아 저장된 template에 OCR 라우팅 필드 누락. TPL-31D13CF3(1.jpg)의 documentType은 T-9-fix에서 수동 삽입된 것으로 추정.",
+      "fixed": true,
+      "fix_files": [
+        "mysuit-ocr/src/components/ocr/core/export.ts",
+        "mysuit-ocr/src/components/ocr/OcrAnnotator.tsx",
+        "mysuit-ocr/src/components/ocr/OcrRightPanel.tsx"
+      ],
+      "fix_description": "buildExportPayload에 documentType 파라미터 추가. OcrAnnotator에 documentType state 추가. OcrRightPanel에 select UI 추가."
+    },
+    {
+      "id": "C",
+      "title": "T-10/rerun 스크립트 BASE_URL 오류",
+      "description": "BASE_URL = 8130이나 실제 backend는 9099. OCR extract API 호출 전부 실패.",
+      "fixed": true,
+      "fix_files": [
+        "ocr-server/scripts/verify_invoice_statement_template_runocr_e2e_t10_rerun.py",
+        "ocr-server/scripts/verify_invoice_statement_template_runocr_e2e_t10.py"
+      ],
+      "fix_description": "BASE_URL = http://127.0.0.1:9099 으로 수정"
+    }
+  ],
+  "non_issues": [
+    {
+      "title": "저장 경로 불일치",
+      "description": "ocr-server/data/templates.json이 save API, load API, T-10 script 모두 동일 경로 사용. 불일치 없음."
+    },
+    {
+      "title": "Next.js proxy 설정",
+      "description": ".env.local BACKEND_URL=http://127.0.0.1:9099 올바름. /templates rewrites 정상."
+    }
+  ],
+  "templates_json_survey": [
+    {
+      "path": "ocr-server/data/templates.json",
+      "exists": true,
+      "template_count": 5,
+      "1jpg_tpl_exists": true,
+      "1jpg_tpl_id": "TPL-31D13CF3",
+      "1jpg_has_table": true,
+      "1jpg_has_doctype": true,
+      "pdf_templates_exist": false
+    }
+  ],
+  "save_api_test": {
+    "method": "POST",
+    "endpoint": "http://127.0.0.1:9099/templates",
+    "payload_file": "5.pdf",
+    "payload_doctype": "invoice_statement",
+    "payload_table_regions": 1,
+    "payload_col_guides": 6,
+    "result": "SUCCESS",
+    "template_id_created": "TPL-D0FA389E",
+    "templates_json_updated": true,
+    "t10_discovery_simulation": "FOUND",
+    "test_template_deleted": true
+  },
+  "validation": {
+    "py_compile_t10_rerun": "OK",
+    "py_compile_t10": "OK",
+    "typecheck": "OK",
+    "build": "OK",
+    "t10_rerun_actual": "PENDING (실제 annotation 저장 후 실행 권장)"
+  },
+  "modified_files": [
+    "mysuit-ocr/src/components/ocr/core/export.ts",
+    "mysuit-ocr/src/components/ocr/OcrAnnotator.tsx",
+    "mysuit-ocr/src/components/ocr/OcrRightPanel.tsx",
+    "ocr-server/scripts/verify_invoice_statement_template_runocr_e2e_t10_rerun.py",
+    "ocr-server/scripts/verify_invoice_statement_template_runocr_e2e_t10.py"
+  ],
+  "backup_files": [
+    "mysuit-ocr/backup/OcrAnnotator_20260515_before_T10_save_debug.tsx",
+    "mysuit-ocr/backup/export_20260515_before_T10_save_debug.ts",
+    "mysuit-ocr/backup/OcrRightPanel_20260515_before_T10_save_debug.tsx",
+    "ocr-server/backup/verify_t10_rerun_20260515_before_T10_save_debug.py",
+    "ocr-server/backup/templates_20260515_before_T10_save_debug.json"
+  ],
+  "next_step": "UI에서 2.pdf~7.pdf annotation 저장 후 T-10-rerun 실행"
+}

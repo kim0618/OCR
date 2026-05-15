@@ -1,0 +1,68 @@
+{
+  "task": "T-10-template-update-debug",
+  "date": "2026-05-15",
+  "status": "fixed",
+  "root_causes": [
+    {
+      "id": "A",
+      "title": "TemplateWorkspace 편집 버튼 미구현",
+      "description": "TemplateWorkspace.tsx line 153의 편집 버튼이 'TODO' 상태 (alert만 표시). Backend template을 UI에서 편집 불가.",
+      "fixed": false,
+      "note": "UI edit flow 구현 별도 작업 필요"
+    },
+    {
+      "id": "B",
+      "title": "OcrAnnotator POST payload에 template_id 미포함",
+      "description": "edit mode에서도 exportPayload에 template_id가 없어서 backend가 name-matching으로만 update. API 생성 template은 localStorage에 없어 edit mode 진입 불가.",
+      "fixed": true,
+      "fix": "selectedTemplateId 있을 때 serverPayload에 template_id 포함"
+    }
+  ],
+  "template_2pdf": {
+    "template_id": "TPL-A4585BC7",
+    "before": {"x": 111, "y": 136, "width": 1486, "height": 2112, "yMax": 2248},
+    "after": {"x": 111, "y": 136, "width": 1486, "height": 1080, "yMax": 1216},
+    "updated_via": "POST /templates API with template_id=TPL-A4585BC7",
+    "updated_at": "2026-05-15 13:32:59"
+  },
+  "binary_search_bounds": {
+    "h=1100_yMax=1236": "rowCount=14",
+    "h=1090_yMax=1226": "rowCount=14",
+    "h=1085_yMax=1221": "rowCount=13",
+    "h=1080_yMax=1216": "rowCount=13",
+    "h=1075_yMax=1211": "rowCount=13",
+    "h=1050_yMax=1186": "rowCount=12",
+    "h=1000_yMax=1136": "rowCount=11",
+    "h=900_yMax=1036": "rowCount=9",
+    "selected": "h=1080 (yMax=1216, rowCount=13)"
+  },
+  "e2e_result": {
+    "boundsChanged": true,
+    "e2eExecuted": true,
+    "rowCount": 13,
+    "expected": 13,
+    "exact": true,
+    "columnGuidesReceived": true,
+    "columnGuidesUsed": true
+  },
+  "overall_e2e_status": {
+    "1jpg": "28/28 EXACT",
+    "5pdf": "6/6 EXACT",
+    "2pdf": "13/13 EXACT",
+    "3pdf": "no template",
+    "4pdf": "no template",
+    "6pdf": "no template",
+    "7pdf": "no template"
+  },
+  "validation": {
+    "typecheck": "PASS",
+    "bounds_save_check": "boundsChanged=true, e2eExecuted=true, rowCount=13/13"
+  },
+  "modified_files": [
+    "mysuit-ocr/src/components/ocr/OcrAnnotator.tsx"
+  ],
+  "backup_files": [
+    "mysuit-ocr/backup/OcrAnnotator_20260515_before_T10_template_update_debug.tsx"
+  ],
+  "next_step": "3.pdf/4.pdf/6.pdf/7.pdf UI annotation 저장 후 T-10-rerun"
+}

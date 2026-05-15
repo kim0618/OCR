@@ -9,6 +9,8 @@ type Props = {
   imgRef: React.RefObject<HTMLImageElement | null>;
   templateName: string;
   setTemplateName: React.Dispatch<React.SetStateAction<string>>;
+  documentType: string;
+  setDocumentType: React.Dispatch<React.SetStateAction<string>>;
   loaded: LoadedImage | null;
   regions: Region[];
   setRegions: React.Dispatch<React.SetStateAction<Region[]>>;
@@ -27,6 +29,8 @@ export default function OcrRightPanel(props: Props) {
     imgRef,
     templateName,
     setTemplateName,
+    documentType,
+    setDocumentType,
     loaded,
     regions,
     setRegions,
@@ -226,6 +230,22 @@ export default function OcrRightPanel(props: Props) {
           className="ms-input"
           style={{ width: "100%" }}
         />
+        <h2 className="oc-label" style={{ marginTop: 8 }}>문서 유형 (documentType)</h2>
+        <select
+          value={documentType}
+          onChange={(e) => setDocumentType(e.target.value)}
+          className="ms-input"
+          style={{ width: "100%" }}
+        >
+          <option value="">-- 선택 --</option>
+          <option value="invoice_statement">invoice_statement (거래명세서)</option>
+          <option value="card_receipt">card_receipt (카드영수증)</option>
+          <option value="pos_receipt">pos_receipt (POS영수증)</option>
+          <option value="food_cafe_receipt">food_cafe_receipt (음식/카페)</option>
+          <option value="finance_slip">finance_slip (금융전표)</option>
+          <option value="medical_receipt">medical_receipt (의료영수증)</option>
+          <option value="unknown">unknown</option>
+        </select>
       </div>
 
       {/* ── 스크롤 영역 ── */}

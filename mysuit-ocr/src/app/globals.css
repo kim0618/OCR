@@ -2214,13 +2214,14 @@ a:focus-visible,
 
 .or-table-wrap {
   width: 100%;
-  overflow-x: auto;
   border: 1px solid var(--border);
   border-radius: 8px;
+  overflow: hidden;
 }
 
 .or-table-result {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: 12px;
 }
@@ -2233,13 +2234,33 @@ a:focus-visible,
 .or-table-cell {
   padding: 5px 8px;
   border: 1px solid var(--border);
-  white-space: nowrap;
+  white-space: normal;
+  word-break: break-all;
   color: var(--text);
+  overflow-wrap: break-word;
+  vertical-align: middle;
 }
 
 .or-table-cell-low {
   color: #d97706;
   background: rgba(217,119,6,0.06);
+}
+
+.or-table-cell-input {
+  width: 100%;
+  min-height: 28px;
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: inherit;
+  font-family: inherit;
+  padding: 4px 6px;
+  outline: none;
+  cursor: text;
+  white-space: normal;
+  word-break: break-all;
+  resize: none;
+  overflow: hidden;
 }
 
 .or-empty {
@@ -2522,7 +2543,7 @@ a:focus-visible,
 
 .or-val-error-row {
   display: grid;
-  grid-template-columns: 10px minmax(70px, 0.9fr) minmax(0, 4fr) 42px 58px;
+  grid-template-columns: 10px minmax(120px, 1.6fr) minmax(0, 2.8fr) 52px 58px;
   align-items: center;
   gap: 8px;
   padding: 7px 8px;
@@ -2548,8 +2569,8 @@ a:focus-visible,
   color: var(--text);
   min-width: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  word-break: keep-all;
+  line-height: 1.4;
 }
 
 .or-val-error-value {
@@ -2565,6 +2586,7 @@ a:focus-visible,
   font-size: 11px;
   white-space: nowrap;
   text-align: right;
+  justify-self: end;
 }
 
 .or-val-review-row {
@@ -2585,6 +2607,8 @@ a:focus-visible,
 .or-val-adoption {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  justify-self: center;
   border-radius: 999px;
   padding: 2px 6px;
   font-size: 10px;

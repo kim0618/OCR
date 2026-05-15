@@ -6,6 +6,7 @@ import remarkGfm from "remark-gfm";
 import type { AutofillAction, AutofillRunSummary, AutofillSuggestion, OutputValueSource } from "@/lib/autofillEngine";
 import { getGroundTruth, compareToGt, fieldKey } from "@/lib/groundTruthStore";
 import { useUi } from "../common/AppProviders";
+import { resolveFieldLabel } from "@/lib/invoiceFieldLabels";
 
 export type FieldSourceBox = {
   x: number;
@@ -337,7 +338,16 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
     );
   };
 
-  const fieldLabel = (field: OcrFieldResult) => field.ko || field.name || field.en || "-";
+  const fieldLabel = (field: OcrFieldResult) => {
+    const { primary } = resolveFieldLabel({ name: field.name, ko: field.ko, en: field.en });
+    return primary;
+  };
+
+  const fieldLabelFull = (field: OcrFieldResult) => {
+    const { primary, secondary } = resolveFieldLabel({ name: field.name, ko: field.ko, en: field.en });
+    if (secondary && secondary !== primary) return `${primary} (${secondary})`;
+    return primary;
+  };
 
   const isAmountLikeField = (field: OcrFieldResult) => {
     const label = fieldLabel(field).replace(/\s+/g, "").toLowerCase();
@@ -496,6 +506,31 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
   };
 
 
+  // Parse table field rows and compute display orientation.
+  // Rules:
+  //   - All rows have uniform N > 1 columns → real multi-row table, keep as-is.
+  //   - Otherwise (single-col rows, or jagged/mixed column counts) → flatten all
+  //     cells into one display row (transposed representation).
+  const parseTableField = (value: string) => {
+    let rows: { value: string; confidence: number }[][] = [];
+    try { rows = JSON.parse(value); } catch { /* ignore */ }
+    const nonEmpty = rows.filter((r) => r.length > 0);
+    const colCounts = nonEmpty.map((r) => r.length);
+    const uniqueCounts = new Set(colCounts);
+    const firstCount = nonEmpty[0]?.length ?? 0;
+    // Keep original multi-row structure only when all non-empty rows share the
+    // same column count AND that count is > 1 (genuine multi-row table).
+    const keepAsIs = uniqueCounts.size === 1 && firstCount > 1;
+    const displayRows = keepAsIs
+      ? rows
+      : [nonEmpty.flatMap((r) => r)]; // flatten all cells into 1 row
+    const actualRows = keepAsIs ? nonEmpty.length : 1;
+    const rowLabel = actualRows === 1
+      ? `${nonEmpty.flatMap((r) => r).length}항목, 1행`
+      : `${actualRows}행`;
+    return { rows, nonEmpty, displayRows, isSingleCol: !keepAsIs, rowLabel };
+  };
+
   const toMarkdown = () => {
     const esc = (s: string) => s.replace(/\|/g, "\\|").replace(/\n/g, " ");
     let md = `# OCR 결과\n\n`;
@@ -503,11 +538,29 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
     md += `- 필드 수: **${editedFields.length}건**\n\n`;
     md += `| No | 필드명 | 값 | 신뢰도 | 채택 |\n`;
     md += `|:---:|--------|-----|:------:|:---:|\n`;
+
     editedFields.forEach((f, i) => {
-      md += `| ${i + 1} | ${esc(f.name)} | ${esc(f.value)} | ${(f.confidence * 100).toFixed(1)}% | ${getAdoptionLabel(f)} |\n`;
+      const label = fieldLabelFull(f);
+      if (f.field_type === "table") {
+        const { rowLabel } = parseTableField(f.value);
+        md += `| ${i + 1} | ${esc(label)} | 표 데이터 (${rowLabel}) | ${(f.confidence * 100).toFixed(1)}% | ${getAdoptionLabel(f)} |\n`;
+      } else {
+        md += `| ${i + 1} | ${esc(label)} | ${esc(f.value)} | ${(f.confidence * 100).toFixed(1)}% | ${getAdoptionLabel(f)} |\n`;
+      }
     });
+
     return md;
   };
+
+  // Table field list for JSX rendering in Preview tab (separate from Markdown)
+  const previewTableFields = useMemo(() =>
+    editedFields
+      .map((f, i) => ({ f, i }))
+      .filter(({ f }) => f.field_type === "table")
+      .map(({ f, i }) => ({ idx: i + 1, label: fieldLabelFull(f), ...parseTableField(f.value) }))
+      .filter(({ nonEmpty }) => nonEmpty.length > 0),
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  [editedFields]);
 
   const toJson = () => {
     return JSON.stringify({ fields: editedFields, processing_time: result.processing_time }, null, 2);
@@ -719,13 +772,33 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                   overflow: "hidden",
                 }}
               >
-                <div
-                  style={{
-                    minHeight: 0,
-                    overflow: "auto",
-                  }}
-                >
+                <div style={{ minHeight: 0, overflow: "auto" }}>
                   <Markdown remarkPlugins={[remarkGfm]}>{toMarkdown()}</Markdown>
+                  {/* Table fields rendered as JSX (reliable layout, not markdown) */}
+                  {previewTableFields.map(({ idx, label, displayRows, rowLabel }) => (
+                    <div key={idx} style={{ marginTop: 12 }}>
+                      <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6 }}>
+                        {idx}. {label}
+                        <span style={{ fontSize: 11, fontWeight: 400, color: "var(--muted)", marginLeft: 8 }}>{rowLabel}</span>
+                      </div>
+                      <div className="or-table-wrap">
+                        <table className="or-table-result">
+                          <tbody>
+                            {displayRows.map((row, ri) => (
+                              <tr key={ri}>
+                                {row.map((cell, ci) => (
+                                  <td key={ci} className={`or-table-cell ${cell.confidence < 0.7 ? "or-table-cell-low" : ""}`}
+                                    title={`신뢰도: ${(cell.confidence * 100).toFixed(1)}%`}>
+                                    {cell.value || "-"}
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  ))}
                 </div>
                 {rawOcrFields.length > 0 && (
                   <div
@@ -888,14 +961,15 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                   onClick={() => onSelectField(i)}
                 >
                   <div className="or-field-header">
-                    <input
-                      className="or-field-name-input"
-                      value={field.name}
-                      onChange={(e) => updateFieldName(i, e.target.value)}
-                      onClick={(e) => e.stopPropagation()}
-                      onFocus={() => onSelectField(i)}
-                      onBlur={flushSave}
-                    />
+                    <span
+                      style={{ flex: 1, minWidth: 0, fontSize: 11, fontWeight: 700, color: "var(--text)", lineHeight: 1.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                      title={`${fieldLabelFull(field)} (${field.name})`}
+                    >
+                      {fieldLabel(field)}
+                      <span style={{ fontSize: 9, fontWeight: 400, color: "var(--muted)", marginLeft: 4 }}>
+                        {field.en || field.name}
+                      </span>
+                    </span>
                     <select
                       className="or-field-type-select"
                       value={field.field_type}
@@ -919,10 +993,12 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                     <span
                       title="최종값 채택 출처"
                       style={{
-                        width: 28,
+                        minWidth: 28,
                         textAlign: "center",
                         fontSize: 13,
                         flexShrink: 0,
+                        display: "inline-flex",
+                        alignItems: "center",
                       }}
                     >
                       {renderAdoption(field)}
@@ -937,29 +1013,58 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                     </button>
                   </div>
                   {field.field_type === "table" ? (() => {
-                    let rows: { value: string; confidence: number }[][] = [];
-                    try { rows = JSON.parse(field.value); } catch { /* ignore */ }
+                    const { rows, displayRows, isSingleCol, rowLabel } = parseTableField(field.value);
+                    const firstRowPreview = displayRows[0]
+                      ? displayRows[0].map((c) => c.value).filter(Boolean).slice(0, 4).join(" / ")
+                      : "";
                     return rows.length > 0 ? (
                       <>
                         <div className="or-field-value-meta" onClick={(e) => e.stopPropagation()}>
-                          <span>OCR 원본: {getOriginalOcrValue(field)}</span>
-                          <span>최종값: 테이블 데이터</span>
+                          <span style={{ fontWeight: 700, color: "var(--accent)" }}>표 데이터 · {rowLabel}</span>
+                          {firstRowPreview && (
+                            <span style={{ color: "var(--muted)", fontSize: 11 }} title="첫 번째 행 미리보기">
+                              {firstRowPreview.length > 50 ? firstRowPreview.slice(0, 48) + "…" : firstRowPreview}
+                            </span>
+                          )}
                           <span>채택: {getAdoptionLabel(field)}</span>
                         </div>
                         <div className="or-table-wrap" onClick={(e) => e.stopPropagation()}>
                           <table className="or-table-result">
                             <tbody>
-                              {rows.map((row, ri) => (
+                              {displayRows.map((row, ri) => (
                                 <tr key={ri}>
-                                  {row.map((cell, ci) => (
-                                    <td
-                                      key={ci}
-                                      className={`or-table-cell ${cell.confidence < 0.7 ? "or-table-cell-low" : ""}`}
-                                      title={`신뢰도: ${(cell.confidence * 100).toFixed(1)}%`}
-                                    >
-                                      {cell.value || "-"}
-                                    </td>
-                                  ))}
+                                  {row.map((cell, ci) => {
+                                    // Map display (ri,ci) back to original rows index for editing
+                                    const origRowIdx = isSingleCol ? ci : ri;
+                                    const origColIdx = isSingleCol ? 0 : ci;
+                                    return (
+                                      <td
+                                        key={ci}
+                                        className={`or-table-cell ${cell.confidence < 0.7 ? "or-table-cell-low" : ""}`}
+                                        title={`신뢰도: ${(cell.confidence * 100).toFixed(1)}%`}
+                                        style={{ padding: 0 }}
+                                      >
+                                        <textarea
+                                          className="or-table-cell-input"
+                                          value={cell.value || ""}
+                                          rows={1}
+                                          onChange={(e) => {
+                                            // auto-grow
+                                            e.target.style.height = "auto";
+                                            e.target.style.height = e.target.scrollHeight + "px";
+                                            const newValue = e.target.value;
+                                            updateFieldValue(i, (() => {
+                                              const updated = rows.map((r) => [...r]);
+                                              updated[origRowIdx][origColIdx] = { ...updated[origRowIdx][origColIdx], value: newValue };
+                                              return JSON.stringify(updated);
+                                            })());
+                                          }}
+                                          onFocus={() => onSelectField(i)}
+                                          onBlur={flushSave}
+                                        />
+                                      </td>
+                                    );
+                                  })}
                                 </tr>
                               ))}
                             </tbody>
@@ -1057,20 +1162,81 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                       <div className="or-val-empty-line">{"\uD574\uB2F9 \uD56D\uBAA9\uC774 \uC5C6\uC2B5\uB2C8\uB2E4."}</div>
                     ) : (
                       <div className="or-val-error-list">
-                        {section.rows.map((item) => (
-                          <div
-                            key={item.idx}
-                            data-field-idx={item.idx}
-                            className={"or-val-error-row or-val-review-row or-val-" + item.status}
-                            onClick={() => onSelectField(item.idx)}
-                          >
-                            <span className={"or-val-dot or-dot-" + item.status} />
-                            <span className="or-val-error-name">{item.field.name}</span>
-                            <span className="or-val-error-value">{item.field.value || "-"}</span>
-                            <span className={"or-val-adoption or-val-adoption-" + getAdoptionLabel(item.field)}>{getAdoptionLabel(item.field)}</span>
-                            <span className="or-val-error-conf">{formatConfidence(item.field.confidence)}</span>
-                          </div>
-                        ))}
+                        {section.rows.map((item) => {
+                          if (item.field.field_type === "table") {
+                            const { displayRows, rowLabel } = parseTableField(item.field.value);
+                            return (
+                              <div
+                                key={item.idx}
+                                data-field-idx={item.idx}
+                                className={"or-val-error-row or-val-review-row or-val-" + item.status}
+                                style={{ display: "block", overflow: "hidden" }}
+                                onClick={() => onSelectField(item.idx)}
+                              >
+                                {/* 헤더: 일반 필드와 동일한 grid */}
+                                <div style={{
+                                  display: "grid",
+                                  gridTemplateColumns: "10px minmax(120px, 1.6fr) minmax(0, 2.8fr) 52px 58px",
+                                  gap: 8,
+                                  alignItems: "center",
+                                  marginBottom: displayRows.length > 0 ? 6 : 0,
+                                }}>
+                                  <span className={"or-val-dot or-dot-" + item.status} />
+                                  <span className="or-val-error-name" title={fieldLabelFull(item.field)}>
+                                    {fieldLabel(item.field)}
+                                  </span>
+                                  <span style={{ color: "var(--accent)", fontWeight: 700, fontSize: 12, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                    표 데이터 · {rowLabel}
+                                  </span>
+                                  <span className={"or-val-adoption or-val-adoption-" + getAdoptionLabel(item.field)}>{getAdoptionLabel(item.field)}</span>
+                                  <span className="or-val-error-conf">{formatConfidence(item.field.confidence)}</span>
+                                </div>
+                                {/* 표 데이터 */}
+                                {displayRows.length > 0 && (
+                                  <div
+                                    className="or-table-wrap"
+                                    onClick={(e) => e.stopPropagation()}
+                                    style={{ marginLeft: 18, width: "calc(100% - 18px)" }}
+                                  >
+                                    <table className="or-table-result">
+                                      <tbody>
+                                        {displayRows.map((row, ri) => (
+                                          <tr key={ri}>
+                                            {row.map((cell, ci) => (
+                                              <td
+                                                key={ci}
+                                                className={`or-table-cell ${cell.confidence < 0.7 ? "or-table-cell-low" : ""}`}
+                                                title={`신뢰도: ${(cell.confidence * 100).toFixed(1)}%`}
+                                              >
+                                                {cell.value || "-"}
+                                              </td>
+                                            ))}
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          }
+                          return (
+                            <div
+                              key={item.idx}
+                              data-field-idx={item.idx}
+                              className={"or-val-error-row or-val-review-row or-val-" + item.status}
+                              onClick={() => onSelectField(item.idx)}
+                            >
+                              <span className={"or-val-dot or-dot-" + item.status} />
+                              <span className="or-val-error-name" title={fieldLabelFull(item.field)}>
+                                {fieldLabel(item.field)}
+                              </span>
+                              <span className="or-val-error-value">{item.field.value || "-"}</span>
+                              <span className={"or-val-adoption or-val-adoption-" + getAdoptionLabel(item.field)}>{getAdoptionLabel(item.field)}</span>
+                              <span className="or-val-error-conf">{formatConfidence(item.field.confidence)}</span>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </section>

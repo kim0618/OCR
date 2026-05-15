@@ -34,6 +34,8 @@ type TemplateItem = {
   fields?: { no?: number; enField?: string; koField?: string }[];
   // T-9-fix: document type from template metadata (e.g. "invoice_statement")
   documentType?: string;
+  // T-10-overlay-scale-fix: original image dimensions for overlay scale correction
+  image?: { width: number; height: number };
 };
 
 const DEFAULT_TEMPLATES: TemplateItem[] = [];
@@ -154,15 +156,22 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
       const list = JSON.parse(localStorage.getItem(LOCAL_TEMPLATES_KEY) || "[]");
       if (!Array.isArray(list)) return [];
       return list
-        .map((item: any) => ({
-          id: String(item?.template_id ?? ""),
-          name: String(item?.template_name ?? ""),
-          mode: String(item?.template_json?.mode ?? "template"),
-          regions: Array.isArray(item?.template_json?.regions) ? item.template_json.regions : [],
-          fields: Array.isArray(item?.template_json?.fields) ? item.template_json.fields : [],
-          // T-9-fix: include documentType from template metadata for routing
-          documentType: String(item?.template_json?.documentType ?? ""),
-        }))
+        .map((item: any) => {
+          const imgMeta = item?.template_json?.image;
+          const imgW = typeof imgMeta?.width === "number" ? imgMeta.width : null;
+          const imgH = typeof imgMeta?.height === "number" ? imgMeta.height : null;
+          return {
+            id: String(item?.template_id ?? ""),
+            name: String(item?.template_name ?? ""),
+            mode: String(item?.template_json?.mode ?? "template"),
+            regions: Array.isArray(item?.template_json?.regions) ? item.template_json.regions : [],
+            fields: Array.isArray(item?.template_json?.fields) ? item.template_json.fields : [],
+            // T-9-fix: include documentType from template metadata for routing
+            documentType: String(item?.template_json?.documentType ?? ""),
+            // T-10-overlay-scale-fix: original image dimensions for overlay scale correction
+            ...(imgW && imgH ? { image: { width: imgW, height: imgH } } : {}),
+          };
+        })
         .filter((item) => item.id && item.name);
     } catch {
       return [];
@@ -210,13 +219,20 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
         const res = await fetch("/templates");
         const json = await res.json();
         const list = json.resultMap?.templateList ?? [];
-        const mapped = list.map((t: any) => ({
-          id: t.template_id,
-          name: t.template_name,
-          regions: Array.isArray(t.template_json?.regions) ? t.template_json.regions : t.regions,
-          // T-9-fix: include documentType from template metadata
-          documentType: String(t.template_json?.documentType ?? ""),
-        }));
+        const mapped = list.map((t: any) => {
+          const imgMeta = t.template_json?.image;
+          const imgW = typeof imgMeta?.width === "number" ? imgMeta.width : null;
+          const imgH = typeof imgMeta?.height === "number" ? imgMeta.height : null;
+          return {
+            id: t.template_id,
+            name: t.template_name,
+            regions: Array.isArray(t.template_json?.regions) ? t.template_json.regions : t.regions,
+            // T-9-fix: include documentType from template metadata
+            documentType: String(t.template_json?.documentType ?? ""),
+            // T-10-overlay-scale-fix: original image dimensions
+            ...(imgW && imgH ? { image: { width: imgW, height: imgH } } : {}),
+          };
+        });
         setTemplates(mergeTemplates(mapped, localTemplates));
         // 기본값: 전체 인식 (빈 값)
       } catch {
@@ -291,7 +307,9 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
           pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
           const pdf = await pdfjs.getDocument(url).promise;
           const page = await pdf.getPage(1);
-          const viewport = page.getViewport({ scale: 2 });
+          // Use the same DPI as backend PyMuPDF (200 DPI = 200/72 ≈ 2.778 scale)
+          // so that canvas regions and overlay bboxes align with the rendered image.
+          const viewport = page.getViewport({ scale: 200 / 72 });
           const canvas = document.createElement("canvas");
           canvas.width = viewport.width;
           canvas.height = viewport.height;
@@ -392,7 +410,20 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
     // receipt_fields / finance_fields 기반으로 fields 를 재구성한다.
     // 템플릿이 있고 region-based(mode !== "unstructured") 이면 백엔드가 region 별로
     // 추출해 둔 raw.fields 를 그대로 사용한다.
-    if (template && template.mode !== "unstructured") return raw;
+    if (template && template.mode !== "unstructured") {
+      // Enrich raw.fields with ko/en labels from template regions so the
+      // Preview overlay and result table show human-readable field names.
+      const regions: any[] = (template as any).regions ?? [];
+      const enriched = ((raw.fields ?? []) as any[]).map((field: any, i: number) => {
+        const region = regions[i] ?? {};
+        return {
+          ...field,
+          ko: field.ko || String(region.koField ?? "").trim() || "",
+          en: field.en || String(region.enField ?? region.canonicalField ?? "").trim() || "",
+        };
+      });
+      return { ...raw, fields: enriched };
+    }
 
     const receiptFields = raw.receipt_fields ?? {};
     const financeFields = raw.finance_fields ?? {};
@@ -1154,6 +1185,8 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
               selectedIndex={selectedFieldIndex}
               onSelectField={setSelectedFieldIndex}
               enableFieldOverlay={resultTab === "preview"}
+              originalWidth={activeTemplateForPanel?.image?.width}
+              originalHeight={activeTemplateForPanel?.image?.height}
             />
           ) : (
             <span style={{ color: "var(--muted)" }}>문서 영역</span>
