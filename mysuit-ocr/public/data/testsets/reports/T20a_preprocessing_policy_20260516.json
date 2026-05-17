@@ -1,0 +1,322 @@
+{
+  "version": "T20a-20260516",
+  "generatedAt": "2026-05-16T18:38:29.427019",
+  "description": "qualityTags 기반 조건부 preprocessing policy. T-20 실험 결과를 바탕으로 설계. 기본 비활성, compare_then_select 모드로만 사용.",
+  "default": {
+    "enabled": false,
+    "mode": "compare_then_select",
+    "description": "기본적으로 전처리 비활성. 조건 충족 시에만 원본/전처리 비교 후 선택."
+  },
+  "variants": {
+    "upscale_1_5x": {
+      "description": "bicubic 1.5x upscale",
+      "risk": "low",
+      "regressionRate": "0/8",
+      "enabledFor": [
+        "blurred",
+        "ocr_garbled_with_small"
+      ],
+      "blockedFor": [
+        "invoice_statement"
+      ],
+      "guards": [
+        "core_fields_not_regressed",
+        "doctype_not_regressed"
+      ],
+      "note": "T-20에서 회귀 0건. small_text 단독은 효과 불명확, blurred/garbled 복합에 유리."
+    },
+    "clahe": {
+      "description": "local contrast enhancement (CLAHE)",
+      "risk": "medium",
+      "regressionRate": "1/8",
+      "enabledFor": [
+        "blurred",
+        "shadow",
+        "low_contrast"
+      ],
+      "blockedFor": [
+        "invoice_statement",
+        "small_text_only"
+      ],
+      "guards": [
+        "core_fields_not_regressed",
+        "doctype_not_regressed",
+        "no_new_false_positive"
+      ],
+      "note": "shadow/blurred에서 효과. small_text 단독(card_001) 오히려 회귀."
+    },
+    "clahe_plus_sharpen": {
+      "description": "CLAHE + sharpening",
+      "risk": "medium",
+      "regressionRate": "1/8",
+      "enabledFor": [
+        "blurred",
+        "shadow",
+        "garbled_source"
+      ],
+      "blockedFor": [
+        "invoice_statement",
+        "small_text_only"
+      ],
+      "guards": [
+        "core_fields_not_regressed",
+        "doctype_not_regressed",
+        "no_new_false_positive"
+      ],
+      "note": "clahe와 비슷한 효과. pos_006(garbled) 개선."
+    },
+    "grayscale": {
+      "description": "BGR -> grayscale 변환",
+      "risk": "medium",
+      "regressionRate": "1/8",
+      "enabledFor": [
+        "long_receipt",
+        "dense_content"
+      ],
+      "blockedFor": [
+        "invoice_statement"
+      ],
+      "guards": [
+        "core_fields_not_regressed"
+      ],
+      "note": "medical_003(long_receipt+small_text)에서 효과. long_receipt 조합에서 유리."
+    },
+    "sharpen": {
+      "description": "3x3 sharpening kernel",
+      "risk": "medium",
+      "regressionRate": "1/8",
+      "enabledFor": [
+        "long_receipt"
+      ],
+      "blockedFor": [
+        "invoice_statement",
+        "small_text_only"
+      ],
+      "guards": [
+        "core_fields_not_regressed"
+      ],
+      "note": "medical_003에서만 효과. small_text 단독은 불리."
+    },
+    "denoise": {
+      "description": "fastNlMeansDenoisingColored",
+      "risk": "high",
+      "regressionRate": "3/8",
+      "enabledFor": [],
+      "blockedFor": [
+        "ALL"
+      ],
+      "defaultBlocked": true,
+      "note": "T-20에서 회귀 3/8. 기본 차단. 특수 경우에만 실험 허용."
+    },
+    "threshold_adaptive": {
+      "description": "adaptive Gaussian threshold",
+      "risk": "high",
+      "regressionRate": "2/8",
+      "enabledFor": [],
+      "blockedFor": [
+        "ALL"
+      ],
+      "defaultBlocked": true,
+      "note": "T-20에서 회귀 2/8. 기본 차단. line count 급감 위험."
+    },
+    "render_dpi_200_grayscale": {
+      "description": "PDF 200 DPI grayscale render",
+      "risk": "high",
+      "regressionRate": "1/2",
+      "enabledFor": [
+        "pdf_small_text",
+        "pdf_low_resolution"
+      ],
+      "blockedFor": [
+        "invoice_statement_dense",
+        "invoice_statement_multi_page_complex"
+      ],
+      "guards": [
+        "rowcount_exact_maintained",
+        "expected_value_fill_not_regressed",
+        "critical_warnings_not_increased",
+        "invoice_anchor_structure_intact"
+      ],
+      "note": "invoice/3.pdf에서 rowCount exact 회복. invoice/2.pdf에서 rowCount mismatch 악화. 단순 구조 PDF에만 조건부 허용, 복잡한 구조(OP-anchor 등)는 차단."
+    }
+  },
+  "qualityTagMapping": {
+    "blurred": {
+      "recommended": [
+        "clahe",
+        "upscale_1_5x"
+      ],
+      "fallback": [
+        "clahe_plus_sharpen"
+      ],
+      "blocked": [
+        "threshold_adaptive",
+        "denoise"
+      ],
+      "evidence": "card_002(blurred): clahe, upscale_1_5x, clahe_plus_sharpen 모두 개선"
+    },
+    "shadow": {
+      "recommended": [
+        "clahe"
+      ],
+      "fallback": [
+        "clahe_plus_sharpen"
+      ],
+      "blocked": [
+        "threshold_adaptive"
+      ],
+      "evidence": "medical_001(shadow): clahe 개선"
+    },
+    "low_contrast": {
+      "recommended": [
+        "clahe"
+      ],
+      "fallback": [
+        "clahe_plus_sharpen"
+      ],
+      "blocked": [
+        "threshold_adaptive"
+      ],
+      "evidence": "direct evidence 없음, T-20 유사 케이스 추정"
+    },
+    "small_text": {
+      "recommended": [],
+      "fallback": [],
+      "blocked": [
+        "clahe",
+        "clahe_plus_sharpen",
+        "threshold_adaptive",
+        "denoise"
+      ],
+      "note": "small_text 단독은 위험. card_001(small_text): ALL variants regressed. long_receipt와 복합 시에만 허용.",
+      "evidence": "card_001, pos_001, pos_002, medical_002: small_text 단독 → unchanged 또는 regressed"
+    },
+    "long_receipt_and_small_text": {
+      "recommended": [
+        "grayscale",
+        "clahe"
+      ],
+      "fallback": [
+        "sharpen",
+        "clahe_plus_sharpen"
+      ],
+      "blocked": [],
+      "evidence": "medical_003(long_receipt+small_text): 모든 variant 개선"
+    },
+    "ocr_garbled": {
+      "recommended": [
+        "upscale_1_5x"
+      ],
+      "fallback": [
+        "clahe_plus_sharpen"
+      ],
+      "blocked": [
+        "denoise",
+        "threshold_adaptive"
+      ],
+      "evidence": "pos_006(garbled): upscale_1_5x 회귀 없음, clahe_plus_sharpen 개선"
+    },
+    "pdf_low_resolution": {
+      "recommended": [
+        "render_dpi_200_grayscale"
+      ],
+      "fallback": [],
+      "blocked": [
+        "render_dpi_300",
+        "render_dpi_200",
+        "render_dpi_150"
+      ],
+      "evidence": "invoice/3.pdf: render_dpi_200_grayscale rowCount exact 회복"
+    }
+  },
+  "documentTypePolicy": {
+    "invoice_statement": {
+      "defaultBlocked": true,
+      "allowedVariants": [
+        "render_dpi_200_grayscale"
+      ],
+      "allowedConditions": [
+        "pdf_low_resolution_confirmed",
+        "guard_passed"
+      ],
+      "requiredGuards": [
+        "rowcount_exact_maintained",
+        "expected_value_fill_not_regressed",
+        "critical_warnings_not_increased",
+        "invoice_anchor_structure_intact"
+      ],
+      "blockedConditions": [
+        "invoice/2.pdf: OP-anchor 구조 복잡 → ALL variants blocked",
+        "multi_page_complex: render DPI 변경 금지"
+      ],
+      "note": "invoice_statement는 기본 전처리 금지. rowCount exact guard 필수."
+    },
+    "receipt": {
+      "mode": "compare_then_select",
+      "defaultEnabled": false,
+      "requiredGuards": [
+        "core_fields_not_regressed",
+        "doctype_not_regressed",
+        "no_new_false_positive"
+      ],
+      "adoptionCondition": "core field fill count 증가 AND 기존 채워진 핵심 필드(merchantName/businessNo/totalAmount) 유지"
+    },
+    "finance_slip": {
+      "defaultBlocked": true,
+      "note": "현재 suppressed_bank_slip 정책. extractor 미구현. 전처리 효과 평가 보류."
+    }
+  },
+  "guardRules": {
+    "core_fields_not_regressed": {
+      "check": "all(original_field_filled → after_field_filled for field in core_fields)",
+      "reject_if": "merchantName OR businessNo OR totalAmount 기존 값이 사라짐",
+      "core_fields": [
+        "merchantName",
+        "businessNo",
+        "totalAmount"
+      ]
+    },
+    "doctype_not_regressed": {
+      "check": "after_doctype closer to expected_doctype than original",
+      "reject_if": "after_doctype 가 expected와 더 멀어짐"
+    },
+    "no_new_false_positive": {
+      "check": "no suspicious new field values (amount >= 10M bare, businessNo matching phone format)",
+      "reject_if": "새로운 false positive amount/businessNo 발생"
+    },
+    "rowcount_exact_maintained": {
+      "check": "after_rowCount == expected_rowCount",
+      "reject_if": "rowCount != expectedRowCount (invoice_statement guard)"
+    },
+    "expected_value_fill_not_regressed": {
+      "check": "expectedValueFillRate(after) >= expectedValueFillRate(original)",
+      "reject_if": "value fill rate 감소"
+    },
+    "critical_warnings_not_increased": {
+      "check": "critical warning count(after) <= critical warning count(original)",
+      "reject_if": "critical warning 증가"
+    },
+    "invoice_anchor_structure_intact": {
+      "check": "OP-anchor rows maintained, header-skip policy result unchanged",
+      "reject_if": "anchor row 변경 또는 header-skip 로직 결과 변경"
+    }
+  },
+  "operationStrategy": {
+    "Phase1_ExperimentOnly": {
+      "description": "T-20: 실험/수동 비교만. 운영 경로 미연결.",
+      "status": "completed"
+    },
+    "Phase2_DebugModeCompare": {
+      "description": "T-20b 목표: debug mode compare_then_select 구현. 전처리 결과를 원본과 비교하되 기본 경로는 원본 유지.",
+      "status": "planned"
+    },
+    "Phase3_QualityTagsConditional": {
+      "description": "qualityTags 기반 자동화. shadow/blurred/low_contrast 태그 있는 샘플에만 clahe 시도.",
+      "status": "future"
+    },
+    "Phase4_OperationDefault": {
+      "description": "Phase2/3 검증 후 운영 기본값 재평가.",
+      "status": "future"
+    }
+  }
+}

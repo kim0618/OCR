@@ -1,0 +1,128 @@
+{
+  "task": "T-17",
+  "title": "OCR 현재 보유 샘플 기준 1차 안정화 최종 요약",
+  "generatedAt": "2026-05-16",
+  "codeModified": false,
+  "generatedFiles": [
+    "mysuit-ocr/public/data/testsets/reports/T17_ocr_current_baseline_stabilization_summary_20260516.md",
+    "mysuit-ocr/public/data/testsets/reports/T17_ocr_current_baseline_stabilization_summary_20260516.json"
+  ],
+  "overallConclusion": [
+    "invoice_statement 1차 안정화 완료",
+    "baseline receipt 1차 개선 완료",
+    "testset management/export/diff 기반 완료",
+    "DB 전환 계획은 PostgreSQL 14개 테이블 기준으로 보류 저장"
+  ],
+  "invoiceStatement": {
+    "testRowCountExact": "7/7",
+    "templateRunOcrE2EExact": "7/7",
+    "rows": [
+      { "sample": "1.jpg", "expected": 28, "actual": 28, "status": "exact" },
+      { "sample": "2.pdf", "expected": 13, "actual": 13, "status": "exact" },
+      { "sample": "3.pdf", "expected": 1, "actual": 1, "status": "exact" },
+      { "sample": "4.pdf", "expected": 1, "actual": 1, "status": "exact" },
+      { "sample": "5.pdf", "expected": 6, "actual": 6, "status": "exact" },
+      { "sample": "6.pdf", "expected": 6, "actual": 6, "status": "exact" },
+      { "sample": "7.pdf", "expected": 1, "actual": 1, "status": "exact" }
+    ],
+    "stabilizedFeatures": [
+      "OP-anchor reconstruction",
+      "multiline layout mapping",
+      "colGuides header skip",
+      "valueMappingWarnings/warning policy"
+    ],
+    "sourceReports": [
+      "T16_baseline_receipt_invoice_final_audit_20260516.json",
+      "invoice_statement/reports/T10_fix_template_colguides_header_skip_20260516.json"
+    ]
+  },
+  "baselineReceipt": {
+    "sourceReport": "T16_baseline_receipt_invoice_final_audit_20260516.json",
+    "improvements": [
+      { "metric": "pos_receipt businessNo missing", "before": 4, "after": 3, "delta": -1 },
+      { "metric": "pos_receipt merchantName missing", "before": 2, "after": 1, "delta": -1 },
+      { "metric": "food_cafe merchantName missing", "before": 4, "after": 2, "delta": -2 },
+      { "metric": "card_receipt businessNo missing", "before": 2, "after": 0, "delta": -2 },
+      { "metric": "card_receipt merchantName missing", "before": 2, "after": 1, "delta": -1 },
+      { "metric": "medical_receipt correct classification", "before": "2/4", "after": "4/4", "delta": "+2" },
+      { "metric": "finance_slip selected", "before": 1, "after": 0, "delta": "정책 정합화" }
+    ],
+    "t16Aggregate": {
+      "totalSamples": 57,
+      "selected": 48,
+      "suppressed": 7,
+      "unknown": 2,
+      "error": 0
+    }
+  },
+  "testsetManagementExportDiff": [
+    {
+      "task": "T-11",
+      "status": "completed",
+      "summary": "documentType / qualityTags summary"
+    },
+    {
+      "task": "T-12a",
+      "status": "completed",
+      "summary": "expectedRowCount summary"
+    },
+    {
+      "task": "T-12b",
+      "status": "completed",
+      "summary": "missing/warning field summary"
+    },
+    {
+      "task": "T-12c",
+      "status": "completed",
+      "summary": "RunAll JSON/MD export"
+    },
+    {
+      "task": "T-12d",
+      "status": "completed",
+      "summary": "before/after diff tool"
+    }
+  ],
+  "dbMigrationPlan": {
+    "source": "mysuit-ocr/docs/db_migration_analysis_ocr_project_20260516.json",
+    "database": "PostgreSQL",
+    "tableCount": 14,
+    "tables": [
+      "users",
+      "sites",
+      "site_members",
+      "ocr_templates",
+      "ocr_template_regions",
+      "ocr_template_table_guides",
+      "ocr_runs",
+      "ocr_run_files",
+      "ocr_run_results",
+      "ocr_run_table_rows",
+      "ocr_run_warnings",
+      "ocr_ground_truth",
+      "user_preferences",
+      "audit_logs"
+    ],
+    "nextStep": "DB-2 schema.sql 작성"
+  },
+  "remainingIssues": [
+    "pos_003.jpg metadata mismatch",
+    "google/6.jpg locked mismatch",
+    "OCR source missing/garbled 케이스",
+    "finance_slip extractor 장기 후보",
+    "tax_invoice sample 없음",
+    "transaction_statement 예비 타입"
+  ],
+  "nextPriorityCandidates": [
+    "현재 상태 마감 후 새 샘플 확보",
+    "metadata 정리",
+    "finance_slip extractor 장기 작업",
+    "DB-2 PostgreSQL schema.sql",
+    "tax_invoice / transaction_statement 실제 샘플 확보 후 parser 분기"
+  ],
+  "validation": {
+    "t16PyCompile": "PASS",
+    "t16VerifyScript": "PASS",
+    "typecheck": "PASS (npm run typecheck)",
+    "build": "not run in T-16 because no code changes"
+  }
+}

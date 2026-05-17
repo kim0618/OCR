@@ -1,0 +1,58 @@
+{
+  "task": "UI-TEST-1",
+  "title": "TestWorkspace 작은 화면 레이아웃 개선",
+  "date": "2026-05-17",
+  "status": "completed",
+  "modifiedFiles": [
+    "mysuit-ocr/src/components/test/TestWorkspace.tsx"
+  ],
+  "backupFiles": [
+    "mysuit-ocr/src/components/test/TestWorkspace_20260517_before_UI1.tsx"
+  ],
+  "changes": [
+    {
+      "task": "작업1",
+      "title": "상단 샘플 썸네일 영역 접기/펼치기",
+      "description": "showThumbnails state 추가 (기본 false). topBar에 토글 버튼 추가. 썸네일은 펼침 시에만 표시.",
+      "lines": ["950-952 (state)", "2243-2295 (topBar JSX)", "6197-6201 (styles.topBar)"],
+      "regression": false
+    },
+    {
+      "task": "작업2",
+      "title": "요약 카드 반응형 grid",
+      "description": "KpiSection wrapper의 flex와 minWidth를 '1 1 240px', 'min(100%, 240px)'으로 변경하여 화면 폭에 따라 4열/2열/1열로 wrapping.",
+      "lines": ["3653 (KpiSection style)"],
+      "regression": false
+    },
+    {
+      "task": "작업3",
+      "title": "documentType/qualityTags 집계 기본 접힘",
+      "description": "이미 <details> 사용 중으로 기본 접힘 상태. 별도 수정 불필요.",
+      "lines": [],
+      "regression": false
+    },
+    {
+      "task": "작업4/5",
+      "title": "이미지 패널 토글 (상세 패널 compact화)",
+      "description": "showImagePanel state 추가 (기본 true). 결과 테이블과 상세 패널 사이 토글 버튼 추가. 이미지 패널 조건부 렌더링.",
+      "lines": ["951-952 (state)", "2886-2904 (toggle button + conditional imagePane)"],
+      "regression": false
+    },
+    {
+      "task": "작업6",
+      "title": "테이블 영역 높이/스크롤 정리",
+      "description": "batchBox maxHeight 220→320. th에 sticky, top:0, background 추가하여 헤더 고정.",
+      "lines": ["6333-6336 (batchBox)", "6387-6392 (th style)"],
+      "regression": false
+    }
+  ],
+  "validation": {
+    "typecheck": "pass",
+    "build": "pass",
+    "buildSize": "/test 47.6 kB",
+    "ocrLogicModified": false,
+    "manifestModified": false,
+    "regressionRisk": "low"
+  },
+  "nextTask": "UI-TEST-2 (작업5 심화 - 필드/디버그 탭 분리) 또는 다음 단계 판단"
+}

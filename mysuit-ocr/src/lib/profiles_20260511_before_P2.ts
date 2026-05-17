@@ -245,13 +245,15 @@ const DOCUMENT_FIELD_SET: ReadonlySet<DocumentFieldKey> = new Set<DocumentFieldK
 // ============================================================
 
 const DOCUMENT_TYPE_PROFILE_MAP: Record<DocumentType, ProfileResolution> = {
-  pos_receipt:        { base: "receipt",  overlays: []                },
-  food_cafe_receipt:  { base: "receipt",  overlays: []                },
-  card_receipt:       { base: "receipt",  overlays: ["card"]          },
-  medical_receipt:    { base: "receipt",  overlays: ["medical"]       },
-  finance_slip:       { base: "finance",  overlays: []                },
-  invoice_statement:  { base: "document", overlays: []                },
-  unknown:            { base: "none",     overlays: []                },
+  pos_receipt:          { base: "receipt",  overlays: []                },
+  food_cafe_receipt:    { base: "receipt",  overlays: []                },
+  card_receipt:         { base: "receipt",  overlays: ["card"]          },
+  medical_receipt:      { base: "receipt",  overlays: ["medical"]       },
+  finance_slip:         { base: "finance",  overlays: []                },
+  invoice_statement:    { base: "document", overlays: []                },
+  tax_invoice:          { base: "document", overlays: []                },
+  transaction_statement:{ base: "document", overlays: []                },
+  unknown:              { base: "none",     overlays: []                },
 };
 
 // ============================================================

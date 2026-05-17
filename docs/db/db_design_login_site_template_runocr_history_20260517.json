@@ -1,0 +1,658 @@
+{
+  "generatedAt": "2026-05-17",
+  "designId": "DB-DESIGN-1",
+  "title": "로그인/사이트/템플릿/RunOCR/히스토리 DB화 상세 설계",
+  "scope": ["auth", "site", "template", "runocr", "history"],
+  "excluded": [
+    "test_workspace",
+    "ground_truth",
+    "testsets",
+    "preprocessing_logic",
+    "ocr_recognition_logic",
+    "runocr_auto_apply_phase3",
+    "finance_slip_parser",
+    "tax_invoice_parser",
+    "transaction_statement_parser"
+  ],
+  "corePrinciples": [
+    "Site-centric isolation: business data is owned by site, not user",
+    "JSONB first, normalize later when query patterns demand it",
+    "storage_key abstraction: never store binary in DB",
+    "Server-verifiable sessions: SHA-256 hashed tokens, not localStorage",
+    "super_admin via single boolean flag on users, bypasses site RLS"
+  ],
+  "tableCounts": {
+    "p0_mvp_auth_site": 4,
+    "p1_mvp_business": 4,
+    "p2_recommended_ops": 4,
+    "p3_future_scaling": 2,
+    "total": 14
+  },
+  "tables": [
+    {
+      "name": "users",
+      "priority": "P0",
+      "purpose": "전역 사용자 마스터. 로그인 ID, bcrypt 비밀번호 해시, super_admin 플래그 보유.",
+      "screens": ["Login", "User management", "Site member invite"],
+      "siteScoped": false,
+      "replaces": ["ocr-server/data/users.json (평문)", "localStorage mysuit_ocr_login (일부)"],
+      "columns": [
+        { "name": "id", "type": "UUID", "required": true, "primaryKey": true, "purpose": "PK", "notes": "gen_random_uuid()" },
+        { "name": "username", "type": "VARCHAR(64)", "required": true, "unique": true, "purpose": "로그인 ID", "notes": "기존 user_id" },
+        { "name": "email", "type": "VARCHAR(255)", "required": false, "unique": true, "purpose": "이메일 로그인/알림 확장" },
+        { "name": "display_name", "type": "VARCHAR(128)", "required": true, "purpose": "UI 표시 이름", "notes": "기존 user_nm" },
+        { "name": "password_hash", "type": "VARCHAR(60)", "required": true, "purpose": "bcrypt 해시", "notes": "정확히 60자" },
+        { "name": "is_super_admin", "type": "BOOLEAN", "required": true, "purpose": "마스터 계정 여부", "notes": "기존 masterYn, default false" },
+        { "name": "status", "type": "VARCHAR(16)", "required": true, "purpose": "active/disabled/pending", "notes": "default active" },
+        { "name": "last_login_at", "type": "TIMESTAMPTZ", "required": false, "purpose": "마지막 로그인 시각" },
+        { "name": "created_at", "type": "TIMESTAMPTZ", "required": true, "purpose": "생성 시각" },
+        { "name": "updated_at", "type": "TIMESTAMPTZ", "required": true, "purpose": "갱신 시각" },
+        { "name": "deleted_at", "type": "TIMESTAMPTZ", "required": false, "purpose": "soft delete" }
+      ],
+      "relations": [
+        { "type": "one-to-many", "target": "sessions", "via": "user_id" },
+        { "type": "one-to-many", "target": "site_members", "via": "user_id" },
+        { "type": "one-to-many", "target": "user_preferences", "via": "user_id" },
+        { "type": "one-to-many", "target": "ocr_runs", "via": "user_id" }
+      ],
+      "indexes": ["UNIQUE(username)", "UNIQUE(email) WHERE email IS NOT NULL"],
+      "notes": "평문 비밀번호 절대 저장 금지. 마이그레이션 시 user_pw → bcrypt 변환 후 즉시 폐기."
+    },
+    {
+      "name": "sessions",
+      "priority": "P0",
+      "purpose": "로그인 세션. localStorage 토큰 대체.",
+      "screens": ["Login", "All authenticated requests"],
+      "siteScoped": false,
+      "replaces": ["localStorage mysuit_ocr_login token"],
+      "columns": [
+        { "name": "id", "type": "UUID", "required": true, "primaryKey": true, "purpose": "PK" },
+        { "name": "user_id", "type": "UUID", "required": true, "foreignKey": "users.id", "purpose": "소유 사용자", "notes": "ON DELETE CASCADE" },
+        { "name": "session_token_hash", "type": "VARCHAR(64)", "required": true, "unique": true, "purpose": "SHA-256 해시", "notes": "평문 토큰은 클라이언트만 보유" },
+        { "name": "expires_at", "type": "TIMESTAMPTZ", "required": true, "purpose": "만료 시각" },
+        { "name": "revoked_at", "type": "TIMESTAMPTZ", "required": false, "purpose": "강제 만료/로그아웃" },
+        { "name": "ip_address", "type": "INET", "required": false, "purpose": "발급 IP" },
+        { "name": "user_agent", "type": "TEXT", "required": false, "purpose": "발급 UA" },
+        { "name": "current_site_id", "type": "UUID", "required": false, "foreignKey": "sites.id", "purpose": "현재 작업 사이트", "notes": "UI 편의용" },
+        { "name": "created_at", "type": "TIMESTAMPTZ", "required": true, "purpose": "발급 시각" },
+        { "name": "last_seen_at", "type": "TIMESTAMPTZ", "required": false, "purpose": "마지막 사용 시각" }
+      ],
+      "relations": [
+        { "type": "many-to-one", "target": "users", "via": "user_id" },
+        { "type": "many-to-one", "target": "sites", "via": "current_site_id" }
+      ],
+      "indexes": ["UNIQUE(session_token_hash)", "INDEX(user_id, revoked_at, expires_at)"],
+      "notes": "유효성 = revoked_at IS NULL AND expires_at > now(). JWT 대신 stateful 세션 채택 (강제 만료 용이)."
+    },
+    {
+      "name": "sites",
+      "priority": "P0",
+      "purpose": "사이트/워크스페이스 마스터. 모든 업무 데이터의 소유자.",
+      "screens": ["Sidebar dropdown", "Site settings", "All workspace screens"],
+      "siteScoped": false,
+      "replaces": ["Sidebar 드롭다운(미구현 부분)"],
+      "columns": [
+        { "name": "id", "type": "UUID", "required": true, "primaryKey": true, "purpose": "PK" },
+        { "name": "name", "type": "VARCHAR(128)", "required": true, "purpose": "표시 이름" },
+        { "name": "slug", "type": "VARCHAR(64)", "required": true, "unique": true, "purpose": "URL/식별자", "notes": "kebab-case" },
+        { "name": "owner_user_id", "type": "UUID", "required": true, "foreignKey": "users.id", "purpose": "사이트 소유자" },
+        { "name": "status", "type": "VARCHAR(16)", "required": true, "purpose": "active/suspended/archived" },
+        { "name": "settings", "type": "JSONB", "required": false, "purpose": "사이트 설정 (retention_days, default_document_type 등)" },
+        { "name": "created_at", "type": "TIMESTAMPTZ", "required": true },
+        { "name": "updated_at", "type": "TIMESTAMPTZ", "required": true },
+        { "name": "deleted_at", "type": "TIMESTAMPTZ", "required": false, "purpose": "soft delete" }
+      ],
+      "relations": [
+        { "type": "one-to-many", "target": "site_members", "via": "site_id" },
+        { "type": "one-to-many", "target": "ocr_templates", "via": "site_id" },
+        { "type": "one-to-many", "target": "ocr_runs", "via": "site_id" }
+      ],
+      "indexes": ["UNIQUE(slug)"],
+      "notes": "owner_user_id는 site_members(role=owner)에도 동시 등록 필요 (트리거 또는 application)."
+    },
+    {
+      "name": "site_members",
+      "priority": "P0",
+      "purpose": "사용자-사이트 멤버십 + 사이트별 권한.",
+      "screens": ["Site member management", "All permission checks"],
+      "siteScoped": true,
+      "columns": [
+        { "name": "id", "type": "UUID", "required": true, "primaryKey": true },
+        { "name": "site_id", "type": "UUID", "required": true, "foreignKey": "sites.id", "purpose": "소속 사이트", "notes": "ON DELETE CASCADE" },
+        { "name": "user_id", "type": "UUID", "required": true, "foreignKey": "users.id", "purpose": "사용자", "notes": "ON DELETE CASCADE" },
+        { "name": "role", "type": "VARCHAR(16)", "required": true, "purpose": "owner/admin/member/viewer", "notes": "CHECK 제약" },
+        { "name": "invited_by", "type": "UUID", "required": false, "foreignKey": "users.id", "purpose": "초대자" },
+        { "name": "joined_at", "type": "TIMESTAMPTZ", "required": true, "purpose": "가입 확정" },
+        { "name": "status", "type": "VARCHAR(16)", "required": true, "purpose": "active/invited/disabled" },
+        { "name": "created_at", "type": "TIMESTAMPTZ", "required": true },
+        { "name": "updated_at", "type": "TIMESTAMPTZ", "required": true }
+      ],
+      "relations": [
+        { "type": "many-to-one", "target": "sites", "via": "site_id" },
+        { "type": "many-to-one", "target": "users", "via": "user_id" }
+      ],
+      "indexes": ["UNIQUE(site_id, user_id)", "INDEX(user_id)"],
+      "constraints": ["CHECK (role IN ('owner','admin','member','viewer'))"],
+      "notes": "super_admin은 멤버십 없이도 통과."
+    },
+    {
+      "name": "ocr_templates",
+      "priority": "P1",
+      "purpose": "템플릿 마스터. 사이트별 격리.",
+      "screens": ["Template tab", "RunOCR (template select)", "History (template name)"],
+      "siteScoped": true,
+      "replaces": ["ocr-server/data/templates.json", "localStorage mysuit_ocr_templates"],
+      "columns": [
+        { "name": "id", "type": "UUID", "required": true, "primaryKey": true },
+        { "name": "site_id", "type": "UUID", "required": true, "foreignKey": "sites.id" },
+        { "name": "name", "type": "VARCHAR(128)", "required": true, "purpose": "템플릿명", "notes": "기존 template_name" },
+        { "name": "document_type", "type": "VARCHAR(64)", "required": true, "purpose": "CLAUDE.md 정의" },
+        { "name": "description", "type": "TEXT", "required": false },
+        { "name": "image_width", "type": "INTEGER", "required": true, "purpose": "좌표 해석 기준" },
+        { "name": "image_height", "type": "INTEGER", "required": true, "purpose": "좌표 해석 기준" },
+        { "name": "source_file_name", "type": "VARCHAR(256)", "required": false },
+        { "name": "source_storage_key", "type": "VARCHAR(512)", "required": false, "purpose": "원본 이미지 URI (base64 분리)" },
+        { "name": "template_body", "type": "JSONB", "required": true, "purpose": "기존 template_json 전체", "notes": "regions/tableConfig 포함" },
+        { "name": "version", "type": "INTEGER", "required": true, "purpose": "버전", "notes": "default 1" },
+        { "name": "is_active", "type": "BOOLEAN", "required": true, "purpose": "RunOCR 후보 여부" },
+        { "name": "created_by", "type": "UUID", "required": true, "foreignKey": "users.id" },
+        { "name": "updated_by", "type": "UUID", "required": false, "foreignKey": "users.id" },
+        { "name": "created_at", "type": "TIMESTAMPTZ", "required": true },
+        { "name": "updated_at", "type": "TIMESTAMPTZ", "required": true },
+        { "name": "deleted_at", "type": "TIMESTAMPTZ", "required": false }
+      ],
+      "relations": [
+        { "type": "many-to-one", "target": "sites", "via": "site_id" },
+        { "type": "one-to-many", "target": "ocr_template_regions", "via": "template_id" },
+        { "type": "one-to-many", "target": "ocr_runs", "via": "template_id" }
+      ],
+      "indexes": ["UNIQUE(site_id, name, version)", "INDEX(site_id, document_type)"],
+      "notes": "MVP는 template_body JSONB 단일 저장. P2에서 regions/guides 정규화 결정."
+    },
+    {
+      "name": "ocr_template_regions",
+      "priority": "P2",
+      "purpose": "템플릿 내 영역(필드/표) 박스 정규화.",
+      "screens": ["Template tab (region builder)"],
+      "siteScoped": true,
+      "columns": [
+        { "name": "id", "type": "UUID", "required": true, "primaryKey": true },
+        { "name": "site_id", "type": "UUID", "required": true, "foreignKey": "sites.id" },
+        { "name": "template_id", "type": "UUID", "required": true, "foreignKey": "ocr_templates.id", "notes": "ON DELETE CASCADE" },
+        { "name": "field_key", "type": "VARCHAR(64)", "required": true },
+        { "name": "field_label", "type": "VARCHAR(128)", "required": true },
+        { "name": "field_type", "type": "VARCHAR(32)", "required": true, "purpose": "text/table/number/date/barcode" },
+        { "name": "x", "type": "INTEGER", "required": true },
+        { "name": "y", "type": "INTEGER", "required": true },
+        { "name": "width", "type": "INTEGER", "required": true },
+        { "name": "height", "type": "INTEGER", "required": true },
+        { "name": "region_order", "type": "INTEGER", "required": true },
+        { "name": "options", "type": "JSONB", "required": false, "purpose": "regex, mapping, validators" },
+        { "name": "created_at", "type": "TIMESTAMPTZ", "required": true },
+        { "name": "updated_at", "type": "TIMESTAMPTZ", "required": true }
+      ],
+      "relations": [
+        { "type": "many-to-one", "target": "ocr_templates", "via": "template_id" }
+      ],
+      "notes": "MVP는 template_body JSONB로 충분. P2 정규화 결정 시 도입."
+    },
+    {
+      "name": "ocr_template_table_guides",
+      "priority": "P2",
+      "purpose": "표 영역의 col/row 가이드 좌표 정규화.",
+      "screens": ["Template tab (table builder)", "invoice_statement parser"],
+      "siteScoped": true,
+      "columns": [
+        { "name": "id", "type": "UUID", "required": true, "primaryKey": true },
+        { "name": "site_id", "type": "UUID", "required": true, "foreignKey": "sites.id" },
+        { "name": "template_id", "type": "UUID", "required": true, "foreignKey": "ocr_templates.id" },
+        { "name": "region_id", "type": "UUID", "required": false, "foreignKey": "ocr_template_regions.id" },
+        { "name": "guide_type", "type": "VARCHAR(16)", "required": true, "purpose": "col/row" },
+        { "name": "guide_key", "type": "VARCHAR(64)", "required": false, "purpose": "컬럼명" },
+        { "name": "guide_value", "type": "NUMERIC", "required": true, "purpose": "좌표(px)" },
+        { "name": "guide_order", "type": "INTEGER", "required": true },
+        { "name": "options", "type": "JSONB", "required": false, "purpose": "header_skip, dtype 등 (T-10 관련)" },
+        { "name": "created_at", "type": "TIMESTAMPTZ", "required": true },
+        { "name": "updated_at", "type": "TIMESTAMPTZ", "required": true }
+      ],
+      "notes": "MVP는 template_body.tableConfig JSONB로 충분. P2~P3에서 정규화."
+    },
+    {
+      "name": "ocr_runs",
+      "priority": "P1",
+      "purpose": "RunOCR 실행 1회 단위 상위 테이블.",
+      "screens": ["RunOCR tab", "History tab"],
+      "siteScoped": true,
+      "replaces": ["ocr-server/data/history.json (일부)", "localStorage mysuit_ocr_history (일부)"],
+      "columns": [
+        { "name": "id", "type": "UUID", "required": true, "primaryKey": true, "purpose": "기존 job_id 대체" },
+        { "name": "site_id", "type": "UUID", "required": true, "foreignKey": "sites.id" },
+        { "name": "user_id", "type": "UUID", "required": true, "foreignKey": "users.id", "purpose": "실행자" },
+        { "name": "template_id", "type": "UUID", "required": false, "foreignKey": "ocr_templates.id" },
+        { "name": "run_mode", "type": "VARCHAR(16)", "required": true, "purpose": "upload/template/batch/test" },
+        { "name": "status", "type": "VARCHAR(16)", "required": true, "purpose": "pending/running/succeeded/failed/partial" },
+        { "name": "model_id", "type": "VARCHAR(64)", "required": false, "purpose": "OCR 엔진/모델" },
+        { "name": "options", "type": "JSONB", "required": false, "purpose": "debugPreprocessing, autoApplyPreprocessing, selectedModel" },
+        { "name": "summary", "type": "JSONB", "required": false, "purpose": "totalFiles, successCount, failureCount, documentTypes" },
+        { "name": "started_at", "type": "TIMESTAMPTZ", "required": false },
+        { "name": "finished_at", "type": "TIMESTAMPTZ", "required": false },
+        { "name": "duration_ms", "type": "INTEGER", "required": false },
+        { "name": "created_at", "type": "TIMESTAMPTZ", "required": true },
+        { "name": "updated_at", "type": "TIMESTAMPTZ", "required": true },
+        { "name": "deleted_at", "type": "TIMESTAMPTZ", "required": false, "purpose": "History 삭제 시 soft delete" }
+      ],
+      "relations": [
+        { "type": "many-to-one", "target": "sites", "via": "site_id" },
+        { "type": "many-to-one", "target": "users", "via": "user_id" },
+        { "type": "many-to-one", "target": "ocr_templates", "via": "template_id" },
+        { "type": "one-to-many", "target": "ocr_run_files", "via": "run_id" }
+      ],
+      "indexes": ["INDEX(site_id, created_at DESC)", "INDEX(site_id, user_id, created_at DESC)"]
+    },
+    {
+      "name": "ocr_run_files",
+      "priority": "P1",
+      "purpose": "실행에 포함된 파일 단위 메타데이터.",
+      "screens": ["RunOCR progress", "History detail"],
+      "siteScoped": true,
+      "columns": [
+        { "name": "id", "type": "UUID", "required": true, "primaryKey": true },
+        { "name": "site_id", "type": "UUID", "required": true, "foreignKey": "sites.id" },
+        { "name": "run_id", "type": "UUID", "required": true, "foreignKey": "ocr_runs.id", "notes": "ON DELETE CASCADE" },
+        { "name": "original_file_name", "type": "VARCHAR(512)", "required": true },
+        { "name": "mime_type", "type": "VARCHAR(64)", "required": true },
+        { "name": "size_bytes", "type": "BIGINT", "required": true },
+        { "name": "storage_key", "type": "VARCHAR(512)", "required": true, "purpose": "local:// / s3:// 추상화" },
+        { "name": "checksum_sha256", "type": "CHAR(64)", "required": false, "purpose": "무결성/중복 검출" },
+        { "name": "page_count", "type": "INTEGER", "required": false },
+        { "name": "image_width", "type": "INTEGER", "required": false },
+        { "name": "image_height", "type": "INTEGER", "required": false },
+        { "name": "file_order", "type": "INTEGER", "required": true, "purpose": "run 내 1-based 순서" },
+        { "name": "metadata", "type": "JSONB", "required": false, "purpose": "EXIF, PDF 메타" },
+        { "name": "created_at", "type": "TIMESTAMPTZ", "required": true }
+      ],
+      "relations": [
+        { "type": "many-to-one", "target": "ocr_runs", "via": "run_id" },
+        { "type": "one-to-one", "target": "ocr_run_results", "via": "file_id" }
+      ],
+      "indexes": ["INDEX(run_id, file_order)", "INDEX(checksum_sha256)"]
+    },
+    {
+      "name": "ocr_run_results",
+      "priority": "P1",
+      "purpose": "OCR 결과 핵심 테이블. 파일 1개당 결과 1건.",
+      "screens": ["RunOCR result panel", "History detail"],
+      "siteScoped": true,
+      "columns": [
+        { "name": "id", "type": "UUID", "required": true, "primaryKey": true },
+        { "name": "site_id", "type": "UUID", "required": true, "foreignKey": "sites.id" },
+        { "name": "run_id", "type": "UUID", "required": true, "foreignKey": "ocr_runs.id" },
+        { "name": "file_id", "type": "UUID", "required": true, "foreignKey": "ocr_run_files.id", "unique": true, "purpose": "1:1 매핑" },
+        { "name": "template_id", "type": "UUID", "required": false, "foreignKey": "ocr_templates.id" },
+        { "name": "document_type", "type": "VARCHAR(64)", "required": true },
+        { "name": "detected_doc_type", "type": "VARCHAR(64)", "required": false, "purpose": "classifier 추정" },
+        { "name": "status", "type": "VARCHAR(16)", "required": true, "purpose": "succeeded/failed/partial/needs_review" },
+        { "name": "receipt_fields", "type": "JSONB", "required": false, "purpose": "영수증 계열 결과" },
+        { "name": "document_fields", "type": "JSONB", "required": false, "purpose": "일반 문서 결과 (invoice_statement.tableRows 포함)" },
+        { "name": "normalized_fields", "type": "JSONB", "required": false, "purpose": "후처리 정규화 (검색용)" },
+        { "name": "table_meta", "type": "JSONB", "required": false, "purpose": "rowCount, colCount, colGuides snapshot" },
+        { "name": "preprocessing_debug", "type": "JSONB", "required": false, "purpose": "debug 또는 production-applied 시에만" },
+        { "name": "raw_text", "type": "TEXT", "required": false, "purpose": "OCR raw text" },
+        { "name": "confidence", "type": "NUMERIC(5,4)", "required": false },
+        { "name": "parser_version", "type": "VARCHAR(32)", "required": false, "purpose": "T-23 등" },
+        { "name": "ocr_engine", "type": "VARCHAR(64)", "required": false },
+        { "name": "warnings_summary", "type": "JSONB", "required": false, "purpose": "{error:0,warning:2,info:1}" },
+        { "name": "created_at", "type": "TIMESTAMPTZ", "required": true },
+        { "name": "updated_at", "type": "TIMESTAMPTZ", "required": true }
+      ],
+      "relations": [
+        { "type": "one-to-one", "target": "ocr_run_files", "via": "file_id" },
+        { "type": "many-to-one", "target": "ocr_runs", "via": "run_id" },
+        { "type": "one-to-many", "target": "ocr_run_table_rows", "via": "result_id" },
+        { "type": "one-to-many", "target": "ocr_run_warnings", "via": "result_id" }
+      ],
+      "indexes": [
+        "UNIQUE(file_id)",
+        "INDEX(site_id, run_id)",
+        "GIN(document_fields)",
+        "GIN(normalized_fields)"
+      ],
+      "preprocessingDebugPolicy": "debugPreprocessing=true OR productionApplied=true 시에만 저장"
+    },
+    {
+      "name": "ocr_run_table_rows",
+      "priority": "P3",
+      "purpose": "거래명세서 등 표 row 단위 정규화 저장.",
+      "screens": ["History detail (행 단위 편집/검색)"],
+      "siteScoped": true,
+      "columns": [
+        { "name": "id", "type": "UUID", "required": true, "primaryKey": true },
+        { "name": "site_id", "type": "UUID", "required": true, "foreignKey": "sites.id" },
+        { "name": "result_id", "type": "UUID", "required": true, "foreignKey": "ocr_run_results.id", "notes": "ON DELETE CASCADE" },
+        { "name": "row_index", "type": "INTEGER", "required": true, "purpose": "0-based" },
+        { "name": "row_data", "type": "JSONB", "required": true, "purpose": "컬럼명→값" },
+        { "name": "source_bboxes", "type": "JSONB", "required": false, "purpose": "셀별 bbox" },
+        { "name": "confidence", "type": "NUMERIC(5,4)", "required": false },
+        { "name": "row_status", "type": "VARCHAR(16)", "required": false, "purpose": "auto/reviewed/corrected/rejected" },
+        { "name": "metadata", "type": "JSONB", "required": false },
+        { "name": "created_at", "type": "TIMESTAMPTZ", "required": true }
+      ],
+      "indexes": ["INDEX(result_id, row_index)"],
+      "notes": "MVP는 ocr_run_results.document_fields.tableRows JSONB로 충분. 행 단위 검색/편집 요구 시 도입."
+    },
+    {
+      "name": "ocr_run_warnings",
+      "priority": "P3",
+      "purpose": "OCR/파서/전처리 경고 누적 저장.",
+      "screens": ["Quality dashboard", "History detail warnings panel"],
+      "siteScoped": true,
+      "columns": [
+        { "name": "id", "type": "UUID", "required": true, "primaryKey": true },
+        { "name": "site_id", "type": "UUID", "required": true, "foreignKey": "sites.id" },
+        { "name": "result_id", "type": "UUID", "required": true, "foreignKey": "ocr_run_results.id" },
+        { "name": "warning_type", "type": "VARCHAR(64)", "required": true, "purpose": "value_mapping/source_missing/preprocessing/parser" },
+        { "name": "field_key", "type": "VARCHAR(64)", "required": false },
+        { "name": "severity", "type": "VARCHAR(16)", "required": true, "purpose": "info/warning/error" },
+        { "name": "message", "type": "TEXT", "required": true },
+        { "name": "metadata", "type": "JSONB", "required": false },
+        { "name": "created_at", "type": "TIMESTAMPTZ", "required": true }
+      ],
+      "indexes": ["INDEX(result_id, severity)", "INDEX(site_id, warning_type, created_at)"],
+      "notes": "MVP는 ocr_run_results.warnings_summary JSONB로 충분."
+    },
+    {
+      "name": "user_preferences",
+      "priority": "P2",
+      "purpose": "사용자별 UI/운영 환경 설정.",
+      "screens": ["All screens (theme, last_site, default_options)"],
+      "siteScoped": false,
+      "replaces": ["localStorage mysuit_ocr_theme", "localStorage mysuit_ocr_login (선택)"],
+      "columns": [
+        { "name": "id", "type": "UUID", "required": true, "primaryKey": true },
+        { "name": "user_id", "type": "UUID", "required": true, "foreignKey": "users.id" },
+        { "name": "preference_key", "type": "VARCHAR(64)", "required": true, "purpose": "theme/last_site_id/default_options" },
+        { "name": "preference_value", "type": "JSONB", "required": true },
+        { "name": "created_at", "type": "TIMESTAMPTZ", "required": true },
+        { "name": "updated_at", "type": "TIMESTAMPTZ", "required": true }
+      ],
+      "indexes": ["UNIQUE(user_id, preference_key)"]
+    },
+    {
+      "name": "audit_logs",
+      "priority": "P2",
+      "purpose": "운영/감사 이벤트 로그. review_log.jsonl 대체 및 확장.",
+      "screens": ["Admin dashboard", "Security audit"],
+      "siteScoped": "nullable",
+      "replaces": ["ocr-server/data/review_log.jsonl (확장)"],
+      "columns": [
+        { "name": "id", "type": "BIGSERIAL", "required": true, "primaryKey": true, "purpose": "대량 append 고려" },
+        { "name": "site_id", "type": "UUID", "required": false, "foreignKey": "sites.id" },
+        { "name": "user_id", "type": "UUID", "required": false, "foreignKey": "users.id" },
+        { "name": "action", "type": "VARCHAR(64)", "required": true, "purpose": "auth.login, template.create, run.execute 등" },
+        { "name": "entity_type", "type": "VARCHAR(64)", "required": false },
+        { "name": "entity_id", "type": "UUID", "required": false },
+        { "name": "ip_address", "type": "INET", "required": false },
+        { "name": "user_agent", "type": "TEXT", "required": false },
+        { "name": "metadata", "type": "JSONB", "required": false, "purpose": "before/after, reason" },
+        { "name": "created_at", "type": "TIMESTAMPTZ", "required": true }
+      ],
+      "indexes": ["INDEX(site_id, created_at DESC)", "INDEX(user_id, created_at DESC)", "INDEX(action, created_at DESC)"]
+    }
+  ],
+  "screenMappings": [
+    {
+      "screen": "Login",
+      "tablesQueried": ["users", "sessions"],
+      "tablesWritten": ["sessions", "audit_logs"],
+      "tablesUpdated": ["users.last_login_at"]
+    },
+    {
+      "screen": "Logout",
+      "tablesQueried": ["sessions"],
+      "tablesWritten": ["audit_logs"],
+      "tablesUpdated": ["sessions.revoked_at"]
+    },
+    {
+      "screen": "SiteSelect (Sidebar)",
+      "tablesQueried": ["sites", "site_members"],
+      "tablesWritten": [],
+      "tablesUpdated": ["sessions.current_site_id", "user_preferences"]
+    },
+    {
+      "screen": "SiteSettings",
+      "tablesQueried": ["sites", "site_members"],
+      "tablesWritten": ["site_members", "audit_logs"],
+      "tablesUpdated": ["sites.settings"]
+    },
+    {
+      "screen": "TemplateList",
+      "tablesQueried": ["ocr_templates"],
+      "tablesWritten": [],
+      "tablesUpdated": []
+    },
+    {
+      "screen": "TemplateEdit",
+      "tablesQueried": ["ocr_templates"],
+      "tablesWritten": ["ocr_templates", "audit_logs"],
+      "tablesUpdated": ["ocr_templates"]
+    },
+    {
+      "screen": "RunOCR",
+      "tablesQueried": ["sites", "ocr_templates"],
+      "tablesWritten": ["ocr_runs", "ocr_run_files", "ocr_run_results", "audit_logs"],
+      "tablesUpdated": ["ocr_runs.status", "ocr_runs.finished_at"]
+    },
+    {
+      "screen": "HistoryList",
+      "tablesQueried": ["ocr_runs", "ocr_run_files"],
+      "tablesWritten": [],
+      "tablesUpdated": []
+    },
+    {
+      "screen": "HistoryDetail",
+      "tablesQueried": ["ocr_runs", "ocr_run_files", "ocr_run_results"],
+      "tablesWritten": [],
+      "tablesUpdated": []
+    },
+    {
+      "screen": "HistoryDelete",
+      "tablesQueried": [],
+      "tablesWritten": ["audit_logs"],
+      "tablesUpdated": ["ocr_runs.deleted_at"]
+    }
+  ],
+  "apiSurface": {
+    "auth": [
+      "POST /auth/login",
+      "POST /auth/logout",
+      "GET /auth/me"
+    ],
+    "sites": [
+      "GET /sites",
+      "POST /sites",
+      "GET /sites/:siteId",
+      "PATCH /sites/:siteId",
+      "GET /sites/:siteId/members",
+      "POST /sites/:siteId/members",
+      "PATCH /sites/:siteId/members/:memberId",
+      "DELETE /sites/:siteId/members/:memberId"
+    ],
+    "templates": [
+      "GET /sites/:siteId/templates",
+      "POST /sites/:siteId/templates",
+      "GET /sites/:siteId/templates/:templateId",
+      "PUT /sites/:siteId/templates/:templateId",
+      "DELETE /sites/:siteId/templates/:templateId"
+    ],
+    "runocr": [
+      "POST /sites/:siteId/ocr/runs",
+      "GET /sites/:siteId/ocr/runs/:runId",
+      "GET /sites/:siteId/ocr/runs/:runId/files",
+      "GET /sites/:siteId/ocr/runs/:runId/results"
+    ],
+    "history": [
+      "GET /sites/:siteId/history",
+      "GET /sites/:siteId/history/:runId",
+      "DELETE /sites/:siteId/history/:runId"
+    ]
+  },
+  "permissions": {
+    "global": {
+      "super_admin": "Bypass all site checks. Manage all users/sites/data."
+    },
+    "site": {
+      "owner": ["site.manage_members", "site.manage_settings", "template.*", "run.*", "history.*"],
+      "admin": ["site.manage_members(non-owner)", "template.*", "run.*", "history.*"],
+      "member": ["template.use", "run.execute", "history.read(own+public)", "history.delete(own)"],
+      "viewer": ["history.read"]
+    }
+  },
+  "decisions": [
+    {
+      "id": "D1",
+      "topic": "Template regions/guides 정규화 시점",
+      "recommendation": "MVP는 template_body JSONB. P2에서 사용 패턴 보고 정규화",
+      "alternatives": ["즉시 정규화"],
+      "impact": "MVP 출시 속도 vs 영역 단위 분석 유연성"
+    },
+    {
+      "id": "D2",
+      "topic": "비밀번호 저장 방식",
+      "recommendation": "bcrypt cost=12, VARCHAR(60)",
+      "alternatives": ["argon2id", "pbkdf2"],
+      "impact": "bcrypt가 라이브러리 호환성 우수"
+    },
+    {
+      "id": "D3",
+      "topic": "세션 토큰 저장 방식",
+      "recommendation": "SHA-256 해시 저장, 평문 토큰은 클라이언트만",
+      "alternatives": ["평문 저장", "JWT"],
+      "impact": "해시가 가장 안전. JWT는 강제 만료 어려움"
+    },
+    {
+      "id": "D4",
+      "topic": "super_admin 표현",
+      "recommendation": "users.is_super_admin BOOLEAN 단일 플래그",
+      "alternatives": ["별도 role 테이블"],
+      "impact": "플래그 방식이 단순"
+    },
+    {
+      "id": "D5",
+      "topic": "run-file-result 관계",
+      "recommendation": "1 run → N files → 1:1 result",
+      "alternatives": ["1 file → N results (재처리 이력)"],
+      "impact": "MVP는 1:1. 재처리는 새 run으로"
+    },
+    {
+      "id": "D6",
+      "topic": "preprocessing_debug 저장 시점",
+      "recommendation": "debugPreprocessing=true OR productionApplied=true",
+      "alternatives": ["항상 저장", "저장 안 함"],
+      "impact": "용량 vs 분석"
+    },
+    {
+      "id": "D7",
+      "topic": "tableRows 별도 테이블 도입",
+      "recommendation": "MVP는 document_fields JSONB. P3에서 분리",
+      "alternatives": ["즉시 분리"],
+      "impact": "행 단위 검색/편집 요구 발생 시점"
+    },
+    {
+      "id": "D8",
+      "topic": "warnings 별도 테이블 도입",
+      "recommendation": "MVP는 warnings_summary JSONB. P3에서 분리",
+      "alternatives": ["즉시 분리"],
+      "impact": "운영 분석 시점"
+    },
+    {
+      "id": "D9",
+      "topic": "audit_logs 도입 시점",
+      "recommendation": "MVP 직후 P2 즉시",
+      "alternatives": ["MVP 포함", "더 후속"],
+      "impact": "보안 감사 요구 강도"
+    },
+    {
+      "id": "D10",
+      "topic": "user_preferences 도입 시점",
+      "recommendation": "P2 (last_site_id 위해)",
+      "alternatives": ["localStorage 유지"],
+      "impact": "멀티사이트 UX"
+    },
+    {
+      "id": "D11",
+      "topic": "sessions.current_site_id 포함 여부",
+      "recommendation": "포함 (nullable)",
+      "alternatives": ["user_preferences로 분리"],
+      "impact": "세션 종료 시 자동 소실 (보안 측면)"
+    },
+    {
+      "id": "D12",
+      "topic": "template 버전 관리 방식",
+      "recommendation": "update (단순) — version 컬럼은 +1",
+      "alternatives": ["insert-new-row (이력 보존)"],
+      "impact": "이력 요구 여부에 따라 선택"
+    },
+    {
+      "id": "D13",
+      "topic": "storage_key URI scheme",
+      "recommendation": "local:// / s3:// 추상화",
+      "alternatives": ["단일 경로 문자열"],
+      "impact": "스토리지 어댑터 확장성"
+    },
+    {
+      "id": "D14",
+      "topic": "document_type CHECK 제약",
+      "recommendation": "application-level 검증",
+      "alternatives": ["DB CHECK 제약"],
+      "impact": "신규 doctype 추가 시 DDL 불필요"
+    },
+    {
+      "id": "D15",
+      "topic": "Row-Level Security 즉시 적용",
+      "recommendation": "미적용 (application-level)",
+      "alternatives": ["즉시 RLS 적용"],
+      "impact": "RLS는 디버깅 난이도 높음. 신중히 도입"
+    }
+  ],
+  "isolationMatrix": [
+    { "table": "users", "siteIdRequired": false, "reason": "전역 엔티티" },
+    { "table": "sessions", "siteIdRequired": false, "reason": "사용자 기준. current_site_id는 hint" },
+    { "table": "sites", "siteIdRequired": "self", "reason": "사이트 자신" },
+    { "table": "site_members", "siteIdRequired": true, "reason": "사이트-사용자 매핑" },
+    { "table": "ocr_templates", "siteIdRequired": true, "reason": "템플릿은 사이트 소유" },
+    { "table": "ocr_template_regions", "siteIdRequired": true, "reason": "조회 성능/RLS 일관성" },
+    { "table": "ocr_template_table_guides", "siteIdRequired": true, "reason": "조회 성능/RLS 일관성" },
+    { "table": "ocr_runs", "siteIdRequired": true, "reason": "사이트 컨텍스트 실행" },
+    { "table": "ocr_run_files", "siteIdRequired": true, "reason": "조회 성능" },
+    { "table": "ocr_run_results", "siteIdRequired": true, "reason": "조회 성능" },
+    { "table": "ocr_run_table_rows", "siteIdRequired": true, "reason": "조회 성능" },
+    { "table": "ocr_run_warnings", "siteIdRequired": true, "reason": "조회 성능" },
+    { "table": "user_preferences", "siteIdRequired": false, "reason": "사용자 기준" },
+    { "table": "audit_logs", "siteIdRequired": "nullable", "reason": "사이트 무관 이벤트 존재" }
+  ],
+  "futureCandidates": [
+    {
+      "name": "ocr_ground_truth",
+      "purpose": "GroundTruth DB화. Template + file_id ref",
+      "blocker": "현재 별도 설계 작업으로 분리 (DB-FUTURE-GT)"
+    },
+    {
+      "name": "ocr_testsets / ocr_testset_items",
+      "purpose": "Test 탭 DB화. testset manifest + RunAll 결과",
+      "blocker": "별도 설계 (DB-FUTURE-TEST)"
+    },
+    {
+      "name": "ocr_review_history",
+      "purpose": "review_log.jsonl의 분류 검토 이력 분리 가능성",
+      "blocker": "audit_logs 흡수 vs 분리 P2에서 결정"
+    }
+  ],
+  "nextActions": [
+    "User reviews this design and confirms D1~D15",
+    "DB-2: Write schema.sql (P0+P1 only for MVP)",
+    "DB-3: FastAPI + asyncpg/SQLAlchemy integration",
+    "DB-4: Migration scripts (users.json/templates.json/history.json → DB)",
+    "DB-5: Remove localStorage, switch to httpOnly cookie sessions",
+    "DB-6: P2 introduction (audit_logs, user_preferences, regions/guides)"
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "task": "T-21",
+  "generatedAt": "2026-05-17T00:00:00",
+  "summary": {
+    "testWorkspace": {
+      "checkboxes": ["debugPreprocessing (default: false)", "autoApplyPreprocessing (default: false)"],
+      "fetchOcrParams": ["debugPreprocessing", "autoApplyPreprocessing", "qualityTagsJson"],
+      "panel": "PreprocessingDebugPanel (applied / candidate / excluded / error / hidden)"
+    },
+    "runOcr": {
+      "choice": "A",
+      "autoApplyPreprocessing": "not_sent",
+      "reason": "충분한 TestWorkspace 검증 후 Phase 3 연결 권장"
+    },
+    "backendVerify": "PASS 11/11 (T-20i verify)",
+    "typecheck": "PASS",
+    "build": "PASS"
+  },
+  "displayStates": [
+    {"state": "productionApplied=true", "label": "보정 OCR 적용됨", "icon": "✓", "color": "green"},
+    {"state": "candidate_found_not_applied", "label": "전처리 후보 있음 — 현재 원본 OCR 유지", "icon": "◌", "color": "yellow"},
+    {"state": "invoice_excluded", "label": "표 문서 — 자동 보정 제외", "icon": "—", "color": "gray"},
+    {"state": "no_candidate", "label": "(미표시)", "icon": "", "color": ""}
+  ],
+  "runOcrStrategy": {
+    "phase": "Phase_0_to_1",
+    "current": "TestWorkspace debug only",
+    "next": "Phase 3: UploadWorkspace receipt + preprocessing_candidate 내부 전달"
+  }
+}

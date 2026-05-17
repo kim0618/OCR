@@ -1,0 +1,39 @@
+{
+  "task": "T-12b",
+  "title": "expectedMissingKeys / valueMappingWarnings 필드별 집계 상세화",
+  "generatedAt": "2026-05-16",
+  "status": "completed",
+  "modifiedFiles": [
+    "mysuit-ocr/src/components/test/TestWorkspace.tsx"
+  ],
+  "backupFiles": [
+    "mysuit-ocr/src/components/test/TestWorkspace_20260516_before_T12b.tsx"
+  ],
+  "newHelpers": [
+    "parseWarningKey(warning: string): string — warning 문자열을 key:type 단위로 파싱",
+    "getInvoiceColLabel(key: string): string — field key → 한국어 라벨 변환"
+  ],
+  "docTypeSummaryRowNewFields": [
+    "missingFieldCounts: Record<string, number>",
+    "warningTypeCounts: Record<string, number>"
+  ],
+  "aggregationLogic": {
+    "missingFields": "manifest required columns × tableRows 실제 데이터 기반",
+    "warningTypes": "tableMeta.valueMappingWarnings → parseWarningKey()"
+  },
+  "uiChanges": [
+    "거래명세서 sub-table 아래: Missing Top + Warn Top 상세 표시 (documentType별 1줄)"
+  ],
+  "validation": {
+    "typecheck": "passed",
+    "build": "passed",
+    "ocrRegressionRisk": "none"
+  },
+  "expectedWarningPatterns": [
+    "insuranceCode:ocr_source_missing",
+    "taxAmount:doc_level_pushdown",
+    "totalAmount:doc_level_pushdown",
+    "multiline_layout_mapping_applied",
+    "quantity:ambiguous_numeric_candidates"
+  ]
+}

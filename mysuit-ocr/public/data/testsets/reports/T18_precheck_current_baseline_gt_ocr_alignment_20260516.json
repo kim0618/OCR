@@ -1,0 +1,3534 @@
+{
+  "generatedAt": "2026-05-16T16:43:54",
+  "scope": "baseline_receipt_invoice_statement",
+  "collectionMode": {
+    "baseline_google": "latest rich validation_results JSON",
+    "receipt_generalization": "ocr_cache text + current classifier/parser",
+    "invoice_statement": "T8 precheck + T10 header-skip E2E reports",
+    "apiNote": "live /ocr/extract was not required; current parser was used for cached OCR where RunAll export is unavailable"
+  },
+  "sources": {
+    "baseline": "validation_results_baseline_after_final_selection_edge_cases.json",
+    "baseline_fast": "validation_results_baseline_fast_after_final_selection_edge_cases.json",
+    "google": "validation_results_google_final_before_lock_fields.json",
+    "google_fast": "validation_results_top_fields_generalization.json",
+    "receipt_generalization": "ocr_cache.json",
+    "invoice_statement": "T8_final_precheck + T10_fix_header_skip"
+  },
+  "summary": {
+    "totalSamples": 57,
+    "executableSamples": 57,
+    "selected": 48,
+    "suppressed": 7,
+    "unknown": 2,
+    "error": 0,
+    "docTypeMatchRate": 77.2,
+    "coreFieldFillRate": 87.6,
+    "coreFieldGtMatchRate": 99.1,
+    "rowCountExactRate": 100.0,
+    "warningCount": 40,
+    "sourceMissingCount": 18,
+    "metadataIssueCount": 2,
+    "failureReasonCounts": {
+      "ok": 30,
+      "classification_mismatch": 9,
+      "suppressed_policy": 7,
+      "ocr_source_garbled": 3,
+      "parser_missed_source_exists": 4,
+      "metadata_mismatch": 1,
+      "ocr_source_missing": 2,
+      "ambiguous_candidates": 1
+    },
+    "documentTypes": {
+      "card_receipt": {
+        "samples": 13,
+        "docTypeMatch": 10,
+        "docTypeMatchRate": 76.9,
+        "selected": 11,
+        "suppressed": 2,
+        "unknown": 0,
+        "error": 0,
+        "coreFieldFillRate": 94.5,
+        "missingTop": {
+          "merchantName": 1,
+          "phone": 1,
+          "address": 1
+        },
+        "warningTop": {
+          "doc_type_mismatch": 3,
+          "cache_based_parser": 2
+        },
+        "sourceMissingTop": {
+          "merchantName": 1,
+          "phone": 1,
+          "address": 1
+        },
+        "representativeFailures": [
+          "baseline/a1.jpg",
+          "baseline/a2.jpg",
+          "baseline_fast/a2.jpg",
+          "receipt_generalization/card_001.jpg",
+          "receipt_generalization/card_002.jpg"
+        ],
+        "verdict": "followup"
+      },
+      "finance_slip": {
+        "samples": 5,
+        "docTypeMatch": 4,
+        "docTypeMatchRate": 80.0,
+        "selected": 0,
+        "suppressed": 5,
+        "unknown": 0,
+        "error": 0,
+        "coreFieldFillRate": 0.0,
+        "missingTop": {},
+        "warningTop": {
+          "cache_based_parser": 2,
+          "doc_type_mismatch": 1,
+          "metadata_issue": 1
+        },
+        "sourceMissingTop": {},
+        "representativeFailures": [
+          "baseline/9.jpg",
+          "baseline_fast/9.jpg",
+          "google/6.jpg",
+          "receipt_generalization/finance_001.jpg",
+          "receipt_generalization/finance_002.jpg"
+        ],
+        "verdict": "followup"
+      },
+      "food_cafe_receipt": {
+        "samples": 15,
+        "docTypeMatch": 13,
+        "docTypeMatchRate": 86.7,
+        "selected": 14,
+        "suppressed": 0,
+        "unknown": 1,
+        "error": 0,
+        "coreFieldFillRate": 90.0,
+        "missingTop": {
+          "merchantName": 2,
+          "totalAmount": 1
+        },
+        "warningTop": {
+          "cache_based_parser": 5,
+          "doc_type_mismatch": 2
+        },
+        "sourceMissingTop": {
+          "merchantName": 2,
+          "totalAmount": 1
+        },
+        "representativeFailures": [
+          "receipt_generalization/food_001.jpg",
+          "receipt_generalization/food_002.jpg",
+          "receipt_generalization/food_004.jpg"
+        ],
+        "verdict": "followup"
+      },
+      "invoice_statement": {
+        "samples": 7,
+        "docTypeMatch": 7,
+        "docTypeMatchRate": 100.0,
+        "selected": 7,
+        "suppressed": 0,
+        "unknown": 0,
+        "error": 0,
+        "coreFieldFillRate": 0.0,
+        "missingTop": {
+          "remark": 7,
+          "totalAmount": 3,
+          "amount": 3,
+          "unit": 2,
+          "supplyAmount": 2,
+          "taxAmount": 2,
+          "insuranceCode": 2,
+          "serialNo": 2
+        },
+        "warningTop": {
+          "insuranceCode": 2,
+          "taxAmount=doc_level_pushdown": 1,
+          "totalAmount=doc_level_pushdown": 1,
+          "multiline_layout_mapping_applied": 1,
+          "quantity": 1
+        },
+        "sourceMissingTop": {},
+        "representativeFailures": [
+          "invoice_statement/2.pdf",
+          "invoice_statement/3.pdf",
+          "invoice_statement/5.pdf"
+        ],
+        "verdict": "followup"
+      },
+      "medical_receipt": {
+        "samples": 6,
+        "docTypeMatch": 4,
+        "docTypeMatchRate": 66.7,
+        "selected": 6,
+        "suppressed": 0,
+        "unknown": 0,
+        "error": 0,
+        "coreFieldFillRate": 83.3,
+        "missingTop": {
+          "merchantName": 2
+        },
+        "warningTop": {
+          "cache_based_parser": 4,
+          "doc_type_mismatch": 2
+        },
+        "sourceMissingTop": {
+          "merchantName": 2
+        },
+        "representativeFailures": [
+          "baseline/8.jpg",
+          "google/9.jpg",
+          "receipt_generalization/medical_001.jpg",
+          "receipt_generalization/medical_002.jpg"
+        ],
+        "verdict": "followup"
+      },
+      "pos_receipt": {
+        "samples": 10,
+        "docTypeMatch": 6,
+        "docTypeMatchRate": 60.0,
+        "selected": 9,
+        "suppressed": 0,
+        "unknown": 1,
+        "error": 0,
+        "coreFieldFillRate": 76.7,
+        "missingTop": {
+          "businessNo": 4,
+          "merchantName": 2,
+          "totalAmount": 1
+        },
+        "warningTop": {
+          "cache_based_parser": 6,
+          "doc_type_mismatch": 4,
+          "metadata_issue": 1
+        },
+        "sourceMissingTop": {
+          "businessNo": 4,
+          "merchantName": 2,
+          "totalAmount": 1
+        },
+        "representativeFailures": [
+          "google/5.jpg",
+          "google_fast/5.jpg",
+          "receipt_generalization/pos_001.jpg",
+          "receipt_generalization/pos_002.jpg",
+          "receipt_generalization/pos_003.jpg"
+        ],
+        "verdict": "followup"
+      },
+      "unknown": {
+        "samples": 1,
+        "docTypeMatch": 0,
+        "docTypeMatchRate": 0.0,
+        "selected": 1,
+        "suppressed": 0,
+        "unknown": 0,
+        "error": 0,
+        "coreFieldFillRate": 50.0,
+        "missingTop": {
+          "merchantName": 1
+        },
+        "warningTop": {
+          "doc_type_mismatch": 1
+        },
+        "sourceMissingTop": {
+          "merchantName": 1
+        },
+        "representativeFailures": [
+          "google/8.jpg"
+        ],
+        "verdict": "followup"
+      }
+    }
+  },
+  "documentTypes": {
+    "card_receipt": {
+      "samples": 13,
+      "docTypeMatch": 10,
+      "docTypeMatchRate": 76.9,
+      "selected": 11,
+      "suppressed": 2,
+      "unknown": 0,
+      "error": 0,
+      "coreFieldFillRate": 94.5,
+      "missingTop": {
+        "merchantName": 1,
+        "phone": 1,
+        "address": 1
+      },
+      "warningTop": {
+        "doc_type_mismatch": 3,
+        "cache_based_parser": 2
+      },
+      "sourceMissingTop": {
+        "merchantName": 1,
+        "phone": 1,
+        "address": 1
+      },
+      "representativeFailures": [
+        "baseline/a1.jpg",
+        "baseline/a2.jpg",
+        "baseline_fast/a2.jpg",
+        "receipt_generalization/card_001.jpg",
+        "receipt_generalization/card_002.jpg"
+      ],
+      "verdict": "followup"
+    },
+    "finance_slip": {
+      "samples": 5,
+      "docTypeMatch": 4,
+      "docTypeMatchRate": 80.0,
+      "selected": 0,
+      "suppressed": 5,
+      "unknown": 0,
+      "error": 0,
+      "coreFieldFillRate": 0.0,
+      "missingTop": {},
+      "warningTop": {
+        "cache_based_parser": 2,
+        "doc_type_mismatch": 1,
+        "metadata_issue": 1
+      },
+      "sourceMissingTop": {},
+      "representativeFailures": [
+        "baseline/9.jpg",
+        "baseline_fast/9.jpg",
+        "google/6.jpg",
+        "receipt_generalization/finance_001.jpg",
+        "receipt_generalization/finance_002.jpg"
+      ],
+      "verdict": "followup"
+    },
+    "food_cafe_receipt": {
+      "samples": 15,
+      "docTypeMatch": 13,
+      "docTypeMatchRate": 86.7,
+      "selected": 14,
+      "suppressed": 0,
+      "unknown": 1,
+      "error": 0,
+      "coreFieldFillRate": 90.0,
+      "missingTop": {
+        "merchantName": 2,
+        "totalAmount": 1
+      },
+      "warningTop": {
+        "cache_based_parser": 5,
+        "doc_type_mismatch": 2
+      },
+      "sourceMissingTop": {
+        "merchantName": 2,
+        "totalAmount": 1
+      },
+      "representativeFailures": [
+        "receipt_generalization/food_001.jpg",
+        "receipt_generalization/food_002.jpg",
+        "receipt_generalization/food_004.jpg"
+      ],
+      "verdict": "followup"
+    },
+    "invoice_statement": {
+      "samples": 7,
+      "docTypeMatch": 7,
+      "docTypeMatchRate": 100.0,
+      "selected": 7,
+      "suppressed": 0,
+      "unknown": 0,
+      "error": 0,
+      "coreFieldFillRate": 0.0,
+      "missingTop": {
+        "remark": 7,
+        "totalAmount": 3,
+        "amount": 3,
+        "unit": 2,
+        "supplyAmount": 2,
+        "taxAmount": 2,
+        "insuranceCode": 2,
+        "serialNo": 2
+      },
+      "warningTop": {
+        "insuranceCode": 2,
+        "taxAmount=doc_level_pushdown": 1,
+        "totalAmount=doc_level_pushdown": 1,
+        "multiline_layout_mapping_applied": 1,
+        "quantity": 1
+      },
+      "sourceMissingTop": {},
+      "representativeFailures": [
+        "invoice_statement/2.pdf",
+        "invoice_statement/3.pdf",
+        "invoice_statement/5.pdf"
+      ],
+      "verdict": "followup"
+    },
+    "medical_receipt": {
+      "samples": 6,
+      "docTypeMatch": 4,
+      "docTypeMatchRate": 66.7,
+      "selected": 6,
+      "suppressed": 0,
+      "unknown": 0,
+      "error": 0,
+      "coreFieldFillRate": 83.3,
+      "missingTop": {
+        "merchantName": 2
+      },
+      "warningTop": {
+        "cache_based_parser": 4,
+        "doc_type_mismatch": 2
+      },
+      "sourceMissingTop": {
+        "merchantName": 2
+      },
+      "representativeFailures": [
+        "baseline/8.jpg",
+        "google/9.jpg",
+        "receipt_generalization/medical_001.jpg",
+        "receipt_generalization/medical_002.jpg"
+      ],
+      "verdict": "followup"
+    },
+    "pos_receipt": {
+      "samples": 10,
+      "docTypeMatch": 6,
+      "docTypeMatchRate": 60.0,
+      "selected": 9,
+      "suppressed": 0,
+      "unknown": 1,
+      "error": 0,
+      "coreFieldFillRate": 76.7,
+      "missingTop": {
+        "businessNo": 4,
+        "merchantName": 2,
+        "totalAmount": 1
+      },
+      "warningTop": {
+        "cache_based_parser": 6,
+        "doc_type_mismatch": 4,
+        "metadata_issue": 1
+      },
+      "sourceMissingTop": {
+        "businessNo": 4,
+        "merchantName": 2,
+        "totalAmount": 1
+      },
+      "representativeFailures": [
+        "google/5.jpg",
+        "google_fast/5.jpg",
+        "receipt_generalization/pos_001.jpg",
+        "receipt_generalization/pos_002.jpg",
+        "receipt_generalization/pos_003.jpg"
+      ],
+      "verdict": "followup"
+    },
+    "unknown": {
+      "samples": 1,
+      "docTypeMatch": 0,
+      "docTypeMatchRate": 0.0,
+      "selected": 1,
+      "suppressed": 0,
+      "unknown": 0,
+      "error": 0,
+      "coreFieldFillRate": 50.0,
+      "missingTop": {
+        "merchantName": 1
+      },
+      "warningTop": {
+        "doc_type_mismatch": 1
+      },
+      "sourceMissingTop": {
+        "merchantName": 1
+      },
+      "representativeFailures": [
+        "google/8.jpg"
+      ],
+      "verdict": "followup"
+    }
+  },
+  "testsets": [
+    {
+      "testsetId": "baseline",
+      "manifest": true,
+      "imageCount": 10,
+      "manifestItems": 10,
+      "placeholder": false,
+      "missingFiles": [],
+      "target": "runall_target",
+      "documentTypes": {
+        "card_receipt": 7,
+        "food_cafe_receipt": 1,
+        "medical_receipt": 1,
+        "finance_slip": 1
+      },
+      "expectedStatus": {
+        "selected": 8,
+        "suppressed_bank_slip": 1,
+        "suppressed_handwritten": 1
+      },
+      "qualityTags": {
+        "__none__": 6,
+        "ocr_noise": 3,
+        "handwritten": 1
+      },
+      "difficulty": {
+        "medium": 4,
+        "easy": 4,
+        "hard": 2
+      }
+    },
+    {
+      "testsetId": "baseline_fast",
+      "manifest": true,
+      "imageCount": 5,
+      "manifestItems": 5,
+      "placeholder": false,
+      "missingFiles": [],
+      "target": "runall_target",
+      "documentTypes": {
+        "card_receipt": 4,
+        "finance_slip": 1
+      },
+      "expectedStatus": {
+        "selected": 3,
+        "suppressed_bank_slip": 1,
+        "suppressed_handwritten": 1
+      },
+      "qualityTags": {
+        "__none__": 2,
+        "ocr_noise": 2,
+        "handwritten": 1
+      },
+      "difficulty": {
+        "medium": 3,
+        "easy": 1,
+        "hard": 1
+      }
+    },
+    {
+      "testsetId": "google",
+      "manifest": true,
+      "imageCount": 11,
+      "manifestItems": 11,
+      "placeholder": false,
+      "missingFiles": [],
+      "target": "runall_target",
+      "documentTypes": {
+        "food_cafe_receipt": 5,
+        "pos_receipt": 3,
+        "finance_slip": 1,
+        "unknown": 1,
+        "medical_receipt": 1
+      },
+      "expectedStatus": {
+        "selected": 10,
+        "suppressed_bank_slip": 1
+      },
+      "qualityTags": {
+        "ocr_noise": 4,
+        "__none__": 7,
+        "small_text": 1
+      },
+      "difficulty": {
+        "medium": 7,
+        "easy": 2,
+        "hard": 2
+      }
+    },
+    {
+      "testsetId": "google_fast",
+      "manifest": true,
+      "imageCount": 5,
+      "manifestItems": 5,
+      "placeholder": false,
+      "missingFiles": [],
+      "target": "runall_target",
+      "documentTypes": {
+        "food_cafe_receipt": 4,
+        "pos_receipt": 1
+      },
+      "expectedStatus": {
+        "selected": 5
+      },
+      "qualityTags": {
+        "ocr_noise": 2,
+        "__none__": 3
+      },
+      "difficulty": {
+        "medium": 5
+      }
+    },
+    {
+      "testsetId": "invoice_statement",
+      "manifest": true,
+      "imageCount": 7,
+      "manifestItems": 7,
+      "placeholder": false,
+      "missingFiles": [],
+      "target": "runall_target",
+      "documentTypes": {
+        "invoice_statement": 7
+      },
+      "expectedStatus": {
+        "selected": 7
+      },
+      "qualityTags": {
+        "__none__": 4,
+        "ocr_garbled": 1,
+        "party_block_garbled": 1,
+        "address_garbled": 1,
+        "no_amount_summary": 2,
+        "lot_serial_table": 1,
+        "buyer_only_document": 1,
+        "optional_supplier": 1,
+        "address_tail_missing": 1
+      },
+      "difficulty": {
+        "easy": 5,
+        "hard": 2
+      }
+    },
+    {
+      "testsetId": "new_samples",
+      "manifest": true,
+      "imageCount": 9,
+      "manifestItems": 9,
+      "placeholder": false,
+      "missingFiles": [],
+      "target": "reference_only",
+      "documentTypes": {
+        "pos_receipt": 8,
+        "unknown": 1
+      },
+      "expectedStatus": {
+        "selected": 8,
+        "unknown": 1
+      },
+      "qualityTags": {
+        "__none__": 8,
+        "handwritten": 1
+      },
+      "difficulty": {
+        "medium": 8,
+        "hard": 1
+      }
+    },
+    {
+      "testsetId": "receipt_generalization",
+      "manifest": true,
+      "imageCount": 19,
+      "manifestItems": 19,
+      "placeholder": false,
+      "missingFiles": [],
+      "target": "runall_target",
+      "documentTypes": {
+        "pos_receipt": 6,
+        "food_cafe_receipt": 5,
+        "medical_receipt": 4,
+        "card_receipt": 2,
+        "finance_slip": 2
+      },
+      "expectedStatus": {
+        "selected": 17,
+        "suppressed_bank_slip": 2
+      },
+      "qualityTags": {
+        "small_text": 12,
+        "long_receipt": 3,
+        "skewed": 2,
+        "shadow": 2,
+        "low_contrast": 1,
+        "__none__": 1,
+        "blurred": 1,
+        "rotated": 1
+      },
+      "difficulty": {
+        "medium": 15,
+        "hard": 3,
+        "easy": 1
+      }
+    },
+    {
+      "testsetId": "tax_invoice",
+      "manifest": true,
+      "imageCount": 0,
+      "manifestItems": 1,
+      "placeholder": true,
+      "missingFiles": [
+        "tax_invoice_sample_placeholder.jpg"
+      ],
+      "target": "no_samples",
+      "documentTypes": {
+        "tax_invoice": 1
+      },
+      "expectedStatus": {
+        "selected": 1
+      },
+      "qualityTags": {
+        "__none__": 1
+      },
+      "difficulty": {
+        "medium": 1
+      }
+    }
+  ],
+  "samples": [
+    {
+      "filename": "1.jpg",
+      "testsetId": "baseline",
+      "manifestDocumentType": "card_receipt",
+      "ocrDocType": "receipt_card",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [],
+      "difficulty": "medium",
+      "fields": {
+        "merchantName": "(주)안전볼트",
+        "businessNo": "138-81-68468",
+        "date": "",
+        "time": "",
+        "totalAmount": "10,560",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "경기 안양시 동안구 호계동 555-9 국",
+        "phone": "031-479-0485",
+        "representative": "윤봉상"
+      },
+      "fieldAlignment": {
+        "merchantName": "exact",
+        "businessNo": "exact",
+        "totalAmount": "exact",
+        "phone": "normalized_match",
+        "address": "exact"
+      },
+      "missingFields": [],
+      "warnings": [],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "validation_results",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "ok",
+      "auditSource": "validation_results_baseline_after_final_selection_edge_cases.json"
+    },
+    {
+      "filename": "2.jpg",
+      "testsetId": "baseline",
+      "manifestDocumentType": "card_receipt",
+      "ocrDocType": "receipt_card",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [],
+      "difficulty": "easy",
+      "fields": {
+        "merchantName": "화성툴",
+        "businessNo": "138-08-99333",
+        "date": "",
+        "time": "",
+        "totalAmount": "11,000",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "경기 안양시 동안구 엘에스로 92 8동140호",
+        "phone": "031-479-0090",
+        "representative": "이태주"
+      },
+      "fieldAlignment": {
+        "merchantName": "exact",
+        "businessNo": "exact",
+        "totalAmount": "exact",
+        "phone": "wrong_value",
+        "address": "exact"
+      },
+      "missingFields": [],
+      "warnings": [],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "validation_results",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "ok",
+      "auditSource": "validation_results_baseline_after_final_selection_edge_cases.json"
+    },
+    {
+      "filename": "3.jpg",
+      "testsetId": "baseline",
+      "manifestDocumentType": "card_receipt",
+      "ocrDocType": "receipt_card",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [],
+      "difficulty": "easy",
+      "fields": {
+        "merchantName": "세광전기조명",
+        "businessNo": "119-10-88385",
+        "date": "",
+        "time": "",
+        "totalAmount": "33,000",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "경기도 안양시 동안구 엘에스로 76",
+        "phone": "031-479-2280",
+        "representative": "이정은"
+      },
+      "fieldAlignment": {
+        "merchantName": "exact",
+        "businessNo": "exact",
+        "totalAmount": "exact",
+        "phone": "exact",
+        "address": "partial_match"
+      },
+      "missingFields": [],
+      "warnings": [],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "validation_results",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "ok",
+      "auditSource": "validation_results_baseline_after_final_selection_edge_cases.json"
+    },
+    {
+      "filename": "4.jpg",
+      "testsetId": "baseline",
+      "manifestDocumentType": "card_receipt",
+      "ocrDocType": "receipt_card",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [
+        "ocr_noise"
+      ],
+      "difficulty": "medium",
+      "fields": {
+        "merchantName": "정공구",
+        "businessNo": "123-23-94265",
+        "date": "",
+        "time": "",
+        "totalAmount": "17,600",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "경기 안양시 동안구 엘에스로 92",
+        "phone": "031-479-3690",
+        "representative": "정영달"
+      },
+      "fieldAlignment": {
+        "merchantName": "exact",
+        "businessNo": "exact",
+        "totalAmount": "exact",
+        "phone": "exact",
+        "address": "exact"
+      },
+      "missingFields": [],
+      "warnings": [],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "validation_results",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "ok",
+      "auditSource": "validation_results_baseline_after_final_selection_edge_cases.json"
+    },
+    {
+      "filename": "7.jpg",
+      "testsetId": "baseline",
+      "manifestDocumentType": "food_cafe_receipt",
+      "ocrDocType": "receipt_card",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [],
+      "difficulty": "medium",
+      "fields": {
+        "merchantName": "서울집",
+        "businessNo": "581-10-00658",
+        "date": "",
+        "time": "",
+        "totalAmount": "35,000",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "경기도 의왕시 경수대로 209 102호 (고천동, 의왕월드비젼)",
+        "phone": "031-388-1080",
+        "representative": "신미남"
+      },
+      "fieldAlignment": {
+        "merchantName": "exact",
+        "totalAmount": "exact"
+      },
+      "missingFields": [],
+      "warnings": [],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "validation_results",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "ok",
+      "auditSource": "validation_results_baseline_after_final_selection_edge_cases.json"
+    },
+    {
+      "filename": "8.jpg",
+      "testsetId": "baseline",
+      "manifestDocumentType": "medical_receipt",
+      "ocrDocType": "receipt_card",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [],
+      "difficulty": "easy",
+      "fields": {
+        "merchantName": "효성온누리약국",
+        "businessNo": "134-04-13602",
+        "date": "",
+        "time": "",
+        "totalAmount": "11,000",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "경기 의왕시 경수대로237",
+        "phone": "031-455-9955",
+        "representative": "최성환"
+      },
+      "fieldAlignment": {
+        "merchantName": "exact",
+        "totalAmount": "exact"
+      },
+      "missingFields": [],
+      "warnings": [
+        "doc_type_mismatch:receipt_card!=manifest:medical_receipt"
+      ],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "validation_results",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "classification_mismatch",
+      "auditSource": "validation_results_baseline_after_final_selection_edge_cases.json"
+    },
+    {
+      "filename": "9.jpg",
+      "testsetId": "baseline",
+      "manifestDocumentType": "finance_slip",
+      "ocrDocType": "bank_slip",
+      "expectedStatus": "suppressed_bank_slip",
+      "actualStatus": "suppressed_bank_slip",
+      "resultStatus": "suppressed",
+      "qualityTags": [],
+      "difficulty": "easy",
+      "fields": {
+        "merchantName": "",
+        "businessNo": "",
+        "date": "",
+        "time": "",
+        "totalAmount": "",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "",
+        "phone": "",
+        "representative": ""
+      },
+      "fieldAlignment": {},
+      "missingFields": [],
+      "warnings": [],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "validation_results",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "suppressed_policy",
+      "auditSource": "validation_results_baseline_after_final_selection_edge_cases.json"
+    },
+    {
+      "filename": "10.jpg",
+      "testsetId": "baseline",
+      "manifestDocumentType": "card_receipt",
+      "ocrDocType": "receipt_card",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [
+        "ocr_noise"
+      ],
+      "difficulty": "medium",
+      "fields": {
+        "merchantName": "토탈철물",
+        "businessNo": "761-21-00890",
+        "date": "",
+        "time": "",
+        "totalAmount": "19,250",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "경기 의왕시 효행로 47 (오전동)1층",
+        "phone": "010-9388-9936",
+        "representative": "전용민"
+      },
+      "fieldAlignment": {
+        "merchantName": "exact",
+        "businessNo": "exact",
+        "totalAmount": "exact",
+        "phone": "exact",
+        "address": "exact"
+      },
+      "missingFields": [],
+      "warnings": [],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "validation_results",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "ok",
+      "auditSource": "validation_results_baseline_after_final_selection_edge_cases.json"
+    },
+    {
+      "filename": "a1.jpg",
+      "testsetId": "baseline",
+      "manifestDocumentType": "card_receipt",
+      "ocrDocType": "receipt_pos",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [
+        "ocr_noise"
+      ],
+      "difficulty": "hard",
+      "fields": {
+        "merchantName": "정공구",
+        "businessNo": "123-23-94265",
+        "date": "",
+        "time": "",
+        "totalAmount": "110,000",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "경기 안양시 동안구 엘에스로 92",
+        "phone": "031-479-3690",
+        "representative": "정영달"
+      },
+      "fieldAlignment": {
+        "merchantName": "exact",
+        "businessNo": "exact",
+        "totalAmount": "exact",
+        "phone": "exact",
+        "address": "exact"
+      },
+      "missingFields": [],
+      "warnings": [
+        "doc_type_mismatch:receipt_pos!=manifest:card_receipt"
+      ],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "validation_results",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "classification_mismatch",
+      "auditSource": "validation_results_baseline_after_final_selection_edge_cases.json"
+    },
+    {
+      "filename": "a2.jpg",
+      "testsetId": "baseline",
+      "manifestDocumentType": "card_receipt",
+      "ocrDocType": "form_or_handwritten",
+      "expectedStatus": "suppressed_handwritten",
+      "actualStatus": "suppressed_handwritten",
+      "resultStatus": "suppressed",
+      "qualityTags": [
+        "handwritten"
+      ],
+      "difficulty": "hard",
+      "fields": {
+        "merchantName": "세광전기조명",
+        "businessNo": "119-10-88385",
+        "date": "",
+        "time": "",
+        "totalAmount": "",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "경기도 안양시 동안구 엘에스로 76,7-17,118",
+        "phone": "031-479-2280",
+        "representative": "이정"
+      },
+      "fieldAlignment": {},
+      "missingFields": [],
+      "warnings": [
+        "doc_type_mismatch:form_or_handwritten!=manifest:card_receipt"
+      ],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "validation_results",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "suppressed_policy",
+      "auditSource": "validation_results_baseline_after_final_selection_edge_cases.json"
+    },
+    {
+      "filename": "1.jpg",
+      "testsetId": "baseline_fast",
+      "manifestDocumentType": "card_receipt",
+      "ocrDocType": "receipt_card",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [],
+      "difficulty": "medium",
+      "fields": {
+        "merchantName": "(주)안전볼트",
+        "businessNo": "138-81-68468",
+        "date": "",
+        "time": "",
+        "totalAmount": "10,560",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "경기 안양시 동안구 호계동 555-9 국",
+        "phone": "031-479-0485",
+        "representative": "윤봉상"
+      },
+      "fieldAlignment": {
+        "merchantName": "exact",
+        "businessNo": "exact",
+        "totalAmount": "exact",
+        "phone": "normalized_match",
+        "address": "exact"
+      },
+      "missingFields": [],
+      "warnings": [],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "validation_results",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "ok",
+      "auditSource": "validation_results_baseline_fast_after_final_selection_edge_cases.json"
+    },
+    {
+      "filename": "4.jpg",
+      "testsetId": "baseline_fast",
+      "manifestDocumentType": "card_receipt",
+      "ocrDocType": "receipt_card",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [
+        "ocr_noise"
+      ],
+      "difficulty": "medium",
+      "fields": {
+        "merchantName": "정공구",
+        "businessNo": "123-23-94265",
+        "date": "",
+        "time": "",
+        "totalAmount": "17,600",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "경기 안양시 동안구 엘에스로 92",
+        "phone": "031-479-3690",
+        "representative": "정영달"
+      },
+      "fieldAlignment": {
+        "merchantName": "exact",
+        "businessNo": "exact",
+        "totalAmount": "exact",
+        "phone": "exact",
+        "address": "exact"
+      },
+      "missingFields": [],
+      "warnings": [],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "validation_results",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "ok",
+      "auditSource": "validation_results_baseline_fast_after_final_selection_edge_cases.json"
+    },
+    {
+      "filename": "9.jpg",
+      "testsetId": "baseline_fast",
+      "manifestDocumentType": "finance_slip",
+      "ocrDocType": "bank_slip",
+      "expectedStatus": "suppressed_bank_slip",
+      "actualStatus": "suppressed_bank_slip",
+      "resultStatus": "suppressed",
+      "qualityTags": [],
+      "difficulty": "easy",
+      "fields": {
+        "merchantName": "",
+        "businessNo": "",
+        "date": "",
+        "time": "",
+        "totalAmount": "",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "",
+        "phone": "",
+        "representative": ""
+      },
+      "fieldAlignment": {},
+      "missingFields": [],
+      "warnings": [],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "validation_results",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "suppressed_policy",
+      "auditSource": "validation_results_baseline_fast_after_final_selection_edge_cases.json"
+    },
+    {
+      "filename": "10.jpg",
+      "testsetId": "baseline_fast",
+      "manifestDocumentType": "card_receipt",
+      "ocrDocType": "receipt_card",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [
+        "ocr_noise"
+      ],
+      "difficulty": "medium",
+      "fields": {
+        "merchantName": "토탈철물",
+        "businessNo": "761-21-00890",
+        "date": "",
+        "time": "",
+        "totalAmount": "19,250",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "경기 의왕시 효행로 47 (오전동)1층",
+        "phone": "010-9388-9936",
+        "representative": "전용민"
+      },
+      "fieldAlignment": {
+        "merchantName": "exact",
+        "businessNo": "exact",
+        "totalAmount": "exact",
+        "phone": "exact",
+        "address": "exact"
+      },
+      "missingFields": [],
+      "warnings": [],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "validation_results",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "ok",
+      "auditSource": "validation_results_baseline_fast_after_final_selection_edge_cases.json"
+    },
+    {
+      "filename": "a2.jpg",
+      "testsetId": "baseline_fast",
+      "manifestDocumentType": "card_receipt",
+      "ocrDocType": "form_or_handwritten",
+      "expectedStatus": "suppressed_handwritten",
+      "actualStatus": "suppressed_handwritten",
+      "resultStatus": "suppressed",
+      "qualityTags": [
+        "handwritten"
+      ],
+      "difficulty": "hard",
+      "fields": {
+        "merchantName": "세광전기조명",
+        "businessNo": "119-10-88385",
+        "date": "",
+        "time": "",
+        "totalAmount": "",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "경기도 안양시 동안구 엘에스로 76,7-17,118",
+        "phone": "031-479-2280",
+        "representative": "이정"
+      },
+      "fieldAlignment": {},
+      "missingFields": [],
+      "warnings": [
+        "doc_type_mismatch:form_or_handwritten!=manifest:card_receipt"
+      ],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "validation_results",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "suppressed_policy",
+      "auditSource": "validation_results_baseline_fast_after_final_selection_edge_cases.json"
+    },
+    {
+      "filename": "1.jpg",
+      "testsetId": "google",
+      "manifestDocumentType": "food_cafe_receipt",
+      "ocrDocType": "receipt_pos",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [
+        "ocr_noise"
+      ],
+      "difficulty": "medium",
+      "fields": {
+        "merchantName": "스카토레",
+        "businessNo": "",
+        "date": "",
+        "time": "",
+        "totalAmount": "15,900",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "",
+        "phone": "",
+        "representative": ""
+      },
+      "fieldAlignment": {
+        "merchantName": "exact",
+        "totalAmount": "exact"
+      },
+      "missingFields": [],
+      "warnings": [],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "validation_results",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "ok",
+      "auditSource": "validation_results_google_final_before_lock_fields.json"
+    },
+    {
+      "filename": "2.jpg",
+      "testsetId": "google",
+      "manifestDocumentType": "food_cafe_receipt",
+      "ocrDocType": "receipt_card",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [],
+      "difficulty": "medium",
+      "fields": {
+        "merchantName": "아우프글렛",
+        "businessNo": "476-41-00855",
+        "date": "",
+        "time": "",
+        "totalAmount": "15,400",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "서울 용신구 이태원로54가길 20 1,2층",
+        "phone": "010-5187-2011",
+        "representative": "김기탁"
+      },
+      "fieldAlignment": {
+        "merchantName": "exact",
+        "totalAmount": "exact"
+      },
+      "missingFields": [],
+      "warnings": [],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "validation_results",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "ok",
+      "auditSource": "validation_results_google_final_before_lock_fields.json"
+    },
+    {
+      "filename": "3.jpg",
+      "testsetId": "google",
+      "manifestDocumentType": "food_cafe_receipt",
+      "ocrDocType": "receipt_pos",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [
+        "ocr_noise"
+      ],
+      "difficulty": "medium",
+      "fields": {
+        "merchantName": "키페보니뜨시담점",
+        "businessNo": "142-88-00355",
+        "date": "",
+        "time": "",
+        "totalAmount": "8,200",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "",
+        "phone": "02-584-0011",
+        "representative": "박광수"
+      },
+      "fieldAlignment": {
+        "merchantName": "exact",
+        "totalAmount": "exact"
+      },
+      "missingFields": [],
+      "warnings": [],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "validation_results",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "ok",
+      "auditSource": "validation_results_google_final_before_lock_fields.json"
+    },
+    {
+      "filename": "4.jpeg",
+      "testsetId": "google",
+      "manifestDocumentType": "pos_receipt",
+      "ocrDocType": "receipt_pos",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [],
+      "difficulty": "medium",
+      "fields": {
+        "merchantName": "문정수정점",
+        "businessNo": "880-95-99360",
+        "date": "",
+        "time": "",
+        "totalAmount": "18,308",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "",
+        "phone": "",
+        "representative": ""
+      },
+      "fieldAlignment": {
+        "merchantName": "exact",
+        "businessNo": "exact",
+        "totalAmount": "exact"
+      },
+      "missingFields": [],
+      "warnings": [],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "validation_results",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "ok",
+      "auditSource": "validation_results_google_final_before_lock_fields.json"
+    },
+    {
+      "filename": "5.jpg",
+      "testsetId": "google",
+      "manifestDocumentType": "pos_receipt",
+      "ocrDocType": "receipt_card",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [],
+      "difficulty": "medium",
+      "fields": {
+        "merchantName": "GS25역상효성점",
+        "businessNo": "220-09-99115",
+        "date": "",
+        "time": "",
+        "totalAmount": "53,200",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "서울 강남대로84길23",
+        "phone": "02-538-1248",
+        "representative": ""
+      },
+      "fieldAlignment": {
+        "merchantName": "exact",
+        "businessNo": "exact",
+        "totalAmount": "exact"
+      },
+      "missingFields": [],
+      "warnings": [
+        "doc_type_mismatch:receipt_card!=manifest:pos_receipt"
+      ],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "validation_results",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "classification_mismatch",
+      "auditSource": "validation_results_google_final_before_lock_fields.json"
+    },
+    {
+      "filename": "6.jpg",
+      "testsetId": "google",
+      "manifestDocumentType": "finance_slip",
+      "ocrDocType": "bank_slip",
+      "expectedStatus": "suppressed_bank_slip",
+      "actualStatus": "suppressed_bank_slip",
+      "resultStatus": "suppressed",
+      "qualityTags": [],
+      "difficulty": "easy",
+      "fields": {
+        "merchantName": "GS25궁리대명점",
+        "businessNo": "",
+        "date": "",
+        "time": "",
+        "totalAmount": "2,900",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "",
+        "phone": "031-552-2292",
+        "representative": ""
+      },
+      "fieldAlignment": {},
+      "missingFields": [],
+      "warnings": [
+        "doc_type_mismatch:bank_slip!=manifest:finance_slip",
+        "metadata_issue:locked google manifest=finance_slip, OCR content is likely receipt-like"
+      ],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "validation_results",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "suppressed_policy",
+      "auditSource": "validation_results_google_final_before_lock_fields.json"
+    },
+    {
+      "filename": "7.jpg",
+      "testsetId": "google",
+      "manifestDocumentType": "pos_receipt",
+      "ocrDocType": "receipt_pos",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [
+        "ocr_noise",
+        "small_text"
+      ],
+      "difficulty": "hard",
+      "fields": {
+        "merchantName": "GS25성신로데오점",
+        "businessNo": "543-49-00108",
+        "date": "",
+        "time": "",
+        "totalAmount": "7,650",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "",
+        "phone": "02-927-2369",
+        "representative": ""
+      },
+      "fieldAlignment": {
+        "merchantName": "exact",
+        "businessNo": "exact",
+        "totalAmount": "exact"
+      },
+      "missingFields": [],
+      "warnings": [],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "validation_results",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "ok",
+      "auditSource": "validation_results_google_final_before_lock_fields.json"
+    },
+    {
+      "filename": "8.jpg",
+      "testsetId": "google",
+      "manifestDocumentType": "unknown",
+      "ocrDocType": "receipt_pos",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [
+        "ocr_noise"
+      ],
+      "difficulty": "hard",
+      "fields": {
+        "merchantName": "",
+        "businessNo": "",
+        "date": "",
+        "time": "",
+        "totalAmount": "5,500",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "서울 영등포구 은행로 17(여의도동, 나이스1사옥)",
+        "phone": "02-1234-5678",
+        "representative": ""
+      },
+      "fieldAlignment": {
+        "merchantName": "source_missing",
+        "totalAmount": "exact"
+      },
+      "missingFields": [
+        "merchantName"
+      ],
+      "warnings": [
+        "doc_type_mismatch:receipt_pos!=manifest:unknown"
+      ],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "validation_results",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "classification_mismatch",
+      "auditSource": "validation_results_google_final_before_lock_fields.json"
+    },
+    {
+      "filename": "9.jpg",
+      "testsetId": "google",
+      "manifestDocumentType": "medical_receipt",
+      "ocrDocType": "receipt_pos",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [],
+      "difficulty": "easy",
+      "fields": {
+        "merchantName": "미화약국",
+        "businessNo": "506-17-32861",
+        "date": "",
+        "time": "",
+        "totalAmount": "27,000",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "경상북도 포함시 남구 포스코대로353번길 8 6070",
+        "phone": "02-2011-0777",
+        "representative": "정은진"
+      },
+      "fieldAlignment": {
+        "merchantName": "exact",
+        "totalAmount": "exact"
+      },
+      "missingFields": [],
+      "warnings": [
+        "doc_type_mismatch:receipt_pos!=manifest:medical_receipt"
+      ],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "validation_results",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "classification_mismatch",
+      "auditSource": "validation_results_google_final_before_lock_fields.json"
+    },
+    {
+      "filename": "10.jpg",
+      "testsetId": "google",
+      "manifestDocumentType": "food_cafe_receipt",
+      "ocrDocType": "receipt_pos",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [],
+      "difficulty": "medium",
+      "fields": {
+        "merchantName": "아비꼬(홍대호정)",
+        "businessNo": "",
+        "date": "",
+        "time": "",
+        "totalAmount": "26,000",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "",
+        "phone": "02-823-0129",
+        "representative": ""
+      },
+      "fieldAlignment": {
+        "merchantName": "exact",
+        "totalAmount": "exact"
+      },
+      "missingFields": [],
+      "warnings": [],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "validation_results",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "ok",
+      "auditSource": "validation_results_google_final_before_lock_fields.json"
+    },
+    {
+      "filename": "11.jpg",
+      "testsetId": "google",
+      "manifestDocumentType": "food_cafe_receipt",
+      "ocrDocType": "receipt_card",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [],
+      "difficulty": "medium",
+      "fields": {
+        "merchantName": "(주)커피빈코리아",
+        "businessNo": "120-86-07029",
+        "date": "",
+        "time": "",
+        "totalAmount": "15,000",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "서울시 마포구홍익로 6길26 163-12호",
+        "phone": "02-33-4278",
+        "representative": ""
+      },
+      "fieldAlignment": {
+        "merchantName": "exact",
+        "totalAmount": "exact"
+      },
+      "missingFields": [],
+      "warnings": [],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "validation_results",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "ok",
+      "auditSource": "validation_results_google_final_before_lock_fields.json"
+    },
+    {
+      "filename": "1.jpg",
+      "testsetId": "google_fast",
+      "manifestDocumentType": "food_cafe_receipt",
+      "ocrDocType": "receipt_pos",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [
+        "ocr_noise"
+      ],
+      "difficulty": "medium",
+      "fields": {
+        "merchantName": "메스카토레",
+        "businessNo": "",
+        "date": "",
+        "time": "",
+        "totalAmount": "46,501",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "",
+        "phone": "",
+        "representative": ""
+      },
+      "fieldAlignment": {
+        "merchantName": "exact",
+        "totalAmount": "exact"
+      },
+      "missingFields": [],
+      "warnings": [],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "validation_results",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "ok",
+      "auditSource": "validation_results_top_fields_generalization.json"
+    },
+    {
+      "filename": "10.jpg",
+      "testsetId": "google_fast",
+      "manifestDocumentType": "food_cafe_receipt",
+      "ocrDocType": "receipt_pos",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [],
+      "difficulty": "medium",
+      "fields": {
+        "merchantName": "아비꼬(홍대호점)",
+        "businessNo": "",
+        "date": "",
+        "time": "",
+        "totalAmount": "26,000",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "",
+        "phone": "02)823-0129",
+        "representative": ""
+      },
+      "fieldAlignment": {
+        "merchantName": "exact",
+        "totalAmount": "exact"
+      },
+      "missingFields": [],
+      "warnings": [],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "validation_results",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "ok",
+      "auditSource": "validation_results_top_fields_generalization.json"
+    },
+    {
+      "filename": "11.jpg",
+      "testsetId": "google_fast",
+      "manifestDocumentType": "food_cafe_receipt",
+      "ocrDocType": "receipt_card",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [],
+      "difficulty": "medium",
+      "fields": {
+        "merchantName": "(주)커피빈코리아",
+        "businessNo": "120-86-07029",
+        "date": "",
+        "time": "",
+        "totalAmount": "15,000",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "서울시마포구의로",
+        "phone": "",
+        "representative": ""
+      },
+      "fieldAlignment": {
+        "merchantName": "exact",
+        "totalAmount": "exact"
+      },
+      "missingFields": [],
+      "warnings": [],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "validation_results",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "ok",
+      "auditSource": "validation_results_top_fields_generalization.json"
+    },
+    {
+      "filename": "3.jpg",
+      "testsetId": "google_fast",
+      "manifestDocumentType": "food_cafe_receipt",
+      "ocrDocType": "receipt_pos",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [
+        "ocr_noise"
+      ],
+      "difficulty": "medium",
+      "fields": {
+        "merchantName": "키메보니또시당점",
+        "businessNo": "142-88-00355",
+        "date": "",
+        "time": "",
+        "totalAmount": "8,200",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "",
+        "phone": "02-584-0011",
+        "representative": ""
+      },
+      "fieldAlignment": {
+        "merchantName": "exact",
+        "totalAmount": "exact"
+      },
+      "missingFields": [],
+      "warnings": [],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "validation_results",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "ok",
+      "auditSource": "validation_results_top_fields_generalization.json"
+    },
+    {
+      "filename": "5.jpg",
+      "testsetId": "google_fast",
+      "manifestDocumentType": "pos_receipt",
+      "ocrDocType": "receipt_card",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [],
+      "difficulty": "medium",
+      "fields": {
+        "merchantName": "",
+        "businessNo": "",
+        "date": "",
+        "time": "",
+        "totalAmount": "53,200",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "",
+        "phone": "02-538-1248",
+        "representative": ""
+      },
+      "fieldAlignment": {
+        "merchantName": "source_missing",
+        "businessNo": "source_missing",
+        "totalAmount": "exact"
+      },
+      "missingFields": [
+        "merchantName",
+        "businessNo"
+      ],
+      "warnings": [
+        "doc_type_mismatch:receipt_card!=manifest:pos_receipt"
+      ],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "validation_results",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "classification_mismatch",
+      "auditSource": "validation_results_top_fields_generalization.json"
+    },
+    {
+      "filename": "card_001.jpg",
+      "testsetId": "receipt_generalization",
+      "manifestDocumentType": "card_receipt",
+      "ocrDocType": "receipt_card",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [
+        "small_text"
+      ],
+      "difficulty": "medium",
+      "fields": {
+        "merchantName": "",
+        "businessNo": "140-09-20255",
+        "date": "",
+        "time": "",
+        "totalAmount": "90,000",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "경기 시용시 시정도번길 31 (장인동, 대상센담",
+        "phone": "",
+        "representative": ""
+      },
+      "fieldAlignment": {
+        "merchantName": "source_missing",
+        "businessNo": "exact",
+        "totalAmount": "exact",
+        "phone": "source_missing",
+        "address": "exact"
+      },
+      "missingFields": [
+        "merchantName",
+        "phone"
+      ],
+      "warnings": [
+        "cache_based_parser:no_live_runall_export"
+      ],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "ocr_cache_text_current_parser",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "ocr_source_garbled",
+      "auditSource": "ocr_cache.json"
+    },
+    {
+      "filename": "card_002.jpg",
+      "testsetId": "receipt_generalization",
+      "manifestDocumentType": "card_receipt",
+      "ocrDocType": "receipt_card",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [
+        "blurred"
+      ],
+      "difficulty": "medium",
+      "fields": {
+        "merchantName": "당신만식부께",
+        "businessNo": "306-13-63556",
+        "date": "",
+        "time": "",
+        "totalAmount": "29,000",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "",
+        "phone": "041-359-7955",
+        "representative": ""
+      },
+      "fieldAlignment": {
+        "merchantName": "exact",
+        "businessNo": "exact",
+        "totalAmount": "exact",
+        "phone": "exact",
+        "address": "source_missing"
+      },
+      "missingFields": [
+        "address"
+      ],
+      "warnings": [
+        "cache_based_parser:no_live_runall_export"
+      ],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "ocr_cache_text_current_parser",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "ocr_source_garbled",
+      "auditSource": "ocr_cache.json"
+    },
+    {
+      "filename": "finance_001.jpg",
+      "testsetId": "receipt_generalization",
+      "manifestDocumentType": "finance_slip",
+      "ocrDocType": "bank_slip",
+      "expectedStatus": "suppressed_bank_slip",
+      "actualStatus": "suppressed_bank_slip",
+      "resultStatus": "suppressed",
+      "qualityTags": [
+        "rotated"
+      ],
+      "difficulty": "medium",
+      "fields": {
+        "merchantName": "",
+        "businessNo": "",
+        "date": "",
+        "time": "",
+        "totalAmount": "",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "",
+        "phone": "",
+        "representative": ""
+      },
+      "fieldAlignment": {},
+      "missingFields": [],
+      "warnings": [
+        "cache_based_parser:no_live_runall_export"
+      ],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "ocr_cache_text_current_parser",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "suppressed_policy",
+      "auditSource": "ocr_cache.json"
+    },
+    {
+      "filename": "finance_002.jpg",
+      "testsetId": "receipt_generalization",
+      "manifestDocumentType": "finance_slip",
+      "ocrDocType": "bank_slip",
+      "expectedStatus": "suppressed_bank_slip",
+      "actualStatus": "suppressed_bank_slip",
+      "resultStatus": "suppressed",
+      "qualityTags": [
+        "skewed"
+      ],
+      "difficulty": "hard",
+      "fields": {
+        "merchantName": "",
+        "businessNo": "",
+        "date": "",
+        "time": "",
+        "totalAmount": "",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "",
+        "phone": "",
+        "representative": ""
+      },
+      "fieldAlignment": {},
+      "missingFields": [],
+      "warnings": [
+        "cache_based_parser:no_live_runall_export"
+      ],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "ocr_cache_text_current_parser",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "suppressed_policy",
+      "auditSource": "ocr_cache.json"
+    },
+    {
+      "filename": "food_001.jpg",
+      "testsetId": "receipt_generalization",
+      "manifestDocumentType": "food_cafe_receipt",
+      "ocrDocType": "unknown",
+      "expectedStatus": "selected",
+      "actualStatus": "unknown",
+      "resultStatus": "unknown",
+      "qualityTags": [
+        "skewed",
+        "shadow"
+      ],
+      "difficulty": "medium",
+      "fields": {
+        "merchantName": "",
+        "businessNo": "",
+        "date": "",
+        "time": "",
+        "totalAmount": "",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "",
+        "phone": "",
+        "representative": ""
+      },
+      "fieldAlignment": {
+        "merchantName": "source_missing",
+        "totalAmount": "source_missing"
+      },
+      "missingFields": [
+        "merchantName",
+        "totalAmount"
+      ],
+      "warnings": [
+        "cache_based_parser:no_live_runall_export",
+        "doc_type_mismatch:unknown!=manifest:food_cafe_receipt"
+      ],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "ocr_cache_text_current_parser",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "classification_mismatch",
+      "auditSource": "ocr_cache.json"
+    },
+    {
+      "filename": "food_002.jpg",
+      "testsetId": "receipt_generalization",
+      "manifestDocumentType": "food_cafe_receipt",
+      "ocrDocType": "receipt_pos",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [
+        "low_contrast"
+      ],
+      "difficulty": "medium",
+      "fields": {
+        "merchantName": "",
+        "businessNo": "",
+        "date": "",
+        "time": "",
+        "totalAmount": "5,000",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "경기 수원시 장안구 영화동443-13",
+        "phone": "031-256-9844",
+        "representative": ""
+      },
+      "fieldAlignment": {
+        "merchantName": "source_missing",
+        "totalAmount": "exact"
+      },
+      "missingFields": [
+        "merchantName"
+      ],
+      "warnings": [
+        "cache_based_parser:no_live_runall_export"
+      ],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "ocr_cache_text_current_parser",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "parser_missed_source_exists",
+      "auditSource": "ocr_cache.json"
+    },
+    {
+      "filename": "food_003.jpg",
+      "testsetId": "receipt_generalization",
+      "manifestDocumentType": "food_cafe_receipt",
+      "ocrDocType": "receipt_pos",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [
+        "small_text"
+      ],
+      "difficulty": "medium",
+      "fields": {
+        "merchantName": "BAGUETTE",
+        "businessNo": "448-20-01024",
+        "date": "",
+        "time": "",
+        "totalAmount": "6,800",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "경기 성남시 분당위 청자일로 240 월드프라자 1층 [정상",
+        "phone": "031-719-1886",
+        "representative": ""
+      },
+      "fieldAlignment": {
+        "merchantName": "exact",
+        "totalAmount": "exact"
+      },
+      "missingFields": [],
+      "warnings": [
+        "cache_based_parser:no_live_runall_export"
+      ],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "ocr_cache_text_current_parser",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "ok",
+      "auditSource": "ocr_cache.json"
+    },
+    {
+      "filename": "food_004.jpg",
+      "testsetId": "receipt_generalization",
+      "manifestDocumentType": "food_cafe_receipt",
+      "ocrDocType": "invoice_statement",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [
+        "small_text"
+      ],
+      "difficulty": "medium",
+      "fields": {
+        "merchantName": "쭈꾸미낙지볶음전문점",
+        "businessNo": "502-30-94239",
+        "date": "",
+        "time": "",
+        "totalAmount": "155,200",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "",
+        "phone": "",
+        "representative": "박준영"
+      },
+      "fieldAlignment": {
+        "merchantName": "exact",
+        "totalAmount": "exact"
+      },
+      "missingFields": [],
+      "warnings": [
+        "cache_based_parser:no_live_runall_export",
+        "doc_type_mismatch:invoice_statement!=manifest:food_cafe_receipt"
+      ],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "ocr_cache_text_current_parser",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "classification_mismatch",
+      "auditSource": "ocr_cache.json"
+    },
+    {
+      "filename": "food_005.jpg",
+      "testsetId": "receipt_generalization",
+      "manifestDocumentType": "food_cafe_receipt",
+      "ocrDocType": "receipt_pos",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [
+        "small_text"
+      ],
+      "difficulty": "medium",
+      "fields": {
+        "merchantName": "이티야커피",
+        "businessNo": "",
+        "date": "",
+        "time": "",
+        "totalAmount": "2,545",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "인천중구 신흥동3가 7-206 1층",
+        "phone": "032-890-2636",
+        "representative": ""
+      },
+      "fieldAlignment": {
+        "merchantName": "exact",
+        "totalAmount": "exact"
+      },
+      "missingFields": [],
+      "warnings": [
+        "cache_based_parser:no_live_runall_export"
+      ],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "ocr_cache_text_current_parser",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "ok",
+      "auditSource": "ocr_cache.json"
+    },
+    {
+      "filename": "medical_001.jpg",
+      "testsetId": "receipt_generalization",
+      "manifestDocumentType": "medical_receipt",
+      "ocrDocType": "medical_receipt",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [
+        "shadow"
+      ],
+      "difficulty": "medium",
+      "fields": {
+        "merchantName": "",
+        "businessNo": "",
+        "date": "",
+        "time": "",
+        "totalAmount": "205,000",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "",
+        "phone": "",
+        "representative": ""
+      },
+      "fieldAlignment": {
+        "merchantName": "source_missing",
+        "totalAmount": "exact"
+      },
+      "missingFields": [
+        "merchantName"
+      ],
+      "warnings": [
+        "cache_based_parser:no_live_runall_export"
+      ],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "ocr_cache_text_current_parser",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "parser_missed_source_exists",
+      "auditSource": "ocr_cache.json"
+    },
+    {
+      "filename": "medical_002.jpg",
+      "testsetId": "receipt_generalization",
+      "manifestDocumentType": "medical_receipt",
+      "ocrDocType": "medical_receipt",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [
+        "small_text"
+      ],
+      "difficulty": "medium",
+      "fields": {
+        "merchantName": "",
+        "businessNo": "",
+        "date": "",
+        "time": "",
+        "totalAmount": "88,000",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "",
+        "phone": "",
+        "representative": ""
+      },
+      "fieldAlignment": {
+        "merchantName": "source_missing",
+        "totalAmount": "exact"
+      },
+      "missingFields": [
+        "merchantName"
+      ],
+      "warnings": [
+        "cache_based_parser:no_live_runall_export"
+      ],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "ocr_cache_text_current_parser",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "parser_missed_source_exists",
+      "auditSource": "ocr_cache.json"
+    },
+    {
+      "filename": "medical_003.jpg",
+      "testsetId": "receipt_generalization",
+      "manifestDocumentType": "medical_receipt",
+      "ocrDocType": "medical_receipt",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [
+        "long_receipt",
+        "small_text"
+      ],
+      "difficulty": "hard",
+      "fields": {
+        "merchantName": "귀약점",
+        "businessNo": "",
+        "date": "",
+        "time": "",
+        "totalAmount": "122,850",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "",
+        "phone": "",
+        "representative": ""
+      },
+      "fieldAlignment": {
+        "merchantName": "exact",
+        "totalAmount": "exact"
+      },
+      "missingFields": [],
+      "warnings": [
+        "cache_based_parser:no_live_runall_export"
+      ],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "ocr_cache_text_current_parser",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "ok",
+      "auditSource": "ocr_cache.json"
+    },
+    {
+      "filename": "medical_004.jpg",
+      "testsetId": "receipt_generalization",
+      "manifestDocumentType": "medical_receipt",
+      "ocrDocType": "medical_receipt",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [],
+      "difficulty": "easy",
+      "fields": {
+        "merchantName": "(주)크레소티",
+        "businessNo": "201-81-82695",
+        "date": "",
+        "time": "",
+        "totalAmount": "1,000",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "서울 영등포구 양평동3가우림e",
+        "phone": "02-2011-0777",
+        "representative": "황윤홍"
+      },
+      "fieldAlignment": {
+        "merchantName": "exact",
+        "totalAmount": "exact"
+      },
+      "missingFields": [],
+      "warnings": [
+        "cache_based_parser:no_live_runall_export"
+      ],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "ocr_cache_text_current_parser",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "ok",
+      "auditSource": "ocr_cache.json"
+    },
+    {
+      "filename": "pos_001.jpg",
+      "testsetId": "receipt_generalization",
+      "manifestDocumentType": "pos_receipt",
+      "ocrDocType": "receipt_pos",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [
+        "small_text"
+      ],
+      "difficulty": "medium",
+      "fields": {
+        "merchantName": "문정수정점",
+        "businessNo": "",
+        "date": "",
+        "time": "",
+        "totalAmount": "18,308",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "",
+        "phone": "",
+        "representative": ""
+      },
+      "fieldAlignment": {
+        "merchantName": "exact",
+        "businessNo": "source_missing",
+        "totalAmount": "exact"
+      },
+      "missingFields": [
+        "businessNo"
+      ],
+      "warnings": [
+        "cache_based_parser:no_live_runall_export"
+      ],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "ocr_cache_text_current_parser",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "ocr_source_garbled",
+      "auditSource": "ocr_cache.json"
+    },
+    {
+      "filename": "pos_002.jpg",
+      "testsetId": "receipt_generalization",
+      "manifestDocumentType": "pos_receipt",
+      "ocrDocType": "receipt_pos",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [
+        "small_text"
+      ],
+      "difficulty": "medium",
+      "fields": {
+        "merchantName": "",
+        "businessNo": "",
+        "date": "",
+        "time": "",
+        "totalAmount": "45,590",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "",
+        "phone": "",
+        "representative": "박스"
+      },
+      "fieldAlignment": {
+        "merchantName": "source_missing",
+        "businessNo": "source_missing",
+        "totalAmount": "exact"
+      },
+      "missingFields": [
+        "merchantName",
+        "businessNo"
+      ],
+      "warnings": [
+        "cache_based_parser:no_live_runall_export"
+      ],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "ocr_cache_text_current_parser",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "parser_missed_source_exists",
+      "auditSource": "ocr_cache.json"
+    },
+    {
+      "filename": "pos_003.jpg",
+      "testsetId": "receipt_generalization",
+      "manifestDocumentType": "pos_receipt",
+      "ocrDocType": "medical_receipt",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [
+        "small_text"
+      ],
+      "difficulty": "medium",
+      "fields": {
+        "merchantName": "미금프라자약국",
+        "businessNo": "129-21-65920",
+        "date": "",
+        "time": "",
+        "totalAmount": "10,360",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "경기 성남시 분당구 금곡동154 번 지 미금프라자 1층 105호",
+        "phone": "",
+        "representative": ""
+      },
+      "fieldAlignment": {
+        "merchantName": "exact",
+        "businessNo": "exact",
+        "totalAmount": "exact"
+      },
+      "missingFields": [],
+      "warnings": [
+        "cache_based_parser:no_live_runall_export",
+        "doc_type_mismatch:medical_receipt!=manifest:pos_receipt",
+        "metadata_issue:manifest=pos_receipt, OCR/source indicates medical receipt"
+      ],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "ocr_cache_text_current_parser",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "metadata_mismatch",
+      "auditSource": "ocr_cache.json"
+    },
+    {
+      "filename": "pos_004.jpg",
+      "testsetId": "receipt_generalization",
+      "manifestDocumentType": "pos_receipt",
+      "ocrDocType": "receipt_pos",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [
+        "long_receipt",
+        "small_text"
+      ],
+      "difficulty": "hard",
+      "fields": {
+        "merchantName": "CUl파주시청점",
+        "businessNo": "141-01-16722",
+        "date": "",
+        "time": "",
+        "totalAmount": "5,000",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "경기로 파주시 중앙로263,(금촌동)",
+        "phone": "031-949-5587",
+        "representative": ""
+      },
+      "fieldAlignment": {
+        "merchantName": "exact",
+        "businessNo": "exact",
+        "totalAmount": "exact"
+      },
+      "missingFields": [],
+      "warnings": [
+        "cache_based_parser:no_live_runall_export"
+      ],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "ocr_cache_text_current_parser",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "ok",
+      "auditSource": "ocr_cache.json"
+    },
+    {
+      "filename": "pos_005.jpg",
+      "testsetId": "receipt_generalization",
+      "manifestDocumentType": "pos_receipt",
+      "ocrDocType": "receipt_pos",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [
+        "long_receipt",
+        "small_text"
+      ],
+      "difficulty": "medium",
+      "fields": {
+        "merchantName": "이마트",
+        "businessNo": "208-86-50913",
+        "date": "",
+        "time": "",
+        "totalAmount": "59,480",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "",
+        "phone": "043-841-1234",
+        "representative": ""
+      },
+      "fieldAlignment": {
+        "merchantName": "exact",
+        "businessNo": "exact",
+        "totalAmount": "exact"
+      },
+      "missingFields": [],
+      "warnings": [
+        "cache_based_parser:no_live_runall_export"
+      ],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "ocr_cache_text_current_parser",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "ok",
+      "auditSource": "ocr_cache.json"
+    },
+    {
+      "filename": "pos_006.jpg",
+      "testsetId": "receipt_generalization",
+      "manifestDocumentType": "pos_receipt",
+      "ocrDocType": "unknown",
+      "expectedStatus": "selected",
+      "actualStatus": "unknown",
+      "resultStatus": "unknown",
+      "qualityTags": [
+        "small_text"
+      ],
+      "difficulty": "medium",
+      "fields": {
+        "merchantName": "GS25",
+        "businessNo": "",
+        "date": "",
+        "time": "",
+        "totalAmount": "",
+        "paymentAmount": "",
+        "cardAmount": "",
+        "cashAmount": "",
+        "address": "",
+        "phone": "",
+        "representative": ""
+      },
+      "fieldAlignment": {
+        "merchantName": "exact",
+        "businessNo": "source_missing",
+        "totalAmount": "source_missing"
+      },
+      "missingFields": [
+        "businessNo",
+        "totalAmount"
+      ],
+      "warnings": [
+        "cache_based_parser:no_live_runall_export",
+        "doc_type_mismatch:unknown!=manifest:pos_receipt"
+      ],
+      "error": "",
+      "tableRows": null,
+      "tableMeta": null,
+      "extractionSource": "ocr_cache_text_current_parser",
+      "valueMappingWarnings": [],
+      "rowCountStatus": null,
+      "failureReason": "classification_mismatch",
+      "auditSource": "ocr_cache.json"
+    },
+    {
+      "filename": "1.jpg",
+      "testsetId": "invoice_statement",
+      "manifestDocumentType": "invoice_statement",
+      "ocrDocType": "invoice_statement",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [],
+      "difficulty": "easy",
+      "fields": {},
+      "fieldAlignment": {},
+      "missingFields": [
+        "unit",
+        "supplyAmount",
+        "taxAmount",
+        "totalAmount",
+        "remark"
+      ],
+      "warnings": [],
+      "error": "",
+      "tableRows": 28,
+      "expectedRowCount": 28,
+      "tableMeta": {
+        "expectedValueFillRate": 60.4,
+        "expectedMissingKeys": [
+          "unit",
+          "supplyAmount",
+          "taxAmount",
+          "totalAmount",
+          "remark"
+        ]
+      },
+      "extractionSource": "expected_columns_header_match",
+      "valueMappingWarnings": [],
+      "rowCountStatus": "exact",
+      "failureReason": "ok",
+      "auditSource": "T8_final_precheck + T10_fix_header_skip"
+    },
+    {
+      "filename": "2.pdf",
+      "testsetId": "invoice_statement",
+      "manifestDocumentType": "invoice_statement",
+      "ocrDocType": "invoice_statement",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [],
+      "difficulty": "easy",
+      "fields": {},
+      "fieldAlignment": {},
+      "missingFields": [
+        "insuranceCode",
+        "amount",
+        "totalAmount",
+        "remark"
+      ],
+      "warnings": [
+        "insuranceCode:ocr_source_missing:보험No OCR 원문에서 보험코드 후보를 찾지 못함 - 빈 값 유지"
+      ],
+      "error": "",
+      "tableRows": 13,
+      "expectedRowCount": 13,
+      "tableMeta": {
+        "expectedValueFillRate": 44.8,
+        "expectedMissingKeys": [
+          "insuranceCode",
+          "amount",
+          "totalAmount",
+          "remark"
+        ]
+      },
+      "extractionSource": "op_anchor_reconstructed_table",
+      "valueMappingWarnings": [
+        "insuranceCode:ocr_source_missing:보험No OCR 원문에서 보험코드 후보를 찾지 못함 - 빈 값 유지"
+      ],
+      "rowCountStatus": "exact",
+      "failureReason": "ocr_source_missing",
+      "auditSource": "T8_final_precheck + T10_fix_header_skip"
+    },
+    {
+      "filename": "3.pdf",
+      "testsetId": "invoice_statement",
+      "manifestDocumentType": "invoice_statement",
+      "ocrDocType": "invoice_statement",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [],
+      "difficulty": "easy",
+      "fields": {},
+      "fieldAlignment": {},
+      "missingFields": [
+        "insuranceCode",
+        "spec",
+        "quantity",
+        "unitPrice",
+        "amount",
+        "manufacturer",
+        "manufacturingExpiryComposite",
+        "lotNo",
+        "serialNo",
+        "remark"
+      ],
+      "warnings": [
+        "insuranceCode:ocr_source_missing:보험No OCR 원문에서 보험코드 후보를 찾지 못함 - 빈 값 유지"
+      ],
+      "error": "",
+      "tableRows": 1,
+      "expectedRowCount": 1,
+      "tableMeta": {
+        "expectedValueFillRate": 16.7,
+        "expectedMissingKeys": [
+          "insuranceCode",
+          "spec",
+          "quantity",
+          "unitPrice",
+          "amount",
+          "manufacturer",
+          "manufacturingExpiryComposite",
+          "lotNo",
+          "serialNo",
+          "remark"
+        ]
+      },
+      "extractionSource": "legacy_text_items",
+      "valueMappingWarnings": [
+        "insuranceCode:ocr_source_missing:보험No OCR 원문에서 보험코드 후보를 찾지 못함 - 빈 값 유지"
+      ],
+      "rowCountStatus": "exact",
+      "failureReason": "ocr_source_missing",
+      "auditSource": "T8_final_precheck + T10_fix_header_skip"
+    },
+    {
+      "filename": "4.pdf",
+      "testsetId": "invoice_statement",
+      "manifestDocumentType": "invoice_statement",
+      "ocrDocType": "invoice_statement",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [
+        "ocr_garbled",
+        "party_block_garbled",
+        "address_garbled"
+      ],
+      "difficulty": "hard",
+      "fields": {},
+      "fieldAlignment": {},
+      "missingFields": [
+        "amount",
+        "remark"
+      ],
+      "warnings": [
+        "taxAmount=doc_level_pushdown",
+        "totalAmount=doc_level_pushdown"
+      ],
+      "error": "",
+      "tableRows": 1,
+      "expectedRowCount": 1,
+      "tableMeta": {
+        "expectedValueFillRate": 80.0,
+        "expectedMissingKeys": [
+          "amount",
+          "remark"
+        ]
+      },
+      "extractionSource": "expected_columns_header_match",
+      "valueMappingWarnings": [
+        "taxAmount=doc_level_pushdown",
+        "totalAmount=doc_level_pushdown"
+      ],
+      "rowCountStatus": "exact",
+      "failureReason": "ok",
+      "auditSource": "T8_final_precheck + T10_fix_header_skip"
+    },
+    {
+      "filename": "5.pdf",
+      "testsetId": "invoice_statement",
+      "manifestDocumentType": "invoice_statement",
+      "ocrDocType": "invoice_statement",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [],
+      "difficulty": "hard",
+      "fields": {},
+      "fieldAlignment": {},
+      "missingFields": [
+        "supplyAmount",
+        "taxAmount",
+        "totalAmount",
+        "remark"
+      ],
+      "warnings": [
+        "multiline_layout_mapping_applied",
+        "quantity:ambiguous_numeric_candidates:quantity candidates 3/6; kept existing empty values"
+      ],
+      "error": "",
+      "tableRows": 6,
+      "expectedRowCount": 6,
+      "tableMeta": {
+        "expectedValueFillRate": 48.1,
+        "expectedMissingKeys": [
+          "supplyAmount",
+          "taxAmount",
+          "totalAmount",
+          "remark"
+        ]
+      },
+      "extractionSource": "legacy_text_items",
+      "valueMappingWarnings": [
+        "multiline_layout_mapping_applied",
+        "quantity:ambiguous_numeric_candidates:quantity candidates 3/6; kept existing empty values"
+      ],
+      "rowCountStatus": "exact",
+      "failureReason": "ambiguous_candidates",
+      "auditSource": "T8_final_precheck + T10_fix_header_skip"
+    },
+    {
+      "filename": "6.pdf",
+      "testsetId": "invoice_statement",
+      "manifestDocumentType": "invoice_statement",
+      "ocrDocType": "invoice_statement",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [
+        "no_amount_summary",
+        "lot_serial_table",
+        "buyer_only_document",
+        "optional_supplier"
+      ],
+      "difficulty": "easy",
+      "fields": {},
+      "fieldAlignment": {},
+      "missingFields": [
+        "serialNo",
+        "manufacturingNo",
+        "unit",
+        "remark"
+      ],
+      "warnings": [],
+      "error": "",
+      "tableRows": 6,
+      "expectedRowCount": 6,
+      "tableMeta": {
+        "expectedValueFillRate": 50.0,
+        "expectedMissingKeys": [
+          "serialNo",
+          "manufacturingNo",
+          "unit",
+          "remark"
+        ]
+      },
+      "extractionSource": "expected_columns_header_match",
+      "valueMappingWarnings": [],
+      "rowCountStatus": "exact",
+      "failureReason": "ok",
+      "auditSource": "T8_final_precheck + T10_fix_header_skip"
+    },
+    {
+      "filename": "7.pdf",
+      "testsetId": "invoice_statement",
+      "manifestDocumentType": "invoice_statement",
+      "ocrDocType": "invoice_statement",
+      "expectedStatus": "selected",
+      "actualStatus": "selected",
+      "resultStatus": "selected",
+      "qualityTags": [
+        "address_tail_missing",
+        "no_amount_summary"
+      ],
+      "difficulty": "easy",
+      "fields": {},
+      "fieldAlignment": {},
+      "missingFields": [
+        "manufacturingNo",
+        "remark"
+      ],
+      "warnings": [],
+      "error": "",
+      "tableRows": 1,
+      "expectedRowCount": 1,
+      "tableMeta": {
+        "expectedValueFillRate": 66.7,
+        "expectedMissingKeys": [
+          "manufacturingNo",
+          "remark"
+        ]
+      },
+      "extractionSource": "expected_columns_header_match",
+      "valueMappingWarnings": [],
+      "rowCountStatus": "exact",
+      "failureReason": "ok",
+      "auditSource": "T8_final_precheck + T10_fix_header_skip"
+    }
+  ],
+  "invoiceStatement": {
+    "rowCountExactRate": 100.0,
+    "samples": {
+      "1.jpg": {
+        "expectedRowCount": 28,
+        "actualRowCount": 28,
+        "rowCountStatus": "exact",
+        "expectedValueFillRate": 60.4,
+        "expectedFilledKeys": [
+          "itemName",
+          "spec",
+          "manufacturingNo",
+          "expiryDate",
+          "quantity",
+          "unitPrice",
+          "amount",
+          "lotNo"
+        ],
+        "expectedMissingKeys": [
+          "unit",
+          "supplyAmount",
+          "taxAmount",
+          "totalAmount",
+          "remark"
+        ],
+        "valueMappingWarnings": [],
+        "extractionSource": "expected_columns_header_match",
+        "firstPreview": [
+          {
+            "itemName": "헥사메던액0.12%",
+            "spec": "15m|*6포",
+            "manufacturingNo": "24027",
+            "expiryDate": "20270205",
+            "quantity": "400",
+            "unitPrice": "1,050",
+            "amount": "420,000"
+          },
+          {
+            "itemName": "더모픽스크림",
+            "spec": "30g",
+            "manufacturingNo": "24001",
+            "expiryDate": "20270116",
+            "quantity": "100",
+            "unitPrice": "4,490",
+            "amount": "449,000"
+          },
+          {
+            "itemName": "하드칼추어블이지정",
+            "spec": "30T",
+            "manufacturingNo": "23010",
+            "expiryDate": "20250601",
+            "quantity": "180",
+            "unitPrice": "1,400",
+            "amount": "252,000"
+          }
+        ],
+        "lastPreview": [
+          {
+            "itemName": "씬지로이드정0.025ng",
+            "spec": "100T",
+            "manufacturingNo": "24001-240ea",
+            "expiryDate": "270107",
+            "quantity": "240",
+            "unitPrice": "2,180",
+            "amount": "523,200"
+          },
+          {
+            "itemName": "부광실데나필정50mg",
+            "spec": "4T",
+            "manufacturingNo": "23001-30ea",
+            "expiryDate": "260212",
+            "quantity": "30",
+            "unitPrice": "3,270",
+            "amount": "98,100"
+          }
+        ],
+        "sampleCheck": "required display columns present; summary footer not mixed",
+        "e2eStatus": "exact",
+        "e2eSpecificChecks": {}
+      },
+      "2.pdf": {
+        "expectedRowCount": 13,
+        "actualRowCount": 13,
+        "rowCountStatus": "exact",
+        "expectedValueFillRate": 44.8,
+        "expectedFilledKeys": [
+          "rowIndex",
+          "itemCode",
+          "itemName",
+          "quantity",
+          "consumerUnitPrice",
+          "supplyUnitPrice",
+          "supplyAmount"
+        ],
+        "expectedMissingKeys": [
+          "insuranceCode",
+          "amount",
+          "totalAmount",
+          "remark"
+        ],
+        "valueMappingWarnings": [
+          "insuranceCode:ocr_source_missing:보험No OCR 원문에서 보험코드 후보를 찾지 못함 - 빈 값 유지"
+        ],
+        "extractionSource": "op_anchor_reconstructed_table",
+        "firstPreview": [
+          {
+            "rowIndex": 1,
+            "itemCode": "OP-NA0300",
+            "itemName": "NAPROXO [ABLEr 30UT24O",
+            "quantity": "73",
+            "consumerUnitPrice": "30,360",
+            "supplyUnitPrice": "30,360"
+          },
+          {
+            "rowIndex": 2,
+            "itemCode": "OP-NA0030",
+            "consumerUnitPrice": "3,036",
+            "supplyUnitPrice": "3,036"
+          },
+          {
+            "rowIndex": 3,
+            "itemCode": "OP-M00100",
+            "quantity": "300",
+            "consumerUnitPrice": "34,002",
+            "supplyUnitPrice": "9,064",
+            "supplyAmount": "9,064"
+          }
+        ],
+        "lastPreview": [
+          {
+            "rowIndex": 12,
+            "itemCode": "P-AL_0500",
+            "quantity": "2",
+            "consumerUnitPrice": "24,200",
+            "supplyUnitPrice": "24,200"
+          },
+          {
+            "rowIndex": 13,
+            "itemCode": "P-AF0100",
+            "itemName": "금",
+            "consumerUnitPrice": "14,080",
+            "supplyUnitPrice": "14,080"
+          }
+        ],
+        "sampleCheck": "OP-anchor reconstruction and OP-* itemCode retained",
+        "e2eStatus": "exact",
+        "e2eSpecificChecks": {
+          "OP-anchor rowCount": 13,
+          "summaryFooterMixed": false
+        }
+      },
+      "3.pdf": {
+        "expectedRowCount": 1,
+        "actualRowCount": 1,
+        "rowCountStatus": "exact",
+        "expectedValueFillRate": 16.7,
+        "expectedFilledKeys": [
+          "rowIndex",
+          "itemName"
+        ],
+        "expectedMissingKeys": [
+          "insuranceCode",
+          "spec",
+          "quantity",
+          "unitPrice",
+          "amount",
+          "manufacturer",
+          "manufacturingExpiryComposite",
+          "lotNo",
+          "serialNo",
+          "remark"
+        ],
+        "valueMappingWarnings": [
+          "insuranceCode:ocr_source_missing:보험No OCR 원문에서 보험코드 후보를 찾지 못함 - 빈 값 유지"
+        ],
+        "extractionSource": "legacy_text_items",
+        "firstPreview": [
+          {
+            "rowIndex": 1,
+            "itemName": "에스피씨세파클러캡슬250mg30 캡슐 0묘"
+          }
+        ],
+        "lastPreview": [
+          {
+            "rowIndex": 1,
+            "itemName": "에스피씨세파클러캡슬250mg30 캡슐 0묘"
+          }
+        ],
+        "sampleCheck": "single row retained; low fill rate documented",
+        "e2eStatus": "exact",
+        "e2eSpecificChecks": {}
+      },
+      "4.pdf": {
+        "expectedRowCount": 1,
+        "actualRowCount": 1,
+        "rowCountStatus": "exact",
+        "expectedValueFillRate": 80.0,
+        "expectedFilledKeys": [
+          "itemName",
+          "lotNo",
+          "unit",
+          "quantity",
+          "unitPrice",
+          "supplyAmount",
+          "taxAmount",
+          "totalAmount"
+        ],
+        "expectedMissingKeys": [
+          "amount",
+          "remark"
+        ],
+        "valueMappingWarnings": [
+          "taxAmount=doc_level_pushdown",
+          "totalAmount=doc_level_pushdown"
+        ],
+        "extractionSource": "expected_columns_header_match",
+        "firstPreview": [
+          {
+            "itemName": "중욕명",
+            "lotNo": "0350823-231024-200811",
+            "unit": "BOX",
+            "quantity": "1,000",
+            "unitPrice": "28,338.00",
+            "supplyAmount": "25,760,000",
+            "taxAmount": "2,576,000"
+          }
+        ],
+        "lastPreview": [
+          {
+            "itemName": "중욕명",
+            "lotNo": "0350823-231024-200811",
+            "unit": "BOX",
+            "quantity": "1,000",
+            "unitPrice": "28,338.00",
+            "supplyAmount": "25,760,000",
+            "taxAmount": "2,576,000"
+          }
+        ],
+        "sampleCheck": "lot/unit/quantity and doc-level amount pushdown checked",
+        "e2eStatus": "exact",
+        "e2eSpecificChecks": {}
+      },
+      "5.pdf": {
+        "expectedRowCount": 6,
+        "actualRowCount": 6,
+        "rowCountStatus": "exact",
+        "expectedValueFillRate": 48.1,
+        "expectedFilledKeys": [
+          "itemName",
+          "itemCode",
+          "quantity",
+          "unitPrice",
+          "amount"
+        ],
+        "expectedMissingKeys": [
+          "supplyAmount",
+          "taxAmount",
+          "totalAmount",
+          "remark"
+        ],
+        "valueMappingWarnings": [
+          "multiline_layout_mapping_applied",
+          "quantity:ambiguous_numeric_candidates:quantity candidates 3/6; kept existing empty values"
+        ],
+        "extractionSource": "legacy_text_items",
+        "firstPreview": [
+          {
+            "itemName": "노루모에프내복액75ML",
+            "itemCode": "NPRT1OT",
+            "unitPrice": "4,000",
+            "amount": "100,000"
+          },
+          {
+            "itemName": "나프록센나트롭정10T100",
+            "itemCode": "INAP250G",
+            "quantity": "213",
+            "unitPrice": "400,000",
+            "amount": "273,000"
+          },
+          {
+            "itemName": "노루모에스산15P",
+            "itemCode": "NRFS75M",
+            "quantity": "63",
+            "unitPrice": "2,300",
+            "amount": "400,000"
+          }
+        ],
+        "lastPreview": [
+          {
+            "itemName": "두피나액30ML",
+            "itemCode": "NRDA4P",
+            "unitPrice": "2,000",
+            "amount": "1,650,000"
+          },
+          {
+            "itemName": "노루모에이스산250G캔",
+            "itemCode": "NASP15P",
+            "unitPrice": "2,730",
+            "amount": "460,000"
+          }
+        ],
+        "sampleCheck": "multiline layout mapping; quantity ambiguity retained",
+        "e2eStatus": "exact",
+        "e2eSpecificChecks": {
+          "multiline layout rowCount": 6
+        }
+      },
+      "6.pdf": {
+        "expectedRowCount": 6,
+        "actualRowCount": 6,
+        "rowCountStatus": "exact",
+        "expectedValueFillRate": 50.0,
+        "expectedFilledKeys": [
+          "rowIndex",
+          "itemCode",
+          "itemName",
+          "quantity",
+          "lotNo",
+          "expiryDate"
+        ],
+        "expectedMissingKeys": [
+          "serialNo",
+          "manufacturingNo",
+          "unit",
+          "remark"
+        ],
+        "valueMappingWarnings": [],
+        "extractionSource": "expected_columns_header_match",
+        "firstPreview": [
+          {
+            "rowIndex": 1,
+            "itemCode": "ATT100T",
+            "itemName": "알코텔정100T",
+            "quantity": "5",
+            "lotNo": "24001",
+            "expiryDate": "270305"
+          },
+          {
+            "rowIndex": 2,
+            "itemCode": "ATGT3OT",
+            "itemName": "액티글리정30T",
+            "quantity": "10",
+            "lotNo": "23001",
+            "expiryDate": "260403"
+          },
+          {
+            "rowIndex": 3,
+            "itemCode": "OLGT3OT",
+            "itemName": "올고탄정10MG30T",
+            "quantity": "10",
+            "lotNo": "23001",
+            "expiryDate": "260809"
+          }
+        ],
+        "lastPreview": [
+          {
+            "rowIndex": 5,
+            "itemCode": "ALG30P",
+            "itemName": "알드린현탁액1.5G30P"
+          },
+          {
+            "rowIndex": 6,
+            "itemCode": "ANDC300C",
+            "itemName": "앤디락생캡슬300C"
+          }
+        ],
+        "sampleCheck": "ANDC300C and quantity 0 rows retained; header skip checked",
+        "e2eStatus": "exact",
+        "e2eSpecificChecks": {
+          "ANDC300C row kept": true,
+          "quantity 0 row kept": true,
+          "headerRowsSkippedCount": 1,
+          "headerRowsSkippedSamples": [
+            "NO 제품코드 5 24001 270305"
+          ]
+        }
+      },
+      "7.pdf": {
+        "expectedRowCount": 1,
+        "actualRowCount": 1,
+        "rowCountStatus": "exact",
+        "expectedValueFillRate": 66.7,
+        "expectedFilledKeys": [
+          "itemName",
+          "serialLotComposite",
+          "unit",
+          "quantity"
+        ],
+        "expectedMissingKeys": [
+          "manufacturingNo",
+          "remark"
+        ],
+        "valueMappingWarnings": [],
+        "extractionSource": "expected_columns_header_match",
+        "firstPreview": [
+          {
+            "itemName": "클리마토플란정",
+            "serialLotComposite": "0350623-231024-260811",
+            "unit": "BOX",
+            "quantity": "1,000"
+          }
+        ],
+        "lastPreview": [
+          {
+            "itemName": "클리마토플란정",
+            "serialLotComposite": "0350623-231024-260811",
+            "unit": "BOX",
+            "quantity": "1,000"
+          }
+        ],
+        "sampleCheck": "serialLotComposite/unit/quantity=1,000 retained",
+        "e2eStatus": "exact",
+        "e2eSpecificChecks": {
+          "quantity=1,000 kept": true
+        }
+      }
+    },
+    "avgExpectedValueFillRate": 52.4,
+    "missingTop": {
+      "remark": 7,
+      "totalAmount": 3,
+      "amount": 3,
+      "unit": 2,
+      "supplyAmount": 2,
+      "taxAmount": 2,
+      "insuranceCode": 2,
+      "serialNo": 2,
+      "manufacturingNo": 2,
+      "spec": 1
+    },
+    "warningTop": {
+      "insuranceCode": 2,
+      "taxAmount=doc_level_pushdown": 1,
+      "totalAmount=doc_level_pushdown": 1,
+      "multiline_layout_mapping_applied": 1,
+      "quantity": 1
+    }
+  },
+  "recommendation": {
+    "ranking": [
+      {
+        "candidate": "OCR raw confidence/bbox 활용",
+        "necessity": "high",
+        "evidence": "parser/ambiguous/classification reasons=14",
+        "score": 14,
+        "rank": 1
+      },
+      {
+        "candidate": "qualityTags 기반 실패 유형 분석",
+        "necessity": "high",
+        "evidence": "ocr/layout/false-positive reasons=5, __none__ tags=32",
+        "score": 5,
+        "rank": 2
+      },
+      {
+        "candidate": "OCR 전처리 실험",
+        "necessity": "high",
+        "evidence": "source missing/garbled reasons=5",
+        "score": 5,
+        "rank": 3
+      }
+    ],
+    "recommended": "OCR raw confidence/bbox 활용",
+    "reasonCountsUsed": {
+      "ok": 30,
+      "classification_mismatch": 9,
+      "suppressed_policy": 7,
+      "ocr_source_garbled": 3,
+      "parser_missed_source_exists": 4,
+      "metadata_mismatch": 1,
+      "ocr_source_missing": 2,
+      "ambiguous_candidates": 1
+    }
+  },
+  "validation": {
+    "py_compile": "PASS: python -m py_compile scripts/verify_current_baseline_runall_gt_alignment_t18_precheck.py",
+    "verify_script": "PASS: python scripts/verify_current_baseline_runall_gt_alignment_t18_precheck.py",
+    "typecheck": "PASS: npm.cmd run typecheck",
+    "build": "PASS: npm.cmd run build (Next.js reported existing ESLint nextVitals warning, exit 0)"
+  }
+}

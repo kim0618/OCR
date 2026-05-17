@@ -245,6 +245,27 @@ def classify_document(full_text: str) -> dict:
     form_n,       form_hits        = _count_hits(FORM_SIGNALS,        text)
     medical_n,    medical_hits     = _count_hits(MEDICAL_SIGNALS,     text)
 
+    # 의료기관 자체를 나타내는 시그널 (약국/의원/병원 이름 감지)
+    # 이 시그널이 있으면 카드 결제 정보가 있더라도 medical_receipt 우선 가능
+    medical_facility_hit = bool(re.search(
+        r'약국|의원|동물병원|(?<=[가-힣])병원(?![가-힣])',
+        text,
+    ))
+
+    # T-19c: 문서 상단 영역 (전체 라인 수의 상위 25%) 텍스트 추출
+    # synthetic y_ratio 기반 position weighting의 기반 데이터
+    _lines_full = [ln.strip() for ln in (full_text or "").splitlines() if ln.strip()]
+    _top_n = max(1, len(_lines_full) // 4)
+    _top_text = " ".join(_lines_full[:_top_n])
+
+    # POS/편의점 브랜드가 상단 영역에 있으면 receipt_pos 우선 신호
+    # 상단에 체인점 브랜드명이 있는 경우 카드 결제 정보가 하단에 있어도 pos로 분류
+    pos_top_signal = bool(re.search(
+        r'GS25|CU편의점|세븐일레븐|이마트24|미니스톱|홈플러스|이마트(?:트\w+)?점|롯데마트',
+        _top_text,
+        re.I,
+    ))
+
     # --- 구조/가드 시그널 ---
     layout_svt_triple = _detect_supply_vat_total_triple(full_text or '')
     bank_subtract     = _bank_to_card_disambig(text)
@@ -273,6 +294,23 @@ def classify_document(full_text: str) -> dict:
         and bank_n > invoice_score
         and not invoice_has_business_structure
     )
+    # T-19c: invoice_statement false positive 차단
+    # 세 가지 케이스:
+    # 1) has_business_structure=False: card/pos 시그널이 강하면 차단
+    # 2) medical_facility=True AND invoice 타이틀 없음 (거래명세서 등 없이 약국 이름만 있는 경우)
+    #    → 공식 invoice 타이틀(거래명세서/거래명세표)이 있는 진짜 invoice는 차단 안 함
+    # 3) 공급자(party) 없고 invoice 타이틀(title) 없는데 POS 시그널 강함
+    #    → 식당/편의점 영수증 오탐 방지 (header/table은 필드 라벨로도 충족 가능)
+    invoice_blocked_by_receipt = bool(
+        invoice_ok
+        and (
+            (not invoice_has_business_structure and (card_n >= 2 or pos_n >= 2 or medical_facility_hit))
+            or (medical_facility_hit and medical_n >= 1 and invoice_evidence.get("title", 0) == 0)
+            or (invoice_evidence.get("party", 0) == 0
+                and invoice_evidence.get("title", 0) == 0
+                and pos_n >= 2)
+        )
+    )
 
     # --- 결정 트리 ---
     #
@@ -292,8 +330,10 @@ def classify_document(full_text: str) -> dict:
     #     단순 은행명 1회 출현으로는 bank_slip 결정하지 않음.
     #   - layout_svt_triple(+공급가액/VAT/합계 검산)이 있으면 card 측에 이미 +1 가산되어
     #     bank 와의 우선순위 다툼에서 카드/영수증 쪽이 유리하다.
+    #   - T-19c: invoice_blocked_by_receipt — card/pos/medical context에서 invoice 오탐 방지
+    #   - T-19c: pos_top_signal — 상단 편의점 브랜드 감지 시 receipt_pos 우선
 
-    if invoice_ok and not invoice_blocked_by_bank:
+    if invoice_ok and not invoice_blocked_by_bank and not invoice_blocked_by_receipt:
         doc_type = "invoice_statement"
 
     elif form_n >= 2 and form_n >= max(pos_n, card_n, bank_n, medical_n):
@@ -303,9 +343,21 @@ def classify_document(full_text: str) -> dict:
     elif bank_slip_strong:
         doc_type = "bank_slip"
 
-    # 의료 영수증
+    # 의료기관 이름(약국/의원/병원) 감지 + 의료 시그널 ≥ 1
+    # 카드/현금 결제 여부와 무관하게 의료 영수증으로 확정
+    # → 약국·병원에서 카드 결제 시 카드 시그널이 강해도 의료 영수증 우선
+    elif medical_facility_hit and medical_n >= 1:
+        doc_type = "medical_receipt"
+
+    # 의료 영수증 (기관명 없어도 의료 시그널이 충분히 강한 경우)
     elif medical_n >= 2 and medical_n >= card_n and medical_n >= max(pos_n - 1, 0):
         doc_type = "medical_receipt"
+
+    # T-19c: 상단 영역에 편의점/POS 브랜드가 있으면 receipt_pos 우선
+    # 카드 결제 정보가 하단에 있어도 POS 영수증으로 분류
+    # card가 압도적으로 강한 경우(card > pos + 2)는 카드전표 유지
+    elif pos_top_signal and not medical_facility_hit and card_n <= pos_n + 2:
+        doc_type = "receipt_pos"
 
     # 카드 매출전표
     elif card_n >= 2 and card_n >= pos_n:
@@ -362,11 +414,14 @@ def classify_document(full_text: str) -> dict:
         "guards": {
             "bank_to_card_subtract":   bank_subtract,
             "layout_supply_vat_total": layout_svt_triple,
+            "medical_facility_hit":    medical_facility_hit,
+            "pos_top_signal":          pos_top_signal,
             "invoice_statement":       {
                 **invoice_evidence,
                 "score": invoice_score,
                 "has_business_structure": invoice_has_business_structure,
                 "blocked_by_bank": invoice_blocked_by_bank,
+                "blocked_by_receipt": invoice_blocked_by_receipt,
             },
         },
         "receipt_like_unknown_evidence": receipt_like_evidence,

@@ -1,0 +1,423 @@
+{
+  "generatedAt": "2026-05-17",
+  "designId": "DB-REVIEW-1",
+  "title": "MVP 7 Table Structure Adequacy Review",
+  "scope": "MVP 7 table review",
+  "predecessors": ["DB-DESIGN-1", "ARCH-1", "OPS-1"],
+  "successor": "DB-2 (schema.sql)",
+  "recommendation": {
+    "status": "keep_with_column_changes",
+    "summary": "7개 테이블 골격은 적합. 단 8개 컬럼 보완 필수: ocr_templates(template_type, output_fields), ocr_runs(processing_time, autofill_summary), ocr_run_results(original_image_storage_key, processed_image_storage_key, autofill_summary), business_references(business_no_normalized), site_members(joined_at)."
+  },
+  "tables": [
+    {
+      "name": "users",
+      "required": true,
+      "purpose": "로그인 계정 + 마스터 권한 (super_admin)",
+      "screens": ["로그인"],
+      "replaces": ["ocr-server/data/users.json (평문 폐기)", "localStorage mysuit_ocr_login 일부"],
+      "siteScoped": false,
+      "columns": [
+        { "name": "id", "type": "UUID", "required": true, "primaryKey": true },
+        { "name": "username", "type": "VARCHAR(64)", "required": true, "unique": true, "notes": "기존 user_id" },
+        { "name": "password_hash", "type": "VARCHAR(60)", "required": true, "notes": "bcrypt" },
+        { "name": "display_name", "type": "VARCHAR(128)", "required": true, "notes": "기존 user_nm" },
+        { "name": "is_super_admin", "type": "BOOLEAN DEFAULT false", "required": true, "notes": "기존 masterYn=Y" },
+        { "name": "status", "type": "VARCHAR(16) DEFAULT 'active'", "required": true },
+        { "name": "last_login_at", "type": "TIMESTAMPTZ", "required": false },
+        { "name": "created_at", "type": "TIMESTAMPTZ DEFAULT now()", "required": true },
+        { "name": "updated_at", "type": "TIMESTAMPTZ DEFAULT now()", "required": true }
+      ],
+      "indexes": ["UNIQUE(username)"],
+      "notes": "user_sessions는 MVP 데모용은 제외 가능. 외부 POC 직전 도입 권장."
+    },
+    {
+      "name": "sites",
+      "required": true,
+      "purpose": "사이트/워크스페이스 마스터 — 모든 업무 데이터의 소유자",
+      "screens": ["사이트 드롭다운", "Site 설정"],
+      "replaces": ["Sidebar 하드코딩 옵션", "users.json comp_cd/comp_nm"],
+      "siteScoped": "self",
+      "columns": [
+        { "name": "id", "type": "UUID", "required": true, "primaryKey": true },
+        { "name": "site_name", "type": "VARCHAR(128)", "required": true },
+        { "name": "site_code", "type": "VARCHAR(64)", "required": true, "unique": true, "notes": "kebab-case slug" },
+        { "name": "status", "type": "VARCHAR(16) DEFAULT 'active'", "required": true },
+        { "name": "settings", "type": "JSONB", "required": false, "notes": "default_document_type, retention_days 등" },
+        { "name": "created_at", "type": "TIMESTAMPTZ DEFAULT now()", "required": true },
+        { "name": "updated_at", "type": "TIMESTAMPTZ DEFAULT now()", "required": true },
+        { "name": "deleted_at", "type": "TIMESTAMPTZ", "required": false, "notes": "soft delete" }
+      ],
+      "indexes": ["UNIQUE(site_code)"],
+      "notes": "parent_site_id 등 계층 구조는 MVP에서 제외. 필요 시 후속 ALTER."
+    },
+    {
+      "name": "site_members",
+      "required": true,
+      "purpose": "사용자-사이트 권한 매핑",
+      "screens": ["권한 체크 미들웨어", "사이트 드롭다운 필터"],
+      "siteScoped": true,
+      "columns": [
+        { "name": "id", "type": "UUID", "required": true, "primaryKey": true },
+        { "name": "site_id", "type": "UUID FK→sites.id ON DELETE CASCADE", "required": true },
+        { "name": "user_id", "type": "UUID FK→users.id ON DELETE CASCADE", "required": true },
+        { "name": "role", "type": "VARCHAR(16) DEFAULT 'member'", "required": true, "notes": "owner/admin/member/viewer" },
+        { "name": "status", "type": "VARCHAR(16) DEFAULT 'active'", "required": true },
+        { "name": "joined_at", "type": "TIMESTAMPTZ DEFAULT now()", "required": true, "added": true, "notes": "신규 추가 권장" },
+        { "name": "created_at", "type": "TIMESTAMPTZ DEFAULT now()", "required": true },
+        { "name": "updated_at", "type": "TIMESTAMPTZ DEFAULT now()", "required": true }
+      ],
+      "constraints": ["UNIQUE(site_id, user_id)", "CHECK (role IN ('owner','admin','member','viewer'))"],
+      "notes": "MVP 데모에서는 role 분기 미구현 OK — is_super_admin 또는 site_members 존재 여부만 검증"
+    },
+    {
+      "name": "business_references",
+      "required": true,
+      "purpose": "사업자번호 기준값 매칭 마스터",
+      "screens": ["RunOCR 실행 시 자동완성", "히스토리 상세보기 매칭 표시"],
+      "replaces": [],
+      "siteScoped": true,
+      "columns": [
+        { "name": "id", "type": "UUID", "required": true, "primaryKey": true },
+        { "name": "site_id", "type": "UUID FK→sites.id ON DELETE CASCADE", "required": true },
+        { "name": "business_no", "type": "VARCHAR(32)", "required": true, "notes": "원본 입력 (참고용)" },
+        { "name": "business_no_normalized", "type": "VARCHAR(12)", "required": true, "added": true, "notes": "138-81-68468 형식 — UNIQUE 매칭 키" },
+        { "name": "company_name", "type": "VARCHAR(256)", "required": false },
+        { "name": "ceo_name", "type": "VARCHAR(128)", "required": false },
+        { "name": "phone", "type": "VARCHAR(32)", "required": false },
+        { "name": "address", "type": "TEXT", "required": false },
+        { "name": "metadata", "type": "JSONB", "required": false, "notes": "업태/종목 등 부가 필드" },
+        { "name": "is_active", "type": "BOOLEAN DEFAULT true", "required": true },
+        { "name": "created_at", "type": "TIMESTAMPTZ DEFAULT now()", "required": true },
+        { "name": "updated_at", "type": "TIMESTAMPTZ DEFAULT now()", "required": true }
+      ],
+      "constraints": ["UNIQUE(site_id, business_no_normalized)"],
+      "notes": "현재 autofillEngine은 history+groundTruth에서 reverse-derive. 마스터 도입 시 1순위 매칭으로 격상.",
+      "matchingFields": ["회사명", "사업자번호", "대표자", "tel", "전화번호", "주소"]
+    },
+    {
+      "name": "ocr_templates",
+      "required": true,
+      "purpose": "템플릿 정의 + 출력 필드 + 영역 좌표",
+      "screens": ["Template 탭", "RunOCR 템플릿 선택", "히스토리 템플릿명 표시"],
+      "replaces": ["ocr-server/data/templates.json", "localStorage mysuit_ocr_templates"],
+      "siteScoped": true,
+      "columns": [
+        { "name": "id", "type": "UUID", "required": true, "primaryKey": true },
+        { "name": "site_id", "type": "UUID FK→sites.id ON DELETE CASCADE", "required": true },
+        { "name": "template_name", "type": "VARCHAR(128)", "required": true },
+        { "name": "template_type", "type": "VARCHAR(32)", "required": true, "added": true, "notes": "template/unstructured/btemplate — 코드에 이미 3종 분기 존재" },
+        { "name": "document_type", "type": "VARCHAR(64)", "required": true, "notes": "invoice_statement, pos_receipt 등" },
+        { "name": "output_fields", "type": "JSONB", "required": false, "added": true, "notes": "[{no,en,ko}] 출력 필드 정의 — 상세보기 출력필드 매핑" },
+        { "name": "template_body", "type": "JSONB", "required": true, "notes": "regions/tableConfig 좌표" },
+        { "name": "image_file_name", "type": "VARCHAR(256)", "required": false },
+        { "name": "image_storage_key", "type": "VARCHAR(512)", "required": false, "notes": "기존 base64 src를 외부 분리" },
+        { "name": "image_width", "type": "INTEGER", "required": true },
+        { "name": "image_height", "type": "INTEGER", "required": true },
+        { "name": "is_active", "type": "BOOLEAN DEFAULT true", "required": true },
+        { "name": "created_by", "type": "UUID FK→users.id", "required": false },
+        { "name": "updated_by", "type": "UUID FK→users.id", "required": false },
+        { "name": "created_at", "type": "TIMESTAMPTZ DEFAULT now()", "required": true },
+        { "name": "updated_at", "type": "TIMESTAMPTZ DEFAULT now()", "required": true },
+        { "name": "deleted_at", "type": "TIMESTAMPTZ", "required": false }
+      ],
+      "constraints": [
+        "UNIQUE(site_id, template_name)",
+        "CHECK (template_type IN ('template','unstructured','btemplate'))"
+      ],
+      "notes": "templates.json의 거대한 base64 image.src는 반드시 image_storage_key로 외부 분리. 그대로 JSONB 저장 시 행당 수 MB 부담."
+    },
+    {
+      "name": "ocr_runs",
+      "required": true,
+      "purpose": "RunOCR 실행 히스토리 리스트",
+      "screens": ["RunOCR 실행", "히스토리 리스트"],
+      "replaces": ["ocr-server/data/history.json 일부", "localStorage mysuit_ocr_history 일부"],
+      "siteScoped": true,
+      "columns": [
+        { "name": "id", "type": "UUID", "required": true, "primaryKey": true, "notes": "기존 job_id 대체" },
+        { "name": "site_id", "type": "UUID FK→sites.id", "required": true },
+        { "name": "user_id", "type": "UUID FK→users.id", "required": true },
+        { "name": "template_id", "type": "UUID FK→ocr_templates.id", "required": false },
+        { "name": "template_name_snapshot", "type": "VARCHAR(128)", "required": false, "notes": "템플릿 삭제/이름변경 대비" },
+        { "name": "request_at", "type": "TIMESTAMPTZ DEFAULT now()", "required": true },
+        { "name": "status", "type": "VARCHAR(16)", "required": true, "notes": "pending/running/success/fail/partial" },
+        { "name": "file_name", "type": "VARCHAR(512)", "required": false, "notes": "대표 파일명" },
+        { "name": "file_count", "type": "INTEGER DEFAULT 1", "required": true },
+        { "name": "document_type", "type": "VARCHAR(64)", "required": false },
+        { "name": "processing_time", "type": "NUMERIC(8,3)", "required": false, "added": true, "notes": "초 단위. 히스토리 리스트 화면 표시용" },
+        { "name": "run_options", "type": "JSONB", "required": false, "notes": "selected_model, preprocessing 옵션" },
+        { "name": "autofill_summary", "type": "JSONB", "required": false, "added": true, "notes": "사업자번호 매칭 결과 요약 (HistoryAutofillRunSummary)" },
+        { "name": "summary", "type": "JSONB", "required": false, "notes": "totalFiles, successCount 등" },
+        { "name": "created_at", "type": "TIMESTAMPTZ DEFAULT now()", "required": true },
+        { "name": "updated_at", "type": "TIMESTAMPTZ DEFAULT now()", "required": true },
+        { "name": "deleted_at", "type": "TIMESTAMPTZ", "required": false }
+      ],
+      "indexes": ["INDEX(site_id, created_at DESC)", "INDEX(site_id, user_id, created_at DESC)"]
+    },
+    {
+      "name": "ocr_run_results",
+      "required": true,
+      "purpose": "히스토리 상세보기 전체 데이터 (이미지/출력필드/OCR원본/표/수정값)",
+      "screens": ["히스토리 상세보기", "상세보기 수정 저장"],
+      "siteScoped": true,
+      "columns": [
+        { "name": "id", "type": "UUID", "required": true, "primaryKey": true },
+        { "name": "site_id", "type": "UUID FK→sites.id", "required": true },
+        { "name": "run_id", "type": "UUID FK→ocr_runs.id ON DELETE CASCADE", "required": true },
+        { "name": "template_id", "type": "UUID FK→ocr_templates.id", "required": false },
+        { "name": "original_file_name", "type": "VARCHAR(512)", "required": true },
+        { "name": "original_image_storage_key", "type": "VARCHAR(512)", "required": false, "added": true, "notes": "전처리 전 이미지" },
+        { "name": "processed_image_storage_key", "type": "VARCHAR(512)", "required": false, "added": true, "notes": "전처리 후 이미지" },
+        { "name": "document_type", "type": "VARCHAR(64)", "required": false },
+        { "name": "detected_doc_type", "type": "VARCHAR(64)", "required": false },
+        { "name": "status", "type": "VARCHAR(16)", "required": true },
+        { "name": "business_no", "type": "VARCHAR(12)", "required": false, "notes": "검색 인덱스용 정규화 사업자번호" },
+        { "name": "primary_name", "type": "VARCHAR(256)", "required": false, "notes": "회사명/거래처명 검색용" },
+        { "name": "total_amount", "type": "NUMERIC(18,2)", "required": false },
+        { "name": "raw_text", "type": "TEXT", "required": false },
+        { "name": "error_message", "type": "TEXT", "required": false },
+        { "name": "output_fields_result", "type": "JSONB", "required": false, "notes": "HistoryOutputField[] — 사용자 수정 데이터 포함" },
+        { "name": "raw_ocr_data", "type": "JSONB", "required": false, "notes": "HistoryOcrField[] — OCR 원본 필드 + bbox" },
+        { "name": "table_data", "type": "JSONB", "required": false, "notes": "tableMeta + tableRows (invoice_statement)" },
+        { "name": "preprocessing_debug", "type": "JSONB", "required": false, "notes": "debug 또는 production-applied 시에만" },
+        { "name": "autofill_summary", "type": "JSONB", "required": false, "added": true, "notes": "상세보기에서 자동완성 상태 표시" },
+        { "name": "warnings_summary", "type": "JSONB", "required": false, "notes": "{error:0,warning:2,info:1}" },
+        { "name": "metadata", "type": "JSONB", "required": false },
+        { "name": "created_at", "type": "TIMESTAMPTZ DEFAULT now()", "required": true },
+        { "name": "updated_at", "type": "TIMESTAMPTZ DEFAULT now()", "required": true }
+      ],
+      "constraints": ["UNIQUE(run_id, original_file_name)"],
+      "indexes": [
+        "INDEX(site_id, business_no)",
+        "INDEX(site_id, created_at DESC)",
+        "INDEX(run_id)",
+        "GIN(output_fields_result)",
+        "GIN(raw_ocr_data)"
+      ],
+      "notes": "사용자 수정값은 output_fields_result JSONB partial update로 처리. 별도 ocr_corrected_fields 불필요."
+    }
+  ],
+  "addedColumns": [
+    { "table": "site_members", "column": "joined_at", "reason": "가입 시점 추적" },
+    { "table": "business_references", "column": "business_no_normalized", "reason": "UNIQUE 매칭 키 (138-81-68468 형식)" },
+    { "table": "ocr_templates", "column": "template_type", "reason": "template/unstructured/btemplate 3종 구분 (코드에 이미 분기 존재)" },
+    { "table": "ocr_templates", "column": "output_fields", "reason": "출력 필드 정의 분리 → 상세보기 출력필드 매핑" },
+    { "table": "ocr_runs", "column": "processing_time", "reason": "히스토리 리스트 화면 표시용" },
+    { "table": "ocr_runs", "column": "autofill_summary", "reason": "사업자번호 매칭 결과 요약" },
+    { "table": "ocr_run_results", "column": "original_image_storage_key", "reason": "전처리 전 이미지 (DetailHistoryView 좌측 상단)" },
+    { "table": "ocr_run_results", "column": "processed_image_storage_key", "reason": "전처리 후 이미지 (DetailHistoryView 좌측 하단)" },
+    { "table": "ocr_run_results", "column": "autofill_summary", "reason": "상세보기에서 자동완성 상태 표시" }
+  ],
+  "excludedTables": [
+    {
+      "name": "user_sessions",
+      "reason": "MVP 데모용은 localStorage 토큰으로 충분",
+      "risk": "강제 만료/무효화 불가, XSS 위험",
+      "needsRevisitWhen": "외부 POC 직전 즉시"
+    },
+    {
+      "name": "ocr_corrected_fields",
+      "reason": "output_fields_result JSONB로 처리 가능",
+      "risk": "행 단위 수정 이력 추적 어려움",
+      "needsRevisitWhen": "감사 로그 또는 학습 데이터 명세 시"
+    },
+    {
+      "name": "ocr_run_files",
+      "reason": "1 run = 1 file 흐름이라 ocr_run_results 행 하나로 충분",
+      "risk": "다중 파일 + 파일별 메타(MIME/checksum) 분리 어려움",
+      "needsRevisitWhen": "다중 파일 업로드 운영 도입 시"
+    },
+    {
+      "name": "ocr_template_regions",
+      "reason": "template_body JSONB로 처리",
+      "risk": "영역 단위 통계/부분 수정 어려움",
+      "needsRevisitWhen": "영역별 분석 UI 도입 시"
+    },
+    {
+      "name": "ocr_template_table_guides",
+      "reason": "template_body JSONB로 처리",
+      "risk": "colGuides 단위 운영 분석 어려움",
+      "needsRevisitWhen": "T-10 후속 표 분석 도입 시"
+    },
+    {
+      "name": "ocr_run_table_rows",
+      "reason": "table_data JSONB로 처리",
+      "risk": "행 단위 검색/편집 어려움",
+      "needsRevisitWhen": "행 단위 검토 워크플로 도입 시"
+    },
+    {
+      "name": "ocr_run_warnings",
+      "reason": "warnings_summary JSONB로 처리",
+      "risk": "경고 추세 분석 어려움",
+      "needsRevisitWhen": "품질 모니터링 대시보드 도입 시"
+    },
+    {
+      "name": "audit_logs",
+      "reason": "review_log.jsonl 유지 (현재 작동)",
+      "risk": "보안 감사 한계",
+      "needsRevisitWhen": "MVP 직후 P2 즉시"
+    },
+    {
+      "name": "user_preferences",
+      "reason": "localStorage mysuit_ocr_theme 유지",
+      "risk": "마지막 선택 사이트 영구 보존 불가",
+      "needsRevisitWhen": "멀티사이트 UX 정착 시"
+    }
+  ],
+  "screenMappings": [
+    {
+      "screen": "로그인",
+      "tablesQueried": ["users"],
+      "tablesWritten": [],
+      "tablesUpdated": ["users.last_login_at"]
+    },
+    {
+      "screen": "사이트 드롭다운",
+      "tablesQueried": ["sites", "site_members"],
+      "tablesWritten": [],
+      "tablesUpdated": []
+    },
+    {
+      "screen": "템플릿 목록",
+      "tablesQueried": ["ocr_templates"],
+      "tablesWritten": [],
+      "tablesUpdated": []
+    },
+    {
+      "screen": "템플릿 생성/수정",
+      "tablesQueried": ["ocr_templates"],
+      "tablesWritten": ["ocr_templates"],
+      "tablesUpdated": ["ocr_templates"]
+    },
+    {
+      "screen": "RunOCR 실행",
+      "tablesQueried": ["sites", "ocr_templates", "business_references"],
+      "tablesWritten": ["ocr_runs", "ocr_run_results"],
+      "tablesUpdated": ["ocr_runs.status"]
+    },
+    {
+      "screen": "사업자번호 매칭",
+      "tablesQueried": ["business_references", "ocr_run_results"],
+      "tablesWritten": [],
+      "tablesUpdated": []
+    },
+    {
+      "screen": "히스토리 리스트",
+      "tablesQueried": ["ocr_runs", "ocr_run_results"],
+      "tablesWritten": [],
+      "tablesUpdated": []
+    },
+    {
+      "screen": "히스토리 상세보기",
+      "tablesQueried": ["ocr_runs", "ocr_run_results"],
+      "tablesWritten": [],
+      "tablesUpdated": []
+    },
+    {
+      "screen": "상세보기 수정 저장",
+      "tablesQueried": [],
+      "tablesWritten": [],
+      "tablesUpdated": ["ocr_run_results.output_fields_result"]
+    },
+    {
+      "screen": "히스토리 삭제",
+      "tablesQueried": [],
+      "tablesWritten": [],
+      "tablesUpdated": ["ocr_runs.deleted_at"]
+    }
+  ],
+  "decisions": [
+    {
+      "id": "R1",
+      "topic": "ocr_templates.template_type 추가",
+      "recommendation": "추가 (template/unstructured/btemplate)",
+      "alternatives": ["template_body.kind로만 보관"],
+      "impact": "누락 시 RunOCR 분기 어려움. 반드시 결정.",
+      "mandatory": true
+    },
+    {
+      "id": "R2",
+      "topic": "ocr_templates.output_fields 분리",
+      "recommendation": "분리 (JSONB 별도)",
+      "alternatives": ["template_body 안에 포함"],
+      "impact": "분리하면 상세보기 출력필드 매핑 단순"
+    },
+    {
+      "id": "R3",
+      "topic": "business_references.business_no_normalized UNIQUE",
+      "recommendation": "필수 (VARCHAR(12), UNIQUE(site_id, business_no_normalized))",
+      "alternatives": ["raw business_no UNIQUE"],
+      "impact": "정규화 없으면 138-81-68468 vs 1388168468 중복",
+      "mandatory": true
+    },
+    {
+      "id": "R4",
+      "topic": "이미지 storage prefix",
+      "recommendation": "local:// / s3:// 추상화",
+      "alternatives": ["단순 경로 문자열"],
+      "impact": "후속 객체스토리지 전환 용이"
+    },
+    {
+      "id": "R5",
+      "topic": "business_references 사이트별 격리",
+      "recommendation": "사이트별 (site_id NOT NULL)",
+      "alternatives": ["전역 마스터"],
+      "impact": "사이트 간 데이터 누수 방지"
+    },
+    {
+      "id": "R6",
+      "topic": "사용자 수정값 → business_references 자동 반영",
+      "recommendation": "MVP는 자동 반영 안 함",
+      "alternatives": ["자동 학습"],
+      "impact": "자동 학습 정책 정의 후 후속"
+    },
+    {
+      "id": "R7",
+      "topic": "history 삭제 정책",
+      "recommendation": "soft delete (deleted_at)",
+      "alternatives": ["hard delete"],
+      "impact": "복구 가능 vs 디스크 절약"
+    },
+    {
+      "id": "R8",
+      "topic": "run-result 관계",
+      "recommendation": "MVP는 1 run = 1 file",
+      "alternatives": ["1 run = N files"],
+      "impact": "향후 N으로 확장 시 같은 구조 유지"
+    }
+  ],
+  "businessReferenceMatchingFlow": {
+    "tier1": {
+      "source": "business_references (마스터)",
+      "confidence": 0.95,
+      "lookup": "WHERE site_id=? AND business_no_normalized=? AND is_active=true"
+    },
+    "tier2": {
+      "source": "ocr_run_results.output_fields_result (사용자 수정값 누적)",
+      "confidence": 0.9,
+      "lookup": "WHERE site_id=? AND business_no=? ORDER BY created_at DESC LIMIT 20"
+    },
+    "autofillableFields": ["회사명", "사업자번호", "대표자", "tel", "전화번호", "주소"],
+    "normalizer": "bizNumber.normalizeBizNumber() → XXX-XX-XXXXX 형식 + 체크섬 검증"
+  },
+  "correctionSaveFlow": {
+    "trigger": "히스토리 상세보기 → output_fields[i].modified 변경 → 저장 버튼",
+    "api": "PUT /sites/:siteId/history/:runId/results/:resultId",
+    "operation": "UPDATE ocr_run_results SET output_fields_result = $jsonb WHERE id = ?",
+    "note": "JSONB partial update. 별도 ocr_corrected_fields 불필요. business_references 자동 반영 없음 (R6)."
+  },
+  "schemaReadyConditions": [
+    "R1 (template_type) 확정",
+    "R2 (output_fields 분리) 확정",
+    "R3 (business_no_normalized) 확정",
+    "R4 (storage prefix) 확정",
+    "R5 (business_references 사이트별 격리) 확정"
+  ],
+  "nextActions": [
+    "사용자가 R1~R5 5개 결정사항 확정",
+    "DB-2: schema.sql 작성 (PostgreSQL 16+)",
+    "DB-3: FastAPI + asyncpg/SQLAlchemy 연동",
+    "DB-4: users.json/templates.json/history.json → DB 마이그레이션"
+  ]
+}

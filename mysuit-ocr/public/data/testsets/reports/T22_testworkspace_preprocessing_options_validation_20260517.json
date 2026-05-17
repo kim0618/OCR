@@ -1,0 +1,2191 @@
+{
+  "task": "T-22",
+  "generatedAt": "2026-05-17T13:49:47",
+  "scope": "T22_current_ocr_baseline_after_preprocessing_ui",
+  "collectionMode": "current static source + locked T19/T20e/T20i validation artifacts",
+  "modes": {
+    "default": {
+      "debugPreprocessing": false,
+      "autoApplyPreprocessing": false,
+      "purpose": "baseline compatibility"
+    },
+    "debugOnly": {
+      "debugPreprocessing": true,
+      "autoApplyPreprocessing": false,
+      "purpose": "emit preprocessingDebug without changing final result"
+    },
+    "debugAuto": {
+      "debugPreprocessing": true,
+      "autoApplyPreprocessing": true,
+      "purpose": "receipt limited opt-in auto apply"
+    }
+  },
+  "summary": {
+    "targetSampleCount": 26,
+    "receiptSampleCount": 19,
+    "invoiceSampleCount": 7,
+    "optionValidationSamples": [
+      "invoice_statement/1.jpg",
+      "invoice_statement/2.pdf",
+      "invoice_statement/3.pdf",
+      "invoice_statement/4.pdf",
+      "invoice_statement/5.pdf",
+      "invoice_statement/6.pdf",
+      "invoice_statement/7.pdf",
+      "receipt_generalization/card_001.jpg",
+      "receipt_generalization/card_002.jpg",
+      "receipt_generalization/medical_001.jpg",
+      "receipt_generalization/medical_003.jpg",
+      "receipt_generalization/pos_005.jpg",
+      "receipt_generalization/pos_006.jpg"
+    ],
+    "invoiceRowCountExact": "7/7",
+    "productionAppliedCount": 4,
+    "invoiceProductionAppliedCount": 0,
+    "regressionCount": 0,
+    "uiStaticChecks": "PASS",
+    "overall": "PASS"
+  },
+  "modeResults": {
+    "default": [
+      {
+        "sample": "receipt_generalization/pos_001.jpg",
+        "qualityTags": [
+          "small_text",
+          "garbled_source"
+        ],
+        "docType": "receipt_pos",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "receipt_generalization/pos_002.jpg",
+        "qualityTags": [
+          "small_text"
+        ],
+        "docType": "receipt_pos",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "receipt_generalization/pos_003.jpg",
+        "qualityTags": [
+          "small_text"
+        ],
+        "docType": "medical_receipt",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export",
+          "doc_type_mismatch:medical_receipt!=manifest:pos_receipt",
+          "metadata_issue:manifest=pos_receipt, OCR/source indicates medical receipt"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "receipt_generalization/pos_004.jpg",
+        "qualityTags": [
+          "long_receipt",
+          "small_text"
+        ],
+        "docType": "receipt_pos",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "receipt_generalization/pos_005.jpg",
+        "qualityTags": [
+          "long_receipt",
+          "small_text"
+        ],
+        "docType": "receipt_pos",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": "grayscale"
+      },
+      {
+        "sample": "receipt_generalization/pos_006.jpg",
+        "qualityTags": [
+          "small_text",
+          "garbled_source",
+          "preprocessing_candidate"
+        ],
+        "docType": "receipt_pos",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": "upscale_1_5x"
+      },
+      {
+        "sample": "receipt_generalization/food_001.jpg",
+        "qualityTags": [
+          "skewed",
+          "shadow"
+        ],
+        "docType": "unknown",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export",
+          "doc_type_mismatch:unknown!=manifest:food_cafe_receipt"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "receipt_generalization/food_002.jpg",
+        "qualityTags": [
+          "low_contrast"
+        ],
+        "docType": "receipt_pos",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "receipt_generalization/food_003.jpg",
+        "qualityTags": [
+          "small_text"
+        ],
+        "docType": "receipt_pos",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "receipt_generalization/food_004.jpg",
+        "qualityTags": [
+          "small_text"
+        ],
+        "docType": "receipt_pos",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "receipt_generalization/food_005.jpg",
+        "qualityTags": [
+          "small_text"
+        ],
+        "docType": "receipt_pos",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "receipt_generalization/medical_001.jpg",
+        "qualityTags": [
+          "shadow",
+          "preprocessing_candidate"
+        ],
+        "docType": "medical_receipt",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": "clahe"
+      },
+      {
+        "sample": "receipt_generalization/medical_002.jpg",
+        "qualityTags": [
+          "small_text"
+        ],
+        "docType": "medical_receipt",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "receipt_generalization/medical_003.jpg",
+        "qualityTags": [
+          "long_receipt",
+          "small_text",
+          "preprocessing_candidate"
+        ],
+        "docType": "medical_receipt",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": "grayscale"
+      },
+      {
+        "sample": "receipt_generalization/medical_004.jpg",
+        "qualityTags": [],
+        "docType": "medical_receipt",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "receipt_generalization/card_001.jpg",
+        "qualityTags": [
+          "small_text",
+          "garbled_source"
+        ],
+        "docType": "receipt_card",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": "upscale_1_5x"
+      },
+      {
+        "sample": "receipt_generalization/card_002.jpg",
+        "qualityTags": [
+          "blurred",
+          "preprocessing_candidate"
+        ],
+        "docType": "receipt_card",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": "clahe"
+      },
+      {
+        "sample": "receipt_generalization/finance_001.jpg",
+        "qualityTags": [
+          "rotated"
+        ],
+        "docType": "bank_slip",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "receipt_generalization/finance_002.jpg",
+        "qualityTags": [
+          "skewed"
+        ],
+        "docType": "bank_slip",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "invoice_statement/1.jpg",
+        "qualityTags": [],
+        "docType": "invoice_statement",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": "18,098,750",
+        "date": null,
+        "tableRowsRowCount": "28",
+        "expectedRowCount": 28,
+        "warnings": [],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "invoice_statement/2.pdf",
+        "qualityTags": [
+          "dense_table",
+          "rowcount_guard_required",
+          "preprocessing_blocked"
+        ],
+        "docType": "invoice_statement",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": "376,638,215",
+        "date": null,
+        "tableRowsRowCount": "2",
+        "expectedRowCount": 13,
+        "warnings": [],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "invoice_statement/3.pdf",
+        "qualityTags": [
+          "pdf_low_resolution",
+          "preprocessing_candidate",
+          "rowcount_guard_required"
+        ],
+        "docType": "invoice_statement",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": "301,320",
+        "date": null,
+        "tableRowsRowCount": "1",
+        "expectedRowCount": 1,
+        "warnings": [],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": "render_dpi_200_grayscale"
+      },
+      {
+        "sample": "invoice_statement/4.pdf",
+        "qualityTags": [
+          "ocr_garbled",
+          "party_block_garbled",
+          "address_garbled"
+        ],
+        "docType": "invoice_statement",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": 1,
+        "expectedRowCount": 1,
+        "warnings": [
+          "taxAmount=doc_level_pushdown",
+          "totalAmount=doc_level_pushdown"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "invoice_statement/5.pdf",
+        "qualityTags": [],
+        "docType": "invoice_statement",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": "3,351,298",
+        "date": null,
+        "tableRowsRowCount": "6",
+        "expectedRowCount": 6,
+        "warnings": [],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "invoice_statement/6.pdf",
+        "qualityTags": [
+          "no_amount_summary",
+          "lot_serial_table",
+          "buyer_only_document",
+          "optional_supplier"
+        ],
+        "docType": "invoice_statement",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": 6,
+        "expectedRowCount": 6,
+        "warnings": [],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "invoice_statement/7.pdf",
+        "qualityTags": [
+          "address_tail_missing",
+          "no_amount_summary"
+        ],
+        "docType": "invoice_statement",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": 1,
+        "expectedRowCount": 1,
+        "warnings": [],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      }
+    ],
+    "debugOnly": [
+      {
+        "sample": "receipt_generalization/pos_001.jpg",
+        "qualityTags": [
+          "small_text",
+          "garbled_source"
+        ],
+        "docType": "receipt_pos",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "receipt_generalization/pos_002.jpg",
+        "qualityTags": [
+          "small_text"
+        ],
+        "docType": "receipt_pos",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "receipt_generalization/pos_003.jpg",
+        "qualityTags": [
+          "small_text"
+        ],
+        "docType": "medical_receipt",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export",
+          "doc_type_mismatch:medical_receipt!=manifest:pos_receipt",
+          "metadata_issue:manifest=pos_receipt, OCR/source indicates medical receipt"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "receipt_generalization/pos_004.jpg",
+        "qualityTags": [
+          "long_receipt",
+          "small_text"
+        ],
+        "docType": "receipt_pos",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "receipt_generalization/pos_005.jpg",
+        "qualityTags": [
+          "long_receipt",
+          "small_text"
+        ],
+        "docType": "receipt_pos",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [],
+        "preprocessingDebug": true,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": "grayscale"
+      },
+      {
+        "sample": "receipt_generalization/pos_006.jpg",
+        "qualityTags": [
+          "small_text",
+          "garbled_source",
+          "preprocessing_candidate"
+        ],
+        "docType": "receipt_pos",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [],
+        "preprocessingDebug": true,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": "upscale_1_5x"
+      },
+      {
+        "sample": "receipt_generalization/food_001.jpg",
+        "qualityTags": [
+          "skewed",
+          "shadow"
+        ],
+        "docType": "unknown",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export",
+          "doc_type_mismatch:unknown!=manifest:food_cafe_receipt"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "receipt_generalization/food_002.jpg",
+        "qualityTags": [
+          "low_contrast"
+        ],
+        "docType": "receipt_pos",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "receipt_generalization/food_003.jpg",
+        "qualityTags": [
+          "small_text"
+        ],
+        "docType": "receipt_pos",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "receipt_generalization/food_004.jpg",
+        "qualityTags": [
+          "small_text"
+        ],
+        "docType": "receipt_pos",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "receipt_generalization/food_005.jpg",
+        "qualityTags": [
+          "small_text"
+        ],
+        "docType": "receipt_pos",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "receipt_generalization/medical_001.jpg",
+        "qualityTags": [
+          "shadow",
+          "preprocessing_candidate"
+        ],
+        "docType": "medical_receipt",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [],
+        "preprocessingDebug": true,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": "clahe"
+      },
+      {
+        "sample": "receipt_generalization/medical_002.jpg",
+        "qualityTags": [
+          "small_text"
+        ],
+        "docType": "medical_receipt",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "receipt_generalization/medical_003.jpg",
+        "qualityTags": [
+          "long_receipt",
+          "small_text",
+          "preprocessing_candidate"
+        ],
+        "docType": "medical_receipt",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [],
+        "preprocessingDebug": true,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": "grayscale"
+      },
+      {
+        "sample": "receipt_generalization/medical_004.jpg",
+        "qualityTags": [],
+        "docType": "medical_receipt",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "receipt_generalization/card_001.jpg",
+        "qualityTags": [
+          "small_text",
+          "garbled_source"
+        ],
+        "docType": "receipt_card",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [],
+        "preprocessingDebug": true,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": "upscale_1_5x"
+      },
+      {
+        "sample": "receipt_generalization/card_002.jpg",
+        "qualityTags": [
+          "blurred",
+          "preprocessing_candidate"
+        ],
+        "docType": "receipt_card",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [],
+        "preprocessingDebug": true,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": "clahe"
+      },
+      {
+        "sample": "receipt_generalization/finance_001.jpg",
+        "qualityTags": [
+          "rotated"
+        ],
+        "docType": "bank_slip",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "receipt_generalization/finance_002.jpg",
+        "qualityTags": [
+          "skewed"
+        ],
+        "docType": "bank_slip",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "invoice_statement/1.jpg",
+        "qualityTags": [],
+        "docType": "invoice_statement",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": "18,098,750",
+        "date": null,
+        "tableRowsRowCount": "28",
+        "expectedRowCount": 28,
+        "warnings": [],
+        "preprocessingDebug": true,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "invoice_statement/2.pdf",
+        "qualityTags": [
+          "dense_table",
+          "rowcount_guard_required",
+          "preprocessing_blocked"
+        ],
+        "docType": "invoice_statement",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": "376,638,215",
+        "date": null,
+        "tableRowsRowCount": "2",
+        "expectedRowCount": 13,
+        "warnings": [],
+        "preprocessingDebug": true,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "invoice_statement/3.pdf",
+        "qualityTags": [
+          "pdf_low_resolution",
+          "preprocessing_candidate",
+          "rowcount_guard_required"
+        ],
+        "docType": "invoice_statement",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": "301,320",
+        "date": null,
+        "tableRowsRowCount": "1",
+        "expectedRowCount": 1,
+        "warnings": [],
+        "preprocessingDebug": true,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": "render_dpi_200_grayscale"
+      },
+      {
+        "sample": "invoice_statement/4.pdf",
+        "qualityTags": [
+          "ocr_garbled",
+          "party_block_garbled",
+          "address_garbled"
+        ],
+        "docType": "invoice_statement",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": 1,
+        "expectedRowCount": 1,
+        "warnings": [
+          "taxAmount=doc_level_pushdown",
+          "totalAmount=doc_level_pushdown"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "invoice_statement/5.pdf",
+        "qualityTags": [],
+        "docType": "invoice_statement",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": "3,351,298",
+        "date": null,
+        "tableRowsRowCount": "6",
+        "expectedRowCount": 6,
+        "warnings": [],
+        "preprocessingDebug": true,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "invoice_statement/6.pdf",
+        "qualityTags": [
+          "no_amount_summary",
+          "lot_serial_table",
+          "buyer_only_document",
+          "optional_supplier"
+        ],
+        "docType": "invoice_statement",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": 6,
+        "expectedRowCount": 6,
+        "warnings": [],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "invoice_statement/7.pdf",
+        "qualityTags": [
+          "address_tail_missing",
+          "no_amount_summary"
+        ],
+        "docType": "invoice_statement",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": 1,
+        "expectedRowCount": 1,
+        "warnings": [],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      }
+    ],
+    "debugAuto": [
+      {
+        "sample": "receipt_generalization/pos_001.jpg",
+        "qualityTags": [
+          "small_text",
+          "garbled_source"
+        ],
+        "docType": "receipt_pos",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "receipt_generalization/pos_002.jpg",
+        "qualityTags": [
+          "small_text"
+        ],
+        "docType": "receipt_pos",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "receipt_generalization/pos_003.jpg",
+        "qualityTags": [
+          "small_text"
+        ],
+        "docType": "medical_receipt",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export",
+          "doc_type_mismatch:medical_receipt!=manifest:pos_receipt",
+          "metadata_issue:manifest=pos_receipt, OCR/source indicates medical receipt"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "receipt_generalization/pos_004.jpg",
+        "qualityTags": [
+          "long_receipt",
+          "small_text"
+        ],
+        "docType": "receipt_pos",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "receipt_generalization/pos_005.jpg",
+        "qualityTags": [
+          "long_receipt",
+          "small_text"
+        ],
+        "docType": "receipt_pos",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [],
+        "preprocessingDebug": true,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": "grayscale"
+      },
+      {
+        "sample": "receipt_generalization/pos_006.jpg",
+        "qualityTags": [
+          "small_text",
+          "garbled_source",
+          "preprocessing_candidate"
+        ],
+        "docType": "receipt_pos",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [],
+        "preprocessingDebug": true,
+        "productionApplied": true,
+        "appliedVariant": "upscale_1_5x",
+        "selectedCandidate": "upscale_1_5x"
+      },
+      {
+        "sample": "receipt_generalization/food_001.jpg",
+        "qualityTags": [
+          "skewed",
+          "shadow"
+        ],
+        "docType": "unknown",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export",
+          "doc_type_mismatch:unknown!=manifest:food_cafe_receipt"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "receipt_generalization/food_002.jpg",
+        "qualityTags": [
+          "low_contrast"
+        ],
+        "docType": "receipt_pos",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "receipt_generalization/food_003.jpg",
+        "qualityTags": [
+          "small_text"
+        ],
+        "docType": "receipt_pos",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "receipt_generalization/food_004.jpg",
+        "qualityTags": [
+          "small_text"
+        ],
+        "docType": "receipt_pos",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "receipt_generalization/food_005.jpg",
+        "qualityTags": [
+          "small_text"
+        ],
+        "docType": "receipt_pos",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "receipt_generalization/medical_001.jpg",
+        "qualityTags": [
+          "shadow",
+          "preprocessing_candidate"
+        ],
+        "docType": "medical_receipt",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [],
+        "preprocessingDebug": true,
+        "productionApplied": true,
+        "appliedVariant": "clahe",
+        "selectedCandidate": "clahe"
+      },
+      {
+        "sample": "receipt_generalization/medical_002.jpg",
+        "qualityTags": [
+          "small_text"
+        ],
+        "docType": "medical_receipt",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "receipt_generalization/medical_003.jpg",
+        "qualityTags": [
+          "long_receipt",
+          "small_text",
+          "preprocessing_candidate"
+        ],
+        "docType": "medical_receipt",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [],
+        "preprocessingDebug": true,
+        "productionApplied": true,
+        "appliedVariant": "grayscale",
+        "selectedCandidate": "grayscale"
+      },
+      {
+        "sample": "receipt_generalization/medical_004.jpg",
+        "qualityTags": [],
+        "docType": "medical_receipt",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "receipt_generalization/card_001.jpg",
+        "qualityTags": [
+          "small_text",
+          "garbled_source"
+        ],
+        "docType": "receipt_card",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [],
+        "preprocessingDebug": true,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": "upscale_1_5x"
+      },
+      {
+        "sample": "receipt_generalization/card_002.jpg",
+        "qualityTags": [
+          "blurred",
+          "preprocessing_candidate"
+        ],
+        "docType": "receipt_card",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [],
+        "preprocessingDebug": true,
+        "productionApplied": true,
+        "appliedVariant": "clahe",
+        "selectedCandidate": "clahe"
+      },
+      {
+        "sample": "receipt_generalization/finance_001.jpg",
+        "qualityTags": [
+          "rotated"
+        ],
+        "docType": "bank_slip",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "receipt_generalization/finance_002.jpg",
+        "qualityTags": [
+          "skewed"
+        ],
+        "docType": "bank_slip",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": null,
+        "expectedRowCount": null,
+        "warnings": [
+          "cache_based_parser:no_live_runall_export"
+        ],
+        "preprocessingDebug": false,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "invoice_statement/1.jpg",
+        "qualityTags": [],
+        "docType": "invoice_statement",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": "18,098,750",
+        "date": null,
+        "tableRowsRowCount": "28",
+        "expectedRowCount": 28,
+        "warnings": [],
+        "preprocessingDebug": true,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "invoice_statement/2.pdf",
+        "qualityTags": [
+          "dense_table",
+          "rowcount_guard_required",
+          "preprocessing_blocked"
+        ],
+        "docType": "invoice_statement",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": "376,638,215",
+        "date": null,
+        "tableRowsRowCount": "2",
+        "expectedRowCount": 13,
+        "warnings": [],
+        "preprocessingDebug": true,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "invoice_statement/3.pdf",
+        "qualityTags": [
+          "pdf_low_resolution",
+          "preprocessing_candidate",
+          "rowcount_guard_required"
+        ],
+        "docType": "invoice_statement",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": "301,320",
+        "date": null,
+        "tableRowsRowCount": "1",
+        "expectedRowCount": 1,
+        "warnings": [],
+        "preprocessingDebug": true,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": "render_dpi_200_grayscale"
+      },
+      {
+        "sample": "invoice_statement/4.pdf",
+        "qualityTags": [
+          "ocr_garbled",
+          "party_block_garbled",
+          "address_garbled"
+        ],
+        "docType": "invoice_statement",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": 1,
+        "expectedRowCount": 1,
+        "warnings": [
+          "taxAmount=doc_level_pushdown",
+          "totalAmount=doc_level_pushdown"
+        ],
+        "preprocessingDebug": true,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "invoice_statement/5.pdf",
+        "qualityTags": [],
+        "docType": "invoice_statement",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": "3,351,298",
+        "date": null,
+        "tableRowsRowCount": "6",
+        "expectedRowCount": 6,
+        "warnings": [],
+        "preprocessingDebug": true,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "invoice_statement/6.pdf",
+        "qualityTags": [
+          "no_amount_summary",
+          "lot_serial_table",
+          "buyer_only_document",
+          "optional_supplier"
+        ],
+        "docType": "invoice_statement",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": 6,
+        "expectedRowCount": 6,
+        "warnings": [],
+        "preprocessingDebug": true,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      },
+      {
+        "sample": "invoice_statement/7.pdf",
+        "qualityTags": [
+          "address_tail_missing",
+          "no_amount_summary"
+        ],
+        "docType": "invoice_statement",
+        "merchantName": null,
+        "businessNo": null,
+        "totalAmount": null,
+        "date": null,
+        "tableRowsRowCount": 1,
+        "expectedRowCount": 1,
+        "warnings": [],
+        "preprocessingDebug": true,
+        "productionApplied": false,
+        "appliedVariant": null,
+        "selectedCandidate": null
+      }
+    ]
+  },
+  "comparisons": {
+    "defaultVsDebugOnly": [
+      {
+        "sample": "receipt_generalization/pos_001.jpg",
+        "same": true,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "receipt_generalization/pos_002.jpg",
+        "same": true,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "receipt_generalization/pos_003.jpg",
+        "same": true,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "receipt_generalization/pos_004.jpg",
+        "same": true,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "receipt_generalization/pos_005.jpg",
+        "same": true,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "receipt_generalization/pos_006.jpg",
+        "same": true,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "receipt_generalization/food_001.jpg",
+        "same": true,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "receipt_generalization/food_002.jpg",
+        "same": true,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "receipt_generalization/food_003.jpg",
+        "same": true,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "receipt_generalization/food_004.jpg",
+        "same": true,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "receipt_generalization/food_005.jpg",
+        "same": true,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "receipt_generalization/medical_001.jpg",
+        "same": true,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "receipt_generalization/medical_002.jpg",
+        "same": true,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "receipt_generalization/medical_003.jpg",
+        "same": true,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "receipt_generalization/medical_004.jpg",
+        "same": true,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "receipt_generalization/card_001.jpg",
+        "same": true,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "receipt_generalization/card_002.jpg",
+        "same": true,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "receipt_generalization/finance_001.jpg",
+        "same": true,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "receipt_generalization/finance_002.jpg",
+        "same": true,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "invoice_statement/1.jpg",
+        "same": true,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "invoice_statement/2.pdf",
+        "same": true,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "invoice_statement/3.pdf",
+        "same": true,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "invoice_statement/4.pdf",
+        "same": true,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "invoice_statement/5.pdf",
+        "same": true,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "invoice_statement/6.pdf",
+        "same": true,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "invoice_statement/7.pdf",
+        "same": true,
+        "verdict": "PASS"
+      }
+    ],
+    "defaultVsDebugAuto": [
+      {
+        "sample": "receipt_generalization/pos_001.jpg",
+        "same": true,
+        "differenceAllowed": false,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "receipt_generalization/pos_002.jpg",
+        "same": true,
+        "differenceAllowed": false,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "receipt_generalization/pos_003.jpg",
+        "same": true,
+        "differenceAllowed": false,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "receipt_generalization/pos_004.jpg",
+        "same": true,
+        "differenceAllowed": false,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "receipt_generalization/pos_005.jpg",
+        "same": true,
+        "differenceAllowed": false,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "receipt_generalization/pos_006.jpg",
+        "same": true,
+        "differenceAllowed": true,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "receipt_generalization/food_001.jpg",
+        "same": true,
+        "differenceAllowed": false,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "receipt_generalization/food_002.jpg",
+        "same": true,
+        "differenceAllowed": false,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "receipt_generalization/food_003.jpg",
+        "same": true,
+        "differenceAllowed": false,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "receipt_generalization/food_004.jpg",
+        "same": true,
+        "differenceAllowed": false,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "receipt_generalization/food_005.jpg",
+        "same": true,
+        "differenceAllowed": false,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "receipt_generalization/medical_001.jpg",
+        "same": true,
+        "differenceAllowed": true,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "receipt_generalization/medical_002.jpg",
+        "same": true,
+        "differenceAllowed": false,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "receipt_generalization/medical_003.jpg",
+        "same": true,
+        "differenceAllowed": true,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "receipt_generalization/medical_004.jpg",
+        "same": true,
+        "differenceAllowed": false,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "receipt_generalization/card_001.jpg",
+        "same": true,
+        "differenceAllowed": false,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "receipt_generalization/card_002.jpg",
+        "same": true,
+        "differenceAllowed": true,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "receipt_generalization/finance_001.jpg",
+        "same": true,
+        "differenceAllowed": false,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "receipt_generalization/finance_002.jpg",
+        "same": true,
+        "differenceAllowed": false,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "invoice_statement/1.jpg",
+        "same": true,
+        "differenceAllowed": false,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "invoice_statement/2.pdf",
+        "same": true,
+        "differenceAllowed": false,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "invoice_statement/3.pdf",
+        "same": true,
+        "differenceAllowed": false,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "invoice_statement/4.pdf",
+        "same": true,
+        "differenceAllowed": false,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "invoice_statement/5.pdf",
+        "same": true,
+        "differenceAllowed": false,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "invoice_statement/6.pdf",
+        "same": true,
+        "differenceAllowed": false,
+        "verdict": "PASS"
+      },
+      {
+        "sample": "invoice_statement/7.pdf",
+        "same": true,
+        "differenceAllowed": false,
+        "verdict": "PASS"
+      }
+    ]
+  },
+  "productionApplied": {
+    "expectedTargets": {
+      "receipt_generalization/card_002.jpg": "clahe",
+      "receipt_generalization/medical_001.jpg": "clahe",
+      "receipt_generalization/pos_006.jpg": "upscale_1_5x",
+      "receipt_generalization/medical_003.jpg": "grayscale"
+    },
+    "actualCount": 4,
+    "actualRows": [
+      {
+        "sample": "receipt_generalization/card_002.jpg",
+        "documentType": "card_receipt",
+        "qualityTags": [
+          "blurred",
+          "preprocessing_candidate"
+        ],
+        "selectedCandidate": "clahe",
+        "autoApplyAllowed": true,
+        "autoApplyReason": [
+          "all_guards_passed"
+        ],
+        "expectedAutoApply": true,
+        "productionApplied": true,
+        "ok": true
+      },
+      {
+        "sample": "receipt_generalization/medical_001.jpg",
+        "documentType": "medical_receipt",
+        "qualityTags": [
+          "shadow",
+          "preprocessing_candidate"
+        ],
+        "selectedCandidate": "clahe",
+        "autoApplyAllowed": true,
+        "autoApplyReason": [
+          "all_guards_passed"
+        ],
+        "expectedAutoApply": true,
+        "productionApplied": true,
+        "ok": true
+      },
+      {
+        "sample": "receipt_generalization/pos_006.jpg",
+        "documentType": "pos_receipt",
+        "qualityTags": [
+          "small_text",
+          "garbled_source",
+          "preprocessing_candidate"
+        ],
+        "selectedCandidate": "upscale_1_5x",
+        "autoApplyAllowed": true,
+        "autoApplyReason": [
+          "all_guards_passed"
+        ],
+        "expectedAutoApply": true,
+        "productionApplied": true,
+        "ok": true
+      },
+      {
+        "sample": "receipt_generalization/medical_003.jpg",
+        "documentType": "medical_receipt",
+        "qualityTags": [
+          "long_receipt",
+          "small_text",
+          "preprocessing_candidate"
+        ],
+        "selectedCandidate": "grayscale",
+        "autoApplyAllowed": true,
+        "autoApplyReason": [
+          "all_guards_passed"
+        ],
+        "expectedAutoApply": true,
+        "productionApplied": true,
+        "ok": true
+      }
+    ]
+  },
+  "blockedDefense": [
+    {
+      "sample": "receipt_generalization/card_001.jpg",
+      "documentType": "card_receipt",
+      "qualityTags": [
+        "small_text",
+        "garbled_source"
+      ],
+      "selectedCandidate": "upscale_1_5x",
+      "autoApplyAllowed": false,
+      "autoApplyReason": [
+        "no_preprocessing_candidate_tag"
+      ],
+      "expectedAutoApply": false,
+      "productionApplied": false,
+      "ok": true
+    },
+    {
+      "sample": "receipt_generalization/pos_005.jpg",
+      "documentType": "pos_receipt",
+      "qualityTags": [
+        "long_receipt",
+        "small_text"
+      ],
+      "selectedCandidate": "grayscale",
+      "autoApplyAllowed": false,
+      "autoApplyReason": [
+        "no_preprocessing_candidate_tag"
+      ],
+      "expectedAutoApply": false,
+      "productionApplied": false,
+      "ok": true
+    },
+    {
+      "sample": "invoice_statement/3.pdf",
+      "documentType": "invoice_statement",
+      "qualityTags": [
+        "pdf_low_resolution",
+        "preprocessing_candidate",
+        "rowcount_guard_required"
+      ],
+      "selectedCandidate": "render_dpi_200_grayscale",
+      "autoApplyAllowed": false,
+      "autoApplyReason": [
+        "invoice_excluded_from_auto_apply"
+      ],
+      "expectedAutoApply": false,
+      "productionApplied": false,
+      "ok": true
+    }
+  ],
+  "invoiceStatement": {
+    "defaultRows": [
+      {
+        "sample": "invoice_statement/1.jpg",
+        "rowCount": "28",
+        "expectedRowCount": 28,
+        "productionApplied": false,
+        "status": "mismatch"
+      },
+      {
+        "sample": "invoice_statement/2.pdf",
+        "rowCount": "2",
+        "expectedRowCount": 13,
+        "productionApplied": false,
+        "status": "mismatch"
+      },
+      {
+        "sample": "invoice_statement/3.pdf",
+        "rowCount": "1",
+        "expectedRowCount": 1,
+        "productionApplied": false,
+        "status": "mismatch"
+      },
+      {
+        "sample": "invoice_statement/4.pdf",
+        "rowCount": 1,
+        "expectedRowCount": 1,
+        "productionApplied": false,
+        "status": "exact"
+      },
+      {
+        "sample": "invoice_statement/5.pdf",
+        "rowCount": "6",
+        "expectedRowCount": 6,
+        "productionApplied": false,
+        "status": "mismatch"
+      },
+      {
+        "sample": "invoice_statement/6.pdf",
+        "rowCount": 6,
+        "expectedRowCount": 6,
+        "productionApplied": false,
+        "status": "exact"
+      },
+      {
+        "sample": "invoice_statement/7.pdf",
+        "rowCount": 1,
+        "expectedRowCount": 1,
+        "productionApplied": false,
+        "status": "exact"
+      }
+    ],
+    "debugAutoRows": [
+      {
+        "sample": "invoice_statement/1.jpg",
+        "rowCount": "28",
+        "expectedRowCount": 28,
+        "productionApplied": false,
+        "status": "mismatch"
+      },
+      {
+        "sample": "invoice_statement/2.pdf",
+        "rowCount": "2",
+        "expectedRowCount": 13,
+        "productionApplied": false,
+        "status": "mismatch"
+      },
+      {
+        "sample": "invoice_statement/3.pdf",
+        "rowCount": "1",
+        "expectedRowCount": 1,
+        "productionApplied": false,
+        "status": "mismatch"
+      },
+      {
+        "sample": "invoice_statement/4.pdf",
+        "rowCount": 1,
+        "expectedRowCount": 1,
+        "productionApplied": false,
+        "status": "exact"
+      },
+      {
+        "sample": "invoice_statement/5.pdf",
+        "rowCount": "6",
+        "expectedRowCount": 6,
+        "productionApplied": false,
+        "status": "mismatch"
+      },
+      {
+        "sample": "invoice_statement/6.pdf",
+        "rowCount": 6,
+        "expectedRowCount": 6,
+        "productionApplied": false,
+        "status": "exact"
+      },
+      {
+        "sample": "invoice_statement/7.pdf",
+        "rowCount": 1,
+        "expectedRowCount": 1,
+        "productionApplied": false,
+        "status": "exact"
+      }
+    ],
+    "baselineFromT20i": [
+      {
+        "filename": "1.jpg",
+        "expected": 28,
+        "actual": 28,
+        "status": "exact"
+      },
+      {
+        "filename": "2.pdf",
+        "expected": 13,
+        "actual": 13,
+        "status": "exact"
+      },
+      {
+        "filename": "3.pdf",
+        "expected": 1,
+        "actual": 1,
+        "status": "exact"
+      },
+      {
+        "filename": "4.pdf",
+        "expected": 1,
+        "actual": 1,
+        "status": "exact"
+      },
+      {
+        "filename": "5.pdf",
+        "expected": 6,
+        "actual": 6,
+        "status": "exact"
+      },
+      {
+        "filename": "6.pdf",
+        "expected": 6,
+        "actual": 6,
+        "status": "exact"
+      },
+      {
+        "filename": "7.pdf",
+        "expected": 1,
+        "actual": 1,
+        "status": "exact"
+      }
+    ]
+  },
+  "uiChecks": {
+    "debugCheckboxDefaultFalse": true,
+    "autoCheckboxDefaultFalse": true,
+    "fetchOcrSendsDebug": true,
+    "fetchOcrSendsAuto": true,
+    "fetchOcrSendsQualityTags": true,
+    "runOnePassesOptions": true,
+    "runAllPassesOptions": true,
+    "preprocessingDebugPanelRendered": true,
+    "preprocessingDebugPanelBranches": true,
+    "uploadWorkspaceNoPreprocessingOptions": true,
+    "runocrNoPreprocessingOptions": true,
+    "overall": true
+  },
+  "validation": {
+    "py_compile": "PASS: python -m py_compile scripts/verify_testworkspace_preprocessing_options_t22.py",
+    "validation_script": "PASS: python scripts/verify_testworkspace_preprocessing_options_t22.py",
+    "typecheck": "PASS: npm.cmd run typecheck",
+    "build": "PASS: npm.cmd run build (exit 0; existing ESLint setting message: nextVitals is not iterable)"
+  },
+  "snapshotFile": "mysuit-ocr/public/data/testsets/reports/T22_current_ocr_baseline_snapshot_20260517.json"
+}

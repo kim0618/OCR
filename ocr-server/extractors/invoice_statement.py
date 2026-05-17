@@ -155,6 +155,26 @@ _TABLE_HEADER_STRONG_RE = re.compile(
     r"\ud488\s*\ubaa9\s*\ucf54\s*\ub4dc",
     re.I,
 )
+# T-10-fix: extended header keyword set for colGuides path
+# Adds NO, \uc81c\ud488\ucf54\ub4dc(\uc81c+\ud488+\ucf54+\ub4dc), \uc81c\ud488\uba85, \ubc88\ud638, \ubcf4\ud5d8No, LOT No, LotNo to existing patterns
+_COLGUIDES_HEADER_EXTRA_KW_RE = re.compile(
+    r"\bNO\b|"
+    r"\uc81c\s*\ud488\s*\ucf54\s*\ub4dc|"          # \uc81c\ud488\ucf54\ub4dc
+    r"\uc81c\s*\ud488\s*\uba85|"                     # \uc81c\ud488\uba85
+    r"\ubc88\s*\ud638|"                               # \ubc88\ud638 (standalone)
+    r"\ud488\s*\uba85|\ud488\s*\ubaa9|\ud488\s*\ubaa9\s*\uba85|\uaddc\s*\uaca9|\uc218\s*\ub7c9|"
+    r"\ub2e8\s*\uc704|\ub2e8\s*\uac00|\uacf5\s*\uae09\s*\uac00\s*\uc561|\uacf5\s*\uae09\s*\uae08\s*\uc561|"
+    r"\uae08\s*\uc561|\uc138\s*\uc561|\ubd80\s*\uac00\s*\uc138|\ud569\s*\uacc4|\ube44\s*\uace0|"
+    r"\uc81c\s*\uc870\s*\ubc88\s*\ud638|\uc720\s*\ud6a8\s*\uae30\s*\uac04|\ubcf4\s*\ud5d8\s*\ucf54\s*\ub4dc|"
+    r"\ud488\s*\ubaa9\s*\ucf54\s*\ub4dc|"
+    r"\ubcf4\s*\ud5d8\s*No|LOT\s*No|LotNo|\ub85c\s*\ud2b8\s*\ubc88\s*\ud638",
+    re.I,
+)
+# T-10-fix: mixed-case product code pattern (e.g. ANDC300C) \u2014 strong item signal
+# Matches codes with >= 2 uppercase letters AND >= 2 digits (not pure-alpha or pure-digit)
+_COLGUIDES_MIXED_ITEM_CODE_RE = re.compile(
+    r"(?:[A-Z]{2,}[0-9]{2,}|[0-9]{2,}[A-Z]{2,})[A-Z0-9]*\b|(?:OP|0P)[-\s][A-Za-z0-9]{2,}",
+)
 _TABLE_STANDALONE_LABEL_RE = re.compile(
     r"^(?:\ud488\s*\uba85|\ud488\s*\ubaa9|\ud488\s*\ubaa9\s*\uba85|\uaddc\s*\uaca9|\uc218\s*\ub7c9|"
     r"\ub2e8\s*\uc704|\ub2e8\s*\uac00|\uacf5\s*\uae09\s*\uac00\s*\uc561|\uacf5\s*\uae09\s*\uae08\s*\uc561|"
@@ -918,6 +938,52 @@ def _has_strong_item_signal(text: str) -> bool:
         if not re.match(r"^\s*\d+\s*/", text):
             return True
     return False
+
+
+def _is_colguides_header_like_row(
+    text: str,
+    table_bounds: "dict[str, float] | None" = None,
+    row_y: float | None = None,
+) -> bool:
+    """T-10-fix: detect header-like rows in the colGuides extraction path.
+
+    Returns True when the row should be skipped as a table header.
+    Only applied in the template_colguides_expected_columns path (skip_contact_filter=True).
+
+    Logic:
+    1. Count header keywords using extended set (includes NO, 제품코드 missed by _is_table_header_row).
+    2. Check strong item signals — mixed-case product codes (ANDC300C) or long Korean itemName.
+       If strong signal found, do NOT skip.
+    3. Near top of tableBounds (<=20%) + 1 keyword → skip (header area).
+    4. Otherwise skip only when >= 2 keywords and no strong signals.
+    """
+    if not text or not text.strip():
+        return False
+
+    header_kw_count = len(_COLGUIDES_HEADER_EXTRA_KW_RE.findall(text))
+    if header_kw_count < 1:
+        return False
+
+    # Strong item signal: mixed alphanumeric product code (ANDC300C, OP-*)
+    if _COLGUIDES_MIXED_ITEM_CODE_RE.search(text):
+        return False
+
+    # Strong item signal: Korean text remaining after removing header keywords
+    # (indicates an actual itemName in the row, not just header labels)
+    text_without_kw = _COLGUIDES_HEADER_EXTRA_KW_RE.sub("", text)
+    remaining_korean = len(re.findall(r"[가-힣]", text_without_kw))
+    if remaining_korean >= 4:
+        return False
+
+    # Position-based: near top of table bounds + any keyword → header area
+    if table_bounds is not None and row_y is not None:
+        y_min = table_bounds.get("yMin", 0.0)
+        y_max = table_bounds.get("yMax", float("inf"))
+        table_h = y_max - y_min
+        if table_h > 0 and (row_y - y_min) / table_h <= 0.20:
+            return True
+
+    return header_kw_count >= 2
 
 
 def _find_op_anchor_lines(lines: list["OcrLine"]) -> list["OcrLine"]:
@@ -2352,6 +2418,14 @@ def _extract_items_using_boundaries(
                     {"reason": "header_or_contact", "text": text[:60], "y": round(row_y, 1)}
                 )
             continue
+        # T-10-fix: in colGuides path, also skip header-like rows where tableBounds covers the header area
+        # (e.g. 6.pdf where "NO 제품코드 …" appears as first row because tableBounds starts above the header)
+        if skip_contact_filter and _is_colguides_header_like_row(text, table_bounds, row_y):
+            if debug is not None:
+                (debug.setdefault("rejectedRows", [])).append(
+                    {"reason": "colguides_header_like", "text": text[:60], "y": round(row_y, 1)}
+                )
+            continue
         # T-6j-fix: pre-compute strong item signal for colGuides bypass
         _signal = skip_contact_filter and _has_strong_item_signal(text)
         if _is_business_contact_line(text) and not _signal:
@@ -2459,8 +2533,80 @@ def _extract_items_using_boundaries(
     if debug is not None:
         debug["rowCandidateCountBeforeFilter"] = _cand_before
         debug["rowCandidateCountAfterFilter"] = _cand_after
+        # T-10-fix: expose header-skip stats for colGuides path
+        _hdr_skipped = [r for r in debug.get("rejectedRows", []) if r.get("reason") == "colguides_header_like"]
+        if _hdr_skipped:
+            debug["headerRowsSkippedCount"] = len(_hdr_skipped)
+            debug["headerRowsSkippedSamples"] = [r["text"] for r in _hdr_skipped]
+            debug["headerSkipAppliedSource"] = "template_colguides_expected_columns"
 
     return items
+
+
+# ────────────────────────────────────────────────────────────────────────────
+# T-Template-Grid-1: variable grid (가변 그리드) helpers
+# 가변 그리드는 사용자가 첫 행만 박스로 지정하고 colGuides + stopKeywords로
+# 아래 행을 자동 감지하는 모드다. 박스 y 범위를 페이지 하단까지 확장하고,
+# stopKeyword를 만나면 그 직전까지만 품목 후보로 사용한다.
+# 고정 그리드(mode="repeat") 또는 mode/stopKeywords 미지정 시 기존 동작 유지.
+# ────────────────────────────────────────────────────────────────────────────
+def _is_variable_grid_bounds(table_bounds: Any) -> bool:
+    """가변 그리드 확장 후보 판별.
+
+    True 조건 (하나 이상):
+      - table_bounds["mode"]가 "auto" 또는 "variable" 계열
+      - table_bounds["stopKeywords"]에 비어있지 않은 문자열이 하나 이상 존재
+    """
+    if not table_bounds or not isinstance(table_bounds, dict):
+        return False
+    mode = str(table_bounds.get("mode") or "").strip().lower()
+    if mode in ("auto", "variable"):
+        return True
+    stops = table_bounds.get("stopKeywords") or []
+    if isinstance(stops, list) and any(str(s).strip() for s in stops):
+        return True
+    return False
+
+
+def _find_stop_keyword_y(
+    lines: list["OcrLine"],
+    stop_keywords: list[str],
+    y_min: float,
+    x_min: float,
+    x_max: float,
+) -> tuple[float | None, str | None]:
+    """y_min 이상, x_min~x_max 범위 내에서 stopKeyword를 포함하는 가장 작은 y를 찾는다.
+
+    매칭은 공백 제거 후 substring 검사 (예: "소 계"도 "소계"로 매칭).
+    Returns (stop_y, matched_keyword) — 없으면 (None, None).
+    """
+    if not stop_keywords:
+        return None, None
+    norm_stops = [str(k).strip() for k in stop_keywords if str(k).strip()]
+    if not norm_stops:
+        return None, None
+    stop_compacts = [("".join(k.split()), k) for k in norm_stops]
+
+    best_y: float | None = None
+    best_keyword: str | None = None
+    for l in lines:
+        if l.cy < y_min:
+            continue
+        if not (x_min <= l.cx <= x_max):
+            continue
+        text = (l.text or "").strip()
+        if not text:
+            continue
+        text_compact = "".join(text.split())
+        if not text_compact:
+            continue
+        for k_compact, k_orig in stop_compacts:
+            if k_compact and k_compact in text_compact:
+                if best_y is None or l.cy < best_y:
+                    best_y = l.cy
+                    best_keyword = k_orig
+                break
+    return best_y, best_keyword
 
 
 def _table_items_with_expected_columns(
@@ -2503,10 +2649,41 @@ def _table_items_with_expected_columns(
 
     # Filter lines to table_bounds if provided
     if table_bounds:
+        # T-Template-Grid-1: 가변 그리드일 때 y_max를 페이지 하단(0.98)까지 확장 +
+        # stopKeywords로 중단 위치 결정. 고정 그리드(mode != "auto" & stopKeywords 없음)는
+        # 기존 동작을 그대로 유지하여 invoice_statement 회귀 방지.
+        is_var = _is_variable_grid_bounds(table_bounds)
         y_min_b = table_bounds.get("yMin", 0.0)
-        y_max_b = table_bounds.get("yMax", page_h)
+        y_max_b_orig = table_bounds.get("yMax", page_h)
         x_min_b = table_bounds.get("xMin", 0.0)
         x_max_b = table_bounds.get("xMax", page_w)
+
+        if is_var:
+            y_max_extended = page_h * 0.98
+            stop_keywords = table_bounds.get("stopKeywords") or []
+            stop_y, stop_keyword_hit = _find_stop_keyword_y(
+                lines, stop_keywords, y_min_b, x_min_b, x_max_b,
+            )
+            if stop_y is not None:
+                # stopKeyword 라인 자체는 품목에서 제외 (그 직전까지만 스캔)
+                y_max_b = min(y_max_extended, stop_y - 1.0)
+            else:
+                y_max_b = y_max_extended
+            # caller dict 변경 방지: 복사 후 yMax 갱신
+            # downstream 함수(_extract_items_using_boundaries 등)도 갱신된 yMax 사용
+            table_bounds = dict(table_bounds)
+            table_bounds["yMax"] = y_max_b
+            if debug is not None:
+                debug["variableGridExpanded"] = True
+                debug["variableGridStopKeywordHit"] = stop_keyword_hit is not None
+                debug["variableGridStopKeyword"] = stop_keyword_hit
+                debug["variableGridScanYMax"] = round(y_max_b, 1)
+                debug["variableGridOriginalYMax"] = round(y_max_b_orig, 1)
+        else:
+            y_max_b = y_max_b_orig
+            if debug is not None:
+                debug["variableGridExpanded"] = False
+
         scope_lines = [
             l for l in lines
             if y_min_b <= l.cy <= y_max_b and x_min_b <= l.cx <= x_max_b
@@ -5830,6 +6007,10 @@ def _detect_table(
         "rowCandidateCountBeforeFilter": header_debug.get("rowCandidateCountBeforeFilter"),
         "rowCandidateCountAfterFilter": header_debug.get("rowCandidateCountAfterFilter"),
         "colGuidesRejectedRows": header_debug.get("colGuidesRejectedRows", []),
+        # T-10-fix: header-like row skip debug
+        "headerRowsSkippedCount": header_debug.get("headerRowsSkippedCount", 0),
+        "headerRowsSkippedSamples": header_debug.get("headerRowsSkippedSamples", []),
+        "headerSkipAppliedSource": header_debug.get("headerSkipAppliedSource", ""),
         # T-6n: OP anchor reconstruction debug
         "opAnchorReconstructionAttempted": header_debug.get("opAnchorReconstructionAttempted", False),
         "opAnchorCount": header_debug.get("opAnchorCount"),
@@ -5839,6 +6020,12 @@ def _detect_table(
         "previousExtractionSource": header_debug.get("previousExtractionSource"),
         "previousRowCount": header_debug.get("previousRowCount"),
         "reconstructedRowCount": header_debug.get("reconstructedRowCount"),
+        # T-Template-Grid-1: variable grid debug fields
+        "variableGridExpanded": header_debug.get("variableGridExpanded"),
+        "variableGridStopKeywordHit": header_debug.get("variableGridStopKeywordHit"),
+        "variableGridStopKeyword": header_debug.get("variableGridStopKeyword"),
+        "variableGridScanYMax": header_debug.get("variableGridScanYMax"),
+        "variableGridOriginalYMax": header_debug.get("variableGridOriginalYMax"),
     }
 
     return {
@@ -6528,12 +6715,22 @@ def extract_invoice_statement_fields(
     canonical["tableMeta"]["columnGuidesUsedAttempted"] = tdbg.get("columnGuidesUsedAttempted", False)
     canonical["tableMeta"]["rowCandidateCountBeforeFilter"] = tdbg.get("rowCandidateCountBeforeFilter")
     canonical["tableMeta"]["rowCandidateCountAfterFilter"] = tdbg.get("rowCandidateCountAfterFilter")
+    # T-10-fix: header-skip debug in tableMeta
+    canonical["tableMeta"]["headerRowsSkippedCount"] = tdbg.get("headerRowsSkippedCount", 0)
+    canonical["tableMeta"]["headerRowsSkippedSamples"] = tdbg.get("headerRowsSkippedSamples", [])
+    canonical["tableMeta"]["headerSkipAppliedSource"] = tdbg.get("headerSkipAppliedSource", "")
     # T-6n: OP anchor reconstruction debug in tableMeta
     canonical["tableMeta"]["opAnchorReconstructionAttempted"] = tdbg.get("opAnchorReconstructionAttempted", False)
     canonical["tableMeta"]["opAnchorCount"] = tdbg.get("opAnchorCount")
     canonical["tableMeta"]["opAnchorRowsBuilt"] = tdbg.get("opAnchorRowsBuilt")
     canonical["tableMeta"]["reconstructedRowCount"] = tdbg.get("reconstructedRowCount")
     canonical["tableMeta"]["previousRowCount"] = tdbg.get("previousRowCount")
+    # T-Template-Grid-1: variable grid debug in tableMeta
+    canonical["tableMeta"]["variableGridExpanded"] = tdbg.get("variableGridExpanded")
+    canonical["tableMeta"]["variableGridStopKeywordHit"] = tdbg.get("variableGridStopKeywordHit")
+    canonical["tableMeta"]["variableGridStopKeyword"] = tdbg.get("variableGridStopKeyword")
+    canonical["tableMeta"]["variableGridScanYMax"] = tdbg.get("variableGridScanYMax")
+    canonical["tableMeta"]["variableGridOriginalYMax"] = tdbg.get("variableGridOriginalYMax")
 
     # T-7a: For single-row tables, push document-level amounts into the row
     # when the row-level column is empty AND the expected columns include it.

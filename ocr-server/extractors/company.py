@@ -49,7 +49,7 @@ def _is_bad_company_candidate(text: str, row_text: str = "") -> bool:
         return True
     if re.search(r'일시불|일시물|할부|회원용|고객용|취소용|무서명|신용구매|매입사|카드종류', compact, re.I):
         return True
-    if re.search(r'유통단지|호계동|오전동|고천동|동안구|의왕시|안양시|경기도|경기', compact):
+    if re.search(r'유통단지|호계동|오전동|고천동|동안구|의왕시|안양시|경기도', compact):
         return True
     if re.search(r'다른경우|실제와|가맹점주소가|전기작업|작업지시|직원|식지|재발행|안내문|설명문구|예시문구|작성문구', compact, re.I):
         return True
@@ -209,11 +209,16 @@ def _company_candidate_texts(row_text: str) -> list[tuple[str, bool]]:
     candidates: list[tuple[str, bool]] = []
     compact_text = re.sub(r'\s+', '', text)
     normalized_compact = _normalize_company_candidate(compact_text)
+    # 영문 단독 브랜드명 허용: PARIS BAGUETTE, STARBUCKS 등 suffix 없는 국제 브랜드
+    english_brand_only = bool(
+        re.fullmatch(r'[A-Za-z]+', compact_text)
+        and not re.search(r'체크카드|신용매출|귀하|카드|van|tid|cat|ibk|nh|cashier|server|station|table|order', compact_text, re.I)
+    )
     if (
         3 <= len(compact_text) <= 18
         and not re.search(r'\d', compact_text)
         and not _FIELD_NOISE_RE.search(compact_text)
-        and _COMPANY_CONTEXT_HINT_RE.search(normalized_compact)
+        and (_COMPANY_CONTEXT_HINT_RE.search(normalized_compact) or english_brand_only)
         and not re.search(r'체크카드|신용매출|귀하|카드|^no\.?', compact_text, re.I)
     ):
         candidates.append((text, False))
@@ -233,8 +238,17 @@ def _company_candidate_texts(row_text: str) -> list[tuple[str, bool]]:
 
     for token in re.findall(r'[가-힣A-Za-z0-9()]{2,}', text):
         normalized_token = _normalize_company_candidate(token)
-        if has_info or _COMPANY_CONTEXT_HINT_RE.search(normalized_token):
+        if has_info or _COMPANY_CONTEXT_HINT_RE.search(normalized_token) or _COMPANY_SUFFIX_HINT_RE.search(normalized_token):
             candidates.append((token, has_info))
+        else:
+            # T-19a: 한글 뒤에 괄호/숫자가 붙은 복합 토큰(예: 상호명(영문)123)에서
+            # 한글 접두어만 분리하여 company hint 체크 — 상호 suffix 감지 가능
+            kr_prefix_m = re.match(r'^([가-힣]{3,})', token)
+            if kr_prefix_m:
+                kr_prefix = kr_prefix_m.group(1)
+                kr_norm = _normalize_company_candidate(kr_prefix)
+                if _COMPANY_CONTEXT_HINT_RE.search(kr_norm) or _COMPANY_SUFFIX_HINT_RE.search(kr_norm):
+                    candidates.append((kr_prefix, has_info))
 
     return candidates
 
@@ -269,7 +283,11 @@ def _rescue_company_name(
                 or _extract_phone_candidate(adjacent_blob)
                 or _extract_address_fragment(adjacent_blob)
             )
-            near_biz_context = bool(_extract_biz_number(f"{prev_text} {row_text} {next_text}"))
+            # near_biz_context: ±2 행 윈도우로 확장 (영수증 상단 브랜드명과 사업자번호 행이 2행 이상 떨어질 수 있음)
+            ctx_start = max(0, idx - 2)
+            ctx_end = min(len(rows), idx + 3)
+            ctx_blob = " ".join(_row_text(rows[i]) for i in range(ctx_start, ctx_end))
+            near_biz_context = bool(_extract_biz_number(ctx_blob))
             for candidate, near_info in _company_candidate_texts(row_text):
                 normalized = _normalize_company_candidate(candidate)
                 if representative and normalized == re.sub(r'\s+', '', representative):

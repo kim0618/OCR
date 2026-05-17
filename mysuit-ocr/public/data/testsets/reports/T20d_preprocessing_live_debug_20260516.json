@@ -1,0 +1,190 @@
+{
+  "task": "T-20d",
+  "generatedAt": "2026-05-16T20:14:39.900469",
+  "mode": "debug_preprocessing_live_integration",
+  "verificationSummary": {
+    "main_py_flag": true,
+    "policy_functions": true,
+    "debug_false_gate": true,
+    "debug_true_compare": true,
+    "invoice_baseline": true,
+    "overall": "PASS"
+  },
+  "checks": {
+    "main_py_flag": {
+      "ok": true,
+      "note": "param=OK block=OK helper=OK"
+    },
+    "policy_functions": {
+      "ok": true,
+      "note": "card_002 qualityTags=OK (['blurred']); invoice/3.pdf qualityTags=OK (['pdf_low_resolution', 'preprocessing_candidate', 'rowcount_guard_required']); invoice/3.pdf expectedRowCount=OK (1); invoice/2.pdf expectedRowCount=OK (13); compute_receipt_improvements (better)=OK; compute_receipt_improvements (worse)=OK; compute_invoice_improvements (recovered)=OK; apply_image_preprocessing=importable"
+    },
+    "debug_false": {
+      "ok": true,
+      "note": "conditional_gate=OK default_false=OK"
+    },
+    "debug_true_compare": {
+      "ok": true,
+      "results": [
+        {
+          "sample": "receipt_generalization/card_002.jpg",
+          "documentType": "card_receipt",
+          "qualityTags": [
+            "blurred"
+          ],
+          "candidates": [
+            "clahe",
+            "upscale_1_5x",
+            "clahe_plus_sharpen"
+          ],
+          "selectedCandidate": "clahe",
+          "wouldApplyInDebug": true,
+          "status": "PASS",
+          "expected": "candidate_accept"
+        },
+        {
+          "sample": "receipt_generalization/medical_001.jpg",
+          "documentType": "medical_receipt",
+          "qualityTags": [
+            "shadow"
+          ],
+          "candidates": [
+            "clahe",
+            "clahe_plus_sharpen"
+          ],
+          "selectedCandidate": "clahe",
+          "wouldApplyInDebug": true,
+          "status": "PASS",
+          "expected": "candidate_accept"
+        },
+        {
+          "sample": "receipt_generalization/pos_006.jpg",
+          "documentType": "pos_receipt",
+          "qualityTags": [
+            "small_text",
+            "garbled_source",
+            "preprocessing_candidate"
+          ],
+          "candidates": [
+            "upscale_1_5x",
+            "clahe_plus_sharpen"
+          ],
+          "selectedCandidate": "upscale_1_5x",
+          "wouldApplyInDebug": true,
+          "status": "PASS",
+          "expected": "candidate_accept"
+        },
+        {
+          "sample": "receipt_generalization/medical_003.jpg",
+          "documentType": "medical_receipt",
+          "qualityTags": [
+            "long_receipt",
+            "small_text"
+          ],
+          "candidates": [
+            "grayscale",
+            "clahe",
+            "clahe_plus_sharpen"
+          ],
+          "selectedCandidate": "grayscale",
+          "wouldApplyInDebug": true,
+          "status": "PASS",
+          "expected": "candidate_accept"
+        },
+        {
+          "sample": "invoice_statement/3.pdf",
+          "documentType": "invoice_statement",
+          "qualityTags": [
+            "pdf_low_resolution",
+            "preprocessing_candidate",
+            "rowcount_guard_required"
+          ],
+          "candidates": [
+            "render_dpi_200_grayscale"
+          ],
+          "selectedCandidate": "render_dpi_200_grayscale",
+          "wouldApplyInDebug": true,
+          "status": "PASS",
+          "expected": "candidate_accept"
+        },
+        {
+          "sample": "invoice_statement/2.pdf",
+          "documentType": "invoice_statement",
+          "qualityTags": [
+            "dense_table",
+            "rowcount_guard_required",
+            "preprocessing_blocked"
+          ],
+          "candidates": [],
+          "selectedCandidate": null,
+          "wouldApplyInDebug": false,
+          "status": "PASS",
+          "expected": "blocked_or_no_candidates"
+        },
+        {
+          "sample": "receipt_generalization/card_001.jpg",
+          "documentType": "card_receipt",
+          "qualityTags": [
+            "small_text",
+            "garbled_source"
+          ],
+          "candidates": [
+            "upscale_1_5x",
+            "clahe_plus_sharpen"
+          ],
+          "selectedCandidate": "upscale_1_5x",
+          "wouldApplyInDebug": true,
+          "status": "PASS",
+          "expected": "any"
+        }
+      ]
+    },
+    "invoice_baseline": {
+      "ok": true,
+      "rows": [
+        {
+          "filename": "1.jpg",
+          "expected": 28,
+          "actual": 28,
+          "status": "exact"
+        },
+        {
+          "filename": "2.pdf",
+          "expected": 13,
+          "actual": 13,
+          "status": "exact"
+        },
+        {
+          "filename": "3.pdf",
+          "expected": 1,
+          "actual": 1,
+          "status": "exact"
+        },
+        {
+          "filename": "4.pdf",
+          "expected": 1,
+          "actual": 1,
+          "status": "exact"
+        },
+        {
+          "filename": "5.pdf",
+          "expected": 6,
+          "actual": 6,
+          "status": "exact"
+        },
+        {
+          "filename": "6.pdf",
+          "expected": 6,
+          "actual": 6,
+          "status": "exact"
+        },
+        {
+          "filename": "7.pdf",
+          "expected": 1,
+          "actual": 1,
+          "status": "exact"
+        }
+      ]
+    }
+  }
+}

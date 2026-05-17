@@ -1,0 +1,165 @@
+{
+  "task": "T-23",
+  "title": "OCR full stabilization final summary",
+  "date": "2026-05-17",
+  "status": "completed",
+  "scope": "ocr_full_stabilization_final_baseline_before_db_work",
+  "createdFiles": [
+    "mysuit-ocr/public/data/testsets/reports/T23_ocr_full_stabilization_final_summary_20260517.md",
+    "mysuit-ocr/public/data/testsets/reports/T23_ocr_full_stabilization_final_summary_20260517.json"
+  ],
+  "overallConclusion": [
+    "invoice_statement stabilized",
+    "baseline receipt improvements completed",
+    "synthetic position improvements completed",
+    "preprocessing debug and limited auto-apply ready",
+    "TestWorkspace validation UI connected",
+    "RunOCR auto-apply deferred",
+    "ready to move to DB work"
+  ],
+  "invoiceStatement": {
+    "rowCountExact": "7/7",
+    "templateRunOcrE2E": "7/7 exact",
+    "samples": [
+      { "sample": "1.jpg", "expected": 28, "actual": 28, "status": "exact" },
+      { "sample": "2.pdf", "expected": 13, "actual": 13, "status": "exact" },
+      { "sample": "3.pdf", "expected": 1, "actual": 1, "status": "exact" },
+      { "sample": "4.pdf", "expected": 1, "actual": 1, "status": "exact" },
+      { "sample": "5.pdf", "expected": 6, "actual": 6, "status": "exact" },
+      { "sample": "6.pdf", "expected": 6, "actual": 6, "status": "exact" },
+      { "sample": "7.pdf", "expected": 1, "actual": 1, "status": "exact" }
+    ],
+    "stabilizedFeatures": [
+      "OP-anchor reconstruction",
+      "multiline layout mapping",
+      "colGuides header skip",
+      "warning policy retained"
+    ]
+  },
+  "baselineReceipt": {
+    "summary": [
+      "T-15/T-16 pos/card/food/medical missing-field and classification improvements completed",
+      "finance_slip selected count cleaned from 1 to 0",
+      "suppression policy aligned",
+      "OCR source missing/garbled cases separated as input OCR quality limits",
+      "metadata mismatch recorded as baseline issue"
+    ]
+  },
+  "t19SyntheticPosition": {
+    "metrics": [
+      { "metric": "docType match rate", "before": "77.2%", "after": "87.7%", "delta": "+10.5%p" },
+      { "metric": "core field fill rate", "before": "87.6%", "after": "94.6%", "delta": "+7.0%p" },
+      { "metric": "classification_mismatch", "before": 9, "after": 3, "delta": -6 },
+      { "metric": "parser_missed_source_exists", "before": 4, "after": 0, "delta": -4 },
+      { "metric": "invoice_statement rowCount exact", "before": "7/7", "after": "7/7", "delta": "0" }
+    ],
+    "finalSnapshotSummary": {
+      "totalSamples": 57,
+      "selected": 48,
+      "suppressed": 7,
+      "unknown": 0,
+      "error": 0,
+      "coreFieldGtMatchRate": "99.1%",
+      "rowCountExactRate": "100.0%"
+    }
+  },
+  "preprocessingPolicy": {
+    "debugPreprocessing": {
+      "default": false,
+      "policy": "debug comparison only"
+    },
+    "autoApplyPreprocessing": {
+      "default": false,
+      "policy": "receipt limited explicit opt-in"
+    },
+    "invoice_statement": {
+      "autoApply": false,
+      "policy": "permanently excluded from auto-apply"
+    },
+    "receipt": {
+      "policy": "requires preprocessing_candidate and guard pass"
+    },
+    "serverDefault": {
+      "autoApplyPreprocessing": false
+    },
+    "guards": [
+      "preprocessing_blocked blocks apply",
+      "core field loss blocks apply",
+      "docType degradation blocks apply",
+      "false positive amount blocks apply",
+      "improvement delta > 0 required"
+    ]
+  },
+  "productionAppliedTargets": [
+    { "sample": "card_002", "variant": "clahe", "reason": "core field fill improved, guard passed" },
+    { "sample": "medical_001", "variant": "clahe", "reason": "merchantName improved, guard passed" },
+    { "sample": "pos_006", "variant": "upscale_1_5x", "reason": "totalAmount improved, guard passed" },
+    { "sample": "medical_003", "variant": "grayscale", "reason": "merchantName improved, guard passed" }
+  ],
+  "t21t22UiValidation": {
+    "testWorkspace": "preprocessing Debug / auto correction checkboxes connected, defaults false",
+    "runOcr": "preprocessing options not passed, existing behavior retained",
+    "uploadWorkspace": "preprocessing options not passed, existing behavior retained",
+    "t22Snapshot": "mysuit-ocr/public/data/testsets/reports/T22_current_ocr_baseline_snapshot_20260517.json",
+    "validatedSamples": 26,
+    "regressionCount": 0,
+    "productionAppliedCount": 4,
+    "invoiceProductionAppliedCount": 0,
+    "invoiceRowCountExact": "7/7"
+  },
+  "baselineFiles": {
+    "t17SummaryMd": "mysuit-ocr/public/data/testsets/reports/T17_ocr_current_baseline_stabilization_summary_20260516.md",
+    "t17SummaryJson": "mysuit-ocr/public/data/testsets/reports/T17_ocr_current_baseline_stabilization_summary_20260516.json",
+    "t19FinalSnapshot": "mysuit-ocr/public/data/testsets/reports/T19_final_runall_snapshot_20260516.json",
+    "t19ImprovementAuditMd": "mysuit-ocr/public/data/testsets/reports/T19_final_synthetic_position_improvement_audit_20260516.md",
+    "t20FinalSummaryMd": "mysuit-ocr/public/data/testsets/reports/T20_final_preprocessing_series_summary_20260517.md",
+    "t22ValidationMd": "mysuit-ocr/public/data/testsets/reports/T22_testworkspace_preprocessing_options_validation_20260517.md",
+    "t22CurrentBaselineSnapshot": "mysuit-ocr/public/data/testsets/reports/T22_current_ocr_baseline_snapshot_20260517.json"
+  },
+  "remainingIssues": [
+    "pos_003 metadata mismatch",
+    "google/6 locked mismatch",
+    "OCR source missing/garbled cases",
+    "finance_slip extractor long-term candidate",
+    "tax_invoice samples missing",
+    "transaction_statement preliminary type",
+    "invoice_statement template path preprocessingDebug wiring long-term candidate",
+    "RunOCR Phase 3 auto-apply deferred"
+  ],
+  "doNotBreakCriteria": [
+    "invoice_statement rowCount 7/7 exact",
+    "invoice_statement excluded from autoApplyPreprocessing",
+    "receipt productionApplied limited to 4 targets",
+    "TestWorkspace option defaults false",
+    "RunOCR existing behavior retained",
+    "UploadWorkspace existing behavior retained",
+    "server autoApplyPreprocessing default false",
+    "preprocessing_candidate tag required guard retained",
+    "preprocessing_blocked block retained"
+  ],
+  "nextCandidates": [
+    "DB-2 PostgreSQL schema.sql",
+    "RunOCR Phase 3 auto preprocessing design",
+    "collect more receipt samples and reassess guards",
+    "collect tax_invoice samples and split parser path",
+    "finance_slip extractor long-term work",
+    "metadata mismatch cleanup"
+  ],
+  "latestVerification": {
+    "t22Validation": "PASS",
+    "t22Overall": "PASS",
+    "t22RegressionCount": 0,
+    "t22ProductionAppliedCount": 4,
+    "t22InvoiceProductionAppliedCount": 0,
+    "t22InvoiceRowCountExact": "7/7",
+    "typecheck": "PASS: npm.cmd run typecheck",
+    "build": "PASS: npm.cmd run build",
+    "knownMessage": "nextVitals is not iterable, exit code 0"
+  },
+  "finalDecision": {
+    "ocrStabilization": "closed",
+    "baseline": "T22_current_ocr_baseline_snapshot_20260517.json",
+    "moveToDbWork": true,
+    "runOcrPhase3AutoApply": "deferred"
+  }
+}

@@ -1,0 +1,270 @@
+{
+  "doc": "DB-PREP-1 DB-2 Schema 결정사항 체크리스트",
+  "date": "2026-05-17",
+  "dbEngine": "PostgreSQL 14+",
+  "extensions": ["pgcrypto"],
+  "tableCount": 14,
+
+  "prioritySummary": {
+    "P0": ["password_hash", "auth_token"],
+    "P1": ["primary_key", "site_model", "file_storage", "template_normalization", "region_coordinates", "history_units", "ocr_result_scope", "ground_truth_structure"],
+    "P2": ["preprocessing_debug", "table_rows_storage", "soft_delete", "audit_logs"],
+    "P3": ["enum_strategy"]
+  },
+
+  "decisions": [
+    {
+      "id": 1,
+      "title": "비밀번호 저장 방식",
+      "priority": "P0",
+      "currentState": "users.json 평문 (user_pw: '1234')",
+      "options": {
+        "A": "bcrypt cost=12 — passlib[bcrypt]",
+        "B": "argon2 — argon2-cffi",
+        "C": "SHA-256 단순 해시 (비권장)"
+      },
+      "recommendation": "A",
+      "reason": "bcrypt는 생태계 성숙, pgcrypto crypt() 지원, 60자 고정 길이",
+      "db2Column": "users.password_hash VARCHAR(60) NOT NULL",
+      "migration": "첫 로그인 시 평문 검증 후 bcrypt 교체 또는 직접 생성"
+    },
+    {
+      "id": 2,
+      "title": "인증/토큰 방식",
+      "priority": "P0",
+      "currentState": "uuid4 생성 후 localStorage 저장, 서버 미저장, 검증/만료 불가",
+      "options": {
+        "A": "JWT access(15분) + refresh token(7일)",
+        "B": "session UUID + sessions 테이블 + HttpOnly cookie",
+        "C": "현재 방식 유지 (uuid + localStorage)"
+      },
+      "recommendation": "B",
+      "reason": "FastAPI 단일 프로세스 환경. sessions 테이블로 무효화 가능. 단기: uuid 유지 + sessions 검증 추가",
+      "db2Table": "sessions(session_id UUID PK, user_id FK, created_at, expires_at, revoked_at)"
+    },
+    {
+      "id": 3,
+      "title": "Primary Key 방식",
+      "priority": "P1",
+      "currentState": "UUID 기반 문자열 (TPL-95328E52, OCR-A1B2C3D4)",
+      "options": {
+        "A": "UUID v4 gen_random_uuid()",
+        "B": "BIGSERIAL",
+        "C": "UUID v7 (시간순)"
+      },
+      "recommendation": "A",
+      "reason": "기존 시스템과 호환, pgcrypto 표준 확장",
+      "db2": "CREATE EXTENSION IF NOT EXISTS pgcrypto; DEFAULT gen_random_uuid()"
+    },
+    {
+      "id": 4,
+      "title": "site/workspace 모델",
+      "priority": "P1",
+      "currentState": "Sidebar.tsx 드롭다운만, 비기능, comp_cd='MYSUIT' 단일",
+      "options": {
+        "A": "단일 기본 site 자동 생성",
+        "B": "독립 sites + site_members (role 포함)",
+        "C": "org > site > user 3단계"
+      },
+      "recommendation": "B",
+      "reason": "template/run FK site_id로 연결 → 멀티 테넌시 확장 쉬움. 처음엔 site 1개로 시작",
+      "db2Tables": ["sites(site_id, site_nm, comp_cd, created_at)", "site_members(site_id, user_id, role, joined_at) PK(site_id, user_id)"],
+      "roleValues": ["owner", "admin", "member", "viewer"]
+    },
+    {
+      "id": 5,
+      "title": "파일 저장 방식",
+      "priority": "P1",
+      "currentState": "base64 localStorage 저장 (5MB 한계, 자동 제거)",
+      "options": {
+        "A": "DB bytea 저장",
+        "B": "local filesystem + path 저장",
+        "C": "storage_key 추상화 (local://, s3://, azure://)"
+      },
+      "recommendation": "C",
+      "reason": "현재는 local, 향후 클라우드 전환 가능한 추상화",
+      "db2Column": "ocr_run_files.storage_key VARCHAR(512) NOT NULL"
+    },
+    {
+      "id": 6,
+      "title": "template 저장 정규화 수준",
+      "priority": "P1",
+      "currentState": "template_json JSON blob 전체 저장",
+      "options": {
+        "A": "template_json jsonb blob 전체",
+        "B": "templates/regions/guides 완전 정규화",
+        "C": "Hybrid: 핵심 컬럼 분리 + template_body jsonb"
+      },
+      "recommendation": "C",
+      "reason": "RunOCR이 regions를 JSON string으로 전달. 완전 정규화는 API 변경 필요. Hybrid가 중간점",
+      "db2": "ocr_templates: document_type, image_width, image_height + template_body JSONB"
+    },
+    {
+      "id": 7,
+      "title": "region 좌표 기준",
+      "priority": "P1",
+      "currentState": "pixel 절대 좌표 (image.width x image.height 기준)",
+      "options": {
+        "A": "pixel 절대 좌표 유지",
+        "B": "normalized 좌표 (0.0~1.0)",
+        "C": "둘 다 저장"
+      },
+      "recommendation": "A",
+      "reason": "기존 UI/API와 호환성. image_width/height 함께 저장으로 나중에 변환 가능",
+      "db2": "ocr_templates.image_width INT, image_height INT"
+    },
+    {
+      "id": 8,
+      "title": "RunOCR history 저장 단위",
+      "priority": "P1",
+      "currentState": "history.json(메타만) + localStorage(상세, MAX 50건)",
+      "options": {
+        "A": "run 단위만",
+        "B": "run + result 분리",
+        "C": "run + file + result 분리 3테이블"
+      },
+      "recommendation": "C",
+      "reason": "파일 storage_key 별도 필요. receipt/invoice 결과 구조 다름. 확장성",
+      "db2Tables": ["ocr_runs(run_id, site_id, user_id, template_id, run_status, created_at, deleted_at)", "ocr_run_files(file_id, run_id, storage_key, original_filename, mime_type, file_size_bytes, file_type)", "ocr_run_results(result_id, file_id, doc_type, run_status, receipt_fields JSONB, document_fields JSONB, raw_text, processing_time_sec, preprocessing_debug JSONB, autofill_summary JSONB)"]
+    },
+    {
+      "id": 9,
+      "title": "OCR result JSON 저장 범위",
+      "priority": "P1",
+      "currentState": "localStorage에 raw fields, normalized, autofill summary 모두 저장",
+      "options": {
+        "A": "최소 (receipt_fields + raw_text만)",
+        "B": "중간 (receipt/document fields + processing_time + nullable debug)",
+        "C": "전체 (extract_debug + preprocessing_debug + review_log 데이터 모두)"
+      },
+      "recommendation": "B",
+      "reason": "extract_debug는 수십 KB. 모두 저장 시 DB 급증. 핵심 결과만, debug는 nullable로 옵셔널",
+      "db2Columns": {
+        "receipt_fields": "JSONB NULL",
+        "document_fields": "JSONB NULL",
+        "raw_text": "TEXT NULL",
+        "doc_type": "VARCHAR(50)",
+        "processing_time_sec": "NUMERIC(8,3)",
+        "preprocessing_debug": "JSONB NULL -- productionApplied=true 시만",
+        "autofill_summary": "JSONB NULL"
+      }
+    },
+    {
+      "id": 10,
+      "title": "GroundTruth 구조",
+      "priority": "P1",
+      "currentState": "localStorage {template::file: {fieldKey: value}}",
+      "options": {
+        "A": "field 단위 UNIQUE(template_id, filename, field_key)",
+        "B": "document 단위 {fields: jsonb}",
+        "C": "run 연결 (run_id, field_key)"
+      },
+      "recommendation": "A",
+      "reason": "필드별 수정 이력 추적 가능. testset GT와 구조 분리",
+      "db2Table": "ocr_ground_truth(gt_id UUID PK, site_id FK, template_id FK NULLABLE, filename VARCHAR(255), field_key VARCHAR(100), confirmed_value TEXT, confirmed_by FK users, confirmed_at TIMESTAMPTZ, UNIQUE(template_id, filename, field_key))"
+    },
+    {
+      "id": 11,
+      "title": "preprocessingDebug 저장 여부",
+      "priority": "P2",
+      "currentState": "응답에는 있으나 DB 미저장",
+      "options": {
+        "A": "저장 안 함",
+        "B": "debug mode만 저장",
+        "C": "productionApplied=true일 때만"
+      },
+      "recommendation": "C",
+      "reason": "실제 전처리 적용 이력만 보존. debug 전체 저장은 DB 급증",
+      "db2": "ocr_run_results.preprocessing_debug JSONB NULL (평소 NULL)"
+    },
+    {
+      "id": 12,
+      "title": "tableRows 저장 방식",
+      "priority": "P2",
+      "currentState": "document_fields.tableRows 배열로 localStorage에 포함",
+      "options": {
+        "A": "result jsonb 안에 포함",
+        "B": "ocr_run_table_rows 별도 테이블",
+        "C": "Hybrid (jsonb 포함 + P3 정규화)"
+      },
+      "recommendation": "C",
+      "reason": "현재 invoice 7샘플 최대 28행. jsonb로 시작, P3에서 재평가",
+      "db2": "document_fields JSONB 안에 tableRows 포함 (P3: ocr_run_table_rows 정규화)"
+    },
+    {
+      "id": 13,
+      "title": "soft delete 적용 범위",
+      "priority": "P2",
+      "currentState": "JSON 파일에서 직접 제거, 복구 불가",
+      "options": {
+        "A": "전체 soft delete",
+        "B": "templates + runs만",
+        "C": "hard delete"
+      },
+      "recommendation": "B",
+      "reason": "templates/runs는 복구 요청 가능. users는 status 컬럼",
+      "db2": "ocr_templates.deleted_at TIMESTAMPTZ NULL, ocr_runs.deleted_at TIMESTAMPTZ NULL, users.status TEXT DEFAULT 'active'"
+    },
+    {
+      "id": 14,
+      "title": "audit_logs 범위",
+      "priority": "P2",
+      "currentState": "review_log.jsonl (auto_extract 이벤트만)",
+      "options": {
+        "A": "최소 (run만)",
+        "B": "중간 (login + template CRUD + run + gt_update)",
+        "C": "전체"
+      },
+      "recommendation": "B",
+      "eventTypes": ["login", "template_create", "template_update", "template_delete", "run_create", "run_delete", "gt_update"],
+      "db2Table": "audit_logs(log_id UUID PK, site_id FK NULL, user_id FK NULL, event_type VARCHAR(50), resource_type VARCHAR(50), resource_id UUID NULL, payload JSONB NULL, ip_address INET NULL, created_at TIMESTAMPTZ)"
+    },
+    {
+      "id": 15,
+      "title": "enum 전략",
+      "priority": "P3",
+      "currentState": "문자열 상수 (adminYn='Y'/'N', status='success'/'fail')",
+      "options": {
+        "A": "PostgreSQL ENUM 타입",
+        "B": "TEXT + CHECK CONSTRAINT",
+        "C": "lookup 테이블"
+      },
+      "recommendation": "B",
+      "reason": "ENUM은 변경 비용 높음. TEXT+CHECK로 유연하게 시작",
+      "examples": {
+        "site_members.role": "TEXT CHECK (role IN ('owner','admin','member','viewer'))",
+        "ocr_runs.run_status": "TEXT CHECK (run_status IN ('pending','running','success','fail'))",
+        "users.status": "TEXT CHECK (status IN ('active','inactive','suspended'))"
+      }
+    }
+  ],
+
+  "db2InputSpec": {
+    "engine": "PostgreSQL 14+",
+    "extensions": ["pgcrypto"],
+    "primaryKey": "UUID v4, DEFAULT gen_random_uuid()",
+    "timestamp": "TIMESTAMPTZ (timezone-aware)",
+    "password": "bcrypt, VARCHAR(60)",
+    "auth": "sessions 테이블 (session_id, user_id, expires_at, revoked_at)",
+    "siteIsolation": "sites + site_members. 모든 주요 테이블에 site_id FK",
+    "fileStorage": "storage_key VARCHAR(512) 추상화",
+    "templateStorage": "Hybrid: document_type/image_width/height 컬럼 + template_body JSONB",
+    "ocrResult": "receipt_fields JSONB + document_fields JSONB + raw_text + preprocessing_debug JSONB NULL",
+    "tableRows": "document_fields JSONB 안에 포함 (P3 정규화)",
+    "groundTruth": "UNIQUE(template_id, filename, field_key) field 단위",
+    "softDelete": "ocr_templates.deleted_at + ocr_runs.deleted_at",
+    "auditLogs": "login + template CRUD + run + gt_update",
+    "enumStrategy": "TEXT + CHECK CONSTRAINT",
+    "p3Tables": ["ocr_template_regions", "ocr_template_table_guides", "ocr_run_table_rows", "ocr_run_warnings"]
+  },
+
+  "openQuestions": [
+    {"q": "users.email 컬럼 추가 여부", "impact": "향후 이메일 인증"},
+    {"q": "기존 localStorage → DB 마이그레이션 스크립트 필요 여부", "impact": "기존 데이터 보존"},
+    {"q": "review_log.jsonl → audit_logs 이전 여부", "impact": "감사 데이터 연속성"},
+    {"q": "local filesystem uploads/ 구현 여부", "impact": "파일 서버 선결"},
+    {"q": "사용자 가입 흐름 (관리자만 vs 셀프)", "impact": "users INSERT 권한"},
+    {"q": "ocr model_id 저장 위치 (runs vs results)", "impact": "모델별 성능 추적"},
+    {"q": "ocr_template_regions 즉시 정규화 vs P3", "impact": "template 수 증가 시 jsonb 검색 성능"}
+  ]
+}

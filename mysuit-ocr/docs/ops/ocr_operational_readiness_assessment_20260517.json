@@ -1,0 +1,115 @@
+{
+  "generatedAt": "2026-05-17",
+  "basedOn": "T-23 (preprocessing UI), T-22 baseline snapshot, T-19 final audit, ARCH-1, DB-PREP-1",
+
+  "overall": {
+    "operationalStage": "Internal Alpha",
+    "completionPercent": 52,
+    "summary": "OCR 엔진/parser는 베타 수준(~72%), 운영 인프라(DB/보안/배포)는 Prototype(~30%). 개발자 로컬 테스트 및 제한 내부 사용만 가능.",
+    "biggestBlockers": [
+      "users.json 평문 비밀번호 (보안 치명)",
+      "localStorage 기반 저장 (데이터 지속성 없음)",
+      "Site 격리 미구현 (멀티 테넌시 불가)"
+    ],
+    "nextTopPriority": "DB-2 schema.sql → bcrypt 인증 → templates/history DB 전환"
+  },
+
+  "scores": {
+    "ocr_core_accuracy": { "score": 82, "stage": "Private Beta", "note": "docTypeMatch 80.7%, coreFieldFill 89.1%, 회귀 0건" },
+    "invoice_statement": { "score": 90, "stage": "MVP Production", "note": "rowCount 7/7 exact, OP-anchor, colGuides, E2E PASS" },
+    "receipt_baseline": { "score": 75, "stage": "Private Beta", "note": "T-16 기반 개선, classification_mismatch 7건 잔존" },
+    "generalization": { "score": 55, "stage": "Internal Alpha", "note": "57샘플 기준, 새 샘플 일반화 미검증" },
+    "preprocessing": { "score": 72, "stage": "Private Beta", "note": "qualityTags guard 완성, Phase 3 연결 보류" },
+    "testworkspace_qa": { "score": 85, "stage": "MVP Production", "note": "RunAll, diff, preprocessing debug, 26샘플 검증 체계" },
+    "runOcr_ux": { "score": 65, "stage": "Internal Alpha", "note": "기본 흐름 동작, autoApply 미연결, History 한계" },
+    "template_ux": { "score": 68, "stage": "Internal Alpha", "note": "생성/저장 동작, site 격리 없음" },
+    "history": { "score": 45, "stage": "Prototype", "note": "localStorage 50건, 이원화, 이미지 서버 없음" },
+    "db_storage": { "score": 25, "stage": "Prototype", "note": "localStorage/JSON 파일 기반, DB-2 준비만 완료" },
+    "auth_security": { "score": 15, "stage": "Prototype", "note": "평문 비밀번호, 토큰 서버 미저장, 인가 없음" },
+    "site_multi_tenant": { "score": 10, "stage": "Prototype", "note": "UI 렌더링만, 완전 비기능" },
+    "operations_logging": { "score": 35, "stage": "Prototype", "note": "review_log.jsonl만, 모니터링/백업 없음" },
+    "deployment_readiness": { "score": 30, "stage": "Prototype", "note": "uvicorn 단일, 프로세스 관리 없음" },
+    "maintainability": { "score": 70, "stage": "Private Beta", "note": "명확한 모듈 구조, 테스트셋/리포트 체계" }
+  },
+
+  "documentTypeCoverage": [
+    { "type": "invoice_statement", "status": "운영 가능", "coverage": 90, "note": "rowCount 7/7, E2E OK" },
+    { "type": "food_cafe_receipt", "status": "베타 수준", "coverage": 75, "note": "docTypeMatch 93%, minor missing" },
+    { "type": "card_receipt", "status": "베타 수준", "coverage": 70, "note": "docTypeMatch 76.9%, merchantName missing" },
+    { "type": "medical_receipt", "status": "베타 수준", "coverage": 60, "note": "docTypeMatch 66.7%, animal hospital edge" },
+    { "type": "pos_receipt", "status": "베타 수준", "coverage": 55, "note": "docTypeMatch 70%, garbled source 多" },
+    { "type": "finance_slip", "status": "불가", "coverage": 5, "note": "suppressed, extractor 미구현" },
+    { "type": "tax_invoice", "status": "불가", "coverage": 0, "note": "샘플 없음, 미구현" },
+    { "type": "transaction_statement", "status": "불가", "coverage": 0, "note": "예비 타입만" }
+  ],
+
+  "readyFor": [
+    "개발자 본인 로컬 사용",
+    "TestWorkspace 검증 체계 (RunAll/diff/리포트)",
+    "invoice_statement 알려진 형식 테스트",
+    "receipt 계열 내부 검증",
+    "preprocessing 정책 검토"
+  ],
+
+  "notReadyFor": [
+    "다중 사용자 동시 접속",
+    "외부 사용자 (보안 미완)",
+    "유료 SaaS 운영",
+    "장기 History 보존 (50건 한계)",
+    "사이트별 데이터 격리",
+    "외부 고객 계정 관리",
+    "finance_slip/tax_invoice 문서",
+    "민감 문서 규정 준수"
+  ],
+
+  "securityRisks": [
+    { "risk": "평문 비밀번호 (admin=1234)", "severity": "CRITICAL", "fix": "bcrypt 해시" },
+    { "risk": "토큰 서버 미저장/만료 없음", "severity": "HIGH", "fix": "sessions 테이블" },
+    { "risk": "localStorage token (XSS)", "severity": "MEDIUM", "fix": "HttpOnly cookie" },
+    { "risk": "인가(permission) 없음", "severity": "MEDIUM", "fix": "site_members role" },
+    { "risk": "파일 접근 제어 없음", "severity": "MEDIUM", "fix": "site_id 기반 ACL" }
+  ],
+
+  "priorities": [
+    { "priority": "P0", "task": "bcrypt 비밀번호 해시", "reason": "보안 치명, 외부 접속 전 필수", "effort": "1일" },
+    { "priority": "P0", "task": "sessions 테이블 + 토큰 검증", "reason": "로그아웃/만료 불가", "effort": "1일" },
+    { "priority": "P1", "task": "DB-2 schema.sql 작성", "reason": "모든 DB 작업의 선결", "effort": "1일" },
+    { "priority": "P1", "task": "DB 연결 config", "reason": "schema 작성 후 즉시", "effort": "반일" },
+    { "priority": "P1", "task": "templates DB 전환", "reason": "localStorage 중복 제거, site 격리", "effort": "1일" },
+    { "priority": "P1", "task": "RunOCR history DB 저장", "reason": "50건 한계 해소, MVP 필수", "effort": "1.5일" },
+    { "priority": "P1", "task": "파일 서버 (uploads/)", "reason": "이미지 영구 저장", "effort": "1일" },
+    { "priority": "P1", "task": "Site 기능 실현", "reason": "다중 사용자 격리", "effort": "1.5일" },
+    { "priority": "P2", "task": "GroundTruth DB 전환", "reason": "공유 가능", "effort": "1일" },
+    { "priority": "P2", "task": "audit_logs 구현", "reason": "감사 추적", "effort": "1일" },
+    { "priority": "P2", "task": "배포 구성 (HTTPS, supervisor)", "reason": "외부 접속 안전", "effort": "1일" },
+    { "priority": "P2", "task": "OCR 처리 큐 구조", "reason": "30~70초/건 병목", "effort": "3일" },
+    { "priority": "P2", "task": "finance_slip extractor", "reason": "은행 전표 운영 불가", "effort": "3일" },
+    { "priority": "P3", "task": "tax_invoice 샘플+설계", "reason": "세금계산서 미지원", "effort": "5일+" },
+    { "priority": "P3", "task": "RunOCR autoApply Phase 3", "reason": "자동 전처리 운영 연결", "effort": "2일" },
+    { "priority": "P3", "task": "CI/CD 자동화", "reason": "수동 배포 개선", "effort": "2일" }
+  ],
+
+  "roadmap2Weeks": [
+    { "day": 1, "task": "DB-2 schema.sql (14개 테이블)", "outcome": "DDL + 인덱스 + 제약" },
+    { "day": 2, "task": "DB 연결 config (FastAPI + asyncpg)", "outcome": "DATABASE_URL, 연결 테스트" },
+    { "day": 3, "task": "users + sessions 마이그레이션", "outcome": "bcrypt, sessions 테이블, /login 수정" },
+    { "day": 4, "task": "sites + site_members 기본", "outcome": "기본 site 자동 생성, site_id FK" },
+    { "day": 5, "task": "templates DB 저장/조회", "outcome": "GET/POST/DELETE /templates DB 전환" },
+    { "day": 6, "task": "ocr_runs + ocr_run_files", "outcome": "RunOCR 실행 시 DB 저장, storage_key" },
+    { "day": 7, "task": "ocr_run_results", "outcome": "receipt_fields + document_fields jsonb" },
+    { "day": 8, "task": "History 탭 DB 조회", "outcome": "localStorage 대체, 50건 한계 해소" },
+    { "day": 9, "task": "GroundTruth DB 전환", "outcome": "ocr_ground_truth, autofill API" },
+    { "day": 10, "task": "audit_logs + 배포 구성", "outcome": "nginx + HTTPS + supervisor" }
+  ],
+
+  "projectedAfter2Weeks": {
+    "overall": "~70%",
+    "db_storage": 75,
+    "auth_security": 72,
+    "site_multi_tenant": 55,
+    "history": 78,
+    "template_ux": 80,
+    "deployment_readiness": 60,
+    "operationalStage": "Private Beta / MVP Production 진입 가능"
+  }
+}

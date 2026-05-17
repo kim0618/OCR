@@ -1,0 +1,59 @@
+{
+  "task": "T-13",
+  "title": "tax_invoice / transaction_statement 샘플 추가 및 parser 분기 준비",
+  "generatedAt": "2026-05-16",
+  "status": "completed",
+  "createdFiles": [
+    "mysuit-ocr/public/data/testsets/tax_invoice/manifest.json"
+  ],
+  "modifiedFiles": [
+    "mysuit-ocr/src/lib/testsets.ts",
+    "mysuit-ocr/src/components/test/TestWorkspace.tsx"
+  ],
+  "backupFiles": [
+    "mysuit-ocr/src/lib/testsets_20260516_before_T13.ts",
+    "mysuit-ocr/src/components/test/TestWorkspace_20260516_before_T13.tsx"
+  ],
+  "documentTypesAdded": {
+    "tax_invoice": {
+      "profile": "document",
+      "color": "#b45309",
+      "label": "세금계산서",
+      "abbr": "세금",
+      "testsetCreated": true,
+      "sampleImages": 0,
+      "status": "인프라 준비 완료, 샘플 이미지 필요"
+    },
+    "transaction_statement": {
+      "profile": "document",
+      "color": "#92400e",
+      "label": "거래전표/계산서류",
+      "abbr": "전표",
+      "testsetCreated": false,
+      "sampleImages": 0,
+      "status": "UI 라벨/순서만 추가, 정의 및 샘플 미확정"
+    }
+  },
+  "parserPlan": {
+    "tax_invoice": {
+      "baseExtractor": "invoice_statement.py 기반 분기",
+      "reusableComponents": ["party block 추출", "amount 추출", "tableRows"],
+      "uniqueFields": ["issuanceDate", "supplierRegistrationNumber", "buyerRegistrationNumber"],
+      "estimatedEffort": "중간 (invoice_statement 분기 추가 + 세금계산서 특유 필드 처리)",
+      "nextTask": "T-14: tax_invoice extractor 1차 구현 (샘플 확보 후)"
+    },
+    "transaction_statement": {
+      "decision": "forward-compatible 예비 타입 유지 (사용 시나리오 미확정)",
+      "nextTask": "샘플 확보 후 재검토"
+    }
+  },
+  "validation": {
+    "typecheck": "passed",
+    "build": "passed",
+    "ocrRegressionRisk": "none"
+  },
+  "blockers": [
+    "tax_invoice 실제 이미지 파일 없음 → public/data/testsets/tax_invoice/ 에 추가 필요",
+    "transaction_statement 정의 미확정 → 실사용 시나리오 확인 필요"
+  ]
+}

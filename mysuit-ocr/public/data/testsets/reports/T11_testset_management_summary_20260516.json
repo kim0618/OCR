@@ -1,0 +1,44 @@
+{
+  "task": "T-11",
+  "title": "testset management / documentType grouping / qualityTags / summary aggregation",
+  "generatedAt": "2026-05-16",
+  "status": "completed",
+  "modifiedFiles": [
+    "mysuit-ocr/src/lib/testsets.ts",
+    "mysuit-ocr/src/lib/profiles.ts",
+    "mysuit-ocr/src/lib/profiles_20260511_before_GT5.ts",
+    "mysuit-ocr/src/lib/profiles_20260511_before_P2.ts",
+    "mysuit-ocr/src/components/test/TestWorkspace.tsx",
+    "mysuit-ocr/public/data/testsets/new_samples/manifest.json"
+  ],
+  "backupFiles": [
+    "mysuit-ocr/src/lib/testsets_20260516_before_T11.ts",
+    "mysuit-ocr/src/components/test/TestWorkspace_20260516_before_T11.tsx"
+  ],
+  "typeChanges": {
+    "Difficulty": { "added": ["extreme"] },
+    "DocumentType": { "added": ["tax_invoice", "transaction_statement"] },
+    "ExpectedStatus": { "added": "explicit union type alias" }
+  },
+  "manifestsCreated": ["new_samples/manifest.json (9 items)"],
+  "testsetUIChanges": [
+    "receipt_generalization added to DEFAULT_TESTSETS",
+    "QualityTagSummarySection now rendered in JSX",
+    "거래명세서 sub-table: rows有 and warn columns added"
+  ],
+  "docTypeSummaryRowNewFields": [
+    "tableRowsWithData: number",
+    "tableRowsWarningCount: number"
+  ],
+  "validation": {
+    "typecheck": "passed",
+    "build": "passed",
+    "ocrRegressionRisk": "none (OCR logic not modified)"
+  },
+  "nextSteps": [
+    "Add expectedRowCount to invoice_statement manifest items for exact rowCount comparison",
+    "Add actual samples for tax_invoice / transaction_statement documentTypes",
+    "Strengthen receipt_generalization ground_truth.json",
+    "Field-level failure rate detailed UI"
+  ]
+}

@@ -32,16 +32,17 @@
             { "key": "unitPrice", "label": "단가" },
             { "key": "amount", "label": "금액" }
           ]
-        }
+        },
+        "expectedRowCount": 28
       }
     },
     {
       "filename": "2.pdf",
       "documentType": "invoice_statement",
-      "qualityTags": [],
+      "qualityTags": ["dense_table", "rowcount_guard_required", "preprocessing_blocked"],
       "difficulty": "easy",
       "expectedStatus": "selected",
-      "notes": "Standard single-page invoice statement. Primary sample for two header blocks, totals, and item table structure.",
+      "notes": "Standard single-page invoice statement. Primary sample for two header blocks, totals, and item table structure. T-20: all DPI variants caused rowCount mismatch regression (13→17). OP-anchor complex structure. preprocessing_blocked.",
       "invoiceProfile": {
         "invoiceSubType": "balance_statement",
         "amountProfile": "balance_cumulative",
@@ -66,16 +67,17 @@
             { "key": "supplyAmount", "label": "공급금액" },
             { "key": "insuranceCode", "label": "보험No" }
           ]
-        }
+        },
+        "expectedRowCount": 13
       }
     },
     {
       "filename": "3.pdf",
       "documentType": "invoice_statement",
-      "qualityTags": [],
+      "qualityTags": ["pdf_low_resolution", "preprocessing_candidate", "rowcount_guard_required"],
       "difficulty": "easy",
       "expectedStatus": "selected",
-      "notes": "Blue invoice statement form. Support sample for left/right header blocks and lower amount structure.",
+      "notes": "Blue invoice statement form. Support sample for left/right header blocks and lower amount structure. T-20: render_dpi_200_grayscale recovered rowCount exact (original=2→expected=1). Single item table, simple structure. pdf_low_resolution issue — rowCount guard required before applying.",
       "invoiceProfile": {
         "invoiceSubType": "standard_amount_statement",
         "amountProfile": "supply_tax_total",
@@ -95,7 +97,8 @@
             { "key": "manufacturer", "label": "제조회사" },
             { "key": "manufacturingExpiryComposite", "label": "제조번호/유효기간" }
           ]
-        }
+        },
+        "expectedRowCount": 1
       }
     },
     {
@@ -122,7 +125,8 @@
             { "key": "supplyAmount", "label": "공급가액" },
             { "key": "taxAmount", "label": "세액" }
           ]
-        }
+        },
+        "expectedRowCount": 1
       }
     },
     {
@@ -148,7 +152,8 @@
             { "key": "unitPrice", "label": "단가" },
             { "key": "amount", "label": "금액" }
           ]
-        }
+        },
+        "expectedRowCount": 6
       }
     },
     {
@@ -174,7 +179,8 @@
             { "key": "lotNo", "label": "LotNo" },
             { "key": "expiryDate", "label": "유효일자" }
           ]
-        }
+        },
+        "expectedRowCount": 6
       }
     },
     {
@@ -201,7 +207,8 @@
             { "key": "unit", "label": "단위" },
             { "key": "quantity", "label": "수량" }
           ]
-        }
+        },
+        "expectedRowCount": 1
       }
     }
   ]

@@ -7,10 +7,10 @@
     {
       "filename": "pos_001.jpg",
       "documentType": "pos_receipt",
-      "qualityTags": ["small_text"],
+      "qualityTags": ["small_text", "garbled_source"],
       "difficulty": "medium",
       "expectedStatus": "selected",
-      "notes": "세븐일레븐 POS 영수증. 브랜드/지점명, 품목, 합계금액 확인."
+      "notes": "세븐일레븐 POS 영수증. 브랜드/지점명, 품목, 합계금액 확인. T-20: ocr_source_garbled, 모든 variant unchanged — 전처리 효과 없음."
     },
     {
       "filename": "pos_002.jpg",
@@ -47,10 +47,10 @@
     {
       "filename": "pos_006.jpg",
       "documentType": "pos_receipt",
-      "qualityTags": ["small_text"],
+      "qualityTags": ["small_text", "garbled_source", "preprocessing_candidate"],
       "difficulty": "medium",
       "expectedStatus": "selected",
-      "notes": "GS25 POS 영수증. 브랜드+지점명, 금액, 안내문구 노이즈 확인."
+      "notes": "GS25 POS 영수증. 브랜드+지점명, 금액, 안내문구 노이즈 확인. T-20: ocr_source_garbled, upscale_1_5x/clahe_plus_sharpen 개선 (core field fill increased, totalAmount appeared)."
     },
     {
       "filename": "food_001.jpg",
@@ -95,10 +95,10 @@
     {
       "filename": "medical_001.jpg",
       "documentType": "medical_receipt",
-      "qualityTags": ["shadow"],
+      "qualityTags": ["shadow", "preprocessing_candidate"],
       "difficulty": "medium",
       "expectedStatus": "selected",
-      "notes": "병원/의료 영수증. 진료 항목과 영수액 확인."
+      "notes": "병원/의료 영수증. 진료 항목과 영수액 확인. T-20: clahe로 core field fill 개선 (merchantName 출현). preprocessing_candidate 확인."
     },
     {
       "filename": "medical_002.jpg",
@@ -111,10 +111,10 @@
     {
       "filename": "medical_003.jpg",
       "documentType": "medical_receipt",
-      "qualityTags": ["long_receipt", "small_text"],
+      "qualityTags": ["long_receipt", "small_text", "preprocessing_candidate"],
       "difficulty": "hard",
       "expectedStatus": "selected",
-      "notes": "동물병원/의료 계열 긴 영수증. 약품/진료 항목과 결제금액 확인."
+      "notes": "동물병원/의료 계열 긴 영수증. 약품/진료 항목과 결제금액 확인. T-20: grayscale로 core field fill 개선 (merchantName 출현). preprocessing_candidate 확인."
     },
     {
       "filename": "medical_004.jpg",
@@ -127,26 +127,26 @@
     {
       "filename": "card_001.jpg",
       "documentType": "card_receipt",
-      "qualityTags": ["small_text"],
+      "qualityTags": ["small_text", "garbled_source"],
       "difficulty": "medium",
       "expectedStatus": "selected",
-      "notes": "신용카드 매출전표. 카드전표형 공급가액/부가세/합계 확인."
+      "notes": "신용카드 매출전표. 카드전표형 공급가액/부가세/합계 확인. T-20: ocr_source_garbled, 모든 variant unchanged — 전처리 효과 없음."
     },
     {
       "filename": "card_002.jpg",
       "documentType": "card_receipt",
-      "qualityTags": ["blurred"],
+      "qualityTags": ["blurred", "preprocessing_candidate"],
       "difficulty": "medium",
       "expectedStatus": "selected",
-      "notes": "카드 매출전표. 흐림/접힌 영수증에서 금액 확인."
+      "notes": "카드 매출전표. 흐림/접힌 영수증에서 금액 확인. T-20: clahe로 core field fill 개선 (merchantName + businessNo 출현). preprocessing_candidate 확인."
     },
     {
       "filename": "finance_001.jpg",
       "documentType": "finance_slip",
       "qualityTags": ["rotated"],
       "difficulty": "medium",
-      "expectedStatus": "selected",
-      "notes": "KB 국민은행 입금 전표. Tier-1 4필드(bankName/transactionType/transactionDateTime/amount) 정상 추출 확인. finance parser 도입 후 selected 기대로 보정(2026-04-27). amount 250,000(요청금액) vs 249,000(입금액) 구분 주의."
+      "expectedStatus": "suppressed_bank_slip",
+      "notes": "KB 국민은행 입금 전표(ATM). OCR 분류: bank_slip → 현재 suppression 정책 적용. finance_slip extractor 미구현 단계이므로 suppressed_bank_slip으로 변경(T-15e, 2026-05-16). 향후 bank_slip parser 구현 후 selected로 재전환 예정. Tier-1 필드: bankName=KB국민은행, transactionType=입금, amount=249000원, dateTime=2018-03-29."
     },
     {
       "filename": "finance_002.jpg",

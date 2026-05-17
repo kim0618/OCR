@@ -1,0 +1,35 @@
+{
+  "task": "T-12d",
+  "title": "RunAll snapshot before/after diff tool 구현",
+  "generatedAt": "2026-05-16",
+  "status": "completed",
+  "createdFiles": [
+    "mysuit-ocr/scripts/diff-runall-snapshots.mjs",
+    "mysuit-ocr/scripts/test-before.json (테스트용, 임시)",
+    "mysuit-ocr/scripts/test-after.json (테스트용, 임시)"
+  ],
+  "modifiedFiles": [
+    "mysuit-ocr/package.json"
+  ],
+  "npmScripts": {
+    "diff:runall": "node scripts/diff-runall-snapshots.mjs"
+  },
+  "cliUsage": "node scripts/diff-runall-snapshots.mjs <before.json> <after.json> [output-dir]",
+  "exitCodes": { "0": "no regression", "1": "regression detected" },
+  "diffOutput": {
+    "json": "runall_diff_{testsetId}_{yyyyMMdd_HHmm}.json",
+    "markdown": "runall_diff_{testsetId}_{yyyyMMdd_HHmm}.md"
+  },
+  "sampleValidation": {
+    "improved": ["3.pdf (missing 2→0)", "5.pdf (rowCount short→exact)"],
+    "regressed": [],
+    "unchanged": 5,
+    "rowCountExactDelta": "+1",
+    "missingDelta": "-2"
+  },
+  "validation": {
+    "scriptRun": "OK",
+    "typecheck": "passed",
+    "build": "passed"
+  }
+}

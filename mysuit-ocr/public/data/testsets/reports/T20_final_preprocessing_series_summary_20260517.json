@@ -1,0 +1,232 @@
+{
+  "task": "T-20-final",
+  "title": "OCR preprocessing series final summary",
+  "date": "2026-05-17",
+  "status": "completed",
+  "scope": {
+    "codeModified": false,
+    "createdFiles": [
+      "mysuit-ocr/public/data/testsets/reports/T20_final_preprocessing_series_summary_20260517.md",
+      "mysuit-ocr/public/data/testsets/reports/T20_final_preprocessing_series_summary_20260517.json"
+    ],
+    "lockedPolicy": "default_off_debug_available_receipt_limited_auto_apply"
+  },
+  "overallConclusion": [
+    "전처리 전체 기본 적용은 위험",
+    "qualityTags 기반 조건부 적용이 적절",
+    "debugPreprocessing 구조 완료",
+    "receipt limited auto-apply 옵션 구현 완료",
+    "invoice_statement는 auto-apply 영구 제외",
+    "기본값은 autoApplyPreprocessing=false 유지"
+  ],
+  "series": {
+    "T20": {
+      "sampleCount": 10,
+      "variantCount": 72,
+      "result": {
+        "improved": 5,
+        "unchanged": 4,
+        "regressed": 1
+      },
+      "effectiveVariants": [
+        "clahe",
+        "upscale_1_5x",
+        "grayscale",
+        "render_dpi_200_grayscale"
+      ],
+      "blockedDefaultFamilies": [
+        "threshold"
+      ]
+    },
+    "T20a": {
+      "summary": [
+        "qualityTags 기반 조건부 policy 설계",
+        "compare_then_select 원칙",
+        "receipt guard",
+        "invoice rowCount guard",
+        "invoice/2.pdf blocked",
+        "invoice/3.pdf candidate 분리"
+      ]
+    },
+    "T20b": {
+      "newModule": "ocr-server/preprocessing_policy.py",
+      "functions": [
+        "get_candidates",
+        "apply_receipt_guard",
+        "apply_invoice_guard",
+        "compare_then_select"
+      ],
+      "verification": "9/9 PASS",
+      "productionApplied": false
+    },
+    "T20c": {
+      "qualityTags": {
+        "invoice_statement/3.pdf": [
+          "pdf_low_resolution",
+          "preprocessing_candidate",
+          "rowcount_guard_required"
+        ],
+        "invoice_statement/2.pdf": [
+          "dense_table",
+          "rowcount_guard_required",
+          "preprocessing_blocked"
+        ],
+        "receipt_generalization/pos_006": [
+          "garbled_source",
+          "preprocessing_candidate"
+        ],
+        "receipt_generalization/card_001": [
+          "garbled_source"
+        ],
+        "receipt_generalization/pos_001": [
+          "garbled_source"
+        ]
+      },
+      "conditionalAcceptChange": {
+        "before": 4,
+        "after": 5
+      }
+    },
+    "T20d": {
+      "implemented": [
+        "main.py debugPreprocessing flag",
+        "preprocessingDebug response block",
+        "debug=true candidate comparison"
+      ],
+      "debugFalseResponseCompatibility": true,
+      "productionApplied": false
+    },
+    "T20e": {
+      "apiValidation": "PASS",
+      "validatedSamples": [
+        "card_002",
+        "medical_001",
+        "pos_006",
+        "medical_003",
+        "invoice3"
+      ],
+      "blockedSamples": [
+        "invoice2"
+      ],
+      "autoApplyDecision": "deferred"
+    },
+    "T20f": {
+      "sampleCount": 15,
+      "normalReceiptRegressions": 0,
+      "normalCandidateAccepts": [
+        "card_001",
+        "pos_005"
+      ],
+      "decision": "preprocessing_candidate tag must be required"
+    },
+    "T20g": {
+      "functionAdded": "decide_auto_apply_preprocessing",
+      "guards": [
+        "invoice_statement permanent exclusion",
+        "preprocessing_candidate required",
+        "preprocessing_blocked blocked",
+        "core field loss blocked",
+        "improvement delta > 0 required",
+        "false positive amount blocked",
+        "docType degradation blocked"
+      ]
+    },
+    "T20h": {
+      "candidateTagsAdded": [
+        "card_002",
+        "medical_001",
+        "medical_003"
+      ],
+      "autoApplyAllowedCount": 4,
+      "autoApplyAllowedIncludes": [
+        "pos_006"
+      ],
+      "blockedNormalSamples": [
+        "card_001",
+        "pos_005"
+      ],
+      "invoiceStatementAllowedCount": 0
+    },
+    "T20i": {
+      "implemented": [
+        "main.py autoApplyPreprocessing flag",
+        "default false",
+        "receipt + guard limited productionApplied"
+      ],
+      "productionAppliedTrueTargets": [
+        {
+          "sample": "card_002",
+          "variant": "clahe"
+        },
+        {
+          "sample": "medical_001",
+          "variant": "clahe"
+        },
+        {
+          "sample": "pos_006",
+          "variant": "upscale_1_5x"
+        },
+        {
+          "sample": "medical_003",
+          "variant": "grayscale"
+        }
+      ],
+      "invoiceStatementProductionApplied": false,
+      "verification": "11/11 PASS"
+    }
+  },
+  "runtimePolicy": {
+    "debugPreprocessing": {
+      "default": false,
+      "description": "전처리 비교 debug"
+    },
+    "autoApplyPreprocessing": {
+      "default": false,
+      "description": "receipt limited auto-apply 명시적 옵션"
+    }
+  },
+  "safetyCriteria": [
+    "기본 OCR 결과는 기존과 동일",
+    "autoApplyPreprocessing=true 명시 필요",
+    "receipt 계열만 적용",
+    "invoice_statement 제외",
+    "preprocessing_candidate 태그 필수",
+    "guard 통과 필수",
+    "original/variant/debug 정보 보존"
+  ],
+  "nextCandidates": [
+    "T-21 Frontend wiring: add debugPreprocessing and autoApplyPreprocessing options to RunOCR/TestWorkspace",
+    "Additional real-world validation",
+    "Collect more receipt samples and reassess guards",
+    "invoice_statement template path debug wiring as a separate long-term candidate",
+    "Keep server default true rollout deferred"
+  ],
+  "verification": {
+    "pyCompile": {
+      "command": "python -m py_compile .\\ocr-server\\main.py .\\ocr-server\\preprocessing_policy.py .\\ocr-server\\scripts\\verify_receipt_limited_auto_apply_t20i.py",
+      "status": "PASS"
+    },
+    "verifyScript": {
+      "command": "python .\\ocr-server\\scripts\\verify_receipt_limited_auto_apply_t20i.py",
+      "status": "PASS",
+      "keyAssertions": "11/11 PASS",
+      "autoApplySimulation": "7/7 PASS",
+      "invoiceStatementBaseline": "7/7 exact"
+    },
+    "typecheck": {
+      "command": "npm.cmd run typecheck",
+      "status": "PASS"
+    },
+    "build": {
+      "command": "npm.cmd run build",
+      "status": "PASS",
+      "note": "Exit code 0. Build succeeded; output included ESLint setting message: nextVitals is not iterable."
+    }
+  },
+  "finalDecision": {
+    "serverDefaultAutoApply": false,
+    "frontendConnection": "next_step",
+    "invoiceStatementPolicy": "permanently_excluded_from_auto_apply",
+    "operationReadiness": "safe for explicit opt-in receipt limited auto-apply"
+  }
+}

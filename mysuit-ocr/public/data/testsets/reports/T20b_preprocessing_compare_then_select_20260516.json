@@ -1,0 +1,1127 @@
+{
+  "task": "T-20b",
+  "generatedAt": "2026-05-16T20:02:08.418929",
+  "mode": "debug_compare_then_select",
+  "defaultApply": false,
+  "verificationSummary": {
+    "total": 9,
+    "pass": 9,
+    "fail": 0,
+    "overall": "PASS"
+  },
+  "samples": [
+    {
+      "sample": "receipt_generalization/card_002.jpg",
+      "documentType": "card_receipt",
+      "qualityTags": [
+        "blurred"
+      ],
+      "original": {
+        "docType": "receipt_card",
+        "docTypeMatch": true,
+        "coreFieldFillCount": 2,
+        "coreFieldTotal": 4,
+        "missingFields": [
+          "merchantName",
+          "businessNo"
+        ],
+        "fields": {
+          "merchantName": "",
+          "businessNo": "",
+          "totalAmount": "28,000"
+        },
+        "warnings": []
+      },
+      "candidates": [
+        "clahe",
+        "upscale_1_5x",
+        "clahe_plus_sharpen"
+      ],
+      "variants": [
+        {
+          "name": "grayscale",
+          "decision": "policy_skip",
+          "reasons": [
+            "not_in_candidates_for_tags=['blurred']"
+          ],
+          "summary": {
+            "docType": "receipt_card",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 2,
+            "improvements": [],
+            "regressions": []
+          }
+        },
+        {
+          "name": "clahe",
+          "decision": "candidate_accept",
+          "reasons": [
+            "core field fill increased"
+          ],
+          "summary": {
+            "docType": "receipt_card",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 4,
+            "improvements": [
+              "core field fill increased"
+            ],
+            "regressions": []
+          }
+        },
+        {
+          "name": "sharpen",
+          "decision": "policy_skip",
+          "reasons": [
+            "not_in_candidates_for_tags=['blurred']"
+          ],
+          "summary": {
+            "docType": "receipt_card",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 2,
+            "improvements": [],
+            "regressions": []
+          }
+        },
+        {
+          "name": "denoise",
+          "decision": "always_blocked",
+          "reasons": [],
+          "summary": {
+            "docType": "receipt_card",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 1,
+            "improvements": [],
+            "regressions": [
+              "core field fill decreased"
+            ]
+          }
+        },
+        {
+          "name": "threshold_adaptive",
+          "decision": "always_blocked",
+          "reasons": [],
+          "summary": {
+            "docType": "receipt_pos",
+            "docTypeMatch": false,
+            "coreFieldFillCount": 1,
+            "improvements": [],
+            "regressions": [
+              "core field fill decreased",
+              "docType regressed"
+            ]
+          }
+        },
+        {
+          "name": "upscale_1_5x",
+          "decision": "candidate_accept",
+          "reasons": [
+            "core field fill increased"
+          ],
+          "summary": {
+            "docType": "receipt_card",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 4,
+            "improvements": [
+              "core field fill increased"
+            ],
+            "regressions": []
+          }
+        },
+        {
+          "name": "clahe_plus_sharpen",
+          "decision": "candidate_accept",
+          "reasons": [
+            "core field fill increased"
+          ],
+          "summary": {
+            "docType": "receipt_card",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 3,
+            "improvements": [
+              "core field fill increased"
+            ],
+            "regressions": []
+          }
+        }
+      ],
+      "selectedCandidate": "clahe",
+      "wouldApplyInDebug": true,
+      "wouldApplyInProduction": false,
+      "t20Judgement": "improved"
+    },
+    {
+      "sample": "receipt_generalization/medical_001.jpg",
+      "documentType": "medical_receipt",
+      "qualityTags": [
+        "shadow"
+      ],
+      "original": {
+        "docType": "medical_receipt",
+        "docTypeMatch": true,
+        "coreFieldFillCount": 1,
+        "coreFieldTotal": 2,
+        "missingFields": [
+          "merchantName"
+        ],
+        "fields": {
+          "merchantName": "",
+          "businessNo": "",
+          "totalAmount": "25,000"
+        },
+        "warnings": []
+      },
+      "candidates": [
+        "clahe",
+        "clahe_plus_sharpen"
+      ],
+      "variants": [
+        {
+          "name": "grayscale",
+          "decision": "policy_skip",
+          "reasons": [
+            "not_in_candidates_for_tags=['shadow']"
+          ],
+          "summary": {
+            "docType": "medical_receipt",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 1,
+            "improvements": [],
+            "regressions": []
+          }
+        },
+        {
+          "name": "clahe",
+          "decision": "candidate_accept",
+          "reasons": [
+            "core field fill increased"
+          ],
+          "summary": {
+            "docType": "medical_receipt",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 2,
+            "improvements": [
+              "core field fill increased"
+            ],
+            "regressions": []
+          }
+        },
+        {
+          "name": "sharpen",
+          "decision": "policy_skip",
+          "reasons": [
+            "not_in_candidates_for_tags=['shadow']"
+          ],
+          "summary": {
+            "docType": "medical_receipt",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 1,
+            "improvements": [],
+            "regressions": []
+          }
+        },
+        {
+          "name": "denoise",
+          "decision": "always_blocked",
+          "reasons": [],
+          "summary": {
+            "docType": "medical_receipt",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 1,
+            "improvements": [],
+            "regressions": []
+          }
+        },
+        {
+          "name": "threshold_adaptive",
+          "decision": "always_blocked",
+          "reasons": [],
+          "summary": {
+            "docType": "medical_receipt",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 1,
+            "improvements": [],
+            "regressions": []
+          }
+        },
+        {
+          "name": "upscale_1_5x",
+          "decision": "policy_skip",
+          "reasons": [
+            "not_in_candidates_for_tags=['shadow']"
+          ],
+          "summary": {
+            "docType": "medical_receipt",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 1,
+            "improvements": [],
+            "regressions": []
+          }
+        },
+        {
+          "name": "clahe_plus_sharpen",
+          "decision": "no_improvement",
+          "reasons": [
+            "no_improvement"
+          ],
+          "summary": {
+            "docType": "medical_receipt",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 1,
+            "improvements": [],
+            "regressions": []
+          }
+        }
+      ],
+      "selectedCandidate": "clahe",
+      "wouldApplyInDebug": true,
+      "wouldApplyInProduction": false,
+      "t20Judgement": "improved"
+    },
+    {
+      "sample": "receipt_generalization/pos_006.jpg",
+      "documentType": "pos_receipt",
+      "qualityTags": [
+        "small_text",
+        "garbled_source",
+        "preprocessing_candidate"
+      ],
+      "original": {
+        "docType": "receipt_pos",
+        "docTypeMatch": true,
+        "coreFieldFillCount": 1,
+        "coreFieldTotal": 3,
+        "missingFields": [
+          "businessNo",
+          "totalAmount"
+        ],
+        "fields": {
+          "merchantName": "GS25",
+          "businessNo": "",
+          "totalAmount": ""
+        },
+        "warnings": []
+      },
+      "candidates": [
+        "upscale_1_5x",
+        "clahe_plus_sharpen"
+      ],
+      "variants": [
+        {
+          "name": "grayscale",
+          "decision": "policy_skip",
+          "reasons": [
+            "not_in_candidates_for_tags=['small_text', 'garbled_source', 'preprocessing_candidate']"
+          ],
+          "summary": {
+            "docType": "receipt_pos",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 1,
+            "improvements": [],
+            "regressions": []
+          }
+        },
+        {
+          "name": "clahe",
+          "decision": "policy_skip",
+          "reasons": [
+            "not_in_candidates_for_tags=['small_text', 'garbled_source', 'preprocessing_candidate']"
+          ],
+          "summary": {
+            "docType": "receipt_pos",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 1,
+            "improvements": [],
+            "regressions": []
+          }
+        },
+        {
+          "name": "sharpen",
+          "decision": "policy_skip",
+          "reasons": [
+            "not_in_candidates_for_tags=['small_text', 'garbled_source', 'preprocessing_candidate']"
+          ],
+          "summary": {
+            "docType": "receipt_pos",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 1,
+            "improvements": [],
+            "regressions": []
+          }
+        },
+        {
+          "name": "denoise",
+          "decision": "always_blocked",
+          "reasons": [],
+          "summary": {
+            "docType": "unknown",
+            "docTypeMatch": false,
+            "coreFieldFillCount": 0,
+            "improvements": [],
+            "regressions": [
+              "core field fill decreased",
+              "docType regressed"
+            ]
+          }
+        },
+        {
+          "name": "threshold_adaptive",
+          "decision": "always_blocked",
+          "reasons": [],
+          "summary": {
+            "docType": "receipt_pos",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 1,
+            "improvements": [],
+            "regressions": []
+          }
+        },
+        {
+          "name": "upscale_1_5x",
+          "decision": "candidate_accept",
+          "reasons": [
+            "businessNo source appeared",
+            "totalAmount source appeared"
+          ],
+          "summary": {
+            "docType": "receipt_pos",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 1,
+            "improvements": [
+              "businessNo source appeared",
+              "totalAmount source appeared"
+            ],
+            "regressions": []
+          }
+        },
+        {
+          "name": "clahe_plus_sharpen",
+          "decision": "candidate_accept",
+          "reasons": [
+            "core field fill increased",
+            "totalAmount source appeared"
+          ],
+          "summary": {
+            "docType": "receipt_pos",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 2,
+            "improvements": [
+              "core field fill increased",
+              "totalAmount source appeared"
+            ],
+            "regressions": []
+          }
+        }
+      ],
+      "selectedCandidate": "upscale_1_5x",
+      "wouldApplyInDebug": true,
+      "wouldApplyInProduction": false,
+      "t20Judgement": "improved"
+    },
+    {
+      "sample": "receipt_generalization/medical_003.jpg",
+      "documentType": "medical_receipt",
+      "qualityTags": [
+        "long_receipt",
+        "small_text"
+      ],
+      "original": {
+        "docType": "medical_receipt",
+        "docTypeMatch": true,
+        "coreFieldFillCount": 1,
+        "coreFieldTotal": 2,
+        "missingFields": [
+          "merchantName"
+        ],
+        "fields": {
+          "merchantName": "",
+          "businessNo": "",
+          "totalAmount": "120,273"
+        },
+        "warnings": []
+      },
+      "candidates": [
+        "grayscale",
+        "clahe",
+        "clahe_plus_sharpen"
+      ],
+      "variants": [
+        {
+          "name": "grayscale",
+          "decision": "candidate_accept",
+          "reasons": [
+            "core field fill increased"
+          ],
+          "summary": {
+            "docType": "medical_receipt",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 2,
+            "improvements": [
+              "core field fill increased"
+            ],
+            "regressions": []
+          }
+        },
+        {
+          "name": "clahe",
+          "decision": "candidate_accept",
+          "reasons": [
+            "core field fill increased"
+          ],
+          "summary": {
+            "docType": "medical_receipt",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 2,
+            "improvements": [
+              "core field fill increased"
+            ],
+            "regressions": []
+          }
+        },
+        {
+          "name": "sharpen",
+          "decision": "policy_skip",
+          "reasons": [
+            "not_in_candidates_for_tags=['long_receipt', 'small_text']"
+          ],
+          "summary": {
+            "docType": "medical_receipt",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 2,
+            "improvements": [
+              "core field fill increased"
+            ],
+            "regressions": []
+          }
+        },
+        {
+          "name": "denoise",
+          "decision": "always_blocked",
+          "reasons": [],
+          "summary": {
+            "docType": "medical_receipt",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 2,
+            "improvements": [
+              "core field fill increased"
+            ],
+            "regressions": []
+          }
+        },
+        {
+          "name": "threshold_adaptive",
+          "decision": "always_blocked",
+          "reasons": [],
+          "summary": {
+            "docType": "medical_receipt",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 2,
+            "improvements": [
+              "core field fill increased"
+            ],
+            "regressions": []
+          }
+        },
+        {
+          "name": "upscale_1_5x",
+          "decision": "policy_skip",
+          "reasons": [
+            "not_in_candidates_for_tags=['long_receipt', 'small_text']"
+          ],
+          "summary": {
+            "docType": "medical_receipt",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 1,
+            "improvements": [],
+            "regressions": []
+          }
+        },
+        {
+          "name": "clahe_plus_sharpen",
+          "decision": "candidate_accept",
+          "reasons": [
+            "core field fill increased"
+          ],
+          "summary": {
+            "docType": "medical_receipt",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 2,
+            "improvements": [
+              "core field fill increased"
+            ],
+            "regressions": []
+          }
+        }
+      ],
+      "selectedCandidate": "grayscale",
+      "wouldApplyInDebug": true,
+      "wouldApplyInProduction": false,
+      "t20Judgement": "improved"
+    },
+    {
+      "sample": "invoice_statement/3.pdf",
+      "documentType": "invoice_statement",
+      "qualityTags": [
+        "pdf_low_resolution",
+        "preprocessing_candidate",
+        "rowcount_guard_required"
+      ],
+      "original": {
+        "docType": "invoice_statement",
+        "rowCount": 2,
+        "expectedRowCount": 1,
+        "rowCountStatus": "mismatch",
+        "warnings": [
+          "insuranceCode:ocr_source_missing:보험No OCR 원문에서 보험코드 후보를 찾지 못함 - 빈 값 유지"
+        ],
+        "expectedMissingKeys": [
+          "insuranceCode",
+          "manufacturer",
+          "lotNo",
+          "serialNo",
+          "remark"
+        ]
+      },
+      "candidates": [
+        "render_dpi_200_grayscale"
+      ],
+      "variants": [
+        {
+          "name": "render_dpi_150",
+          "decision": "always_blocked",
+          "reasons": [],
+          "summary": {
+            "rowCount": 2,
+            "rowCountStatus": "mismatch",
+            "warnings": 1,
+            "improvements": [
+              "expectedMissingKeys decreased"
+            ],
+            "regressions": [
+              "rowCount mismatch expected 1"
+            ]
+          }
+        },
+        {
+          "name": "render_dpi_200",
+          "decision": "always_blocked",
+          "reasons": [],
+          "summary": {
+            "rowCount": 2,
+            "rowCountStatus": "mismatch",
+            "warnings": 1,
+            "improvements": [],
+            "regressions": [
+              "rowCount mismatch expected 1"
+            ]
+          }
+        },
+        {
+          "name": "render_dpi_300",
+          "decision": "always_blocked",
+          "reasons": [],
+          "summary": {
+            "rowCount": 2,
+            "rowCountStatus": "mismatch",
+            "warnings": 1,
+            "improvements": [],
+            "regressions": [
+              "rowCount mismatch expected 1"
+            ]
+          }
+        },
+        {
+          "name": "render_dpi_200_grayscale",
+          "decision": "candidate_accept",
+          "reasons": [
+            "rowCount exact recovered"
+          ],
+          "summary": {
+            "rowCount": 1,
+            "rowCountStatus": "exact",
+            "warnings": 1,
+            "improvements": [
+              "rowCount exact recovered"
+            ],
+            "regressions": []
+          }
+        }
+      ],
+      "selectedCandidate": "render_dpi_200_grayscale",
+      "wouldApplyInDebug": true,
+      "wouldApplyInProduction": false,
+      "t20Judgement": "improved"
+    },
+    {
+      "sample": "invoice_statement/2.pdf",
+      "documentType": "invoice_statement",
+      "qualityTags": [
+        "dense_table",
+        "rowcount_guard_required",
+        "preprocessing_blocked"
+      ],
+      "original": {
+        "docType": "invoice_statement",
+        "rowCount": 18,
+        "expectedRowCount": 13,
+        "rowCountStatus": "mismatch",
+        "warnings": [],
+        "expectedMissingKeys": [
+          "amount",
+          "totalAmount",
+          "remark"
+        ]
+      },
+      "candidates": [],
+      "variants": [
+        {
+          "name": "render_dpi_150",
+          "decision": "always_blocked",
+          "reasons": [],
+          "summary": {
+            "rowCount": 17,
+            "rowCountStatus": "mismatch",
+            "warnings": 0,
+            "improvements": [],
+            "regressions": [
+              "rowCount mismatch expected 13"
+            ]
+          }
+        },
+        {
+          "name": "render_dpi_200",
+          "decision": "always_blocked",
+          "reasons": [],
+          "summary": {
+            "rowCount": 18,
+            "rowCountStatus": "mismatch",
+            "warnings": 0,
+            "improvements": [],
+            "regressions": [
+              "rowCount mismatch expected 13"
+            ]
+          }
+        },
+        {
+          "name": "render_dpi_300",
+          "decision": "always_blocked",
+          "reasons": [],
+          "summary": {
+            "rowCount": 17,
+            "rowCountStatus": "mismatch",
+            "warnings": 0,
+            "improvements": [],
+            "regressions": [
+              "rowCount mismatch expected 13"
+            ]
+          }
+        },
+        {
+          "name": "render_dpi_200_grayscale",
+          "decision": "policy_skip",
+          "reasons": [
+            "not_in_candidates_for_tags=['dense_table', 'rowcount_guard_required', 'preprocessing_blocked']"
+          ],
+          "summary": {
+            "rowCount": 17,
+            "rowCountStatus": "mismatch",
+            "warnings": 0,
+            "improvements": [],
+            "regressions": [
+              "rowCount mismatch expected 13"
+            ]
+          }
+        }
+      ],
+      "selectedCandidate": null,
+      "wouldApplyInDebug": false,
+      "wouldApplyInProduction": false,
+      "t20Judgement": "regressed"
+    },
+    {
+      "sample": "receipt_generalization/card_001.jpg",
+      "documentType": "card_receipt",
+      "qualityTags": [
+        "small_text",
+        "garbled_source"
+      ],
+      "original": {
+        "docType": "receipt_card",
+        "docTypeMatch": true,
+        "coreFieldFillCount": 2,
+        "coreFieldTotal": 4,
+        "missingFields": [
+          "merchantName",
+          "businessNo"
+        ],
+        "fields": {
+          "merchantName": "",
+          "businessNo": "",
+          "totalAmount": "90,000"
+        },
+        "warnings": []
+      },
+      "candidates": [
+        "upscale_1_5x",
+        "clahe_plus_sharpen"
+      ],
+      "variants": [
+        {
+          "name": "grayscale",
+          "decision": "policy_skip",
+          "reasons": [
+            "not_in_candidates_for_tags=['small_text', 'garbled_source']"
+          ],
+          "summary": {
+            "docType": "receipt_card",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 1,
+            "improvements": [],
+            "regressions": [
+              "core field fill decreased"
+            ]
+          }
+        },
+        {
+          "name": "clahe",
+          "decision": "policy_skip",
+          "reasons": [
+            "not_in_candidates_for_tags=['small_text', 'garbled_source']"
+          ],
+          "summary": {
+            "docType": "receipt_card",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 1,
+            "improvements": [],
+            "regressions": [
+              "core field fill decreased"
+            ]
+          }
+        },
+        {
+          "name": "sharpen",
+          "decision": "policy_skip",
+          "reasons": [
+            "not_in_candidates_for_tags=['small_text', 'garbled_source']"
+          ],
+          "summary": {
+            "docType": "receipt_card",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 1,
+            "improvements": [],
+            "regressions": [
+              "core field fill decreased"
+            ]
+          }
+        },
+        {
+          "name": "denoise",
+          "decision": "always_blocked",
+          "reasons": [],
+          "summary": {
+            "docType": "receipt_card",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 1,
+            "improvements": [],
+            "regressions": [
+              "core field fill decreased"
+            ]
+          }
+        },
+        {
+          "name": "threshold_adaptive",
+          "decision": "always_blocked",
+          "reasons": [],
+          "summary": {
+            "docType": "receipt_card",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 1,
+            "improvements": [],
+            "regressions": [
+              "core field fill decreased"
+            ]
+          }
+        },
+        {
+          "name": "upscale_1_5x",
+          "decision": "no_improvement",
+          "reasons": [
+            "no_improvement"
+          ],
+          "summary": {
+            "docType": "receipt_card",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 2,
+            "improvements": [],
+            "regressions": []
+          }
+        },
+        {
+          "name": "clahe_plus_sharpen",
+          "decision": "reject",
+          "reasons": [
+            "core field fill decreased"
+          ],
+          "summary": {
+            "docType": "receipt_card",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 1,
+            "improvements": [],
+            "regressions": [
+              "core field fill decreased"
+            ]
+          }
+        }
+      ],
+      "selectedCandidate": null,
+      "wouldApplyInDebug": false,
+      "wouldApplyInProduction": false,
+      "t20Judgement": "unchanged"
+    },
+    {
+      "sample": "receipt_generalization/pos_001.jpg",
+      "documentType": "pos_receipt",
+      "qualityTags": [
+        "small_text",
+        "garbled_source"
+      ],
+      "original": {
+        "docType": "receipt_pos",
+        "docTypeMatch": true,
+        "coreFieldFillCount": 3,
+        "coreFieldTotal": 3,
+        "missingFields": [],
+        "fields": {
+          "merchantName": "편의점",
+          "businessNo": "215-85-44631",
+          "totalAmount": "6,900"
+        },
+        "warnings": []
+      },
+      "candidates": [
+        "upscale_1_5x",
+        "clahe_plus_sharpen"
+      ],
+      "variants": [
+        {
+          "name": "grayscale",
+          "decision": "policy_skip",
+          "reasons": [
+            "not_in_candidates_for_tags=['small_text', 'garbled_source']"
+          ],
+          "summary": {
+            "docType": "receipt_pos",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 3,
+            "improvements": [],
+            "regressions": []
+          }
+        },
+        {
+          "name": "clahe",
+          "decision": "policy_skip",
+          "reasons": [
+            "not_in_candidates_for_tags=['small_text', 'garbled_source']"
+          ],
+          "summary": {
+            "docType": "receipt_pos",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 3,
+            "improvements": [],
+            "regressions": []
+          }
+        },
+        {
+          "name": "sharpen",
+          "decision": "policy_skip",
+          "reasons": [
+            "not_in_candidates_for_tags=['small_text', 'garbled_source']"
+          ],
+          "summary": {
+            "docType": "receipt_pos",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 3,
+            "improvements": [],
+            "regressions": []
+          }
+        },
+        {
+          "name": "denoise",
+          "decision": "always_blocked",
+          "reasons": [],
+          "summary": {
+            "docType": "receipt_pos",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 3,
+            "improvements": [],
+            "regressions": []
+          }
+        },
+        {
+          "name": "threshold_adaptive",
+          "decision": "always_blocked",
+          "reasons": [],
+          "summary": {
+            "docType": "receipt_pos",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 3,
+            "improvements": [],
+            "regressions": []
+          }
+        },
+        {
+          "name": "upscale_1_5x",
+          "decision": "no_improvement",
+          "reasons": [
+            "no_improvement"
+          ],
+          "summary": {
+            "docType": "receipt_pos",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 3,
+            "improvements": [],
+            "regressions": []
+          }
+        },
+        {
+          "name": "clahe_plus_sharpen",
+          "decision": "no_improvement",
+          "reasons": [
+            "no_improvement"
+          ],
+          "summary": {
+            "docType": "receipt_pos",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 3,
+            "improvements": [],
+            "regressions": []
+          }
+        }
+      ],
+      "selectedCandidate": null,
+      "wouldApplyInDebug": false,
+      "wouldApplyInProduction": false,
+      "t20Judgement": "unchanged"
+    },
+    {
+      "sample": "receipt_generalization/medical_002.jpg",
+      "documentType": "medical_receipt",
+      "qualityTags": [
+        "small_text"
+      ],
+      "original": {
+        "docType": "medical_receipt",
+        "docTypeMatch": true,
+        "coreFieldFillCount": 2,
+        "coreFieldTotal": 2,
+        "missingFields": [],
+        "fields": {
+          "merchantName": "하나동물병원",
+          "businessNo": "",
+          "totalAmount": "88,000"
+        },
+        "warnings": []
+      },
+      "candidates": [],
+      "variants": [
+        {
+          "name": "grayscale",
+          "decision": "policy_skip",
+          "reasons": [
+            "not_in_candidates_for_tags=['small_text']"
+          ],
+          "summary": {
+            "docType": "medical_receipt",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 2,
+            "improvements": [],
+            "regressions": []
+          }
+        },
+        {
+          "name": "clahe",
+          "decision": "policy_skip",
+          "reasons": [
+            "not_in_candidates_for_tags=['small_text']"
+          ],
+          "summary": {
+            "docType": "medical_receipt",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 2,
+            "improvements": [],
+            "regressions": []
+          }
+        },
+        {
+          "name": "sharpen",
+          "decision": "policy_skip",
+          "reasons": [
+            "not_in_candidates_for_tags=['small_text']"
+          ],
+          "summary": {
+            "docType": "medical_receipt",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 2,
+            "improvements": [],
+            "regressions": []
+          }
+        },
+        {
+          "name": "denoise",
+          "decision": "always_blocked",
+          "reasons": [],
+          "summary": {
+            "docType": "medical_receipt",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 2,
+            "improvements": [],
+            "regressions": []
+          }
+        },
+        {
+          "name": "threshold_adaptive",
+          "decision": "always_blocked",
+          "reasons": [],
+          "summary": {
+            "docType": "medical_receipt",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 2,
+            "improvements": [],
+            "regressions": []
+          }
+        },
+        {
+          "name": "upscale_1_5x",
+          "decision": "policy_skip",
+          "reasons": [
+            "not_in_candidates_for_tags=['small_text']"
+          ],
+          "summary": {
+            "docType": "medical_receipt",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 2,
+            "improvements": [],
+            "regressions": []
+          }
+        },
+        {
+          "name": "clahe_plus_sharpen",
+          "decision": "policy_skip",
+          "reasons": [
+            "not_in_candidates_for_tags=['small_text']"
+          ],
+          "summary": {
+            "docType": "medical_receipt",
+            "docTypeMatch": true,
+            "coreFieldFillCount": 2,
+            "improvements": [],
+            "regressions": []
+          }
+        }
+      ],
+      "selectedCandidate": null,
+      "wouldApplyInDebug": false,
+      "wouldApplyInProduction": false,
+      "t20Judgement": "unchanged"
+    }
+  ]
+}

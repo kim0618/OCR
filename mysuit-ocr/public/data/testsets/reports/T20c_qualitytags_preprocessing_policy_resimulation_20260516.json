@@ -1,0 +1,729 @@
+{
+  "task": "T-20c",
+  "generatedAt": "2026-05-16T19:55:37.374572",
+  "t20aSummary": {
+    "conditional_accept_before": 4,
+    "reject_all_before": 6
+  },
+  "t20cSummary": {
+    "conditional_accept_after": 5,
+    "reject_all_after": 5,
+    "unchanged_after": 0,
+    "changed_samples": 1
+  },
+  "qualityTagChanges": [
+    {
+      "sample": "receipt_generalization/card_001.jpg",
+      "before": [
+        "small_text"
+      ],
+      "after": [
+        "small_text",
+        "garbled_source"
+      ],
+      "changed": true
+    },
+    {
+      "sample": "receipt_generalization/pos_001.jpg",
+      "before": [
+        "small_text"
+      ],
+      "after": [
+        "small_text",
+        "garbled_source"
+      ],
+      "changed": true
+    },
+    {
+      "sample": "receipt_generalization/pos_006.jpg",
+      "before": [
+        "small_text"
+      ],
+      "after": [
+        "small_text",
+        "garbled_source",
+        "preprocessing_candidate"
+      ],
+      "changed": true
+    },
+    {
+      "sample": "invoice_statement/2.pdf",
+      "before": [],
+      "after": [
+        "dense_table",
+        "rowcount_guard_required",
+        "preprocessing_blocked"
+      ],
+      "changed": true
+    },
+    {
+      "sample": "invoice_statement/3.pdf",
+      "before": [],
+      "after": [
+        "pdf_low_resolution",
+        "preprocessing_candidate",
+        "rowcount_guard_required"
+      ],
+      "changed": true
+    }
+  ],
+  "decisionChanges": [
+    {
+      "sample": "invoice_statement/3.pdf",
+      "before": "reject_all",
+      "after": "conditional_accept",
+      "bestAccepted": "render_dpi_200_grayscale"
+    }
+  ],
+  "keyChecks": {
+    "invoice2_reject_all": true,
+    "invoice3_conditional_accept": true,
+    "receipt_4_maintained": true,
+    "overall_pass": true
+  },
+  "policySimulation": {
+    "conditional_accept": 5,
+    "reject_all": 5,
+    "unchanged": 0,
+    "samples": [
+      {
+        "sample": "receipt_generalization/card_001.jpg",
+        "documentType": "card_receipt",
+        "qualityTags_before": [
+          "small_text"
+        ],
+        "qualityTags_after": [
+          "small_text",
+          "garbled_source"
+        ],
+        "tags_changed": true,
+        "sampleJudgement_t20": "unchanged",
+        "acceptedVariants": [],
+        "rejectedVariants": [
+          "grayscale",
+          "clahe",
+          "sharpen",
+          "denoise",
+          "threshold_adaptive",
+          "upscale_1_5x",
+          "clahe_plus_sharpen"
+        ],
+        "variantDecisions": [
+          {
+            "variant": "grayscale",
+            "decision": "policy_reject",
+            "reason": "no_qualitytag_match: grayscale needs ['long_receipt', 'dense_content'], got ['small_text', 'garbled_source']"
+          },
+          {
+            "variant": "clahe",
+            "decision": "policy_reject",
+            "reason": "small_text_only_blocked: clahe"
+          },
+          {
+            "variant": "sharpen",
+            "decision": "policy_reject",
+            "reason": "no_qualitytag_match: sharpen needs ['long_receipt'], got ['small_text', 'garbled_source']"
+          },
+          {
+            "variant": "denoise",
+            "decision": "policy_reject",
+            "reason": "variant_blocked_by_default: denoise"
+          },
+          {
+            "variant": "threshold_adaptive",
+            "decision": "policy_reject",
+            "reason": "variant_blocked_by_default: threshold_adaptive"
+          },
+          {
+            "variant": "upscale_1_5x",
+            "decision": "unchanged",
+            "reason": "no_improvement",
+            "improvements": [],
+            "regressions": []
+          },
+          {
+            "variant": "clahe_plus_sharpen",
+            "decision": "policy_reject",
+            "reason": "small_text_only_blocked: clahe_plus_sharpen"
+          }
+        ],
+        "finalDecision": "reject_all",
+        "bestAccepted": null
+      },
+      {
+        "sample": "receipt_generalization/card_002.jpg",
+        "documentType": "card_receipt",
+        "qualityTags_before": [
+          "blurred"
+        ],
+        "qualityTags_after": [
+          "blurred"
+        ],
+        "tags_changed": false,
+        "sampleJudgement_t20": "improved",
+        "acceptedVariants": [
+          "clahe",
+          "upscale_1_5x",
+          "clahe_plus_sharpen"
+        ],
+        "rejectedVariants": [
+          "grayscale",
+          "sharpen",
+          "denoise",
+          "threshold_adaptive"
+        ],
+        "variantDecisions": [
+          {
+            "variant": "grayscale",
+            "decision": "policy_reject",
+            "reason": "no_qualitytag_match: grayscale needs ['long_receipt', 'dense_content'], got ['blurred']"
+          },
+          {
+            "variant": "clahe",
+            "decision": "accept",
+            "reason": "guard_passed: ['core field fill increased']",
+            "improvements": [
+              "core field fill increased"
+            ],
+            "regressions": []
+          },
+          {
+            "variant": "sharpen",
+            "decision": "policy_reject",
+            "reason": "no_qualitytag_match: sharpen needs ['long_receipt'], got ['blurred']"
+          },
+          {
+            "variant": "denoise",
+            "decision": "policy_reject",
+            "reason": "variant_blocked_by_default: denoise"
+          },
+          {
+            "variant": "threshold_adaptive",
+            "decision": "policy_reject",
+            "reason": "variant_blocked_by_default: threshold_adaptive"
+          },
+          {
+            "variant": "upscale_1_5x",
+            "decision": "accept",
+            "reason": "guard_passed: ['core field fill increased']",
+            "improvements": [
+              "core field fill increased"
+            ],
+            "regressions": []
+          },
+          {
+            "variant": "clahe_plus_sharpen",
+            "decision": "accept",
+            "reason": "guard_passed: ['core field fill increased']",
+            "improvements": [
+              "core field fill increased"
+            ],
+            "regressions": []
+          }
+        ],
+        "finalDecision": "conditional_accept",
+        "bestAccepted": "clahe"
+      },
+      {
+        "sample": "receipt_generalization/medical_001.jpg",
+        "documentType": "medical_receipt",
+        "qualityTags_before": [
+          "shadow"
+        ],
+        "qualityTags_after": [
+          "shadow"
+        ],
+        "tags_changed": false,
+        "sampleJudgement_t20": "improved",
+        "acceptedVariants": [
+          "clahe"
+        ],
+        "rejectedVariants": [
+          "grayscale",
+          "sharpen",
+          "denoise",
+          "threshold_adaptive",
+          "upscale_1_5x",
+          "clahe_plus_sharpen"
+        ],
+        "variantDecisions": [
+          {
+            "variant": "grayscale",
+            "decision": "policy_reject",
+            "reason": "no_qualitytag_match: grayscale needs ['long_receipt', 'dense_content'], got ['shadow']"
+          },
+          {
+            "variant": "clahe",
+            "decision": "accept",
+            "reason": "guard_passed: ['core field fill increased']",
+            "improvements": [
+              "core field fill increased"
+            ],
+            "regressions": []
+          },
+          {
+            "variant": "sharpen",
+            "decision": "policy_reject",
+            "reason": "no_qualitytag_match: sharpen needs ['long_receipt'], got ['shadow']"
+          },
+          {
+            "variant": "denoise",
+            "decision": "policy_reject",
+            "reason": "variant_blocked_by_default: denoise"
+          },
+          {
+            "variant": "threshold_adaptive",
+            "decision": "policy_reject",
+            "reason": "variant_blocked_by_default: threshold_adaptive"
+          },
+          {
+            "variant": "upscale_1_5x",
+            "decision": "policy_reject",
+            "reason": "no_qualitytag_match: upscale_1_5x needs ['blurred', 'ocr_garbled_with_small'], got ['shadow']"
+          },
+          {
+            "variant": "clahe_plus_sharpen",
+            "decision": "unchanged",
+            "reason": "no_improvement",
+            "improvements": [],
+            "regressions": []
+          }
+        ],
+        "finalDecision": "conditional_accept",
+        "bestAccepted": "clahe"
+      },
+      {
+        "sample": "receipt_generalization/pos_001.jpg",
+        "documentType": "pos_receipt",
+        "qualityTags_before": [
+          "small_text"
+        ],
+        "qualityTags_after": [
+          "small_text",
+          "garbled_source"
+        ],
+        "tags_changed": true,
+        "sampleJudgement_t20": "unchanged",
+        "acceptedVariants": [],
+        "rejectedVariants": [
+          "grayscale",
+          "clahe",
+          "sharpen",
+          "denoise",
+          "threshold_adaptive",
+          "upscale_1_5x",
+          "clahe_plus_sharpen"
+        ],
+        "variantDecisions": [
+          {
+            "variant": "grayscale",
+            "decision": "policy_reject",
+            "reason": "no_qualitytag_match: grayscale needs ['long_receipt', 'dense_content'], got ['small_text', 'garbled_source']"
+          },
+          {
+            "variant": "clahe",
+            "decision": "policy_reject",
+            "reason": "small_text_only_blocked: clahe"
+          },
+          {
+            "variant": "sharpen",
+            "decision": "policy_reject",
+            "reason": "no_qualitytag_match: sharpen needs ['long_receipt'], got ['small_text', 'garbled_source']"
+          },
+          {
+            "variant": "denoise",
+            "decision": "policy_reject",
+            "reason": "variant_blocked_by_default: denoise"
+          },
+          {
+            "variant": "threshold_adaptive",
+            "decision": "policy_reject",
+            "reason": "variant_blocked_by_default: threshold_adaptive"
+          },
+          {
+            "variant": "upscale_1_5x",
+            "decision": "unchanged",
+            "reason": "no_improvement",
+            "improvements": [],
+            "regressions": []
+          },
+          {
+            "variant": "clahe_plus_sharpen",
+            "decision": "policy_reject",
+            "reason": "small_text_only_blocked: clahe_plus_sharpen"
+          }
+        ],
+        "finalDecision": "reject_all",
+        "bestAccepted": null
+      },
+      {
+        "sample": "receipt_generalization/pos_002.jpg",
+        "documentType": "pos_receipt",
+        "qualityTags_before": [
+          "small_text"
+        ],
+        "qualityTags_after": [
+          "small_text"
+        ],
+        "tags_changed": false,
+        "sampleJudgement_t20": "unchanged",
+        "acceptedVariants": [],
+        "rejectedVariants": [
+          "grayscale",
+          "clahe",
+          "sharpen",
+          "denoise",
+          "threshold_adaptive",
+          "upscale_1_5x",
+          "clahe_plus_sharpen"
+        ],
+        "variantDecisions": [
+          {
+            "variant": "grayscale",
+            "decision": "policy_reject",
+            "reason": "no_qualitytag_match: grayscale needs ['long_receipt', 'dense_content'], got ['small_text']"
+          },
+          {
+            "variant": "clahe",
+            "decision": "policy_reject",
+            "reason": "small_text_only_blocked: clahe"
+          },
+          {
+            "variant": "sharpen",
+            "decision": "policy_reject",
+            "reason": "no_qualitytag_match: sharpen needs ['long_receipt'], got ['small_text']"
+          },
+          {
+            "variant": "denoise",
+            "decision": "policy_reject",
+            "reason": "variant_blocked_by_default: denoise"
+          },
+          {
+            "variant": "threshold_adaptive",
+            "decision": "policy_reject",
+            "reason": "variant_blocked_by_default: threshold_adaptive"
+          },
+          {
+            "variant": "upscale_1_5x",
+            "decision": "unchanged",
+            "reason": "no_improvement",
+            "improvements": [],
+            "regressions": []
+          },
+          {
+            "variant": "clahe_plus_sharpen",
+            "decision": "policy_reject",
+            "reason": "small_text_only_blocked: clahe_plus_sharpen"
+          }
+        ],
+        "finalDecision": "reject_all",
+        "bestAccepted": null
+      },
+      {
+        "sample": "receipt_generalization/pos_006.jpg",
+        "documentType": "pos_receipt",
+        "qualityTags_before": [
+          "small_text"
+        ],
+        "qualityTags_after": [
+          "small_text",
+          "garbled_source",
+          "preprocessing_candidate"
+        ],
+        "tags_changed": true,
+        "sampleJudgement_t20": "improved",
+        "acceptedVariants": [
+          "upscale_1_5x"
+        ],
+        "rejectedVariants": [
+          "grayscale",
+          "clahe",
+          "sharpen",
+          "denoise",
+          "threshold_adaptive",
+          "clahe_plus_sharpen"
+        ],
+        "variantDecisions": [
+          {
+            "variant": "grayscale",
+            "decision": "policy_reject",
+            "reason": "no_qualitytag_match: grayscale needs ['long_receipt', 'dense_content'], got ['small_text', 'garbled_source', 'preprocessing_candidate']"
+          },
+          {
+            "variant": "clahe",
+            "decision": "policy_reject",
+            "reason": "small_text_only_blocked: clahe"
+          },
+          {
+            "variant": "sharpen",
+            "decision": "policy_reject",
+            "reason": "no_qualitytag_match: sharpen needs ['long_receipt'], got ['small_text', 'garbled_source', 'preprocessing_candidate']"
+          },
+          {
+            "variant": "denoise",
+            "decision": "policy_reject",
+            "reason": "variant_blocked_by_default: denoise"
+          },
+          {
+            "variant": "threshold_adaptive",
+            "decision": "policy_reject",
+            "reason": "variant_blocked_by_default: threshold_adaptive"
+          },
+          {
+            "variant": "upscale_1_5x",
+            "decision": "accept",
+            "reason": "guard_passed: ['businessNo source appeared', 'totalAmount source appeared']",
+            "improvements": [
+              "businessNo source appeared",
+              "totalAmount source appeared"
+            ],
+            "regressions": []
+          },
+          {
+            "variant": "clahe_plus_sharpen",
+            "decision": "policy_reject",
+            "reason": "small_text_only_blocked: clahe_plus_sharpen"
+          }
+        ],
+        "finalDecision": "conditional_accept",
+        "bestAccepted": "upscale_1_5x"
+      },
+      {
+        "sample": "invoice_statement/2.pdf",
+        "documentType": "invoice_statement",
+        "qualityTags_before": [],
+        "qualityTags_after": [
+          "dense_table",
+          "rowcount_guard_required",
+          "preprocessing_blocked"
+        ],
+        "tags_changed": true,
+        "sampleJudgement_t20": "regressed",
+        "acceptedVariants": [],
+        "rejectedVariants": [
+          "render_dpi_150",
+          "render_dpi_200",
+          "render_dpi_300",
+          "render_dpi_200_grayscale"
+        ],
+        "variantDecisions": [
+          {
+            "variant": "render_dpi_150",
+            "decision": "policy_reject",
+            "reason": "invoice_statement_blocked: render_dpi_150 not in allowed"
+          },
+          {
+            "variant": "render_dpi_200",
+            "decision": "policy_reject",
+            "reason": "invoice_statement_blocked: render_dpi_200 not in allowed"
+          },
+          {
+            "variant": "render_dpi_300",
+            "decision": "policy_reject",
+            "reason": "invoice_statement_blocked: render_dpi_300 not in allowed"
+          },
+          {
+            "variant": "render_dpi_200_grayscale",
+            "decision": "policy_reject",
+            "reason": "preprocessing_blocked_tag: render_dpi_200_grayscale"
+          }
+        ],
+        "finalDecision": "reject_all",
+        "bestAccepted": null
+      },
+      {
+        "sample": "invoice_statement/3.pdf",
+        "documentType": "invoice_statement",
+        "qualityTags_before": [],
+        "qualityTags_after": [
+          "pdf_low_resolution",
+          "preprocessing_candidate",
+          "rowcount_guard_required"
+        ],
+        "tags_changed": true,
+        "sampleJudgement_t20": "improved",
+        "acceptedVariants": [
+          "render_dpi_200_grayscale"
+        ],
+        "rejectedVariants": [
+          "render_dpi_150",
+          "render_dpi_200",
+          "render_dpi_300"
+        ],
+        "variantDecisions": [
+          {
+            "variant": "render_dpi_150",
+            "decision": "policy_reject",
+            "reason": "invoice_statement_blocked: render_dpi_150 not in allowed"
+          },
+          {
+            "variant": "render_dpi_200",
+            "decision": "policy_reject",
+            "reason": "invoice_statement_blocked: render_dpi_200 not in allowed"
+          },
+          {
+            "variant": "render_dpi_300",
+            "decision": "policy_reject",
+            "reason": "invoice_statement_blocked: render_dpi_300 not in allowed"
+          },
+          {
+            "variant": "render_dpi_200_grayscale",
+            "decision": "accept",
+            "reason": "guard_passed: ['rowCount exact recovered']",
+            "improvements": [
+              "rowCount exact recovered"
+            ],
+            "regressions": []
+          }
+        ],
+        "finalDecision": "conditional_accept",
+        "bestAccepted": "render_dpi_200_grayscale"
+      },
+      {
+        "sample": "receipt_generalization/medical_002.jpg",
+        "documentType": "medical_receipt",
+        "qualityTags_before": [
+          "small_text"
+        ],
+        "qualityTags_after": [
+          "small_text"
+        ],
+        "tags_changed": false,
+        "sampleJudgement_t20": "unchanged",
+        "acceptedVariants": [],
+        "rejectedVariants": [
+          "grayscale",
+          "clahe",
+          "sharpen",
+          "denoise",
+          "threshold_adaptive",
+          "upscale_1_5x",
+          "clahe_plus_sharpen"
+        ],
+        "variantDecisions": [
+          {
+            "variant": "grayscale",
+            "decision": "policy_reject",
+            "reason": "no_qualitytag_match: grayscale needs ['long_receipt', 'dense_content'], got ['small_text']"
+          },
+          {
+            "variant": "clahe",
+            "decision": "policy_reject",
+            "reason": "small_text_only_blocked: clahe"
+          },
+          {
+            "variant": "sharpen",
+            "decision": "policy_reject",
+            "reason": "no_qualitytag_match: sharpen needs ['long_receipt'], got ['small_text']"
+          },
+          {
+            "variant": "denoise",
+            "decision": "policy_reject",
+            "reason": "variant_blocked_by_default: denoise"
+          },
+          {
+            "variant": "threshold_adaptive",
+            "decision": "policy_reject",
+            "reason": "variant_blocked_by_default: threshold_adaptive"
+          },
+          {
+            "variant": "upscale_1_5x",
+            "decision": "unchanged",
+            "reason": "no_improvement",
+            "improvements": [],
+            "regressions": []
+          },
+          {
+            "variant": "clahe_plus_sharpen",
+            "decision": "policy_reject",
+            "reason": "small_text_only_blocked: clahe_plus_sharpen"
+          }
+        ],
+        "finalDecision": "reject_all",
+        "bestAccepted": null
+      },
+      {
+        "sample": "receipt_generalization/medical_003.jpg",
+        "documentType": "medical_receipt",
+        "qualityTags_before": [
+          "long_receipt",
+          "small_text"
+        ],
+        "qualityTags_after": [
+          "long_receipt",
+          "small_text"
+        ],
+        "tags_changed": false,
+        "sampleJudgement_t20": "improved",
+        "acceptedVariants": [
+          "grayscale",
+          "clahe",
+          "sharpen",
+          "clahe_plus_sharpen"
+        ],
+        "rejectedVariants": [
+          "denoise",
+          "threshold_adaptive",
+          "upscale_1_5x"
+        ],
+        "variantDecisions": [
+          {
+            "variant": "grayscale",
+            "decision": "accept",
+            "reason": "guard_passed: ['core field fill increased']",
+            "improvements": [
+              "core field fill increased"
+            ],
+            "regressions": []
+          },
+          {
+            "variant": "clahe",
+            "decision": "accept",
+            "reason": "guard_passed: ['core field fill increased']",
+            "improvements": [
+              "core field fill increased"
+            ],
+            "regressions": []
+          },
+          {
+            "variant": "sharpen",
+            "decision": "accept",
+            "reason": "guard_passed: ['core field fill increased']",
+            "improvements": [
+              "core field fill increased"
+            ],
+            "regressions": []
+          },
+          {
+            "variant": "denoise",
+            "decision": "policy_reject",
+            "reason": "variant_blocked_by_default: denoise"
+          },
+          {
+            "variant": "threshold_adaptive",
+            "decision": "policy_reject",
+            "reason": "variant_blocked_by_default: threshold_adaptive"
+          },
+          {
+            "variant": "upscale_1_5x",
+            "decision": "unchanged",
+            "reason": "no_improvement",
+            "improvements": [],
+            "regressions": []
+          },
+          {
+            "variant": "clahe_plus_sharpen",
+            "decision": "accept",
+            "reason": "guard_passed: ['core field fill increased']",
+            "improvements": [
+              "core field fill increased"
+            ],
+            "regressions": []
+          }
+        ],
+        "finalDecision": "conditional_accept",
+        "bestAccepted": "grayscale"
+      }
+    ]
+  }
+}

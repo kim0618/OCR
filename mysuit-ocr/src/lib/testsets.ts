@@ -56,6 +56,13 @@ export const TESTSETS: TestsetMeta[] = [
     path: "/data/testsets/invoice_statement",
     description: "거래명세서 계열 헤더/합계/표 구조 1차 검증용",
   },
+  {
+    id: "tax_invoice",
+    label: "세금계산서 검증셋",
+    folder: "tax_invoice",
+    path: "/data/testsets/tax_invoice",
+    description: "세금계산서(부가가치세) 공급가액/세액/합계 및 품목표 추출 검증용. 샘플 추가 대기.",
+  },
 ];
 
 export const DATASET_FOLDERS: Record<string, string> = Object.fromEntries(
@@ -78,6 +85,8 @@ export type DocumentType =
   | "finance_slip"
   | "medical_receipt"
   | "invoice_statement"
+  | "tax_invoice"
+  | "transaction_statement"
   | "unknown";
 
 export type QualityTag =
@@ -104,7 +113,7 @@ export type QualityTag =
   | "address_tail_missing"
   | string;
 
-export type Difficulty = "easy" | "medium" | "hard";
+export type Difficulty = "easy" | "medium" | "hard" | "extreme";
 
 // ---------------------------------------------------------------------------
 // Invoice Statement profile types (P-1)
@@ -165,6 +174,8 @@ export interface InvoiceProfile {
     /** T-6k: UI 표시 전용 — 실제 문서 표 헤더명 그대로 표시하기 위한 컬럼 순서/라벨 */
     display?: InvoiceTableExpectedDisplayColumn[];
   };
+  /** T-12a: 기대 tableRows 행 수 (rowCount exact/short/over 판정 기준) */
+  expectedRowCount?: number;
 }
 
 export type DatasetRole =
@@ -176,12 +187,22 @@ export type DatasetRole =
 
 export type DatasetStatus = "locked" | "in_progress" | "draft";
 
+export type ExpectedStatus =
+  | "selected"
+  | "suppressed"
+  | "suppressed_bank_slip"
+  | "suppressed_handwritten"
+  | "unknown"
+  | "error"
+  | "review"
+  | string; // open for future values
+
 export type ManifestItem = {
   filename: string;
   documentType: DocumentType;
   qualityTags: QualityTag[];
   difficulty: Difficulty;
-  expectedStatus: string;
+  expectedStatus: ExpectedStatus;
   notes?: string;
   invoiceProfile?: InvoiceProfile;
 };

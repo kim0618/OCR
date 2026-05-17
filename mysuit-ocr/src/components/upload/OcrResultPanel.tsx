@@ -7,6 +7,7 @@ import type { AutofillAction, AutofillRunSummary, AutofillSuggestion, OutputValu
 import { getGroundTruth, compareToGt, fieldKey } from "@/lib/groundTruthStore";
 import { useUi } from "../common/AppProviders";
 import { resolveFieldLabel } from "@/lib/invoiceFieldLabels";
+import { TABLE_COLUMN_META } from "@/lib/profiles";
 
 export type FieldSourceBox = {
   x: number;
@@ -562,6 +563,29 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
   // eslint-disable-next-line react-hooks/exhaustive-deps
   [editedFields]);
 
+  // UI-PREVIEW-1: invoice_statement structured tableRows (document_fields.tableRows)
+  // document_fields는 OcrResult 타입에 없지만 런타임에 백엔드 응답에 포함됨
+  const docTableRows = useMemo(() => {
+    const df = (result as Record<string, unknown>).document_fields as Record<string, unknown> | null | undefined;
+    if (!df) return null;
+    const rows = df.tableRows;
+    if (!Array.isArray(rows) || rows.length === 0) return null;
+    return rows as Record<string, string>[];
+  }, [result]);
+
+  // UI-PREVIEW-1: TABLE_COLUMN_META에서 rowIndex 제외하고 데이터가 있는 컬럼만 필터
+  const docTableCols = useMemo(() => {
+    if (!docTableRows) return null;
+    return TABLE_COLUMN_META.filter(
+      (col) =>
+        col.key !== "rowIndex" &&
+        docTableRows.some((row) => {
+          const v = row[col.key];
+          return v !== undefined && v !== null && String(v).trim() !== "";
+        }),
+    );
+  }, [docTableRows]);
+
   const toJson = () => {
     return JSON.stringify({ fields: editedFields, processing_time: result.processing_time }, null, 2);
   };
@@ -762,7 +786,7 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                 style={{
                   display: "grid",
                   gridTemplateRows: rawOcrFields.length > 0
-                    ? "minmax(0, 1fr) minmax(0, 1fr)"
+                    ? "minmax(0, 7fr) minmax(0, 3fr)"
                     : "minmax(0, 1fr)",
                   flex: 1,
                   minHeight: 0,
@@ -775,30 +799,70 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                 <div style={{ minHeight: 0, overflow: "auto" }}>
                   <Markdown remarkPlugins={[remarkGfm]}>{toMarkdown()}</Markdown>
                   {/* Table fields rendered as JSX (reliable layout, not markdown) */}
-                  {previewTableFields.map(({ idx, label, displayRows, rowLabel }) => (
-                    <div key={idx} style={{ marginTop: 12 }}>
-                      <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6 }}>
-                        {idx}. {label}
-                        <span style={{ fontSize: 11, fontWeight: 400, color: "var(--muted)", marginLeft: 8 }}>{rowLabel}</span>
-                      </div>
-                      <div className="or-table-wrap">
-                        <table className="or-table-result">
-                          <tbody>
-                            {displayRows.map((row, ri) => (
-                              <tr key={ri}>
-                                {row.map((cell, ci) => (
-                                  <td key={ci} className={`or-table-cell ${cell.confidence < 0.7 ? "or-table-cell-low" : ""}`}
-                                    title={`신뢰도: ${(cell.confidence * 100).toFixed(1)}%`}>
-                                    {cell.value || "-"}
-                                  </td>
+                  {previewTableFields.map(({ idx, label, displayRows, rowLabel }, tableIdx) => {
+                    // UI-PREVIEW-1: invoice_statement structured tableRows가 있으면 컬럼 순서 보정
+                    if (tableIdx === 0 && docTableRows && docTableCols && docTableCols.length > 0) {
+                      return (
+                        <div key={idx} style={{ marginTop: 12 }}>
+                          <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6 }}>
+                            {idx}. {label}
+                            <span style={{ fontSize: 11, fontWeight: 400, color: "var(--muted)", marginLeft: 8 }}>
+                              {docTableCols.length}항목, {docTableRows.length}행
+                            </span>
+                          </div>
+                          <div className="or-table-wrap" style={{ overflowX: "auto" }}>
+                            <table className="or-table-result">
+                              <tbody>
+                                {/* 헤더 행 — TABLE_COLUMN_META 순서 기준 */}
+                                <tr>
+                                  {docTableCols.map((col) => (
+                                    <td key={col.key} className="or-table-cell">{col.labelKo}</td>
+                                  ))}
+                                </tr>
+                                {/* 데이터 행 */}
+                                {docTableRows.map((row, ri) => (
+                                  <tr key={ri}>
+                                    {docTableCols.map((col) => {
+                                      const val = row[col.key];
+                                      const display = val !== undefined && val !== null && String(val).trim() !== "" ? String(val) : "-";
+                                      return (
+                                        <td key={col.key} className="or-table-cell">{display}</td>
+                                      );
+                                    })}
+                                  </tr>
                                 ))}
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      );
+                    }
+                    // Fallback: raw displayRows (기존 동작)
+                    return (
+                      <div key={idx} style={{ marginTop: 12 }}>
+                        <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6 }}>
+                          {idx}. {label}
+                          <span style={{ fontSize: 11, fontWeight: 400, color: "var(--muted)", marginLeft: 8 }}>{rowLabel}</span>
+                        </div>
+                        <div className="or-table-wrap">
+                          <table className="or-table-result">
+                            <tbody>
+                              {displayRows.map((row, ri) => (
+                                <tr key={ri}>
+                                  {row.map((cell, ci) => (
+                                    <td key={ci} className={`or-table-cell ${cell.confidence < 0.7 ? "or-table-cell-low" : ""}`}
+                                      title={`신뢰도: ${(cell.confidence * 100).toFixed(1)}%`}>
+                                      {cell.value || "-"}
+                                    </td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
                 {rawOcrFields.length > 0 && (
                   <div

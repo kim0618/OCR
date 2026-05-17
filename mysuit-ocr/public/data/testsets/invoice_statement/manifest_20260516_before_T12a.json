@@ -1,0 +1,208 @@
+{
+  "datasetId": "invoice_statement",
+  "datasetRole": "document_type",
+  "status": "draft",
+  "description": "Invoice statement round-1 validation set for header blocks, totals, and table structure.",
+  "items": [
+    {
+      "filename": "1.jpg",
+      "documentType": "invoice_statement",
+      "qualityTags": [],
+      "difficulty": "easy",
+      "expectedStatus": "selected",
+      "notes": "Single invoice statement image. Primary sample for tableDetected, rowCount, and firstRowPreview.",
+      "invoiceProfile": {
+        "invoiceSubType": "subtotal_cumulative_statement",
+        "amountProfile": "subtotal_cumulative",
+        "partyProfile": "supplier_buyer",
+        "tableProfile": "multi_item_table",
+        "summaryFields": {
+          "subtotal": { "label": "소계", "appliesToAmount": false },
+          "cumulativeAmount": { "label": "누계", "appliesToAmount": false }
+        },
+        "tableExpectedColumns": {
+          "required": ["itemName", "spec", "manufacturingNo", "expiryDate", "quantity", "unitPrice", "amount"],
+          "optional": ["lotNo", "unit", "supplyAmount", "taxAmount", "totalAmount", "remark"],
+          "display": [
+            { "key": "itemName", "label": "품목" },
+            { "key": "spec", "label": "규격" },
+            { "key": "manufacturingNo", "label": "제조번호" },
+            { "key": "expiryDate", "label": "유효기간" },
+            { "key": "quantity", "label": "수량" },
+            { "key": "unitPrice", "label": "단가" },
+            { "key": "amount", "label": "금액" }
+          ]
+        }
+      }
+    },
+    {
+      "filename": "2.pdf",
+      "documentType": "invoice_statement",
+      "qualityTags": [],
+      "difficulty": "easy",
+      "expectedStatus": "selected",
+      "notes": "Standard single-page invoice statement. Primary sample for two header blocks, totals, and item table structure.",
+      "invoiceProfile": {
+        "invoiceSubType": "balance_statement",
+        "amountProfile": "balance_cumulative",
+        "partyProfile": "supplier_buyer",
+        "tableProfile": "item_quantity_table",
+        "summaryFields": {
+          "previousBalance": { "label": "전일잔액", "appliesToAmount": false },
+          "transactionAmount": { "label": "당일거래금액", "appliesToAmount": false },
+          "cumulativeBalance": { "label": "누계잔액", "appliesToAmount": false }
+        },
+        "visibleAmountFields": ["previousBalance", "transactionAmount", "cumulativeBalance", "totalAmount"],
+        "tableExpectedColumns": {
+          "required": ["rowIndex", "itemCode", "itemName", "quantity", "consumerUnitPrice", "supplyUnitPrice", "supplyAmount", "insuranceCode"],
+          "optional": ["amount", "totalAmount", "remark"],
+          "display": [
+            { "key": "rowIndex", "label": "NO" },
+            { "key": "itemCode", "label": "품목코드" },
+            { "key": "itemName", "label": "품목명" },
+            { "key": "quantity", "label": "수량" },
+            { "key": "consumerUnitPrice", "label": "소비자단가" },
+            { "key": "supplyUnitPrice", "label": "공급단가" },
+            { "key": "supplyAmount", "label": "공급금액" },
+            { "key": "insuranceCode", "label": "보험No" }
+          ]
+        }
+      }
+    },
+    {
+      "filename": "3.pdf",
+      "documentType": "invoice_statement",
+      "qualityTags": [],
+      "difficulty": "easy",
+      "expectedStatus": "selected",
+      "notes": "Blue invoice statement form. Support sample for left/right header blocks and lower amount structure.",
+      "invoiceProfile": {
+        "invoiceSubType": "standard_amount_statement",
+        "amountProfile": "supply_tax_total",
+        "partyProfile": "supplier_weak",
+        "tableProfile": "single_item_table",
+        "tableExpectedColumns": {
+          "required": ["rowIndex", "insuranceCode", "itemName", "spec", "quantity", "unitPrice", "amount", "manufacturer", "manufacturingExpiryComposite"],
+          "optional": ["lotNo", "serialNo", "remark"],
+          "display": [
+            { "key": "rowIndex", "label": "순번" },
+            { "key": "insuranceCode", "label": "보험코드" },
+            { "key": "itemName", "label": "품명" },
+            { "key": "spec", "label": "규격" },
+            { "key": "quantity", "label": "수량" },
+            { "key": "unitPrice", "label": "단가" },
+            { "key": "amount", "label": "금액" },
+            { "key": "manufacturer", "label": "제조회사" },
+            { "key": "manufacturingExpiryComposite", "label": "제조번호/유효기간" }
+          ]
+        }
+      }
+    },
+    {
+      "filename": "4.pdf",
+      "documentType": "invoice_statement",
+      "qualityTags": ["ocr_garbled", "party_block_garbled", "address_garbled"],
+      "difficulty": "hard",
+      "expectedStatus": "selected",
+      "notes": "Two-page invoice statement. Round 1 is page-1 structure checking only. OCR quality significantly degraded: party blocks garbled, addresses garbled.",
+      "invoiceProfile": {
+        "invoiceSubType": "ocr_garbled_statement",
+        "amountProfile": "supply_tax_total",
+        "partyProfile": "party_garbled",
+        "tableProfile": "single_item_table",
+        "tableExpectedColumns": {
+          "required": ["itemName", "lotNo", "unit", "quantity", "unitPrice", "supplyAmount", "taxAmount"],
+          "optional": ["amount", "totalAmount", "remark"],
+          "display": [
+            { "key": "itemName", "label": "품목명" },
+            { "key": "lotNo", "label": "LotNo." },
+            { "key": "unit", "label": "단위" },
+            { "key": "quantity", "label": "수량" },
+            { "key": "unitPrice", "label": "단가" },
+            { "key": "supplyAmount", "label": "공급가액" },
+            { "key": "taxAmount", "label": "세액" }
+          ]
+        }
+      }
+    },
+    {
+      "filename": "5.pdf",
+      "documentType": "invoice_statement",
+      "qualityTags": [],
+      "difficulty": "hard",
+      "expectedStatus": "selected",
+      "notes": "Long multi-page detail PDF. Deferred from round-1 complete extraction.",
+      "invoiceProfile": {
+        "invoiceSubType": "standard_amount_statement",
+        "amountProfile": "supply_tax_total",
+        "partyProfile": "supplier_buyer",
+        "tableProfile": "multi_item_table",
+        "fieldLabels": { "taxAmount": "부가세" },
+        "tableExpectedColumns": {
+          "required": ["itemName", "itemCode", "quantity", "unitPrice", "amount"],
+          "optional": ["supplyAmount", "taxAmount", "totalAmount", "remark"],
+          "display": [
+            { "key": "itemName", "label": "품명" },
+            { "key": "itemCode", "label": "품목코드" },
+            { "key": "quantity", "label": "수량" },
+            { "key": "unitPrice", "label": "단가" },
+            { "key": "amount", "label": "금액" }
+          ]
+        }
+      }
+    },
+    {
+      "filename": "6.pdf",
+      "documentType": "invoice_statement",
+      "qualityTags": ["no_amount_summary", "lot_serial_table", "buyer_only_document", "optional_supplier"],
+      "difficulty": "easy",
+      "expectedStatus": "selected",
+      "notes": "거래명세서 세부 내역 (수량/Lot No 중심). 공급자 정보 없음(선택 필드). 금액 합계 없음. supplier fields GT 미포함.",
+      "invoiceProfile": {
+        "invoiceSubType": "detail_lot_statement",
+        "amountProfile": "no_amount_summary",
+        "partyProfile": "buyer_only",
+        "tableProfile": "lot_serial_quantity_table",
+        "tableExpectedColumns": {
+          "required": ["rowIndex", "itemCode", "itemName", "quantity", "lotNo", "expiryDate"],
+          "optional": ["serialNo", "manufacturingNo", "unit", "remark"],
+          "display": [
+            { "key": "rowIndex", "label": "NO" },
+            { "key": "itemCode", "label": "제품코드" },
+            { "key": "itemName", "label": "제품명" },
+            { "key": "quantity", "label": "수량" },
+            { "key": "lotNo", "label": "LotNo" },
+            { "key": "expiryDate", "label": "유효일자" }
+          ]
+        }
+      }
+    },
+    {
+      "filename": "7.pdf",
+      "documentType": "invoice_statement",
+      "qualityTags": ["address_tail_missing", "no_amount_summary"],
+      "difficulty": "easy",
+      "expectedStatus": "selected",
+      "notes": "거래명세서 (수량/serial 중심). supplier address tail (302호/당산동4가/SK V1 센터)이 OCR 원문에 없어 partial match 유지. 금액 합계 없는 수량 중심 문서.",
+      "invoiceProfile": {
+        "invoiceSubType": "quantity_serial_statement",
+        "amountProfile": "quantity_total_only",
+        "partyProfile": "buyer_rep_optional",
+        "tableProfile": "serial_quantity_table",
+        "summaryFields": {
+          "totalQuantity": { "label": "총수량", "appliesToAmount": false }
+        },
+        "tableExpectedColumns": {
+          "required": ["itemName", "serialLotComposite", "unit", "quantity"],
+          "optional": ["manufacturingNo", "remark"],
+          "display": [
+            { "key": "itemName", "label": "품명" },
+            { "key": "serialLotComposite", "label": "시리얼/로트No." },
+            { "key": "unit", "label": "단위" },
+            { "key": "quantity", "label": "수량" }
+          ]
+        }
+      }
+    }
+  ]
+}

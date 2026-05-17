@@ -10,7 +10,7 @@ type Props = {
   templateName: string;
   setTemplateName: React.Dispatch<React.SetStateAction<string>>;
   documentType: string;
-  setDocumentType: React.Dispatch<React.SetStateAction<string>>;
+  setDocumentType: (value: string) => void;
   loaded: LoadedImage | null;
   regions: Region[];
   setRegions: React.Dispatch<React.SetStateAction<Region[]>>;

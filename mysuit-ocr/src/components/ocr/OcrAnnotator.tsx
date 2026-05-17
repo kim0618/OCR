@@ -31,6 +31,21 @@ export default function OcrAnnotator({
   const [rowTemplateTargetId, setRowTemplateTargetId] = useState<string | null>(null);
   const [colGuideTargetId, setColGuideTargetId] = useState<string | null>(null);
 
+  // 수동 변경 추적 + 업로드 토큰 (stale 응답 방지)
+  const docTypeManualRef = useRef(false);
+  const uploadTokenRef = useRef(0);
+
+  const VALID_AUTO_DOC_TYPES = [
+    "invoice_statement", "card_receipt", "pos_receipt",
+    "food_cafe_receipt", "finance_slip", "medical_receipt",
+  ];
+
+  // 사용자 수동 선택 시 호출 — 이후 자동 감지 결과가 덮어쓰지 않음
+  const handleSetDocumentType = useCallback((value: string) => {
+    docTypeManualRef.current = true;
+    setDocumentType(value);
+  }, []);
+
   function updateName(id: string, name: string) {
     setRegions((prev) => prev.map((r) => (r.id === id ? { ...r, name } : r)));
   }
@@ -72,6 +87,33 @@ export default function OcrAnnotator({
 
   async function onPickFile(file: File) {
     const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+
+    // 새 파일 업로드 시 수동 변경 플래그 초기화 + 토큰 갱신
+    docTypeManualRef.current = false;
+    const token = ++uploadTokenRef.current;
+
+    // 자동 documentType 감지 — fire-and-forget, UI 오류 없이 조용히 실패
+    void (async () => {
+      try {
+        const fd = new FormData();
+        fd.append("file", file);
+        const res = await fetch("/api/ocr-extract", { method: "POST", body: fd });
+        if (!res.ok) return;
+        const json = await res.json() as Record<string, unknown>;
+        const detected = String(json?.doc_type ?? json?.documentType ?? json?.detectedDocType ?? "");
+        if (
+          detected &&
+          detected !== "unknown" &&
+          VALID_AUTO_DOC_TYPES.includes(detected) &&
+          !docTypeManualRef.current &&
+          uploadTokenRef.current === token
+        ) {
+          setDocumentType(detected);
+        }
+      } catch (err) {
+        console.error("[auto docType detect error]", err);
+      }
+    })();
 
     if (isPdf) {
       try {
@@ -325,7 +367,7 @@ export default function OcrAnnotator({
           templateName={templateName}
           setTemplateName={setTemplateName}
           documentType={documentType}
-          setDocumentType={setDocumentType}
+          setDocumentType={handleSetDocumentType}
           loaded={loaded}
           regions={regions}
           setRegions={setRegions}

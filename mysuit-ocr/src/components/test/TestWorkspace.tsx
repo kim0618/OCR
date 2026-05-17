@@ -74,6 +74,17 @@ type DocTypeSummaryRow = {
   fieldFilled: Record<FieldKey, number>;
   documentFieldFilled: Record<string, number>;
   financeFieldFilled: Record<string, number>;  // finance 전용 필드 채움 수
+  // T-11: invoice tableRows 메트릭
+  tableRowsWithData: number;     // tableRows를 반환한 샘플 수
+  tableRowsWarningCount: number; // valueMappingWarnings가 있는 샘플 수
+  // T-12a: rowCount exact/short/over 집계
+  rowExactCount: number;   // actualRowCount === expectedRowCount
+  rowShortCount: number;   // actualRowCount < expectedRowCount
+  rowOverCount: number;    // actualRowCount > expectedRowCount
+  rowUnknownCount: number; // expectedRowCount 없음
+  // T-12b: field-level missing / warning 집계
+  missingFieldCounts: Record<string, number>;  // field key → missing count
+  warningTypeCounts: Record<string, number>;   // "key:type" or type → occurrence count
 };
 
 type QualityTagSummaryRow = {
@@ -112,16 +123,58 @@ DEFAULT_TESTSETS.push({
 });
 
 DEFAULT_TESTSETS.push({
+  id: "receipt_generalization",
+  label: "영수증 신규 일반화셋",
+  path: "/data/testsets/receipt_generalization",
+  description: "baseline/google 이후 신규 영수증 샘플 일반화 검증용",
+});
+
+DEFAULT_TESTSETS.push({
   id: "invoice_statement",
   label: "거래명세서 1차 검증셋",
   path: "/data/testsets/invoice_statement",
   description: "거래명세서 계열 헤더/합계/표 구조 1차 검증용",
 });
 
+DEFAULT_TESTSETS.push({
+  id: "tax_invoice",
+  label: "세금계산서 검증셋",
+  path: "/data/testsets/tax_invoice",
+  description: "세금계산서(부가가치세) 공급가액/세액/합계 및 품목표 추출 검증용",
+});
+
 const datasetQuery = (datasetId: string) => `dataset=${encodeURIComponent(datasetId)}`;
 const imageUrl = (baseUrl: string, filename: string) => `${baseUrl}/${encodeURIComponent(filename)}`;
 const fileExt = (filename: string) => filename.split(".").pop()?.toLowerCase() ?? "";
 const isPdfFile = (filename: string | null | undefined) => fileExt(filename ?? "") === "pdf";
+
+// T-12c: 브라우저 파일 다운로드 유틸
+function downloadFile(content: string, filename: string, mimeType: string): void {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// T-12b: warning 문자열을 "fieldKey:warningType" 단위로 파싱
+// 형식 예: "insuranceCode:ocr_source_missing:설명...", "taxAmount:doc_level_pushdown", "multiline_layout_mapping_applied"
+function parseWarningKey(warning: string): string {
+  const colonIdx = warning.indexOf(":");
+  if (colonIdx === -1) return warning.split(" ")[0] ?? warning;
+  const first = warning.slice(0, colonIdx).trim();
+  const rest = warning.slice(colonIdx + 1);
+  const secondEnd = rest.indexOf(":");
+  const second = (secondEnd === -1 ? rest : rest.slice(0, secondEnd)).trim();
+  // first가 camelCase 필드 키이고 second가 snake_case 타입이면 "key:type" 반환
+  if (/^[a-z][a-zA-Z0-9]*$/.test(first) && /^[a-z][a-z0-9_]*$/.test(second)) {
+    return `${first}:${second}`;
+  }
+  // 아니면 전체를 type으로 취급
+  return first;
+}
 
 function deriveUiStatus(data: OcrResponse): string {
   if (data.status) return data.status;
@@ -703,10 +756,18 @@ async function readJsonResponse<T>(res: Response, label: string): Promise<T> {
   }
 }
 
+/** T-21: 전처리 검증 옵션 (TestWorkspace 전용) */
+type PreprocessingOpts = {
+  debugPreprocessing?: boolean;
+  autoApplyPreprocessing?: boolean;
+  qualityTags?: string[];
+};
+
 async function fetchOcr(
   filename: string,
   imageBaseUrl: string,
   tableExpectedColumns?: { required: string[]; optional?: string[] } | null,
+  preprocessingOpts?: PreprocessingOpts,
 ): Promise<OcrEntry> {
   const originalUrl = imageUrl(imageBaseUrl, filename);
   const imageRes = await fetch(originalUrl);
@@ -719,6 +780,16 @@ async function fetchOcr(
   // T-6f: pass tableExpectedColumns from manifest invoiceProfile to backend extractor
   if (tableExpectedColumns) {
     form.append("tableExpectedColumns", JSON.stringify(tableExpectedColumns));
+  }
+  // T-21: preprocessing debug/auto-apply options (TestWorkspace only)
+  if (preprocessingOpts?.debugPreprocessing) {
+    form.append("debugPreprocessing", "true");
+  }
+  if (preprocessingOpts?.autoApplyPreprocessing) {
+    form.append("autoApplyPreprocessing", "true");
+  }
+  if (preprocessingOpts?.qualityTags && preprocessingOpts.qualityTags.length > 0) {
+    form.append("qualityTagsJson", JSON.stringify(preprocessingOpts.qualityTags));
   }
   const backendBase = process.env.NEXT_PUBLIC_BACKEND_URL;
   const ocrEndpoint = backendBase ? `${backendBase}/ocr/extract` : "/api/ocr-extract";
@@ -742,6 +813,7 @@ async function fetchOcr(
     documentFields: inferInvoiceDocumentFields(data),
     extractDebug: data.extract_debug,
     financeReviewReasons: data.finance_review_reasons,
+    preprocessingDebug: data.preprocessingDebug,
   };
 }
 
@@ -862,6 +934,9 @@ export default function TestWorkspace() {
 
   const [running, setRunning]       = useState(false);
   const [runningAll, setRunningAll] = useState(false);
+  // T-21: 전처리 검증 옵션 (TestWorkspace 전용, 기본값 false)
+  const [debugPreprocessing, setDebugPreprocessing]       = useState(false);
+  const [autoApplyPreprocessing, setAutoApplyPreprocessing] = useState(false);
   const [progress, setProgress]     = useState<{ done: number; total: number } | null>(null);
   const [currentRunningFile, setCurrentRunningFile] = useState<string | null>(null);
   const [uiError, setUiError] = useState<string | null>(null);
@@ -873,6 +948,7 @@ export default function TestWorkspace() {
   const [partyMaster, setPartyMaster] = useState<PartyMasterMap>({});
   const [selectedQualityTags, setSelectedQualityTags] = useState<string[]>([]);
   const [showBatchSummary, setShowBatchSummary] = useState(true);
+  const [showThumbnails, setShowThumbnails] = useState(false);
   const activeTestset = useMemo(
     () => testsets.find((t) => t.id === activeDataset) ?? DEFAULT_TESTSETS[0],
     [testsets, activeDataset],
@@ -1131,7 +1207,13 @@ export default function TestWorkspace() {
       // T-6f: pass tableExpectedColumns from manifest invoiceProfile
       const _runOneMeta = manifest?.items.find((item) => item.filename === filename);
       const _runOneTec = _runOneMeta?.invoiceProfile?.tableExpectedColumns ?? null;
-      const entry = await fetchOcr(filename, activeTestset.path, _runOneTec);
+      // T-21: pass preprocessing opts (TestWorkspace 검증 전용, 기본 false)
+      const _runOnePreOpts: PreprocessingOpts = {
+        debugPreprocessing,
+        autoApplyPreprocessing,
+        qualityTags: _runOneMeta?.qualityTags ?? [],
+      };
+      const entry = await fetchOcr(filename, activeTestset.path, _runOneTec, _runOnePreOpts);
       setOcr((prev) => ({ ...prev, [filename]: entry }));
 
       const currentGt    = gtRef.current;
@@ -1196,7 +1278,13 @@ export default function TestWorkspace() {
         // T-6f: pass tableExpectedColumns from manifest invoiceProfile
         const _runAllMeta = manifest?.items.find((item) => item.filename === name);
         const _runAllTec = _runAllMeta?.invoiceProfile?.tableExpectedColumns ?? null;
-        const entry = await fetchOcr(name, activeTestset.path, _runAllTec);
+        // T-21: pass preprocessing opts (TestWorkspace 검증 전용, 기본 false)
+        const _runAllPreOpts: PreprocessingOpts = {
+          debugPreprocessing,
+          autoApplyPreprocessing,
+          qualityTags: _runAllMeta?.qualityTags ?? [],
+        };
+        const entry = await fetchOcr(name, activeTestset.path, _runAllTec, _runAllPreOpts);
         setOcr((prev) => ({ ...prev, [name]: entry }));
 
         const suggestions = sortSuggestions(
@@ -1260,7 +1348,7 @@ export default function TestWorkspace() {
         for (const col of FINANCE_DISPLAY_COLS) financeFieldFilled[col.key] = 0;
         const documentFieldFilled: Record<string, number> = {};
         for (const col of DOCUMENT_FIELD_META) documentFieldFilled[col.key] = 0;
-        map.set(dt, { documentType: dt, total: 0, selected: 0, suppressed: 0, unknown: 0, error: 0, notRun: 0, fieldFilled, financeFieldFilled, documentFieldFilled });
+        map.set(dt, { documentType: dt, total: 0, selected: 0, suppressed: 0, unknown: 0, error: 0, notRun: 0, fieldFilled, financeFieldFilled, documentFieldFilled, tableRowsWithData: 0, tableRowsWarningCount: 0, rowExactCount: 0, rowShortCount: 0, rowOverCount: 0, rowUnknownCount: 0, missingFieldCounts: {}, warningTypeCounts: {} });
       }
       return map.get(dt)!;
     };
@@ -1294,6 +1382,41 @@ export default function TestWorkspace() {
           const docFields = ocrEntry.documentFields ?? {};
           for (const col of DOCUMENT_FIELD_META) {
             if (docFields[col.key]) row.documentFieldFilled[col.key]++;
+          }
+          // T-11: tableRows 메트릭 집계
+          const tMeta = getInvoiceTableMeta(docFields as unknown as Record<string, string> | null);
+          if (tMeta?.rowCount && tMeta.rowCount > 0) row.tableRowsWithData++;
+          if (tMeta?.valueMappingWarnings && tMeta.valueMappingWarnings.length > 0) row.tableRowsWarningCount++;
+          // T-12a: rowCount exact/short/over 집계
+          const expectedRowCount = manifestItem?.invoiceProfile?.expectedRowCount;
+          const actualRowCount = tMeta?.rowCount ?? (docFields?.rowCount ? Number(docFields.rowCount) : 0);
+          if (expectedRowCount != null) {
+            if (actualRowCount === expectedRowCount) row.rowExactCount++;
+            else if (actualRowCount < expectedRowCount) row.rowShortCount++;
+            else row.rowOverCount++;
+          } else {
+            row.rowUnknownCount++;
+          }
+          // T-12b: missing field 집계 (manifest required columns 기준)
+          const tableRowsData = getInvoiceTableRows(docFields as unknown as Record<string, string> | null);
+          const requiredCols = manifestItem?.invoiceProfile?.tableExpectedColumns?.required ?? [];
+          if (requiredCols.length > 0 && tableRowsData.length > 0) {
+            for (const colKey of requiredCols) {
+              const hasValue = tableRowsData.some((r) => {
+                const v = (r as Record<string, unknown>)[colKey];
+                return v != null && v !== "" && v !== 0;
+              });
+              if (!hasValue) {
+                row.missingFieldCounts[colKey] = (row.missingFieldCounts[colKey] ?? 0) + 1;
+              }
+            }
+          }
+          // T-12b: warning type 집계 (valueMappingWarnings 파싱)
+          if (tMeta?.valueMappingWarnings) {
+            for (const w of tMeta.valueMappingWarnings) {
+              const wKey = parseWarningKey(w);
+              row.warningTypeCounts[wKey] = (row.warningTypeCounts[wKey] ?? 0) + 1;
+            }
           }
         } else {
           // receipt 기존 로직
@@ -1436,6 +1559,180 @@ export default function TestWorkspace() {
     }),
     [images, ocr, manifest],
   );
+
+  // T-12c: RunAll snapshot 빌드 (JSON export용)
+  const buildRunAllSnapshot = useCallback(() => {
+    const testsetMeta = DEFAULT_TESTSETS.find((s) => s.id === activeDataset);
+    const now = new Date();
+    const sampleList = images.map((img) => {
+      const manifestItem = manifest?.items.find((i) => i.filename === img);
+      const ocrEntry = ocr[img];
+      if (!ocrEntry) {
+        return {
+          filename: img,
+          documentType: manifestItem?.documentType ?? "unknown",
+          qualityTags: manifestItem?.qualityTags ?? [],
+          difficulty: manifestItem?.difficulty ?? "medium",
+          expectedStatus: manifestItem?.expectedStatus ?? "",
+          run: false,
+        };
+      }
+      const docFields = ocrEntry.documentFields ?? {};
+      const tMeta = getInvoiceTableMeta(docFields as unknown as Record<string, string> | null);
+      const tRaw = tMeta as unknown as Record<string, unknown> | null;
+      const tableRows = getInvoiceTableRows(docFields as unknown as Record<string, string> | null);
+      const expectedRowCount = manifestItem?.invoiceProfile?.expectedRowCount;
+      const actualRowCount = tMeta?.rowCount ?? (docFields?.rowCount ? Number(docFields.rowCount) : 0);
+      let rowCountStatus: "exact" | "short" | "over" | "unknown" = "unknown";
+      if (expectedRowCount != null) {
+        if (actualRowCount === expectedRowCount) rowCountStatus = "exact";
+        else if (actualRowCount < expectedRowCount) rowCountStatus = "short";
+        else rowCountStatus = "over";
+      }
+      const requiredCols = manifestItem?.invoiceProfile?.tableExpectedColumns?.required ?? [];
+      const missingFields = tableRows.length > 0
+        ? requiredCols.filter((k) => !tableRows.some((r) => {
+            const v = (r as Record<string, unknown>)[k];
+            return v != null && v !== "" && v !== 0;
+          }))
+        : [];
+      return {
+        filename: img,
+        documentType: manifestItem?.documentType ?? "unknown",
+        qualityTags: manifestItem?.qualityTags ?? [],
+        difficulty: manifestItem?.difficulty ?? "medium",
+        expectedStatus: manifestItem?.expectedStatus ?? "",
+        run: true,
+        status: ocrEntry.status ?? "selected",
+        docType: ocrEntry.docType ?? null,
+        extractionSource: tMeta?.extractionSource ?? null,
+        tableBoundsUsed: tRaw?.["tableBoundsUsed"] ?? false,
+        columnGuidesUsed: tRaw?.["columnGuidesUsed"] ?? false,
+        columnGuidesCount: tRaw?.["columnGuidesCount"] ?? 0,
+        actualRowCount: actualRowCount || null,
+        expectedRowCount: expectedRowCount ?? null,
+        rowCountStatus,
+        firstRowPreview: tMeta?.firstRowPreview ?? null,
+        valueMappingWarnings: tMeta?.valueMappingWarnings ?? [],
+        missingFields,
+        notes: manifestItem?.notes ?? "",
+      };
+    });
+    const docRunSamples = sampleList.filter((s) =>
+      resolveProfile(s.documentType).base === "document" && s.run
+    );
+    return {
+      generatedAt: now.toISOString(),
+      testsetId: activeDataset,
+      testsetLabel: testsetMeta?.label ?? activeDataset,
+      totalSamples: images.length,
+      samplesRun: sampleList.filter((s) => s.run).length,
+      summary: {
+        documentTypeSummary: (docTypeSummary ?? []).map((r) => ({
+          documentType: r.documentType,
+          total: r.total, selected: r.selected, suppressed: r.suppressed,
+          unknown: r.unknown, error: r.error, notRun: r.notRun,
+          tableRowsWithData: r.tableRowsWithData,
+          tableRowsWarningCount: r.tableRowsWarningCount,
+          rowExactCount: r.rowExactCount, rowShortCount: r.rowShortCount,
+          rowOverCount: r.rowOverCount, rowUnknownCount: r.rowUnknownCount,
+          missingFieldCounts: r.missingFieldCounts,
+          warningTypeCounts: r.warningTypeCounts,
+        })),
+        qualityTagSummary: (qualityTagSummary ?? []).map((r) => ({
+          tag: r.tag, total: r.total, selected: r.selected,
+          suppressed: r.suppressed, unknown: r.unknown, error: r.error, notRun: r.notRun,
+        })),
+        rowCountSummary: {
+          samplesWithExpected: docRunSamples.filter((s) => s.rowCountStatus !== "unknown").length,
+          exact:   docRunSamples.filter((s) => s.rowCountStatus === "exact").length,
+          short:   docRunSamples.filter((s) => s.rowCountStatus === "short").length,
+          over:    docRunSamples.filter((s) => s.rowCountStatus === "over").length,
+          unknown: docRunSamples.filter((s) => s.rowCountStatus === "unknown").length,
+        },
+        missingFieldSummary: Object.fromEntries(
+          (docTypeSummary ?? [])
+            .filter((r) => Object.keys(r.missingFieldCounts).length > 0)
+            .map((r) => [r.documentType, r.missingFieldCounts])
+        ),
+        warningSummary: Object.fromEntries(
+          (docTypeSummary ?? [])
+            .filter((r) => Object.keys(r.warningTypeCounts).length > 0)
+            .map((r) => [r.documentType, r.warningTypeCounts])
+        ),
+      },
+      samples: sampleList,
+    };
+  }, [images, ocr, manifest, activeDataset, docTypeSummary, qualityTagSummary]);
+
+  // T-12c: JSON export handler
+  const handleExportJson = useCallback(() => {
+    if (!batchRows.length && !documentBatchRows.length) return;
+    const snap = buildRunAllSnapshot();
+    const now = new Date();
+    const ts = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,"0")}${String(now.getDate()).padStart(2,"0")}_${String(now.getHours()).padStart(2,"0")}${String(now.getMinutes()).padStart(2,"0")}`;
+    downloadFile(JSON.stringify(snap, null, 2), `ocr_runall_${activeDataset}_${ts}.json`, "application/json");
+  }, [buildRunAllSnapshot, batchRows.length, documentBatchRows.length, activeDataset]);
+
+  // T-12c: Markdown export handler
+  const handleExportMarkdown = useCallback(() => {
+    if (!batchRows.length && !documentBatchRows.length) return;
+    const snap = buildRunAllSnapshot();
+    const now = new Date();
+    const ts = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,"0")}${String(now.getDate()).padStart(2,"0")}_${String(now.getHours()).padStart(2,"0")}${String(now.getMinutes()).padStart(2,"0")}`;
+    const lines: string[] = [];
+    lines.push(`# RunAll Snapshot — ${snap.testsetLabel}`);
+    lines.push(`> 생성: ${snap.generatedAt}  |  샘플: ${snap.samplesRun}/${snap.totalSamples}`);
+    lines.push("");
+    // DocumentType summary
+    lines.push("## DocumentType 집계");
+    lines.push("| documentType | total | selected | suppressed | not_run | rows有 | exact | short | over |");
+    lines.push("|---|---:|---:|---:|---:|---:|---:|---:|---:|");
+    for (const r of snap.summary.documentTypeSummary) {
+      lines.push(`| ${r.documentType} | ${r.total} | ${r.selected} | ${r.suppressed} | ${r.notRun} | ${r.tableRowsWithData} | ${r.rowExactCount} | ${r.rowShortCount} | ${r.rowOverCount} |`);
+    }
+    lines.push("");
+    // Row count summary
+    const rc = snap.summary.rowCountSummary;
+    if (rc.samplesWithExpected > 0) {
+      lines.push("## rowCount 집계");
+      lines.push(`- exact: ${rc.exact}  short: ${rc.short}  over: ${rc.over}  (기대값 있는 샘플: ${rc.samplesWithExpected})`);
+      lines.push("");
+    }
+    // Missing fields
+    const mfs = snap.summary.missingFieldSummary;
+    if (Object.keys(mfs).length > 0) {
+      lines.push("## Missing Fields");
+      for (const [dt, counts] of Object.entries(mfs)) {
+        const top = Object.entries(counts as Record<string, number>).sort((a,b)=>b[1]-a[1]).slice(0,8);
+        lines.push(`**${dt}**: ${top.map(([k,c])=>`${getInvoiceColLabel(k)}(${c})`).join(", ")}`);
+      }
+      lines.push("");
+    }
+    // Warning types
+    const ws = snap.summary.warningSummary;
+    if (Object.keys(ws).length > 0) {
+      lines.push("## Warning Types");
+      for (const [dt, counts] of Object.entries(ws)) {
+        const top = Object.entries(counts as Record<string, number>).sort((a,b)=>b[1]-a[1]).slice(0,8);
+        lines.push(`**${dt}**: ${top.map(([k,c])=>`${k}(${c})`).join(", ")}`);
+      }
+      lines.push("");
+    }
+    // Per-sample table
+    lines.push("## 샘플별 결과");
+    lines.push("| 파일명 | documentType | status | rowCount | expectedRow | rowCountStatus |");
+    lines.push("|---|---|---|---:|---:|---|");
+    for (const s of snap.samples) {
+      const status = s.run ? (s.status ?? "—") : "미실행";
+      const actual = (s as Record<string, unknown>)["actualRowCount"] ?? "—";
+      const expected = (s as Record<string, unknown>)["expectedRowCount"] ?? "—";
+      const rcStatus = s.run ? ((s as Record<string, unknown>)["rowCountStatus"] ?? "—") : "—";
+      lines.push(`| ${s.filename} | ${s.documentType} | ${status} | ${actual} | ${expected} | ${rcStatus} |`);
+    }
+    lines.push("");
+    downloadFile(lines.join("\n"), `ocr_runall_${activeDataset}_${ts}.md`, "text/markdown");
+  }, [buildRunAllSnapshot, batchRows.length, documentBatchRows.length, activeDataset]);
 
   // 영수증 계열 총 이미지 수 (미실행 포함) — receipt KPI 분모 (docs/TEST_PROFILE_SCHEMA §7.2)
   const receiptImageCount = useMemo(
@@ -1944,43 +2241,59 @@ export default function TestWorkspace() {
 
       {/* ── Top bar: 썸네일 + 모드 + 실행 ── */}
       <div style={styles.topBar}>
-        <div style={{ display: "flex", gap: 12, overflowX: "auto", flex: 1, alignItems: "center" }}>
-          {docTypeGroups
-            ? docTypeGroups.map((g) => (
-                <div key={g.documentType} style={styles.groupBox}>
-                  <div style={styles.groupLabel}>
-                    <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 2, background: DOC_TYPE_COLOR[g.documentType] ?? "#6b7280", marginRight: 5, flexShrink: 0, verticalAlign: "middle" }} />
-                    <span title={g.documentType}>{DOC_TYPE_LABEL[g.documentType] ?? g.documentType}</span>
-                    <span style={{ color: "var(--muted)", fontSize: 9, marginLeft: 4, opacity: 0.7 }}>({g.documentType})</span>
-                    <span style={{ color: "var(--muted)", fontWeight: 500, marginLeft: 4 }}>×{g.images.length}</span>
-                  </div>
-                  <div style={{ display: "flex", gap: 6 }}>{g.images.map(renderThumb)}</div>
-                </div>
-              ))
-            : (
-              <>
-                {multiGroups.map((g) => (
-                  <div key={g.biz} style={styles.groupBox}>
+        {/* 썸네일 토글 버튼 */}
+        <button
+          type="button"
+          onClick={() => setShowThumbnails((v) => !v)}
+          style={{
+            fontSize: 10, fontWeight: 700, padding: "4px 9px", borderRadius: 6, cursor: "pointer",
+            border: "1px solid rgba(255,255,255,0.15)",
+            background: showThumbnails ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.03)",
+            color: "var(--muted)", whiteSpace: "nowrap", flexShrink: 0,
+          }}>
+          {showThumbnails ? "▼ 접기" : `▶ 샘플 (${images.length})`}
+        </button>
+
+        {/* 썸네일 그룹 — 펼침 상태에서만 표시 */}
+        {showThumbnails && (
+          <div style={{ display: "flex", gap: 12, overflowX: "auto", flex: 1, alignItems: "center" }}>
+            {docTypeGroups
+              ? docTypeGroups.map((g) => (
+                  <div key={g.documentType} style={styles.groupBox}>
                     <div style={styles.groupLabel}>
-                      <span style={{ color: "var(--accent)" }}>●</span> {g.label}
+                      <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 2, background: DOC_TYPE_COLOR[g.documentType] ?? "#6b7280", marginRight: 5, flexShrink: 0, verticalAlign: "middle" }} />
+                      <span title={g.documentType}>{DOC_TYPE_LABEL[g.documentType] ?? g.documentType}</span>
+                      <span style={{ color: "var(--muted)", fontSize: 9, marginLeft: 4, opacity: 0.7 }}>({g.documentType})</span>
                       <span style={{ color: "var(--muted)", fontWeight: 500, marginLeft: 4 }}>×{g.images.length}</span>
                     </div>
                     <div style={{ display: "flex", gap: 6 }}>{g.images.map(renderThumb)}</div>
                   </div>
-                ))}
-                {singles.length > 0 && multiGroups.length > 0 && (
-                  <div style={{ width: 1, height: 56, background: "rgba(255,255,255,0.08)", flexShrink: 0 }} />
-                )}
-                {singles.length > 0 && (
-                  <div style={styles.groupBox}>
-                    <div style={{ ...styles.groupLabel, color: "var(--muted)" }}>단독</div>
-                    <div style={{ display: "flex", gap: 6 }}>{singles.map(renderThumb)}</div>
-                  </div>
-                )}
-              </>
-            )
-          }
-        </div>
+                ))
+              : (
+                <>
+                  {multiGroups.map((g) => (
+                    <div key={g.biz} style={styles.groupBox}>
+                      <div style={styles.groupLabel}>
+                        <span style={{ color: "var(--accent)" }}>●</span> {g.label}
+                        <span style={{ color: "var(--muted)", fontWeight: 500, marginLeft: 4 }}>×{g.images.length}</span>
+                      </div>
+                      <div style={{ display: "flex", gap: 6 }}>{g.images.map(renderThumb)}</div>
+                    </div>
+                  ))}
+                  {singles.length > 0 && multiGroups.length > 0 && (
+                    <div style={{ width: 1, height: 56, background: "rgba(255,255,255,0.08)", flexShrink: 0 }} />
+                  )}
+                  {singles.length > 0 && (
+                    <div style={styles.groupBox}>
+                      <div style={{ ...styles.groupLabel, color: "var(--muted)" }}>단독</div>
+                      <div style={{ display: "flex", gap: 6 }}>{singles.map(renderThumb)}</div>
+                    </div>
+                  )}
+                </>
+              )
+            }
+          </div>
+        )}
 
         <div style={{ marginLeft: "auto", flexShrink: 0, display: "flex", alignItems: "center", gap: 8 }}>
           <div style={styles.modeSwitcher}>
@@ -2026,6 +2339,17 @@ export default function TestWorkspace() {
             style={btnStyle(runningAll, "ghost")}>
             {runningAll ? `Run All (${progress?.done}/${progress?.total})` : "Run All"}
           </button>
+          {/* T-21: 전처리 검증 옵션 (TestWorkspace 전용) */}
+          <span style={{ display: "flex", alignItems: "center", gap: 10, marginLeft: 8, fontSize: 12, color: "var(--muted)" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: 4, cursor: "pointer" }} title="전처리 후보를 비교하고 preprocessingDebug를 표시합니다. 최종 결과는 변경하지 않습니다.">
+              <input type="checkbox" checked={debugPreprocessing} onChange={(e) => setDebugPreprocessing(e.target.checked)} />
+              전처리 Debug
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: 4, cursor: "pointer" }} title="receipt 계열에서 guard 통과 시 전처리 결과를 적용합니다. invoice_statement는 제외됩니다.">
+              <input type="checkbox" checked={autoApplyPreprocessing} onChange={(e) => setAutoApplyPreprocessing(e.target.checked)} />
+              자동 보정
+            </label>
+          </span>
         </div>
       </div>
 
@@ -2214,6 +2538,34 @@ export default function TestWorkspace() {
       {/* ── documentType 집계 ── */}
       {docTypeSummary && (
         <DocTypeSummarySection rows={docTypeSummary} totalImages={images.length} />
+      )}
+
+
+      {/* ── T-12c: RunAll 결과 내보내기 ── */}
+      {(batchRows.length > 0 || documentBatchRows.length > 0) && (
+        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", alignItems: "center" }}>
+          <span style={{ fontSize: 10, color: "var(--muted)" }}>결과 내보내기:</span>
+          <button
+            type="button"
+            onClick={handleExportJson}
+            style={{
+              fontSize: 10, fontWeight: 700, padding: "4px 10px", borderRadius: 5, cursor: "pointer",
+              border: "1px solid rgba(99,102,241,0.5)", background: "rgba(99,102,241,0.12)", color: "#a5b4fc",
+            }}
+          >
+            JSON 저장
+          </button>
+          <button
+            type="button"
+            onClick={handleExportMarkdown}
+            style={{
+              fontSize: 10, fontWeight: 700, padding: "4px 10px", borderRadius: 5, cursor: "pointer",
+              border: "1px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.05)", color: "var(--muted)",
+            }}
+          >
+            MD 저장
+          </button>
+        </div>
       )}
 
       {/* ── Batch summary (접기/펼치기 토글) ── */}
@@ -2740,6 +3092,11 @@ export default function TestWorkspace() {
             </div>
           )}
 
+          {/* T-21: 전처리 결과 패널 */}
+          {selOcr?.preprocessingDebug && (
+            <PreprocessingDebugPanel debug={selOcr.preprocessingDebug} />
+          )}
+
           {/* Debug panel */}
           {selOcr && (
             <details open={showDebug} onToggle={(e) => setShowDebug((e.target as HTMLDetailsElement).open)} style={{ background: "var(--panel)", borderRadius: 8, padding: "8px 14px" }}>
@@ -2777,6 +3134,91 @@ export default function TestWorkspace() {
         </div>
       </div>
     </div>
+  );
+}
+
+// ============================================================
+// T-21: PreprocessingDebugPanel
+// ============================================================
+function PreprocessingDebugPanel({ debug }: { debug: import("./core/types").PreprocessingDebug }) {
+  const isApplied = debug.productionApplied === true;
+  const hasCandidate = !isApplied && debug.selectedCandidate;
+  const isInvoiceExcluded = debug.autoApplyDecision?.reason?.includes("invoice_excluded_from_auto_apply");
+  const isBlocked = !isApplied && !hasCandidate && (debug.candidates ?? []).length === 0 && !isInvoiceExcluded;
+
+  if (isBlocked && !debug.error) return null;
+
+  const accentColor = isApplied ? "#22c55e" : isInvoiceExcluded ? "#6b7280" : "#f59e0b";
+  const label = isApplied
+    ? "보정 OCR 적용됨"
+    : isInvoiceExcluded
+    ? "표 문서 — 자동 보정 제외"
+    : hasCandidate
+    ? "전처리 후보 있음"
+    : debug.error
+    ? "전처리 오류"
+    : "전처리 후보 없음";
+
+  return (
+    <details style={{
+      background: "var(--panel)", borderRadius: 8, padding: "8px 14px",
+      border: `1px solid ${accentColor}44`,
+    }}>
+      <summary style={{ fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+        <span style={{ color: accentColor, fontSize: 13 }}>{isApplied ? "✓" : isInvoiceExcluded ? "—" : "◌"}</span>
+        <span style={{ color: accentColor }}>{label}</span>
+        {isApplied && debug.appliedVariant && (
+          <span style={{ fontSize: 11, color: "var(--muted)", fontWeight: 400 }}>({debug.appliedVariant})</span>
+        )}
+        {hasCandidate && (
+          <span style={{ fontSize: 11, color: "var(--muted)", fontWeight: 400 }}>
+            후보: {debug.selectedCandidate} — 현재 원본 OCR 유지
+          </span>
+        )}
+      </summary>
+      <div style={{ marginTop: 8, fontSize: 12, display: "flex", flexDirection: "column", gap: 6 }}>
+        {isInvoiceExcluded && (
+          <p style={{ color: "var(--muted)", margin: 0 }}>
+            거래명세서 표 문서는 행 수 안정성을 우선하여 자동 전처리 적용 대상에서 제외됩니다.
+          </p>
+        )}
+        {debug.error && (
+          <p style={{ color: "#ef4444", margin: 0 }}>오류: {debug.error}</p>
+        )}
+        {!isInvoiceExcluded && !debug.error && (
+          <>
+            {(debug.candidates ?? []).length > 0 && (
+              <div style={{ color: "var(--muted)" }}>
+                후보 variant: {(debug.candidates ?? []).join(", ")}
+              </div>
+            )}
+            {(debug.decisions ?? []).map((d, i) => (
+              <div key={i} style={{
+                padding: "4px 8px", borderRadius: 4,
+                background: d.decision === "candidate_accept" ? "#22c55e22" : d.decision === "reject" ? "#ef444422" : "var(--panel2)",
+                color: "var(--text)", fontSize: 11,
+              }}>
+                <strong>{d.variant}</strong>
+                <span style={{ marginLeft: 6, color: "var(--muted)" }}>{d.decision}</span>
+                {(d.reasons ?? []).length > 0 && (
+                  <span style={{ marginLeft: 6, color: "var(--muted)", fontSize: 10 }}>
+                    — {d.reasons!.join(", ")}
+                  </span>
+                )}
+              </div>
+            ))}
+            {debug.autoApplyDecision && !isApplied && (
+              <div style={{ fontSize: 11, color: "var(--muted)" }}>
+                autoApply: {debug.autoApplyDecision.autoApplyAllowed ? "허용" : "차단"}
+                {(debug.autoApplyDecision.reason ?? []).length > 0 && (
+                  <span> — {debug.autoApplyDecision.reason!.join(", ")}</span>
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </details>
   );
 }
 
@@ -3221,7 +3663,7 @@ function KpiSection({ title, subtitle, tone, icon, children }: { title: string; 
       background: "var(--panel)",
       border: `1px solid ${color}30`,
       boxShadow: `inset 3px 0 0 0 ${color}`,
-      minWidth: 0, flex: "1 1 0",
+      minWidth: "min(100%, 240px)", flex: "1 1 240px",
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         {icon && <span style={{ fontSize: 14, color }}>{icon}</span>}
@@ -4145,6 +4587,15 @@ const CUSTOM_COL_LABELS: Record<string, string> = {
   serialLotComposite:           "시리얼/로트No.",
 };
 
+// T-12b: canonical + custom key → Korean label (DocTypeSummarySection 에서 사용)
+const _INVOICE_COL_LABEL_MAP: Record<string, string> = {
+  ...Object.fromEntries(TABLE_COLUMN_META.map((m) => [m.key, m.labelKo])),
+  ...CUSTOM_COL_LABELS,
+};
+function getInvoiceColLabel(key: string): string {
+  return _INVOICE_COL_LABEL_MAP[key] ?? key;
+}
+
 // T-6e-fix3 / T-6k: 커스텀/composite key에 대한 셀 값 해석
 function resolveDisplayColValue(row: CanonicalTableRow, col: string): string {
   const rowAny = row as Record<string, unknown>;
@@ -4351,11 +4802,30 @@ function InvoiceTableRowsPanel({
         {tableDetected && (
           <span style={{ fontSize: 9, padding: "1px 6px", borderRadius: 3, background: "rgba(34,197,94,0.15)", color: "#86efac", fontWeight: 600 }}>표 감지</span>
         )}
-        {rowCount > 0 && (
-          <span style={{ fontSize: 9, color: "var(--muted)" }}>
-            행 수: <b style={{ color: "#e5e7eb" }}>{rowCount}</b>
-          </span>
-        )}
+        {rowCount > 0 && (() => {
+          const expRow = invoiceProfile?.expectedRowCount;
+          let rowStatus: "exact" | "short" | "over" | "unknown" = "unknown";
+          if (expRow != null) {
+            if (rowCount === expRow) rowStatus = "exact";
+            else if (rowCount < expRow) rowStatus = "short";
+            else rowStatus = "over";
+          }
+          const rowStatusColor = rowStatus === "exact" ? "#22c55e" : rowStatus === "short" ? "#f59e0b" : rowStatus === "over" ? "#ef4444" : "var(--muted)";
+          const rowStatusLabel = rowStatus === "exact" ? "정상" : rowStatus === "short" ? "부족" : rowStatus === "over" ? "초과" : "";
+          return (
+            <span style={{ fontSize: 9, color: "var(--muted)" }}>
+              행 수: <b style={{ color: "#e5e7eb" }}>{rowCount}</b>
+              {expRow != null && (
+                <>
+                  <span style={{ opacity: 0.6, marginLeft: 2 }}>/ 기대 {expRow}</span>
+                  <span style={{ marginLeft: 4, fontWeight: 700, color: rowStatusColor }}>
+                    · {rowStatusLabel}
+                  </span>
+                </>
+              )}
+            </span>
+          );
+        })()}
         {detectedCount > 0 && (
           <span style={{ fontSize: 9, color: "var(--muted)" }}>감지 컬럼 {detectedCount}개</span>
         )}
@@ -5061,22 +5531,26 @@ function toneOf(ok: number, total: number): KpiTone {
 // Manifest metadata display
 // ============================================================
 const DOC_TYPE_COLOR: Record<string, string> = {
-  card_receipt:      "#0284c7",
-  pos_receipt:       "#7c3aed",
-  food_cafe_receipt: "#ea580c",
-  finance_slip:      "#dc2626",
-  medical_receipt:   "#16a34a",
-  invoice_statement: "#ca8a04",
-  unknown:           "#6b7280",
+  card_receipt:         "#0284c7",
+  pos_receipt:          "#7c3aed",
+  food_cafe_receipt:    "#ea580c",
+  finance_slip:         "#dc2626",
+  medical_receipt:      "#16a34a",
+  invoice_statement:    "#ca8a04",
+  tax_invoice:          "#b45309",
+  transaction_statement:"#92400e",
+  unknown:              "#6b7280",
 };
 const DOC_TYPE_ABBR: Record<string, string> = {
-  card_receipt:      "카드",
-  pos_receipt:       "POS",
-  food_cafe_receipt: "음식",
-  finance_slip:      "금융",
-  medical_receipt:   "약국",
-  invoice_statement: "거래",
-  unknown:           "기타",
+  card_receipt:         "카드",
+  pos_receipt:          "POS",
+  food_cafe_receipt:    "음식",
+  finance_slip:         "금융",
+  medical_receipt:      "약국",
+  invoice_statement:    "거래",
+  tax_invoice:          "세금",
+  transaction_statement:"전표",
+  unknown:              "기타",
 };
 const DIFF_COLOR: Record<string, string> = {
   easy:   "#22c55e",
@@ -5085,16 +5559,20 @@ const DIFF_COLOR: Record<string, string> = {
 };
 const DOC_TYPE_ORDER: string[] = [
   "card_receipt", "pos_receipt", "food_cafe_receipt",
-  "medical_receipt", "finance_slip", "invoice_statement", "unknown",
+  "medical_receipt", "finance_slip",
+  "invoice_statement", "tax_invoice", "transaction_statement",
+  "unknown",
 ];
 const DOC_TYPE_LABEL: Record<string, string> = {
-  card_receipt:      "카드전표/일반 영수증",
-  pos_receipt:       "POS/마트/편의점 영수증",
-  food_cafe_receipt: "음식점/카페 영수증",
-  medical_receipt:   "병원/약국 영수증",
-  finance_slip:      "은행/금융 전표",
-  invoice_statement: "세금계산서/거래명세서",
-  unknown:           "기타/Unknown",
+  card_receipt:         "카드전표/일반 영수증",
+  pos_receipt:          "POS/마트/편의점 영수증",
+  food_cafe_receipt:    "음식점/카페 영수증",
+  medical_receipt:      "병원/약국 영수증",
+  finance_slip:         "은행/금융 전표",
+  invoice_statement:    "거래명세서",
+  tax_invoice:          "세금계산서",
+  transaction_statement:"거래전표/계산서류",
+  unknown:              "기타/Unknown",
 };
 const QUALITY_TAG_LABELS: Record<string, string> = {
   ocr_noise:    "OCR 노이즈",
@@ -5465,7 +5943,7 @@ function DocTypeSummarySection({
           </div>
         )}
 
-        {/* ── 거래명세서 sub-table (document 전용 컬럼) ── */}
+        {/* ── 거래명세서 sub-table (document 전용 컬럼 + T-11: tableRows 메트릭) ── */}
         {documentRows.length > 0 && (
           <div style={{ overflowX: "auto" }}>
             {renderSubGroupHeader("거래명세서", documentTotal, "#ca8a04")}
@@ -5481,14 +5959,79 @@ function DocTypeSummarySection({
                   {DOCUMENT_FIELD_META.map((col) => (
                     <th key={col.key} style={{ ...thSm, textAlign: "center" }}>{col.shortLabel}</th>
                   ))}
+                  {/* T-11/T-12a: tableRows 메트릭 */}
+                  <th style={{ ...thSm, textAlign: "center", color: "#22c55e" }}>rows有</th>
+                  <th style={{ ...thSm, textAlign: "center", color: "#22c55e" }}>exact</th>
+                  <th style={{ ...thSm, textAlign: "center", color: "#f59e0b" }}>short</th>
+                  <th style={{ ...thSm, textAlign: "center", color: "#ef4444" }}>over</th>
+                  <th style={{ ...thSm, textAlign: "center", color: "#f59e0b" }}>warn</th>
                 </tr>
               </thead>
               <tbody>
-                {documentRows.map((row) => (
-                  <tr key={row.documentType}>{renderStatusCells(row, "document")}</tr>
-                ))}
+                {documentRows.map((row) => {
+                  const runCount = row.total - row.notRun;
+                  return (
+                    <tr key={row.documentType}>
+                      {renderStatusCells(row, "document")}
+                      {/* T-11/T-12a: tableRows 메트릭 */}
+                      <td style={{ ...tdSm, textAlign: "center", color: row.tableRowsWithData === runCount && runCount > 0 ? "#22c55e" : row.tableRowsWithData > 0 ? "#f59e0b" : "rgba(255,255,255,0.25)" }}>
+                        {runCount > 0 ? `${row.tableRowsWithData}/${runCount}` : "—"}
+                      </td>
+                      <td style={{ ...tdSm, textAlign: "center", fontWeight: 700, color: row.rowExactCount > 0 ? "#22c55e" : "rgba(255,255,255,0.25)" }}>
+                        {runCount > 0 ? (row.rowExactCount || "—") : "—"}
+                      </td>
+                      <td style={{ ...tdSm, textAlign: "center", fontWeight: 700, color: row.rowShortCount > 0 ? "#f59e0b" : "rgba(255,255,255,0.25)" }}>
+                        {runCount > 0 ? (row.rowShortCount || "—") : "—"}
+                      </td>
+                      <td style={{ ...tdSm, textAlign: "center", fontWeight: 700, color: row.rowOverCount > 0 ? "#ef4444" : "rgba(255,255,255,0.25)" }}>
+                        {runCount > 0 ? (row.rowOverCount || "—") : "—"}
+                      </td>
+                      <td style={{ ...tdSm, textAlign: "center", color: row.tableRowsWarningCount > 0 ? "#f59e0b" : "rgba(255,255,255,0.25)" }}>
+                        {runCount > 0 ? (row.tableRowsWarningCount || "—") : "—"}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
+
+            {/* T-12b: missing field / warning type 상세 (documentType별) */}
+            {documentRows.map((row) => {
+              const topMissing = Object.entries(row.missingFieldCounts)
+                .sort((a, b) => b[1] - a[1]).slice(0, 6);
+              const topWarnings = Object.entries(row.warningTypeCounts)
+                .sort((a, b) => b[1] - a[1]).slice(0, 6);
+              if (topMissing.length === 0 && topWarnings.length === 0) return null;
+              return (
+                <div key={`detail-${row.documentType}`} style={{ marginTop: 6, padding: "4px 6px", fontSize: 10, borderTop: "1px solid rgba(255,255,255,0.06)", color: "var(--muted)" }}>
+                  <span style={{ fontWeight: 700, color: "#c4b5fd", marginRight: 6 }}>
+                    {DOC_TYPE_LABEL[row.documentType] ?? row.documentType}
+                  </span>
+                  {topMissing.length > 0 && (
+                    <span style={{ marginRight: 10 }}>
+                      <span style={{ color: "#f87171", fontWeight: 700 }}>Missing: </span>
+                      {topMissing.map(([k, c]) => (
+                        <span key={k} style={{ marginRight: 5 }}>
+                          <span style={{ color: "#fca5a5" }}>{getInvoiceColLabel(k)}</span>
+                          <span style={{ color: "rgba(255,255,255,0.35)", marginLeft: 1 }}>({c})</span>
+                        </span>
+                      ))}
+                    </span>
+                  )}
+                  {topWarnings.length > 0 && (
+                    <span>
+                      <span style={{ color: "#fbbf24", fontWeight: 700 }}>Warn: </span>
+                      {topWarnings.map(([k, c]) => (
+                        <span key={k} style={{ marginRight: 5 }}>
+                          <span style={{ color: "#fde68a" }}>{k}</span>
+                          <span style={{ color: "rgba(255,255,255,0.35)", marginLeft: 1 }}>({c})</span>
+                        </span>
+                      ))}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 
@@ -5665,9 +6208,9 @@ const styles: Record<string, React.CSSProperties> = {
     flexShrink: 0,
   },
   topBar: {
-    display: "flex", alignItems: "center", gap: 12, padding: "8px 12px",
+    display: "flex", alignItems: "center", gap: 8, padding: "8px 12px",
     background: "var(--panel)", borderRadius: 10, boxShadow: "var(--shadowSoft)",
-    flexShrink: 0, overflow: "hidden",
+    flexShrink: 0, flexWrap: "wrap",
   },
   groupBox: {
     display: "flex", flexDirection: "column", gap: 4, flexShrink: 0,
@@ -5802,7 +6345,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   batchBox: {
     background: "var(--panel)", borderRadius: 10, boxShadow: "var(--shadowSoft)",
-    padding: "10px 14px", flexShrink: 0, maxHeight: 220, overflow: "auto",
+    padding: "10px 14px", flexShrink: 0, maxHeight: 320, overflow: "auto",
   },
   sectionHeader: {
     fontSize: 11, fontWeight: 700, color: "var(--muted)", marginBottom: 8,
@@ -5858,6 +6401,7 @@ const th: React.CSSProperties = {
   padding: "6px 10px", textAlign: "left", fontWeight: 700,
   color: "var(--muted)", borderBottom: "1px solid rgba(255,255,255,0.06)",
   whiteSpace: "nowrap",
+  position: "sticky", top: 0, background: "var(--panel)", zIndex: 1,
 };
 
 const td: React.CSSProperties = {

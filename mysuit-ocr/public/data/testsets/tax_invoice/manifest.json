@@ -1,0 +1,36 @@
+{
+  "datasetId": "tax_invoice",
+  "datasetRole": "document_type",
+  "status": "draft",
+  "description": "세금계산서(부가가치세 세금계산서) 1차 검증셋. 공급가액/세액/합계 및 품목표 추출 검증용. 샘플 추가 대기 중.",
+  "items": [
+    {
+      "filename": "tax_invoice_sample_placeholder.jpg",
+      "documentType": "tax_invoice",
+      "qualityTags": [],
+      "difficulty": "medium",
+      "expectedStatus": "selected",
+      "notes": "PLACEHOLDER: 실제 세금계산서 샘플 이미지 필요. 이 항목은 구조 준비용이며 실제 파일이 없어 RunAll 시 스킵됩니다. 실제 샘플 추가 시 이 항목을 교체하세요.",
+      "invoiceProfile": {
+        "invoiceSubType": "standard_amount_statement",
+        "amountProfile": "supply_tax_total",
+        "partyProfile": "supplier_buyer",
+        "tableProfile": "item_amount_table",
+        "tableExpectedColumns": {
+          "required": ["itemName", "quantity", "unitPrice", "supplyAmount", "taxAmount"],
+          "optional": ["rowIndex", "spec", "remark", "amount", "totalAmount"],
+          "display": [
+            { "key": "rowIndex", "label": "일자" },
+            { "key": "itemName", "label": "품목" },
+            { "key": "spec", "label": "규격" },
+            { "key": "quantity", "label": "수량" },
+            { "key": "unitPrice", "label": "단가" },
+            { "key": "supplyAmount", "label": "공급가액" },
+            { "key": "taxAmount", "label": "세액" }
+          ]
+        },
+        "expectedRowCount": 1
+      }
+    }
+  ]
+}

@@ -35,6 +35,30 @@ export const EMPTY_GT = (): GtRecord => ({ fields: EMPTY_ENTRY(), type: "영수�
 
 export type OcrCacheRecord = { ocr_text: string; scanned_at: string };
 
+/** T-21: 전처리 debug/auto-apply 결과 (preprocessingDebug) */
+export type PreprocessingDebug = {
+  enabled?: boolean;
+  productionApplied?: boolean;
+  wouldApplyInDebug?: boolean;
+  selectedCandidate?: string | null;
+  appliedVariant?: string | null;
+  candidates?: string[];
+  decisions?: Array<{
+    variant?: string;
+    decision?: string;
+    reasons?: string[];
+  }>;
+  originalSummary?: Record<string, unknown>;
+  qualityTags?: string[];
+  autoApplyDecision?: {
+    autoApplyAllowed?: boolean;
+    reason?: string[];
+    riskLevel?: string;
+    requiresManualReview?: boolean;
+  };
+  error?: string;
+};
+
 export type OcrResponse = {
   fields: { name: string; field_type: string; value: string; confidence: number; bbox: number[] }[];
   full_text: string;
@@ -50,6 +74,8 @@ export type OcrResponse = {
   doc_type?: string;
   processing_time: number;
   processed_image?: string;
+  /** T-21: 전처리 debug/auto-apply 결과 */
+  preprocessingDebug?: PreprocessingDebug;
 };
 
 export type OcrEntry = {
@@ -67,6 +93,8 @@ export type OcrEntry = {
   extractDebug?: Record<string, unknown>;
   /** finance_profile review 사유 코드 목록 */
   financeReviewReasons?: string[];
+  /** T-21: 전처리 debug/auto-apply 결과 */
+  preprocessingDebug?: PreprocessingDebug;
 };
 
 export type AutofillSource = "biz" | "text";

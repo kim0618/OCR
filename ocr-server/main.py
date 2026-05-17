@@ -45,7 +45,7 @@ from extractors.company import (
     _rescue_company_name,
 )
 from extractors.common import _bad_top_text_candidate, _extract_until_next_label
-from extractors.business_number import _validate_biz_number, _extract_biz_number
+from extractors.business_number import _validate_biz_number, _extract_biz_number, _extract_biz_number_relaxed
 from extractors.phone import (
     _normalize_phone_digits,
     _valid_phone_digits,
@@ -217,8 +217,12 @@ def _extract_fields_from_rows(rows, target: dict) -> None:
         if not target.get("사업자번호"):
             has_label = bool(re.search(r'사업자|등록번호', row_compact))
             biz = _extract_biz_number(row_text)
-            if not biz and has_label and index + 1 < len(rows):
-                biz = _extract_biz_number(_row_text(rows[index + 1]))
+            if not biz and has_label:
+                # 레이블 있으면 체크섬 완화 fallback 허용
+                biz = _extract_biz_number_relaxed(row_text)
+                if not biz and index + 1 < len(rows):
+                    next_text = _row_text(rows[index + 1])
+                    biz = _extract_biz_number(next_text) or _extract_biz_number_relaxed(next_text)
             if biz:
                 target["사업자번호"] = biz
 
@@ -311,6 +315,7 @@ _REVIEW_STATUSES = {
     "suppressed_bank_slip",
     "suppressed_handwritten",
     "suppressed_unknown_bare",
+    "suppressed_receipt_bare_negative",
 }
 
 
@@ -368,6 +373,29 @@ def _apply_doc_type_amount_policy(
                 "reason": "unknown: 분류 근거 부족 + bare 저신뢰 후보 → 비움.",
                 "policy": "unknown_conservative",
             }
+
+    # T-19b: receipt_pos/receipt_card — bare 단독 + score < 0 + 금액이 매우 큰 경우 오탐 방지
+    # 조건: pattern=bare AND score<0 AND 금액>=1000만원
+    # → 단말기ID·영수증번호·계좌번호 뒷자리가 천문학적 금액으로 오인되는 케이스 차단
+    # 소액 bare(18,308원 등)는 낮은 score라도 유지 (합계라벨 없는 단순영수증 포함)
+    if amount_value and sel and sel.get("pattern") == "bare" and sel.get("score", 0) < 0:
+        if doc_type in ("receipt_pos", "receipt_card"):
+            try:
+                import re as _re
+                _amt_int = int(_re.sub(r"[,\s원₩]", "", amount_value) or "0")
+            except (ValueError, TypeError):
+                _amt_int = 0
+            if _amt_int >= 10_000_000:
+                amount_value = ""
+                amount_debug = {
+                    **amount_debug,
+                    "status": "suppressed_receipt_bare_negative",
+                    "reason": (
+                        "receipt: bare 단독 + score<0 + 금액>=1000만원 → 번호/ID 오탐 방지. "
+                        "합계라벨/comma형식 없이 천문학적 금액은 수신번호 등 오인 가능성 높음."
+                    ),
+                    "policy": "receipt_bare_negative_large_amount",
+                }
 
     # 최종 상태 기준으로 검토 필요 여부 산정
     final_status = amount_debug.get("status") or status_1st
@@ -464,6 +492,22 @@ def extract_receipt_fields(
     if rescued_company and rescued_company != result.get("회사명", ""):
         result["회사명"] = rescued_company
         field_sources["회사명"] = rescued_source or "company_rescue"
+
+    # --- 사업자번호 rescue: 체크섬 완화 2차 시도 ---
+    # 전화/주소 컨텍스트가 확인된 경우에만 실행 (비즈니스 정보 블록으로 판단)
+    # OCR 노이즈로 체크섬이 틀린 3-2-5 패턴을 복구한다.
+    if not result.get("사업자번호") and (result.get("tel") or result.get("주소")):
+        all_rescue_rows = list((upper_rows or []) + (upper_single_rows or [])) + rows
+        for rescue_row in all_rescue_rows:
+            rescue_text = _row_text(rescue_row)
+            # 전화번호로 오인될 수 있는 행 제외
+            if _extract_phone_candidate(rescue_text):
+                continue
+            biz_rescue = _extract_biz_number_relaxed(rescue_text)
+            if biz_rescue:
+                result["사업자번호"] = biz_rescue
+                field_sources["사업자번호"] = "biz_rescue_relaxed"
+                break
 
     # --- 총합계금액 ---
     # 후보를 3개 소스에서 수집 → merge → 공급가액+부가세 합성 후보 추가 → 재merge
@@ -1590,6 +1634,263 @@ async def preprocess_corners(file: UploadFile = File(...)):
     return {"corners": corners, "detected": bool(cnts and corners[0]["x"] != 0.05)}
 
 
+# ── T-20d: debug preprocessing helpers ─────────────────────────────────────
+
+def _build_preprocessing_debug(
+    data: bytes,
+    filename: str,
+    img: np.ndarray,
+    ocr: object,
+    doc_type: str,
+    receipt_fields: dict,
+    response: dict,
+    quality_tags_json: str,
+    ocr_lines_raw: list,
+    auto_apply_mode: bool = False,
+) -> dict:
+    """Build preprocessingDebug response block.
+
+    Returns dict for response["preprocessingDebug"].
+    When auto_apply_mode=True, includes auto-apply decision and
+    stores variant raw fields as "_appliedRawFields" if guard passes.
+    Production path is only modified by the caller (not here).
+    """
+    from preprocessing_policy import (  # type: ignore
+        get_candidates,
+        compare_then_select as pp_compare,
+        get_quality_tags_from_manifest,
+        get_expected_row_count,
+        get_table_expected_columns,
+        apply_image_preprocessing,
+        render_pdf_variant,
+        compute_receipt_improvements,
+        compute_invoice_improvements,
+        decide_auto_apply_preprocessing,
+    )
+
+    # qualityTags: Form override > manifest lookup
+    qt: list[str] = []
+    if quality_tags_json:
+        try:
+            qt = json.loads(quality_tags_json)
+        except Exception:
+            pass
+    if not qt:
+        qt = get_quality_tags_from_manifest(filename)
+
+    candidates = get_candidates(qt, doc_type)
+    is_invoice = doc_type == "invoice_statement"
+    is_pdf = filename.lower().endswith(".pdf")
+
+    # Build original result summary
+    if is_invoice:
+        doc_fields = response.get("document_fields") or {}
+        orig_rc = doc_fields.get("rowCount")
+        expected_rc = get_expected_row_count(filename)
+        original_result = {
+            "variant": "original",
+            "docType": doc_type,
+            "rowCount": orig_rc,
+            "expectedRowCount": expected_rc,
+            "rowCountStatus": "exact" if orig_rc == expected_rc else "mismatch",
+            "warnings": [],
+            "expectedMissingKeys": [],
+            "improvements": [],
+            "regressions": [],
+        }
+        original_summary = {
+            "docType": doc_type,
+            "rowCount": orig_rc,
+            "expectedRowCount": expected_rc,
+        }
+    else:
+        expected_rc = None
+        _rf = receipt_fields or {}
+        _core_fields = ["merchantName", "businessNo", "totalAmount"]
+        _orig_fill = sum(
+            1 for f in _core_fields
+            if _rf.get(f) and str(_rf[f]).strip() not in {"", "None", "null", "-"}
+        )
+        original_result = {
+            "variant": "original",
+            "docType": doc_type,
+            "docTypeMatch": True,
+            "coreFieldFillCount": _orig_fill,
+            "fields": {k: _rf.get(k, "") for k in _core_fields},
+            "improvements": [],
+            "regressions": [],
+        }
+        original_summary = {
+            "docType": doc_type,
+            "coreFieldFillCount": _orig_fill,
+            "fields": {k: _rf.get(k, "") for k in _core_fields},
+        }
+
+    # No candidates → return early with blocked info
+    if not candidates:
+        _no_cand_result: dict = {
+            "enabled": True,
+            "productionApplied": False,
+            "qualityTags": qt,
+            "candidates": [],
+            "selectedCandidate": None,
+            "wouldApplyInDebug": False,
+            "wouldApplyInProduction": False,
+            "originalSummary": original_summary,
+            "decisions": [],
+        }
+        if auto_apply_mode:
+            _no_cand_result["autoApplyDecision"] = {
+                "autoApplyAllowed": False,
+                "reason": ["no_candidates"],
+                "riskLevel": "low",
+                "requiresManualReview": False,
+            }
+        return _no_cand_result
+
+    # Run preprocessing variants
+    variant_results: list[dict] = []
+    _var_raw_fields_map: dict[str, dict] = {}  # T-20i: store raw fields per variant for auto-apply
+    for variant in candidates:
+        try:
+            # Apply preprocessing to get variant image
+            if is_pdf and variant == "render_dpi_200_grayscale":
+                var_img = render_pdf_variant(data, variant)
+            elif not is_pdf:
+                var_img = apply_image_preprocessing(img, variant)
+            else:
+                variant_results.append({"variant": variant, "error": "pdf_variant_not_supported"})
+                continue
+
+            # Run OCR
+            import time as _time
+            _t0 = _time.time()
+            _var_ocr_result = ocr.ocr(var_img)
+            _ocr_sec = round(_time.time() - _t0, 3)
+            _var_lines = _parse_ocr_lines(_var_ocr_result)
+            _var_text = "\n".join(t for _, t, c in _var_lines if t and c >= 0.1)
+
+            if is_invoice:
+                tec = get_table_expected_columns(filename)
+                _inv_debug: dict = {}
+                _var_doc_fields = extract_invoice_statement_fields(
+                    _var_lines, debug=_inv_debug, table_expected_columns=tec
+                )
+                _var_table_rows = _var_doc_fields.get("tableRows") or []
+                _var_rc = len(_var_table_rows)
+                _var_warnings = (_var_doc_fields.get("tableMeta") or {}).get("valueMappingWarnings") or []
+                vr: dict = {
+                    "variant": variant,
+                    "docType": doc_type,
+                    "rowCount": _var_rc,
+                    "expectedRowCount": expected_rc,
+                    "rowCountStatus": "exact" if _var_rc == expected_rc else "mismatch",
+                    "warnings": _var_warnings,
+                    "ocrSeconds": _ocr_sec,
+                }
+                impr, regr = compute_invoice_improvements(original_result, vr, expected_rc)
+            else:
+                _var_doc_info = classify_document(_var_text)
+                _var_doc_type = _var_doc_info.get("type", "unknown")
+                _var_exdebug: dict = {}
+                _var_raw_fields = extract_receipt_fields(
+                    _var_lines, doc_type=_var_doc_type, debug=_var_exdebug
+                )
+                _var_raw_fields_map[variant] = _var_raw_fields or {}  # T-20i: store for auto-apply
+                _var_values = list((_var_raw_fields or {}).values())
+                _ALIASES = ["merchantName", "businessNo", "representative", "phone", "address", "totalAmount"]
+                _var_norm = {a: _var_values[i] if i < len(_var_values) else "" for i, a in enumerate(_ALIASES)}
+                vr = {
+                    "variant": variant,
+                    "docType": _var_doc_type,
+                    "docTypeMatch": _var_doc_type == doc_type,
+                    "coreFieldFillCount": sum(
+                        1 for f in ["merchantName", "businessNo", "totalAmount"]
+                        if _var_norm.get(f) and str(_var_norm[f]).strip() not in {"", "None", "null", "-"}
+                    ),
+                    "fields": {k: _var_norm.get(k, "") for k in ["merchantName", "businessNo", "totalAmount"]},
+                    "ocrSeconds": _ocr_sec,
+                }
+                impr, regr = compute_receipt_improvements(original_result, vr)
+
+            vr["improvements"] = impr
+            vr["regressions"] = regr
+            variant_results.append(vr)
+
+        except Exception as ve:
+            variant_results.append({"variant": variant, "error": str(ve), "improvements": [], "regressions": []})
+            print(f"[debug_preprocessing] variant={variant} error: {ve}")
+
+    # compare_then_select
+    compare_result = pp_compare(
+        original=original_result,
+        variant_results=variant_results,
+        quality_tags=qt,
+        doc_type=doc_type,
+        expected_row_count=expected_rc,
+        debug_preprocessing=True,
+    )
+
+    decisions = [
+        {
+            "variant": vd["variant"],
+            "decision": vd["decision"],
+            "reasons": vd.get("reasons", []),
+        }
+        for vd in compare_result["variantDecisions"]
+        if vd["decision"] not in ("policy_skip", "always_blocked")
+    ]
+
+    _out: dict = {
+        "enabled": True,
+        "productionApplied": False,
+        "qualityTags": qt,
+        "candidates": compare_result["candidates"],
+        "selectedCandidate": compare_result["selectedCandidate"],
+        "wouldApplyInDebug": compare_result["wouldApplyInDebug"],
+        "wouldApplyInProduction": False,
+        "originalSummary": original_summary,
+        "decisions": decisions,
+    }
+
+    # T-20i: auto-apply decision (receipt only, invoice永久除外)
+    if auto_apply_mode:
+        _selected = compare_result["selectedCandidate"]
+        if _selected and not is_invoice:
+            _sel_vr = next((vr for vr in variant_results if vr.get("variant") == _selected), {})
+            _auto_decision = decide_auto_apply_preprocessing(
+                original=original_result,
+                candidate_result=_sel_vr,
+                sample_meta={"documentType": doc_type, "qualityTags": qt, "filename": filename},
+                debug_decision={
+                    "decision": "candidate_accept",
+                    "selectedCandidate": _selected,
+                    "reasons": _sel_vr.get("improvements", []),
+                },
+            )
+        elif is_invoice:
+            _auto_decision = {
+                "autoApplyAllowed": False,
+                "reason": ["invoice_excluded_from_auto_apply"],
+                "riskLevel": "high",
+                "requiresManualReview": False,
+            }
+        else:
+            _auto_decision = {
+                "autoApplyAllowed": False,
+                "reason": ["no_candidate_accept"],
+                "riskLevel": "low",
+                "requiresManualReview": False,
+            }
+        _out["autoApplyDecision"] = _auto_decision
+        # Store raw fields for caller (will be popped by ocr_extract, not in final response)
+        if _auto_decision.get("autoApplyAllowed") and _selected:
+            _out["_appliedRawFields"] = _var_raw_fields_map.get(_selected, {})
+            _out["appliedVariant"] = _selected
+
+    return _out
+
+
 @app.post("/ocr/extract")
 async def ocr_extract(
     file: UploadFile = File(...),
@@ -1601,6 +1902,9 @@ async def ocr_extract(
     tableBounds: str = Form(""),           # T-6i: Template table bounds
     columnGuides: str = Form(""),          # T-6j: Template column guide x-positions (OCR space)
     documentType: str = Form(""),          # T-9-fix: explicit documentType override (e.g. "invoice_statement")
+    debugPreprocessing: str = Form("false"),    # T-20d: debug compare_then_select (default=false, production unchanged)
+    qualityTagsJson: str = Form(""),            # T-20d: qualityTags override for preprocessing debug
+    autoApplyPreprocessing: str = Form("false"),# T-20i: limited auto-apply for receipt (default=false, invoice永久除外)
 ):
     import time
     start = time.time()
@@ -2142,13 +2446,23 @@ async def ocr_extract(
                             }
                             # T-6j: extract colX (pre-computed absolute pixel positions)
                             # colX is in img space; scale to OCR space
-                            _col_x_img = (_r.get("table") or {}).get("colX", [])
+                            _tbl_meta = _r.get("table") or {}
+                            _col_x_img = _tbl_meta.get("colX", [])
                             if isinstance(_col_x_img, list) and _col_x_img:
                                 _tcg = [
                                     min(float(ocr_w), max(0.0, float(cx) * _sx))
                                     for cx in _col_x_img
                                     if isinstance(cx, (int, float))
                                 ]
+                            # T-Template-Grid-1: variable grid 메타 전달 (mode, stopKeywords)
+                            _mode = str(_tbl_meta.get("mode") or "")
+                            if _mode:
+                                _tbn["mode"] = _mode
+                            _stops = _tbl_meta.get("stopKeywords")
+                            if isinstance(_stops, list):
+                                _clean_stops = [str(s).strip() for s in _stops if isinstance(s, (str, int, float)) and str(s).strip()]
+                                if _clean_stops:
+                                    _tbn["stopKeywords"] = _clean_stops
                         break
 
             # T-10-fix-colguides: When template provides colX (column guides) but no
@@ -2268,6 +2582,54 @@ async def ocr_extract(
             f"upper_ran={timings.get('upper_reocr_ran')} amount_ran={timings.get('amount_reocr_ran')} "
             f"slowest5=" + ",".join(f"{k}={v}" for k, v in _top_slowest)
         )
+
+    # T-20d/T-20i: debug preprocessing compare + optional limited auto-apply
+    _debug_preprocessing = debugPreprocessing.strip().lower() in ("true", "1", "yes")
+    _auto_apply_preprocessing = autoApplyPreprocessing.strip().lower() in ("true", "1", "yes")
+    # B案: auto-apply implies debug mode so we always have compare data before applying
+    _run_preprocessing = _debug_preprocessing or _auto_apply_preprocessing
+    if _run_preprocessing and not region_list:
+        try:
+            _prep_debug = _build_preprocessing_debug(
+                data=data,
+                filename=file.filename or "",
+                img=img,
+                ocr=ocr,
+                doc_type=doc_type,
+                receipt_fields=receipt_fields,
+                response=response,
+                quality_tags_json=qualityTagsJson,
+                ocr_lines_raw=ocr_lines_raw,
+                auto_apply_mode=_auto_apply_preprocessing,
+            )
+            # T-20i: receipt limited auto-apply (invoice永久除外)
+            _is_invoice_doc = doc_type == "invoice_statement"
+            if (
+                _auto_apply_preprocessing
+                and not _is_invoice_doc
+                and _prep_debug.get("autoApplyDecision", {}).get("autoApplyAllowed")
+                and "_appliedRawFields" in _prep_debug
+            ):
+                _applied_fields = _prep_debug.pop("_appliedRawFields")
+                response["receipt_fields"] = _applied_fields
+                _prep_debug["productionApplied"] = True
+                print(
+                    f"[auto_apply] APPLIED variant={_prep_debug.get('appliedVariant')} "
+                    f"file={file.filename} doc_type={doc_type}"
+                )
+            else:
+                # Ensure internal field is not leaked to response
+                _prep_debug.pop("_appliedRawFields", None)
+                if _auto_apply_preprocessing and _is_invoice_doc:
+                    print(f"[auto_apply] SKIPPED invoice_statement: {file.filename}")
+            response["preprocessingDebug"] = _prep_debug
+        except Exception as _pde:
+            print(f"[debug_preprocessing] error (response unaffected): {_pde}")
+            response["preprocessingDebug"] = {
+                "enabled": True,
+                "productionApplied": False,
+                "error": str(_pde),
+            }
 
     return response
 

@@ -1,0 +1,201 @@
+{
+  "task": "T-20i",
+  "generatedAt": "2026-05-17T13:38:00.596046",
+  "verificationSummary": {
+    "main_py_param": true,
+    "flag_gates": true,
+    "simulation": true,
+    "invoice_baseline": true,
+    "overall": "PASS"
+  },
+  "autoApplyResults": {
+    "productionAppliedTrue": 4,
+    "allowedSamples": [
+      "receipt_generalization/card_002.jpg",
+      "receipt_generalization/medical_001.jpg",
+      "receipt_generalization/pos_006.jpg",
+      "receipt_generalization/medical_003.jpg"
+    ],
+    "blockedNormal": [
+      "receipt_generalization/card_001.jpg",
+      "receipt_generalization/pos_005.jpg"
+    ],
+    "invoiceExcluded": [
+      "invoice_statement/3.pdf"
+    ]
+  },
+  "keyAssertions": {
+    "autoApplyPreprocessing param added": true,
+    "debug/auto flag gates correct": true,
+    "productionApplied=True count == 4": true,
+    "card_002 autoApplyAllowed": true,
+    "medical_001 autoApplyAllowed": true,
+    "pos_006 autoApplyAllowed": true,
+    "medical_003 autoApplyAllowed": true,
+    "card_001 blocked": true,
+    "pos_005 blocked": true,
+    "invoice/3.pdf excluded": true,
+    "invoice baseline 7/7 exact": true
+  },
+  "samples": [
+    {
+      "sample": "receipt_generalization/card_002.jpg",
+      "documentType": "card_receipt",
+      "qualityTags": [
+        "blurred",
+        "preprocessing_candidate"
+      ],
+      "selectedCandidate": "clahe",
+      "autoApplyAllowed": true,
+      "autoApplyReason": [
+        "all_guards_passed"
+      ],
+      "expectedAutoApply": true,
+      "productionApplied": true,
+      "ok": true
+    },
+    {
+      "sample": "receipt_generalization/medical_001.jpg",
+      "documentType": "medical_receipt",
+      "qualityTags": [
+        "shadow",
+        "preprocessing_candidate"
+      ],
+      "selectedCandidate": "clahe",
+      "autoApplyAllowed": true,
+      "autoApplyReason": [
+        "all_guards_passed"
+      ],
+      "expectedAutoApply": true,
+      "productionApplied": true,
+      "ok": true
+    },
+    {
+      "sample": "receipt_generalization/pos_006.jpg",
+      "documentType": "pos_receipt",
+      "qualityTags": [
+        "small_text",
+        "garbled_source",
+        "preprocessing_candidate"
+      ],
+      "selectedCandidate": "upscale_1_5x",
+      "autoApplyAllowed": true,
+      "autoApplyReason": [
+        "all_guards_passed"
+      ],
+      "expectedAutoApply": true,
+      "productionApplied": true,
+      "ok": true
+    },
+    {
+      "sample": "receipt_generalization/medical_003.jpg",
+      "documentType": "medical_receipt",
+      "qualityTags": [
+        "long_receipt",
+        "small_text",
+        "preprocessing_candidate"
+      ],
+      "selectedCandidate": "grayscale",
+      "autoApplyAllowed": true,
+      "autoApplyReason": [
+        "all_guards_passed"
+      ],
+      "expectedAutoApply": true,
+      "productionApplied": true,
+      "ok": true
+    },
+    {
+      "sample": "receipt_generalization/card_001.jpg",
+      "documentType": "card_receipt",
+      "qualityTags": [
+        "small_text",
+        "garbled_source"
+      ],
+      "selectedCandidate": "upscale_1_5x",
+      "autoApplyAllowed": false,
+      "autoApplyReason": [
+        "no_preprocessing_candidate_tag"
+      ],
+      "expectedAutoApply": false,
+      "productionApplied": false,
+      "ok": true
+    },
+    {
+      "sample": "receipt_generalization/pos_005.jpg",
+      "documentType": "pos_receipt",
+      "qualityTags": [
+        "long_receipt",
+        "small_text"
+      ],
+      "selectedCandidate": "grayscale",
+      "autoApplyAllowed": false,
+      "autoApplyReason": [
+        "no_preprocessing_candidate_tag"
+      ],
+      "expectedAutoApply": false,
+      "productionApplied": false,
+      "ok": true
+    },
+    {
+      "sample": "invoice_statement/3.pdf",
+      "documentType": "invoice_statement",
+      "qualityTags": [
+        "pdf_low_resolution",
+        "preprocessing_candidate",
+        "rowcount_guard_required"
+      ],
+      "selectedCandidate": "render_dpi_200_grayscale",
+      "autoApplyAllowed": false,
+      "autoApplyReason": [
+        "invoice_excluded_from_auto_apply"
+      ],
+      "expectedAutoApply": false,
+      "productionApplied": false,
+      "ok": true
+    }
+  ],
+  "invoiceBaseline": [
+    {
+      "filename": "1.jpg",
+      "expected": 28,
+      "actual": 28,
+      "status": "exact"
+    },
+    {
+      "filename": "2.pdf",
+      "expected": 13,
+      "actual": 13,
+      "status": "exact"
+    },
+    {
+      "filename": "3.pdf",
+      "expected": 1,
+      "actual": 1,
+      "status": "exact"
+    },
+    {
+      "filename": "4.pdf",
+      "expected": 1,
+      "actual": 1,
+      "status": "exact"
+    },
+    {
+      "filename": "5.pdf",
+      "expected": 6,
+      "actual": 6,
+      "status": "exact"
+    },
+    {
+      "filename": "6.pdf",
+      "expected": 6,
+      "actual": 6,
+      "status": "exact"
+    },
+    {
+      "filename": "7.pdf",
+      "expected": 1,
+      "actual": 1,
+      "status": "exact"
+    }
+  ]
+}

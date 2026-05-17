@@ -1,0 +1,216 @@
+{
+  "doc": "ARCH-1 OCR 현재 데이터 흐름 분석",
+  "date": "2026-05-17",
+  "purpose": "DB-2 PostgreSQL schema.sql 작업 전 현재 구조 문서화",
+
+  "localStorageKeys": [
+    {
+      "key": "mysuit_ocr_login",
+      "file": "src/lib/login.ts:13",
+      "data": "StoredLogin: accessToken, user_id, user_nm, adminYn, masterYn, comp_cd, comp_nm, envMysuitUrl, envMagellanVersion",
+      "screens": ["전체 (로그인 상태 유지)"],
+      "dbPriority": "P1",
+      "dbTable": ["users", "sessions"],
+      "issue": "XSS 취약, 토큰 서버 미저장"
+    },
+    {
+      "key": "mysuit_ocr_templates",
+      "file": "src/components/upload/UploadWorkspace.tsx:42",
+      "data": "TemplateItem[]: id, name, regions[], documentType, image 메타",
+      "screens": ["UploadWorkspace", "OcrAnnotator", "UnstructuredBuilder", "template/page"],
+      "dbPriority": "P1",
+      "dbTable": ["ocr_templates", "ocr_template_regions"],
+      "issue": "백엔드 templates.json과 중복, 동기화 없음"
+    },
+    {
+      "key": "mysuit_ocr_history",
+      "file": "src/lib/historyStore.ts:4",
+      "data": "HistoryRunRecord[]: MAX_RECORDS=50, 5MB 한계",
+      "screens": ["HistoryWorkspace"],
+      "dbPriority": "P1",
+      "dbTable": ["ocr_runs", "ocr_run_files", "ocr_run_results"],
+      "issue": "50건 초과 시 이전 기록 소실, 이미지 자동 제거"
+    },
+    {
+      "key": "mysuit_ocr_groundtruth",
+      "file": "src/lib/groundTruthStore.ts:7",
+      "data": "Record<compositeKey, {fieldKey: confirmedValue}>. compositeKey=template::file",
+      "screens": ["HistoryWorkspace", "autofillEngine"],
+      "dbPriority": "P1",
+      "dbTable": ["ocr_ground_truth"],
+      "issue": "브라우저 로컬만, 공유/이전 불가"
+    },
+    {
+      "key": "mysuit_ocr_theme",
+      "file": "src/lib/theme.ts:7",
+      "data": "light | dark",
+      "screens": ["전체"],
+      "dbPriority": "P4",
+      "dbTable": ["user_preferences"],
+      "issue": "낮음"
+    }
+  ],
+
+  "backendFiles": [
+    {
+      "file": "data/users.json",
+      "role": "사용자 인증",
+      "readEndpoints": ["POST /login"],
+      "writeEndpoints": [],
+      "structure": "[{user_id, user_pw(PLAINTEXT!), user_nm, adminYn, masterYn, comp_cd, comp_nm}]",
+      "securityIssue": "CRITICAL: 평문 비밀번호",
+      "dbTable": "users"
+    },
+    {
+      "file": "data/templates.json",
+      "role": "템플릿 CRUD 영구 저장",
+      "readEndpoints": ["GET /templates"],
+      "writeEndpoints": ["POST /templates", "DELETE /templates/{id}"],
+      "structure": "[{template_id, template_name, template_json:{regions,documentType,colGuides,image}, updated_at}]",
+      "dbTable": "ocr_templates"
+    },
+    {
+      "file": "data/history.json",
+      "role": "OCR 실행 기록 (메타만)",
+      "readEndpoints": ["POST /ocrSelect"],
+      "writeEndpoints": ["POST /ocrInsert", "POST /ocrUpdate", "POST /ocrDelete"],
+      "structure": "[{job_id, file_name, template_name, processing_time, created_at}]",
+      "note": "localStorage 상세와 이원화. 서버에는 메타만 저장",
+      "dbTable": "ocr_runs"
+    },
+    {
+      "file": "data/review_log.jsonl",
+      "role": "OCR 자동추출 감사 로그 (append-only)",
+      "readEndpoints": ["GET /ocr/review-log (운영용)"],
+      "writeEndpoints": ["auto_extract 이벤트마다 append"],
+      "structure": "JSONL: {ts, event_type, image_id, doc_type, status, total_amount, fields, full_text, processing_time_sec}",
+      "note": "분석이 불편한 JSONL, 빠르게 누적",
+      "dbTable": "audit_logs"
+    },
+    {
+      "file": "data/drive_timings_latest.json",
+      "role": "드라이브 벤치마크 결과",
+      "readEndpoints": [],
+      "writeEndpoints": [],
+      "note": "운영 참고용, DB 이전 불필요"
+    }
+  ],
+
+  "screens": {
+    "template": {
+      "create": "TemplateWorkspace → POST /templates → templates.json + localStorage",
+      "read": "GET /templates → template 목록",
+      "update": "POST /templates (replace)",
+      "delete": "DELETE /templates/{id}",
+      "siteScoped": false,
+      "issue": "동시 쓰기 경쟁, 사이트 격리 없음"
+    },
+    "runOcr": {
+      "formDataFields": ["file", "template_id", "regions (JSON)", "documentType", "model_id", "tableExpectedColumns (T-6f)", "tableBounds (T-6i, 조건부)", "columnGuides (T-6j, 조건부)"],
+      "notSent": ["debugPreprocessing", "autoApplyPreprocessing"],
+      "preprocessingStatus": "선택 A: 미전달 (T-21). 백엔드 기본값 false 유지",
+      "historyWrite": "성공 시 localStorage + POST /ocrInsert",
+      "issue": "이미지 파일 서버 미저장, base64 임시 저장"
+    },
+    "history": {
+      "storage": "mysuit_ocr_history localStorage",
+      "maxRecords": 50,
+      "sizeLimit": "5MB (이미지 자동 제거 fallback)",
+      "backendSync": "POST /ocrInsert (메타만)",
+      "detailFields": ["ocr_fields[]", "output_fields[]", "autofill_summary"],
+      "issue": "50건 초과 소실, 이미지 제거, 재실행 불가"
+    },
+    "loginAuth": {
+      "endpoint": "POST /login → POST {BACKEND_URL}/login",
+      "passwordStorage": "users.json 평문 (심각)",
+      "tokenGeneration": "uuid.uuid4() — 서버 미저장",
+      "tokenClient": "localStorage mysuit_ocr_login.accessToken",
+      "sessionManagement": "없음 (만료/무효화 불가)",
+      "issue": "평문 비밀번호, 토큰 서버 미저장"
+    },
+    "site": {
+      "uiLocation": "Sidebar.tsx:84",
+      "currentState": "하드코딩 3개 옵션, 비기능 (useState만)",
+      "persistence": "없음",
+      "scopeEffect": "없음 (template/history 격리 안 됨)",
+      "note": "완전히 미연결. DB 설계의 핵심 엔티티"
+    },
+    "groundTruth": {
+      "storage": "mysuit_ocr_groundtruth localStorage",
+      "key": "compositeKey = `${template_name}::${file_name}`",
+      "fieldKey": "en 우선, 없으면 ko, trim+lowercase",
+      "savePolicy": "비어있지 않은 modified 값만, 기존값 보존 우선",
+      "usage": "autofillEngine.ts → 자동채움 제안 (source: 'gt')",
+      "vs_testset": "testsets GT는 TestWorkspace용 참조값, 자동채움 미사용"
+    }
+  },
+
+  "dbTableMap": [
+    { "current": "users.json", "table": "users", "priority": "P1", "note": "bcrypt 필수" },
+    { "current": "comp_cd 필드", "table": "sites", "priority": "P1", "note": "멀티사이트 기반" },
+    { "current": "adminYn/masterYn", "table": "site_members", "priority": "P2", "note": "role enum" },
+    { "current": "templates.json 기본", "table": "ocr_templates", "priority": "P1", "note": "site_id FK" },
+    { "current": "template_json.regions[]", "table": "ocr_template_regions", "priority": "P2" },
+    { "current": "colGuides/tableBounds", "table": "ocr_template_table_guides", "priority": "P3" },
+    { "current": "history.json + localStorage 상세", "table": "ocr_runs", "priority": "P1", "note": "job_id PK" },
+    { "current": "image_url (base64/URL)", "table": "ocr_run_files", "priority": "P2", "note": "파일 서버 참조" },
+    { "current": "receipt_fields / document_fields", "table": "ocr_run_results", "priority": "P2", "note": "jsonb" },
+    { "current": "tableRows", "table": "ocr_run_table_rows", "priority": "P3", "note": "invoice 전용" },
+    { "current": "valueMappingWarnings", "table": "ocr_run_warnings", "priority": "P3" },
+    { "current": "mysuit_ocr_groundtruth", "table": "ocr_ground_truth", "priority": "P1" },
+    { "current": "mysuit_ocr_theme", "table": "user_preferences", "priority": "P4", "note": "jsonb" },
+    { "current": "review_log.jsonl", "table": "audit_logs", "priority": "P3", "note": "인덱스 필요" }
+  ],
+
+  "securityRisks": [
+    {
+      "risk": "평문 비밀번호",
+      "level": "CRITICAL",
+      "location": "data/users.json",
+      "fix": "bcrypt + salt"
+    },
+    {
+      "risk": "토큰 서버 미저장",
+      "level": "HIGH",
+      "location": "main.py:725",
+      "fix": "sessions 테이블 + 만료"
+    },
+    {
+      "risk": "localStorage 토큰 XSS",
+      "level": "MEDIUM",
+      "location": "src/lib/login.ts:13",
+      "fix": "HttpOnly cookie"
+    },
+    {
+      "risk": "JSON 파일 동시 쓰기",
+      "level": "MEDIUM",
+      "location": "templates.json, history.json",
+      "fix": "DB ACID 트랜잭션"
+    },
+    {
+      "risk": "히스토리 5MB 한계",
+      "level": "MEDIUM",
+      "location": "historyStore.ts:5",
+      "fix": "DB + 파일 서버"
+    },
+    {
+      "risk": "사이트 격리 미구현",
+      "level": "MEDIUM",
+      "location": "Sidebar.tsx:84",
+      "fix": "sites + site_members"
+    }
+  ],
+
+  "db2Decisions": [
+    "비밀번호 해시: bcrypt (passlib[bcrypt] 또는 bcrypt.js)",
+    "토큰 방식: JWT + sessions table 또는 session UUID",
+    "sites 구조: 독립 sites 엔티티 (comp_cd 대체)",
+    "template_json: jsonb blob vs 정규화 테이블 (P2)",
+    "이미지 저장: base64 제거 → 파일 서버 URL",
+    "review_log: DB 이전 vs JSONL 유지",
+    "ground_truth: 독립 테이블 (template_id, file_name, field_key)",
+    "role: adminYn/masterYn → enum(admin, member, viewer)",
+    "preprocessingDebug 이력 저장 여부 (ocr_run_results 확장 고려)",
+    "기존 localStorage 데이터 마이그레이션 스크립트 필요"
+  ]
+}

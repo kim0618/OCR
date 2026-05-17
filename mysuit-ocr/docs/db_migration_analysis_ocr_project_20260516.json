@@ -1,0 +1,119 @@
+{
+  "task": "DB-1",
+  "title": "OCR 프로젝트 localStorage → DB 전환 분석",
+  "generatedAt": "2026-05-16",
+  "codeModified": false,
+  "storageAudit": {
+    "localStorage": {
+      "keysFound": 5,
+      "keys": [
+        {
+          "key": "mysuit_ocr_login",
+          "files": ["lib/login.ts"],
+          "data": "accessToken, user_id, user_nm, adminYn, masterYn, comp_cd, comp_nm, envMysuitUrl",
+          "dbMigration": "required",
+          "securityRisk": "high",
+          "notes": "accessToken을 localStorage에 저장 → XSS 취약. httpOnly 쿠키로 전환 필요"
+        },
+        {
+          "key": "mysuit_ocr_templates",
+          "files": ["components/ocr/OcrAnnotator.tsx", "components/template/UnstructuredBuilder.tsx", "components/upload/UploadWorkspace.tsx", "app/template/page.tsx"],
+          "data": "template_id, template_name, template_json (regions, documentType, colGuides, base64 image)",
+          "dbMigration": "required",
+          "securityRisk": "medium",
+          "notes": "base64 이미지로 인한 용량 문제. 멀티 기기 공유 필요"
+        },
+        {
+          "key": "mysuit_ocr_history",
+          "files": ["lib/historyStore.ts"],
+          "data": "job_id, file_name, template_name, ocr_fields, output_fields, status, processing_time",
+          "dbMigration": "required",
+          "securityRisk": "medium",
+          "notes": "최대 50건 자동 삭제. Quota exceeded 핸들링 이미 구현됨 → DB 전환 시 해결"
+        },
+        {
+          "key": "mysuit_ocr_groundtruth",
+          "files": ["lib/groundTruthStore.ts", "lib/autofillEngine.ts"],
+          "data": "composite key(template::file) → field_key → confirmed_value",
+          "dbMigration": "recommended",
+          "securityRisk": "low",
+          "notes": "autofill 제안 소스. 기기 간 공유를 위해 DB 권장"
+        },
+        {
+          "key": "mysuit_ocr_theme",
+          "files": ["lib/theme.ts", "app/layout.tsx"],
+          "data": "\"light\" | \"dark\"",
+          "dbMigration": "keep",
+          "securityRisk": "none",
+          "notes": "손실 영향 없는 UI 상태"
+        }
+      ]
+    },
+    "sessionStorage": { "keysFound": 0 },
+    "indexedDB": { "keysFound": 0 }
+  },
+  "backendPersistence": {
+    "files": [
+      {
+        "path": "data/templates.json",
+        "size": "2.6MB",
+        "format": "JSON array",
+        "content": "TPL-XXXXXXXX templates with base64 images embedded",
+        "dbMigration": "required",
+        "notes": "base64 이미지로 크기 급증. 파일 스토리지로 분리 필요"
+      },
+      {
+        "path": "data/history.json",
+        "size": "573B",
+        "format": "JSON array",
+        "content": "job_id, file_name, template_name, processing_time, created_at",
+        "dbMigration": "required",
+        "notes": "단순 메타만 저장. OCR 결과는 별도 테이블 필요"
+      },
+      {
+        "path": "data/users.json",
+        "size": "368B",
+        "format": "JSON array",
+        "content": "user_id, user_pw(PLAINTEXT!), user_nm, adminYn, masterYn, comp_cd",
+        "dbMigration": "critical",
+        "securityRisk": "critical",
+        "notes": "평문 비밀번호 저장! 즉시 해시화 필요"
+      },
+      {
+        "path": "data/review_log.jsonl",
+        "size": "13MB",
+        "format": "JSONL append-only",
+        "content": "OCR extraction events, human corrections",
+        "dbMigration": "recommended",
+        "notes": "현재 쿼리 불가. DB 이전 시 필터/분석 가능"
+      },
+      {
+        "path": "data/drive_timings_latest.json",
+        "size": "9.5KB",
+        "format": "JSON",
+        "content": "성능 측정 결과",
+        "dbMigration": "optional",
+        "notes": "성능 모니터링 용도. 별도 테이블 또는 유지"
+      }
+    ]
+  },
+  "entities": [
+    "users", "sites", "site_members",
+    "ocr_templates", "ocr_template_regions", "ocr_template_table_guides",
+    "ocr_runs", "ocr_run_files", "ocr_run_results", "ocr_run_table_rows", "ocr_run_warnings",
+    "ocr_ground_truth", "user_preferences", "audit_logs"
+  ],
+  "securityIssues": [
+    { "severity": "critical", "item": "users.json 평문 비밀번호", "action": "bcrypt 해시화 즉시 적용" },
+    { "severity": "high", "item": "accessToken in localStorage", "action": "httpOnly 쿠키 전환" },
+    { "severity": "medium", "item": "OCR 원문 장기 localStorage 보관", "action": "보존 기간 정책 + DB 이전" }
+  ],
+  "migrationPhases": [
+    "Phase 1: DB Schema SQL 작성 (DB-2)",
+    "Phase 2: Backend FastAPI DB 연동 (DB-3)",
+    "Phase 3: Frontend Template 탭 API 전환 (DB-4)",
+    "Phase 4: History/Auth/GT API 전환 (DB-5)",
+    "Phase 5: localStorage import 도구 (DB-6)",
+    "Phase 6: 보안 강화 httpOnly + bcrypt (DB-7)"
+  ]
+}

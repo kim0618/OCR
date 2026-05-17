@@ -1,0 +1,208 @@
+{
+  "task": "T-20h",
+  "generatedAt": "2026-05-17T12:57:50.533758",
+  "autoApplyAllowed": 4,
+  "allowedSamples": [
+    {
+      "sample": "receipt_generalization/card_002.jpg",
+      "candidate": "clahe"
+    },
+    {
+      "sample": "receipt_generalization/medical_001.jpg",
+      "candidate": "clahe"
+    },
+    {
+      "sample": "receipt_generalization/pos_006.jpg",
+      "candidate": "upscale_1_5x"
+    },
+    {
+      "sample": "receipt_generalization/medical_003.jpg",
+      "candidate": "grayscale"
+    }
+  ],
+  "samples": [
+    {
+      "sample": "receipt_generalization/card_002.jpg",
+      "group": "candidate",
+      "documentType": "card_receipt",
+      "qualityTags": [
+        "blurred",
+        "preprocessing_candidate"
+      ],
+      "selectedCandidate": "clahe",
+      "debugDecision": "candidate_accept",
+      "autoApplyAllowed": true,
+      "autoApplyReason": [
+        "all_guards_passed"
+      ],
+      "riskLevel": "low",
+      "requiresManualReview": false,
+      "productionApplied": false,
+      "expectedAutoApply": true,
+      "ok": true
+    },
+    {
+      "sample": "receipt_generalization/medical_001.jpg",
+      "group": "candidate",
+      "documentType": "medical_receipt",
+      "qualityTags": [
+        "shadow",
+        "preprocessing_candidate"
+      ],
+      "selectedCandidate": "clahe",
+      "debugDecision": "candidate_accept",
+      "autoApplyAllowed": true,
+      "autoApplyReason": [
+        "all_guards_passed"
+      ],
+      "riskLevel": "low",
+      "requiresManualReview": false,
+      "productionApplied": false,
+      "expectedAutoApply": true,
+      "ok": true
+    },
+    {
+      "sample": "receipt_generalization/pos_006.jpg",
+      "group": "candidate",
+      "documentType": "pos_receipt",
+      "qualityTags": [
+        "small_text",
+        "garbled_source",
+        "preprocessing_candidate"
+      ],
+      "selectedCandidate": "upscale_1_5x",
+      "debugDecision": "candidate_accept",
+      "autoApplyAllowed": true,
+      "autoApplyReason": [
+        "all_guards_passed"
+      ],
+      "riskLevel": "low",
+      "requiresManualReview": false,
+      "productionApplied": false,
+      "expectedAutoApply": true,
+      "ok": true
+    },
+    {
+      "sample": "receipt_generalization/medical_003.jpg",
+      "group": "candidate",
+      "documentType": "medical_receipt",
+      "qualityTags": [
+        "long_receipt",
+        "small_text",
+        "preprocessing_candidate"
+      ],
+      "selectedCandidate": "grayscale",
+      "debugDecision": "candidate_accept",
+      "autoApplyAllowed": true,
+      "autoApplyReason": [
+        "all_guards_passed"
+      ],
+      "riskLevel": "low",
+      "requiresManualReview": false,
+      "productionApplied": false,
+      "expectedAutoApply": true,
+      "ok": true
+    },
+    {
+      "sample": "receipt_generalization/card_001.jpg",
+      "group": "normal_receipt",
+      "documentType": "card_receipt",
+      "qualityTags": [
+        "small_text",
+        "garbled_source"
+      ],
+      "selectedCandidate": "upscale_1_5x",
+      "debugDecision": "candidate_accept",
+      "autoApplyAllowed": false,
+      "autoApplyReason": [
+        "no_preprocessing_candidate_tag"
+      ],
+      "riskLevel": "medium",
+      "requiresManualReview": true,
+      "productionApplied": false,
+      "expectedAutoApply": false,
+      "ok": true
+    },
+    {
+      "sample": "receipt_generalization/pos_005.jpg",
+      "group": "normal_receipt",
+      "documentType": "pos_receipt",
+      "qualityTags": [
+        "long_receipt",
+        "small_text"
+      ],
+      "selectedCandidate": "grayscale",
+      "debugDecision": "candidate_accept",
+      "autoApplyAllowed": false,
+      "autoApplyReason": [
+        "no_preprocessing_candidate_tag"
+      ],
+      "riskLevel": "medium",
+      "requiresManualReview": true,
+      "productionApplied": false,
+      "expectedAutoApply": false,
+      "ok": true
+    },
+    {
+      "sample": "receipt_generalization/pos_002.jpg",
+      "group": "normal_receipt",
+      "documentType": "pos_receipt",
+      "qualityTags": [
+        "small_text"
+      ],
+      "selectedCandidate": null,
+      "debugDecision": "preprocessing_blocked",
+      "autoApplyAllowed": false,
+      "autoApplyReason": [
+        "debug_decision_not_accept: preprocessing_blocked"
+      ],
+      "riskLevel": "low",
+      "requiresManualReview": false,
+      "productionApplied": false,
+      "expectedAutoApply": false,
+      "ok": true
+    },
+    {
+      "sample": "invoice_statement/2.pdf",
+      "group": "blocked_edge",
+      "documentType": "invoice_statement",
+      "qualityTags": [
+        "dense_table",
+        "rowcount_guard_required",
+        "preprocessing_blocked"
+      ],
+      "selectedCandidate": null,
+      "debugDecision": "preprocessing_blocked",
+      "autoApplyAllowed": false,
+      "autoApplyReason": [
+        "invoice_excluded_from_auto_apply"
+      ],
+      "riskLevel": "high",
+      "requiresManualReview": false,
+      "productionApplied": false,
+      "expectedAutoApply": false,
+      "ok": true
+    },
+    {
+      "sample": "invoice_statement/3.pdf",
+      "group": "blocked_edge",
+      "documentType": "invoice_statement",
+      "qualityTags": [
+        "pdf_low_resolution",
+        "preprocessing_candidate",
+        "rowcount_guard_required"
+      ],
+      "selectedCandidate": "render_dpi_200_grayscale",
+      "debugDecision": "candidate_accept",
+      "autoApplyAllowed": false,
+      "autoApplyReason": [
+        "invoice_excluded_from_auto_apply"
+      ],
+      "riskLevel": "high",
+      "requiresManualReview": false,
+      "productionApplied": false,
+      "expectedAutoApply": false,
+      "ok": true
+    }
+  ]
+}

@@ -1,0 +1,119 @@
+{
+  "task": "T-15e",
+  "finance_slip_manifest": {
+    "items": [
+      {
+        "testset": "baseline",
+        "filename": "9.jpg",
+        "expectedStatus": "suppressed_bank_slip",
+        "qualityTags": []
+      },
+      {
+        "testset": "baseline_fast",
+        "filename": "9.jpg",
+        "expectedStatus": "suppressed_bank_slip",
+        "qualityTags": []
+      },
+      {
+        "testset": "google",
+        "filename": "6.jpg",
+        "expectedStatus": "suppressed_bank_slip",
+        "qualityTags": []
+      },
+      {
+        "testset": "receipt_generalization",
+        "filename": "finance_001.jpg",
+        "expectedStatus": "suppressed_bank_slip",
+        "qualityTags": [
+          "rotated"
+        ]
+      },
+      {
+        "testset": "receipt_generalization",
+        "filename": "finance_002.jpg",
+        "expectedStatus": "suppressed_bank_slip",
+        "qualityTags": [
+          "skewed"
+        ]
+      }
+    ],
+    "all_suppressed_after": true,
+    "before_selected": 1,
+    "after_selected": 0,
+    "before_suppressed": 4,
+    "after_suppressed": 5
+  },
+  "t15a_pos_receipt": {
+    "before_biz": 2,
+    "after_biz": 3,
+    "before_mn": 4,
+    "after_mn": 5
+  },
+  "t15b_medical": {
+    "correct": 4,
+    "total": 4
+  },
+  "t15c_food_cafe": {
+    "before_mn": 1,
+    "after_mn": 3
+  },
+  "t15d_card_receipt": {
+    "before_biz": 0,
+    "after_biz": 2,
+    "before_mn": 0,
+    "after_mn": 1
+  },
+  "invoice_statement": [
+    {
+      "filename": "1.jpg",
+      "expected": 28,
+      "actual": 28,
+      "status": "exact"
+    },
+    {
+      "filename": "2.pdf",
+      "expected": 13,
+      "actual": 13,
+      "status": "exact"
+    },
+    {
+      "filename": "3.pdf",
+      "expected": 1,
+      "actual": 1,
+      "status": "exact"
+    },
+    {
+      "filename": "4.pdf",
+      "expected": 1,
+      "actual": 1,
+      "status": "exact"
+    },
+    {
+      "filename": "5.pdf",
+      "expected": 6,
+      "actual": 6,
+      "status": "exact"
+    },
+    {
+      "filename": "6.pdf",
+      "expected": 6,
+      "actual": 6,
+      "status": "exact"
+    },
+    {
+      "filename": "7.pdf",
+      "expected": 1,
+      "actual": 1,
+      "status": "exact"
+    }
+  ],
+  "invoice_all_exact": true,
+  "known_manifest_mislabels": [
+    "receipt_generalization/pos_003.jpg"
+  ],
+  "notes": {
+    "pos_003_mislabel": "manifest=pos_receipt이나 OCR내용이 약국영수증(medical_receipt). T-15b에서 정확히 분류됨. manifest는 T-15e 범위 밖으로 미변경.",
+    "google_6_note": "google/6.jpg: manifest=finance_slip/suppressed_bank_slip. OCR필드에 GS25+2900원 있어 편의점 영수증으로 추정되나, google testset locked이므로 변경 안 함.",
+    "finance_001_change": "finance_001.jpg: selected→suppressed_bank_slip. finance_slip extractor 미구현 단계에서 suppression 정책과 일치시킴. 향후 extractor 구현 후 selected로 재전환 예정."
+  }
+}
