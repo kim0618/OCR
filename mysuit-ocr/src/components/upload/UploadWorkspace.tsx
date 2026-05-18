@@ -818,7 +818,9 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
       }
       // 코너 페이로드 비활성화 — 백엔드 detect_document 자동 경로 사용 (Test 와 동일)
       // if (corners.length === 4) formData.append("corners", JSON.stringify(corners));
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || ""}/ocr/extract`, {
+      const backendBase = process.env.NEXT_PUBLIC_BACKEND_URL || "";
+      const ocrEndpoint = backendBase ? `${backendBase}/ocr/extract` : "/api/ocr-extract";
+      const res = await fetch(ocrEndpoint, {
         method: "POST",
         body: formData,
       });

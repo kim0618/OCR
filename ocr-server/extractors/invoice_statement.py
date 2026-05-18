@@ -2752,6 +2752,8 @@ def _table_items_with_expected_columns(
         }
         debug["matchedHeaders"] = list(matched_dict.keys())
         debug["missingExpectedHeaders"] = [k for k in required if k not in matched_dict]
+        # T-PREVIEW-LABEL-1: 원본 헤더 텍스트 보존 (canonical mapping 이후에도 라벨 유지)
+        debug["columnOriginalLabels"] = {k: line.text.strip() for k, line in matched_dict.items()}
 
     # Build boundaries — T-6h: pass required_keys so optional unmatched columns are excluded
     # T-6i: allow_single_match when table_bounds provided (bounded area has less noise)
@@ -6701,6 +6703,24 @@ def extract_invoice_statement_fields(
         expected_columns=table_expected_columns,
         matched_column_keys=_matched_keys,
     )
+
+    # T-PREVIEW-LABEL-1: 원본 헤더 라벨 propagation → 프론트 columnLabels 우선 사용
+    col_original_labels = tdbg.get("columnOriginalLabels", {})
+    if col_original_labels:
+        # header OCR 기반 경로 (expected_columns_header_match): 실제 OCR 텍스트 사용
+        canonical["tableMeta"]["columnLabels"] = col_original_labels
+    else:
+        # op_anchor / legacy_text / fallback 경로: header OCR 없이 추출한 경우
+        # _EXPECTED_COLUMN_ALIASES 첫 번째 별칭을 primary label로 사용
+        # (rowIndex: "NO", insuranceCode: "보험No" 등 — 원본 헤더와 가장 가까운 표준 라벨)
+        actual_cols = canonical["tableMeta"].get("columns", [])
+        fallback_labels = {
+            k: _EXPECTED_COLUMN_ALIASES[k][0]
+            for k in actual_cols
+            if k in _EXPECTED_COLUMN_ALIASES and _EXPECTED_COLUMN_ALIASES[k]
+        }
+        if fallback_labels:
+            canonical["tableMeta"]["columnLabels"] = fallback_labels
 
     # T-6e: propagate extraction metadata into tableMeta
     canonical["tableMeta"]["extractionSource"] = tdbg.get("extractionSource", "")

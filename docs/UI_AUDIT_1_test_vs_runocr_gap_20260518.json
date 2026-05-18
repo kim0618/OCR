@@ -1,0 +1,283 @@
+{
+  "auditDate": "2026-05-18",
+  "auditName": "UI-AUDIT-1",
+  "title": "Test 탭 vs RunOCR/Template/Preview 격차 분석",
+  "model": "Claude Opus 4.7 (1M context)",
+  "scope": [
+    "mysuit-ocr/src/components/test/TestWorkspace.tsx",
+    "mysuit-ocr/src/components/upload/OcrResultPanel.tsx (fix8 applied)",
+    "mysuit-ocr/src/components/upload/UploadWorkspace.tsx",
+    "mysuit-ocr/src/components/ocr/OcrAnnotator.tsx",
+    "mysuit-ocr/src/components/ocr/OcrRightPanel.tsx",
+    "mysuit-ocr/src/components/ocr/core/export.ts",
+    "mysuit-ocr/src/lib/historyStore.ts",
+    "mysuit-ocr/src/lib/invoiceFieldLabels.ts",
+    "mysuit-ocr/src/lib/profiles.ts",
+    "ocr-server/main.py",
+    "ocr-server/extractors/invoice_statement.py",
+    "mysuit-ocr/public/data/testsets/invoice_statement/manifest.json"
+  ],
+  "summary": {
+    "topGaps": [
+      {
+        "rank": 1,
+        "title": "manifest 기반 expected 컬럼·라벨 강제가 Test 탭 단독",
+        "detail": "RunOCR Preview는 fix8로 tableMeta 기반까지는 동등하나, manifest invoiceProfile.tableExpectedColumns.display/required 미사용으로 외부 파일에서 컬럼 셋/라벨이 어긋남"
+      },
+      {
+        "rank": 2,
+        "title": "expected vs actual 비교 표시(rowCount, missing, warnings)가 Preview에 거의 없음",
+        "detail": "Test 탭은 expectedRowCount 비교 배지 + missing required + valueMappingWarnings를 모두 표시하지만 Preview는 '(N행)'만"
+      },
+      {
+        "rank": 3,
+        "title": "preprocessingDebug/autoApply/Template gridMode·stopKeywords 디버그가 Preview 미연결",
+        "detail": "Test 탭은 PreprocessingDebugPanel로 노출, 백엔드는 variableGridExpanded/stopKeywordHit/tableDebug 응답하지만 RunOCR Preview UI 미표시"
+      }
+    ],
+    "priorityActions": {
+      "P0": [
+        "A. RunOCR Preview manifest 미사용 → 컬럼 셋/라벨 불일치 보정",
+        "B. Preview에 expectedRowCount 비교 배지(정상/부족/초과) 추가",
+        "C. Preview에 valueMappingWarnings / missing required 컬럼 표시"
+      ],
+      "P1": [
+        "F. preprocessingDebug RunOCR 옵션 전달 + Preview 표시",
+        "E. Preview에 variableGridExpanded/stopKeywordHit/extractionSource 디버그 배지",
+        "H. History에 tableRows/tableMeta/valueMappingWarnings/doc_type 저장"
+      ],
+      "P2": [
+        "D. Preview 헤더에 doc_type 배지 노출",
+        "G. INVOICE_FIELD_KO와 manifest display.label 동기화"
+      ]
+    }
+  },
+  "items": [
+    {
+      "id": "A",
+      "name": "tableRows 표시 컬럼",
+      "status": "PARTIAL",
+      "testLocations": [
+        "TestWorkspace.tsx:4546 getManifestExpectedColKeys",
+        "TestWorkspace.tsx:4571 getManifestDisplayLabelMap",
+        "TestWorkspace.tsx:4581 CUSTOM_COL_LABELS",
+        "TestWorkspace.tsx:4600 resolveDisplayColValue",
+        "TestWorkspace.tsx:4634 getDisplayTableColumns",
+        "TestWorkspace.tsx:4692 InvoiceTableRowsPanel",
+        "TestWorkspace.tsx:4716 displayMode auto-switch useEffect",
+        "TestWorkspace.tsx:4738 colLabelMap (manifest display labels 최우선)"
+      ],
+      "actualLocations": [
+        "OcrResultPanel.tsx:177 _ALL_COL_LABEL_MAP (canonical+custom only)",
+        "OcrResultPanel.tsx:189 buildTableColsFromMeta (fix8)",
+        "OcrResultPanel.tsx:212 buildInvoiceDisplayCols (hasValue fallback)",
+        "OcrResultPanel.tsx:122 filterInvoicePreviewDisplayCols",
+        "OcrResultPanel.tsx:1014 previewTableFields JSX rendering"
+      ],
+      "difference": "fix8로 tableMeta.expectedColumnKeys + tableMeta.columns 동등화 완료. 그러나 manifest tableExpectedColumns.display 미사용, manifestDisplayLabelMap 미적용, resolveDisplayColValue(composite 해석) 미적용.",
+      "userImpact": "백엔드가 _tec lookup으로 expectedColumnKeys를 채우지 못한 케이스(외부 파일 등)에서 컬럼 셋 어긋남. 헤더 라벨이 manifest 'NO/품목'이 아닌 canonical '순번/품목명'으로 표시.",
+      "riskLevel": "medium",
+      "recommendedAction": "백엔드 응답에 displayLabels 맵 추가 또는 OcrResultPanel에 manifest lookup props 주입"
+    },
+    {
+      "id": "B",
+      "name": "rowCount exact 표시",
+      "status": "TEST_ONLY",
+      "testLocations": [
+        "TestWorkspace.tsx:1394~1396 rowExactCount/rowShortCount/rowOverCount 집계",
+        "TestWorkspace.tsx:1587~1590 rowCountStatus 결정",
+        "TestWorkspace.tsx:1724~1729 markdown report column",
+        "TestWorkspace.tsx:4805~4810 expRow 비교 배지 (#22c55e/#f59e0b/#ef4444)"
+      ],
+      "actualLocations": [
+        "OcrResultPanel.tsx:1027 단순 {docTableRows.length}행 표시"
+      ],
+      "difference": "Test 탭은 invoiceProfile.expectedRowCount와 비교해 exact/short/over 배지. Preview는 단순 N행만.",
+      "userImpact": "RunOCR 사용자가 백엔드 추출이 기대 행수를 충족했는지 알 수 없음",
+      "riskLevel": "medium",
+      "recommendedAction": "백엔드 응답에 expectedRowCount/rowCountMatchStatus 키 포함 또는 manifest 조회 추가"
+    },
+    {
+      "id": "C",
+      "name": "missing field / warning 집계",
+      "status": "TEST_ONLY",
+      "testLocations": [
+        "TestWorkspace.tsx:1389 tableRowsWarningCount 집계",
+        "TestWorkspace.tsx:1414~1417 warning type 집계",
+        "TestWorkspace.tsx:4760 manifestMissingRequired 계산",
+        "TestWorkspace.tsx:4849~4854 valueMappingWarnings 배지",
+        "TestWorkspace.tsx:5998~6034 Missing Top6 / Warn Top6 표시"
+      ],
+      "actualLocations": [
+        "OcrResultPanel.tsx Validation 탭 - field.value/confidence 기반 success/warning/error 분류만"
+      ],
+      "difference": "백엔드는 tableMeta.valueMappingWarnings/missingExpectedColumnKeys를 응답에 포함하지만 Preview/Validation UI에서 처리하지 않음",
+      "userImpact": "OCR source_missing 등 매핑 실패 진단 정보가 RunOCR 사용자에게 보이지 않음. 검수 신뢰도 저하.",
+      "riskLevel": "high",
+      "recommendedAction": "Preview 표 위 또는 Validation 탭 상단에 tableMeta 기반 missing/warning 카드 추가"
+    },
+    {
+      "id": "D",
+      "name": "documentType 처리",
+      "status": "PARTIAL",
+      "testLocations": [
+        "TestWorkspace - manifest item.documentType 직접 사용",
+        "TestWorkspace DocumentDetailPanel - PROFILE 배지로 doc_type 표시"
+      ],
+      "actualLocations": [
+        "OcrAnnotator.tsx:24,66,103 - documentType state + auto-detect",
+        "OcrRightPanel.tsx:12,32,233,235 - UI select",
+        "core/export.ts:18,28 - 저장 payload에 documentType 포함",
+        "UploadWorkspace.tsx:815~818 - formData append (activeTemplate.documentType)",
+        "main.py:2020~2034 - explicit > template > classifier 우선순위 적용"
+      ],
+      "difference": "라우팅 우선순위까지 완전 적용. 단 RunOCR Preview UI에 result.doc_type 노출 없음",
+      "userImpact": "잘못 분류된 경우 사용자가 인지 어려움",
+      "riskLevel": "low_to_medium",
+      "recommendedAction": "Preview 헤더 영역에 doc_type 배지 1줄 추가"
+    },
+    {
+      "id": "E",
+      "name": "Template table mode/stopKeywords/colGuides",
+      "status": "APPLIED",
+      "testLocations": [
+        "core/export.ts:61~84 - colGuides/mode/stopKeywords/colX/tableName/columns payload 포함",
+        "main.py:2447~2466 - Template region colX 스케일링 + mode + stopKeywords 전파",
+        "main.py:1502 _ocr_table_region - colGuides 사용",
+        "extractors/invoice_statement.py:2548~2653 - 가변 그리드 mode/stopKeywords로 row 중단"
+      ],
+      "actualLocations": [
+        "OcrResultPanel.tsx - tableDebug/variableGridExpanded/stopKeywordHit 응답에 포함되나 UI 미노출"
+      ],
+      "difference": "데이터 경로 완벽. 단 사용자 디버그 가시성이 Test 탭/Annotator에만 존재",
+      "userImpact": "정지키워드/가변 그리드 동작 여부 RunOCR 단독으로 확인 불가",
+      "riskLevel": "low",
+      "recommendedAction": "Preview 표 옆에 디버그 토글로 extractionSource/stopKeywordHit/variableGridExpanded 노출"
+    },
+    {
+      "id": "F",
+      "name": "preprocessingDebug / autoApplyPreprocessing",
+      "status": "TEST_ONLY",
+      "testLocations": [
+        "TestWorkspace.tsx:761~762 type 정의",
+        "TestWorkspace.tsx:785~793 form-data 전달",
+        "TestWorkspace.tsx:816 응답 매핑 (preprocessingDebug: data.preprocessingDebug)",
+        "TestWorkspace.tsx:938~939 state",
+        "TestWorkspace.tsx:1212~1213, 1283~1284 runAll/runOne 옵션 전달",
+        "TestWorkspace.tsx:2344~2349 UI 체크박스",
+        "TestWorkspace.tsx:3096 PreprocessingDebugPanel"
+      ],
+      "actualLocations": [
+        "UploadWorkspace.tsx runOcr() - 옵션 전달 자체 없음 (검색 0건)",
+        "OcrResultPanel.tsx - 표시 없음"
+      ],
+      "difference": "동일 백엔드 옵션이 RunOCR 흐름에선 호출 자체가 일어나지 않음",
+      "userImpact": "RunOCR에서 흐림/저대비 등 입력 품질 분석 불가",
+      "riskLevel": "low_to_medium",
+      "recommendedAction": "RunOCR에 옵션 토글 추가 + Preview에 PreprocessingDebugPanel 재사용"
+    },
+    {
+      "id": "G",
+      "name": "field label 표시",
+      "status": "PARTIAL",
+      "testLocations": [
+        "TestWorkspace - INVOICE_FIELD_KO + CUSTOM_COL_LABELS + manifest display.label 3중 병합",
+        "invoiceFieldLabels.ts:1 INVOICE_FIELD_KO 사전"
+      ],
+      "actualLocations": [
+        "OcrResultPanel.tsx:551 fieldLabel → resolveFieldLabel 호출",
+        "invoiceFieldLabels.ts:42 resolveFieldLabel (ko prop > INVOICE_FIELD_KO > en > name)",
+        "core/export.ts:44~47 Template region koField/enField/canonicalField 저장"
+      ],
+      "difference": "INVOICE_FIELD_KO가 manifest display.label과 동기화 안 됨 (예: '보험No' vs '보험코드')",
+      "userImpact": "라벨 텍스트 불일치. 의미 통일성 부족, 데이터 분석엔 영향 없음",
+      "riskLevel": "low",
+      "recommendedAction": "invoiceFieldLabels.ts에 manifest display.label 우선 사용 옵션 추가 또는 백엔드 응답에 displayLabels 동봉"
+    },
+    {
+      "id": "H",
+      "name": "History 저장 구조",
+      "status": "MISMATCH",
+      "testLocations": [
+        "TestWorkspace 결과 - History 저장 없음 (검증 패널 전용)"
+      ],
+      "actualLocations": [
+        "UploadWorkspace.tsx:1008~1022 appendHistoryRun",
+        "historyStore.ts:61~77 HistoryRunRecord - image_url/original_image_url/processed_image_url/ocr_fields/output_fields/autofill_summary만 정의",
+        "historyStore.ts에 tableRows/tableMeta/document_fields/doc_type/valueMappingWarnings 키워드 0건"
+      ],
+      "difference": "invoice_statement 표 추출 결과가 history에 영속화되지 않아 DetailHistoryView에서 표 미리보기/검수 불가",
+      "userImpact": "과거 RunOCR 결과에서 행 데이터 재방문 불가, 검수 통계 누적 불가",
+      "riskLevel": "high",
+      "recommendedAction": "HistoryRunRecord에 document_fields/doc_type/table_meta 옵션 필드 추가, appendHistoryRun 호출 시 함께 저장 (DB 전환 전 임시)"
+    }
+  ],
+  "sampleAnalysis": {
+    "1.jpg": {
+      "rowCount": 28,
+      "characteristics": "itemCode 거의 빈값 (row 13만 'C30915'), lotNo≈mfgNo prefix-match",
+      "testTabColumns": ["itemName", "spec", "manufacturingNo", "expiryDate", "quantity", "unitPrice", "amount"],
+      "testTabLabels": ["품목", "규격", "제조번호", "유효기간", "수량", "단가", "금액"],
+      "runOcrColumns": ["itemName", "spec", "manufacturingNo", "expiryDate", "quantity", "unitPrice", "amount"],
+      "runOcrLabels": ["품목명", "규격", "제조번호", "유효기간", "수량", "단가", "금액"],
+      "diff": "fix8로 컬럼 셋 동등. 헤더 라벨만 manifest('품목') vs canonical('품목명') 차이",
+      "rowCountDisplay": {"test": "28 / 기대 28 · 정상 녹색 배지", "runOcr": "28행 회색 텍스트"},
+      "warnings": {"test": "valueMappingWarnings 배지", "runOcr": "미표시"}
+    },
+    "2.pdf": {
+      "rowCount": 13,
+      "characteristics": "itemCode 'OP-...' 유의미, mfgNo 전부 빈값, lotNo column misidentification 노이즈",
+      "testTabColumns": ["rowIndex", "itemCode", "itemName", "quantity", "consumerUnitPrice", "supplyUnitPrice", "supplyAmount", "insuranceCode"],
+      "testTabLabels": ["NO", "품목코드", "품목명", "수량", "소비자단가", "공급단가", "공급금액", "보험No"],
+      "runOcrColumns": "tableMeta.expectedColumnKeys 채워지면 testTabColumns와 동일",
+      "runOcrLabels": ["순번", "품목코드", "품목명", "수량", "소비자단가", "공급단가", "공급금액", "보험코드"],
+      "diff": "라벨 차이 ('NO'→'순번', '보험No'→'보험코드'). hasValue fallback에서는 lotNo 노이즈 컬럼이 isLotNoiseFromItemCodeTable로 자동 제거됨",
+      "rowCountDisplay": {"test": "13 / 기대 13 · 정상", "runOcr": "13행"},
+      "warnings": {"test": "ocr_source_missing 노출", "runOcr": "미노출"}
+    },
+    "4.pdf": {
+      "rowCount": 1,
+      "characteristics": "serialNo만 있음, totalAmount 값 있음, party 깨짐",
+      "testTabColumns": ["itemName", "lotNo", "unit", "quantity", "unitPrice", "supplyAmount", "taxAmount"],
+      "testTabLabels": ["품목명", "LotNo.", "단위", "수량", "단가", "공급가액", "세액"],
+      "runOcrColumns": "expectedColumnKeys 채워지면 동일, fallback에선 lotNo 빈값으로 제거 가능",
+      "runOcrLabels": ["품목명", "LOT/제조번호", "단위", "수량", "단가", "공급금액", "세액", "(합계금액 노이즈)"],
+      "diff": "라벨 차이 (LotNo.→LOT/제조번호, 공급가액→공급금액). manifest 미반영 시 lotNo 빈값으로 사라질 수 있음. totalAmount는 footer 합계행 값이 row로 잘못 들어와 표시됨 (사용자 직접 보고)",
+      "rowCountDisplay": {"test": "1 / 기대 1 · 정상", "runOcr": "1행"},
+      "missing": {"test": "missing: LotNo.(lotNo) 표기", "runOcr": "미표기"},
+      "serialNoDisplay": {"test": "manifest required에 serialNo 없음 → expected 모드면 숨김", "runOcr": "hasValue 기반은 표시 후 majority rule"}
+    }
+  },
+  "filesUnmodified": {
+    "code": [
+      "ocr-server/main.py",
+      "ocr-server/extractors/invoice_statement.py",
+      "mysuit-ocr/src/components/upload/OcrResultPanel.tsx (fix8 상태 유지)",
+      "mysuit-ocr/src/components/upload/UploadWorkspace.tsx",
+      "mysuit-ocr/src/components/test/TestWorkspace.tsx",
+      "mysuit-ocr/src/components/ocr/OcrAnnotator.tsx",
+      "mysuit-ocr/src/components/ocr/OcrRightPanel.tsx",
+      "mysuit-ocr/src/components/ocr/OcrCanvasPane.tsx",
+      "mysuit-ocr/src/components/ocr/core/export.ts",
+      "mysuit-ocr/src/lib/historyStore.ts",
+      "mysuit-ocr/src/lib/invoiceFieldLabels.ts",
+      "mysuit-ocr/src/lib/profiles.ts",
+      "mysuit-ocr/src/lib/canonicalFields.ts",
+      "mysuit-ocr/src/lib/testsets.ts"
+    ],
+    "data": [
+      "ocr-server/data/templates.json",
+      "mysuit-ocr/public/data/testsets/invoice_statement/manifest.json",
+      "ground truth 파일 전체"
+    ],
+    "schema_and_export": [
+      "DB schema 미수정",
+      "JSON/Markdown 내보내기 미수정"
+    ]
+  },
+  "filesCreated": [
+    "docs/UI_AUDIT_1_test_vs_runocr_gap_20260518.md",
+    "docs/UI_AUDIT_1_test_vs_runocr_gap_20260518.json"
+  ],
+  "nextRecommendedTask": "UI-PREVIEW-9 (P0) — Preview에 displayLabels/manifest 라벨 우선순위 + expectedRowCount 비교 배지 + valueMappingWarnings 패널 묶음 추가"
+}

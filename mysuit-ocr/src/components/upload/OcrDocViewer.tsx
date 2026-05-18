@@ -116,23 +116,17 @@ export default function OcrDocViewer({
       {enableFieldOverlay && (
         <div
           style={{
-            position: "absolute",
-            top: 8,
-            left: 8,
-            zIndex: 5,
             display: "flex",
             alignItems: "center",
             flexWrap: "wrap",
             gap: 8,
-            width: "fit-content",
-            maxWidth: "calc(100% - 16px)",
-            padding: "6px 8px",
-            borderRadius: 6,
-            border: "1px solid rgba(148,163,184,0.24)",
-            background: "rgba(15,23,42,0.82)",
+            padding: "5px 10px",
+            borderBottom: "1px solid rgba(148,163,184,0.16)",
+            background: "rgba(15,23,42,0.72)",
             color: "#e5e7eb",
             fontSize: 11,
             fontWeight: 800,
+            flexShrink: 0,
           }}
         >
           <label style={{ display: "inline-flex", alignItems: "center", gap: 5, cursor: "pointer" }}>

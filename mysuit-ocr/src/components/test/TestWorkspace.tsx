@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { extractBizNumber, normalizeBizNumber } from "@/lib/bizNumber";
 import { useUi } from "../common/AppProviders";
+import { INVOICE_COL_LABEL_MAP } from "@/lib/invoiceTableDisplay";
 
 import {
   Entry,
@@ -4576,24 +4577,10 @@ function getManifestDisplayLabelMap(
   return Object.fromEntries(displayArr.map((d) => [d.key, d.label]));
 }
 
-// T-6e-fix3 / T-6k: 커스텀 display key 라벨 (canonical TABLE_COLUMN_META에 없는 key)
-// T-6k: composite key 추가 (manufacturingExpiryComposite, serialLotComposite)
-const CUSTOM_COL_LABELS: Record<string, string> = {
-  consumerUnitPrice:            "소비자단가",
-  supplyUnitPrice:              "공급단가",
-  manufacturingExpiry:          "제조번호/유효기간",
-  manufacturingExpiryComposite: "제조번호/유효기간",
-  serialLot:                    "시리얼/로트No.",
-  serialLotComposite:           "시리얼/로트No.",
-};
-
-// T-12b: canonical + custom key → Korean label (DocTypeSummarySection 에서 사용)
-const _INVOICE_COL_LABEL_MAP: Record<string, string> = {
-  ...Object.fromEntries(TABLE_COLUMN_META.map((m) => [m.key, m.labelKo])),
-  ...CUSTOM_COL_LABELS,
-};
+// PREVIEW-9A: CUSTOM_COL_LABELS / _INVOICE_COL_LABEL_MAP → invoiceTableDisplay 공통 helper로 교체
+// getInvoiceColLabel은 shared INVOICE_COL_LABEL_MAP 기반 래퍼로 유지
 function getInvoiceColLabel(key: string): string {
-  return _INVOICE_COL_LABEL_MAP[key] ?? key;
+  return INVOICE_COL_LABEL_MAP[key] ?? key;
 }
 
 // T-6e-fix3 / T-6k: 커스텀/composite key에 대한 셀 값 해석
@@ -4734,11 +4721,10 @@ function InvoiceTableRowsPanel({
     () => getManifestDisplayLabelMap(invoiceProfile?.tableExpectedColumns),
     [invoiceProfile?.tableExpectedColumns]
   );
-  // T-6e-fix3 / T-6k: canonical + custom + manifest display labels (우선순위: manifest > custom > canonical)
+  // PREVIEW-9A: INVOICE_COL_LABEL_MAP(shared) + manifest display labels (manifest 최우선)
   const colLabelMap: Record<string, string> = {
-    ...Object.fromEntries(TABLE_COLUMN_META.map((m) => [m.key, m.labelKo])),
-    ...CUSTOM_COL_LABELS,
-    ...manifestDisplayLabelMap,  // T-6k: 실제 문서 헤더명이 최우선
+    ...INVOICE_COL_LABEL_MAP,
+    ...manifestDisplayLabelMap,
   };
 
   // T-6e-fix2: 동적 컬럼 결정 — manifest expected cols 전달 (string[])

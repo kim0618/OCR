@@ -7,7 +7,150 @@ import type { AutofillAction, AutofillRunSummary, AutofillSuggestion, OutputValu
 import { getGroundTruth, compareToGt, fieldKey } from "@/lib/groundTruthStore";
 import { useUi } from "../common/AppProviders";
 import { resolveFieldLabel } from "@/lib/invoiceFieldLabels";
-import { TABLE_COLUMN_META } from "@/lib/profiles";
+import {
+  INVOICE_TABLE_COL_PRIORITY,
+  INVOICE_COL_LABEL_MAP as _ALL_COL_LABEL_MAP,
+  isInternalTableKey as isInternalKey,
+  normalizeTableCell as normalizeCell,
+  isMeaninglessTableValue as isMeaningless,
+  hasMeaningfulTableValue as hasMeaningfulValue,
+  buildInvoicePreviewCols,
+} from "@/lib/invoiceTableDisplay";
+
+// UI-PREVIEW-10A-fix: fixed-layout + colgroup 방식 — key가 폭을 밀지 않음
+const _IDX_KEYS  = new Set(["rowIndex", "no", "rowNo", "lineNo", "seq"]);
+const _CODE_KEYS = new Set(["itemCode", "insuranceCode", "serialNo", "lotNo", "manufacturingNo"]);
+const _WIDE_KEYS = new Set(["itemName", "manufacturer"]);
+const _NUM_KEYS  = new Set(["quantity", "unitPrice", "consumerUnitPrice", "supplyUnitPrice",
+                             "amount", "supplyAmount", "taxAmount", "totalAmount"]);
+
+function _invoiceColWidth(key: string): string {
+  if (_IDX_KEYS.has(key))  return "52px";
+  if (key === "quantity")  return "64px";
+  if (_NUM_KEYS.has(key))  return "92px";
+  if (_CODE_KEYS.has(key)) return "96px";
+  if (_WIDE_KEYS.has(key)) return "auto";
+  return "82px";
+}
+
+function _invoiceDataAlign(key: string): React.CSSProperties["textAlign"] {
+  if (_IDX_KEYS.has(key)) return "center";
+  if (_NUM_KEYS.has(key)) return "right";
+  return "left";
+}
+
+
+
+
+
+// LOT계열 / 제조번호계열 / itemCode계열 key셋
+const _LOT_KEYS = new Set(["lotNo", "serialLot", "lot", "lotNumber"]);
+const _MFG_KEYS = new Set(["manufacturingNo", "manufactureNo", "mfgNo"]);
+const _ITEMCODE_KEYS = new Set(["itemCode", "productCode"]);
+
+// fix5: Preview majority rule — 95% 이상 비어있거나 중복이면 숨김
+const PREVIEW_COLUMN_HIDE_RATIO = 0.95;
+
+// 특정 key의 meaningful 값 row 비율 (0~1)
+function meaningfulRatio(rows: Record<string, unknown>[], key: string): number {
+  if (rows.length === 0) return 0;
+  let count = 0;
+  for (const row of rows) {
+    if (!isMeaningless(normalizeCell(row[key]))) count++;
+  }
+  return count / rows.length;
+}
+
+// fix6: prefix match — lot이 mfg의 접두어로 포함되면 의미상 중복으로 간주
+// (백엔드 extractor가 manufacturingNo에 "lot+수량단위" 또는 "C+lot+추가" 형태로 결합한 케이스 대응)
+// 오탐 방지: lot 길이가 충분(>=4)할 때만 prefix match 적용
+const _PREFIX_MATCH_MIN_LEN = 4;
+function _isLotDupOfMfg(lot: string, mfg: string): boolean {
+  if (lot === mfg) return true;
+  if (lot.length < _PREFIX_MATCH_MIN_LEN || mfg.length === 0) return false;
+  if (mfg.startsWith(lot)) return true;
+  // "C" + lot 형태 (예: lot='30915', mfg='C30915-400ea')
+  if (mfg.startsWith("C" + lot) || mfg.startsWith("c" + lot)) return true;
+  return false;
+}
+
+// key1 값이 meaningless이거나 key2 값과 (prefix 포함) 중복인 row 비율
+function meaninglessOrDupRatio(
+  rows: Record<string, unknown>[],
+  key1: string,
+  key2: string,
+): number {
+  if (rows.length === 0) return 0;
+  let count = 0;
+  for (const row of rows) {
+    const v1 = normalizeCell(row[key1]);
+    const v2 = normalizeCell(row[key2]);
+    if (isMeaningless(v1) || _isLotDupOfMfg(v1, v2)) count++;
+  }
+  return count / rows.length;
+}
+
+// fix7-E: itemCode 기반 표에서 lotNo가 column misidentification 노이즈인지 판단
+// 조건: itemCode가 의미 있고(OP-xxx 코드 등) + manufacturingNo가 전 row 비어있으면
+// → lotNo는 인접 컬럼 OCR 노이즈일 가능성 높음 → Preview에서 숨김
+function isLotNoiseFromItemCodeTable(rows: Record<string, unknown>[]): boolean {
+  return hasMeaningfulValue(rows, "itemCode") && !hasMeaningfulValue(rows, "manufacturingNo");
+}
+
+// 렌더링 직전 post-filter: 내부키 · 빈컬럼 · itemCode majority · lot중복 majority · lot노이즈 · serial중복
+function filterInvoicePreviewDisplayCols(
+  cols: { key: string; labelKo: string }[],
+  rows: Record<string, unknown>[],
+): { key: string; labelKo: string }[] {
+  if (!cols || cols.length === 0 || rows.length === 0) return cols ?? [];
+
+  // A. 내부/composite 키 제거
+  let out = cols.filter((c) => !isInternalKey(c.key));
+
+  // B. 의미 없는 컬럼 제거 (모든 row에서 빈 값) — strict 룰
+  out = out.filter((c) => hasMeaningfulValue(rows, c.key));
+
+  // B-2. itemCode 계열 majority rule — meaningful 비율이 (1 - 0.95) 이하면 숨김
+  out = out.filter((c) => {
+    if (!_ITEMCODE_KEYS.has(c.key)) return true;
+    return meaningfulRatio(rows, c.key) > (1 - PREVIEW_COLUMN_HIDE_RATIO);
+  });
+
+  // C. lot계열 vs 제조번호계열 majority 중복 제거 (95% 이상 dup이면 제거)
+  const mfgCol = out.find((c) => _MFG_KEYS.has(c.key));
+  if (mfgCol) {
+    const toRemove = new Set<string>();
+    for (const col of out.filter((c) => _LOT_KEYS.has(c.key))) {
+      if (meaninglessOrDupRatio(rows, col.key, mfgCol.key) >= PREVIEW_COLUMN_HIDE_RATIO) {
+        toRemove.add(col.key);
+      }
+    }
+    // D. labelKo "LOT/제조번호" 컬럼도 majority dup이면 제거
+    for (const col of out.filter((c) => c.labelKo === "LOT/제조번호" || c.labelKo === "LOT/제조 번호")) {
+      if (toRemove.has(col.key)) continue;
+      if (meaninglessOrDupRatio(rows, col.key, mfgCol.key) >= PREVIEW_COLUMN_HIDE_RATIO) {
+        toRemove.add(col.key);
+      }
+    }
+    if (toRemove.size > 0) out = out.filter((c) => !toRemove.has(c.key));
+  }
+
+  // E. itemCode 기반 표에서 lotNo 노이즈 제거
+  // itemCode가 의미있고 mfgNo가 전부 비어있으면 lotNo는 column misidentification 노이즈
+  if (out.some((c) => _LOT_KEYS.has(c.key)) && isLotNoiseFromItemCodeTable(rows)) {
+    out = out.filter((c) => !_LOT_KEYS.has(c.key));
+  }
+
+  // F. serialNo vs lotNo 중복 제거: serialNo === lotNo 95% 이상이면 serialNo 숨김
+  const lotCol = out.find((c) => c.key === "lotNo");
+  if (lotCol && out.some((c) => c.key === "serialNo")) {
+    if (meaninglessOrDupRatio(rows, "serialNo", "lotNo") >= PREVIEW_COLUMN_HIDE_RATIO) {
+      out = out.filter((c) => c.key !== "serialNo");
+    }
+  }
+
+  return out;
+}
 
 export type FieldSourceBox = {
   x: number;
@@ -77,6 +220,7 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
   const [rawOcrOpen, setRawOcrOpen] = useState(true);
   const [autofillDetailOpen, setAutofillDetailOpen] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const [customTableEdits, setCustomTableEdits] = useState<Record<string, string>[] | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const editedFieldsRef = useRef<OcrFieldResult[]>(editedFields);
   useEffect(() => { editedFieldsRef.current = editedFields; }, [editedFields]);
@@ -426,82 +570,107 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
 
   const renderAutofillSummary = (summary?: AutofillRunSummary) => {
     if (!summary) return null;
-    const mainText =
-      summary.status === "no_business_number" ? "자동복원: 사업자번호 없음" :
-      summary.status === "no_candidates" ? "자동복원: 같은 사업자번호의 저장 기록 없음" :
-      summary.status === "corrected" ? `자동복원: 보정 ${summary.correctedCount}건 · 확인 ${summary.confirmedCount}건` :
-      summary.status === "applied" ? `자동복원: 채움 ${summary.filledCount}건 · 보정 ${summary.correctedCount}건 · 확인 ${summary.confirmedCount}건` :
-      summary.status === "confirmed" ? `자동복원: 확인 ${summary.confirmedCount}건 · 보정 0건` :
-      "자동복원: 미실행";
-    const subText =
-      summary.businessNumber
-        ? `사업자번호 ${summary.businessNumber} · 저장 후보 ${summary.candidateCount}건`
-        : "";
+
+    const restoredCount = (summary.correctedCount ?? 0) + (summary.filledCount ?? 0);
+    const isApplied   = summary.status === "applied" || summary.status === "corrected";
+    const isConfirmed = summary.status === "confirmed";
+    const isNoCandidates = summary.status === "no_candidates";
+    const isNoBizNum     = summary.status === "no_business_number";
+    const isNotRun = !summary.status || summary.status === "not_run";
+
+    // 한 줄 요약 텍스트
+    const summaryText = isNoBizNum        ? "자동복원 불가 · 사업자번호 미인식"
+      : isNoCandidates  ? "자동복원 후보 없음"
+      : isApplied && restoredCount > 0 ? `자동복원 적용됨 · ${restoredCount}개 필드 보정`
+      : isApplied       ? "자동복원 확인됨 · 변경 없음"
+      : isConfirmed     ? `자동복원 확인 · ${summary.confirmedCount}개 일치`
+      : isNotRun        ? "자동복원 미사용"
+      : "자동복원 확인 필요";
+
+    // 상태별 색상 (다크 테마 어울리게)
+    const cs = isApplied
+      ? { border: "rgba(20,184,166,0.28)", bg: "rgba(20,184,166,0.07)", accent: "#0d9488" }
+      : isConfirmed
+      ? { border: "rgba(59,130,246,0.22)", bg: "rgba(59,130,246,0.06)", accent: "#3b82f6" }
+      : isNoBizNum || isNoCandidates || isNotRun
+      ? { border: "rgba(148,163,184,0.18)", bg: "rgba(148,163,184,0.06)", accent: "var(--muted)" }
+      : { border: "rgba(234,179,8,0.3)", bg: "rgba(234,179,8,0.07)", accent: "#ca8a04" };
+
+    // 상세 내용 (펼쳤을 때)
+    const renderDetail = () => {
+      if (isNoBizNum) return (
+        <div style={{ marginTop: 6, fontSize: 11, color: "var(--muted)" }}>
+          자동복원을 위해 필요한 사업자번호를 OCR 결과에서 찾지 못했습니다.
+        </div>
+      );
+      if (isNoCandidates) return (
+        <div style={{ marginTop: 6, fontSize: 11, color: "var(--muted)" }}>
+          {summary.businessNumber ? `사업자번호 ${summary.businessNumber} 기준 ` : ""}저장 후보가 없습니다.
+        </div>
+      );
+      if (isNotRun) return (
+        <div style={{ marginTop: 6, fontSize: 11, color: "var(--muted)" }}>
+          이번 OCR 실행에서는 자동복원을 사용하지 않았습니다.
+        </div>
+      );
+      // applied / corrected / confirmed: 필드별 상세
+      if (!hasAutofillDetail) return null;
+      return (
+        <div style={{ marginTop: 8, border: "1px solid rgba(148,163,184,0.18)", borderRadius: 6, overflow: "auto", maxHeight: 220 }}>
+          {summary.businessNumber && (
+            <div style={{ padding: "5px 8px", fontSize: 11, color: "var(--muted)", borderBottom: "1px solid rgba(148,163,184,0.12)" }}>
+              기준 사업자번호: {summary.businessNumber}
+            </div>
+          )}
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+            <thead>
+              <tr style={{ background: "rgba(148,163,184,0.08)" }}>
+                <th style={{ padding: "5px 8px", textAlign: "left", color: "var(--muted)", borderBottom: "1px solid rgba(148,163,184,0.14)" }}>필드</th>
+                <th style={{ padding: "5px 8px", textAlign: "left", color: "var(--muted)", borderBottom: "1px solid rgba(148,163,184,0.14)" }}>OCR 값</th>
+                <th style={{ padding: "5px 8px", textAlign: "left", color: "var(--muted)", borderBottom: "1px solid rgba(148,163,184,0.14)" }}>복원 후보값</th>
+                <th style={{ width: 52, padding: "5px 8px", textAlign: "center", color: "var(--muted)", borderBottom: "1px solid rgba(148,163,184,0.14)" }}>채택</th>
+              </tr>
+            </thead>
+            <tbody>
+              {autofillDetailRows.map((row, index) => (
+                <tr key={`${row.label}-${index}`}>
+                  <td style={{ padding: "5px 8px", borderBottom: "1px solid rgba(148,163,184,0.08)", fontWeight: 700, whiteSpace: "nowrap" }}>{row.label}</td>
+                  <td title={row.ocrValue || "빈 값"} style={{ padding: "5px 8px", borderBottom: "1px solid rgba(148,163,184,0.08)", maxWidth: 140, wordBreak: "break-word" }}>{row.ocrValue || "-"}</td>
+                  <td title={row.candidate || ""} style={{ padding: "5px 8px", borderBottom: "1px solid rgba(148,163,184,0.08)", maxWidth: 160, wordBreak: "break-word" }}>{row.candidate || "-"}</td>
+                  <td style={{ padding: "5px 8px", borderBottom: "1px solid rgba(148,163,184,0.08)", textAlign: "center", color: "var(--muted)" }}>
+                    {row.action === "confirmed" ? "OCR" : row.action === "corrected" ? "복원" : row.action === "filled" ? "복원" : row.excluded ? "제외" : "-"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+    };
+
     return (
       <div
         style={{
           margin: "10px 12px 0",
-          padding: "7px 10px",
-          border: "1px solid rgba(99,102,241,0.18)",
+          padding: "6px 10px",
+          border: `1px solid ${cs.border}`,
           borderRadius: 6,
-          background: "rgba(99,102,241,0.06)",
-          color: "var(--text)",
+          background: cs.bg,
           fontSize: 12,
-          lineHeight: 1.45,
+          lineHeight: 1.4,
         }}
       >
-        <div style={{ fontWeight: 800 }}>{mainText}</div>
-        {subText && <div style={{ color: "var(--muted)", marginTop: 2 }}>{subText}</div>}
-        <div style={{ color: "var(--muted)", marginTop: 2 }}>{autofillHelpText(summary)}</div>
-        {hasAutofillDetail && summary.status !== "no_business_number" && summary.status !== "no_candidates" && (
-          <>
-            <button
-              type="button"
-              onClick={() => setAutofillDetailOpen((open) => !open)}
-              style={{
-                marginTop: 6,
-                padding: 0,
-                border: "none",
-                background: "transparent",
-                color: "#4f46e5",
-                fontSize: 12,
-                fontWeight: 800,
-                cursor: "pointer",
-              }}
-            >
-              {autofillDetailOpen ? "상세 접기" : "상세 보기"}
-            </button>
-            {autofillDetailOpen && (
-              <div style={{ marginTop: 8, border: "1px solid rgba(148,163,184,0.18)", borderRadius: 6, overflow: "auto", maxHeight: 220 }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
-                  <thead>
-                    <tr style={{ background: "rgba(148,163,184,0.08)" }}>
-                      <th style={{ padding: "6px 8px", textAlign: "left", color: "var(--muted)", borderBottom: "1px solid rgba(148,163,184,0.14)" }}>필드</th>
-                      <th style={{ padding: "6px 8px", textAlign: "left", color: "var(--muted)", borderBottom: "1px solid rgba(148,163,184,0.14)" }}>OCR 값</th>
-                      <th style={{ padding: "6px 8px", textAlign: "left", color: "var(--muted)", borderBottom: "1px solid rgba(148,163,184,0.14)" }}>복원 후보값</th>
-                      <th style={{ width: 76, padding: "6px 8px", textAlign: "center", color: "var(--muted)", borderBottom: "1px solid rgba(148,163,184,0.14)" }}>채택</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {autofillDetailRows.map((row, index) => (
-                      <tr key={`${row.label}-${index}`}>
-                        <td style={{ padding: "6px 8px", borderBottom: "1px solid rgba(148,163,184,0.08)", fontWeight: 800, whiteSpace: "nowrap" }}>{row.label}</td>
-                        <td title={row.ocrValue || "빈 값"} style={{ padding: "6px 8px", borderBottom: "1px solid rgba(148,163,184,0.08)", maxWidth: 160, wordBreak: "break-word" }}>{row.ocrValue || "-"}</td>
-                        <td title={row.candidate || ""} style={{ padding: "6px 8px", borderBottom: "1px solid rgba(148,163,184,0.08)", maxWidth: 180, wordBreak: "break-word" }}>{row.candidate || "-"}</td>
-                        <td style={{ padding: "6px 8px", borderBottom: "1px solid rgba(148,163,184,0.08)", textAlign: "center" }}>
-                          {row.action === "confirmed" ? "OCR" :
-                           row.action === "corrected" ? "복원" :
-                           row.action === "filled" ? "복원" :
-                           row.excluded ? "제외" : "-"}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </>
-        )}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+          <span style={{ fontWeight: 700, color: cs.accent }}>{summaryText}</span>
+          <button
+            type="button"
+            onClick={() => setAutofillDetailOpen((open) => !open)}
+            style={{ padding: 0, border: "none", background: "transparent", color: "var(--muted)", fontSize: 11, cursor: "pointer", flexShrink: 0 }}
+          >
+            {autofillDetailOpen ? "접기" : "상세"}
+          </button>
+        </div>
+        {autofillDetailOpen && renderDetail()}
       </div>
     );
   };
@@ -543,7 +712,8 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
     editedFields.forEach((f, i) => {
       const label = fieldLabelFull(f);
       if (f.field_type === "table") {
-        const { rowLabel } = parseTableField(f.value);
+        const { rowLabel: rawRowLabel } = parseTableField(f.value);
+        const rowLabel = docTableRows ? `${docTableRows.length}행` : rawRowLabel;
         md += `| ${i + 1} | ${esc(label)} | 표 데이터 (${rowLabel}) | ${(f.confidence * 100).toFixed(1)}% | ${getAdoptionLabel(f)} |\n`;
       } else {
         md += `| ${i + 1} | ${esc(label)} | ${esc(f.value)} | ${(f.confidence * 100).toFixed(1)}% | ${getAdoptionLabel(f)} |\n`;
@@ -563,28 +733,66 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
   // eslint-disable-next-line react-hooks/exhaustive-deps
   [editedFields]);
 
-  // UI-PREVIEW-1: invoice_statement structured tableRows (document_fields.tableRows)
-  // document_fields는 OcrResult 타입에 없지만 런타임에 백엔드 응답에 포함됨
+  // invoice_statement structured tableRows + tableMeta (document_fields에서 추출)
   const docTableRows = useMemo(() => {
     const df = (result as Record<string, unknown>).document_fields as Record<string, unknown> | null | undefined;
     if (!df) return null;
     const rows = df.tableRows;
     if (!Array.isArray(rows) || rows.length === 0) return null;
-    return rows as Record<string, string>[];
+    return rows as Record<string, unknown>[];
   }, [result]);
 
-  // UI-PREVIEW-1: TABLE_COLUMN_META에서 rowIndex 제외하고 데이터가 있는 컬럼만 필터
-  const docTableCols = useMemo(() => {
-    if (!docTableRows) return null;
-    return TABLE_COLUMN_META.filter(
-      (col) =>
-        col.key !== "rowIndex" &&
-        docTableRows.some((row) => {
-          const v = row[col.key];
-          return v !== undefined && v !== null && String(v).trim() !== "";
-        }),
-    );
-  }, [docTableRows]);
+  const docTableMeta = useMemo(() => {
+    const df = (result as Record<string, unknown>).document_fields as Record<string, unknown> | null | undefined;
+    if (!df) return null;
+    const tm = df.tableMeta;
+    return tm && typeof tm === "object" ? (tm as Record<string, unknown>) : null;
+  }, [result]);
+
+  // fix8: tableMeta 우선 (TestWorkspace getDisplayTableColumns와 동일 로직)
+  // tableMeta.expectedColumnKeys → tableMeta.columns → hasValue fallback + filter
+  // fix8/PREVIEW-9A: 공통 helper buildInvoicePreviewCols 사용
+  const docTableDisplayCols = useMemo(
+    () => (docTableRows ? buildInvoicePreviewCols(docTableMeta, docTableRows) : null),
+    [docTableRows, docTableMeta],
+  );
+
+  // PREVIEW-9B: expected 컬럼 중 tableRows에 값이 없는 핵심 컬럼 → 품목표 제목에 안내 배지
+  // 배지에 표시할 key allowlist — 사용자 확인이 필요한 항목만 (amount/remark 등 제외)
+  const _PREVIEW_BADGE_KEYS = new Set(["insuranceCode"]);
+  const missingExpectedWarning = useMemo(() => {
+    if (!docTableRows || !docTableMeta) return "";
+    const displayKeys = new Set((docTableDisplayCols ?? []).map((c) => c.key));
+    const warnKeys = new Set<string>();
+
+    // 조건 B: valueMappingWarnings 중 source_missing 계열 + allowlist 키만
+    const vmw = docTableMeta.valueMappingWarnings;
+    if (Array.isArray(vmw)) {
+      for (const w of vmw) {
+        const parts = String(w).split(":");
+        if (parts.length >= 2 && (parts[1].includes("source_missing") || parts[1].includes("missing"))) {
+          const k = parts[0].trim();
+          if (k && _PREVIEW_BADGE_KEYS.has(k)) warnKeys.add(k);
+        }
+      }
+    }
+
+    // 조건 C: expectedColumnKeys에 있으나 전체 빈값 + allowlist 키만
+    const expKeys = docTableMeta.expectedColumnKeys;
+    if (Array.isArray(expKeys)) {
+      for (const k of expKeys) {
+        const key = String(k);
+        if (!_PREVIEW_BADGE_KEYS.has(key)) continue;
+        if (!displayKeys.has(key) && !hasMeaningfulValue(docTableRows, key)) {
+          warnKeys.add(key);
+        }
+      }
+    }
+
+    if (warnKeys.size === 0) return "";
+    const labels = [...warnKeys].map((k) => _ALL_COL_LABEL_MAP[k] ?? k).join(", ");
+    return `확인 필요: ${labels} 미인식`;
+  }, [docTableRows, docTableMeta, docTableDisplayCols]);
 
   const toJson = () => {
     return JSON.stringify({ fields: editedFields, processing_time: result.processing_time }, null, 2);
@@ -786,7 +994,7 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                 style={{
                   display: "grid",
                   gridTemplateRows: rawOcrFields.length > 0
-                    ? "minmax(0, 7fr) minmax(0, 3fr)"
+                    ? (rawOcrOpen ? "minmax(0, 7fr) minmax(0, 3fr)" : "minmax(0, 1fr) auto")
                     : "minmax(0, 1fr)",
                   flex: 1,
                   minHeight: 0,
@@ -797,45 +1005,103 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                 }}
               >
                 <div style={{ minHeight: 0, overflow: "auto" }}>
-                  <Markdown remarkPlugins={[remarkGfm]}>{toMarkdown()}</Markdown>
+                  <Markdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      td: ({ children, ...props }) => {
+                        const text = typeof children === "string" ? children : null;
+                        const match = text?.match(/^(.+?)\s+\(([a-zA-Z][a-zA-Z0-9_]*)\)$/);
+                        if (match) {
+                          return (
+                            <td {...(props as React.TdHTMLAttributes<HTMLTableCellElement>)}>
+                              {match[1]}
+                              <span style={{
+                                opacity: 0.55, fontSize: 10, marginLeft: 3,
+                                fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                              }}>
+                                ({match[2]})
+                              </span>
+                            </td>
+                          );
+                        }
+                        return <td {...(props as React.TdHTMLAttributes<HTMLTableCellElement>)}>{children}</td>;
+                      },
+                    }}
+                  >{toMarkdown()}</Markdown>
                   {/* Table fields rendered as JSX (reliable layout, not markdown) */}
                   {previewTableFields.map(({ idx, label, displayRows, rowLabel }, tableIdx) => {
-                    // UI-PREVIEW-1: invoice_statement structured tableRows가 있으면 컬럼 순서 보정
-                    if (tableIdx === 0 && docTableRows && docTableCols && docTableCols.length > 0) {
-                      return (
-                        <div key={idx} style={{ marginTop: 12 }}>
-                          <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6 }}>
-                            {idx}. {label}
-                            <span style={{ fontSize: 11, fontWeight: 400, color: "var(--muted)", marginLeft: 8 }}>
-                              {docTableCols.length}항목, {docTableRows.length}행
-                            </span>
-                          </div>
-                          <div className="or-table-wrap" style={{ overflowX: "auto" }}>
-                            <table className="or-table-result">
-                              <tbody>
-                                {/* 헤더 행 — TABLE_COLUMN_META 순서 기준 */}
-                                <tr>
-                                  {docTableCols.map((col) => (
-                                    <td key={col.key} className="or-table-cell">{col.labelKo}</td>
+                    // fix8: tableMeta 기반이면 백엔드가 이미 계산한 컬럼 사용 (TestWorkspace 동일 로직)
+                    // fallback(hasValue 기반)일 때만 filterInvoicePreviewDisplayCols 추가 적용
+                    if (tableIdx === 0 && docTableRows && docTableDisplayCols) {
+                      // PREVIEW-9A-fix2: buildInvoicePreviewCols가 dedup 포함 완전 처리
+                      // docTableDisplayCols를 그대로 사용 (별도 필터 불필요)
+                      const finalDisplayCols = docTableDisplayCols;
+                      if (finalDisplayCols.length > 0) {
+                        return (
+                          <div key={idx} style={{ marginTop: 12 }}>
+                            <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6 }}>
+                              <span>{idx}. {label}</span>
+                              <span style={{ fontSize: 11, fontWeight: 400, color: "var(--muted)" }}>
+                                {docTableRows.length}행
+                              </span>
+                              {missingExpectedWarning && (
+                                <span style={{
+                                  fontSize: 11, fontWeight: 600, color: "#d97706",
+                                  background: "rgba(251,191,36,0.12)",
+                                  border: "1px solid rgba(217,119,6,0.25)",
+                                  borderRadius: 4, padding: "1px 7px",
+                                }}>
+                                  {missingExpectedWarning}
+                                </span>
+                              )}
+                            </div>
+                            <div className="or-table-wrap" style={{ overflowX: "auto", borderRadius: 0 }}>
+                              {/* PREVIEW-10A-fix: fixed-layout + colgroup */}
+                              <table className="or-table-result">
+                                <colgroup>
+                                  {finalDisplayCols.map((col) => (
+                                    <col key={col.key} style={{ width: _invoiceColWidth(col.key) }} />
                                   ))}
-                                </tr>
-                                {/* 데이터 행 */}
-                                {docTableRows.map((row, ri) => (
-                                  <tr key={ri}>
-                                    {docTableCols.map((col) => {
-                                      const val = row[col.key];
-                                      const display = val !== undefined && val !== null && String(val).trim() !== "" ? String(val) : "-";
-                                      return (
-                                        <td key={col.key} className="or-table-cell">{display}</td>
-                                      );
-                                    })}
+                                </colgroup>
+                                <tbody>
+                                  {/* 헤더 행 — 항상 가운데 정렬 */}
+                                  <tr>
+                                    {finalDisplayCols.map((col) => (
+                                      <td key={col.key} className="or-table-cell" style={{ textAlign: "center", verticalAlign: "middle" }}>
+                                        <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={col.labelKo}>
+                                          {col.labelKo}
+                                        </div>
+                                        {col.labelKo !== col.key && (
+                                          <div title={col.key} style={{
+                                            fontSize: 10, opacity: 0.55, marginTop: 1,
+                                            fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                                            whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block",
+                                          }}>
+                                            ({col.key})
+                                          </div>
+                                        )}
+                                      </td>
+                                    ))}
                                   </tr>
-                                ))}
-                              </tbody>
-                            </table>
+                                  {/* 데이터 행 — 컬럼 타입별 정렬 */}
+                                  {docTableRows.map((row, ri) => (
+                                    <tr key={ri}>
+                                      {finalDisplayCols.map((col) => (
+                                        <td key={col.key} className="or-table-cell" style={{
+                                          textAlign: _invoiceDataAlign(col.key),
+                                          whiteSpace: _NUM_KEYS.has(col.key) || _IDX_KEYS.has(col.key) ? "nowrap" : "normal",
+                                        }}>
+                                          {normalizeCell(row[col.key]) || "-"}
+                                        </td>
+                                      ))}
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
                           </div>
-                        </div>
-                      );
+                        );
+                      }
                     }
                     // Fallback: raw displayRows (기존 동작)
                     return (
@@ -902,8 +1168,6 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                         minHeight: 0,
                         overflow: "auto",
                         marginTop: 8,
-                        border: "1px solid rgba(148,163,184,0.18)",
-                        borderRadius: 6,
                       }}
                     >
                       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
@@ -1077,7 +1341,100 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                     </button>
                   </div>
                   {field.field_type === "table" ? (() => {
-                    const { rows, displayRows, isSingleCol, rowLabel } = parseTableField(field.value);
+                    // UI-CUSTOM-1: docTableRows 기반 표 표시 (Preview와 동일 컬럼/helper 재사용)
+                    if (docTableRows && docTableDisplayCols && docTableDisplayCols.length > 0) {
+                      const editRows: Record<string, string>[] = customTableEdits ??
+                        docTableRows.map((r) => {
+                          const row: Record<string, string> = {};
+                          for (const k of Object.keys(r)) row[k] = normalizeCell(r[k]);
+                          return row;
+                        });
+                      return (
+                        <>
+                          <div className="or-field-value-meta" style={{ alignItems: "center" }} onClick={(e) => e.stopPropagation()}>
+                            <span style={{ fontWeight: 700, color: "var(--accent)" }}>
+                              표 데이터 · {docTableRows.length}행
+                            </span>
+                            {missingExpectedWarning && (
+                              <span style={{
+                                fontSize: 11, fontWeight: 600, color: "#d97706",
+                                background: "rgba(251,191,36,0.12)",
+                                border: "1px solid rgba(217,119,6,0.25)",
+                                borderRadius: 4, padding: "1px 7px",
+                              }}>
+                                {missingExpectedWarning}
+                              </span>
+                            )}
+                            <span>채택: {getAdoptionLabel(field)}</span>
+                          </div>
+                          <div className="or-table-wrap" style={{ overflowX: "auto", borderRadius: 0, marginTop: 6 }} onClick={(e) => e.stopPropagation()}>
+                            <table className="or-table-result">
+                              <colgroup>
+                                {docTableDisplayCols.map((col) => (
+                                  <col key={col.key} style={{ width: _invoiceColWidth(col.key) }} />
+                                ))}
+                              </colgroup>
+                              <tbody>
+                                <tr>
+                                  {docTableDisplayCols.map((col) => (
+                                    <td key={col.key} className="or-table-cell" style={{ textAlign: "center", verticalAlign: "middle" }}>
+                                      <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={col.key}>
+                                        {col.labelKo}
+                                      </div>
+                                      {col.labelKo !== col.key && (
+                                        <div title={col.key} style={{
+                                          fontSize: 10, opacity: 0.55, marginTop: 1,
+                                          fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                                          whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block",
+                                        }}>
+                                          ({col.key})
+                                        </div>
+                                      )}
+                                    </td>
+                                  ))}
+                                </tr>
+                                {editRows.map((row, ri) => (
+                                  <tr key={ri}>
+                                    {docTableDisplayCols.map((col) => (
+                                      <td key={col.key} className="or-table-cell" style={{
+                                        textAlign: _invoiceDataAlign(col.key),
+                                        whiteSpace: _NUM_KEYS.has(col.key) || _IDX_KEYS.has(col.key) ? "nowrap" : "normal",
+                                        padding: 0,
+                                      }}>
+                                        <textarea
+                                          className="or-table-cell-input"
+                                          value={row[col.key] ?? ""}
+                                          rows={1}
+                                          style={{ textAlign: _invoiceDataAlign(col.key) }}
+                                          onChange={(e) => {
+                                            e.target.style.height = "auto";
+                                            e.target.style.height = e.target.scrollHeight + "px";
+                                            const newVal = e.target.value;
+                                            setCustomTableEdits((prev) => {
+                                              const base = prev ?? docTableRows.map((r) => {
+                                                const obj: Record<string, string> = {};
+                                                for (const k of Object.keys(r)) obj[k] = normalizeCell(r[k]);
+                                                return obj;
+                                              });
+                                              return base.map((r, idx) => idx === ri ? { ...r, [col.key]: newVal } : r);
+                                            });
+                                          }}
+                                          onFocus={() => onSelectField(i)}
+                                          onBlur={flushSave}
+                                        />
+                                      </td>
+                                    ))}
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </>
+                      );
+                    }
+                    // fallback: raw parseTableField (docTableRows 없는 경우)
+                    const { rows, displayRows, isSingleCol, rowLabel: rawRowLabel } = parseTableField(field.value);
+                    const rowLabel = rawRowLabel;
                     const firstRowPreview = displayRows[0]
                       ? displayRows[0].map((c) => c.value).filter(Boolean).slice(0, 4).join(" / ")
                       : "";
@@ -1097,38 +1454,15 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                             <tbody>
                               {displayRows.map((row, ri) => (
                                 <tr key={ri}>
-                                  {row.map((cell, ci) => {
-                                    // Map display (ri,ci) back to original rows index for editing
-                                    const origRowIdx = isSingleCol ? ci : ri;
-                                    const origColIdx = isSingleCol ? 0 : ci;
-                                    return (
-                                      <td
-                                        key={ci}
-                                        className={`or-table-cell ${cell.confidence < 0.7 ? "or-table-cell-low" : ""}`}
-                                        title={`신뢰도: ${(cell.confidence * 100).toFixed(1)}%`}
-                                        style={{ padding: 0 }}
-                                      >
-                                        <textarea
-                                          className="or-table-cell-input"
-                                          value={cell.value || ""}
-                                          rows={1}
-                                          onChange={(e) => {
-                                            // auto-grow
-                                            e.target.style.height = "auto";
-                                            e.target.style.height = e.target.scrollHeight + "px";
-                                            const newValue = e.target.value;
-                                            updateFieldValue(i, (() => {
-                                              const updated = rows.map((r) => [...r]);
-                                              updated[origRowIdx][origColIdx] = { ...updated[origRowIdx][origColIdx], value: newValue };
-                                              return JSON.stringify(updated);
-                                            })());
-                                          }}
-                                          onFocus={() => onSelectField(i)}
-                                          onBlur={flushSave}
-                                        />
-                                      </td>
-                                    );
-                                  })}
+                                  {row.map((cell, ci) => (
+                                    <td
+                                      key={ci}
+                                      className={`or-table-cell ${cell.confidence < 0.7 ? "or-table-cell-low" : ""}`}
+                                      title={`신뢰도: ${(cell.confidence * 100).toFixed(1)}%`}
+                                    >
+                                      {cell.value || "-"}
+                                    </td>
+                                  ))}
                                 </tr>
                               ))}
                             </tbody>
@@ -1228,7 +1562,12 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                       <div className="or-val-error-list">
                         {section.rows.map((item) => {
                           if (item.field.field_type === "table") {
-                            const { displayRows, rowLabel } = parseTableField(item.field.value);
+                            // UI-VALIDATION-1: docTableRows 기반 표 표시 (Preview/Custom과 동일 helper 재사용)
+                            const hasStructured = docTableRows && docTableDisplayCols && docTableDisplayCols.length > 0;
+                            const rowLabel = docTableRows ? `${docTableRows.length}행` : (() => {
+                              const { rowLabel: raw } = parseTableField(item.field.value);
+                              return raw;
+                            })();
                             return (
                               <div
                                 key={item.idx}
@@ -1243,36 +1582,68 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                                   gridTemplateColumns: "10px minmax(120px, 1.6fr) minmax(0, 2.8fr) 52px 58px",
                                   gap: 8,
                                   alignItems: "center",
-                                  marginBottom: displayRows.length > 0 ? 6 : 0,
+                                  marginBottom: 6,
                                 }}>
                                   <span className={"or-val-dot or-dot-" + item.status} />
                                   <span className="or-val-error-name" title={fieldLabelFull(item.field)}>
                                     {fieldLabel(item.field)}
+                                    <span style={{
+                                      display: "block", fontSize: 9, fontWeight: 400,
+                                      color: "var(--muted)", whiteSpace: "nowrap",
+                                      overflow: "hidden", textOverflow: "ellipsis",
+                                    }}>
+                                      {item.field.en || item.field.name}
+                                    </span>
                                   </span>
-                                  <span style={{ color: "var(--accent)", fontWeight: 700, fontSize: 12, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                    표 데이터 · {rowLabel}
+                                  <span style={{ display: "flex", alignItems: "center", gap: 6, overflow: "hidden" }}>
+                                    <span style={{ color: "var(--accent)", fontWeight: 700, fontSize: 12, whiteSpace: "nowrap" }}>
+                                      표 데이터 · {rowLabel}
+                                    </span>
+                                    {missingExpectedWarning && (
+                                      <span style={{
+                                        fontSize: 10, fontWeight: 600, color: "#d97706",
+                                        background: "rgba(251,191,36,0.12)",
+                                        border: "1px solid rgba(217,119,6,0.25)",
+                                        borderRadius: 4, padding: "1px 6px", whiteSpace: "nowrap",
+                                      }}>
+                                        {missingExpectedWarning}
+                                      </span>
+                                    )}
                                   </span>
                                   <span className={"or-val-adoption or-val-adoption-" + getAdoptionLabel(item.field)}>{getAdoptionLabel(item.field)}</span>
                                   <span className="or-val-error-conf">{formatConfidence(item.field.confidence)}</span>
                                 </div>
-                                {/* 표 데이터 */}
-                                {displayRows.length > 0 && (
+                                {/* 표 데이터: docTableRows 기반 */}
+                                {hasStructured ? (
                                   <div
                                     className="or-table-wrap"
                                     onClick={(e) => e.stopPropagation()}
-                                    style={{ marginLeft: 18, width: "calc(100% - 18px)" }}
+                                    style={{ marginLeft: 18, width: "calc(100% - 18px)", overflowX: "auto", borderRadius: 0 }}
                                   >
                                     <table className="or-table-result">
+                                      <colgroup>
+                                        {docTableDisplayCols!.map((col) => (
+                                          <col key={col.key} style={{ width: _invoiceColWidth(col.key) }} />
+                                        ))}
+                                      </colgroup>
                                       <tbody>
-                                        {displayRows.map((row, ri) => (
+                                        <tr>
+                                          {docTableDisplayCols!.map((col) => (
+                                            <td key={col.key} className="or-table-cell" style={{ textAlign: "center", verticalAlign: "middle" }}>
+                                              <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={`${col.labelKo} (${col.key})`}>
+                                                {col.labelKo}
+                                              </div>
+                                            </td>
+                                          ))}
+                                        </tr>
+                                        {docTableRows!.map((row, ri) => (
                                           <tr key={ri}>
-                                            {row.map((cell, ci) => (
-                                              <td
-                                                key={ci}
-                                                className={`or-table-cell ${cell.confidence < 0.7 ? "or-table-cell-low" : ""}`}
-                                                title={`신뢰도: ${(cell.confidence * 100).toFixed(1)}%`}
-                                              >
-                                                {cell.value || "-"}
+                                            {docTableDisplayCols!.map((col) => (
+                                              <td key={col.key} className="or-table-cell" style={{
+                                                textAlign: _invoiceDataAlign(col.key),
+                                                whiteSpace: _NUM_KEYS.has(col.key) || _IDX_KEYS.has(col.key) ? "nowrap" : "normal",
+                                              }}>
+                                                {normalizeCell(row[col.key]) || "-"}
                                               </td>
                                             ))}
                                           </tr>
@@ -1280,6 +1651,10 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                                       </tbody>
                                     </table>
                                   </div>
+                                ) : (
+                                  docTableRows && docTableRows.length === 0 ? (
+                                    <div className="or-empty" style={{ fontSize: 12, marginLeft: 18 }}>테이블 데이터 없음</div>
+                                  ) : null
                                 )}
                               </div>
                             );
