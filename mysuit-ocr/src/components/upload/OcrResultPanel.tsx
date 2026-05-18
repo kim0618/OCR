@@ -1579,7 +1579,7 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                                 {/* 헤더: 일반 필드와 동일한 grid */}
                                 <div style={{
                                   display: "grid",
-                                  gridTemplateColumns: "10px minmax(120px, 1.6fr) minmax(0, 2.8fr) 52px 58px",
+                                  gridTemplateColumns: "10px minmax(160px, 1.6fr) minmax(0, 2.8fr) 42px 58px",
                                   gap: 8,
                                   alignItems: "center",
                                   marginBottom: 6,
@@ -1587,16 +1587,12 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                                   <span className={"or-val-dot or-dot-" + item.status} />
                                   <span className="or-val-error-name" title={fieldLabelFull(item.field)}>
                                     {fieldLabel(item.field)}
-                                    <span style={{
-                                      display: "block", fontSize: 9, fontWeight: 400,
-                                      color: "var(--muted)", whiteSpace: "nowrap",
-                                      overflow: "hidden", textOverflow: "ellipsis",
-                                    }}>
-                                      {item.field.en || item.field.name}
+                                    <span style={{ fontSize: 9, fontWeight: 400, color: "var(--muted)", marginLeft: 4 }}>
+                                      ({item.field.en || item.field.name})
                                     </span>
                                   </span>
                                   <span style={{ display: "flex", alignItems: "center", gap: 6, overflow: "hidden" }}>
-                                    <span style={{ color: "var(--accent)", fontWeight: 700, fontSize: 12, whiteSpace: "nowrap" }}>
+                                    <span className="or-val-error-value">
                                       표 데이터 · {rowLabel}
                                     </span>
                                     {missingExpectedWarning && (
@@ -1630,9 +1626,18 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                                         <tr>
                                           {docTableDisplayCols!.map((col) => (
                                             <td key={col.key} className="or-table-cell" style={{ textAlign: "center", verticalAlign: "middle" }}>
-                                              <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={`${col.labelKo} (${col.key})`}>
+                                              <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={col.labelKo}>
                                                 {col.labelKo}
                                               </div>
+                                              {col.labelKo !== col.key && (
+                                                <div title={col.key} style={{
+                                                  fontSize: 10, opacity: 0.55, marginTop: 1,
+                                                  fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                                                  whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block",
+                                                }}>
+                                                  ({col.key})
+                                                </div>
+                                              )}
                                             </td>
                                           ))}
                                         </tr>
@@ -1669,6 +1674,9 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                               <span className={"or-val-dot or-dot-" + item.status} />
                               <span className="or-val-error-name" title={fieldLabelFull(item.field)}>
                                 {fieldLabel(item.field)}
+                                <span style={{ fontSize: 9, fontWeight: 400, color: "var(--muted)", marginLeft: 4 }}>
+                                  ({item.field.en || item.field.name})
+                                </span>
                               </span>
                               <span className="or-val-error-value">{item.field.value || "-"}</span>
                               <span className={"or-val-adoption or-val-adoption-" + getAdoptionLabel(item.field)}>{getAdoptionLabel(item.field)}</span>

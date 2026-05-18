@@ -864,7 +864,7 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
         } else {
           const internalSuggestions = buildAutofillSuggestionsFromCandidates({
             businessNumber,
-            candidates: collectInternalAutofillCandidates(),
+            candidates: collectInternalAutofillCandidates(businessNumber),
             templateName: activeTemplate?.name ?? null,
             fileName: selectedFile.name,
           });

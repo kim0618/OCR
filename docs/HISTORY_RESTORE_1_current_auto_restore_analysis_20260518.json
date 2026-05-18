@@ -1,0 +1,221 @@
+{
+  "meta": {
+    "task": "HISTORY-RESTORE-1",
+    "date": "2026-05-18",
+    "tool": "Claude Code",
+    "model": "Claude Sonnet 4.6",
+    "codeModified": false
+  },
+  "summary": {
+    "storageBackend": "localStorage only",
+    "storageKey": "mysuit_ocr_history",
+    "groundTruthKey": "mysuit_ocr_groundtruth",
+    "maxRecords": 50,
+    "candidateSource": "output_fields of history runs (user-edited only)",
+    "matchingCriteria": "normalized businessNumber (no supplier/buyer distinction)",
+    "biggestRisk": "no supplier/buyer distinction + no erroneous value cleanup mechanism + data loss on browser clear"
+  },
+  "localStorage": {
+    "keys": [
+      {
+        "key": "mysuit_ocr_history",
+        "purpose": "OCR run history",
+        "file": "historyStore.ts",
+        "line": 4,
+        "maxRecords": 50
+      },
+      {
+        "key": "mysuit_ocr_groundtruth",
+        "purpose": "Ground truth answers",
+        "file": "autofillEngine.ts",
+        "line": 79
+      }
+    ]
+  },
+  "historyStructure": {
+    "HistoryRunRecord": {
+      "job_id": "string (RUN-XXXXXXXX)",
+      "file_name": "string",
+      "template_name": "string | null",
+      "processing_time": "number",
+      "created_at": "string (YYYY-MM-DD HH:mm:ss)",
+      "status": "success | fail",
+      "original_image_url": "string | null",
+      "processed_image_url": "string | null",
+      "image_storage_mode": "legacy | url",
+      "ocr_fields": "HistoryOcrField[] (OCR raw)",
+      "output_fields": "HistoryOutputField[] (final after autofill)",
+      "autofill_summary": "HistoryAutofillRunSummary"
+    },
+    "HistoryOutputField": {
+      "en": "string (e.g. field_1)",
+      "ko": "string (e.g. 공급자 사업자 번호)",
+      "original": "string (OCR original, immutable after save)",
+      "modified": "string (user-edited or autofill-applied value)",
+      "confidence": "number",
+      "source": "ocr | biz | gt | text",
+      "applied": "string (autofill-applied value)",
+      "autofillAction": "filled | corrected | confirmed | none",
+      "suggestions": "AutofillSuggestion[]"
+    },
+    "fileReference": "historyStore.ts:20-77"
+  },
+  "autofillFlow": {
+    "candidateGeneration": {
+      "function": "readHistoryCandidateRecords",
+      "file": "autofillEngine.ts",
+      "lines": "297-328",
+      "steps": [
+        "readHistoryRuns() from localStorage",
+        "iterate output_fields of each run",
+        "getHistoryFieldKey() to normalize field name",
+        "getHistoryFieldValue() — modified first, then original",
+        "isUserEditedHistoryField() — only user-edited fields included",
+        "candidateFields filter: companyName/businessNumber/representative/tel/address",
+        "extract businessNumber, build AutofillCandidateRecord"
+      ]
+    },
+    "candidateRetrieval": {
+      "function": "collectInternalAutofillCandidates",
+      "file": "autofillEngine.ts",
+      "lines": "330-332",
+      "scope": "entire localStorage history (no documentType/templateId filter)"
+    },
+    "suggestionBuilding": {
+      "function": "buildAutofillSuggestionsFromCandidates",
+      "file": "autofillEngine.ts",
+      "lines": "344-390",
+      "matching": "normalizeBusinessNumber(candidate.businessNumber) === businessNumber",
+      "dedup": "same field::value merged, hitCount accumulated"
+    },
+    "apply": {
+      "function": "applyAutofillToOutputFields",
+      "file": "autofillEngine.ts",
+      "lines": "396-427",
+      "actions": {
+        "filled": "OCR value was empty, autofill supplied value",
+        "corrected": "OCR value differed from autofill value",
+        "confirmed": "OCR value matched autofill value",
+        "none": "field not autofillable or no suggestion"
+      }
+    }
+  },
+  "businessNumberMatching": {
+    "extractionFile": "bizNumber.ts",
+    "extractionLines": "66-92",
+    "pattern1": "/[1-9]\\d{2}[\\s\\-.]*\\d{2}[\\s\\-.]*\\d{5}/g with checksum",
+    "pattern2": "OCR error correction (O→0, I→1, Z→2, S→5, B→8) then retry",
+    "supplierBuyerDistinction": false,
+    "risk": "거래명세서에서 공급자/공급받는자 사업자번호가 혼용될 수 있음"
+  },
+  "autofillableFields": {
+    "allowlist": ["회사명", "사업자번호", "대표자", "tel", "주소"],
+    "file": "autofillEngine.ts",
+    "lines": "70-77",
+    "aliases": {
+      "상호": "회사명",
+      "가맹점명": "회사명",
+      "companyName": "회사명",
+      "supplierName": "회사명",
+      "merchantName": "회사명",
+      "대표자명": "대표자",
+      "representative": "대표자",
+      "phone": "tel",
+      "전화": "tel",
+      "address": "주소",
+      "사업자등록번호": "사업자번호",
+      "businessNumber": "사업자번호"
+    }
+  },
+  "excludedFields": {
+    "explicitExclusion": ["총합계금액"],
+    "implicitExclusion": [
+      "판매금액", "부가세", "공급가액",
+      "거래일시", "발행일", "승인번호", "카드번호",
+      "전표번호", "가맹번호",
+      "tableRows", "품목명", "단가", "수량", "금액"
+    ],
+    "mechanism": "not in AUTOFILLABLE_FIELDS + isAutofillableField() check"
+  },
+  "userEditDetection": {
+    "function": "isUserEditedHistoryField",
+    "file": "autofillEngine.ts",
+    "lines": "249-256",
+    "rules": [
+      "source === 'text' → user edited",
+      "source === 'biz' || 'gt' → NOT user edited (autofill value, excluded from future candidates)",
+      "modified !== original && modified exists → user edited"
+    ]
+  },
+  "risks": [
+    {
+      "id": 1,
+      "issue": "공급자/공급받는자 미구분",
+      "severity": "high",
+      "detail": "거래명세서에서 공급자 사업자번호로 공급받는자 필드가 복원될 수 있음"
+    },
+    {
+      "id": 2,
+      "issue": "사용자 오입력 전파",
+      "severity": "high",
+      "detail": "source=text이면 오입력도 후보로 저장됨. 수동 삭제 수단 없음"
+    },
+    {
+      "id": 3,
+      "issue": "localStorage 휘발성",
+      "severity": "high",
+      "detail": "브라우저 초기화 시 모든 자동복원 후보 소실"
+    },
+    {
+      "id": 4,
+      "issue": "documentType 필터 없음",
+      "severity": "medium",
+      "detail": "거래명세서 history가 영수증 자동복원 후보로 혼입 가능"
+    },
+    {
+      "id": 5,
+      "issue": "DB 전환 시 구조 재설계",
+      "severity": "high",
+      "detail": "confirmedResult/restoreExtract 미분리 → 전환 시 output_fields 전체 재파싱 필요"
+    }
+  ],
+  "recommendedStructure": {
+    "runSnapshot": {
+      "originalOcrFields": "OCR raw fields (immutable)",
+      "tableRows": "품목표 원본",
+      "tableMeta": "컬럼 메타",
+      "processingTime": "number",
+      "validationResult": "object"
+    },
+    "confirmedResult": {
+      "confirmedFields": "사용자 최종 확인 필드",
+      "confirmedTableRows": "사용자 최종 확인 품목표",
+      "savedAt": "timestamp"
+    },
+    "restoreExtract": {
+      "businessNo": "정규화된 사업자번호",
+      "partyType": "supplier | buyer | merchant",
+      "restoreFields": {
+        "companyName": "string",
+        "representative": "string",
+        "tel": "string",
+        "address": "string"
+      },
+      "sourceRunId": "출처 run의 job_id"
+    }
+  },
+  "dbCandidateTables": [
+    "ocr_runs",
+    "ocr_run_results",
+    "ocr_restore_profiles (businessNo + partyType 기준)",
+    "ocr_restore_profile_fields (필드별 값)",
+    "ocr_restore_applications (복원 적용 이력)"
+  ],
+  "nextTasks": [
+    "HISTORY-RESTORE-2: confirmedResult/restoreExtract 저장 구조 추가",
+    "HISTORY-RESTORE-3: 자동복원 조회를 restoreExtract 기준으로 변경",
+    "HISTORY-RESTORE-4: 공급자/공급받는자 partyType 구분 추가",
+    "HISTORY-RESTORE-5: History 상세 UI 섹션 분리",
+    "HISTORY-RESTORE-DB: PostgreSQL restoreProfiles 테이블 설계"
+  ]
+}

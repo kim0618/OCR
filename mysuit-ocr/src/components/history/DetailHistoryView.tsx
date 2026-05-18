@@ -17,6 +17,17 @@ import {
   type MatchStatus,
 } from "@/lib/groundTruthStore";
 import { useUi } from "../common/AppProviders";
+import { normalizeBizNumber } from "@/lib/bizNumber";
+import { normalizeAutofillFieldKey } from "@/lib/autofillEngine";
+import {
+  type RestoreProfile,
+  type RestoreProfileFields,
+  AUTOFILL_TO_PROFILE_KEY,
+  PROFILE_FIELD_LABELS,
+  isMeaninglessValue,
+  readRestoreProfiles,
+  writeRestoreProfiles,
+} from "@/lib/restoreProfileStore";
 
 type Props = {
   item: HistoryRunRecord | null;
@@ -222,6 +233,50 @@ const saveButtonStyle: React.CSSProperties = {
   boxShadow: "0 4px 12px rgba(8,145,178,0.25)",
 };
 
+const restoreButtonStyle: React.CSSProperties = {
+  border: "1px solid var(--accent)",
+  background: "transparent",
+  color: "var(--accent)",
+  borderRadius: 8,
+  padding: "6px 14px",
+  fontSize: 12,
+  fontWeight: 800,
+  cursor: "pointer",
+};
+
+const modalOverlayStyle: React.CSSProperties = {
+  position: "fixed",
+  inset: 0,
+  background: "rgba(0,0,0,0.55)",
+  zIndex: 1000,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+};
+
+const modalCardStyle: React.CSSProperties = {
+  background: "var(--panel)",
+  border: "1px solid var(--border)",
+  borderRadius: 14,
+  padding: 24,
+  maxWidth: 540,
+  width: "90%",
+  display: "flex",
+  flexDirection: "column",
+  gap: 14,
+};
+
+const cancelButtonStyle: React.CSSProperties = {
+  border: "1px solid var(--border)",
+  background: "var(--panel2)",
+  color: "var(--text)",
+  borderRadius: 8,
+  padding: "6px 16px",
+  fontSize: 12,
+  fontWeight: 700,
+  cursor: "pointer",
+};
+
 const emptyCellStyle: React.CSSProperties = {
   ...tdStyle,
   textAlign: "center",
@@ -303,6 +358,10 @@ export default function DetailHistoryView({ item, onBack, onSaved }: Props) {
   const ui = useUi();
   const [outputs, setOutputs] = useState<HistoryOutputField[]>([]);
   const [gtMap, setGtMap] = useState<GroundTruthMap>({});
+  const [restoreConfirm, setRestoreConfirm] = useState<{
+    existing: RestoreProfile;
+    newProfile: RestoreProfile;
+  } | null>(null);
 
   useEffect(() => {
     setOutputs(item?.output_fields ? [...item.output_fields] : []);
@@ -340,6 +399,113 @@ export default function DetailHistoryView({ item, onBack, onSaved }: Props) {
       await ui.alert("저장되었습니다. 동일한 템플릿·파일로 다음에 OCR 을 실행하면 일치 여부가 표시됩니다.");
     } else {
       await ui.alert("저장 중 오류가 발생했습니다.");
+    }
+  };
+
+  const handleSaveRestoreProfile = async () => {
+    let businessNo: string | null = null;
+    const fields: RestoreProfileFields = {};
+
+    for (const row of outputs) {
+      const canonicalKey = normalizeAutofillFieldKey(row.ko || row.en);
+      const value = row.modified.trim() || row.original.trim();
+      if (!value || isMeaninglessValue(value)) continue;
+
+      if (canonicalKey === "사업자번호") {
+        businessNo = normalizeBizNumber(value);
+      } else {
+        const profileKey = AUTOFILL_TO_PROFILE_KEY[canonicalKey];
+        if (profileKey) {
+          fields[profileKey] = value;
+        }
+      }
+    }
+
+    if (!businessNo) {
+      await ui.alert("자동복원 후보를 저장할 수 없습니다. 사업자번호가 필요합니다.");
+      return;
+    }
+    if (Object.keys(fields).length === 0) {
+      await ui.alert("자동복원 후보로 저장할 필드가 없습니다.");
+      return;
+    }
+
+    const now = new Date().toISOString().slice(0, 19).replace("T", " ");
+    const newProfile: RestoreProfile = {
+      businessNo,
+      partyType: "generic",
+      fields,
+      sourceHistoryId: item.job_id,
+      sourceFileName: item.file_name,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    const profiles = readRestoreProfiles();
+    const existingIdx = profiles.findIndex(
+      (p) => p.businessNo === businessNo && p.partyType === "generic",
+    );
+
+    if (existingIdx === -1) {
+      profiles.push(newProfile);
+      try {
+        writeRestoreProfiles(profiles);
+        await ui.alert(`자동복원 후보 저장 완료 · ${Object.keys(fields).length}개 필드`);
+      } catch {
+        await ui.alert("저장 중 오류가 발생했습니다.");
+      }
+      return;
+    }
+
+    const existing = profiles[existingIdx]!;
+    const allSame = Object.entries(fields).every(([key, val]) => {
+      const existingVal = (existing.fields[key as keyof RestoreProfileFields] ?? "").trim();
+      return existingVal === val.trim();
+    });
+
+    if (allSame) {
+      await ui.alert("이미 동일한 자동복원 후보가 저장되어 있습니다.");
+      return;
+    }
+
+    setRestoreConfirm({ existing, newProfile });
+  };
+
+  const handleRestoreConfirmOk = () => {
+    if (!restoreConfirm) return;
+    const { existing, newProfile } = restoreConfirm;
+
+    const profiles = readRestoreProfiles();
+    const idx = profiles.findIndex(
+      (p) => p.businessNo === newProfile.businessNo && p.partyType === newProfile.partyType,
+    );
+
+    const mergedFields: RestoreProfileFields = { ...existing.fields };
+    for (const [key, val] of Object.entries(newProfile.fields)) {
+      if (!isMeaninglessValue(val)) {
+        mergedFields[key as keyof RestoreProfileFields] = val;
+      }
+    }
+
+    const updated: RestoreProfile = {
+      ...newProfile,
+      fields: mergedFields,
+      createdAt: existing.createdAt,
+    };
+
+    if (idx !== -1) {
+      profiles[idx] = updated;
+    } else {
+      profiles.push(updated);
+    }
+
+    try {
+      writeRestoreProfiles(profiles);
+      setRestoreConfirm(null);
+      void ui.alert(`자동복원 후보 갱신 완료 · ${Object.keys(newProfile.fields).length}개 필드`);
+    } catch {
+      setRestoreConfirm(null);
+      void ui.alert("저장 중 오류가 발생했습니다.");
     }
   };
 
@@ -408,9 +574,14 @@ export default function DetailHistoryView({ item, onBack, onSaved }: Props) {
           <div style={sectionStyle}>
             <div style={sectionHeaderStyle}>
               <div style={sectionLabelStyle}>출력 필드</div>
-              <button type="button" style={saveButtonStyle} onClick={() => void handleSave()}>
-                저장
-              </button>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button type="button" style={saveButtonStyle} onClick={() => void handleSave()}>
+                  저장
+                </button>
+                <button type="button" style={restoreButtonStyle} onClick={() => void handleSaveRestoreProfile()}>
+                  자동복원 후보 저장
+                </button>
+              </div>
             </div>
             <div style={tableWrapStyle}>
               <table style={tableStyle}>
@@ -516,6 +687,57 @@ export default function DetailHistoryView({ item, onBack, onSaved }: Props) {
           </div>
         </div>
       </div>
+
+      {restoreConfirm && (
+        <div style={modalOverlayStyle} onClick={() => setRestoreConfirm(null)}>
+          <div style={modalCardStyle} onClick={(e) => e.stopPropagation()}>
+            <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)" }}>
+              이미 저장된 자동복원 후보가 있습니다.
+            </div>
+            <div style={{ fontSize: 12, color: "var(--muted)" }}>
+              사업자번호: {restoreConfirm.newProfile.businessNo}
+            </div>
+            <div style={{ display: "flex", gap: 16 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 700, fontSize: 12, marginBottom: 8, color: "var(--muted)" }}>기존 후보</div>
+                {(Object.keys(PROFILE_FIELD_LABELS) as (keyof RestoreProfileFields)[]).map((key) => (
+                  <div key={key} style={{ fontSize: 12, marginBottom: 4 }}>
+                    <span style={{ color: "var(--muted)", marginRight: 6 }}>{PROFILE_FIELD_LABELS[key]}:</span>
+                    <span style={{ color: "var(--text)" }}>{restoreConfirm.existing.fields[key] || "-"}</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 700, fontSize: 12, marginBottom: 8, color: "var(--accent)" }}>새 후보</div>
+                {(Object.keys(PROFILE_FIELD_LABELS) as (keyof RestoreProfileFields)[]).map((key) => {
+                  const existingVal = (restoreConfirm.existing.fields[key] ?? "").trim();
+                  const newVal = (restoreConfirm.newProfile.fields[key] ?? "").trim();
+                  const changed = newVal !== "" && newVal !== existingVal;
+                  return (
+                    <div key={key} style={{ fontSize: 12, marginBottom: 4 }}>
+                      <span style={{ color: "var(--muted)", marginRight: 6 }}>{PROFILE_FIELD_LABELS[key]}:</span>
+                      <span style={{ color: changed ? "var(--accent)" : "var(--text)", fontWeight: changed ? 700 : 400 }}>
+                        {newVal || "-"}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            <div style={{ fontSize: 12, color: "var(--text)", borderTop: "1px solid var(--border)", paddingTop: 12 }}>
+              기존 후보를 새 값으로 갱신하시겠습니까?
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+              <button type="button" style={cancelButtonStyle} onClick={() => setRestoreConfirm(null)}>
+                취소
+              </button>
+              <button type="button" style={saveButtonStyle} onClick={handleRestoreConfirmOk}>
+                최신값으로 갱신
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

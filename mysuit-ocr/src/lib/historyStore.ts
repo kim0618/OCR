@@ -33,7 +33,7 @@ export type HistoryOutputField = {
     label?: string;
     reason?: string;
     confidence?: number;
-    sourceType?: "history" | "groundTruth" | "cache";
+    sourceType?: "history" | "groundTruth" | "cache" | "restoreProfile";
     createdAt?: string;
     updatedAt?: string;
     templateName?: string | null;

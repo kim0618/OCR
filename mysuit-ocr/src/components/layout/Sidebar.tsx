@@ -46,19 +46,27 @@ function NavIcon({ name, size = 16, color = "currentColor" }: { name: string; si
           <circle cx="11" cy="13.5" r="0.8" fill={color}/>
         </svg>
       );
+    case "restore":
+      return (
+        <svg width={s} height={s} viewBox="0 0 20 20" fill="none">
+          <path d="M3.5 10a6.5 6.5 0 1 0 1.3-3.9" stroke={color} strokeWidth="1.8" strokeLinecap="round"/>
+          <path d="M3.5 4.5V8H7" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      );
     default:
       return null;
   }
 }
 
 const DEFAULT_ITEMS: NavItem[] = [
-  { label: "Template",  href: "/template",  icon: "template" },
-  { label: "RunOCR",    href: "/runocr",    icon: "upload" },
-  { label: "History",   href: "/history",   icon: "history" },
-  { label: "BUpload",   href: "/upload",    icon: "upload" },
-  { label: "BTemplate", href: "/btemplate", icon: "template" },
-  { label: "BHistory",  href: "/bhistory",  icon: "history" },
-  { label: "Test",      href: "/test",      icon: "test" },
+  { label: "Template",  href: "/template",     icon: "template" },
+  { label: "RunOCR",    href: "/runocr",       icon: "upload" },
+  { label: "History",   href: "/history",      icon: "history" },
+  { label: "Restore",    href: "/autorestore",  icon: "restore" },
+  { label: "BUpload",   href: "/upload",       icon: "upload" },
+  { label: "BTemplate", href: "/btemplate",    icon: "template" },
+  { label: "BHistory",  href: "/bhistory",     icon: "history" },
+  { label: "Test",      href: "/test",         icon: "test" },
 ];
 
 export default function Sidebar({

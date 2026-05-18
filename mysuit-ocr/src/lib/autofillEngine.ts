@@ -1,5 +1,6 @@
 import { normalizeBizNumber } from "./bizNumber";
 import { readHistoryRuns, type HistoryOutputField } from "./historyStore";
+import { readRestoreProfiles, isMeaninglessValue } from "./restoreProfileStore";
 
 export type AutofillSource = "biz";
 export type OutputValueSource = "ocr" | "biz" | "gt" | "text";
@@ -12,7 +13,7 @@ export type AutofillSuggestion = {
   confidence: number;
   reason?: string;
   label?: string;
-  sourceType?: "history" | "groundTruth" | "cache";
+  sourceType?: "history" | "groundTruth" | "cache" | "restoreProfile";
   createdAt?: string;
   updatedAt?: string;
   templateName?: string | null;
@@ -24,7 +25,7 @@ export type AutofillCandidateRecord = {
   businessNumber: string;
   fields: Record<string, string>;
   source?: string;
-  sourceType?: "history" | "groundTruth" | "cache";
+  sourceType?: "history" | "groundTruth" | "cache" | "restoreProfile";
   fileName?: string;
   templateName?: string | null;
   createdAt?: string;
@@ -191,6 +192,7 @@ function valueQualityScore(value: string): number {
 
 function suggestionPriority(suggestion: AutofillSuggestion): number {
   let score = suggestion.confidence;
+  if (suggestion.sourceType === "restoreProfile") score += 0.025;
   if (suggestion.sourceType === "history") score += 0.02;
   if (suggestion.sourceType === "groundTruth") score += 0.015;
   if ((suggestion.hitCount ?? 0) >= 2) score += Math.min(0.012, (suggestion.hitCount ?? 0) * 0.003);
@@ -327,12 +329,58 @@ function readHistoryCandidateRecords(): AutofillCandidateRecord[] {
   });
 }
 
-export function collectInternalAutofillCandidates(): AutofillCandidateRecord[] {
-  return readHistoryCandidateRecords();
+function readRestoreProfileCandidates(): AutofillCandidateRecord[] {
+  try {
+    return readRestoreProfiles().flatMap((profile) => {
+      const bizNo = normalizeBusinessNumber(profile.businessNo ?? "");
+      if (!bizNo) return [];
+      const fields: Record<string, string> = {};
+      for (const [rawKey, val] of Object.entries(profile.fields ?? {})) {
+        if (isEmptyOcrValue(val) || isMeaninglessValue(val)) continue;
+        const normalizedKey = normalizeAutofillFieldKey(rawKey);
+        if (!normalizedKey || !isAutofillableField(normalizedKey)) continue;
+        fields[normalizedKey] = val;
+      }
+      if (Object.keys(fields).length === 0) return [];
+      const candidate: AutofillCandidateRecord = {
+        businessNumber: bizNo,
+        fields,
+        source: "restoreProfile",
+        sourceType: "restoreProfile",
+        fileName: profile.sourceFileName,
+        createdAt: profile.createdAt,
+        updatedAt: profile.updatedAt,
+      };
+      return [candidate];
+    });
+  } catch {
+    return [];
+  }
+}
+
+export function collectInternalAutofillCandidates(businessNumber?: string): AutofillCandidateRecord[] {
+  const restoreProfiles = readRestoreProfileCandidates();
+  if (businessNumber) {
+    const normalizedBizNo = normalizeBusinessNumber(businessNumber);
+    const matchingRestore = restoreProfiles.filter(
+      (c) => normalizeBusinessNumber(c.businessNumber) === normalizedBizNo,
+    );
+    if (matchingRestore.length > 0) {
+      // 1순위: restore profiles에 같은 사업자번호 후보 있음
+      return matchingRestore;
+    }
+    // 2순위: history fallback
+    return readHistoryCandidateRecords();
+  }
+  // businessNumber 없이 호출 시 전체 반환 (restore 우선 + history fallback)
+  return restoreProfiles.length > 0
+    ? restoreProfiles
+    : readHistoryCandidateRecords();
 }
 
 function confidenceForCandidate(candidate: AutofillCandidateRecord, templateName?: string | null): number {
   let confidence = !candidate.source ? 0.9 : 0.95;
+  if (candidate.sourceType === "restoreProfile") confidence += 0.025;
   if (candidate.sourceType === "history") confidence += 0.02;
   if (candidate.sourceType === "groundTruth") confidence += 0.015;
   if (candidate.templateName && templateName && candidate.templateName === templateName) confidence += 0.03;
