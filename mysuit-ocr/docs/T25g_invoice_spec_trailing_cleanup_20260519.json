@@ -1,0 +1,121 @@
+{
+  "generatedAt": "2026-05-19",
+  "scope": "T25g_invoice_spec_trailing_cleanup",
+  "tool": "Claude Sonnet 4.6 (Claude Code)",
+  "codeModified": true,
+  "backupFiles": [
+    "ocr-server/backup/invoice_statement_20260519_1456_before_T25g_spec_trailing_cleanup.py"
+  ],
+  "modifiedFiles": [
+    "ocr-server/extractors/invoice_statement.py"
+  ],
+  "addedHelpers": [
+    "_cleanup_spec_trailing_chars(value: str) -> tuple[str, list[str]]"
+  ],
+  "addedRegexPatterns": [
+    "_T25G_ML_TRAILING_RE = re.compile(r'^\\d{1,4}[mM]$')",
+    "_T25G_OPEN_PAREN_RE = re.compile(r'^([^\\(\\)]{1,18})\\([A-Za-z0-9]{0,4}$')"
+  ],
+  "cleanupRules": {
+    "ruleA_closing_parenthesis": {
+      "description": "spec 값에 '(' 있고 ')' 없고 길이 ≤20자 → 끝에 ')' 추가",
+      "examples": [
+        "500T(B → 500T(B)",
+        "100T(A → 100T(A)"
+      ],
+      "warningKey": "spec:trailing_closing_parenthesis_restored",
+      "autoCorrection": true,
+      "conservative": true
+    },
+    "ruleB_ml_suffix": {
+      "description": "spec 값이 \\d{1,4}[mM]$ 에 매칭 → 'l' 추가하여 ml 단위 완성",
+      "examples": [
+        "150m → 150ml",
+        "500m → 500ml",
+        "30m → 30ml"
+      ],
+      "warningKey": "spec:trailing_ml_suffix_restored",
+      "autoCorrection": true,
+      "conservative": true,
+      "note": "Rule B가 먼저 적용되면 Rule A는 미적용 (조기 return)"
+    }
+  },
+  "improvedCells": [
+    {
+      "sample": "1.jpg",
+      "rowIndex": 8,
+      "field": "spec",
+      "before": "500T(B",
+      "after": "500T(B)",
+      "rule": "ruleA_closing_parenthesis"
+    },
+    {
+      "sample": "1.jpg",
+      "rowIndex": 23,
+      "field": "spec",
+      "before": "150m",
+      "after": "150ml",
+      "rule": "ruleB_ml_suffix",
+      "note": "OCR cached as '150mI'; parser output showed '150m' (trailing I stripped)"
+    },
+    {
+      "sample": "1.jpg",
+      "rowIndex": 26,
+      "field": "spec",
+      "before": "500m",
+      "after": "500ml",
+      "rule": "ruleB_ml_suffix",
+      "note": "OCR cached as '500n1'; parser output showed '500m'"
+    }
+  ],
+  "unchangedFields": [
+    "itemName — 자동 보정 없음",
+    "quantity — T-25d cleanup만 유지",
+    "manufacturingNo, expiryDate — 변경 없음",
+    "unitPrice, amount, supplyAmount, taxAmount, totalAmount — 변경 없음"
+  ],
+  "t25dCleanupPreserved": {
+    "qty_trailing_symbol": "row5 quantity '360 ^' → '360' ✓",
+    "amount_comma_space": [
+      "row19 amount '301, 100' → '301,100' ✓",
+      "row20 amount '782, 160' → '782,160' ✓",
+      "row21 amount '163, 100' → '163,100' ✓",
+      "row26 amount '220, 890' → '220,890' ✓"
+    ]
+  },
+  "noChangeSpecs": [
+    "'15m|*6포' — 포함 문자 때문에 ml regex 미매칭, 괄호 없음 → 변경 없음",
+    "'150mI' — m 뒤에 I가 있어 ml regex 미매칭 → 변경 없음",
+    "'500n1' — m이 없어 미매칭 → 변경 없음",
+    "'30T', '500C', '100T', '120DOSE', '10g', '4T' — 모두 변경 없음",
+    "'500T(B)' — 이미 ')' 있음 → 변경 없음"
+  ],
+  "rowCountStatus": {
+    "note": "row 추가/삭제 코드 미변경. spec 값 수정만. rowCount 회귀 불가.",
+    "lastConfirmed": "T10_fix_template_colguides_header_skip_20260516.json — 7/7 all exact",
+    "expected": {
+      "1.jpg": 28,
+      "2.pdf": 13,
+      "3.pdf": 1,
+      "4.pdf": 1,
+      "5.pdf": 6,
+      "6.pdf": 6,
+      "7.pdf": 1
+    }
+  },
+  "verificationResults": {
+    "py_compile": "OK",
+    "unitTests": "17/17 PASS (_cleanup_spec_trailing_chars)",
+    "integrationTest": "ALL ASSERTIONS PASSED",
+    "typecheck": "PASS",
+    "build": "PASS"
+  },
+  "nextActions": [
+    {
+      "taskId": "future",
+      "title": "correction profile 기반 itemName 오인식 후보 표시",
+      "description": "사용자가 Custom 탭에서 수정한 값을 correction profile로 저장, 다음 OCR에서 같은 품목코드 발견 시 후보 표시",
+      "risk": "low (auto-correct 없이 후보 표시만)"
+    }
+  ]
+}

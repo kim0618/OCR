@@ -1,0 +1,81 @@
+{
+  "generatedAt": "2026-05-19",
+  "scope": "T25f_RESET_custom_table_cell_warning_rollback",
+  "tool": "Claude Sonnet 4.6 (Claude Code)",
+  "codeModified": true,
+  "backupFiles": [
+    "ocr-server/backup/invoiceTableDisplay_20260519_1449_before_T25f_RESET_warning_rollback.ts",
+    "ocr-server/backup/OcrResultPanel_20260519_1449_before_T25f_RESET_warning_rollback.tsx"
+  ],
+  "modifiedFiles": [
+    "mysuit-ocr/src/lib/invoiceTableDisplay.ts",
+    "mysuit-ocr/src/components/upload/OcrResultPanel.tsx"
+  ],
+  "removedCode": {
+    "invoiceTableDisplay.ts": [
+      "CustomCellWarning interface",
+      "getCustomTableCellWarning() export function",
+      "_ITEM_NAME_CHAR_CONFUSION_RE regex constant",
+      "T-25f/REV1 section comment block"
+    ],
+    "OcrResultPanel.tsx": [
+      "getCustomTableCellWarning import",
+      "cellWarn constant (T-25f warning calculation)",
+      "T-25f comment in Custom tab rendering",
+      "warning border/background styles on <td>",
+      "position:relative on <td>",
+      "paddingRight:cellWarn?18:undefined on <textarea>",
+      "⚠ span (warning icon + title + aria-label)",
+      "map((col)=>{...return(...)}) wrapper → restored to map((col)=>(...))"
+    ]
+  },
+  "keptCode": {
+    "OcrResultPanel.tsx": [
+      "Custom tab editRows.map tableRows rendering",
+      "textarea editing UX (onChange/onFocus/onBlur/flushSave)",
+      "title={String(row[col.key]??\"\")} on <textarea> — full value hover (useful independently)",
+      "missingExpectedWarning table-level badge (pre-existing, unrelated to T-25f)",
+      "buildInvoicePreviewCols import and usage"
+    ],
+    "invoiceTableDisplay.ts": [
+      "buildInvoicePreviewCols",
+      "normalizeTableCell",
+      "hasMeaningfulTableValue",
+      "isMeaninglessTableValue",
+      "isInternalTableKey",
+      "INVOICE_TABLE_COL_PRIORITY",
+      "INVOICE_COL_LABEL_MAP"
+    ]
+  },
+  "verificationChecks": {
+    "CustomCellWarning_gone": true,
+    "getCustomTableCellWarning_gone": true,
+    "cellWarn_gone": true,
+    "warningIcon_gone": true,
+    "warningBorder_gone": true,
+    "Custom_tab_rendering_intact": true,
+    "textarea_title_kept": true,
+    "flushSave_kept": true,
+    "t25d_cleanup_unaffected": true
+  },
+  "typecheck": "PASS",
+  "build": "PASS",
+  "regressionCheck": {
+    "previewTab": "unchanged",
+    "validationTab": "unchanged",
+    "historyDetail": "unchanged",
+    "rowValue": "unchanged",
+    "t25dCleanup": "preserved",
+    "invoiceRowCount7of7": "maintained (no parser changes)"
+  },
+  "futureWorkSuggestion": {
+    "approach": "correction-profile 기반 재구현",
+    "trigger": "품목코드 + 거래처/사업자번호 기반 과거 수정 이력 축적 후",
+    "mechanism": [
+      "사용자가 Custom 탭에서 수정한 tableRows 값을 correction profile로 저장",
+      "다음 OCR에서 같은 품목코드/유사 품목명 발견 시 '과거 수정 후보 있음' 표시",
+      "자동 치환 아닌 Custom 탭에서 후보 표시 → 사용자가 선택",
+      "품목코드 + 규격 + 거래처 3중 키로 후보 신뢰도 산정"
+    ]
+  }
+}

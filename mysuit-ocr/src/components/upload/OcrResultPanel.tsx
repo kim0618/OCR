@@ -1405,6 +1405,7 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                                           className="or-table-cell-input"
                                           value={row[col.key] ?? ""}
                                           rows={1}
+                                          title={String(row[col.key] ?? "")}
                                           style={{ textAlign: _invoiceDataAlign(col.key) }}
                                           onChange={(e) => {
                                             e.target.style.height = "auto";

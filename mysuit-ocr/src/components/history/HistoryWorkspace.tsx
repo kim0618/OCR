@@ -6,7 +6,7 @@ import api from "@/lib/axios";
 import CreateHistoryPopup, { type HistoryPopupForm } from "./popup/CreateHistoryPopup";
 import EditHistoryPopup, { type HistoryPopupRow } from "./popup/EditHistoryPopup";
 import DetailHistoryView from "./DetailHistoryView";
-import { readHistoryRuns, deleteHistoryRun, type RunStatus, type HistoryRunRecord } from "@/lib/historyStore";
+import { readHistoryListWithFallback, readHistoryDetailWithFallback, deleteHistoryRun, type RunStatus, type HistoryRunRecord } from "@/lib/historyStore";
 
 type HistoryRow = HistoryPopupRow & { status?: RunStatus };
 
@@ -40,10 +40,11 @@ export default function HistoryWorkspace() {
   // TEMP: 히스토리 DB 미구축 상태. RunOCR 에서 OCR 실행 시
   // localStorage 에 적재한 실행 기록을 읽어 표시한다.
   // DB 준비되면 `lib/historyStore` 만 교체하면 됨.
+  // HISTORY-STRUCTURE-2B: mysuit_ocr_history_index 우선 조회, fallback → mysuit_ocr_history
   const boardList = async () => {
     try {
       await ui.withLoading(async () => {
-        const list = readHistoryRuns();
+        const list = readHistoryListWithFallback();
         const mapped: HistoryRow[] = list.map((r) => ({
           job_id: r.job_id,
           file_name: r.file_name,
@@ -271,10 +272,9 @@ export default function HistoryWorkspace() {
                         <button
                           type="button"
                           className="ms-btn-sm"
+                          // HISTORY-STRUCTURE-2C: details 우선, fallback → mysuit_ocr_history
                           onClick={() => {
-                            const all = readHistoryRuns();
-                            const full = all.find((r) => r.job_id === row.job_id) ?? null;
-                            setDetailRecord(full);
+                            setDetailRecord(readHistoryDetailWithFallback(row.job_id));
                           }}
                         >
                           상세보기

@@ -142,9 +142,12 @@ export default function OcrAnnotator({
           naturalWidth: canvas.width,
           naturalHeight: canvas.height,
         });
-        setRegions([]);
-        setSelectedId(null);
-        setDrawMode(null);
+        // 편집 모드에서 이미지 재업로드 시 기존 영역 유지 (이미지 손실 복구용)
+        if (!isEditMode) {
+          setRegions([]);
+          setSelectedId(null);
+          setDrawMode(null);
+        }
         setZoomPct(DEFAULT_ZOOM_PCT);
         setRowTemplateTargetId(null);
         setColGuideTargetId(null);
@@ -167,9 +170,12 @@ export default function OcrAnnotator({
           naturalWidth: img.naturalWidth,
           naturalHeight: img.naturalHeight,
         });
-        setRegions([]);
-        setSelectedId(null);
-        setDrawMode(null);
+        // 편집 모드에서 이미지 재업로드 시 기존 영역 유지 (이미지 손실 복구용)
+        if (!isEditMode) {
+          setRegions([]);
+          setSelectedId(null);
+          setDrawMode(null);
+        }
         setZoomPct(DEFAULT_ZOOM_PCT);
         setRowTemplateTargetId(null);
         setColGuideTargetId(null);

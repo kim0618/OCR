@@ -1,0 +1,247 @@
+{
+  "generatedAt": "2026-05-19T00:00:00+09:00",
+  "scope": "HISTORY_STRUCTURE_3",
+  "model": "claude-sonnet-4-6",
+  "analysisMethod": "static_code_analysis + typecheck + build",
+  "codeModified": false,
+  "status": "PASS",
+  "summary": {
+    "scenarioCount": 10,
+    "passed": 10,
+    "failed": 0,
+    "regressionCount": 0,
+    "typecheckResult": "PASS",
+    "buildResult": "PASS",
+    "buildNote": "ESLint warning: nextVitals is not iterable (Next.js plugin issue, unrelated to HISTORY-STRUCTURE)",
+    "closeable_2A_2D": true,
+    "dbReadiness": "ready"
+  },
+  "localStorageKeys": {
+    "legacy": "mysuit_ocr_history",
+    "index": "mysuit_ocr_history_index",
+    "details": "mysuit_ocr_history_details",
+    "restoreProfiles": "mysuit_ocr_restore_profiles"
+  },
+  "keyFiles": [
+    { "path": "src/lib/historyStore.ts", "lines": 671, "role": "core store" },
+    { "path": "src/lib/restoreProfileStore.ts", "lines": 87, "role": "restore profiles" },
+    { "path": "src/lib/autofillEngine.ts", "lines": 486, "role": "autofill pipeline" },
+    { "path": "src/components/history/HistoryWorkspace.tsx", "lines": 334, "role": "history list UI" },
+    { "path": "src/components/history/DetailHistoryView.tsx", "lines": 751, "role": "history detail UI" },
+    { "path": "src/components/upload/UploadWorkspace.tsx", "lines": 1500, "role": "OCR execution" },
+    { "path": "src/components/upload/OcrResultPanel.tsx", "lines": 1700, "role": "Preview/Custom/Validation tabs" },
+    { "path": "src/components/autorestore/AutoRestoreWorkspace.tsx", "lines": 435, "role": "restore tab UI" }
+  ],
+  "scenarios": [
+    {
+      "id": "A",
+      "name": "RunOCR 저장 — 3개 저장소 동시 생성",
+      "status": "PASS",
+      "evidence": {
+        "codeLocation": "UploadWorkspace.tsx:1008 appendHistoryRun(), :1027 syncHistoryIndexAndDetailOnCreate()",
+        "isolation": "syncHistoryIndexAndDetailOnCreate wrapped in try/catch, fail record does NOT create index/detail",
+        "documentFields": "json.document_fields extracted as rawDocFields → detail.runSnapshot.documentFields (tableRows preserved)",
+        "images": "processed_image_url, original_image_url, image_url(legacy) all stored"
+      },
+      "notes": "fail record는 legacy만 저장. index/detail 미생성은 의도된 동작."
+    },
+    {
+      "id": "B",
+      "name": "History 목록 index 보강 조회",
+      "status": "PASS",
+      "evidence": {
+        "function": "readHistoryListWithFallback() in historyStore.ts:551",
+        "strategy": "legacy base → indexMap 보강 merge → sort by created_at",
+        "fallback1": "index.length===0 → return legacy immediately",
+        "fallback2": "catch{} → return legacy (parse failure)"
+      },
+      "notes": "삭제된 legacy 항목은 legacy base 기준이므로 결과에서 자동 제외됨."
+    },
+    {
+      "id": "C",
+      "name": "History 상세 details 우선 조회",
+      "status": "PASS",
+      "evidence": {
+        "function": "readHistoryDetailWithFallback(historyId) in historyStore.ts:648",
+        "outputFieldsPriority": ["confirmedResult.outputFields", "runSnapshot.outputFieldsSnapshot", "[]"],
+        "detailPath": "detail.historyId 확인 → index meta 보강 → detailToHistoryRunRecord()",
+        "fallback": "catch{} OR detail missing → readHistoryRuns().find(job_id)"
+      }
+    },
+    {
+      "id": "D",
+      "name": "History 상세 [저장] 후 confirmedResult/index 갱신",
+      "status": "PASS",
+      "evidence": {
+        "handleSave": "DetailHistoryView.tsx:393",
+        "legacyUpdate": "updateHistoryRun(item.job_id, { output_fields: outputs })",
+        "syncCall": "syncHistoryIndexAndDetailOnSave(item.job_id, outputs) in try/catch",
+        "indexUpdate": "index[idx].updatedAt = now, hasConfirmedResult = true",
+        "detailUpdate": "details[historyId].confirmedResult = { savedAt, outputFields }"
+      },
+      "notes": "sync 실패가 기존 저장 flow를 차단하지 않음."
+    },
+    {
+      "id": "E",
+      "name": "History 삭제 동기화",
+      "status": "PASS",
+      "evidence": {
+        "deleteButton": "HistoryWorkspace.tsx:295 deleteHistoryRun(row.job_id)",
+        "syncDelete": "syncHistoryIndexAndDetailOnDelete() in historyStore.ts:245",
+        "isolation": "index 삭제, detail 삭제 각각 독립 try/catch",
+        "profilePreservation": "mysuit_ocr_restore_profiles NOT touched in deleteHistoryRun or syncHistoryIndexAndDetailOnDelete",
+        "cancelSafety": "confirm dialog: ok=false → return early, no stores modified"
+      },
+      "issues": ["historyDelete() 함수 dead code (ISSUE-6)"]
+    },
+    {
+      "id": "F",
+      "name": "clearHistoryRuns 전체 삭제",
+      "status": "PASS",
+      "evidence": {
+        "function": "clearHistoryRuns() in historyStore.ts:232",
+        "removes": ["mysuit_ocr_history", "mysuit_ocr_history_index", "mysuit_ocr_history_details"],
+        "preserves": "mysuit_ocr_restore_profiles (NOT touched)",
+        "uiExposure": "No UI component calls clearHistoryRuns() — developer tool only"
+      }
+    },
+    {
+      "id": "G",
+      "name": "Restore/자동복원 회귀",
+      "status": "PASS",
+      "evidence": {
+        "autofillPriority": "collectInternalAutofillCandidates(): restoreProfiles 1순위 → history 2순위 (groundTruth 완전 제외)",
+        "restoreTab": "AutoRestoreWorkspace → readRestoreProfiles() 직접 사용",
+        "profileIsolation": "history 삭제가 restore profile 삭제하지 않음"
+      },
+      "issues": ["readGroundTruthCandidateRecords() dead code (ISSUE-4)"]
+    },
+    {
+      "id": "H",
+      "name": "Preview/Custom/Validation 회귀",
+      "status": "PASS",
+      "analysisMethod": "static_code_analysis",
+      "evidence": {
+        "OcrResultPanel": "import/call 구조 변경 없음",
+        "UploadWorkspace": "OCR 파이프라인 구조 동일, output_fields 빌드 경로 변경 없음"
+      },
+      "notes": "정적 분석 기반. 런타임 검증 권장."
+    },
+    {
+      "id": "I",
+      "name": "localStorage 안전성",
+      "status": "PASS",
+      "evidence": {
+        "readFunctions": "readHistoryIndex(), readHistoryDetails(), readHistoryRuns() 모두 try/catch + 빈 배열/객체 반환",
+        "listFallback": "readHistoryListWithFallback() catch → legacy",
+        "detailFallback": "readHistoryDetailWithFallback() catch → legacy",
+        "maxRecords": "MAX_RECORDS=50 (legacy + index). details dict는 MAX 제한 없음 (ISSUE-3)",
+        "quotaHandling": "appendHistoryRun: 다단계 폴백. writeHistoryIndex/Details: QuotaExceeded 미처리 (ISSUE-2)"
+      }
+    },
+    {
+      "id": "J",
+      "name": "DB 매핑",
+      "status": "PASS",
+      "mapping": [
+        { "from": "mysuit_ocr_history_index[]", "to": "ocr_runs", "type": "table" },
+        { "from": "index[].historyId", "to": "ocr_runs.id", "type": "varchar PK" },
+        { "from": "index[].fileName", "to": "ocr_runs.file_name", "type": "varchar" },
+        { "from": "index[].templateName", "to": "ocr_runs.template_name", "type": "varchar nullable" },
+        { "from": "index[].documentType", "to": "ocr_runs.document_type", "type": "varchar nullable" },
+        { "from": "index[].createdAt/updatedAt", "to": "ocr_runs.created_at/updated_at", "type": "timestamptz" },
+        { "from": "index[].status", "to": "ocr_runs.status", "type": "enum(success,fail)" },
+        { "from": "index[].summary", "to": "ocr_runs.summary", "type": "JSONB" },
+        { "from": "index[].hasConfirmedResult", "to": "ocr_runs.has_confirmed_result", "type": "boolean" },
+        { "from": "details[].images", "to": "ocr_run_files", "type": "table or JSONB" },
+        { "from": "details.runSnapshot.ocrFields", "to": "ocr_run_results.raw_ocr_data", "type": "JSONB" },
+        { "from": "details.runSnapshot.documentFields", "to": "ocr_run_results.document_fields", "type": "JSONB (tableRows 포함)" },
+        { "from": "details.runSnapshot.outputFieldsSnapshot", "to": "ocr_run_results.output_fields_snapshot", "type": "JSONB" },
+        { "from": "details.runSnapshot.autofillSummary", "to": "ocr_run_results.autofill_summary", "type": "JSONB" },
+        { "from": "details.confirmedResult.outputFields", "to": "ocr_run_results.confirmed_fields", "type": "JSONB" },
+        { "from": "details.confirmedResult.savedAt", "to": "ocr_run_results.confirmed_at", "type": "timestamptz nullable" },
+        { "from": "mysuit_ocr_restore_profiles[]", "to": "ocr_restore_profiles", "type": "table" },
+        { "from": "restore_profiles[].businessNo", "to": "ocr_restore_profiles.business_no", "type": "varchar" },
+        { "from": "restore_profiles[].partyType", "to": "ocr_restore_profiles.party_type", "type": "varchar default generic" },
+        { "from": "restore_profiles[].fields", "to": "ocr_restore_profiles.fields", "type": "JSONB (MVP), 정규화 가능" },
+        { "from": "restore_profiles[].sourceHistoryId", "to": "ocr_restore_profiles.source_run_id", "type": "varchar nullable FK→ocr_runs" },
+        { "from": "restore_profiles[].sourceFileName", "to": "ocr_restore_profiles.source_file_name", "type": "varchar" },
+        { "from": "restore_profiles[].createdAt/updatedAt", "to": "ocr_restore_profiles.created_at/updated_at", "type": "timestamptz" }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "id": "ISSUE-1",
+      "title": "sourceHistoryId dangling 경고 UI 미구현",
+      "severity": "LOW",
+      "affected": "AutoRestoreWorkspace",
+      "nextAction": "HISTORY-RESTORE-5"
+    },
+    {
+      "id": "ISSUE-2",
+      "title": "writeHistoryDetails / writeHistoryIndex QuotaExceededError 미처리",
+      "severity": "MEDIUM",
+      "affected": "historyStore.ts writeHistoryIndex, writeHistoryDetails",
+      "nextAction": "HISTORY-STRUCTURE-4"
+    },
+    {
+      "id": "ISSUE-3",
+      "title": "upsertHistoryDetail MAX 제한 없음",
+      "severity": "LOW",
+      "affected": "historyStore.ts upsertHistoryDetail",
+      "nextAction": "HISTORY-STRUCTURE-4"
+    },
+    {
+      "id": "ISSUE-4",
+      "title": "readGroundTruthCandidateRecords() dead code",
+      "severity": "LOW",
+      "affected": "autofillEngine.ts",
+      "policy": "실사용 autofill에서 groundTruth 제외 유지. 테스트/검증용으로 분리 보존.",
+      "nextAction": "CLEANUP-1"
+    },
+    {
+      "id": "ISSUE-5",
+      "title": "writeRestoreProfiles QuotaExceededError 미처리",
+      "severity": "LOW",
+      "affected": "restoreProfileStore.ts writeRestoreProfiles",
+      "nextAction": "HISTORY-STRUCTURE-4"
+    },
+    {
+      "id": "ISSUE-6",
+      "title": "historyDelete() 함수 dead code",
+      "severity": "LOW",
+      "affected": "HistoryWorkspace.tsx historyDelete()",
+      "nextAction": "CLEANUP-1"
+    },
+    {
+      "id": "ISSUE-7",
+      "title": "History 상세 tableRows 렌더링 미연결",
+      "severity": "MEDIUM",
+      "affected": "DetailHistoryView.tsx",
+      "note": "데이터는 detail.runSnapshot.documentFields.tableRows에 저장됨. UI 표시만 없음.",
+      "nextAction": "HISTORY-DETAIL-1"
+    },
+    {
+      "id": "ISSUE-8",
+      "title": "sourceType restoreProfile 배지 미표시",
+      "severity": "LOW",
+      "affected": "OcrResultPanel.tsx",
+      "nextAction": "UI-ENHANCEMENT-1"
+    }
+  ],
+  "groundTruthPolicy": {
+    "autofillExclusion": true,
+    "reason": "HISTORY-RESTORE-3 정책: 실사용 자동복원에서 groundTruth 제외. restore_profiles → history fallback 유지.",
+    "recommendation": "readGroundTruthCandidateRecords()는 테스트/검증용으로 분리 보존. CLEANUP-1에서 제거 또는 export 분리 결정."
+  },
+  "nextActions": [
+    { "order": 1, "name": "DB-2", "description": "PostgreSQL schema 작성 (ocr_runs, ocr_run_results, ocr_run_files, ocr_restore_profiles)", "priority": "HIGH" },
+    { "order": 2, "name": "HISTORY-STRUCTURE-4", "description": "writeHistoryIndex/Details QuotaExceededError 처리, upsertHistoryDetail MAX 제한", "priority": "MEDIUM" },
+    { "order": 3, "name": "HISTORY-DETAIL-1", "description": "History 상세에서 documentFields.tableRows 표시 (ISSUE-7)", "priority": "MEDIUM" },
+    { "order": 4, "name": "HISTORY-RESTORE-5", "description": "sourceHistoryId dangling 경고 UI (ISSUE-1)", "priority": "LOW" },
+    { "order": 5, "name": "UI-ENHANCEMENT-1", "description": "sourceType restoreProfile 배지 표시 (ISSUE-8)", "priority": "LOW" },
+    { "order": 6, "name": "CLEANUP-1", "description": "readGroundTruthCandidateRecords() 제거/분리, historyDelete() 제거 (ISSUE-4, ISSUE-6)", "priority": "LOW" },
+    { "order": 7, "name": "DB-3", "description": "localStorage → DB 마이그레이션 스크립트", "priority": "POST-DB-2" }
+  ]
+}

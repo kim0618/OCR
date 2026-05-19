@@ -1,0 +1,128 @@
+{
+  "generatedAt": "2026-05-19",
+  "scope": "T27a_template_orientation_path_alignment",
+  "tool": "Claude Sonnet 4.6 (Claude Code)",
+  "codeModified": true,
+  "backupFiles": [
+    "ocr-server/backup/main_20260519_1631_before_T27a_template_orientation_path_alignment.py"
+  ],
+  "modifiedFiles": [
+    "ocr-server/main.py"
+  ],
+  "unstructuredPathReasonItWorks": {
+    "description": "비정형 OCR 경로는 detect_orientation을 통해 0/90/180/270 회전 후보 중 점수가 가장 높은 방향으로 입력 이미지를 자동 회전한 뒤 OCR을 수행하므로, 뒤집힌 입력도 정상 방향으로 복구돼 OCR 결과가 정상이 된다.",
+    "callSite": "main.py:2076  doc_img, orient_meta = detect_orientation(doc_img, ocr, original_wh=(orig_w, orig_h))",
+    "detectOrientationLocation": "ocr-server/preprocess.py:131",
+    "detectOrientationLogic": "small 이미지로 4개 방향 모두 OCR 점수(hangul+digit+conf+line_count) 계산 → 최고 점수 방향으로 원본 이미지 회전"
+  },
+  "templatePathBrokenReason": {
+    "description": "템플릿 RunOCR 경로(if region_list:)는 detect_orientation 호출이 없어서 뒤집힌 원본 이미지 그대로 OCR에 들어간다. template region 좌표는 정상 방향 이미지 기준으로 저장되어 있는데, 뒤집힌 이미지에 정상 방향 좌표를 적용하면 잘못된 영역을 crop한다. 결과: 공급자/공급받는자/품목표 등 거의 모든 region에서 깨진 OCR 결과 반환.",
+    "callSiteThatUsedRawImg": [
+      "main.py:1986  table_rows = _ocr_table_region(img, ocr, region)  ← 원본 뒤집힌 img",
+      "main.py:2043  _tmpl_inv_result = ocr.ocr(img)                   ← 원본 뒤집힌 img"
+    ],
+    "evidence": {
+      "공급자_사업자번호": "IHIY IC (정상: 118-81-00450)",
+      "공급자_상호":      "092'860811FC (정상: 부광약품(주))",
+      "공급받는자_사업자번호": "2C)V61282a 11 (정상: 1138504425)",
+      "rowCount":            "22 (정상: 28)"
+    }
+  },
+  "pathDifferenceSummary": {
+    "unstructured": [
+      "detect_document(img) → doc_img",
+      "detect_orientation(doc_img, ocr) → 정상 방향으로 회전된 doc_img",
+      "deskew + CLAHE + 리사이즈 → ocr_img",
+      "ocr.ocr(ocr_img) → 정상화된 이미지에서 OCR"
+    ],
+    "template_before_fix": [
+      "img (원본 뒤집힌 채) 그대로 사용",
+      "_ocr_table_region(img, ocr, region) — 원본 좌표를 뒤집힌 img에 적용 → 깨짐"
+    ],
+    "template_after_fix": [
+      "detect_orientation(img, ocr) → 정상 방향으로 회전된 img",
+      "이후 region crop은 정상 방향 이미지에 정상 방향 좌표 적용 → 정상"
+    ]
+  },
+  "fix": {
+    "approach": "비정형 경로에서 이미 안정적으로 동작하는 detect_orientation을 템플릿 경로에서도 region crop 직전에 동일하게 호출. 새로운 알고리즘 추가 없음.",
+    "location": "main.py — `if region_list:` 진입 직후, `for idx, region in enumerate(region_list):` 직전",
+    "callSignature": "img, _orient_meta_tmpl = detect_orientation(img, ocr, original_wh=(orig_w, orig_h))",
+    "additionalLogic": [
+      "orig_h/orig_w를 회전 후 크기로 갱신 (90/270 회전 시 가로/세로 뒤바뀜 대응)",
+      "timings에 template_detect_orientation_ms / template_orientation_angle 기록",
+      "try/except로 detect_orientation 실패 시 원본 이미지 fallback (안전망)"
+    ]
+  },
+  "expectedNormalCase": {
+    "input": "정상 방향 1.jpg",
+    "behavior": "detect_orientation → angle=0 추천 → image 변경 없음",
+    "result": "기존 결과 그대로 유지 (회귀 없음)",
+    "fields": {
+      "supplierBizNumber": "118-81-00450",
+      "supplierCompany": "부광약품(주)",
+      "buyerBizNumber": "1138504425",
+      "buyerCompany": "백제약품(주)영등포지점",
+      "rowCount": 28,
+      "T25dCleanup": "유지",
+      "T25gSpecCleanup": "유지"
+    }
+  },
+  "expectedFlippedCase": {
+    "input": "180도 뒤집힌 1.jpg",
+    "behavior": "detect_orientation → angle=180 추천 → image 180도 회전 적용 → 정상 방향됨",
+    "result": "이후 region crop이 정상 방향 이미지에 정상 좌표 적용 → 정상 결과 기대",
+    "expectedFields": {
+      "supplierBizNumber": "118-81-00450",
+      "supplierCompany": "부광약품(주)",
+      "buyerBizNumber": "1138504425",
+      "buyerCompany": "백제약품(주)영등포지점",
+      "rowCount": "28 (또는 정상 결과에 가까운 행 수)"
+    }
+  },
+  "unstructuredPathImpact": {
+    "modified": false,
+    "reason": "비정형 경로는 `else:` 블록(line 2050+)로 분리되어 있고 그 안의 detect_orientation 호출은 그대로 둠. 이번 패치는 `if region_list:` 블록에만 추가됨."
+  },
+  "baselinePreserved": {
+    "rowCount_7of7": true,
+    "t25d_cleanup": true,
+    "t25g_spec_cleanup": true,
+    "t25f_reset_no_warning_ui": true,
+    "t26a_company_normalization": true,
+    "t26a_fix_original_value_split": true,
+    "itemName_no_autofix": true,
+    "preprocessing_policy_unchanged": true,
+    "invoice_statement_parser_unchanged": true,
+    "frontend_unchanged": true
+  },
+  "verificationResults": {
+    "py_compile": "OK",
+    "detect_orientation_signature_match": "OK (image, ocr_engine, original_wh)",
+    "code_placement_verified": "T-27a block placed BEFORE region for-loop, inside `if region_list:` block",
+    "typecheck": "PASS",
+    "build": "PASS"
+  },
+  "limitations": [
+    "detect_orientation은 OCR 엔진을 한 번 더 호출하므로 템플릿 RunOCR 처리 시간이 소폭 증가",
+    "detect_orientation이 잘못된 방향을 추천하는 케이스는 비정형 경로와 동일한 한계 (검증된 함수라 안정성은 높음)",
+    "조향이 회전된 이미지를 미리보기로 보내고 싶다면 별도 작업 필요 (이번 작업에서는 original_b64는 회전 전 원본 그대로)"
+  ],
+  "nextActions": [
+    {
+      "taskId": "T-27a-followup",
+      "title": "live RunOCR 검증",
+      "description": "서버 재시작 후 1.jpg 정상 + 180도 뒤집힌 1.jpg 양쪽 RunOCR 실행하여 Custom 탭 결과 확인",
+      "checklist": [
+        "정상 1.jpg: 기존 결과 동일",
+        "뒤집힌 1.jpg: 공급자 상호 부광약품(주), buyerCompany 백제약품(주)영등포지점, rowCount 28 (또는 가깝게)",
+        "정상 receipt 샘플: 결과 변화 없음"
+      ]
+    },
+    {
+      "taskId": "T-27b",
+      "title": "orientation auto-apply guarded mode for invoice_statement",
+      "description": "현재 T-27a는 모든 템플릿 경로에 일괄 적용. 만약 회귀가 발견되면 doc_type=invoice_statement 한정 또는 quality flag 기반 guard 추가 검토"
+    }
+  ]
+}

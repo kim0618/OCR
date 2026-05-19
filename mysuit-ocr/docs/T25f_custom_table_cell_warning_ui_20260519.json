@@ -1,0 +1,140 @@
+{
+  "generatedAt": "2026-05-19",
+  "scope": "T25f_custom_table_cell_warning_ui",
+  "tool": "Claude Sonnet 4.6 (Claude Code)",
+  "codeModified": true,
+  "backupFiles": [
+    "ocr-server/backup/OcrResultPanel_20260519_1428_before_T25f_custom_cell_warning.tsx",
+    "ocr-server/backup/invoiceTableDisplay_20260519_1428_before_T25f_custom_cell_warning.ts"
+  ],
+  "modifiedFiles": [
+    "mysuit-ocr/src/lib/invoiceTableDisplay.ts",
+    "mysuit-ocr/src/components/upload/OcrResultPanel.tsx"
+  ],
+  "tabScope": {
+    "customTab": true,
+    "previewTab": false,
+    "validationTab": false,
+    "historyDetail": false
+  },
+  "rowValueChanged": false,
+  "warningRules": [
+    {
+      "key": "quantity:handwritten_overlay_suspected",
+      "field": "quantity",
+      "trigger": "T-25d valueMappingWarnings에 해당 row의 quantity:handwritten_overlay_suspected 있을 때",
+      "message": "수기 표시로 수량 OCR 원문이 불명확합니다. 원문 이미지와 대조 후 확인하세요.",
+      "severity": "warn",
+      "autoCorrection": false,
+      "source": "valueMappingWarnings (T-25d backend)",
+      "affectedRows": [12]
+    },
+    {
+      "key": "manufacturingNo:handwritten_overlay_suspected",
+      "field": "manufacturingNo",
+      "trigger": "T-25d valueMappingWarnings에 해당 row의 manufacturingNo:handwritten_overlay_suspected 있을 때",
+      "message": "수기 표시로 제조번호 OCR 원문이 불명확합니다. 원문 이미지와 대조 후 확인하세요.",
+      "severity": "warn",
+      "autoCorrection": false,
+      "source": "valueMappingWarnings (T-25d backend)",
+      "affectedRows": [4]
+    },
+    {
+      "key": "expiryDate:handwritten_overlay_suspected",
+      "field": "expiryDate",
+      "trigger": "T-25d valueMappingWarnings에 해당 row의 manufacturingNo:handwritten_overlay_suspected 있을 때 (expiryDate도 함께 비어 있으므로 동일 경고 적용)",
+      "message": "수기 표시로 유효기간 OCR 원문이 불명확합니다. 원문 이미지와 대조 후 확인하세요.",
+      "severity": "warn",
+      "autoCorrection": false,
+      "source": "valueMappingWarnings (T-25d backend, manufacturingNo warning covers expiryDate)",
+      "affectedRows": [4]
+    },
+    {
+      "key": "spec:numeric_alpha_ambiguous",
+      "field": "spec",
+      "trigger": "T-25d valueMappingWarnings 또는 독립 패턴: 값이 \\d[O][A-Z] 포함 (예: 6OT, 3OT)",
+      "message": "규격의 숫자/영문자 OCR 혼동 가능성이 있습니다 (예: O/0/T 혼동). 자동 보정하지 않았습니다.",
+      "severity": "warn",
+      "autoCorrection": false,
+      "source": "dual: valueMappingWarnings + independent pattern check",
+      "affectedRows": [4, 12]
+    },
+    {
+      "key": "itemName:possible_ocr_char_confusion",
+      "field": "itemName",
+      "trigger": "독립 패턴: itemName이 '청' 또는 '징'으로 끝날 때 (예: 아집린청 → 아집린정 의심)",
+      "message": "품목명 OCR 오인식 가능성이 있습니다. 원문 이미지와 대조 후 확인하세요.",
+      "severity": "warn",
+      "autoCorrection": false,
+      "source": "independent pattern check",
+      "affectedRows": ["hypothetical — current 1.jpg data does not have '청' ending itemNames"]
+    }
+  ],
+  "uiImplementation": {
+    "warningIndicator": "⚠ (U+26A0)",
+    "position": "absolute, top-right corner of td cell",
+    "style": {
+      "warnSeverity": {
+        "border": "rgba(217,119,6,0.45) 1px solid",
+        "background": "rgba(254,243,199,0.30)",
+        "iconColor": "#d97706"
+      },
+      "infoSeverity": {
+        "border": "rgba(59,130,246,0.35) 1px solid",
+        "background": "rgba(219,234,254,0.20)",
+        "iconColor": "#3b82f6"
+      }
+    },
+    "tooltip": "title attribute on ⚠ span (hover for message)",
+    "textareaTitle": "title={String(row[col.key])} — full value visible on hover (spec truncation fix)",
+    "editablePreserved": true,
+    "layoutImpact": "paddingRight: 18px on textarea when warning present (prevents text under ⚠)"
+  },
+  "specTruncationAnalysis": {
+    "issue": "규격 끝 글자 누락처럼 보이는 문제",
+    "rootCause": "UI display issue — 82px column width for spec col + textarea (no text-overflow:ellipsis support in textarea)",
+    "dataStatus": "1.jpg spec values are intact: max length is 7 chars (15m|*6포, 500T(B), 120DOSE). No data truncation.",
+    "fix": "Added title={String(row[col.key])} to <textarea> → full value visible on hover",
+    "action": "No data correction needed. UI fix only."
+  },
+  "affectedRows1jpg": [
+    {
+      "rowIndex": 4,
+      "itemName": "하드칼씨플러스정",
+      "warningsShown": [
+        "spec:numeric_alpha_ambiguous (spec=6OT)",
+        "manufacturingNo:handwritten_overlay_suspected (empty)",
+        "expiryDate:handwritten_overlay_suspected (empty)"
+      ]
+    },
+    {
+      "rowIndex": 12,
+      "itemName": "부스콘정5mg",
+      "warningsShown": [
+        "quantity:handwritten_overlay_suspected (empty)",
+        "spec:numeric_alpha_ambiguous (spec=3OT)"
+      ]
+    }
+  ],
+  "regressionCheck": {
+    "previewTabUnchanged": true,
+    "validationTabUnchanged": true,
+    "historyDetailUnchanged": true,
+    "rowValueUnchanged": true,
+    "invoiceRowCount7of7": "maintained (no parser changes)",
+    "t25dCleanupResultsPreserved": true
+  },
+  "verificationResults": {
+    "typecheck": "PASS",
+    "build": "PASS",
+    "logicTests": "8/8 PASS (mock data validation)"
+  },
+  "nextActions": [
+    {
+      "taskId": "T-25c",
+      "title": "Red pen suppression debug variant",
+      "description": "row 4 mfg/exp 및 row 12 qty 복구 실험 (debug-only)",
+      "risk": "medium"
+    }
+  ]
+}

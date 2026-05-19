@@ -6157,6 +6157,139 @@ def _canonical_row_preview(row: dict[str, Any]) -> str:
     return " ".join(p for p in parts if p)[:100]
 
 
+# ── T-25d: cell-level safe cleanup helpers ────────────────────────────────
+
+_T25D_AMOUNT_COMMA_SPACE_RE = re.compile(r"(\d),\s+(\d)")
+_T25D_AMOUNT_CLEAN_VAL_RE = re.compile(r"^\d{1,3}(?:,\d{3})*$")
+_T25D_AMOUNT_NUMERIC_RE = re.compile(r"^[\d,\s]+$")
+_T25D_QTY_TRAILING_RE = re.compile(r"^([\d,]+)\s+([^\d\s,가-힣A-Za-z]{1,2})\s*$")
+_T25D_QTY_NUMERIC_RE = re.compile(r"^\d{1,6}(?:,\d{3})*$")
+_T25D_SPEC_O_ZERO_RE = re.compile(r"(?<!\w)\d[O][A-Z]")
+_T25D_AMOUNT_FIELDS = ("amount", "supplyAmount", "taxAmount", "totalAmount")
+_T25D_QTY_ALLOWED_SYMBOLS = {"^", "<", ">", ".", "·", "•"}
+
+
+def _t25d_amount_comma_space_cleanup(row: dict[str, Any]) -> str:
+    """Remove spurious spaces after thousands-separator commas in amount fields.
+
+    "301, 100" -> "301,100". Only applied when the full value is numeric/comma/space
+    and the cleaned result is a valid amount pattern (d{1,3}(,d{3})*).
+    Returns description of changes, or "" if none.
+    """
+    changed: list[str] = []
+    for field in _T25D_AMOUNT_FIELDS:
+        val = str(row.get(field) or "")
+        if not val:
+            continue
+        if not _T25D_AMOUNT_NUMERIC_RE.fullmatch(val):
+            continue
+        if not _T25D_AMOUNT_COMMA_SPACE_RE.search(val):
+            continue
+        cleaned = _T25D_AMOUNT_COMMA_SPACE_RE.sub(r"\1,\2", val).strip()
+        if not _T25D_AMOUNT_CLEAN_VAL_RE.fullmatch(cleaned):
+            continue
+        if cleaned != val:
+            row[field] = cleaned
+            changed.append(f"{field}:{val!r}->{cleaned!r}")
+    return "; ".join(changed)
+
+
+def _t25d_qty_trailing_symbol_cleanup(row: dict[str, Any]) -> str:
+    """Remove spurious trailing markup symbol from quantity field.
+
+    "360 ^" -> "360". Only applied when the trailing part is in the conservative
+    allowed symbol set and the numeric part is a valid quantity.
+    Returns description of change, or "" if nothing changed.
+    """
+    val = str(row.get("quantity") or "")
+    if not val:
+        return ""
+    m = _T25D_QTY_TRAILING_RE.match(val)
+    if not m:
+        return ""
+    numeric_part = m.group(1)
+    symbol_part = m.group(2)
+    if not _T25D_QTY_NUMERIC_RE.fullmatch(numeric_part):
+        return ""
+    if symbol_part not in _T25D_QTY_ALLOWED_SYMBOLS:
+        return ""
+    row["quantity"] = numeric_part
+    return f"{val!r}->{numeric_part!r}"
+
+
+def _t25d_warning_only_checks(
+    row: dict[str, Any],
+    row_num: int,
+    required_set: set[str],
+) -> list[str]:
+    """Generate warning-only entries for ambiguous cells (no auto-fix applied).
+
+    Guards: warnings only fire when the field is in the table's required columns,
+    preventing false positives for samples that legitimately omit those fields.
+    """
+    warnings: list[str] = []
+    item_name = str(row.get("itemName") or "")
+    qty = str(row.get("quantity") or "")
+    mfg = str(row.get("manufacturingNo") or "")
+    exp = str(row.get("expiryDate") or "")
+    unit_price = str(row.get("unitPrice") or "")
+    amount = str(row.get("amount") or "")
+    spec = str(row.get("spec") or "")
+    # quantity empty but surrounded by filled fields -> handwritten overlay suspected
+    if "quantity" in required_set and not qty and item_name and unit_price and amount:
+        warnings.append(f"quantity:handwritten_overlay_suspected:row{row_num}")
+    # both manufacturingNo and expiryDate empty with key fields present
+    if (
+        "manufacturingNo" in required_set
+        and not mfg
+        and not exp
+        and item_name
+        and qty
+        and unit_price
+    ):
+        warnings.append(f"manufacturingNo:handwritten_overlay_suspected:row{row_num}")
+    # spec O/0 ambiguity: digit immediately followed by letter O followed by uppercase letter
+    if "spec" in required_set and spec and _T25D_SPEC_O_ZERO_RE.search(spec):
+        warnings.append(f"spec:numeric_alpha_ambiguous:row{row_num}:{spec}")
+    return warnings
+
+
+# ── T-25g: spec trailing character safe cleanup ──────────────────────────────
+
+_T25G_ML_TRAILING_RE = re.compile(r"^\d{1,4}[mM]$")
+_T25G_OPEN_PAREN_RE = re.compile(r"^([^\(\)]{1,18})\([A-Za-z0-9]{0,4}$")
+
+
+def _cleanup_spec_trailing_chars(value: str) -> tuple[str, list[str]]:
+    """Conservative trailing character cleanup for spec field only.
+
+    Rule A (closing parenthesis): "(" present, ")" absent, ≤20 chars
+        "500T(B" -> "500T(B)"
+    Rule B (ml suffix): matches ^\\d{1,4}[mM]$
+        "150m" -> "150ml",  "500m" -> "500ml"
+
+    Returns (cleaned_value, debug_key_list). Value unchanged if no rule fires.
+    """
+    if not value:
+        return value, []
+    debug: list[str] = []
+    cleaned = value
+
+    # Rule B first: purely \\d+m → append "l" to complete "ml" unit
+    if _T25G_ML_TRAILING_RE.fullmatch(cleaned):
+        cleaned = cleaned + "l"
+        debug.append(f"spec:trailing_ml_suffix_restored:{value!r}->{cleaned!r}")
+        return cleaned, debug  # Rule A not needed after B
+
+    # Rule A: open paren without matching close paren
+    if "(" in cleaned and ")" not in cleaned and len(cleaned) <= 20:
+        if _T25G_OPEN_PAREN_RE.match(cleaned):
+            cleaned = cleaned + ")"
+            debug.append(f"spec:trailing_closing_parenthesis_restored:{value!r}->{cleaned!r}")
+
+    return cleaned, debug
+
+
 def _build_canonical_table_rows(
     table_items: list[dict[str, Any]],
     expected_columns: dict[str, list[str]] | None = None,
@@ -6164,6 +6297,10 @@ def _build_canonical_table_rows(
 ) -> dict[str, Any]:
     canonical_rows: list[dict[str, Any]] = []
     col_fill: dict[str, int] = {c: 0 for c in _TABLE_ROW_COLUMNS}
+    _t25d_warnings: list[str] = []
+    _t25d_required_set: set[str] = (
+        set(expected_columns.get("required") or []) if expected_columns else set()
+    )
 
     # T-6: sort items by y-coordinate before assigning rowIndex
     def _item_y_key_inner(item: dict[str, Any]) -> float:
@@ -6263,6 +6400,22 @@ def _build_canonical_table_rows(
             _qty_clean = re.sub(r"[,.\s]", "", _qty_v)
             if re.search(r"[가-힣]", _qty_v) or (len(_qty_v) > 20 and not re.fullmatch(r"[\d,.\s]+", _qty_v)):
                 row["quantity"] = ""
+
+        # T-25d: cell-level safe cleanup (amount comma-space + quantity trailing symbol)
+        _t25d_amt_w = _t25d_amount_comma_space_cleanup(row)
+        if _t25d_amt_w:
+            _t25d_warnings.append(f"amount:comma_space_cleanup_applied:{_t25d_amt_w}")
+        _t25d_qty_w = _t25d_qty_trailing_symbol_cleanup(row)
+        if _t25d_qty_w:
+            _t25d_warnings.append(f"quantity:trailing_markup_symbol_removed:{_t25d_qty_w}")
+        _t25d_warnings.extend(_t25d_warning_only_checks(row, idx + 1, _t25d_required_set))
+
+        # T-25g: spec trailing character safe cleanup (ml suffix + closing parenthesis)
+        if row.get("spec"):
+            _t25g_spec, _t25g_debug = _cleanup_spec_trailing_chars(str(row["spec"]))
+            if _t25g_debug:
+                row["spec"] = _t25g_spec
+                _t25d_warnings.extend(_t25g_debug)
 
         for col in _TABLE_ROW_COLUMNS:
             if row.get(col):
@@ -6370,6 +6523,14 @@ def _build_canonical_table_rows(
                     f"{_t8b_key}:ocr_source_missing:{_t8b_label} {_t8b_reason}"
                 )
 
+        # T-25d: cell cleanup + warning-only warnings (deduped)
+        if _t25d_warnings:
+            _t25d_seen: set[str] = set(table_meta["valueMappingWarnings"])
+            for _w in _t25d_warnings:
+                if _w not in _t25d_seen:
+                    _t25d_seen.add(_w)
+                    table_meta["valueMappingWarnings"].append(_w)
+
     return {
         "tableRows": canonical_rows,
         "tableMeta": table_meta,
@@ -6439,6 +6600,16 @@ def _normalize_invoice_company_name(value: str) -> tuple[str, list[dict[str, str
     normalized = re.sub(r"\s+", " ", raw).strip()
     _add_norm_rule(rules, "company_trim_spacing", raw, normalized, "safe", "company_field_spacing")
     before = normalized
+    # T-26a Rule C: strip trailing non-Korean customer/buyer code (e.g. "1010546N")
+    # Pattern: space + 5-12 char mixed uppercase+digit code at end of company name
+    _trail_m = re.search(r"\s([A-Z0-9]{5,12})$", before)
+    if _trail_m:
+        _code = _trail_m.group(1)
+        if re.search(r"\d", _code) and re.search(r"[A-Z]", _code):
+            normalized = before[:_trail_m.start()].strip()
+            _add_norm_rule(rules, "company_trailing_code_stripped", before, normalized, "safe", "trailing_customer_code_removed")
+            before = normalized
+    # T-26a Rule A+B: remove internal spaces between Korean syllables
     normalized = re.sub(r"\s+", "", normalized)
     _add_norm_rule(rules, "company_internal_space_compare", before, normalized, "safe_compare", "company_field_compare_value")
     before = normalized
@@ -6824,13 +6995,14 @@ def extract_invoice_statement_fields(
         if _t8a.get("warnings"):
             canonical["tableMeta"].setdefault("valueMappingWarnings", []).extend(_t8a["warnings"])
 
+    # T-26a: apply company name spacing normalization to actual output fields
     fields.update(
         {
-            "supplierCompany": supplier["company"],
+            "supplierCompany": _normalize_invoice_company_name(supplier["company"])[0],
             "supplierBizNumber": supplier["bizNumber"],
             "supplierRepresentative": supplier["representative"],
             "supplierAddress": supplier["address"],
-            "buyerCompany": buyer["company"],
+            "buyerCompany": _normalize_invoice_company_name(buyer["company"])[0],
             "buyerBizNumber": buyer["bizNumber"],
             "buyerRepresentative": buyer["representative"],
             "buyerAddress": buyer["address"],

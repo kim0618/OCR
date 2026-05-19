@@ -1,0 +1,1165 @@
+{
+  "generatedAt": "2026-05-19T09:43:16",
+  "tool": "Codex",
+  "scope": "receipt_unstructured_template_vs_baseline",
+  "previousReport": "CODEX_RECEIPT_BASELINE_VS_RUNOCR_TEMPLATE_20260518",
+  "reinterpretation": {
+    "regionsZeroIsFailure": false,
+    "reason": "unstructured template may have no regions; verification target is parser result to output field mapping"
+  },
+  "template": {
+    "templateId": "TPL-003",
+    "templateName": "영수증",
+    "documentType": null,
+    "mode": null,
+    "regionsCount": 0,
+    "fieldCount": 5,
+    "fields": [],
+    "outputFieldDefinitionsFound": false,
+    "outputFieldDefinitionSource": "not_found_in_accessible_sources",
+    "hasTemplateJson": false,
+    "storedSource": "ocr-server\\data\\templates.json",
+    "inferredOutputFields": []
+  },
+  "frontendMapping": {
+    "source": "mysuit-ocr\\src\\components\\upload\\UploadWorkspace.tsx",
+    "runocrLoadsLocalStorageOnly": true,
+    "localStorageKey": "mysuit_ocr_templates",
+    "unstructuredUsesReceiptFields": true,
+    "templateFieldsDriveOutputFields": true,
+    "apiPayloadSendsTemplateId": true,
+    "apiPayloadSendsRegionsOnlyForRegionTemplate": true,
+    "apiPayloadSendsDocumentTypeOnlyIfTemplateHasIt": true
+  },
+  "baseline": {
+    "source": "receipt_generalization/ocr_cache.json + current parser",
+    "sampleCount": 17,
+    "includedDocumentTypes": [
+      "card_receipt",
+      "food_cafe_receipt",
+      "medical_receipt",
+      "pos_receipt"
+    ],
+    "excluded": [
+      "finance_slip suppressed samples"
+    ]
+  },
+  "execution": {
+    "mode": "static_analysis",
+    "apiMode": "not_run",
+    "apiBase": "",
+    "allowApiSideEffects": false
+  },
+  "summary": {
+    "status": "INCONCLUSIVE",
+    "total": 17,
+    "matched": 0,
+    "mismatched": 0,
+    "inconclusive": 17,
+    "projectedNonEmptyFields": 53,
+    "projectedMatchedFields": 53,
+    "projectedMatchNote": "If an unstructured template outputs receipt_fields directly, projected parser fields match baseline values."
+  },
+  "samples": [
+    {
+      "filename": "pos_001.jpg",
+      "manifestDocumentType": "pos_receipt",
+      "baselineDocType": "receipt_pos",
+      "runocrTemplateDocType": "receipt_pos",
+      "outputFieldsMatched": "2/2",
+      "status": "inconclusive",
+      "reasons": [
+        "unstructured_template_mapping_missing",
+        "no_live_api_static_only"
+      ],
+      "fields": [
+        {
+          "key": "merchantName",
+          "baselineValue": "문정수정점",
+          "templateOutputValue": "문정수정점",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "businessNo",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "representative",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "phone",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "address",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "totalAmount",
+          "baselineValue": "18,308",
+          "templateOutputValue": "18,308",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        }
+      ],
+      "autofillInterference": false
+    },
+    {
+      "filename": "pos_002.jpg",
+      "manifestDocumentType": "pos_receipt",
+      "baselineDocType": "receipt_pos",
+      "runocrTemplateDocType": "receipt_pos",
+      "outputFieldsMatched": "2/2",
+      "status": "inconclusive",
+      "reasons": [
+        "unstructured_template_mapping_missing",
+        "no_live_api_static_only"
+      ],
+      "fields": [
+        {
+          "key": "merchantName",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "businessNo",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "representative",
+          "baselineValue": "박스",
+          "templateOutputValue": "박스",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "phone",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "address",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "totalAmount",
+          "baselineValue": "45,590",
+          "templateOutputValue": "45,590",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        }
+      ],
+      "autofillInterference": false
+    },
+    {
+      "filename": "pos_003.jpg",
+      "manifestDocumentType": "pos_receipt",
+      "baselineDocType": "medical_receipt",
+      "runocrTemplateDocType": "medical_receipt",
+      "outputFieldsMatched": "4/4",
+      "status": "inconclusive",
+      "reasons": [
+        "unstructured_template_mapping_missing",
+        "no_live_api_static_only"
+      ],
+      "fields": [
+        {
+          "key": "merchantName",
+          "baselineValue": "미금프라자약국",
+          "templateOutputValue": "미금프라자약국",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "businessNo",
+          "baselineValue": "129-21-65920",
+          "templateOutputValue": "129-21-65920",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "representative",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "phone",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "address",
+          "baselineValue": "경기 성남시 분당구 금곡동154 번 지 미금프라자 1층 105호",
+          "templateOutputValue": "경기 성남시 분당구 금곡동154 번 지 미금프라자 1층 105호",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "totalAmount",
+          "baselineValue": "10,360",
+          "templateOutputValue": "10,360",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        }
+      ],
+      "autofillInterference": false
+    },
+    {
+      "filename": "pos_004.jpg",
+      "manifestDocumentType": "pos_receipt",
+      "baselineDocType": "receipt_pos",
+      "runocrTemplateDocType": "receipt_pos",
+      "outputFieldsMatched": "5/5",
+      "status": "inconclusive",
+      "reasons": [
+        "unstructured_template_mapping_missing",
+        "no_live_api_static_only"
+      ],
+      "fields": [
+        {
+          "key": "merchantName",
+          "baselineValue": "CUl파주시청점",
+          "templateOutputValue": "CUl파주시청점",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "businessNo",
+          "baselineValue": "141-01-16722",
+          "templateOutputValue": "141-01-16722",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "representative",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "phone",
+          "baselineValue": "031-949-5587",
+          "templateOutputValue": "031-949-5587",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "address",
+          "baselineValue": "경기로 파주시 중앙로263,(금촌동)",
+          "templateOutputValue": "경기로 파주시 중앙로263,(금촌동)",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "totalAmount",
+          "baselineValue": "5,000",
+          "templateOutputValue": "5,000",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        }
+      ],
+      "autofillInterference": false
+    },
+    {
+      "filename": "pos_005.jpg",
+      "manifestDocumentType": "pos_receipt",
+      "baselineDocType": "receipt_pos",
+      "runocrTemplateDocType": "receipt_pos",
+      "outputFieldsMatched": "4/4",
+      "status": "inconclusive",
+      "reasons": [
+        "unstructured_template_mapping_missing",
+        "no_live_api_static_only"
+      ],
+      "fields": [
+        {
+          "key": "merchantName",
+          "baselineValue": "이마트",
+          "templateOutputValue": "이마트",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "businessNo",
+          "baselineValue": "208-86-50913",
+          "templateOutputValue": "208-86-50913",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "representative",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "phone",
+          "baselineValue": "043-841-1234",
+          "templateOutputValue": "043-841-1234",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "address",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "totalAmount",
+          "baselineValue": "59,480",
+          "templateOutputValue": "59,480",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        }
+      ],
+      "autofillInterference": false
+    },
+    {
+      "filename": "pos_006.jpg",
+      "manifestDocumentType": "pos_receipt",
+      "baselineDocType": "receipt_pos",
+      "runocrTemplateDocType": "receipt_pos",
+      "outputFieldsMatched": "1/1",
+      "status": "inconclusive",
+      "reasons": [
+        "unstructured_template_mapping_missing",
+        "no_live_api_static_only"
+      ],
+      "fields": [
+        {
+          "key": "merchantName",
+          "baselineValue": "GS25",
+          "templateOutputValue": "GS25",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "businessNo",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "representative",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "phone",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "address",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "totalAmount",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        }
+      ],
+      "autofillInterference": false
+    },
+    {
+      "filename": "food_001.jpg",
+      "manifestDocumentType": "food_cafe_receipt",
+      "baselineDocType": "unknown",
+      "runocrTemplateDocType": "unknown",
+      "outputFieldsMatched": "0/0",
+      "status": "inconclusive",
+      "reasons": [
+        "unstructured_template_mapping_missing",
+        "no_live_api_static_only"
+      ],
+      "fields": [
+        {
+          "key": "merchantName",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "businessNo",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "representative",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "phone",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "address",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "totalAmount",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        }
+      ],
+      "autofillInterference": false
+    },
+    {
+      "filename": "food_002.jpg",
+      "manifestDocumentType": "food_cafe_receipt",
+      "baselineDocType": "receipt_pos",
+      "runocrTemplateDocType": "receipt_pos",
+      "outputFieldsMatched": "4/4",
+      "status": "inconclusive",
+      "reasons": [
+        "unstructured_template_mapping_missing",
+        "no_live_api_static_only"
+      ],
+      "fields": [
+        {
+          "key": "merchantName",
+          "baselineValue": "경기장애인생산품판매시설",
+          "templateOutputValue": "경기장애인생산품판매시설",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "businessNo",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "representative",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "phone",
+          "baselineValue": "031-256-9844",
+          "templateOutputValue": "031-256-9844",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "address",
+          "baselineValue": "경기 수원시 장안구 영화동443-13",
+          "templateOutputValue": "경기 수원시 장안구 영화동443-13",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "totalAmount",
+          "baselineValue": "5,000",
+          "templateOutputValue": "5,000",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        }
+      ],
+      "autofillInterference": false
+    },
+    {
+      "filename": "food_003.jpg",
+      "manifestDocumentType": "food_cafe_receipt",
+      "baselineDocType": "receipt_pos",
+      "runocrTemplateDocType": "receipt_pos",
+      "outputFieldsMatched": "5/5",
+      "status": "inconclusive",
+      "reasons": [
+        "unstructured_template_mapping_missing",
+        "no_live_api_static_only"
+      ],
+      "fields": [
+        {
+          "key": "merchantName",
+          "baselineValue": "BAGUETTE",
+          "templateOutputValue": "BAGUETTE",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "businessNo",
+          "baselineValue": "448-20-01024",
+          "templateOutputValue": "448-20-01024",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "representative",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "phone",
+          "baselineValue": "031-719-1886",
+          "templateOutputValue": "031-719-1886",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "address",
+          "baselineValue": "경기 성남시 분당위 청자일로 240 월드프라자 1층 [정상",
+          "templateOutputValue": "경기 성남시 분당위 청자일로 240 월드프라자 1층 [정상",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "totalAmount",
+          "baselineValue": "6,800",
+          "templateOutputValue": "6,800",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        }
+      ],
+      "autofillInterference": false
+    },
+    {
+      "filename": "food_004.jpg",
+      "manifestDocumentType": "food_cafe_receipt",
+      "baselineDocType": "receipt_pos",
+      "runocrTemplateDocType": "receipt_pos",
+      "outputFieldsMatched": "4/4",
+      "status": "inconclusive",
+      "reasons": [
+        "unstructured_template_mapping_missing",
+        "no_live_api_static_only"
+      ],
+      "fields": [
+        {
+          "key": "merchantName",
+          "baselineValue": "쭈꾸미낙지볶음전문점",
+          "templateOutputValue": "쭈꾸미낙지볶음전문점",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "businessNo",
+          "baselineValue": "502-30-94239",
+          "templateOutputValue": "502-30-94239",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "representative",
+          "baselineValue": "박준영",
+          "templateOutputValue": "박준영",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "phone",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "address",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "totalAmount",
+          "baselineValue": "155,200",
+          "templateOutputValue": "155,200",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        }
+      ],
+      "autofillInterference": false
+    },
+    {
+      "filename": "food_005.jpg",
+      "manifestDocumentType": "food_cafe_receipt",
+      "baselineDocType": "receipt_pos",
+      "runocrTemplateDocType": "receipt_pos",
+      "outputFieldsMatched": "4/4",
+      "status": "inconclusive",
+      "reasons": [
+        "unstructured_template_mapping_missing",
+        "no_live_api_static_only"
+      ],
+      "fields": [
+        {
+          "key": "merchantName",
+          "baselineValue": "이티야커피",
+          "templateOutputValue": "이티야커피",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "businessNo",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "representative",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "phone",
+          "baselineValue": "032-890-2636",
+          "templateOutputValue": "032-890-2636",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "address",
+          "baselineValue": "인천중구 신흥동3가 7-206 1층",
+          "templateOutputValue": "인천중구 신흥동3가 7-206 1층",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "totalAmount",
+          "baselineValue": "2,545",
+          "templateOutputValue": "2,545",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        }
+      ],
+      "autofillInterference": false
+    },
+    {
+      "filename": "medical_001.jpg",
+      "manifestDocumentType": "medical_receipt",
+      "baselineDocType": "medical_receipt",
+      "runocrTemplateDocType": "medical_receipt",
+      "outputFieldsMatched": "1/1",
+      "status": "inconclusive",
+      "reasons": [
+        "unstructured_template_mapping_missing",
+        "no_live_api_static_only"
+      ],
+      "fields": [
+        {
+          "key": "merchantName",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "businessNo",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "representative",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "phone",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "address",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "totalAmount",
+          "baselineValue": "205,000",
+          "templateOutputValue": "205,000",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        }
+      ],
+      "autofillInterference": false
+    },
+    {
+      "filename": "medical_002.jpg",
+      "manifestDocumentType": "medical_receipt",
+      "baselineDocType": "medical_receipt",
+      "runocrTemplateDocType": "medical_receipt",
+      "outputFieldsMatched": "2/2",
+      "status": "inconclusive",
+      "reasons": [
+        "unstructured_template_mapping_missing",
+        "no_live_api_static_only"
+      ],
+      "fields": [
+        {
+          "key": "merchantName",
+          "baselineValue": "하나동물병원",
+          "templateOutputValue": "하나동물병원",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "businessNo",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "representative",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "phone",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "address",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "totalAmount",
+          "baselineValue": "88,000",
+          "templateOutputValue": "88,000",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        }
+      ],
+      "autofillInterference": false
+    },
+    {
+      "filename": "medical_003.jpg",
+      "manifestDocumentType": "medical_receipt",
+      "baselineDocType": "medical_receipt",
+      "runocrTemplateDocType": "medical_receipt",
+      "outputFieldsMatched": "2/2",
+      "status": "inconclusive",
+      "reasons": [
+        "unstructured_template_mapping_missing",
+        "no_live_api_static_only"
+      ],
+      "fields": [
+        {
+          "key": "merchantName",
+          "baselineValue": "귀약점",
+          "templateOutputValue": "귀약점",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "businessNo",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "representative",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "phone",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "address",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "totalAmount",
+          "baselineValue": "122,850",
+          "templateOutputValue": "122,850",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        }
+      ],
+      "autofillInterference": false
+    },
+    {
+      "filename": "medical_004.jpg",
+      "manifestDocumentType": "medical_receipt",
+      "baselineDocType": "medical_receipt",
+      "runocrTemplateDocType": "medical_receipt",
+      "outputFieldsMatched": "6/6",
+      "status": "inconclusive",
+      "reasons": [
+        "unstructured_template_mapping_missing",
+        "no_live_api_static_only"
+      ],
+      "fields": [
+        {
+          "key": "merchantName",
+          "baselineValue": "(주)크레소티",
+          "templateOutputValue": "(주)크레소티",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "businessNo",
+          "baselineValue": "201-81-82695",
+          "templateOutputValue": "201-81-82695",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "representative",
+          "baselineValue": "황윤홍",
+          "templateOutputValue": "황윤홍",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "phone",
+          "baselineValue": "02-2011-0777",
+          "templateOutputValue": "02-2011-0777",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "address",
+          "baselineValue": "서울 영등포구 양평동3가우림e",
+          "templateOutputValue": "서울 영등포구 양평동3가우림e",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "totalAmount",
+          "baselineValue": "1,000",
+          "templateOutputValue": "1,000",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        }
+      ],
+      "autofillInterference": false
+    },
+    {
+      "filename": "card_001.jpg",
+      "manifestDocumentType": "card_receipt",
+      "baselineDocType": "receipt_card",
+      "runocrTemplateDocType": "receipt_card",
+      "outputFieldsMatched": "3/3",
+      "status": "inconclusive",
+      "reasons": [
+        "unstructured_template_mapping_missing",
+        "no_live_api_static_only"
+      ],
+      "fields": [
+        {
+          "key": "merchantName",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "businessNo",
+          "baselineValue": "140-09-20255",
+          "templateOutputValue": "140-09-20255",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "representative",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "phone",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "address",
+          "baselineValue": "경기 시용시 시정도번길 31 (장인동, 대상센담",
+          "templateOutputValue": "경기 시용시 시정도번길 31 (장인동, 대상센담",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "totalAmount",
+          "baselineValue": "90,000",
+          "templateOutputValue": "90,000",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        }
+      ],
+      "autofillInterference": false
+    },
+    {
+      "filename": "card_002.jpg",
+      "manifestDocumentType": "card_receipt",
+      "baselineDocType": "receipt_card",
+      "runocrTemplateDocType": "receipt_card",
+      "outputFieldsMatched": "4/4",
+      "status": "inconclusive",
+      "reasons": [
+        "unstructured_template_mapping_missing",
+        "no_live_api_static_only"
+      ],
+      "fields": [
+        {
+          "key": "merchantName",
+          "baselineValue": "당신만식부께",
+          "templateOutputValue": "당신만식부께",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "businessNo",
+          "baselineValue": "306-13-63556",
+          "templateOutputValue": "306-13-63556",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "representative",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "phone",
+          "baselineValue": "041-359-7955",
+          "templateOutputValue": "041-359-7955",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        },
+        {
+          "key": "address",
+          "baselineValue": "",
+          "templateOutputValue": "",
+          "normalizedMatch": true,
+          "status": "both_empty",
+          "reason": "match"
+        },
+        {
+          "key": "totalAmount",
+          "baselineValue": "29,000",
+          "templateOutputValue": "29,000",
+          "normalizedMatch": true,
+          "status": "match",
+          "reason": "match"
+        }
+      ],
+      "autofillInterference": false
+    }
+  ],
+  "apiResults": {},
+  "issues": [
+    {
+      "type": "regions_zero_not_failure",
+      "detail": "비정형 템플릿에서는 regions 0개가 정상일 수 있으므로 실패 근거로 보지 않음."
+    },
+    {
+      "type": "unstructured_template_mapping_missing",
+      "detail": "접근 가능한 TPL-003 저장값에는 template_json.fields/output field definitions가 없음."
+    },
+    {
+      "type": "unstructured_mode_not_persisted",
+      "detail": "접근 가능한 TPL-003 저장값에는 mode='unstructured'가 없음. 실제 RunOCR localStorage 템플릿과 다를 수 있음."
+    },
+    {
+      "type": "document_type_missing_or_mismatch",
+      "detail": "TPL-003 documentType이 없어 API payload에서 documentType을 강제하지 않음. backend classify_document 결과에 의존."
+    }
+  ],
+  "nextActions": [
+    "RunOCR localStorage의 mysuit_ocr_templates에서 TPL-003의 mode와 fields를 확인한다.",
+    "비정형 영수증 템플릿에 mode='unstructured'와 fields(회사명/사업자번호/대표자/tel/주소/총합계금액 등)를 저장한다.",
+    "side effect 허용 환경에서 --api-base ... --allow-api-side-effects로 E2E 응답을 검증한다.",
+    "documentType을 receipt 계열로 강제할지, backend classify_document에 맡길지 정책을 정한다."
+  ],
+  "autofill": {
+    "interferenceDetected": false,
+    "note": "Static parser/output mapping simulation does not invoke frontend autofill, History, restoreProfile, localStorage writes, or DB writes."
+  }
+}

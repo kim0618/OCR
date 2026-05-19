@@ -1,0 +1,361 @@
+{
+  "generatedAt": "2026-05-19",
+  "scope": "T25_invoice_1jpg_handwritten_overlay_tableRows_analysis",
+  "target": "invoice_statement/1.jpg",
+  "tool": "Claude Sonnet 4.6 (Claude Code)",
+  "dataSource": {
+    "ocrCacheText": "ocr_cache.json → 1.jpg.ocr_text (scanned_at: 2026-05-18T04:01:44Z)",
+    "parserResults": "T10_fix_template_colguides_header_skip_20260516.json (rowCount=28, status=exact)",
+    "fillStats": "T6m_value_mapping_after_20260514.json (fillCounts per column per row)",
+    "t8precheck": "T8_final_precheck_invoice_statement_full_quality_20260514.json",
+    "manifest": "manifest.json → 1.jpg, expectedRowCount=28",
+    "groundTruth": "ground_truth.json → rowCount=28, firstRowPreview=헥사메딘액0.12% 15m|*6포"
+  },
+  "summary": {
+    "rowCountExactMaintained": true,
+    "rowCountActual": 28,
+    "rowCountExpected": 28,
+    "rowCountStatus": "exact",
+    "totalSuspectedContaminatedCells": 8,
+    "totalMinorArtifactCells": 2,
+    "sourceGarbledHoldCandidates": 3,
+    "numericAmbiguousCandidates": 2,
+    "safeNumericCleanupCandidates": 4,
+    "warningOnlyCandidates": 2,
+    "redPenPreprocessCandidates": 2,
+    "holdCandidates": 3,
+    "noActionItems": 2,
+    "codeModifiedThisTurn": false,
+    "regressionRisk": "none_code_unchanged"
+  },
+  "rowIssues": [
+    {
+      "rowIndex": 1,
+      "field": "spec",
+      "currentValue": "15m|*6포",
+      "issueType": "itemName_trailing_noise",
+      "confidence": "medium",
+      "rawSource": "OCR: '15m|*6포' — pipe character OCR artifact for lowercase 'l'",
+      "mathematicalVerification": null,
+      "recommendation": "no_action",
+      "reason": "Value is readable and understood; '|' is a common l/| OCR confusion. No handwriting cause suspected."
+    },
+    {
+      "rowIndex": 4,
+      "field": "spec",
+      "itemName": "하드칼씨플러스정",
+      "currentValue": "6OT",
+      "issueType": "numeric_ambiguous",
+      "confidence": "medium",
+      "rawSource": "OCR: '6OT' — letter O in place of digit 0; likely actual value is '60T'",
+      "mathematicalVerification": null,
+      "recommendation": "warning_only",
+      "reason": "O/0 confusion in spec field. '60T' is standard Korean pharmaceutical tablet count (60정). Auto-correction risky — could affect downstream matching. warning_only for T-25b."
+    },
+    {
+      "rowIndex": 4,
+      "field": "manufacturingNo",
+      "itemName": "하드칼씨플러스정",
+      "currentValue": "",
+      "issueType": "source_garbled_hold",
+      "confidence": null,
+      "rawSource": "OCR source: completely absent — no token found in manufacturing number column region",
+      "mathematicalVerification": null,
+      "recommendation": "hold",
+      "reason": "Manufacturing number token is absent from the OCR raw text for this row. The corresponding column region likely had a handwritten mark (red circle/annotation) that made the printed value unreadable to OCR. Cannot auto-recover."
+    },
+    {
+      "rowIndex": 4,
+      "field": "expiryDate",
+      "itemName": "하드칼씨플러스정",
+      "currentValue": "",
+      "issueType": "source_garbled_hold",
+      "confidence": null,
+      "rawSource": "OCR source: completely absent — no token found in expiry date column region",
+      "mathematicalVerification": null,
+      "recommendation": "hold",
+      "reason": "Expiry date token is absent from the OCR raw text for this row. Same contamination region as manufacturingNo. Cannot auto-recover."
+    },
+    {
+      "rowIndex": 12,
+      "field": "spec",
+      "itemName": "부스콘정5mg",
+      "currentValue": "3OT",
+      "issueType": "numeric_ambiguous",
+      "confidence": "medium",
+      "rawSource": "OCR: '3OT' — letter O in place of digit 0; likely actual value is '30T'",
+      "mathematicalVerification": null,
+      "recommendation": "warning_only",
+      "reason": "O/0 confusion in spec field. '30T' is standard Korean pharmaceutical tablet count. warning_only for T-25b."
+    },
+    {
+      "rowIndex": 12,
+      "field": "quantity",
+      "itemName": "부스콘정5mg",
+      "currentValue": "",
+      "issueType": "source_garbled_hold",
+      "confidence": null,
+      "rawSource": "OCR source: completely absent — no token found in quantity column region. Raw OCR shows: '부스콘정5mg 3OT 23001A1-10ea 250202 2,790 27,900' — quantity token between expiryDate(250202) and unitPrice(2,790) is missing.",
+      "mathematicalVerification": "27,900 (amount) ÷ 2,790 (unitPrice) = 10 (exact) — mathematical inference suggests quantity=10, but auto-insertion is prohibited.",
+      "recommendation": "hold",
+      "reason": "Quantity token is absent from OCR raw text. Math verification confirms qty=10 from amount÷unitPrice but auto-insertion is not allowed. Red pen annotation likely covered the '10' in the quantity column."
+    },
+    {
+      "rowIndex": 19,
+      "field": "amount",
+      "itemName": "헬론정20mg",
+      "currentValue": "301, 100",
+      "issueType": "printed_value_plus_markup",
+      "confidence": "low-medium",
+      "rawSource": "OCR raw: '301, 100' — space inserted after comma; actual value should be '301,100'",
+      "mathematicalVerification": "10 (qty) × 30,110 (unitPrice) = 301,100 — confirms '301,100' is correct; space is OCR artifact",
+      "recommendation": "safe_numeric_cleanup_candidate",
+      "reason": "Space after thousands-separator comma is a consistent OCR artifact pattern. Pattern: '\\d+,\\s+\\d{3}' → '\\d+,\\d{3}'. Safe to clean in T-25b. No value ambiguity."
+    },
+    {
+      "rowIndex": 20,
+      "field": "amount",
+      "itemName": "메티마졸정",
+      "currentValue": "782, 160",
+      "issueType": "printed_value_plus_markup",
+      "confidence": "low-medium",
+      "rawSource": "OCR raw: '782, 160' — space inserted after comma; actual value should be '782,160'",
+      "mathematicalVerification": "240 (qty) × 3,259 (unitPrice) = 782,160 — confirms '782,160' is correct",
+      "recommendation": "safe_numeric_cleanup_candidate",
+      "reason": "Same pattern as row 19. Space after comma is OCR artifact from handwritten mark overlapping comma character area."
+    },
+    {
+      "rowIndex": 21,
+      "field": "amount",
+      "itemName": "메티마줄정",
+      "currentValue": "163, 100",
+      "issueType": "printed_value_plus_markup",
+      "confidence": "low-medium",
+      "rawSource": "OCR raw: '163, 100' — space inserted after comma; actual value should be '163,100'",
+      "mathematicalVerification": "10 (qty) × 16,310 (unitPrice) = 163,100 — confirms '163,100' is correct",
+      "recommendation": "safe_numeric_cleanup_candidate",
+      "reason": "Same pattern as rows 19, 20."
+    },
+    {
+      "rowIndex": 23,
+      "field": "spec",
+      "itemName": "오르필시럽",
+      "currentValue": "150mI",
+      "issueType": "numeric_ambiguous",
+      "confidence": "medium",
+      "rawSource": "OCR: '150mI' — capital I in place of lowercase 'l'; likely actual value is '150ml'",
+      "mathematicalVerification": null,
+      "recommendation": "no_action",
+      "reason": "l/I OCR confusion is a common artifact with no handwriting cause suspected. Value is readable. no_action."
+    },
+    {
+      "rowIndex": 26,
+      "field": "amount",
+      "itemName": "소아용프리마란시럽",
+      "currentValue": "220, 890",
+      "issueType": "printed_value_plus_markup",
+      "confidence": "low-medium",
+      "rawSource": "T10 parser result: '220, 890' — space after comma; actual value should be '220,890'",
+      "mathematicalVerification": "30 (qty) × 7,363 (unitPrice) = 220,890 — confirms '220,890' is correct",
+      "recommendation": "safe_numeric_cleanup_candidate",
+      "reason": "Same pattern as rows 19, 20, 21. Space after comma OCR artifact."
+    }
+  ],
+  "issueTypeSummary": [
+    {
+      "issueType": "source_garbled_hold",
+      "count": 3,
+      "description": "OCR raw source is completely absent for the field — no token detected in the column region. Likely caused by handwritten marks (red pen circles/annotations) covering the printed values.",
+      "affectedRows": [4, 12],
+      "affectedFields": ["manufacturingNo(row4)", "expiryDate(row4)", "quantity(row12)"],
+      "processingDirection": "hold — no auto-recovery possible without OCR re-run on cleaned image"
+    },
+    {
+      "issueType": "numeric_ambiguous",
+      "count": 2,
+      "description": "O/0 character confusion in spec field. OCR read letter 'O' instead of digit '0'. Both '6OT'→'60T' and '3OT'→'30T' are suspected.",
+      "affectedRows": [4, 12],
+      "affectedFields": ["spec(row4)", "spec(row12)"],
+      "processingDirection": "warning_only — cannot auto-correct without higher confidence. Defer to T-25b."
+    },
+    {
+      "issueType": "printed_value_plus_markup",
+      "count": 4,
+      "description": "Amount field has a space inserted after the thousands-separator comma (e.g., '301, 100' instead of '301,100'). Consistent pattern across 4 rows suggests a handwritten mark (checkmark or circle) overlapping the comma area in the amount column. Math verification confirms all 4 are correct numeric values with the space removed.",
+      "affectedRows": [19, 20, 21, 26],
+      "affectedFields": ["amount(row19)", "amount(row20)", "amount(row21)", "amount(row26)"],
+      "processingDirection": "safe_numeric_cleanup_candidate — regex cleanup safe for T-25b"
+    },
+    {
+      "issueType": "itemName_trailing_noise",
+      "count": 1,
+      "description": "Pipe character '|' OCR artifact for lowercase 'l' in spec field. Non-handwriting related.",
+      "affectedRows": [1],
+      "affectedFields": ["spec(row1)"],
+      "processingDirection": "no_action"
+    },
+    {
+      "issueType": "no_action_minor",
+      "count": 1,
+      "description": "Capital 'I' OCR artifact for lowercase 'l' in spec field. Non-handwriting related.",
+      "affectedRows": [23],
+      "affectedFields": ["spec(row23)"],
+      "processingDirection": "no_action"
+    }
+  ],
+  "safeFixCandidates": {
+    "safe_numeric_cleanup_candidate": {
+      "description": "Amount fields with space after comma ('301, 100' → '301,100'). All 4 cases verified by quantity × unitPrice math.",
+      "affectedRows": [19, 20, 21, 26],
+      "proposedRegex": "re.sub(r'(\\d{1,3}),\\s+(\\d{3})', r'\\1,\\2', value)",
+      "riskAssessment": "low — pattern is specific to comma-space-3digit, does not affect other numeric formats",
+      "deferredTo": "T-25b",
+      "autoApply": false
+    },
+    "warning_only_candidate": {
+      "description": "Spec fields with O/0 confusion ('6OT', '3OT'). Suspected values '60T', '30T'.",
+      "affectedRows": [4, 12],
+      "proposedWarning": "spec:O_zero_ambiguity_detected",
+      "riskAssessment": "medium — cannot confirm without document reference",
+      "deferredTo": "T-25b",
+      "autoApply": false
+    },
+    "source_garbled_hold": {
+      "description": "Three fields where OCR source is completely absent. Row 4: manufacturingNo, expiryDate. Row 12: quantity.",
+      "affectedRows": [4, 12],
+      "mathematicalHints": {
+        "row12_quantity": "27,900 ÷ 2,790 = 10 (exact) — mathematical inference only, not auto-insertable"
+      },
+      "riskAssessment": "high — any auto-correction would be a guess",
+      "deferredTo": "T-25d or manual review",
+      "autoApply": false
+    }
+  },
+  "redPenSuppressionAssessment": {
+    "overallFeasibility": "possible_debug_only",
+    "targetRows": [4, 12],
+    "targetFields": ["row4:manufacturingNo", "row4:expiryDate", "row12:quantity"],
+    "approach": "HSV-based red channel masking (H: 0-15 or 160-180, S: >100, V: >50) → inpaint or whiten → re-OCR",
+    "potentialBenefit": "Could recover manufacturing number and expiry date for row 4, and quantity for row 12 if the handwritten marks are clearly separable from printed text",
+    "risks": [
+      "Red rubber stamps/seals that are part of the document would also be erased",
+      "Red printed ink (company logos, document headers) may be affected",
+      "If red pen and printed text overlap in the same pixel region, both will be degraded",
+      "Re-OCR adds latency and complexity",
+      "May introduce new regressions in rows that currently pass"
+    ],
+    "autoApplyDecision": "PROHIBITED — invoice_statement is permanently excluded from preprocessing auto-apply per preprocessing_policy.py Rule 1",
+    "debugVariantDecision": "permitted as debug-only compare variant in T-25c",
+    "productionApply": false
+  },
+  "warningPolicy": [
+    {
+      "warningKey": "tableRows:partial_field_contamination_suspected",
+      "trigger": "any required column has < 100% fill rate across all rows",
+      "currentState": "manufacturingNo=96.4%, expiryDate=96.4%, quantity=96.4% — 1 row each missing",
+      "proposedMessage": "일부 행에서 필수 컬럼 값이 비어 있습니다. 수기 오염 또는 OCR 인식 실패가 원인일 수 있습니다.",
+      "uiLocation": "tableMeta.valueMappingWarnings",
+      "implementationPhase": "T-25b",
+      "rowValueChanged": false,
+      "autoCorrection": false
+    },
+    {
+      "warningKey": "quantity:handwritten_overlay_suspected",
+      "trigger": "row has itemName + mfg + exp + unitPrice + amount all filled, but quantity is empty",
+      "affectedRows": [12],
+      "proposedMessage": "수량 값이 비어 있으며, 수기 표시로 인한 OCR 누락이 의심됩니다. 금액/단가 비율로 수량=10을 추정할 수 있으나 자동 보정은 하지 않습니다.",
+      "uiLocation": "tableMeta.valueMappingWarnings",
+      "implementationPhase": "T-25b",
+      "rowValueChanged": false,
+      "autoCorrection": false
+    },
+    {
+      "warningKey": "manufacturingNo:handwritten_overlay_suspected",
+      "trigger": "row has itemName + quantity + unitPrice + amount all filled, but manufacturingNo and expiryDate are both empty",
+      "affectedRows": [4],
+      "proposedMessage": "제조번호/유효기간 값이 비어 있으며, 수기 표시로 인한 OCR 누락이 의심됩니다. 수동 확인이 필요합니다.",
+      "uiLocation": "tableMeta.valueMappingWarnings",
+      "implementationPhase": "T-25b",
+      "rowValueChanged": false,
+      "autoCorrection": false
+    },
+    {
+      "warningKey": "amount:comma_space_formatting_noise",
+      "trigger": "amount field matches pattern '\\d{1,3},\\s+\\d{3}'",
+      "affectedRows": [19, 20, 21, 26],
+      "proposedMessage": "금액 필드에 쉼표 뒤 공백이 감지되었습니다. 수기 표시로 인한 OCR 포매팅 오류일 수 있습니다. (예: '301, 100' → '301,100')",
+      "uiLocation": "tableMeta.valueMappingWarnings",
+      "implementationPhase": "T-25b",
+      "rowValueChanged": false,
+      "autoCorrection": false
+    }
+  ],
+  "parserLayerAnalysis": {
+    "valueFlowPath": "_table_items_with_expected_columns (colGuides path) → _extract_items_using_boundaries → _build_canonical_table_rows → valueMappingWarnings",
+    "contamination Layer": "OCR source layer (pre-parser) — values are absent from OCR raw text before parser runs",
+    "parserAdoption": "parser correctly records empty string for missing tokens; does NOT invent values",
+    "displayLayer": "OcrResultPanel.tsx receives parser output as-is; no additional normalization for these cells",
+    "normalizeTableCell": "not involved — the issue is upstream (OCR tokenization), not display normalization",
+    "valueOverride": "none — parser does not override or fill missing required fields",
+    "warningLayer": "tableMeta.valueMappingWarnings is populated by _build_canonical_table_rows; currently only insuranceCode:ocr_source_missing is implemented",
+    "addWarningImpact": "adding new warning entries to valueMappingWarnings does NOT affect tableRows values or rowCount"
+  },
+  "regressionPlan": {
+    "rowCountGuard": {
+      "required": true,
+      "target": "all 7 invoice_statement samples",
+      "expected": {
+        "1.jpg": 28,
+        "2.pdf": 13,
+        "3.pdf": 1,
+        "4.pdf": 1,
+        "5.pdf": 6,
+        "6.pdf": 6,
+        "7.pdf": 1
+      },
+      "currentStatus": "all passing as of T10_fix (2026-05-16)",
+      "note": "No code was changed in T-25. rowCount regression is impossible without code changes."
+    },
+    "columnStructureGuard": {
+      "required": true,
+      "target": "tableRows column keys must remain unchanged",
+      "note": "canonical _TABLE_ROW_COLUMNS preserved; no modification this turn"
+    },
+    "previewValidation": {
+      "required": true,
+      "target": "OcrResultPanel.tsx tableRows display, History tableRows detail, Custom/Validation panels",
+      "note": "No code changed; display regression impossible"
+    },
+    "receiptRegressionGuard": {
+      "required": true,
+      "note": "invoice_statement analysis only; receipt parser not touched"
+    },
+    "typecheckBuild": {
+      "required": "only if code changes are made",
+      "note": "No code changed in T-25; typecheck/build not required"
+    }
+  },
+  "nextActions": [
+    {
+      "taskId": "T-25b",
+      "title": "Warning-only implementation",
+      "description": "Add 4 warning entries to tableMeta.valueMappingWarnings in _build_canonical_table_rows: (1) partial_field_contamination_suspected, (2) quantity:handwritten_overlay_suspected, (3) manufacturingNo:handwritten_overlay_suspected, (4) amount:comma_space_formatting_noise. Row values NOT changed. Verify all 7 rowCounts remain exact after change.",
+      "risk": "low — warning addition only, no row value modification",
+      "prerequisites": "T-25 analysis report (this document)"
+    },
+    {
+      "taskId": "T-25c",
+      "title": "Red pen suppression debug variant",
+      "description": "Implement HSV-based red pixel masking as a debug-only preprocessing variant. Compare OCR results before/after on 1.jpg. Check if row 4 mfg/exp and row 12 qty become recoverable. Do NOT apply in production. Do NOT change invoice_statement auto-apply policy.",
+      "risk": "medium — preprocessing changes require careful isolation",
+      "prerequisites": "T-25b complete"
+    },
+    {
+      "taskId": "T-25d",
+      "title": "Safe numeric cleanup guard",
+      "description": "Implement amount comma-space cleanup (regex: '(\\d{1,3}),\\s+(\\d{3})' → '\\1,\\2') as a post-processing step in _build_canonical_table_rows for the amount field. Verify math for all 4 affected rows. Ensure no regression on other 6 samples. This is safe_numeric_cleanup_candidate only — no guessing for garbled fields.",
+      "risk": "low — regex cleanup with math verification",
+      "prerequisites": "T-25b complete"
+    }
+  ]
+}

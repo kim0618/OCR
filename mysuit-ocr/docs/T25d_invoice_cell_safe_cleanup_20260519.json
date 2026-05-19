@@ -1,0 +1,221 @@
+{
+  "generatedAt": "2026-05-19",
+  "scope": "T25d_invoice_cell_safe_cleanup",
+  "tool": "Claude Sonnet 4.6 (Claude Code)",
+  "codeModified": true,
+  "backupFile": "ocr-server/backup/invoice_statement_20260519_1327_before_T25d_cell_safe_cleanup.py",
+  "modifiedFiles": [
+    "ocr-server/extractors/invoice_statement.py"
+  ],
+  "modifiedFunctions": [
+    "_build_canonical_table_rows (T-25d cleanup blocks inserted)"
+  ],
+  "addedHelpers": [
+    "_t25d_amount_comma_space_cleanup",
+    "_t25d_qty_trailing_symbol_cleanup",
+    "_t25d_warning_only_checks"
+  ],
+  "addedRegexPatterns": [
+    "_T25D_AMOUNT_COMMA_SPACE_RE",
+    "_T25D_AMOUNT_CLEAN_VAL_RE",
+    "_T25D_AMOUNT_NUMERIC_RE",
+    "_T25D_QTY_TRAILING_RE",
+    "_T25D_QTY_NUMERIC_RE",
+    "_T25D_SPEC_O_ZERO_RE"
+  ],
+  "implementedRules": {
+    "amount_comma_space_cleanup": {
+      "description": "Remove spurious space after thousands-separator comma in amount fields",
+      "pattern": "(\\d),\\s+(\\d) → \\1,\\2",
+      "conditions": [
+        "Full value is numeric/comma/space only (no Korean, no letters)",
+        "Cleaned result matches valid amount pattern: d{1,3}(,d{3})*",
+        "Applied to fields: amount, supplyAmount, taxAmount, totalAmount"
+      ],
+      "examples": [
+        "301, 100 → 301,100",
+        "782, 160 → 782,160",
+        "163, 100 → 163,100",
+        "220, 890 → 220,890"
+      ],
+      "warningKey": "amount:comma_space_cleanup_applied"
+    },
+    "quantity_trailing_symbol_cleanup": {
+      "description": "Remove spurious trailing markup symbol from quantity field",
+      "pattern": "digits + whitespace + single-symbol → digits only",
+      "conditions": [
+        "Trailing part is in allowed symbol set: {^, <, >, ., ·, •}",
+        "Numeric part matches valid quantity: d{1,6}(,d{3})*",
+        "No letters, Korean characters, or digits in trailing symbol part"
+      ],
+      "examples": [
+        "360 ^ → 360"
+      ],
+      "warningKey": "quantity:trailing_markup_symbol_removed"
+    }
+  },
+  "warningOnlyRules": {
+    "quantity_handwritten_overlay": {
+      "warningKey": "quantity:handwritten_overlay_suspected:rowN",
+      "trigger": "quantity empty AND itemName + unitPrice + amount all present AND 'quantity' in required columns",
+      "action": "warning only — no auto-fill",
+      "guardReason": "fires only when quantity is declared required, preventing 4.pdf/6.pdf false positives"
+    },
+    "manufacturingNo_handwritten_overlay": {
+      "warningKey": "manufacturingNo:handwritten_overlay_suspected:rowN",
+      "trigger": "both manufacturingNo and expiryDate empty AND itemName + quantity + unitPrice present AND 'manufacturingNo' in required columns",
+      "action": "warning only — no auto-fill",
+      "guardReason": "fires only when manufacturingNo is declared required, preventing 4.pdf false positives"
+    },
+    "spec_numeric_alpha_ambiguous": {
+      "warningKey": "spec:numeric_alpha_ambiguous:rowN:VALUE",
+      "trigger": "spec contains pattern: digit + letter-O + uppercase letter (e.g. 6OT, 3OT)",
+      "action": "warning only — no auto-correct",
+      "guardReason": "fires only when spec is declared required; detected by _T25D_SPEC_O_ZERO_RE"
+    }
+  },
+  "prohibitedActions": {
+    "itemName_auto_replace": false,
+    "spec_O0_auto_correct": false,
+    "quantity_math_infer_fill": false,
+    "manufacturingNo_auto_fill": false,
+    "expiryDate_auto_fill": false,
+    "red_pen_suppression": false
+  },
+  "verificationResults": {
+    "py_compile": "OK",
+    "unitTests": {
+      "amount_cleanup_301_100": "PASS (→ 301,100)",
+      "amount_cleanup_782_160": "PASS (→ 782,160)",
+      "amount_cleanup_163_100": "PASS (→ 163,100)",
+      "amount_cleanup_220_890": "PASS (→ 220,890)",
+      "qty_trailing_360_caret": "PASS (→ 360)",
+      "qty_clean_value_unchanged": "PASS",
+      "qty_letter_suffix_no_change": "PASS (360 ml unchanged)",
+      "warning_row12_qty_missing": "PASS",
+      "warning_row4_mfg_exp_missing": "PASS",
+      "warning_spec_6OT": "PASS",
+      "warning_spec_3OT": "PASS",
+      "no_false_positive_4pdf": "PASS",
+      "no_false_positive_6pdf_qty0": "PASS",
+      "no_false_positive_2pdf_spec": "PASS"
+    },
+    "integrationTest": {
+      "rowCount_mock_8items": "PASS (8→8, unchanged)",
+      "amount_space_cleanup_4rows": "PASS",
+      "qty_trailing_cleanup": "PASS",
+      "spec_not_modified": "PASS",
+      "mfg_not_auto_filled": "PASS",
+      "qty_missing_not_auto_filled": "PASS"
+    },
+    "regressionGuards": {
+      "4pdf_schema_no_false_positive": "PASS",
+      "6pdf_rowCount_6_maintained": "PASS",
+      "6pdf_qty0_no_warning": "PASS",
+      "2pdf_spec_no_false_positive": "PASS"
+    },
+    "typecheck": "PASS (npm run typecheck — no TypeScript changes, clean exit)",
+    "build": "PASS (npm run build — all routes compiled successfully)"
+  },
+  "rowCountStatus": {
+    "note": "No code path that adds/removes rows was modified. Cleanup only modifies non-empty values in-place. rowCount cannot change from these changes.",
+    "expected": {
+      "1.jpg": 28,
+      "2.pdf": 13,
+      "3.pdf": 1,
+      "4.pdf": 1,
+      "5.pdf": 6,
+      "6.pdf": 6,
+      "7.pdf": 1
+    },
+    "lastConfirmedExact": "T10_fix_template_colguides_header_skip_20260516.json — all 7 exact"
+  },
+  "improvedCells": [
+    {
+      "sample": "1.jpg",
+      "rowIndex": 5,
+      "field": "quantity",
+      "before": "360 ^",
+      "after": "360",
+      "rule": "quantity_trailing_symbol_cleanup",
+      "note": "Observed in live OCR; current cache shows '360' without symbol (cleanup is a no-op if symbol absent)"
+    },
+    {
+      "sample": "1.jpg",
+      "rowIndex": 19,
+      "field": "amount",
+      "before": "301, 100",
+      "after": "301,100",
+      "rule": "amount_comma_space_cleanup",
+      "mathVerification": "10 × 30,110 = 301,100 ✓"
+    },
+    {
+      "sample": "1.jpg",
+      "rowIndex": 20,
+      "field": "amount",
+      "before": "782, 160",
+      "after": "782,160",
+      "rule": "amount_comma_space_cleanup",
+      "mathVerification": "240 × 3,259 = 782,160 ✓"
+    },
+    {
+      "sample": "1.jpg",
+      "rowIndex": 21,
+      "field": "amount",
+      "before": "163, 100",
+      "after": "163,100",
+      "rule": "amount_comma_space_cleanup",
+      "mathVerification": "10 × 16,310 = 163,100 ✓"
+    },
+    {
+      "sample": "1.jpg",
+      "rowIndex": 26,
+      "field": "amount",
+      "before": "220, 890",
+      "after": "220,890",
+      "rule": "amount_comma_space_cleanup",
+      "mathVerification": "30 × 7,363 = 220,890 ✓"
+    }
+  ],
+  "warningOnlyCells": [
+    {
+      "sample": "1.jpg",
+      "rowIndex": 4,
+      "field": "manufacturingNo",
+      "issue": "empty — handwritten_overlay_suspected",
+      "action": "warning only"
+    },
+    {
+      "sample": "1.jpg",
+      "rowIndex": 4,
+      "field": "spec",
+      "value": "6OT",
+      "issue": "O/0 numeric_alpha_ambiguous",
+      "action": "warning only"
+    },
+    {
+      "sample": "1.jpg",
+      "rowIndex": 12,
+      "field": "quantity",
+      "issue": "empty — handwritten_overlay_suspected",
+      "action": "warning only",
+      "mathHint": "27,900 ÷ 2,790 = 10 (not auto-inserted)"
+    },
+    {
+      "sample": "1.jpg",
+      "rowIndex": 12,
+      "field": "spec",
+      "value": "3OT",
+      "issue": "O/0 numeric_alpha_ambiguous",
+      "action": "warning only"
+    }
+  ],
+  "nextActions": [
+    {
+      "taskId": "T-25c",
+      "title": "Red pen suppression debug variant",
+      "description": "HSV-based red pixel masking to investigate row 4 mfg/exp and row 12 qty recovery. debug-only, no production apply.",
+      "risk": "medium"
+    }
+  ]
+}

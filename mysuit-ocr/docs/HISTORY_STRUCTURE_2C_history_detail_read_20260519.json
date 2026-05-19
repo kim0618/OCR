@@ -1,0 +1,90 @@
+{
+  "task": "HISTORY-STRUCTURE-2C",
+  "date": "2026-05-19",
+  "tool": "Claude Code (claude-sonnet-4-6)",
+  "overall": "PASS",
+  "typecheck": "PASS",
+  "build": "PASS",
+  "regression": false,
+  "existing_history_structure_unchanged": true,
+  "DetailHistoryView_modified": false,
+
+  "backup_files": [
+    "backup/historyStore_20260519_before_HISTORY_STRUCTURE_2C.ts",
+    "backup/HistoryWorkspace_20260519_before_HISTORY_STRUCTURE_2C.tsx"
+  ],
+
+  "modified_files": [
+    {
+      "file": "src/lib/historyStore.ts",
+      "changes": "Added detailToHistoryRunRecord() + readHistoryDetailWithFallback(). No existing code modified.",
+      "functions_added": ["detailToHistoryRunRecord", "readHistoryDetailWithFallback"]
+    },
+    {
+      "file": "src/components/history/HistoryWorkspace.tsx",
+      "changes": "Removed readHistoryRuns import. Added readHistoryDetailWithFallback import. Detail click handler: 3 lines → 1 line."
+    }
+  ],
+
+  "detail_query_strategy": {
+    "primary": "mysuit_ocr_history_details[historyId] + mysuit_ocr_history_index[historyId] meta",
+    "fallback": "readHistoryRuns().find(job_id)",
+    "heavy_load_avoided_when_detail_exists": true,
+    "DetailHistoryView_receives": "HistoryRunRecord (same shape as before)"
+  },
+
+  "output_fields_priority": {
+    "1st": "detail.confirmedResult.outputFields — latest saved values from [저장]",
+    "2nd": "detail.runSnapshot.outputFieldsSnapshot — original OCR snapshot",
+    "3rd": "readHistoryRuns().output_fields — via legacy fallback",
+    "last": "[] — empty array if nothing found"
+  },
+
+  "fallback_conditions": {
+    "details_key_missing": "legacy fallback",
+    "details_parse_failure": "legacy fallback (catch)",
+    "detail_not_found": "legacy fallback",
+    "detail_historyId_missing": "legacy fallback",
+    "any_exception": "legacy fallback (catch)"
+  },
+
+  "tableRows_preservation": {
+    "in_localStorage": true,
+    "in_HistoryRunRecord": false,
+    "reason": "HistoryRunRecord type does not have documentFields field. tableRows stay in mysuit_ocr_history_details.runSnapshot.documentFields.",
+    "ui_rendering": "not yet implemented (future task)"
+  },
+
+  "save_flow_preserved": {
+    "updateHistoryRun": "unchanged",
+    "syncHistoryIndexAndDetailOnSave": "unchanged (from 2A)",
+    "onSaved_callback": "receives legacy record from updateHistoryRun return value",
+    "next_open_after_save": "confirmedResult.outputFields takes priority (1st priority)"
+  },
+
+  "regression_check": {
+    "history_list": "PASS — readHistoryListWithFallback() unchanged",
+    "history_detail_new": "PASS — detail + index meta combination",
+    "history_detail_legacy": "PASS — readHistoryRuns().find() fallback",
+    "save_button": "PASS — DetailHistoryView unchanged",
+    "restore_profile_save": "PASS — restoreProfileStore unchanged",
+    "restore_tab": "PASS — AutoRestoreWorkspace unchanged",
+    "autofill_engine": "PASS — autofillEngine.ts unchanged",
+    "preview_custom_validation": "PASS — OcrResultPanel.tsx unchanged"
+  },
+
+  "localStorage_safety": {
+    "mysuit_ocr_history_unchanged": true,
+    "details_read_parse_guard": true,
+    "detail_missing_guard": true,
+    "index_read_failure_graceful": true,
+    "data_migration": false
+  },
+
+  "pending": [
+    "HISTORY-STRUCTURE-2D: 삭제 시 index/detail 동기화",
+    "tableRows UI rendering in DetailHistoryView",
+    "hasRestoreProfile flag update on profile save/delete",
+    "onSaved callback using detail-based reopen (post-2D)"
+  ]
+}

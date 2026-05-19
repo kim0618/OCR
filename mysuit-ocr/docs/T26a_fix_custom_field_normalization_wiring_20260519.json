@@ -1,0 +1,86 @@
+{
+  "generatedAt": "2026-05-19",
+  "scope": "T26a_fix_custom_field_normalization_wiring",
+  "tool": "Claude Sonnet 4.6 (Claude Code)",
+  "codeModified": true,
+  "backupFiles": [
+    "ocr-server/backup/main_20260519_1549_before_T26a_fix_custom_field_normalization_wiring.py"
+  ],
+  "modifiedFiles": [
+    "ocr-server/main.py"
+  ],
+  "rootCause": {
+    "description": "T-26a normalization was applied to document_fields.supplierCompany/buyerCompany but NOT to fields[N].value (the array that Custom tab reads for '최종값'). The two structures are disconnected in the backend response.",
+    "details": {
+      "backend_response_structure": {
+        "fields": "Array of {name, field_type, value, confidence, bbox} — built from template region OCR. Custom tab shows field.value as '최종값'.",
+        "document_fields": "Dict with canonical keys (supplierCompany, buyerCompany, tableRows, etc.) — built by extract_invoice_statement_fields(). T-26a normalization WAS applied here, but NOT to fields[]."
+      },
+      "template_field_mapping": "Template TPL-31D13CF3 region field_2 has koField='공급자 상호' → fields[1].value = raw OCR '부광 약 품(주)'. document_fields.supplierCompany = '부광약품(주)' (normalized) but these are separate.",
+      "custom_tab_reads": "OcrResultPanel.tsx shows field.value as '최종값' and field.original as 'OCR 원본'. Before this fix, both showed the raw OCR since field.original was not set."
+    }
+  },
+  "fix": {
+    "location": "ocr-server/main.py — after invoice_statement extraction try-except block",
+    "logic": "After document_fields is populated, iterate zip(fields, region_list). For fields where region.koField matches '공급자 상호' or '공급받는자 상호', set field['original']=raw_value and field['value']=normalized_value from document_fields.",
+    "koFieldMapping": {
+      "공급자 상호": "supplierCompany",
+      "공급자 회사명": "supplierCompany",
+      "공급받는자 상호": "buyerCompany",
+      "공급받는자 회사명": "buyerCompany"
+    },
+    "conditions": [
+      "doc_type == 'invoice_statement'",
+      "region_list present (template path)",
+      "document_fields in response",
+      "region.koField matches company field mapping",
+      "document_fields[doc_key] is non-empty",
+      "raw value differs from normalized value"
+    ]
+  },
+  "expectedCustomTabResult": {
+    "supplierCompany": {
+      "ocrSource": "부광 약 품(주)",
+      "finalValue": "부광약품(주)"
+    },
+    "buyerCompany": {
+      "ocrSource": "백제약품(주)영등포지점 1010546N",
+      "finalValue": "백제약품(주)영등포지점"
+    }
+  },
+  "unchangedFields": [
+    "공급자 사업자 번호 — bizNumber field not in koFieldMapping",
+    "공급자 주소 — address field not in koFieldMapping",
+    "공급자 성명 — representative field not in koFieldMapping",
+    "공급받는자 사업자 번호 — not mapped",
+    "공급받는자 주소 — not mapped",
+    "공급받는자 성명 — not mapped",
+    "합계금액 — not mapped",
+    "tableRows — not touched",
+    "document_fields structure — not touched"
+  ],
+  "baselinePreserved": {
+    "t25d_cleanup": true,
+    "t25g_spec_cleanup": true,
+    "t25f_reset_no_warning": true,
+    "rowCount_7of7": true,
+    "itemName_no_autofix": true
+  },
+  "verificationResults": {
+    "py_compile_main": "OK",
+    "py_compile_invoice_statement": "OK",
+    "simulationTest": "ALL ASSERTIONS PASSED (5/5)",
+    "typecheck": "PASS",
+    "build": "PASS"
+  },
+  "nextActions": [
+    {
+      "action": "서버 재시작 후 1.jpg RunOCR 실행으로 Custom 탭 live 검증"
+    },
+    {
+      "taskId": "T-26b",
+      "title": "다른 샘플 party company 정규화 확인",
+      "description": "2~7.pdf 공급자/공급받는자 상호에도 동일 정규화가 안전하게 적용되는지 RunOCR 레벨 확인"
+    }
+  ]
+}

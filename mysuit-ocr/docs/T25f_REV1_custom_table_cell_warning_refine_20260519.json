@@ -1,0 +1,79 @@
+{
+  "generatedAt": "2026-05-19",
+  "scope": "T25f_REV1_custom_table_cell_warning_refine",
+  "tool": "Claude Sonnet 4.6 (Claude Code)",
+  "codeModified": true,
+  "backupFiles": [
+    "ocr-server/backup/invoiceTableDisplay_20260519_1439_before_T25f_REV1_warning_refine.ts",
+    "ocr-server/backup/OcrResultPanel_20260519_1439_before_T25f_REV1_warning_refine.tsx"
+  ],
+  "modifiedFiles": [
+    "mysuit-ocr/src/lib/invoiceTableDisplay.ts"
+  ],
+  "unchangedFiles": [
+    "mysuit-ocr/src/components/upload/OcrResultPanel.tsx"
+  ],
+  "tabScope": {
+    "customTab": true,
+    "previewTab": false,
+    "validationTab": false,
+    "historyDetail": false
+  },
+  "rowValueChanged": false,
+  "removedWarnings": [
+    "quantity:handwritten_overlay_suspected — 빈칸에 표시되던 문제, valueMappingWarnings 기반 로직 전체 제거",
+    "manufacturingNo:handwritten_overlay_suspected — 동일 이유",
+    "expiryDate:handwritten_overlay_suspected — 동일 이유"
+  ],
+  "keptWarnings": [
+    {
+      "key": "itemName:possible_ocr_char_confusion",
+      "trigger": "itemName에 한글 포함 + 3자 이상 + '청' 또는 '징'으로 끝남",
+      "nonEmpty": true,
+      "autoCorrection": false
+    },
+    {
+      "key": "spec:numeric_alpha_ambiguous",
+      "trigger": "spec 값 ≤6자 + 숫자 포함 + 'O' 포함 + 'T' 포함 (예: 6OT, 3OT)",
+      "nonEmpty": true,
+      "autoCorrection": false
+    },
+    {
+      "key": "spec:possible_unit_suffix_missing",
+      "trigger": "spec 값이 순수 숫자만으로 구성 (예: 400)",
+      "nonEmpty": true,
+      "autoCorrection": false,
+      "severity": "info"
+    }
+  ],
+  "emptyGuardAdded": true,
+  "emptyGuardDetail": "function 시작부에 rawValue → value 변환 후 value가 빈 문자열이면 null 반환",
+  "valueMappingWarningsRemoved": true,
+  "validationResults": {
+    "emptyQuantity_null": "PASS",
+    "emptyMfg_null": "PASS",
+    "emptyExp_null": "PASS",
+    "itemName_청_suffix": "PASS",
+    "itemName_정_suffix_null": "PASS",
+    "spec_6OT_warn": "PASS",
+    "spec_3OT_warn": "PASS",
+    "spec_30T_null": "PASS",
+    "spec_500C_null": "PASS",
+    "spec_120DOSE_null_length": "PASS",
+    "spec_numeric_only_info": "PASS",
+    "amount_normal_null": "PASS",
+    "unitPrice_normal_null": "PASS",
+    "totalTests": 15,
+    "passed": 15
+  },
+  "typecheck": "PASS",
+  "build": "PASS",
+  "regressionCheck": {
+    "previewTabUnchanged": true,
+    "validationTabUnchanged": true,
+    "historyDetailUnchanged": true,
+    "rowValueUnchanged": true,
+    "invoiceRowCount7of7": "maintained (no parser changes)",
+    "t25dCleanupResultsPreserved": true
+  }
+}

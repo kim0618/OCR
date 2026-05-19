@@ -1,0 +1,233 @@
+{
+  "generatedAt": "2026-05-19",
+  "scope": "T28a_template_runocr_normalized_image_pipeline",
+  "tool": "Claude Code",
+  "model": "Claude Sonnet 4.6",
+  "taskType": "구조 개선 (T-27a/fix/fix2 폐기 + normalized image pipeline 도입)",
+  "codeModified": true,
+  "backupFiles": [
+    "ocr-server/backup/main_20260519_before_T28a_template_normalized_pipeline.py"
+  ],
+  "modifiedFiles": [
+    "ocr-server/main.py"
+  ],
+  "unchangedFiles": [
+    "ocr-server/preprocess.py",
+    "ocr-server/extractors/invoice_statement.py",
+    "ocr-server/preprocessing_policy.py",
+    "mysuit-ocr/src/* (frontend 전체)",
+    "ocr-server/main.py 비정형 OCR 경로 (else 블록 line 2097+)"
+  ],
+  "unstructuredPipeline": {
+    "stages": [
+      "cv2.imdecode → img",
+      "detect_document(img) → doc_img (또는 corners perspective transform)",
+      "detect_orientation(doc_img, ocr, original_wh) → 정상 방향 doc_img",
+      "deskew(doc_img) → doc_deskewed",
+      "display_max_w=2000 resize → display_img (미리보기용)",
+      "ocr_max_w=950 resize → ocr_img",
+      "CLAHE on L channel",
+      "unsharp mask",
+      "ocr.ocr(ocr_img) 1회 풀 OCR (950px)"
+    ],
+    "ocrInputSize": "~950px width",
+    "design": "전체 문서를 normalize → 그 normalized image 1장만 OCR"
+  },
+  "templatePathProblem": {
+    "before_T27": "cv2.imdecode → img → 곧바로 region for-loop. 뒤집힌 img에 정상 방향 좌표 적용 → 깨진 crop.",
+    "T27a": "detect_orientation 1회 호출. 224px thumb 한계로 큰 invoice에서 angle=0 잘못 추천 가능.",
+    "T27a_fix2": "invoice_statement 한정 anchor fallback OCR 추가. 정상 입력에서도 768px 풀 OCR 1회 강제 + fallback 시 추가 1회 → 처리 시간 60s → 153~166s 회귀. 정확도도 미해결.",
+    "rootCauseOfFailure": "orientation 정규화를 crop 직전에 '패치 형태'로 덧붙임. 비정형 경로처럼 '전체 문서 기준 normalized image 1장' 구조가 아니었음."
+  },
+  "removedFromT27": [
+    "T-27a-fix2 invoice_statement anchor fallback 블록",
+    "_count_inv_anchors_t27a 헬퍼",
+    "_INV_ANCHORS (15개 anchor 목록)",
+    "_tmpl_orient_debug dict 빌드",
+    "timings: template_anchor_fallback_applied, template_anchor_orig, template_anchor_rot180, template_anchor_fallback_ms",
+    "response.templateOrientationDebug 노출"
+  ],
+  "retainedFromT27": [
+    "detect_orientation(img, ocr, original_wh) 1회 호출 (위치/의도가 'normalized image 생성'으로 명확화됨)",
+    "timings.template_detect_orientation_ms"
+  ],
+  "T28a_pipeline_design": {
+    "principles": [
+      "전체 문서 기준 방향 정규화 → normalized image 생성",
+      "field crop / table crop / parser 모두 같은 normalized img 사용",
+      "resize/deskew 미적용 → template region 좌표 기준 일치 보장 (scaleX=1.0, scaleY=1.0)",
+      "추가 OCR 없음 — detect_orientation 내부 thumbnail OCR만 사용 (224px × 2~4 candidates)",
+      "debug meta는 추가 OCR 없이 노출 (templateImageNormalization)"
+    ],
+    "newFlow": [
+      "cv2.imdecode → img",
+      "detect_orientation(img, ocr, original_wh) → normalized img",
+      "orig_h, orig_w = img.shape[:2] (90/270 회전 시 swap 대응)",
+      "templateImageNormalization meta 빌드",
+      "for region in region_list: _ocr_crop_region(normalized_img, ...) / _ocr_table_region(normalized_img, ...)",
+      "invoice_statement: ocr.ocr(normalized_img) → ocr_lines_raw → extract_invoice_statement_fields"
+    ],
+    "locationInMain": {
+      "pipelineBlock": "main.py:1976-2022",
+      "responseExposure": "main.py:2431-2433"
+    },
+    "addedOcrCallsInNormalFlow": 0
+  },
+  "coordinateHandling": {
+    "scaleX": 1.0,
+    "scaleY": 1.0,
+    "resizeApplied": false,
+    "deskewApplied": false,
+    "reasoning": "resize 미적용 정책 → 좌표 변환 필요 없음. 90/270 회전은 width/height swap만 발생하나 template 좌표가 portrait 기준이면 매핑 깨짐 (작업 범위 밖).",
+    "rotationCases": {
+      "0": "변화 없음 / 좌표 그대로 사용 가능",
+      "180": "width/height 동일 / 좌표 그대로 사용 가능 (정상 방향 좌표가 정상 image에 적용)",
+      "90": "width↔height swap / 좌표 invalid (현재 작업 범위 밖)",
+      "270": "width↔height swap / 좌표 invalid (현재 작업 범위 밖)"
+    }
+  },
+  "expectedNormalCase": {
+    "input": "정상 방향 1.jpg",
+    "appliedRotation": 0,
+    "imgChanged": false,
+    "expectedFields": {
+      "supplierBizNumber": "118-81-00450",
+      "supplierCompanyOcrOriginal": "부광 약 품(주)",
+      "supplierCompanyFinal": "부광약품(주)",
+      "supplierAddress": "서울특별시 동작구 상도로7",
+      "buyerBizNumber": "1138504425",
+      "buyerCompanyOcrOriginal": "백제약품(주)영등포지점 1010546N",
+      "buyerCompanyFinal": "백제약품(주)영등포지점",
+      "buyerAddress": "서울특별시 구로구 공원로 8길 24 (구로동)",
+      "tableRows": 28,
+      "totalAmount": "18,098,750",
+      "t25g_spec_cleanup": ["500T(B)", "150ml", "500ml"]
+    },
+    "expectedTemplateImageNormalization": {
+      "enabled": true,
+      "appliedRotation": 0,
+      "deskewApplied": false,
+      "resizeApplied": false,
+      "originalSize": [2483, 3511],
+      "normalizedSize": [2483, 3511],
+      "scaleX": 1.0,
+      "scaleY": 1.0,
+      "usedForRegionCrop": true,
+      "usedForTableCrop": true,
+      "usedForParser": true,
+      "status": "applied"
+    },
+    "expectedProcessingTimeS": "60~90 (T-27 이전 수준 회복)"
+  },
+  "expectedFlippedCase": {
+    "input": "180도 뒤집힌 1.jpg",
+    "scenarioA": {
+      "condition": "detect_orientation이 angle=180을 추천",
+      "behavior": "img 회전 → field/table/parser 모두 정상 방향 image 사용",
+      "expectedFields": {
+        "supplierBizNumber": "118-81-00450",
+        "supplierCompanyFinal": "부광약품(주)",
+        "buyerBizNumber": "1138504425",
+        "buyerCompanyFinal": "백제약품(주)영등포지점",
+        "tableRows": 28
+      },
+      "expectedTemplateImageNormalization": {
+        "appliedRotation": 180,
+        "originalSize": [2483, 3511],
+        "normalizedSize": [2483, 3511],
+        "status": "applied"
+      }
+    },
+    "scenarioB": {
+      "condition": "detect_orientation이 angle=0을 추천 (224px thumb 한계)",
+      "behavior": "img 회전 안 됨 → 결과 깨짐",
+      "followupTask": "T-28b (큰 thumbnail 옵션 또는 수동 회전 버튼)",
+      "note": "T-28a 범위는 구조 정리 + T-27 비용 제거. 시나리오 B 보완은 별도 task."
+    }
+  },
+  "unstructuredPathImpact": {
+    "modified": false,
+    "reasonAndEvidence": "T-28a normalized image pipeline은 if region_list 블록 안에만 적용. else 블록(line 2097+)의 비정형 경로는 코드 자체를 건드리지 않음. detect_document, detect_orientation, deskew, CLAHE, unsharp, receipt parser, finance_slip parser 모두 미변경."
+  },
+  "invoiceStatementRowCountExact": {
+    "1.jpg": "28/28 (기대)",
+    "2.pdf": "13/13 (기대)",
+    "3.pdf": "1/1 (기대)",
+    "4.pdf": "1/1 (기대)",
+    "5.pdf": "6/6 (기대)",
+    "6.pdf": "6/6 (기대)",
+    "7.pdf": "1/1 (기대)",
+    "evidence": "invoice_statement.py 미변경 + normalized image (정상 방향)만 parser에 전달 → 입력 일관성 보장 → 기존 정상 방향 7개 샘플 동일 입력"
+  },
+  "performance": {
+    "before_T27a_fix2": {
+      "T27a_thumb_224": "2~6s",
+      "T27a_fix2_anchor_orig_768": "15~30s (정상 입력도 무조건)",
+      "T27a_fix2_anchor_rot_768": "0~30s (fallback 시)",
+      "region_crops_plus_table": "25~35s",
+      "parser_full_ocr": "40~80s",
+      "totalRangeS": "100~180",
+      "userObservedS": "153~166"
+    },
+    "after_T28a_estimated": {
+      "detect_orientation_thumb_224": "2~6s",
+      "anchor_fallback": "0 (제거됨)",
+      "region_crops_plus_table": "25~35s",
+      "parser_full_ocr": "40~80s",
+      "totalRangeS": "65~120",
+      "expectedRecoveryS": "약 30~60s 단축"
+    },
+    "verificationNeeded": "live RunOCR 측정으로 확정 필요"
+  },
+  "baselinePreserved": {
+    "t25d_amount_comma_space_cleanup": true,
+    "t25d_qty_trailing_symbol_cleanup": true,
+    "t25g_spec_cleanup": true,
+    "t25f_reset_no_warning_ui": true,
+    "t26a_company_normalization": true,
+    "t26a_fix_original_value_split": true,
+    "itemName_no_autofix": true,
+    "quantity_empty_no_autofill": true,
+    "manufacturingNo_expiryDate_no_autofix": true,
+    "custom_tab_warning_not_reintroduced": true
+  },
+  "verificationResults": {
+    "py_compile_main": "PASS",
+    "T27_residual_code_removed": "PASS (T-27a, T-27a-fix2, _tmpl_orient_debug, _INV_ANCHORS, _count_inv_anchors_t27a 잔존 없음)",
+    "T28a_markers_present": "PASS (T-28a, _tmpl_img_norm_debug, templateImageNormalization 확인)",
+    "npm_typecheck": "PASS",
+    "npm_build": "PASS",
+    "unstructured_else_block_untouched": "PASS"
+  },
+  "remainingIssues": [
+    "뒤집힌 1.jpg에서 detect_orientation이 angle=180을 추천하는지 live 검증 필요 (224px thumb 한계로 잘못 추천 가능). 발생 시 T-28b 후속 작업.",
+    "parser full OCR (main.py:2090) 비용 그대로 (40~80s). 정상 60s 목표 미달 시 T-28c로 parser 입력 다운스케일 검토.",
+    "scaleX/scaleY 변환 로직 미구현. resize 미적용 정책이라 현재 필요 없음. resize 도입 시 함께 구현.",
+    "templateImageNormalization은 invoice_statement 외 모든 doc_type 노출 (의도된 동작).",
+    "90/270 회전 케이스에서 좌표 invalid (사용자 보고는 180 케이스 한정이라 우선 미해결)."
+  ],
+  "nextActions": [
+    {
+      "taskId": "T-28a-followup",
+      "title": "live 검증",
+      "description": "정상 1.jpg + 뒤집힌 1.jpg + 비정형 receipt + invoice_statement 7개 샘플 RunOCR로 실제 결과 확인. templateImageNormalization.appliedRotation 로그 확인. 처리 시간 60~90s 회복 확인."
+    },
+    {
+      "taskId": "T-28b",
+      "title": "invoice_statement용 큰 thumbnail orientation detection",
+      "condition": "T-28a-followup에서 뒤집힌 1.jpg가 정상화되지 않을 때",
+      "description": "detect_orientation에 invoice_statement 전용 큰 thumbnail (512~640px short-side) 옵션 추가. 정상 입력 early-stop 유지."
+    },
+    {
+      "taskId": "T-28c",
+      "title": "parser full OCR 입력 다운스케일",
+      "condition": "정상 문서 처리 시간이 여전히 90s 초과 시",
+      "description": "invoice_statement parser용 ocr.ocr(img) 입력을 1200~1400px로 다운스케일 검토. tableRows 작은 글자 인식 손실 위험 — 7개 샘플 rowCount exact 검증 필수."
+    },
+    {
+      "taskId": "T-28d",
+      "title": "RunOCR UI 수동 회전 버튼 (선택)",
+      "description": "frontend에 90/180/270 회전 버튼 추가. 자동 detection 실패 시 사용자 수동 보정 가능. OCR 코드 무영향."
+    }
+  ]
+}

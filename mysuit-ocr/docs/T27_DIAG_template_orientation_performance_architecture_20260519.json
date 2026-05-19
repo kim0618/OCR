@@ -1,0 +1,303 @@
+{
+  "generatedAt": "2026-05-19",
+  "scope": "T27_DIAG_template_orientation_performance_architecture",
+  "tool": "Claude Code",
+  "model": "Claude Sonnet 4.6",
+  "codeModified": false,
+  "filesRolledBack": false,
+  "newLogicAdded": false,
+  "purpose": "현재 RunOCR 템플릿 OCR 방향 보정/전처리 구조 분석 + 뒤집힌 1.jpg 실패 원인 확정 + 수정 전략 제안 (코드 수정 없음, 리포트 전용).",
+  "currentSymptom": {
+    "input": "180도 뒤집힌 1.jpg 업로드",
+    "brokenFields": {
+      "공급자_사업자번호": "서울 [배달]",
+      "공급자_주소": "-1- ㄱ- 등록",
+      "공급자_성명": "서서",
+      "공급받는자_사업자번호": "추",
+      "공급받는자_주소": "028690211 호 D202 등록 1138504425",
+      "rowCount": 25,
+      "합계금액": "30 7,3그"
+    },
+    "correctFields": {
+      "공급자_상호_최종값": "부광약품(주)",
+      "공급받는자_상호_최종값": "백제약품(주)영등포지점"
+    },
+    "expectedFields": {
+      "공급자_사업자번호": "118-81-00450",
+      "공급자_주소": "서울특별시 동작구 상도로7",
+      "공급받는자_사업자번호": "1138504425",
+      "공급받는자_주소": "서울특별시 구로구 공원로 8길 24 (구로동)",
+      "rowCount": 28,
+      "합계금액": "18,098,750"
+    },
+    "processingTimeBefore": "약 60초",
+    "processingTimeNow": "약 153~166초",
+    "performanceRegressionRatio": "2~3배 느려짐"
+  },
+  "unstructuredPath": {
+    "blockLocation": "main.py:2173+ (else 블록)",
+    "pipeline": [
+      "cv2.imdecode → img",
+      "detect_document(img) → doc_img (원근 보정)",
+      "detect_orientation(doc_img, ocr) → 정상 방향 doc_img",
+      "deskew → doc_deskewed",
+      "Resize display_max_w=2000 → display_img",
+      "Resize ocr_max_w=950 → ocr_img (작은 크기)",
+      "CLAHE + 언샤프 마스크 → ocr_img 최종",
+      "ocr.ocr(ocr_img) 1회 풀 OCR (950px 작은 크기)",
+      "receipt_fields / 금액 추출"
+    ],
+    "whyFlippedWorks": "detect_orientation이 모든 입력에 자동 회전 적용. 이후 모든 처리는 정상화 이미지에 적용. OCR도 950px 작은 크기에서 빠르게 1회만 실행."
+  },
+  "templatePath": {
+    "blockLocation": "main.py:1975+ (if region_list 블록)",
+    "pipeline": [
+      "cv2.imdecode → img",
+      "[T-27a] detect_orientation(img, ocr) → img 재할당 가능 (main.py:1985)",
+      "[T-27a-fix2] invoice_statement이면 anchor fallback 검사 (main.py:1997-2098)",
+      "for region in region_list (main.py:2100+)",
+      "  table: _ocr_table_region(img, ocr, region)",
+      "  field: _ocr_crop_region(img, ocr, x, y, w, h)",
+      "classify_document(full_lines) → doc_type",
+      "doc_type=='invoice_statement': ocr.ocr(img) 풀 OCR → ocr_lines_raw (main.py:2166)",
+      "extract_invoice_statement_fields(ocr_lines_raw) → document_fields (main.py:2622)",
+      "[T-26a-fix] fields[i].value를 document_fields[supplierCompany/buyerCompany]로 패치 (main.py:2643-2669)"
+    ],
+    "missingFromUnstructured": [
+      "detect_document (원근 보정)",
+      "deskew",
+      "ocr_max_w=950 리사이즈 (full-resolution 그대로 OCR)",
+      "CLAHE",
+      "언샤프 마스크"
+    ],
+    "fullOcrInputSize": "2483x3511 (1.jpg 원본 풀 사이즈)",
+    "ocrInputSizeComparison": {
+      "unstructured": "~950px width",
+      "template_invoice_statement": "2483x3511 full size"
+    }
+  },
+  "t27Changes": [
+    {
+      "marker": "T-27a",
+      "location": "main.py:1983-1995",
+      "behavior": "detect_orientation(img, ocr, original_wh) 호출. 224px short-side thumb로 0/90/180/270 점수 비교 후 best_angle 방향으로 img 회전.",
+      "addedOcrCalls": "224px thumb x 2~4회 (early-stop 조건)",
+      "scope": "모든 doc_type (invoice_statement, 그 외 포함)"
+    },
+    {
+      "marker": "T-27a-fix",
+      "status": "deprecated (T-27a-fix2로 대체됨)",
+      "previousConditions": "orig_anchors < 4, rot_anchors > orig+1, anchor 목록 10개"
+    },
+    {
+      "marker": "T-27a-fix2",
+      "location": "main.py:1997-2098",
+      "behavior": "invoice_statement 한정 anchor 기반 cross-check fallback. 768px short-side thumb OCR로 invoice 키워드 카운트 비교. orig < 5 AND rot >= orig+2 AND rot >= 4 일 때 180도 회전 적용.",
+      "addedOcrCalls": "768px thumb x 1회 (정상 입력도 무조건), x 1회 추가 (fallback 검사 시)",
+      "scope": "invoice_statement 한정",
+      "responseExposed": "response.templateOrientationDebug (main.py:2507-2509)"
+    }
+  ],
+  "imagePathFlow": {
+    "imdecodeAtLine": "main.py:944",
+    "cvImdecodeEXIF": "EXIF 무시 (pixel 데이터 그대로)",
+    "imgReassignments": [
+      "main.py:1985 — detect_orientation 반환값 (T-27a)",
+      "main.py:2059 — cv2.rotate(img, ROTATE_180) 적용 시 (T-27a-fix2 fallback)"
+    ],
+    "downstreamConsumers": [
+      "main.py:2109 _ocr_table_region(img, ocr, region) — img numpy 직접 사용",
+      "main.py:2132 _ocr_crop_region(img, ocr, x, y, w, h) — img numpy 직접 사용",
+      "main.py:2166 ocr.ocr(img) — invoice_statement parser용 풀 OCR"
+    ],
+    "cropFunctionImplementation": {
+      "_ocr_crop_region": "main.py:1015-1043. img[y1:y2, x1:x2] 직접 slice. 파일 재오픈 없음.",
+      "_ocr_table_region": "main.py:1502+. 같은 패턴 (img[y1:y2, x1:x2])."
+    },
+    "wiringConsistency": "모든 crop/parser가 같은 img 변수 사용 → wiring 자체는 일관됨. img가 실제로 회전됐다면 모든 결과가 정상이어야 한다."
+  },
+  "performanceAnalysis": {
+    "templatePathOcrCalls": {
+      "T27a_thumb_224px": {"size": "224x316", "count": "2~4", "estTime_s": "2~6"},
+      "T27a_fix2_anchor_768px_orig": {"size": "768x1086", "count": "1 (항상)", "estTime_s": "15~30"},
+      "T27a_fix2_anchor_768px_rot180": {"size": "768x1086", "count": "0~1 (fallback 검사 시)", "estTime_s": "15~30"},
+      "region_field_crops": {"size": "작은 crop", "count": "7~10", "estTime_s_total": "5~15"},
+      "table_region": {"size": "표 영역", "count": "1", "estTime_s": "10~20"},
+      "parser_full_OCR": {"size": "2483x3511 (full)", "count": "1", "estTime_s": "40~80"}
+    },
+    "totalEstimateSeconds": "100~180",
+    "userObservedSeconds": "153~166",
+    "rootCauseOfRegression": [
+      "T-27a-fix2 768px thumb OCR이 정상 입력에서도 1회 강제 (15~30s)",
+      "T-27a-fix2 fallback 검사 시 추가 1회 (15~30s)",
+      "기존부터 있던 issue: invoice_statement parser at line 2166이 full-resolution 2483x3511 img를 통째로 OCR (40~80s)",
+      "비정형 경로는 950px 리사이즈 후 OCR하지만 invoice_statement template은 그 단계가 없음"
+    ],
+    "regressionAttribution": {
+      "T27_added_cost": "약 60~70%",
+      "preexisting_full_size_parser_OCR": "약 30~40%"
+    }
+  },
+  "hypotheses": [
+    {
+      "id": "H1",
+      "title": "detect_orientation/T-27a-fix2 fallback이 실제로 발동하지 않는다",
+      "likelihood": "매우 높음",
+      "evidence": [
+        "깨진 결과 '서울 [배달]'이 정상 방향 1.jpg의 다른 영역 텍스트와 일치 → img 회전 안 됨",
+        "detect_orientation은 224px thumb 점수 비교 (2483x3511 입력에는 한글 너무 작아져 0/180 점수 차이 미세)",
+        "T-27a-fix2 anchor가 짧은 한글(공급자, 수량 등)을 사용 → 뒤집힌 OCR 잡음에서 5개 이상 우연 매칭 가능 (fallback 미발동)",
+        "또는 서버 재시작 안 됨으로 T-27a-fix2 자체가 live에 없음"
+      ],
+      "needsVerification": "다음 RunOCR에서 response.templateOrientationDebug.fallbackApplied / detectOrientationAngle / originalAnchorCount / rotated180AnchorCount 확인"
+    },
+    {
+      "id": "H2",
+      "title": "fallback은 발동하지만 rotated image가 crop/parser에 전달되지 않는다",
+      "likelihood": "낮음",
+      "evidence": ["main.py:2059에서 img = _rotated_180_img 재할당. for-loop(2100+) 및 parser(2166)가 같은 img 변수 사용."]
+    },
+    {
+      "id": "H3",
+      "title": "rotated image는 전달되지만 crop 함수가 원본 image_path를 재오픈한다",
+      "likelihood": "매우 낮음",
+      "evidence": ["_ocr_crop_region/_ocr_table_region 모두 numpy img 직접 받아 img[y1:y2, x1:x2] slice. 파일 경로 재오픈 없음."]
+    },
+    {
+      "id": "H4",
+      "title": "field crop과 table crop이 서로 다른 image 기준을 쓴다",
+      "likelihood": "매우 낮음",
+      "evidence": ["for-loop(main.py:2100-2141)에서 둘 다 같은 img 인자."]
+    },
+    {
+      "id": "H5",
+      "title": "OCR은 rotated를 쓰지만 overlay/preview만 원본이라 사용자 헷갈림",
+      "likelihood": "부분적 가능, 그러나 불충분",
+      "evidence": ["response['original_image']는 회전 전 원본 보존. 그러나 사업자번호 값 '서울 [배달]'은 실제 OCR 결과 → 단순 표시 혼동만으로는 설명 안 됨."]
+    },
+    {
+      "id": "H6",
+      "title": "detect_orientation angle 의미 반대 해석",
+      "likelihood": "매우 낮음",
+      "evidence": ["preprocess.py:327-334 — best_angle==180이면 cv2.rotate(image, ROTATE_180) 반환. 호출자가 그대로 사용."]
+    },
+    {
+      "id": "H7",
+      "title": "template region 좌표가 정상 방향이 아닌 다른 방향 기준으로 저장됨",
+      "likelihood": "낮음~중간 (확인 필요)",
+      "evidence": ["사용자 시나리오상 정상 방향 1.jpg에서 template 생성 가정 → 정상 방향 좌표일 것. 그러나 코드만으로 확정 불가."],
+      "needsVerification": "DB region 좌표 vs 정상 1.jpg의 실제 필드 좌표 비교"
+    },
+    {
+      "id": "H8",
+      "title": "T-26a-fix가 일부 field value만 parser 값으로 덮어써서 상호만 정상처럼 보임",
+      "likelihood": "매우 높음 (확정)",
+      "evidence": [
+        "main.py:2643-2669. _T26A_KOFIELD_MAP에 4개 koField만 (공급자 상호/회사명, 공급받는자 상호/회사명).",
+        "사업자번호/주소/성명/품목표는 region crop 원본 노출 → 회사 상호만 정상으로 보이는 비대칭 패턴 정확히 설명."
+      ]
+    }
+  ],
+  "whySupplierBusinessNoIsSeoulDelivery": {
+    "summary": "img가 회전되지 않은 상태에서 정상 방향 region 좌표를 뒤집힌 이미지에 적용하면, 좌표 (x,y,w,h)가 가리키는 위치는 정상 이미지 기준 (orig_w - x - w, orig_h - y - h, w, h) 즉 우측 하단의 다른 영역. 1.jpg 우측 하단은 거래조건/배달지/요청사항 텍스트 영역으로 추정. OCR 결과 '서울 [배달]'.",
+    "implication": "이 단서가 img 미회전을 강력하게 증명함 → H1 가능성 최고"
+  },
+  "whyCompanyNamesAreCorrect": {
+    "summary": "T-26a-fix가 fields[i].value를 document_fields.supplierCompany/buyerCompany로 덮어씀. parser가 어떻게 정상 회사명을 추출했는지는 두 가능성: (A) img가 실제 회전됐다면 region crop도 정상이어야 하는데 깨졌으므로 모순. (B) img는 뒤집힌 상태 그대로지만 parser anchor 매칭이 뒤집힌 OCR 노이즈에서 우연히 회사명을 잡았을 가능성. 또는 부분적으로 detect_orientation이 가끔 발동했을 가능성.",
+    "verificationNeeded": "extract_debug.invoice_statement.document_fields.supplierCompany 의 추출 source / anchor 일치 여부 live 데이터 확인 필요"
+  },
+  "strategies": [
+    {
+      "id": "S1",
+      "title": "T-27a/T-27a-fix/T-27a-fix2 전부 롤백",
+      "normalSpeedRecover": "즉시 회복",
+      "unstructuredImpact": "없음",
+      "regressionRisk": "매우 낮음",
+      "implementationDifficulty": "매우 낮음",
+      "flippedSolution": "복원 안 됨 (다시 깨짐)",
+      "applicableWhen": "현재 T-27 코드가 구조적으로 잘못됐거나 성능 악화가 심각"
+    },
+    {
+      "id": "S2",
+      "title": "현재 T-27 구조 유지하고 wiring만 수정",
+      "normalSpeedRecover": "없음 (속도 그대로)",
+      "unstructuredImpact": "없음",
+      "regressionRisk": "이미 회귀 상태",
+      "implementationDifficulty": "중간",
+      "flippedSolution": "조건 튜닝 필요",
+      "applicableWhen": "fallback은 발동하는데 image 전달이 끊긴 경우 (코드 검증상 wiring은 일관됨 → 부적합)"
+    },
+    {
+      "id": "S3",
+      "title": "자동 orientation 제거 + 깨짐 감지 시 1회 180 재시도 (guarded fallback)",
+      "normalSpeedRecover": "정상은 빠름",
+      "unstructuredImpact": "없음",
+      "regressionRisk": "중간",
+      "implementationDifficulty": "중간 (실패 판정 기준 필요)",
+      "flippedSolution": "뒤집힘만 추가 비용"
+    },
+    {
+      "id": "S4",
+      "title": "RunOCR 화면에서 수동 90/180 회전 버튼 제공",
+      "normalSpeedRecover": "100% (자동 OCR 비용 0)",
+      "unstructuredImpact": "없음 (frontend만)",
+      "regressionRisk": "매우 낮음",
+      "implementationDifficulty": "낮음",
+      "flippedSolution": "사용자가 직접 눌러 해결"
+    },
+    {
+      "id": "S5",
+      "title": "업로드 시점에 orientation normalization → 정상화 이미지를 RunOCR 입력으로 저장",
+      "normalSpeedRecover": "정상화 단계 1회만 발생",
+      "unstructuredImpact": "최소 (preview/overlay 일관성 정리 필요)",
+      "regressionRisk": "중간",
+      "implementationDifficulty": "높음",
+      "flippedSolution": "완전 해결"
+    }
+  ],
+  "recommendedDirection": {
+    "phaseA": {
+      "action": "T-27a / T-27a-fix / T-27a-fix2 전부 롤백",
+      "method": "백업된 main_20260519_1631_before_T27a_template_orientation_path_alignment.py 로 단일 복원 (또는 3개 마커 직접 제거)",
+      "effect": "처리 시간 즉시 회복 (153~166s → 60s 이하), 정상 문서 회귀 위험 0",
+      "cost": "뒤집힌 문서는 다시 깨짐 (그러나 사용자가 인지 가능)"
+    },
+    "phaseB": {
+      "action": "RunOCR UI에 수동 90/180 회전 버튼 추가 (frontend 단독)",
+      "scope": "frontend만. OCR 코드 무영향.",
+      "effect": "사용자가 미리보기에서 뒤집힘 인지 → 회전 → RunOCR 실행 → 좌표 기준 일치 → 모든 결과 정상",
+      "advantages": "자동 detection 비용 0, 정상 문서 100% 빠른 처리"
+    },
+    "phaseC_optional": {
+      "action": "(선택) 업로드 시점 orientation normalization → 정상화 이미지 저장 후 RunOCR 입력으로 사용",
+      "scope": "preview/overlay/저장 이미지 일관성 정리 필요. 다음 작업으로 분리."
+    }
+  },
+  "rejectedStrategies": {
+    "S2": "T-27a-fix2 wiring은 이미 정확함. 속도 회귀가 본질 → 유지 가치 없음.",
+    "S3": "실패 판정 기준이 anchor 매칭이 되면 다시 T-27a-fix2와 같은 회귀 위험. 우선순위 낮음."
+  },
+  "nextTaskConditions": [
+    "현재 T-27a-fix2 적용된 main.py를 backup/main_20260519_before_T27_rollback.py로 보관",
+    "롤백 대상 코드 마커 3개: T-27a (main.py:1977-1995), T-27a-fix2 (main.py:1997-2098), templateOrientationDebug 노출 (main.py:2507-2509)",
+    "건드리지 말 것: 비정형 OCR 경로 (else 블록 line 2173+), T-25 cleanup, T-26a/T-26a-fix, invoice_statement.py, preprocess.py, preprocessing_policy.py, frontend",
+    "검증: py_compile main.py, npm run typecheck, npm run build",
+    "live 검증: 정상 1.jpg RunOCR → 처리 시간 60s 이하 + 28행 / 회사상호 / T-25 / T-26 기준선 유지",
+    "수동 회전 버튼은 별도 task로 분리"
+  ],
+  "baselinePreserved": {
+    "t25d_cleanup": "무영향",
+    "t25f_reset_no_warning_ui": "무영향",
+    "t25g_spec_cleanup": "무영향",
+    "t26a_company_normalization": "무영향",
+    "t26a_fix_original_value_split": "무영향",
+    "invoice_statement_rowcount_7of7": "무영향",
+    "unstructured_receipt_path": "무영향"
+  },
+  "verificationNotes": [
+    "response.templateOrientationDebug.fallbackApplied 값을 다음 RunOCR에서 확인하면 H1을 직접 검증 가능",
+    "DB의 region 좌표가 정상 방향 기준인지 검증 필요 (H7)",
+    "invoice_statement.py anchor 매칭이 뒤집힌 OCR에서 어떻게 회사명을 추출하는지 검증 필요 (다음 진단 task)",
+    "서버 재시작 여부 — T-27a-fix2 코드가 live에 실제로 반영됐는지 (response에 templateOrientationDebug 키가 보이는지) 확인 필수"
+  ]
+}

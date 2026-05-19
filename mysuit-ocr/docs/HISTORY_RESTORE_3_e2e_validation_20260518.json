@@ -1,0 +1,269 @@
+{
+  "task": "HISTORY-RESTORE-3",
+  "date_initial": "2026-05-18",
+  "date_updated": "2026-05-19",
+  "method": "static-code-analysis",
+  "tool": "Claude Code (claude-sonnet-4-6)",
+  "overall": "PASS",
+  "overall_note": "Issue I-5 (groundTruth exclusion) requires team decision before final close",
+  "typecheck": "PASS",
+  "typecheck_errors": 0,
+  "build": "PASS",
+  "build_pages": 21,
+  "build_note": "ESLint warning: nextVitals is not iterable (non-blocking, Next.js 15 plugin compat issue)",
+  "code_modified": false,
+  "history_restore_2a_closeable": true,
+  "history_restore_2b_closeable": true,
+  "history_restore_2c_closeable": "conditional (pending I-5 decision)",
+  "files_analyzed": [
+    "src/lib/autofillEngine.ts",
+    "src/lib/historyStore.ts",
+    "src/lib/restoreProfileStore.ts",
+    "src/app/history/page.tsx",
+    "src/app/autorestore/page.tsx",
+    "src/components/history/HistoryWorkspace.tsx",
+    "src/components/history/DetailHistoryView.tsx",
+    "src/components/autorestore/AutoRestoreWorkspace.tsx",
+    "src/components/upload/UploadWorkspace.tsx",
+    "backup/autofillEngine_20260506_before_autofill_detail_ui.ts"
+  ],
+  "localStorage": {
+    "mysuit_ocr_history": {
+      "defined_in": "src/lib/historyStore.ts",
+      "storage_key": "mysuit_ocr_history",
+      "max_records": 50,
+      "read": "readHistoryRuns() — try/catch, returns [] on error",
+      "write": "appendHistoryRun(), updateHistoryRun() — try/catch with QuotaExceededError fallback (50→30→15→5→1)",
+      "delete_row": "deleteHistoryRun() — try/catch",
+      "delete_all": "clearHistoryRuns() — no try/catch (no callers, low risk)",
+      "parse_guard": true,
+      "structure_unchanged": true
+    },
+    "mysuit_ocr_restore_profiles": {
+      "defined_in": "src/lib/restoreProfileStore.ts",
+      "storage_key": "mysuit_ocr_restore_profiles",
+      "read": "readRestoreProfiles() — try/catch, Array.isArray check, returns [] on error",
+      "write": "writeRestoreProfiles() — no internal try/catch; callers wrap in try/catch",
+      "delete": "deleteRestoreProfile(businessNo, partyType) — reads via guarded path, then writes",
+      "sort": "sortRestoreProfilesByUpdatedAt() — bTime.localeCompare(aTime) descending",
+      "dedup_key": "businessNo + partyType composite",
+      "parse_guard": true
+    },
+    "cross_contamination": false,
+    "cross_contamination_evidence": "historyStore and restoreProfileStore have no cross-imports. autofillEngine reads both but writes neither. deleteRestoreProfile() only writes mysuit_ocr_restore_profiles. deleteHistoryRun() only writes mysuit_ocr_history."
+  },
+  "autofill_priority": {
+    "before_2c": ["groundTruth (mysuit_ocr_groundtruth)", "history (mysuit_ocr_history)"],
+    "after_2c": ["restoreProfiles (mysuit_ocr_restore_profiles)", "history fallback (mysuit_ocr_history)"],
+    "groundTruth_excluded": true,
+    "groundTruth_dead_code": "readGroundTruthCandidateRecords() defined at autofillEngine.ts:271 but never called after 2C",
+    "mixing_prevented": true,
+    "code_ref": "autofillEngine.ts:361-378"
+  },
+  "scenarios": {
+    "A_restore_profile_priority": {
+      "label": "restore profile 후보 있음",
+      "status": "PASS",
+      "detail": "collectInternalAutofillCandidates(): matchingRestore.length > 0 → immediate return, no mixing with history",
+      "code_ref": "autofillEngine.ts:363-371"
+    },
+    "A1_empty_field_guard": {
+      "label": "restore profile 빈 필드 비덮어쓰기",
+      "status": "PASS",
+      "detail": "readRestoreProfileCandidates() filters with isEmptyOcrValue() + isMeaninglessValue() before adding to candidates",
+      "code_ref": "autofillEngine.ts:338-343"
+    },
+    "A2_sourceType": {
+      "label": "sourceType: restoreProfile 설정",
+      "status": "PASS",
+      "detail": "readRestoreProfileCandidates() sets sourceType: 'restoreProfile' on each candidate",
+      "code_ref": "autofillEngine.ts:349"
+    },
+    "B_history_fallback": {
+      "label": "restore profile 없음 + history fallback",
+      "status": "PASS",
+      "detail": "When matchingRestore.length === 0, returns readHistoryCandidateRecords()",
+      "code_ref": "autofillEngine.ts:372-373"
+    },
+    "B1_user_edited_filter": {
+      "label": "isUserEditedHistoryField 필터 유지",
+      "status": "PASS",
+      "detail": "isUserEditedHistoryField() logic preserved: source=text OR modified≠original",
+      "code_ref": "autofillEngine.ts:251-258"
+    },
+    "B2_allowlist": {
+      "label": "history fallback allowlist 5개 유지",
+      "status": "PASS",
+      "detail": "candidateFields limited to: companyName, businessNumber, representative, tel, address (normalized keys)",
+      "code_ref": "autofillEngine.ts:300"
+    },
+    "C_no_candidates": {
+      "label": "둘 다 없음 — 후보 없음 상태",
+      "status": "PASS",
+      "detail": "status='no_candidates', candidateCount=0, message='자동복원: 같은 사업자번호의 저장 기록 없음', no crash",
+      "code_ref": "UploadWorkspace.tsx:900, 914"
+    },
+    "D_delete_isolation": {
+      "label": "Restore 삭제 후 동작 + history 무영향",
+      "status": "PASS",
+      "detail": "deleteRestoreProfile() only writes mysuit_ocr_restore_profiles. mysuit_ocr_history untouched.",
+      "code_ref": "restoreProfileStore.ts:63-69"
+    },
+    "E_partial_fields": {
+      "label": "일부 필드만 있는 restore profile",
+      "status": "PASS",
+      "detail": "Empty fields filtered in readRestoreProfileCandidates(). applyAutofillToOutputFields() preserves currentValue when no valid auto suggestion for a field.",
+      "code_ref": "autofillEngine.ts:338-343, 453-468"
+    },
+    "F1_history_list": {
+      "label": "History 목록 UI 회귀",
+      "status": "PASS",
+      "detail": "HistoryWorkspace.tsx unchanged"
+    },
+    "F2_history_detail": {
+      "label": "History 상세 UI 회귀",
+      "status": "PASS",
+      "detail": "DetailHistoryView.tsx: [저장] unchanged, [자동복원 후보 저장] added, output_fields display unchanged",
+      "code_ref": "DetailHistoryView.tsx:578-583"
+    },
+    "F3_restore_tab": {
+      "label": "Restore 탭 UI 회귀",
+      "status": "PASS",
+      "detail": "AutoRestoreWorkspace.tsx: list/detail/delete/empty-state/confirm-modal all implemented, history unaffected"
+    },
+    "F4_preview": {
+      "label": "RunOCR Preview UI 회귀",
+      "status": "PASS",
+      "detail": "OcrResultPanel.tsx type imports only, rendering logic unchanged"
+    },
+    "F5_custom_validation": {
+      "label": "Custom/Validation 탭 UI 회귀",
+      "status": "PASS",
+      "detail": "OcrResultPanel.tsx unchanged, autofillEngine types-only reference"
+    },
+    "G_localstorage_safety": {
+      "label": "localStorage 안전성",
+      "status": "PASS",
+      "detail": "See localStorage section above. Cross-contamination: none. Parse guards: both keys. Sort: descending. Dedup: businessNo+partyType."
+    },
+    "H_save_button": {
+      "label": "자동복원 후보 저장 버튼",
+      "status": "PASS",
+      "checks": {
+        "no_bizno_guard": "PASS — DetailHistoryView.tsx:424",
+        "no_fields_guard": "PASS — DetailHistoryView.tsx:428",
+        "diff_modal": "PASS — DetailHistoryView.tsx:461-471, 691-740",
+        "same_value_alert": "PASS — DetailHistoryView.tsx:466-469",
+        "cancel_no_save": "PASS — setRestoreConfirm(null) only",
+        "update_merge_no_overwrite": "PASS — handleRestoreConfirmOk() spreads existing.fields, overwrites only if !isMeaninglessValue(val)",
+        "createdAt_preserved": "PASS — ...newProfile, createdAt: existing.createdAt",
+        "updatedAt_refreshed": "PASS — updatedAt: now in newProfile"
+      }
+    }
+  },
+  "issues": [
+    {
+      "id": "I-1",
+      "severity": "low",
+      "title": "ESLint warning: nextVitals is not iterable",
+      "symptom": "Printed during npm run build, non-blocking",
+      "cause": "Next.js 15.5.x / eslint-config-next version mismatch",
+      "affected_file": "eslint config",
+      "impact": "None on runtime. CI/CD may fail if ESLint configured as error.",
+      "fix_candidate": "Update eslint-config-next or disable nextVitals rule",
+      "priority": "low",
+      "fix_now": false
+    },
+    {
+      "id": "I-2",
+      "severity": "low",
+      "title": "writeRestoreProfiles() has no internal QuotaExceededError handling",
+      "symptom": "May throw on localStorage full without graceful fallback",
+      "cause": "localStorage.setItem() called directly without try/catch",
+      "affected_file": "src/lib/restoreProfileStore.ts:58-61",
+      "impact": "Low — callers catch the error. No granular fallback unlike historyStore.",
+      "fix_candidate": "Add QuotaExceededError handling inside writeRestoreProfiles() consistent with historyStore pattern",
+      "priority": "low",
+      "fix_now": false
+    },
+    {
+      "id": "I-3",
+      "severity": "very_low",
+      "title": "clearHistoryRuns() has no try/catch",
+      "symptom": "Rare — removeItem almost never throws",
+      "cause": "window.localStorage.removeItem() called directly",
+      "affected_file": "src/lib/historyStore.ts",
+      "impact": "Very low — no current callers",
+      "fix_candidate": "Add try/catch if callers are added",
+      "priority": "very_low",
+      "fix_now": false
+    },
+    {
+      "id": "I-4",
+      "severity": "very_low",
+      "title": "allSame check is one-directional in handleSaveRestoreProfile",
+      "symptom": "If existing profile has fields not in newProfile, may report allSame incorrectly",
+      "cause": "Iterates only over newProfile.fields keys",
+      "affected_file": "src/components/history/DetailHistoryView.tsx:461-464",
+      "impact": "Practically none — RestoreProfileFields has exactly 4 fixed keys",
+      "fix_candidate": "Bidirectional comparison or iterate over PROFILE_FIELD_LABELS keys",
+      "priority": "very_low",
+      "fix_now": false
+    },
+    {
+      "id": "I-5",
+      "severity": "medium",
+      "title": "groundTruth candidates excluded from autofill after HISTORY-RESTORE-2C",
+      "symptom": "mysuit_ocr_groundtruth data no longer used for autofill suggestions",
+      "reproduction_steps": [
+        "1. Click [저장] in History detail → data saved to mysuit_ocr_groundtruth",
+        "2. Run OCR on same-bizno document",
+        "3. groundTruth values NOT applied as autofill (excluded from collectInternalAutofillCandidates)"
+      ],
+      "cause": "HISTORY-RESTORE-2C rewrote collectInternalAutofillCandidates(). Old: [...readGroundTruthCandidateRecords(), ...readHistoryCandidateRecords()]. New: restoreProfile > history only. readGroundTruthCandidateRecords() is now dead code.",
+      "affected_file": "src/lib/autofillEngine.ts:361-378",
+      "backup_evidence": "backup/autofillEngine_20260506_before_autofill_detail_ui.ts:313-318",
+      "impact": {
+        "autofill_behavior_changed": true,
+        "groundtruth_display_ok": true,
+        "groundtruth_data_intact": true,
+        "dead_code": "readGroundTruthCandidateRecords() at autofillEngine.ts:271"
+      },
+      "fix_candidates": [
+        "Option A: Re-add groundTruth as 3rd priority in collectInternalAutofillCandidates()",
+        "Option B: Confirm exclusion as policy, delete readGroundTruthCandidateRecords()",
+        "Option C: Include groundTruth only when both restoreProfile and history return no candidates"
+      ],
+      "priority": "medium",
+      "fix_now": false,
+      "requires_team_decision": true
+    }
+  ],
+  "ui_regression": {
+    "history_list": "PASS",
+    "history_detail": "PASS",
+    "restore_tab": "PASS",
+    "runocr_preview": "PASS",
+    "custom_tab": "PASS",
+    "validation_tab": "PASS"
+  },
+  "conclusion": {
+    "overall_pass": true,
+    "history_restore_2a_requirements_met": true,
+    "history_restore_2b_requirements_met": true,
+    "history_restore_2c_requirements_met": true,
+    "close_2a": "YES",
+    "close_2b": "YES",
+    "close_2c": "CONDITIONAL — confirm I-5 groundTruth exclusion intent",
+    "autofill_structure_separation_complete": true,
+    "no_code_modified_in_this_task": true,
+    "runtime_verification_recommended": true,
+    "runtime_items": [
+      "Actual OCR run → mysuit_ocr_history entry written",
+      "Save restore profile button → mysuit_ocr_restore_profiles entry appears in /autorestore",
+      "Second OCR same bizno → autofill from restoreProfile applied",
+      "Delete restore profile → history fallback autofill activated",
+      "Full UI flow: /history → detail → [자동복원 후보 저장] → /autorestore → verify"
+    ]
+  }
+}

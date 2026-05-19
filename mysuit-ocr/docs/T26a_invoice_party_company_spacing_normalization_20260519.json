@@ -1,0 +1,104 @@
+{
+  "generatedAt": "2026-05-19",
+  "scope": "T26a_invoice_party_company_spacing_normalization",
+  "tool": "Claude Sonnet 4.6 (Claude Code)",
+  "codeModified": true,
+  "backupFiles": [
+    "ocr-server/backup/invoice_statement_20260519_1532_before_T26a_party_company_spacing_normalization.py"
+  ],
+  "modifiedFiles": [
+    "ocr-server/extractors/invoice_statement.py"
+  ],
+  "changesSummary": {
+    "function_modified": "_normalize_invoice_company_name (Rule C: trailing code removal added)",
+    "application_site": "fields.update() — supplierCompany and buyerCompany now use _normalize_invoice_company_name()[0]",
+    "previousBehavior": "normalization was debug-only (valueDirectChange: False, not applied to actual output)",
+    "newBehavior": "normalization applied to actual supplierCompany and buyerCompany fields"
+  },
+  "appliedRules": {
+    "ruleA_paren_normalization": {
+      "description": "(주), ㈜, (주 ), ( 주) 등 법인 괄호 표기 정규화",
+      "examples": [
+        "부광약품 ( 주 ) → 부광약품(주)",
+        "부광약품(주 ) → 부광약품(주)"
+      ],
+      "existingBehavior": true,
+      "note": "기존 _normalize_invoice_company_name에 이미 구현됨"
+    },
+    "ruleB_internal_space_removal": {
+      "description": "회사명 내 한글 글자 사이 불필요 공백 제거",
+      "examples": [
+        "부광 약 품(주) → 부광약품(주)",
+        "백 제 약 품(주) → 백제약품(주)"
+      ],
+      "existingBehavior": true,
+      "note": "기존 re.sub(r'\\s+', '', normalized) 로직, T-26a에서 fields output에 실제 적용됨"
+    },
+    "ruleC_trailing_code_removal": {
+      "description": "공급받는자 상호 뒤 거래처 코드 제거 (숫자+대문자 혼합 5-12자)",
+      "condition": "공백 + [A-Z0-9]{5,12} + 문자열 끝, 대문자와 숫자 모두 포함",
+      "examples": [
+        "백제약품(주)영등포지점 1010546N → 백제약품(주)영등포지점"
+      ],
+      "newInT26a": true,
+      "warningKey": "company_trailing_code_stripped"
+    }
+  },
+  "beforeAfter_1jpg": {
+    "supplierCompany": {
+      "before": "부광 약 품(주)",
+      "after": "부광약품(주)",
+      "gtExpected": "부광약품(주)",
+      "match": true
+    },
+    "buyerCompany": {
+      "before": "백제약품(주)영등포지점 1010546N (if code present) or 백제약품(주)영등포지점",
+      "after": "백제약품(주)영등포지점",
+      "gtExpected": "백제약품(주)영등포지점",
+      "match": true
+    },
+    "trailingCodeDecision": {
+      "code": "1010546N",
+      "removed": true,
+      "reason": "8-char mixed uppercase+digit pattern matches customer code regex. Company name ends with '지점' before the code.",
+      "safety": "conservative — requires both digits AND uppercase to qualify as code"
+    }
+  },
+  "unchangedFields": [
+    "supplierAddress — _normalize_invoice_address, 공백 구조 유지",
+    "supplierBizNumber — 변경 없음",
+    "supplierRepresentative — 변경 없음",
+    "buyerAddress — _normalize_invoice_address, 공백 구조 유지",
+    "buyerBizNumber — 변경 없음",
+    "buyerRepresentative — 변경 없음",
+    "tableRows (itemName, spec, quantity, amount, ...) — 변경 없음",
+    "issueDate — 변경 없음"
+  ],
+  "t25BaselinePreserved": {
+    "t25d_amount_cleanup": true,
+    "t25d_qty_trailing_symbol": true,
+    "t25g_spec_paren": true,
+    "t25g_spec_ml": true,
+    "t25f_reset_no_warning_ui": true,
+    "rowCount_7of7_exact": true
+  },
+  "verificationResults": {
+    "py_compile": "OK",
+    "unitTests": "6/6 PASS (_normalize_invoice_company_name)",
+    "integrationTest": "ALL ASSERTIONS PASSED",
+    "typecheck": "PASS",
+    "build": "PASS"
+  },
+  "nextActions": [
+    {
+      "taskId": "T-26b",
+      "title": "다른 샘플 party company 정규화 확인",
+      "description": "2~7.pdf 공급자/공급받는자 상호에도 동일 정규화가 안전하게 적용되는지 확인"
+    },
+    {
+      "taskId": "correction-profile-v1",
+      "title": "tableRows correction profile 설계",
+      "description": "사용자 Custom 탭 수정 이력 기반 후보 표시 구조"
+    }
+  ]
+}

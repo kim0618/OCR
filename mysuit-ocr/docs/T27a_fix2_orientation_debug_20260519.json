@@ -1,0 +1,113 @@
+{
+  "generatedAt": "2026-05-19",
+  "scope": "T27a_fix2_orientation_debug",
+  "tool": "Claude Sonnet 4.6 (Claude Code)",
+  "codeModified": true,
+  "backupFiles": [
+    "ocr-server/backup/main_20260519_before_T27a_fix2_orientation_live_failure.py"
+  ],
+  "modifiedFiles": [
+    "ocr-server/main.py"
+  ],
+  "t27a_fix_failure_reason": {
+    "conditions_too_weak": [
+      "orig < 4: 뒤집힌 이미지에서 anchor가 3개 이하여야 검사 시작 — 너무 관대",
+      "rot > orig + 1: 단 2개 더 많아도 적용 — 절대값 최소값 조건 없음",
+      "anchor 10개: 정상 방향 전용 키워드(등록번호, 상호, 사업장주소 등) 미포함"
+    ]
+  },
+  "changes": {
+    "anchor_list": {
+      "before_count": 10,
+      "after_count": 15,
+      "added": ["등록번호", "상호", "사업장주소", "유효기간", "소계"]
+    },
+    "threshold_fallback_check": {
+      "before": "orig < 4",
+      "after": "orig < 5"
+    },
+    "threshold_apply": {
+      "before": "rot > orig + 1",
+      "after": "rot >= orig + 2 AND rot >= 4"
+    },
+    "new_debug_struct": "templateOrientationDebug in response (항상 포함, invoice_statement 외에는 enabled=false)"
+  },
+  "templateOrientationDebug_fields": {
+    "enabled": "bool — docType이 invoice_statement이면 true",
+    "docType": "string — _template_doc_type or documentType",
+    "detectOrientationAngle": "int — detect_orientation이 추천한 각도 (0/90/180/270)",
+    "fallbackChecked": "bool — anchor fallback 로직 진입 여부",
+    "fallbackApplied": "bool — 180도 회전 실제 적용 여부",
+    "appliedRotation": "string — 'none' or '180'",
+    "originalAnchorCount": "int or null — 현재 img에서 발견된 anchor 수",
+    "rotated180AnchorCount": "int or null — 180도 회전 img에서 발견된 anchor 수 (검사 시에만)",
+    "usedImageForRegionCrop": "string — 'original' or 'rotated180'",
+    "usedImageForTableCrop": "string — 'original' or 'rotated180'",
+    "usedImageForParser": "string — 'original' or 'rotated180'",
+    "reason": "string — 발동/미발동 이유 상세",
+    "fallbackMs": "float — anchor fallback 수행 시간 (ms)"
+  },
+  "expected_normal_case": {
+    "input": "정상 방향 1.jpg",
+    "detectOrientationAngle": 0,
+    "originalAnchorCount": "10 이상",
+    "fallbackApplied": false,
+    "reason": "fallback skipped: orig_anchors >= 5",
+    "result": "기존 결과 그대로 (회귀 없음)"
+  },
+  "expected_flipped_case": {
+    "input": "180도 뒤집힌 1.jpg",
+    "detectOrientationAngle": 0,
+    "originalAnchorCount": "0~2",
+    "rotated180AnchorCount": "8~13",
+    "fallbackApplied": true,
+    "appliedRotation": "180",
+    "usedImageForRegionCrop": "rotated180",
+    "usedImageForParser": "rotated180",
+    "expected_fields": {
+      "supplierBizNumber": "118-81-00450",
+      "supplierCompany": "부광약품(주)",
+      "buyerBizNumber": "1138504425",
+      "buyerCompany": "백제약품(주)영등포지점",
+      "rowCount": 28
+    }
+  },
+  "verification": {
+    "py_compile": "OK",
+    "typecheck": "PASS",
+    "build": "PASS"
+  },
+  "unstructured_path_impact": {
+    "modified": false,
+    "reason": "templateOrientationDebug는 if region_list: 블록 내에서만 생성. locals() 체크로 response에 추가되므로 unstructured path에서는 response에 포함 안 됨"
+  },
+  "baseline_preserved": {
+    "t25d_cleanup": true,
+    "t25g_spec_cleanup": true,
+    "t25f_reset_no_warning_ui": true,
+    "t26a_company_normalization": true,
+    "t26a_fix_original_value_split": true,
+    "itemName_no_autofix": true,
+    "preprocessing_policy_unchanged": true,
+    "invoice_statement_parser_unchanged": true,
+    "frontend_unchanged": true
+  },
+  "next_actions": [
+    {
+      "action": "서버 재시작 후 뒤집힌 1.jpg RunOCR 실행",
+      "checklist": [
+        "templateOrientationDebug.fallbackApplied == true",
+        "rowCount == 28",
+        "공급자 사업자번호 == 118-81-00450",
+        "공급받는자 사업자번호 == 1138504425"
+      ]
+    },
+    {
+      "action": "정상 1.jpg 회귀 확인",
+      "checklist": [
+        "templateOrientationDebug.fallbackApplied == false",
+        "기존 결과 동일"
+      ]
+    }
+  ]
+}

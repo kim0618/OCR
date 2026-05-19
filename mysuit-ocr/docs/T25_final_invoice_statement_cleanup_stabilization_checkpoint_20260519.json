@@ -1,0 +1,209 @@
+{
+  "generatedAt": "2026-05-19",
+  "scope": "T25_final_invoice_statement_cleanup_stabilization_checkpoint",
+  "tool": "Claude Sonnet 4.6 (Claude Code)",
+  "type": "checkpoint_documentation",
+  "codeModifiedThisTurn": false,
+  "purpose": "T-25 계열 작업 완료 후 invoice_statement 후속 작업의 기준선(checkpoint) 문서화. 이 기준선은 '더 이상 수정 안 함'이 아니라 '다음 작업의 회귀 감지 기준'이다.",
+
+  "t25_series_summary": {
+    "T25_analysis": {
+      "task": "T-25 invoice_statement 1.jpg 수기/빨간펜 마킹 오염 분석",
+      "codeModified": false,
+      "outcome": [
+        "1.jpg rowCount 28/28 exact 유지",
+        "invoice_statement 7개 샘플 7/7 rowCount exact 재확인",
+        "수기 오염 의심 cell 분류 완료",
+        "safe cleanup 후보 vs 보류 후보 분리"
+      ],
+      "contaminatedCells": {
+        "source_garbled_hold": ["row4:manufacturingNo", "row4:expiryDate", "row12:quantity"],
+        "numeric_ambiguous": ["row4:spec(6OT)", "row12:spec(3OT)"],
+        "printed_value_plus_markup": ["row19:amount", "row20:amount", "row21:amount", "row26:amount"],
+        "no_action": ["row1:spec(15m|*6포)", "row23:spec(150mI)"]
+      }
+    },
+    "T25d_cleanup": {
+      "task": "T-25d invoice_statement cell-level safe cleanup",
+      "codeModified": true,
+      "modifiedFiles": ["ocr-server/extractors/invoice_statement.py"],
+      "appliedRules": {
+        "amount_comma_space": {
+          "pattern": "\\d,\\s+\\d → \\d,\\d",
+          "examples": [
+            "row19 amount: '301, 100' → '301,100'",
+            "row20 amount: '782, 160' → '782,160'",
+            "row21 amount: '163, 100' → '163,100'",
+            "row26 amount: '220, 890' → '220,890'"
+          ]
+        },
+        "quantity_trailing_symbol": {
+          "pattern": "숫자 + 공백 + 단독기호 → 숫자만",
+          "examples": ["row5 quantity: '360 ^' → '360'"]
+        },
+        "warning_only": {
+          "keys": [
+            "quantity:handwritten_overlay_suspected:rowN",
+            "manufacturingNo:handwritten_overlay_suspected:rowN",
+            "spec:numeric_alpha_ambiguous:rowN:VALUE"
+          ],
+          "note": "valueMappingWarnings 추가만, row value 불변"
+        }
+      },
+      "notModified": [
+        "itemName (자동 보정 금지)",
+        "spec O/0 혼동 (자동 보정 금지)",
+        "quantity 빈 값 (자동 삽입 금지)",
+        "manufacturingNo/expiryDate 빈 값 (자동 복구 금지)"
+      ],
+      "regressionResult": "rowCount 7/7 exact 유지"
+    },
+    "T25f_warning_ui": {
+      "task": "T-25f Custom 탭 tableRows cell warning 표시 시도",
+      "codeModified": true,
+      "modifiedFiles": [
+        "mysuit-ocr/src/lib/invoiceTableDisplay.ts",
+        "mysuit-ocr/src/components/upload/OcrResultPanel.tsx"
+      ],
+      "attempted": "Custom 탭 품목표 셀에 ⚠ 아이콘 + amber border/background로 OCR 오인식 의심 표시",
+      "resetReason": "regex 기반 자동 탐지는 과탐지/미탐지 위험이 있으며, 품목코드/과거 수정 이력/GT/마스터 데이터가 없는 현재 단계에서는 정확한 warning 판단이 어렵다고 결정"
+    },
+    "T25f_RESET": {
+      "task": "T-25f RESET — Custom 탭 cell warning 표시 제거",
+      "codeModified": true,
+      "modifiedFiles": [
+        "mysuit-ocr/src/lib/invoiceTableDisplay.ts",
+        "mysuit-ocr/src/components/upload/OcrResultPanel.tsx"
+      ],
+      "removed": [
+        "CustomCellWarning 타입",
+        "getCustomTableCellWarning 함수",
+        "itemName/spec warning 탐지 로직",
+        "Custom 탭 셀 ⚠ 아이콘",
+        "warning용 amber border/background",
+        "cellWarn 계산 코드"
+      ],
+      "kept": [
+        "Custom 탭 품목표 렌더링",
+        "textarea 편집 UX",
+        "textarea title={전체값} (hover로 전체값 확인)",
+        "기존 table-level missingExpectedWarning 배지 (T-25f 이전부터 존재)",
+        "T-25d backend cleanup"
+      ],
+      "verificationResult": "typecheck PASS, build PASS"
+    },
+    "T25g_spec_cleanup": {
+      "task": "T-25g invoice_statement spec trailing character safe cleanup",
+      "codeModified": true,
+      "modifiedFiles": ["ocr-server/extractors/invoice_statement.py"],
+      "appliedRules": {
+        "ruleA_closing_parenthesis": {
+          "condition": "'(' 있음 + ')' 없음 + 길이 ≤20자",
+          "examples": ["500T(B → 500T(B)"]
+        },
+        "ruleB_ml_suffix": {
+          "condition": "^\\d{1,4}[mM]$ fullmatch",
+          "examples": ["150m → 150ml", "500m → 500ml"]
+        }
+      },
+      "improvedCells": [
+        {"rowIndex": 8,  "field": "spec", "before": "500T(B",  "after": "500T(B)"},
+        {"rowIndex": 23, "field": "spec", "before": "150m",    "after": "150ml"},
+        {"rowIndex": 26, "field": "spec", "before": "500m",    "after": "500ml"}
+      ],
+      "unchangedSpecs": ["15m|*6포", "150mI", "500n1", "30T", "500C", "100T", "120DOSE", "10g", "4T"],
+      "verificationResult": "py_compile OK, 단위테스트 17/17 PASS, typecheck PASS, build PASS"
+    }
+  },
+
+  "currentBaseline": {
+    "description": "T-25 완료 후 invoice_statement 정상 상태 기준선",
+    "rowCountExact": {
+      "1.jpg": 28, "2.pdf": 13, "3.pdf": 1, "4.pdf": 1,
+      "5.pdf": 6,  "6.pdf": 6,  "7.pdf": 1
+    },
+    "backendCleanupActive": {
+      "amount_comma_space": true,
+      "quantity_trailing_symbol": true,
+      "spec_trailing_closing_paren": true,
+      "spec_trailing_ml_suffix": true
+    },
+    "frontendWarningUI": {
+      "cellLevelWarning": false,
+      "tableLevel_missingExpectedWarning": true,
+      "textareaTitle_fullValue": true
+    },
+    "prohibitions": [
+      "itemName 자동 보정",
+      "spec O/0 자동 수정",
+      "quantity 빈 값 자동 삽입",
+      "manufacturingNo/expiryDate 자동 복구",
+      "Custom 탭 cell warning 재도입 (근거 데이터 없이)",
+      "red_pen_suppression 자동 적용",
+      "main.py 수정",
+      "preprocessing_policy.py 수정"
+    ]
+  },
+
+  "regressionConditions": {
+    "description": "다음 작업에서 아래가 발생하면 회귀로 판단",
+    "conditions": [
+      "Custom 탭에서 ⚠ 아이콘 또는 amber warning border가 다시 표시됨",
+      "spec '500T(B)'가 다시 '500T(B'로 깨짐",
+      "spec '150ml'이 다시 '150m'으로 깨짐",
+      "spec '500ml'이 다시 '500m'으로 깨짐",
+      "amount '301,100'이 다시 '301, 100'으로 깨짐",
+      "quantity '360'이 다시 '360 ^'로 깨짐",
+      "invoice_statement 7개 중 어느 하나라도 rowCount 불일치",
+      "itemName이 자동으로 변경됨",
+      "quantity 빈 값에 수학 추정으로 자동 삽입됨"
+    ]
+  },
+
+  "openIssues": [
+    {
+      "issue": "품목명 OCR 오인식",
+      "example": "OCR: '아집린청' / 사용자확인: '아젭틴정'",
+      "currentStatus": "자동 보정 없음, warning도 없음 (RESET 상태)",
+      "plannedApproach": "correction profile 구조에서 처리"
+    },
+    {
+      "issue": "row 4 manufacturingNo/expiryDate 소실",
+      "cause": "수기/빨간펜이 해당 컬럼 인쇄값 위에 겹쳐 OCR 인식 불가",
+      "currentStatus": "빈 값 유지, warning만 (valueMappingWarnings)",
+      "plannedApproach": "T-25c red_pen_suppression debug variant (미구현)"
+    },
+    {
+      "issue": "row 12 quantity 소실",
+      "cause": "동일 — 수기 마킹",
+      "mathHint": "27,900 ÷ 2,790 = 10 (자동 삽입 금지)",
+      "currentStatus": "빈 값 유지, warning만",
+      "plannedApproach": "T-25c 또는 수동 확인"
+    }
+  ],
+
+  "futureWorkSuggestions": [
+    {
+      "taskId": "correction-profile-v1",
+      "title": "tableRows correction profile 설계 및 저장",
+      "description": "사용자가 Custom 탭에서 수정한 tableRows 값을 correction profile로 저장. 키: 공급자 사업자번호 + 공급받는자 사업자번호 + 품목코드 + 규격.",
+      "autoCorrect": false,
+      "purpose": "다음 OCR에서 같은 품목코드 발견 시 '과거 수정 후보 있음' Custom 탭 표시"
+    },
+    {
+      "taskId": "T-25c",
+      "title": "red_pen_suppression debug variant",
+      "description": "HSV 기반 빨간 마스킹 후 재OCR. row4 mfg/exp, row12 qty 복구 가능성 확인. debug-only, 운영 자동 적용 금지.",
+      "risk": "medium"
+    }
+  ],
+
+  "verificationSummary": {
+    "py_compile": "OK (T-25d+T-25g 기준)",
+    "unitTests": "17/17 PASS (T-25g _cleanup_spec_trailing_chars)",
+    "integrationTests": "ALL PASS",
+    "typecheck": "PASS",
+    "build": "PASS",
+    "rowCount7of7": "all exact (T10_fix_2026-05-16 기준)"
+  }
+}

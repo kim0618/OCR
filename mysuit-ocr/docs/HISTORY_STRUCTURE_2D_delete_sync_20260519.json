@@ -1,0 +1,85 @@
+{
+  "task": "HISTORY-STRUCTURE-2D",
+  "date": "2026-05-19",
+  "tool": "Claude Code (claude-sonnet-4-6)",
+  "overall": "PASS",
+  "typecheck": "PASS",
+  "build": "PASS",
+  "regression": false,
+  "existing_delete_behavior_unchanged": true,
+
+  "backup_files": [
+    "backup/historyStore_20260519_before_HISTORY_STRUCTURE_2D.ts"
+  ],
+
+  "modified_files": [
+    {
+      "file": "src/lib/historyStore.ts",
+      "changes": [
+        "Added private syncHistoryIndexAndDetailOnDelete(historyId)",
+        "Modified deleteHistoryRun(): split legacy try/catch from sync call",
+        "Modified clearHistoryRuns(): added index/detail key removal"
+      ],
+      "HistoryWorkspace_modified": false,
+      "reason": "deleteHistoryRun() modified directly — single call site auto-gets sync"
+    }
+  ],
+
+  "delete_sync_policy": {
+    "mysuit_ocr_history": "deleted (existing behavior)",
+    "mysuit_ocr_history_index": "historyId entry removed",
+    "mysuit_ocr_history_details": "historyId key removed",
+    "mysuit_ocr_restore_profiles": "NOT deleted — preserved by policy"
+  },
+
+  "clear_sync": {
+    "mysuit_ocr_history": "removeItem (existing)",
+    "mysuit_ocr_history_index": "removeItem (added)",
+    "mysuit_ocr_history_details": "removeItem (added)",
+    "callers_exist": false,
+    "note": "clearHistoryRuns() has no current callers — handled for completeness"
+  },
+
+  "delete_flow": {
+    "step1": "tryWriteHistory(next) — legacy delete",
+    "step1_fail": "console.warn + return false (existing behavior)",
+    "step2": "syncHistoryIndexAndDetailOnDelete(jobId) — only runs after step1 success",
+    "step2_index_fail": "console.warn, continue to detail step",
+    "step2_detail_fail": "console.warn, end sync",
+    "step2_any_fail": "return true maintained (legacy delete succeeded)"
+  },
+
+  "safety_analysis": {
+    "index_key_missing": "readHistoryIndex() returns [] → filter no-op → skip write",
+    "details_key_missing": "readHistoryDetails() returns {} → hasOwnProperty false → skip write",
+    "index_parse_failure": "try/catch → console.warn → detail step continues",
+    "detail_parse_failure": "try/catch → console.warn → exit",
+    "any_sync_failure": "legacy delete true is preserved"
+  },
+
+  "restore_profile_dangling": {
+    "deleted_with_history": false,
+    "reason": "Restore candidates are independent master data — valid without source history",
+    "future_handling": "Show '원본 History 없음' warning in Restore detail when sourceHistoryId not found"
+  },
+
+  "regression_check": {
+    "history_delete": "PASS — same return value (true/false), boardList() called after",
+    "delete_cancel": "PASS — deleteHistoryRun not called on cancel → sync not called",
+    "delete_failure": "PASS — tryWriteHistory fail → return false before sync",
+    "history_list": "PASS — readHistoryListWithFallback() unchanged",
+    "history_detail": "PASS — readHistoryDetailWithFallback() unchanged",
+    "save_button": "PASS — updateHistoryRun + syncOnSave unchanged",
+    "restore_profile_save": "PASS — restoreProfileStore unchanged",
+    "restore_tab": "PASS — AutoRestoreWorkspace unchanged",
+    "autofill_engine": "PASS — autofillEngine.ts unchanged",
+    "preview_custom_validation": "PASS — OcrResultPanel.tsx unchanged"
+  },
+
+  "pending": [
+    "Restore detail: show '원본 History 없음' when sourceHistoryId is dangling",
+    "History detail: tableRows UI rendering",
+    "clearHistoryRuns() caller/UI if needed",
+    "HISTORY-STRUCTURE-3: full E2E regression + DB mapping docs"
+  ]
+}

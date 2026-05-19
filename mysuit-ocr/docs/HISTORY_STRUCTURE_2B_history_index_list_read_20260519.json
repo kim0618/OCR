@@ -1,0 +1,82 @@
+{
+  "task": "HISTORY-STRUCTURE-2B",
+  "date": "2026-05-19",
+  "tool": "Claude Code (claude-sonnet-4-6)",
+  "overall": "PASS",
+  "typecheck": "PASS",
+  "build": "PASS",
+  "regression": false,
+  "existing_history_structure_unchanged": true,
+  "detail_view_unchanged": true,
+
+  "backup_files": [
+    "backup/historyStore_20260519_before_HISTORY_STRUCTURE_2B.ts",
+    "backup/HistoryWorkspace_20260519_before_HISTORY_STRUCTURE_2B.tsx"
+  ],
+
+  "modified_files": [
+    {
+      "file": "src/lib/historyStore.ts",
+      "changes": "Added indexItemToRunRecord() (private) + readHistoryListWithFallback() (exported). No existing code modified.",
+      "strategy": "Merge: legacy always as base, index enrichment where available"
+    },
+    {
+      "file": "src/components/history/HistoryWorkspace.tsx",
+      "changes": "Added readHistoryListWithFallback to import. boardList(): readHistoryRuns() → readHistoryListWithFallback(). 2 lines changed.",
+      "detail_click_unchanged": true
+    }
+  ],
+
+  "list_query_strategy": {
+    "approach": "merge",
+    "primary": "mysuit_ocr_history (always read as base)",
+    "secondary": "mysuit_ocr_history_index (enrichment for matching entries)",
+    "rationale": [
+      "Delete safety: deleteHistoryRun() only deletes from legacy — merge reflects deletion immediately on next boardList()",
+      "Old data safety: pre-2A entries are not in index but must show in list",
+      "parse safety: index failure → legacy-only fallback"
+    ]
+  },
+
+  "fallback_conditions": {
+    "index_key_missing": "legacy fallback",
+    "index_parse_failure": "legacy fallback (catch)",
+    "index_not_array": "legacy fallback (length check)",
+    "index_empty": "legacy fallback (length === 0)",
+    "index_item_missing_historyId": "item skipped in indexMap",
+    "any_exception": "legacy fallback (catch)"
+  },
+
+  "detail_view_connection": {
+    "click_handler": "readHistoryRuns() — unchanged",
+    "job_id_compatibility": "index.historyId === legacy.job_id (set in 2A)",
+    "DetailHistoryView_modified": false
+  },
+
+  "regression_check": {
+    "history_list_display": "PASS — legacy always read, all items show",
+    "history_delete": "PASS — deleteHistoryRun() removes from legacy, next boardList merge excludes deleted item",
+    "history_detail_open": "PASS — readHistoryRuns() in click handler, job_id connected",
+    "save_button": "PASS — DetailHistoryView unchanged",
+    "restore_profile_save": "PASS — restoreProfileStore unchanged",
+    "restore_tab": "PASS — AutoRestoreWorkspace unchanged",
+    "autofill_engine": "PASS — autofillEngine.ts unchanged",
+    "preview_custom_validation": "PASS — OcrResultPanel.tsx unchanged"
+  },
+
+  "localStorage_safety": {
+    "mysuit_ocr_history_unchanged": true,
+    "index_read_parse_guard": true,
+    "index_empty_guard": true,
+    "legacy_data_migration": false
+  },
+
+  "pending": [
+    "HISTORY-STRUCTURE-2C: 상세 조회 details 우선 전환",
+    "HISTORY-STRUCTURE-2D: 삭제 시 index/detail 동기화",
+    "updatedAt UI column",
+    "documentType / primaryCompanyName UI display",
+    "hasConfirmedResult badge",
+    "pre-2A legacy entries have no index — shown via legacy until DB migration"
+  ]
+}

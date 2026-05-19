@@ -1,0 +1,273 @@
+{
+  "task": "HISTORY-STRUCTURE-1",
+  "date": "2026-05-19",
+  "method": "static-code-analysis",
+  "tool": "Claude Code (claude-sonnet-4-6)",
+  "code_modified": false,
+  "prerequisite_tasks_complete": ["HISTORY-RESTORE-2A", "HISTORY-RESTORE-2B", "HISTORY-RESTORE-2C", "HISTORY-RESTORE-3"],
+
+  "current_history_structure": {
+    "storage_key": "mysuit_ocr_history",
+    "defined_in": "src/lib/historyStore.ts",
+    "max_records": 50,
+    "record_type": "HistoryRunRecord",
+    "fields": {
+      "job_id": { "type": "string", "pattern": "RUN-XXXXXXXX", "category": "identifier", "list_needed": true, "detail_needed": true },
+      "file_name": { "type": "string", "category": "list_light", "list_needed": true, "detail_needed": true },
+      "template_name": { "type": "string|null", "category": "list_light", "list_needed": true, "detail_needed": true },
+      "processing_time": { "type": "number", "category": "list_light", "list_needed": true, "detail_needed": false },
+      "created_at": { "type": "string", "format": "YYYY-MM-DD HH:mm:ss", "category": "list_light", "list_needed": true, "detail_needed": true },
+      "status": { "type": "success|fail", "category": "list_light", "list_needed": true, "detail_needed": false },
+      "image_url": { "type": "string?", "category": "image_heavy", "list_needed": false, "detail_needed": true, "note": "legacy" },
+      "original_image_url": { "type": "string|null", "category": "image_heavy", "list_needed": false, "detail_needed": true },
+      "processed_image_url": { "type": "string|null", "category": "image_heavy", "list_needed": false, "detail_needed": true },
+      "image_storage_mode": { "type": "legacy|url", "category": "image_meta", "list_needed": false, "detail_needed": true },
+      "ocr_fields": { "type": "HistoryOcrField[]?", "category": "detail_medium", "list_needed": false, "detail_needed": true, "note": "OCR raw fields with bbox" },
+      "output_fields": { "type": "HistoryOutputField[]?", "category": "detail_heavy", "list_needed": false, "detail_needed": true, "note": "Heaviest field — includes suggestions[] per field" },
+      "autofill_summary": { "type": "HistoryAutofillRunSummary?", "category": "detail_medium", "list_needed": false, "detail_needed": false, "note": "businessNumber useful for list but not currently shown" }
+    },
+    "missing_fields": {
+      "updated_at": "Not tracked — [저장] does not write timestamp",
+      "documentType": "Not stored — only template_name exists",
+      "primaryBusinessNo": "Not stored — derivable from autofill_summary.businessNumber",
+      "primaryCompanyName": "Not stored — derivable from output_fields parsing",
+      "hasRestoreProfile": "Not stored — requires restoreProfileStore lookup at runtime",
+      "document_fields_tableRows": "CRITICAL: Not stored in history — only available in RunOCR result (OcrResultPanel). History detail CANNOT show invoice table rows.",
+      "warningCount": "Not stored — no validation result in history",
+      "missingCount": "Not stored"
+    },
+    "output_field_structure": {
+      "type": "HistoryOutputField",
+      "heavy_reason": "suggestions[] array contains multiple autofill candidates per field",
+      "fields": ["no", "en", "ko", "original", "modified", "confidence", "source", "applied", "autofillAction", "suggestions"]
+    }
+  },
+
+  "current_list_usage": {
+    "component": "src/components/history/HistoryWorkspace.tsx",
+    "function": "boardList()",
+    "fields_mapped": ["job_id", "file_name", "template_name", "processing_time", "created_at", "status"],
+    "fields_loaded_but_unused": ["ocr_fields", "output_fields", "autofill_summary", "image_url", "original_image_url", "processed_image_url"],
+    "table_columns_displayed": ["No", "템플릿명", "요청일시", "상태", "파일명", "상세보기", "삭제"],
+    "detail_click": "Calls readHistoryRuns() again and finds record by job_id — re-reads all data"
+  },
+
+  "current_detail_usage": {
+    "component": "src/components/history/DetailHistoryView.tsx",
+    "fields_used": ["job_id", "file_name", "template_name", "created_at", "output_fields", "ocr_fields", "original_image_url", "processed_image_url", "image_url", "image_storage_mode"],
+    "fields_not_used_in_detail": ["autofill_summary", "processing_time", "status"],
+    "save_button_updates": ["output_fields"],
+    "save_button_also_writes": "mysuit_ocr_groundtruth (via saveGroundTruth())",
+    "no_updated_at_on_save": true,
+    "autofill_summary_display": "NOT shown in History detail — only in RunOCR Preview (OcrResultPanel)"
+  },
+
+  "button_analysis": {
+    "save_button": {
+      "label": "저장",
+      "updates": "output_fields (full replacement via updateHistoryRun)",
+      "storage": "mysuit_ocr_history",
+      "also_updates": "mysuit_ocr_groundtruth",
+      "does_not_update": ["updated_at (field missing)", "ocr_fields", "autofill_summary", "images"]
+    },
+    "restore_profile_save_button": {
+      "label": "자동복원 후보 저장",
+      "updates": "businessNo + 4 fields (companyName, representative, tel, address)",
+      "storage": "mysuit_ocr_restore_profiles",
+      "conflict_with_save": false,
+      "separation": "Completely independent — different localStorage key"
+    }
+  },
+
+  "restore_profile_relationship": {
+    "link_field": "sourceHistoryId → mysuit_ocr_history.job_id",
+    "also_links": "sourceFileName → mysuit_ocr_history.file_name",
+    "foreign_key_constraint": false,
+    "dangling_ref_risk": "History deletion does NOT cascade to restore_profiles — sourceHistoryId becomes dangling reference",
+    "reverse_isolation": "Restore profile deletion does NOT affect mysuit_ocr_history",
+    "has_restore_profile_flag": "Not in history index — requires runtime lookup from restoreProfileStore"
+  },
+
+  "recommended_index_structure": {
+    "storage_key": "mysuit_ocr_history_index",
+    "fields": {
+      "historyId": "string (RUN-XXXXXXXX)",
+      "fileName": "string",
+      "templateName": "string|null",
+      "documentType": "string|null",
+      "createdAt": "string",
+      "updatedAt": "string (NEW — set on save)",
+      "status": "success|fail",
+      "processingTime": "number",
+      "summary": {
+        "fieldCount": "number",
+        "autofillStatus": "string",
+        "autofillFilledCount": "number",
+        "autofillConfirmedCount": "number",
+        "primaryBusinessNo": "string|null",
+        "primaryCompanyName": "string|null",
+        "tableRowCount": "number (future — requires document_fields storage)",
+        "warningCount": "number (future)",
+        "missingCount": "number (future)"
+      },
+      "hasConfirmedResult": "boolean",
+      "hasRestoreProfile": "boolean (requires sync on restore_profile save/delete)"
+    },
+    "derivation": {
+      "primaryBusinessNo": "autofill_summary.businessNumber",
+      "primaryCompanyName": "output_fields 회사명 field modified or original",
+      "fieldCount": "output_fields.length",
+      "autofillStatus": "autofill_summary.status",
+      "hasConfirmedResult": "output_fields.some(f => f.modified !== '')"
+    }
+  },
+
+  "recommended_detail_structure": {
+    "storage_key": "mysuit_ocr_history_details",
+    "structure": {
+      "historyId": "string",
+      "runSnapshot": {
+        "description": "Immutable OCR execution data",
+        "fields": ["fileName", "templateName", "documentType", "ocrFields", "documentFields", "autofillSummary"]
+      },
+      "confirmedResult": {
+        "description": "Mutable — updated on [저장] click",
+        "fields": ["savedAt", "outputFields"]
+      },
+      "images": {
+        "description": "Image URLs (heavy — can be omitted if Quota issues)",
+        "fields": ["originalImageUrl", "processedImageUrl", "imageStorageMode"]
+      }
+    },
+    "design_decision_required": {
+      "document_fields_tableRows": "Include in runSnapshot.documentFields if History detail needs to show invoice table rows",
+      "suggestions_in_outputFields": "output_fields.suggestions[] is heavy — consider stripping before saving to confirmedResult"
+    }
+  },
+
+  "phase_plan": [
+    {
+      "phase": "HISTORY-STRUCTURE-2A",
+      "name": "병행 저장",
+      "description": "On OCR run, additionally write to mysuit_ocr_history_index and mysuit_ocr_history_details. mysuit_ocr_history unchanged.",
+      "files_to_modify": ["src/lib/historyStore.ts (add new functions)", "src/components/upload/UploadWorkspace.tsx (call new functions)"],
+      "risk": "low",
+      "rollback": "Delete new localStorage keys",
+      "validation": ["mysuit_ocr_history unchanged", "New keys written correctly", "Index summary fields correct"]
+    },
+    {
+      "phase": "HISTORY-STRUCTURE-2A-b",
+      "name": "[저장] 버튼 index 연동",
+      "description": "On [저장] click, update history_details.confirmedResult and history_index.updatedAt/hasConfirmedResult",
+      "files_to_modify": ["src/components/history/DetailHistoryView.tsx"],
+      "risk": "low",
+      "rollback": "Remove index update call",
+      "validation": ["updated_at refreshed in index", "confirmedResult.outputFields matches saved output_fields"]
+    },
+    {
+      "phase": "HISTORY-STRUCTURE-2B",
+      "name": "목록 index 우선 조회",
+      "description": "HistoryWorkspace reads from history_index first, falls back to mysuit_ocr_history",
+      "files_to_modify": ["src/components/history/HistoryWorkspace.tsx"],
+      "risk": "low",
+      "rollback": "Remove index-first branch",
+      "validation": ["Old records still show via fallback", "New records show from index with richer fields"]
+    },
+    {
+      "phase": "HISTORY-STRUCTURE-2C",
+      "name": "상세 detail 우선 조회",
+      "description": "Detail view reads from history_details first, falls back to mysuit_ocr_history",
+      "files_to_modify": ["src/components/history/HistoryWorkspace.tsx (detail click)", "src/components/history/DetailHistoryView.tsx"],
+      "risk": "medium",
+      "rollback": "Remove detail-first branch",
+      "validation": ["Fallback works for old records", "Confirmed result shows correctly for new records"]
+    },
+    {
+      "phase": "HISTORY-STRUCTURE-2D",
+      "name": "삭제 동기화",
+      "description": "deleteHistoryRun() extended to also delete from index and details",
+      "files_to_modify": ["src/lib/historyStore.ts"],
+      "risk": "medium",
+      "rollback": "Remove cascade delete",
+      "validation": ["Delete removes from all 3 keys", "No orphan records"]
+    },
+    {
+      "phase": "HISTORY-STRUCTURE-3",
+      "name": "DB 전환",
+      "description": "Replace historyStore.ts localStorage operations with API calls",
+      "files_to_modify": ["src/lib/historyStore.ts (full replacement)"],
+      "risk": "high",
+      "rollback": "Revert historyStore.ts to localStorage version",
+      "validation": ["All CRUD via API", "Pagination", "Filter", "Existing data migration"]
+    }
+  ],
+
+  "db_mapping": {
+    "history_index": {
+      "ocr_runs": ["id", "site_id", "user_id", "template_id", "document_type", "primary_business_no", "primary_company_name", "status", "processing_time", "created_at", "updated_at"],
+      "ocr_run_files": ["run_id", "original_file_name", "file_size"]
+    },
+    "history_details.images": {
+      "ocr_run_files": ["original_image_path", "processed_image_path"]
+    },
+    "history_details.runSnapshot": {
+      "ocr_run_results": ["run_id", "raw_ocr_data JSONB", "document_fields JSONB", "autofill_summary JSONB", "field_count", "table_row_count"]
+    },
+    "history_details.confirmedResult": {
+      "ocr_run_results": ["confirmed_fields JSONB", "confirmed_at TIMESTAMPTZ"]
+    },
+    "mysuit_ocr_restore_profiles": {
+      "ocr_restore_profiles": ["id", "site_id", "business_no", "party_type", "fields JSONB", "source_run_id UUID FK", "source_file_name", "created_at", "updated_at"]
+    }
+  },
+
+  "risks": [
+    {
+      "id": "R-1",
+      "risk": "localStorage 용량 증가",
+      "impact": "index + detail 추가로 기존 대비 약 1.5~2배 용량 증가",
+      "mitigation": "신규 key에도 MAX_RECORDS=50 동일 적용, QuotaExceededError 폴백 구현 필수"
+    },
+    {
+      "id": "R-2",
+      "risk": "index/detail 불일치 (부분 쓰기 실패)",
+      "impact": "목록은 있으나 상세 없는 상태 발생 가능",
+      "mitigation": "상세 조회 실패 시 mysuit_ocr_history fallback 유지"
+    },
+    {
+      "id": "R-3",
+      "risk": "[저장] 후 index.updatedAt 미갱신",
+      "impact": "목록에서 최근 수정 시점 오표시",
+      "mitigation": "2A-b 단계에서 [저장] → index.updatedAt 갱신 연동"
+    },
+    {
+      "id": "R-4",
+      "risk": "삭제 시 orphan detail 레코드",
+      "impact": "history_details에 참조되지 않는 레코드 누적",
+      "mitigation": "2D 단계에서 deleteHistoryRun() 확장"
+    },
+    {
+      "id": "R-5",
+      "risk": "sourceHistoryId dangling reference",
+      "impact": "삭제된 History를 가리키는 restore_profile 잔존",
+      "mitigation": "History 삭제 시 연관 restore_profile 경고 표시 (즉시 삭제 불필요)"
+    },
+    {
+      "id": "R-6",
+      "risk": "document_fields.tableRows 미저장",
+      "impact": "History 상세에서 품목표 재확인 불가 (현재 기능 누락)",
+      "mitigation": "2A 설계 시 runSnapshot.documentFields에 포함 여부 결정 필요"
+    }
+  ],
+
+  "conclusion": {
+    "design_complete": true,
+    "immediate_implementation": false,
+    "next_task": "HISTORY-STRUCTURE-2A",
+    "decisions_needed_before_2a": [
+      "document_fields.tableRows 저장 여부 — History 상세 품목표 기능 필요 여부",
+      "output_fields.suggestions[] 저장 범위 — confirmedResult에서 제외 가능"
+    ],
+    "parallel_task": "I-5 groundTruth autofill 정책 확정 (HISTORY-RESTORE-3 잔여 이슈)"
+  }
+}

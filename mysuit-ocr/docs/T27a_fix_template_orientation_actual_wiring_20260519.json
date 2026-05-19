@@ -1,0 +1,152 @@
+{
+  "generatedAt": "2026-05-19",
+  "scope": "T27a_fix_template_orientation_actual_wiring",
+  "tool": "Claude Sonnet 4.6 (Claude Code)",
+  "codeModified": true,
+  "backupFiles": [
+    "ocr-server/backup/main_20260519_1647_before_T27a_fix_actual_orientation_wiring.py"
+  ],
+  "modifiedFiles": [
+    "ocr-server/main.py"
+  ],
+  "t27a_failure_root_cause": {
+    "what_worked": [
+      "detect_orientation 호출 자체는 정상 (line 1985)",
+      "img 변수 재할당 OK",
+      "for loop의 region crop도 같은 img 사용 (code path 일관)"
+    ],
+    "what_failed": [
+      "detect_orientation 함수 내부 thumbnail size가 224px short-side로 매우 작음 (preprocess.py:140)",
+      "큰 invoice_statement 문서(2483×3511)를 224 thumb로 줄이면 한글 텍스트 인식이 약해서 OCR score가 미세함",
+      "0도 vs 180도 비교에서 점수 차이(diff/ratio)가 임계값 미만 → angle=0 잘못 추천",
+      "결과: img 회전 안 됨 → 뒤집힌 이미지에 정상 방향 좌표 적용 → region crop 깨짐"
+    ],
+    "smoking_gun_evidence": {
+      "user_observed": {
+        "supplierCompany_final_value": "부광약품(주) (정상)",
+        "buyerCompany_final_value": "백제약품(주)영등포지점 (정상)",
+        "supplier_business_no_field": "서울 [배달] (깨짐)",
+        "supplier_address_field": "-1- ㄱ- 등록 (깨짐)",
+        "rowCount": "25 (정상 28보다 적음)"
+      },
+      "interpretation": "supplierCompany 최종값이 정상인 것은 T-26a-fix가 document_fields.supplierCompany를 가져와 field.value로 덮어씀. document_fields는 invoice_statement parser가 텍스트 anchor 기반으로 추출 → 뒤집힌 OCR에서도 일부 라인은 정상 인식 → parser가 anchor 매칭으로 supplierCompany 추출. 그러나 region crop은 정상 방향 좌표를 뒤집힌 이미지에 직접 적용 → 잘못된 영역('서울 [배달]' 등) crop. 이 패턴은 'img가 회전되지 않음'을 명확히 입증."
+    }
+  },
+  "fix_design": {
+    "principle": "기존 detect_orientation을 그대로 사용 + invoice_statement 한정 anchor 기반 cross-check fallback. 새 orientation 알고리즘이 아니라 검증 로직.",
+    "scope": "invoice_statement 한정 (_template_doc_type 또는 documentType이 invoice_statement인 경우)",
+    "logic": [
+      "1. detect_orientation 호출 (기존 T-27a 그대로 유지)",
+      "2. 현재 img에 대해 768px thumb OCR 수행 → invoice_statement anchor 카운트",
+      "3. anchor 카운트 < 4이면 약한 신호로 판단",
+      "4. img를 cv2.ROTATE_180으로 회전한 가상 image에서도 768px thumb OCR → anchor 카운트",
+      "5. 180-rot anchors가 orig anchors보다 +1 이상 많으면 → 180도 회전 적용 (img 갱신)",
+      "6. 그 외에는 기존 img 유지 (회귀 방지)"
+    ],
+    "anchors_used": [
+      "거래명세서", "공급자", "공급받는자", "사업자",
+      "품목", "규격", "수량", "단가", "금액", "합계"
+    ],
+    "thumbnail_size_choice": "768px (detect_orientation의 224보다 크고 full size보다 작음). 한글 anchor 카운트에 충분한 해상도 + 속도 절약"
+  },
+  "wiring_after_fix": {
+    "detect_orientation_call": "main.py:1985 (T-27a 기존 위치, 유지)",
+    "anchor_fallback_block": "main.py:T-27a-fix 블록 — detect_orientation 직후, region for-loop 직전",
+    "img_propagation": [
+      "img가 anchor fallback에서 재할당될 수 있음",
+      "이후 _ocr_crop_region(img, ocr, rx, ry, rw, rh) (field regions)",
+      "_ocr_table_region(img, ocr, region) (table region)",
+      "그리고 invoice_statement extract용 ocr.ocr(img) (line 2043)",
+      "모두 같은 img 변수 사용 → 일관성 확보"
+    ],
+    "verified_order": "detect_orientation → T-27a-fix anchor fallback → for region crop → invoice_statement parser (모두 동일 img)"
+  },
+  "expected_normal_case": {
+    "input": "정상 방향 1.jpg",
+    "behavior": [
+      "detect_orientation → angle=0",
+      "anchor 카운트 ≥ 4 (정상 OCR에서 모든 anchor 발견) → fallback 미발동",
+      "img 변경 없음 → 기존 결과 그대로"
+    ],
+    "expected_fields": {
+      "supplierBizNumber": "118-81-00450",
+      "supplierCompany": "부광약품(주)",
+      "supplierAddress": "서울특별시 동작구 상도로7",
+      "buyerBizNumber": "1138504425",
+      "buyerCompany": "백제약품(주)영등포지점",
+      "buyerAddress": "서울특별시 구로구 공원로8길24(구로동)",
+      "rowCount": 28,
+      "T25dCleanup": "유지",
+      "T25gSpecCleanup": "유지"
+    }
+  },
+  "expected_flipped_case": {
+    "input": "180도 뒤집힌 1.jpg",
+    "behavior": [
+      "detect_orientation → angle=0 (잘못 추천) → img 회전 안 됨",
+      "anchor 카운트: 뒤집힌 이미지에서 정상 anchor 거의 없음 (보통 0~2개)",
+      "anchor fallback 발동 → 180도 회전 image에서 anchor 카운트",
+      "180-rot 이미지는 정상 방향이므로 anchor 많이 발견 (5~10개)",
+      "fallback 조건 충족 → img를 180도 회전 image로 갱신",
+      "이후 region crop / parser 모두 정상 방향 image 사용 → 정상 결과"
+    ],
+    "expected_fields": {
+      "supplierBizNumber": "118-81-00450",
+      "supplierCompany": "부광약품(주)",
+      "supplierAddress": "서울특별시 동작구 상도로7",
+      "buyerBizNumber": "1138504425",
+      "buyerCompany": "백제약품(주)영등포지점",
+      "buyerAddress": "서울특별시 구로구 공원로 8길 24 (구로동)",
+      "rowCount": 28
+    }
+  },
+  "unstructured_path_impact": {
+    "modified": false,
+    "reason": "anchor fallback은 if region_list: 블록 내부에 있고 invoice_statement 한정 조건. else: 블록(비정형 경로)은 미변경."
+  },
+  "baseline_preserved": {
+    "rowCount_7of7": true,
+    "t25d_cleanup": true,
+    "t25g_spec_cleanup": true,
+    "t25f_reset_no_warning_ui": true,
+    "t26a_company_normalization": true,
+    "t26a_fix_original_value_split": true,
+    "itemName_no_autofix": true,
+    "preprocessing_policy_unchanged": true,
+    "invoice_statement_parser_unchanged": true,
+    "frontend_unchanged": true
+  },
+  "verification_results": {
+    "py_compile_main": "OK",
+    "code_placement_verified": "detect_orientation → T-27a-fix → for loop 순서 확인됨",
+    "all_markers_present": "T-27a-fix, _count_inv_anchors_t27a, _INV_ANCHORS, ROTATE_180, fallback flags 모두 OK",
+    "typecheck": "PASS",
+    "build": "PASS"
+  },
+  "cost_estimation": {
+    "normal_input": "anchor 카운트 ≥ 4 → 1번의 추가 thumb OCR (~수백 ms). fallback 미발동.",
+    "flipped_input": "2번의 추가 thumb OCR (원본 + 180-rot)",
+    "thumbnail_768px": "1.jpg의 2483 short → 768로 축소, OCR 빠름",
+    "non_invoice_doc": "fallback 미적용, 비용 0"
+  },
+  "remaining_concerns": [
+    "anchor 카운트 임계값(< 4)이 보수적. 만약 정상 invoice_statement에서 anchor가 < 4로 나오면 불필요한 OCR 1회 추가. (그러나 fallback 조건 +1을 안 넘으면 img 변경 없음 → 결과는 동일.)",
+    "90도/270도 회전 케이스는 다루지 않음. 사용자 보고는 180도 케이스이므로 우선 180도만 처리.",
+    "OCR 엔진의 PaddleOCR이 textline orientation 보정을 비활성화한 상태(use_textline_orientation=False)에서 안정성 검증됨."
+  ],
+  "next_actions": [
+    {
+      "action": "서버 재시작 후 1.jpg 정상 + 뒤집힌 1.jpg 양쪽 live 검증",
+      "checklist": [
+        "정상 1.jpg: 결과 동일 (회귀 없음). anchor_fallback_applied=false 확인",
+        "뒤집힌 1.jpg: rowCount 28, supplier/buyer field 정상. anchor_fallback_applied=true 확인",
+        "정상 receipt: 비정형 경로 결과 동일"
+      ]
+    },
+    {
+      "taskId": "T-27b",
+      "title": "90/270 rotation 케이스 anchor fallback 확장",
+      "description": "만약 90/270 회전 입력이 발견되면 fallback에 90/270도 후보도 추가"
+    }
+  ]
+}

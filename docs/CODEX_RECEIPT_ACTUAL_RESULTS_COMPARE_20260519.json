@@ -1,0 +1,101 @@
+{
+  "generatedAt": "2026-05-19T10:09:27.088919+09:00",
+  "tool": "Codex",
+  "scope": "receipt_actual_results_compare",
+  "executionPolicy": {
+    "apiCalled": false,
+    "ocrExecuted": false,
+    "productCodeModified": false
+  },
+  "templateFields": [
+    {
+      "key": "no_1",
+      "label": "회사명"
+    },
+    {
+      "key": "no_2",
+      "label": "사업자번호"
+    },
+    {
+      "key": "no_3",
+      "label": "대표자"
+    },
+    {
+      "key": "no_4",
+      "label": "전화번호"
+    },
+    {
+      "key": "no_5",
+      "label": "주소"
+    },
+    {
+      "key": "no_6",
+      "label": "총합계금액"
+    }
+  ],
+  "sources": {
+    "baseline": {
+      "found": true,
+      "path": "mysuit-ocr\\public\\data\\testsets\\reports\\T22_current_ocr_baseline_snapshot_20260517.json",
+      "isActualResult": true,
+      "actualEvidence": "existing Test baseline snapshot/report JSON",
+      "warnings": [
+        "cache_based_parser:no_live_runall_export",
+        "doc_type_mismatch:medical_receipt!=manifest:pos_receipt",
+        "doc_type_mismatch:unknown!=manifest:food_cafe_receipt",
+        "metadata_issue:manifest=pos_receipt, OCR/source indicates medical receipt",
+        "taxAmount=doc_level_pushdown",
+        "totalAmount=doc_level_pushdown"
+      ]
+    },
+    "runocr": {
+      "found": false,
+      "path": "",
+      "isActualResult": false,
+      "actualEvidence": "",
+      "candidateCount": 0,
+      "projectionReportsExcluded": [
+        "docs\\CODEX_RECEIPT_RUNTIME_TEMPLATE_E2E_20260519.json",
+        "docs\\CODEX_RECEIPT_BASELINE_VS_RUNOCR_TEMPLATE_20260518.json",
+        "docs\\CODEX_RECEIPT_UNSTRUCTURED_TEMPLATE_VS_BASELINE_20260519.json"
+      ],
+      "searchedPathCount": 184
+    }
+  },
+  "summary": {
+    "status": "INCONCLUSIVE",
+    "sampleTotal": 17,
+    "sampleCompared": 0,
+    "sampleMatched": 0,
+    "sampleMismatched": 0,
+    "fieldMatched": 0,
+    "fieldMismatched": 0,
+    "fieldBothEmpty": 0,
+    "fieldMissing": 0,
+    "inconclusive": 17
+  },
+  "samples": [],
+  "issues": [
+    {
+      "code": "actual_runocr_result_missing",
+      "message": "No stored RunOCR receipt-template result with output_fields was found for receipt_generalization samples."
+    },
+    {
+      "code": "sample_not_matched",
+      "message": "No common sample could be matched between baseline and actual RunOCR result data."
+    },
+    {
+      "code": "projection_only_not_actual",
+      "message": "Projection/static CODEX receipt reports were explicitly excluded from PASS evidence."
+    }
+  ],
+  "autofill": {
+    "interference": null,
+    "reason": "actual RunOCR output_fields were not found, so autofill metadata could not be inspected"
+  },
+  "nextActions": [
+    "Export browser localStorage keys mysuit_ocr_history, mysuit_ocr_history_details, and mysuit_ocr_templates.",
+    "Provide an actual RunOCR receipt-template result JSON/export for the same receipt_generalization filenames.",
+    "Add a side-effect-free result export path for RunOCR if repeatable actual-result comparisons are needed."
+  ]
+}

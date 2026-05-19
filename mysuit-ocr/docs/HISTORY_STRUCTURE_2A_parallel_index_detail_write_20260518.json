@@ -1,0 +1,135 @@
+{
+  "task": "HISTORY-STRUCTURE-2A",
+  "date": "2026-05-19",
+  "tool": "Claude Code (claude-sonnet-4-6)",
+  "overall": "PASS",
+  "typecheck": "PASS",
+  "build": "PASS",
+  "regression": false,
+  "code_modified": true,
+  "existing_history_structure_unchanged": true,
+
+  "backup_files": [
+    "backup/historyStore_20260519_before_HISTORY_STRUCTURE_2A.ts",
+    "backup/UploadWorkspace_20260519_before_HISTORY_STRUCTURE_2A.tsx",
+    "backup/DetailHistoryView_20260519_before_HISTORY_STRUCTURE_2A.tsx"
+  ],
+
+  "modified_files": [
+    {
+      "file": "src/lib/historyStore.ts",
+      "changes": "Added 4 types + 10 helper functions at end of file. No existing code modified.",
+      "types_added": ["HistoryIndexSummary", "HistoryIndexItem", "HistoryDetailDocumentFields", "HistoryDetailRecord"],
+      "functions_added": [
+        "readHistoryIndex", "writeHistoryIndex",
+        "readHistoryDetails", "writeHistoryDetails",
+        "upsertHistoryIndexItem", "upsertHistoryDetail",
+        "buildHistoryIndexItem", "buildHistoryDetail",
+        "syncHistoryIndexAndDetailOnCreate", "syncHistoryIndexAndDetailOnSave"
+      ]
+    },
+    {
+      "file": "src/components/upload/UploadWorkspace.tsx",
+      "changes": "Added syncHistoryIndexAndDetailOnCreate import + 12-line try/catch block after appendHistoryRun()",
+      "sync_point": "After appendHistoryRun() on OCR success"
+    },
+    {
+      "file": "src/components/history/DetailHistoryView.tsx",
+      "changes": "Added syncHistoryIndexAndDetailOnSave import + 6-line try/catch block inside handleSave()",
+      "sync_point": "After updateHistoryRun() succeeds in handleSave()"
+    }
+  ],
+
+  "new_localStorage_keys": {
+    "mysuit_ocr_history_index": {
+      "type": "HistoryIndexItem[]",
+      "max_records": 50,
+      "read_guard": "parse failure returns []",
+      "write_guard": "caller try/catch, failure is console.warn only"
+    },
+    "mysuit_ocr_history_details": {
+      "type": "Record<historyId, HistoryDetailRecord>",
+      "read_guard": "parse failure returns {}",
+      "write_guard": "caller try/catch, failure is console.warn only"
+    }
+  },
+
+  "index_structure": {
+    "historyId": "record.job_id",
+    "fileName": "record.file_name",
+    "templateName": "record.template_name",
+    "documentType": "activeTemplate.documentType (optional)",
+    "createdAt": "record.created_at",
+    "updatedAt": "createdAt on create, refreshed on [저장]",
+    "status": "record.status",
+    "summary": {
+      "fieldCount": "output_fields.length",
+      "tableRowCount": "document_fields.tableRows.length (optional)",
+      "autofillStatus": "autofill_summary.status",
+      "primaryBusinessNo": "autofill_summary.businessNumber",
+      "primaryCompanyName": "output_fields 회사명/상호/상호명/가맹점명 ko key value"
+    },
+    "hasConfirmedResult": "false on create, true after [저장]",
+    "hasRestoreProfile": "false (not connected in 2A)"
+  },
+
+  "detail_structure": {
+    "runSnapshot": {
+      "ocrFields": "record.ocr_fields",
+      "documentFields": {
+        "tableRows": "json.document_fields.tableRows — invoice 품목표 포함",
+        "tableMeta": "json.document_fields.tableMeta"
+      },
+      "outputFieldsSnapshot": "OCR 실행 직후 output_fields 원본",
+      "autofillSummary": "record.autofill_summary"
+    },
+    "confirmedResult": {
+      "initial": null,
+      "after_save": {
+        "savedAt": "nowTimestamp()",
+        "outputFields": "저장된 output_fields"
+      }
+    },
+    "images": {
+      "originalImageUrl": "record.original_image_url",
+      "processedImageUrl": "record.processed_image_url",
+      "imageUrl": "record.image_url (legacy)"
+    }
+  },
+
+  "tableRows_stored": true,
+  "tableRows_source": "json.document_fields.tableRows from raw API response",
+  "tableRows_ui_connected": false,
+
+  "save_sync": {
+    "trigger": "handleSave() in DetailHistoryView after updateHistoryRun() succeeds",
+    "index_updates": ["updatedAt = nowTimestamp()", "hasConfirmedResult = true"],
+    "detail_updates": ["confirmedResult.savedAt = nowTimestamp()", "confirmedResult.outputFields = outputs"]
+  },
+
+  "safety": {
+    "existing_flow_unbreakable": true,
+    "sync_in_trycatch": true,
+    "quota_exceeded_handling": "sync failure caught, console.warn, existing history write unaffected",
+    "read_parse_guard": true
+  },
+
+  "regression_check": {
+    "history_list": "PASS — readHistoryRuns() unchanged",
+    "history_detail": "PASS — DetailHistoryView display logic unchanged",
+    "save_button": "PASS — updateHistoryRun + saveGroundTruth unchanged",
+    "restore_profile_save": "PASS — restoreProfileStore unchanged",
+    "restore_tab": "PASS — AutoRestoreWorkspace unchanged",
+    "autofill_engine": "PASS — autofillEngine.ts unchanged",
+    "preview_custom_validation": "PASS — OcrResultPanel.tsx unchanged"
+  },
+
+  "pending": [
+    "HISTORY-STRUCTURE-2B: 목록 조회 index 우선 전환",
+    "HISTORY-STRUCTURE-2C: 상세 조회 detail 우선 전환",
+    "HISTORY-STRUCTURE-2D: 삭제 동기화",
+    "hasRestoreProfile 실시간 반영",
+    "tableRows UI 연결 (DetailHistoryView)",
+    "I-5 groundTruth autofill 정책 확정"
+  ]
+}

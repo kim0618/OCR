@@ -9,7 +9,7 @@ import OcrDocViewer from "./OcrDocViewer";
 import CornerAdjust, { type Corner } from "./CornerAdjust";
 import FileDropzone from "../common/FileDropzone";
 import type { Region, FieldType, LoadedImage } from "../ocr/core/types";
-import { appendHistoryRun, updateHistoryRun, type HistoryOcrField, type HistoryOutputField } from "@/lib/historyStore";
+import { appendHistoryRun, updateHistoryRun, syncHistoryIndexAndDetailOnCreate, type HistoryDetailDocumentFields, type HistoryOcrField, type HistoryOutputField } from "@/lib/historyStore";
 import { extractBizNumber } from "@/lib/bizNumber";
 import {
   applyAutofillToOutputFields,
@@ -1020,6 +1020,17 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
         output_fields: outputFieldsForHistory,
         autofill_summary: autofillSummary,
       });
+      // HISTORY-STRUCTURE-2A: index/detail 병행 저장 (실패해도 기존 flow 유지)
+      try {
+        const rawDocFields = (json as Record<string, unknown>)?.document_fields as
+          HistoryDetailDocumentFields | undefined;
+        syncHistoryIndexAndDetailOnCreate(successRecord, {
+          documentType: activeTemplate?.documentType || undefined,
+          documentFields: rawDocFields,
+        });
+      } catch (e) {
+        console.warn("[history-structure] index/detail sync failed on create", e);
+      }
       setCurrentJobId(successRecord.job_id);
       setCurrentCreatedAt(successRecord.created_at);
       setInitialOutputFields(outputFieldsForHistory);
@@ -1140,6 +1151,7 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
   };
 
   const handleResultClose = () => {
+    // X 버튼: RunOCR 진입 초기 화면(파일 미선택 상태)으로 복귀
     setOcrResult(null);
     setProcessedImageUrl(null);
     setCurrentJobId(null);
@@ -1147,6 +1159,10 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
     setInitialOutputFields(null);
     setSelectedFieldIndex(null);
     setCanvasSelectedId(null);
+    setSelectedFile(null);
+    setPreprocessResult(null);
+    setCorners([]);
+    setShowCornerAdjust(false);
   };
 
   // OCR 결과 화면

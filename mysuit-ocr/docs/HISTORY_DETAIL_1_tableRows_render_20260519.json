@@ -1,0 +1,129 @@
+{
+  "generatedAt": "2026-05-19T00:00:00+09:00",
+  "scope": "HISTORY_DETAIL_1",
+  "model": "claude-sonnet-4-6",
+  "status": "PASS",
+  "codeModified": true,
+  "summary": {
+    "tableRowsRenderingAdded": true,
+    "regressionCount": 0,
+    "typecheckResult": "PASS",
+    "buildResult": "PASS",
+    "buildNote": "ESLint warning: nextVitals is not iterable (pre-existing, unrelated). /history page JS 5.71kB → 6.43kB."
+  },
+  "backupFiles": [
+    "backup/historyStore_20260519_before_HISTORY_DETAIL_1.ts",
+    "backup/DetailHistoryView_20260519_before_HISTORY_DETAIL_1.tsx"
+  ],
+  "modifiedFiles": [
+    {
+      "path": "src/lib/historyStore.ts",
+      "changes": [
+        {
+          "type": "type_extension",
+          "description": "HistoryRunRecord에 document_fields?: HistoryDetailDocumentFields 추가"
+        },
+        {
+          "type": "function_update",
+          "function": "detailToHistoryRunRecord()",
+          "description": "반환 객체에 document_fields: detail.runSnapshot?.documentFields 추가"
+        }
+      ]
+    },
+    {
+      "path": "src/components/history/DetailHistoryView.tsx",
+      "changes": [
+        {
+          "type": "import_add",
+          "description": "buildInvoicePreviewCols, normalizeTableCell from @/lib/invoiceTableDisplay"
+        },
+        {
+          "type": "constants_add",
+          "description": "_TBL_IDX_KEYS, _TBL_NUM_KEYS, _TBL_CODE_KEYS, _TBL_WIDE_KEYS, tblColWidth(), tblDataAlign(), tblThStyle, tblTdStyle"
+        },
+        {
+          "type": "useMemo_add",
+          "description": "tableRows, tableMeta, tableDisplayCols useMemo hooks"
+        },
+        {
+          "type": "handleSave_update",
+          "description": "onSaved에 {...updated, document_fields: item.document_fields} 전달하여 tableRows 표시 유지"
+        },
+        {
+          "type": "jsx_add",
+          "description": "품목표 섹션 — 출력 필드와 OCR 데이터 사이, tableRows/tableDisplayCols 있을 때만 렌더링"
+        }
+      ]
+    }
+  ],
+  "unchangedFiles": [
+    "src/lib/invoiceTableDisplay.ts",
+    "src/components/upload/OcrResultPanel.tsx",
+    "src/components/history/HistoryWorkspace.tsx",
+    "src/lib/restoreProfileStore.ts",
+    "src/lib/autofillEngine.ts"
+  ],
+  "dataFlow": {
+    "storage": "mysuit_ocr_history_details[historyId].runSnapshot.documentFields.tableRows",
+    "readPath": "readHistoryDetailWithFallback → detailToHistoryRunRecord → HistoryRunRecord.document_fields",
+    "extractPath": "DetailHistoryView: item.document_fields?.tableRows → tableRows useMemo",
+    "columnPath": "buildInvoicePreviewCols(tableMeta, tableRows) → tableDisplayCols",
+    "renderPath": "tableRows && tableDisplayCols → 품목표 섹션 JSX"
+  },
+  "renderingSpec": {
+    "sectionTitle": "품목표",
+    "subtitle": "표 데이터 · {N}행",
+    "position": "출력 필드 섹션과 OCR 데이터 섹션 사이",
+    "showCondition": "tableRows.length > 0 && tableDisplayCols.length > 0",
+    "hideCondition": "tableRows=null OR length=0 OR tableDisplayCols empty",
+    "headerFormat": "한글 라벨 + (canonicalKey) 2줄 (Preview/Custom/Validation 동일)",
+    "scrollBehavior": "overflowX: auto, overflowY: auto, maxHeight: 220px",
+    "columnDecision": "buildInvoicePreviewCols — expectedColumnKeys → columns → allowlist + hasValue",
+    "legacyFallback": "document_fields 없음 → 섹션 미표시 (기존 UI 그대로)"
+  },
+  "regressionCheck": {
+    "historyList": "PASS",
+    "historyDetailOpen": "PASS",
+    "historyDetailRender": "PASS — 출력 필드 + 품목표(선택) + OCR 데이터",
+    "save": "PASS — updateHistoryRun + document_fields 보존",
+    "saveRestoreProfile": "PASS — 변경 없음",
+    "delete": "PASS — 변경 없음",
+    "restore": "PASS — 변경 없음",
+    "runOcr": "PASS — 변경 없음",
+    "preview": "PASS — OcrResultPanel 미수정",
+    "custom": "PASS — OcrResultPanel 미수정",
+    "validation": "PASS — OcrResultPanel 미수정",
+    "localStorageStructure": "PASS — 변경 없음"
+  },
+  "remainingIssues": [
+    {
+      "id": "ISSUE-D1",
+      "title": "품목표 cell 편집 기능 없음",
+      "severity": "LOW",
+      "note": "이번 작업 범위 제외 (읽기 전용). 후속 작업에서 구현 가능."
+    },
+    {
+      "id": "ISSUE-D2",
+      "title": "HISTORY-STRUCTURE-2A 이전 거래명세서 → tableRows 없음",
+      "severity": "LOW",
+      "note": "detail 없는 항목은 legacy fallback. 재실행하면 tableRows 포함됨."
+    },
+    {
+      "id": "ISSUE-D3",
+      "title": "거래명세서 외 문서의 tableRows 대응",
+      "severity": "LOW",
+      "note": "documentType 제한 없이 tableRows 존재 여부 기준 표시. 현재는 invoice_statement만 생성."
+    },
+    {
+      "id": "ISSUE-D4",
+      "title": "긴 표 UI 개선",
+      "severity": "LOW",
+      "note": "maxHeight 220px + scroll로 기본 대응. 후속에서 pagination 가능."
+    }
+  ],
+  "nextActions": [
+    { "order": 1, "name": "DB-2", "description": "PostgreSQL schema 작성", "priority": "HIGH" },
+    { "order": 2, "name": "HISTORY-STRUCTURE-4", "description": "localStorage QuotaExceededError 처리 강화", "priority": "MEDIUM" },
+    { "order": 3, "name": "HISTORY-RESTORE-5", "description": "sourceHistoryId dangling 경고 UI", "priority": "LOW" }
+  ]
+}

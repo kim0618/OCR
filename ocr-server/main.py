@@ -1974,6 +1974,53 @@ async def ocr_extract(
 
     if region_list:
         # === 템플릿 영역 기반 OCR ===
+        # T-28a: Template RunOCR shared normalized image pipeline.
+        # 비정형 경로(line ~2199)와 동일한 detect_orientation을 region crop 이전에 적용한다.
+        # 전체 문서를 먼저 정상 방향으로 정규화한 뒤 field/table/parser 모두 같은 normalized image를 사용한다.
+        #
+        # 원칙:
+        # - 좌표 기준 유지를 위해 resize/deskew는 적용하지 않는다 (방향만 정규화).
+        # - 정상 입력에서 detect_orientation은 angle=0 → 회전 없음 → 회귀 방지.
+        # - 90/270 회전 시 img.shape에 따라 orig_w/orig_h 갱신.
+        # - field crop, table crop, invoice_statement parser 모두 같은 normalized img 사용.
+        #
+        # T-28a가 폐기한 T-27 구조:
+        # - T-27a-fix / T-27a-fix2의 anchor 기반 fallback OCR (정상 입력에서도 768px 풀 OCR 1~2회 강제) 제거.
+        # - templateOrientationDebug (추가 OCR 비용 발생하던 debug) 제거.
+        # - 대신 templateImageNormalization 메타를 추가 OCR 없이 노출.
+        _t_norm0 = time.time()
+        _orig_size_before_norm = [orig_w, orig_h]
+        _applied_rotation = 0
+        _norm_status = "applied"
+        try:
+            img, _orient_meta_tmpl = detect_orientation(img, ocr, original_wh=(orig_w, orig_h))
+            _applied_rotation = int(_orient_meta_tmpl.get("angle", 0) or 0)
+            # 회전 후 새 크기로 갱신 (90/270 회전 시 가로/세로가 뒤바뀜)
+            orig_h, orig_w = img.shape[:2]
+            timings["template_detect_orientation_ms"] = _ms(time.time() - _t_norm0)
+            if _applied_rotation != 0:
+                print(f"[template] T-28a normalized: rotation={_applied_rotation}")
+        except Exception as _norm_e:
+            print(f"[template] T-28a normalization failed (using original image): {_norm_e}")
+            timings["template_normalization_error"] = str(_norm_e)
+            _norm_status = f"error: {_norm_e}"
+
+        # templateImageNormalization meta — 추가 OCR 없이 normalized image pipeline 상태 노출
+        _tmpl_img_norm_debug: dict = {
+            "enabled": True,
+            "appliedRotation": _applied_rotation,
+            "deskewApplied": False,
+            "resizeApplied": False,
+            "originalSize": _orig_size_before_norm,
+            "normalizedSize": [orig_w, orig_h],
+            "scaleX": 1.0,
+            "scaleY": 1.0,
+            "usedForRegionCrop": True,
+            "usedForTableCrop": True,
+            "usedForParser": True,
+            "status": _norm_status,
+        }
+
         for idx, region in enumerate(region_list):
             rx = int(region.get("x", 0))
             ry = int(region.get("y", 0))
@@ -2381,6 +2428,9 @@ async def ocr_extract(
         "receipt_fields": receipt_fields,
         "processing_time": round(elapsed, 2),
     }
+    # T-28a: templateImageNormalization meta — normalized image pipeline 상태 (추가 OCR 없음)
+    if "_tmpl_img_norm_debug" in locals():
+        response["templateImageNormalization"] = _tmpl_img_norm_debug
     # finance_profile Tier-1 추출: doc_type == "bank_slip" 분기에서만 실행
     # _apply_doc_type_amount_policy / receipt_fields 완전 무수정 (docs/FINANCE_PARSER_TARGET §5.2)
     if doc_type == "bank_slip":
@@ -2513,6 +2563,34 @@ async def ocr_extract(
             )
         except Exception as _ie:
             print(f"[invoice_statement] extractor error (response unaffected): {_ie}")
+
+    # T-26a-fix: patch template field values with normalized party company names.
+    # Template path raw.fields[i].value = raw OCR text; document_fields has normalized values.
+    # Update field["value"] → normalized, field["original"] → raw OCR (shown as "OCR 원본").
+    # Only applies: invoice_statement + template (region_list) path + document_fields present.
+    # Does NOT touch address, bizNumber, representative, tableRows, or any other field.
+    if doc_type == "invoice_statement" and region_list and "document_fields" in response:
+        _t26a_doc = response["document_fields"]
+        _T26A_KOFIELD_MAP: dict[str, str] = {
+            "공급자 상호": "supplierCompany",
+            "공급자 회사명": "supplierCompany",
+            "공급받는자 상호": "buyerCompany",
+            "공급받는자 회사명": "buyerCompany",
+        }
+        for _f, _r in zip(fields, region_list):
+            _ko = ((_r.get("koField") or "")).strip()
+            _doc_key = _T26A_KOFIELD_MAP.get(_ko)
+            if not _doc_key:
+                continue
+            _norm = _t26a_doc.get(_doc_key, "")
+            if not _norm:
+                continue
+            _orig = (_f.get("value") or "")
+            if _orig == _norm:
+                continue  # already matches, no change needed
+            _f["original"] = _orig  # preserve raw OCR as "OCR 원본"
+            _f["value"] = _norm     # set normalized value as "최종값"
+            print(f"[T26a-fix] {_ko}: {_orig!r} → {_norm!r}")
 
     if processed_b64:
         response["processed_image"] = f"data:image/jpeg;base64,{processed_b64}"

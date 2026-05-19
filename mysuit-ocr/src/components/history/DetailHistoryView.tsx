@@ -7,7 +7,14 @@ import {
   updateHistoryRun,
   getOriginalHistoryImage,
   getProcessedHistoryImage,
+  syncHistoryIndexAndDetailOnSave,
+  syncHistoryDetailTableRowsOnSave,
 } from "@/lib/historyStore";
+import {
+  buildInvoicePreviewCols,
+  normalizeTableCell,
+} from "@/lib/invoiceTableDisplay";
+import { resolveFieldLabel } from "@/lib/invoiceFieldLabels";
 import {
   getGroundTruth,
   saveGroundTruth,
@@ -287,6 +294,62 @@ const emptyCellStyle: React.CSSProperties = {
   lineHeight: 1.55,
 };
 
+// ── 품목표 렌더링 헬퍼 (HISTORY-DETAIL-1) ────────────────────────────────────
+
+const _TBL_IDX_KEYS  = new Set(["rowIndex", "no", "rowNo", "lineNo", "seq"]);
+const _TBL_NUM_KEYS  = new Set(["quantity", "unitPrice", "consumerUnitPrice", "supplyUnitPrice",
+                                "amount", "supplyAmount", "taxAmount", "totalAmount"]);
+const _TBL_CODE_KEYS = new Set(["itemCode", "insuranceCode", "serialNo", "lotNo", "manufacturingNo"]);
+const _TBL_WIDE_KEYS = new Set(["itemName", "manufacturer"]);
+
+function tblColWidth(key: string): string {
+  if (_TBL_IDX_KEYS.has(key))  return "48px";
+  if (key === "quantity")       return "60px";
+  if (_TBL_NUM_KEYS.has(key))  return "88px";
+  if (_TBL_CODE_KEYS.has(key)) return "92px";
+  if (_TBL_WIDE_KEYS.has(key)) return "auto";
+  return "78px";
+}
+
+function tblDataAlign(key: string): React.CSSProperties["textAlign"] {
+  if (_TBL_IDX_KEYS.has(key)) return "center";
+  if (_TBL_NUM_KEYS.has(key)) return "right";
+  return "left";
+}
+
+const tblInputStyle: React.CSSProperties = {
+  width: "100%",
+  boxSizing: "border-box",
+  border: "1px solid var(--border)",
+  borderRadius: 4,
+  padding: "3px 6px",
+  fontSize: 12,
+  background: "var(--panel2)",
+  color: "var(--text)",
+};
+
+const tblThStyle: React.CSSProperties = {
+  background: "var(--panel2)",
+  color: "var(--muted)",
+  fontWeight: 700,
+  textAlign: "center",
+  padding: "6px 8px",
+  borderBottom: "1px solid var(--border)",
+  whiteSpace: "nowrap",
+  position: "sticky",
+  top: 0,
+  zIndex: 1,
+  fontSize: 11,
+};
+
+const tblTdStyle: React.CSSProperties = {
+  padding: "5px 8px",
+  borderBottom: "1px solid var(--border)",
+  color: "var(--text)",
+  verticalAlign: "middle",
+  fontSize: 12,
+};
+
 const matchCellMatch: React.CSSProperties = {
   color: "#22c55e",
   fontWeight: 800,
@@ -365,6 +428,12 @@ export default function DetailHistoryView({ item, onBack, onSaved }: Props) {
 
   useEffect(() => {
     setOutputs(item?.output_fields ? [...item.output_fields] : []);
+    const rawRows = item?.document_fields?.tableRows;
+    setEditedTableRows(
+      Array.isArray(rawRows) && rawRows.length > 0
+        ? (rawRows as Record<string, unknown>[]).map((row) => ({ ...row }))
+        : null,
+    );
     if (item) {
       setGtMap(getGroundTruth(item.template_name, item.file_name));
     } else {
@@ -373,6 +442,27 @@ export default function DetailHistoryView({ item, onBack, onSaved }: Props) {
   }, [item]);
 
   const ocrRows = useMemo(() => item?.ocr_fields ?? [], [item]);
+  const [tableRowsOpen, setTableRowsOpen] = useState(false);
+  const [editedTableRows, setEditedTableRows] = useState<Record<string, unknown>[] | null>(null);
+
+  // HISTORY-DETAIL-1: detail.runSnapshot.documentFields.tableRows 표시
+  const tableRows = useMemo((): Record<string, unknown>[] | null => {
+    const df = item?.document_fields;
+    if (!df) return null;
+    const rows = df.tableRows;
+    if (!Array.isArray(rows) || rows.length === 0) return null;
+    return rows as Record<string, unknown>[];
+  }, [item]);
+
+  const tableMeta = useMemo(
+    () => (item?.document_fields?.tableMeta ?? null) as Record<string, unknown> | null,
+    [item],
+  );
+
+  const tableDisplayCols = useMemo(
+    () => (tableRows ? buildInvoicePreviewCols(tableMeta, tableRows) : null),
+    [tableRows, tableMeta],
+  );
 
   if (!item) return null;
 
@@ -395,7 +485,25 @@ export default function DetailHistoryView({ item, onBack, onSaved }: Props) {
       // 정답(기준값) 저장소에도 동시 반영. 빈 modified 는 모듈 내부에서 자동 제외.
       const newGt = saveGroundTruth(item.template_name, item.file_name, outputs);
       setGtMap(newGt);
-      onSaved?.(updated);
+      // HISTORY-DETAIL-1: legacy store 반환값에 document_fields 보존 (편집된 tableRows 반영)
+      const savedDocFields = item.document_fields
+        ? { ...item.document_fields, tableRows: editedTableRows ?? item.document_fields.tableRows }
+        : undefined;
+      onSaved?.({ ...updated, document_fields: savedDocFields });
+      // HISTORY-STRUCTURE-2A: confirmedResult + index.updatedAt 병행 갱신 (실패해도 기존 저장 유지)
+      try {
+        syncHistoryIndexAndDetailOnSave(item.job_id, outputs);
+      } catch (e) {
+        console.warn("[history-structure] index/detail sync failed on save", e);
+      }
+      // 편집된 tableRows 저장 (실패해도 기존 저장 유지)
+      if (editedTableRows) {
+        try {
+          syncHistoryDetailTableRowsOnSave(item.job_id, editedTableRows);
+        } catch (e) {
+          console.warn("[history-detail] tableRows save failed", e);
+        }
+      }
       await ui.alert("저장되었습니다. 동일한 템플릿·파일로 다음에 OCR 을 실행하면 일치 여부가 표시됩니다.");
     } else {
       await ui.alert("저장 중 오류가 발생했습니다.");
@@ -571,7 +679,7 @@ export default function DetailHistoryView({ item, onBack, onSaved }: Props) {
         </div>
 
         <div style={rightPaneStyle}>
-          <div style={sectionStyle}>
+          <div style={{ ...sectionStyle, flex: tableRowsOpen ? 7 : 1 }}>
             <div style={sectionHeaderStyle}>
               <div style={sectionLabelStyle}>출력 필드</div>
               <div style={{ display: "flex", gap: 8 }}>
@@ -584,16 +692,25 @@ export default function DetailHistoryView({ item, onBack, onSaved }: Props) {
               </div>
             </div>
             <div style={tableWrapStyle}>
-              <table style={tableStyle}>
+              <table style={{ ...tableStyle, tableLayout: "fixed" }}>
+                <colgroup>
+                  <col style={{ width: 44 }} />
+                  <col />
+                  <col />
+                  <col style={{ width: "28%" }} />
+                  <col style={{ width: "28%" }} />
+                  <col style={{ width: 72 }} />
+                  <col style={{ width: 48 }} />
+                </colgroup>
                 <thead>
                   <tr>
-                    <th style={{ ...thStyle, width: 44 }}>No</th>
-                    <th style={thStyle}>영문필드명</th>
-                    <th style={thStyle}>한글필드명</th>
+                    <th style={{ ...thStyle, textAlign: "center" }}>No</th>
+                    <th style={thStyle}>영문 필드명</th>
+                    <th style={thStyle}>한글 필드명</th>
                     <th style={thStyle}>원본 데이터</th>
                     <th style={thStyle}>수정 데이터</th>
-                    <th style={{ ...thStyle, width: 80 }}>정확도</th>
-                    <th style={thStyle}>일치</th>
+                    <th style={{ ...thStyle, textAlign: "center" }}>정확도</th>
+                    <th style={{ ...thStyle, textAlign: "center" }}>일치</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -605,26 +722,42 @@ export default function DetailHistoryView({ item, onBack, onSaved }: Props) {
                     </tr>
                   ) : (
                     outputs.map((row, idx) => {
-                      const cmp = compareToGt(row.original, gtMap[fieldKey(row.en, row.ko)]);
+                      const isRawTable = /^\s*\[[\[{]/.test(row.original ?? "") || /^\s*\[[\[{]/.test(row.modified ?? "");
+                      const cmp = isRawTable ? { status: "none" as const, gt: undefined } : compareToGt(row.original, gtMap[fieldKey(row.en, row.ko)]);
+                      // ko 없으면 ocrRows[idx].name 으로 한글 라벨 보강 (canonical key → INVOICE_FIELD_KO 매핑)
+                      const displayKo = row.ko || (() => {
+                        const ocrRow = ocrRows[idx];
+                        if (!ocrRow) return "";
+                        const { primary } = resolveFieldLabel({ name: ocrRow.name, ko: ocrRow.ko ?? "", en: ocrRow.en ?? row.en });
+                        return primary !== ocrRow.name && primary !== row.en ? primary : "";
+                      })();
                       return (
                         <tr key={`${row.en}-${idx}`}>
                           <td style={{ ...tdStyle, textAlign: "center" }}>{row.no ?? idx + 1}</td>
                           <td style={tdStyle}>{row.en}</td>
-                          <td style={tdStyle}>{row.ko}</td>
-                          <td style={tdStyle}>{row.original}</td>
+                          <td style={tdStyle}>{displayKo}</td>
                           <td style={tdStyle}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                              <input
-                                type="text"
-                                value={row.modified}
-                                onChange={(e) => handleModify(idx, e.target.value)}
-                                style={inputStyle}
-                              />
-                              <SourceBadge source={row.source} />
-                            </div>
+                            {isRawTable
+                              ? `표 데이터${tableRows ? ` (${tableRows.length}행)` : ""}`
+                              : row.original}
                           </td>
-                          <td style={{ ...tdStyle, textAlign: "right" }}>{fmtConf(row.confidence)}</td>
                           <td style={tdStyle}>
+                            {isRawTable ? (
+                              <span>-</span>
+                            ) : (
+                              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                <input
+                                  type="text"
+                                  value={row.modified}
+                                  onChange={(e) => handleModify(idx, e.target.value)}
+                                  style={inputStyle}
+                                />
+                                <SourceBadge source={row.source} />
+                              </div>
+                            )}
+                          </td>
+                          <td style={{ ...tdStyle, textAlign: "center" }}>{fmtConf(row.confidence)}</td>
+                          <td style={{ ...tdStyle, textAlign: "center" }}>
                             <MatchCell status={cmp.status} gt={cmp.gt} />
                           </td>
                         </tr>
@@ -634,9 +767,99 @@ export default function DetailHistoryView({ item, onBack, onSaved }: Props) {
                 </tbody>
               </table>
             </div>
+
+            {/* HISTORY-DETAIL-1: 품목표 — 접이식, tableRows가 있을 때만 표시 */}
+            {tableRows && tableRows.length > 0 && tableDisplayCols && tableDisplayCols.length > 0 && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setTableRowsOpen((v) => !v)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    width: "100%",
+                    paddingTop: 10,
+                    paddingBottom: 0,
+                    borderTop: "1px solid var(--border)",
+                    marginTop: 4,
+                    background: "transparent",
+                    border: "none",
+                    borderTopWidth: 1,
+                    borderTopStyle: "solid",
+                    borderTopColor: "var(--border)",
+                    cursor: "pointer",
+                    textAlign: "left",
+                  }}
+                >
+                  <span style={sectionLabelStyle}>품목표</span>
+                  <span style={{ fontSize: 12, color: "var(--muted)", display: "flex", alignItems: "center", gap: 6 }}>
+                    <span>표 데이터 · {tableRows.length}행</span>
+                    <span style={{ fontSize: 10 }}>{tableRowsOpen ? "▲" : "▼"}</span>
+                  </span>
+                </button>
+                {tableRowsOpen && (
+                  <div style={{ overflowX: "auto", overflowY: "auto", maxHeight: 200, borderRadius: 8 }}>
+                    <table style={{ ...tableStyle, tableLayout: "fixed", minWidth: "100%" }}>
+                      <colgroup>
+                        {tableDisplayCols.map((col) => (
+                          <col key={col.key} style={{ width: tblColWidth(col.key) }} />
+                        ))}
+                      </colgroup>
+                      <tbody>
+                        <tr>
+                          {tableDisplayCols.map((col) => (
+                            <th key={col.key} style={tblThStyle}>
+                              <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={col.labelKo}>
+                                {col.labelKo}
+                              </div>
+                              {col.labelKo !== col.key && (
+                                <div title={col.key} style={{
+                                  fontSize: 10,
+                                  opacity: 0.5,
+                                  marginTop: 1,
+                                  fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                                  whiteSpace: "nowrap",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                }}>
+                                  ({col.key})
+                                </div>
+                              )}
+                            </th>
+                          ))}
+                        </tr>
+                        {(editedTableRows ?? tableRows)!.map((row, ri) => (
+                          <tr key={ri}>
+                            {tableDisplayCols.map((col) => (
+                              <td key={col.key} style={{ ...tblTdStyle, padding: "3px 6px" }}>
+                                <input
+                                  type="text"
+                                  value={normalizeTableCell(row[col.key])}
+                                  onChange={(e) => {
+                                    setEditedTableRows((prev) => {
+                                      const base = prev ?? (tableRows ? tableRows.map((r) => ({ ...r })) : []);
+                                      return base.map((r, i) => i === ri ? { ...r, [col.key]: e.target.value } : r);
+                                    });
+                                  }}
+                                  style={{
+                                    ...tblInputStyle,
+                                    textAlign: tblDataAlign(col.key),
+                                  }}
+                                />
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </>
+            )}
           </div>
 
-          <div style={sectionStyle}>
+          <div style={{ ...sectionStyle, flex: tableRowsOpen ? 3 : 1 }}>
             <div style={sectionHeaderStyle}>
               <div style={sectionLabelStyle}>OCR 데이터</div>
             </div>
@@ -645,11 +868,11 @@ export default function DetailHistoryView({ item, onBack, onSaved }: Props) {
                 <thead>
                   <tr>
                     <th style={{ ...thStyle, width: 44 }}>No</th>
-                    <th style={thStyle}>영문필드명</th>
-                    <th style={thStyle}>한글필드명</th>
+                    <th style={thStyle}>영문 필드명</th>
+                    <th style={thStyle}>한글 필드명</th>
                     <th style={thStyle}>원본 데이터</th>
-                    <th style={{ ...thStyle, width: 80 }}>정확도</th>
-                    <th style={thStyle}>일치</th>
+                    <th style={{ ...thStyle, width: 72, textAlign: "center" }}>정확도</th>
+                    <th style={{ ...thStyle, width: 48, textAlign: "center" }}>일치</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -673,8 +896,8 @@ export default function DetailHistoryView({ item, onBack, onSaved }: Props) {
                           <td style={tdStyle}>{enName || "-"}</td>
                           <td style={tdStyle}>{koName || "-"}</td>
                           <td style={tdStyle}>{row.value}</td>
-                          <td style={{ ...tdStyle, textAlign: "right" }}>{fmtConf(row.confidence)}</td>
-                          <td style={tdStyle}>
+                          <td style={{ ...tdStyle, textAlign: "center" }}>{fmtConf(row.confidence)}</td>
+                          <td style={{ ...tdStyle, textAlign: "center" }}>
                             <MatchCell status={cmp.status} gt={cmp.gt} />
                           </td>
                         </tr>

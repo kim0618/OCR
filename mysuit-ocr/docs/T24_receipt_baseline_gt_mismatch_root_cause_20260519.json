@@ -1,0 +1,394 @@
+{
+  "generatedAt": "2026-05-19T00:00:00+09:00",
+  "scope": "T24_receipt_baseline_gt_mismatch_root_cause",
+  "model": "claude-sonnet-4-6",
+  "analysisMethod": "static_code_analysis + codex_report_review + gt_review",
+  "codeModified": false,
+  "inputReports": [
+    "D:\\Free_Vue\\tmp\\CODEX_RECEIPT_TEMPLATE_GT_AUDIT_BASELINE10_MINUS_BANK_20260519.json",
+    "D:\\Free_Vue\\tmp\\CODEX_RECEIPT_TEMPLATE_GT_AUDIT_BASELINE10_MINUS_BANK_20260519.md",
+    "D:\\Free_Vue\\tmp\\CODEX_TESTTAB_VS_RUNOCR_RECEIPT_BASELINE10_MINUS_BANK_20260519.json"
+  ],
+  "gtSource": "mysuit-ocr/public/data/testsets/baseline/ground_truth.json",
+  "targetSamples": [
+    { "filename": "1.jpg", "documentType": "card_receipt", "runocrDocType": "receipt_card", "status": "PASS" },
+    { "filename": "2.jpg", "documentType": "card_receipt", "runocrDocType": "receipt_card", "issues": 1 },
+    { "filename": "3.jpg", "documentType": "card_receipt", "runocrDocType": "receipt_card", "issues": 1 },
+    { "filename": "4.jpg", "documentType": "card_receipt", "runocrDocType": "receipt_card", "issues": 1 },
+    { "filename": "7.jpg", "documentType": "food_cafe_receipt", "runocrDocType": "receipt_card", "issues": 1 },
+    { "filename": "8.jpg", "documentType": "medical_receipt", "runocrDocType": "medical_receipt", "issues": 1 },
+    { "filename": "10.jpg", "documentType": "card_receipt", "runocrDocType": "receipt_card", "issues": 1 },
+    { "filename": "a1.jpg", "documentType": "card_receipt", "runocrDocType": "receipt_pos", "issues": 4, "note": "document_type_mismatch" },
+    { "filename": "a2.jpg", "documentType": "card_receipt", "runocrDocType": "form_or_handwritten", "issues": 3, "note": "handwritten_limit" }
+  ],
+  "summary": {
+    "totalSamples": 9,
+    "totalFields": 54,
+    "match": 41,
+    "mismatch": 9,
+    "missing": 4,
+    "accuracy": 75.93,
+    "totalIssues": 13,
+    "safeFixCandidates": 3,
+    "gtIssueCandidates": 1,
+    "posReceiptCandidates": 2,
+    "addressRuleCandidates": 3,
+    "garbledSourceCandidates": 7,
+    "holdCandidates": 4,
+    "worstField": "no_5",
+    "worstFieldAccuracy": 33.33
+  },
+  "fieldSummary": [
+    {
+      "key": "no_1", "label": "회사명",
+      "match": 7, "mismatch": 2, "missing": 0, "accuracy": 77.78,
+      "issueFiles": ["4.jpg", "a1.jpg"],
+      "rootCauses": ["ocr_source_garbled", "merchant_name_candidate"],
+      "recommendation": "보류 — OCR raw 미확인"
+    },
+    {
+      "key": "no_2", "label": "사업자번호",
+      "match": 9, "mismatch": 0, "missing": 0, "accuracy": 100.0,
+      "issueFiles": [],
+      "rootCauses": [],
+      "recommendation": "절대 수정 금지 — 회귀 방지 최우선"
+    },
+    {
+      "key": "no_3", "label": "대표자",
+      "match": 7, "mismatch": 1, "missing": 1, "accuracy": 77.78,
+      "issueFiles": ["a1.jpg", "a2.jpg"],
+      "rootCauses": ["representative_rule_candidate", "ocr_source_garbled"],
+      "recommendation": "T-25a: POS 영수증 대표자 탐색 강화 (a1.jpg), a2.jpg는 보류"
+    },
+    {
+      "key": "no_4", "label": "전화번호",
+      "match": 7, "mismatch": 1, "missing": 1, "accuracy": 77.78,
+      "issueFiles": ["2.jpg", "a1.jpg"],
+      "rootCauses": ["gt_issue_or_ambiguous", "tel_rule_candidate"],
+      "recommendation": "2.jpg: GT 수동 확인 필요 (11자리 오입력 의심). a1.jpg: T-25a POS 전화번호"
+    },
+    {
+      "key": "no_5", "label": "주소",
+      "match": 3, "mismatch": 5, "missing": 1, "accuracy": 33.33,
+      "issueFiles": ["3.jpg", "7.jpg", "8.jpg", "10.jpg", "a1.jpg", "a2.jpg"],
+      "rootCauses": ["address_rule_candidate", "ocr_source_garbled", "ocr_source_missing"],
+      "recommendation": "T-25b: 괄호 후 공백 + 도로명+번지 공백 규칙. 나머지 보류."
+    },
+    {
+      "key": "no_6", "label": "총합계금액",
+      "match": 8, "mismatch": 0, "missing": 1, "accuracy": 88.89,
+      "issueFiles": ["a2.jpg"],
+      "rootCauses": ["amount_rule_candidate", "ocr_source_garbled"],
+      "recommendation": "T-25c 별도 검토: form_or_handwritten policy 완화 신중 검토"
+    }
+  ],
+  "issueDetails": [
+    {
+      "id": 1,
+      "filename": "2.jpg", "documentType": "card_receipt",
+      "field": "no_4", "label": "전화번호",
+      "gtRaw": "03147900090", "ocrRaw": "031-479-0090",
+      "gtNormalized": "03147900090", "ocrNormalized": "0314790090",
+      "status": "mismatch",
+      "codexReason": "ocr_source_garbled",
+      "reanalysisReason": "J",
+      "reanalysisLabel": "gt_issue_or_ambiguous",
+      "detail": "GT 11자리(03147900090) vs OCR 10자리(0314790090). 한국 031 지역번호는 10자리(031-479-0090)가 정상. GT 작성 오입력 의심. OCR이 정답일 가능성 높음.",
+      "improvable": true,
+      "recommendedAction": "GT 수동 확인 후 수정: 03147900090 → 031-479-0090",
+      "regressionRisk": "없음 (GT 수정 시)"
+    },
+    {
+      "id": 2,
+      "filename": "3.jpg", "documentType": "card_receipt",
+      "field": "no_5", "label": "주소",
+      "gtRaw": "경기도 안양시 동안구 엘에스로 76 (호계동) 7-117,11",
+      "ocrRaw": "경기 안양시 동안구 엘에스로 76 (호계동)7-117.11",
+      "status": "mismatch",
+      "codexReason": "ocr_source_garbled",
+      "reanalysisReason": "H+C 복합",
+      "reanalysisLabel": "ocr_source_garbled + address_rule_candidate",
+      "detail": "세 가지 차이 혼재: ①경기도→경기(OCR 누락), ②(호계동)7→(호계동) 7(공백, 개선가능), ③7-117,11→7-117.11(OCR 쉼표→점, 불가)",
+      "improvable": true,
+      "improvablePart": "②번 공백: )(숫자/한글) → ) 공백 삽입",
+      "recommendedAction": "T-25b 주소 공백 규칙으로 ② 부분 개선",
+      "regressionRisk": "낮음 (부분 개선)"
+    },
+    {
+      "id": 3,
+      "filename": "4.jpg", "documentType": "card_receipt",
+      "field": "no_1", "label": "회사명",
+      "gtRaw": "정공구", "ocrRaw": "가행점",
+      "status": "mismatch",
+      "codexReason": "ocr_source_garbled",
+      "reanalysisReason": "H+D",
+      "reanalysisLabel": "ocr_source_garbled + merchant_name_candidate",
+      "detail": "가행점은 가맹점의 OCR 노이즈로 추정. company.py에서 가맹점 컨텍스트 텍스트를 높게 평가했을 가능성. OCR raw에 정공구가 있는지 cache 없어 확인 불가.",
+      "improvable": false,
+      "recommendedAction": "보류 — OCR raw 확인 후 판단",
+      "regressionRisk": "해당없음"
+    },
+    {
+      "id": 4,
+      "filename": "7.jpg", "documentType": "food_cafe_receipt",
+      "field": "no_5", "label": "주소",
+      "gtRaw": "경기도 의왕시 경수대로 209 102호 (고천동, 의왕월드비젼)",
+      "ocrRaw": "경기도 의왕시 경수대로 209 102호(고천동,의왕월드 비전)",
+      "status": "mismatch",
+      "codexReason": "ocr_source_garbled",
+      "reanalysisReason": "H",
+      "reanalysisLabel": "ocr_source_garbled (부분 C 포함)",
+      "detail": "102호(고천동→102호 (고천동: 괄호 전 공백 가능. 의왕월드비젼→의왕월드 비전: OCR 맞춤법/공백 오인식, 복구 불가.",
+      "improvable": true,
+      "improvablePart": "괄호 전 공백만 개선 가능",
+      "recommendedAction": "T-25b 주소 공백 규칙 적용 시 일부 개선",
+      "regressionRisk": "낮음 (부분 개선)"
+    },
+    {
+      "id": 5,
+      "filename": "8.jpg", "documentType": "medical_receipt",
+      "field": "no_5", "label": "주소",
+      "gtRaw": "경기 의왕시 경수대로 237",
+      "ocrRaw": "경기 의왕시 경수대로237",
+      "status": "mismatch",
+      "codexReason": "ocr_source_garbled",
+      "reanalysisReason": "C",
+      "reanalysisLabel": "address_rule_candidate",
+      "detail": "경수대로237→경수대로 237: 도로명 접미어 후 번지 숫자 공백 누락. OCR 또는 parser에서 공백 제거. 규칙으로 개선 가능.",
+      "improvable": true,
+      "recommendedAction": "T-25b: re.sub(r'([로길가대로])\\b(\\d)', r'\\1 \\2', value)",
+      "regressionRisk": "중간 — 다른 주소에서 오작동 여부 회귀 확인 필요"
+    },
+    {
+      "id": 6,
+      "filename": "10.jpg", "documentType": "card_receipt",
+      "field": "no_5", "label": "주소",
+      "gtRaw": "경기 의왕시 효행로 47 (오전동) 1층",
+      "ocrRaw": "경기 의왕시 효행로 47 (오전동)1층",
+      "status": "mismatch",
+      "codexReason": "parser_rule_candidate",
+      "reanalysisReason": "C",
+      "reanalysisLabel": "address_rule_candidate",
+      "detail": "(오전동)1층→(오전동) 1층: 닫는 괄호 후 숫자/한글 공백 누락. parser 또는 OCR 공백 처리 문제. 규칙으로 안전하게 개선 가능.",
+      "improvable": true,
+      "recommendedAction": "T-25b: re.sub(r'\\)([가-힣0-9])', r') \\1', value)",
+      "regressionRisk": "낮음 — 괄호 닫힘 직후 공백 없는 케이스는 거의 오류"
+    },
+    {
+      "id": 7,
+      "filename": "a1.jpg", "documentType": "card_receipt",
+      "field": "no_1", "label": "회사명",
+      "gtRaw": "정공구", "ocrRaw": "기계공구",
+      "status": "mismatch",
+      "codexReason": "ocr_source_garbled",
+      "reanalysisReason": "H+D",
+      "reanalysisLabel": "ocr_source_garbled + merchant_name_candidate",
+      "detail": "POS 영수증(receipt_pos). 업종 카테고리 기계공구를 회사명으로 오인식. company.py score에서 기계공구가 더 높게 평가됨. OCR raw에 정공구 여부 불확실.",
+      "improvable": false,
+      "recommendedAction": "보류 — POS 영수증 구조 분석 후 별도 대응",
+      "regressionRisk": "해당없음"
+    },
+    {
+      "id": 8,
+      "filename": "a1.jpg", "documentType": "card_receipt",
+      "field": "no_3", "label": "대표자",
+      "gtRaw": "정영달", "ocrRaw": "",
+      "status": "missing",
+      "codexReason": "parser_rule_candidate",
+      "reanalysisReason": "E",
+      "reanalysisLabel": "representative_rule_candidate",
+      "detail": "POS 영수증에서 대표자 라벨 없거나 위치 다름. 4.jpg(같은 가게 카드영수증)에서 정영달 정상 인식. representative.py _fill_lone_representative_from_lines이 POS 영수증 레이아웃에서 실패.",
+      "improvable": true,
+      "recommendedAction": "T-25a: receipt_pos에서 사업자번호 ±3행 3-4자 한글 이름 탐색 강화",
+      "regressionRisk": "중간 — 다른 POS 영수증에서 false positive 위험"
+    },
+    {
+      "id": 9,
+      "filename": "a1.jpg", "documentType": "card_receipt",
+      "field": "no_4", "label": "전화번호",
+      "gtRaw": "031-479-3690", "ocrRaw": "",
+      "status": "missing",
+      "codexReason": "parser_rule_candidate",
+      "reanalysisReason": "F",
+      "reanalysisLabel": "tel_rule_candidate",
+      "detail": "POS 영수증에서 전화번호 없거나 레이아웃 다름. 4.jpg에서 동일 번호 정상 인식. _extract_fields_from_rows tel 경로가 POS 레이아웃에서 실패.",
+      "improvable": true,
+      "recommendedAction": "T-25a: receipt_pos에서 사업자번호 인접행 phone 패턴 추가",
+      "regressionRisk": "낮음 — phone 패턴 자체는 robust"
+    },
+    {
+      "id": 10,
+      "filename": "a1.jpg", "documentType": "card_receipt",
+      "field": "no_5", "label": "주소",
+      "gtRaw": "경기 안양시 동안구 엘에스로 92", "ocrRaw": "",
+      "status": "missing",
+      "codexReason": "ocr_source_garbled",
+      "reanalysisReason": "H+I",
+      "reanalysisLabel": "ocr_source_garbled + ocr_source_missing",
+      "detail": "POS 영수증에서 주소 자체 없음(OCR raw 없거나 POS 레이아웃에서 미인쇄). 4.jpg에서 정상 인식. 복구 불가.",
+      "improvable": false,
+      "recommendedAction": "보류 — POS 영수증 주소 구조적 부재",
+      "regressionRisk": "해당없음"
+    },
+    {
+      "id": 11,
+      "filename": "a2.jpg", "documentType": "card_receipt",
+      "field": "no_3", "label": "대표자",
+      "gtRaw": "이정은", "ocrRaw": "이정",
+      "status": "mismatch",
+      "codexReason": "ocr_source_garbled",
+      "reanalysisReason": "H",
+      "reanalysisLabel": "ocr_source_garbled",
+      "detail": "form_or_handwritten 타입. 수기 문서에서 은 자 잘림. 3.jpg(카드영수증 동일 가게)에서 이정은 정상 인식. OCR raw 자체 문제.",
+      "improvable": false,
+      "recommendedAction": "보류 — 수기 문서 OCR 한계",
+      "regressionRisk": "해당없음"
+    },
+    {
+      "id": 12,
+      "filename": "a2.jpg", "documentType": "card_receipt",
+      "field": "no_5", "label": "주소",
+      "gtRaw": "경기도 안양시 동안구 엘에스로 76, 7-117, 118(호계동, 국제유통단지)",
+      "ocrRaw": "경기도 안양시 동안구 엘에스로 76,7-117, (호계동, 국제유통단지)",
+      "status": "mismatch",
+      "codexReason": "ocr_source_garbled",
+      "reanalysisReason": "H",
+      "reanalysisLabel": "ocr_source_garbled",
+      "detail": "form_or_handwritten. 수기 문서에서 118 완전 누락. OCR raw 자체 문제. 복구 불가.",
+      "improvable": false,
+      "recommendedAction": "보류 — 수기 OCR 118 누락",
+      "regressionRisk": "해당없음"
+    },
+    {
+      "id": 13,
+      "filename": "a2.jpg", "documentType": "card_receipt",
+      "field": "no_6", "label": "총합계금액",
+      "gtRaw": "480,000", "ocrRaw": "",
+      "status": "missing",
+      "codexReason": "ocr_source_garbled",
+      "reanalysisReason": "G+H",
+      "reanalysisLabel": "amount_rule_candidate + ocr_source_garbled",
+      "detail": "form_or_handwritten. amount_extractor _apply_doc_type_amount_policy에서 score>=45 또는 non-bare 조건 미달로 suppressed 가능성. OCR raw에 480,000 있어도 policy 통과 실패.",
+      "improvable": true,
+      "improvablePart": "form_or_handwritten policy 완화 — 별도 신중 검토",
+      "recommendedAction": "T-25c: form_or_handwritten amount policy 완화 신중 검토. false positive 위험 높음.",
+      "regressionRisk": "높음 — policy 완화 시 다른 form 문서에서 오인식 위험"
+    }
+  ],
+  "rootCauseSummary": [
+    { "code": "C", "label": "address_rule_candidate", "count": 3, "improvable": true, "action": "T-25b 주소 공백 규칙" },
+    { "code": "E", "label": "representative_rule_candidate", "count": 1, "improvable": true, "action": "T-25a POS 대표자" },
+    { "code": "F", "label": "tel_rule_candidate", "count": 1, "improvable": true, "action": "T-25a POS 전화번호" },
+    { "code": "G", "label": "amount_rule_candidate", "count": 1, "improvable": true, "action": "T-25c form policy 검토" },
+    { "code": "H", "label": "ocr_source_garbled", "count": 7, "improvable": false, "action": "전처리/qualityTags" },
+    { "code": "I", "label": "ocr_source_missing", "count": 1, "improvable": false, "action": "보류" },
+    { "code": "J", "label": "gt_issue_or_ambiguous", "count": 1, "improvable": true, "action": "GT 수동 확인 후 수정" },
+    { "code": "D", "label": "merchant_name_candidate", "count": 2, "improvable": false, "action": "OCR raw 확인 후 T-25 별도 판단" }
+  ],
+  "improvementCandidates": [
+    {
+      "priority": 1,
+      "targetTask": "T-25b",
+      "filename": "10.jpg", "field": "no_5",
+      "rootCause": "C",
+      "rule": "re.sub(r'\\)([가-힣0-9])', r') \\1', value)",
+      "description": "닫는 괄호 후 공백 삽입",
+      "affectedSamples": ["10.jpg", "3.jpg", "7.jpg"],
+      "regressionRisk": "낮음"
+    },
+    {
+      "priority": 2,
+      "targetTask": "T-25b",
+      "filename": "8.jpg", "field": "no_5",
+      "rootCause": "C",
+      "rule": "re.sub(r'([로길가대로])\\b(\\d)', r'\\1 \\2', value)",
+      "description": "도로명 접미어 후 번지 숫자 공백 삽입",
+      "affectedSamples": ["8.jpg"],
+      "regressionRisk": "중간"
+    },
+    {
+      "priority": 3,
+      "targetTask": "T-25a",
+      "filename": "a1.jpg", "field": "no_3",
+      "rootCause": "E",
+      "rule": "receipt_pos 대표자: 사업자번호 ±3행 3-4자 한글 이름 탐색 강화",
+      "description": "POS 영수증 representative 추출 보강",
+      "affectedSamples": ["a1.jpg"],
+      "regressionRisk": "중간"
+    },
+    {
+      "priority": 4,
+      "targetTask": "T-25a",
+      "filename": "a1.jpg", "field": "no_4",
+      "rootCause": "F",
+      "rule": "receipt_pos 전화번호: 사업자번호 인접행 phone 패턴 추가",
+      "description": "POS 영수증 tel 추출 보강",
+      "affectedSamples": ["a1.jpg"],
+      "regressionRisk": "낮음"
+    },
+    {
+      "priority": 5,
+      "targetTask": "GT 수동 확인",
+      "filename": "2.jpg", "field": "no_4",
+      "rootCause": "J",
+      "rule": "GT 값 03147900090 (11자리) → 031-479-0090 (10자리) 수정 검토",
+      "description": "GT 오입력 의심 — OCR 결과 0314790090이 정답일 가능성",
+      "affectedSamples": ["2.jpg"],
+      "regressionRisk": "없음 (GT 수정만)"
+    }
+  ],
+  "a1JpgAnalysis": {
+    "filename": "a1.jpg",
+    "manifestDocType": "card_receipt",
+    "runocrDocType": "receipt_pos",
+    "documentTypeMismatch": true,
+    "sameStoreAs": "4.jpg",
+    "businessNo": "123-23-94265",
+    "failedFields": 4,
+    "successFields": 2,
+    "rootCause": "POS 영수증 특유 포맷 — 대표자/전화/주소 생략 또는 다른 레이아웃",
+    "fixable": {
+      "no_1": false,
+      "no_3": true,
+      "no_4": true,
+      "no_5": false
+    },
+    "recommendation": "a1.jpg는 POS 영수증 구조적 문제. no_3/no_4 parser 보강 가능. no_1/no_5는 보류."
+  },
+  "nextActions": [
+    {
+      "name": "T-25a",
+      "description": "POS 영수증 safe rule improvements: a1.jpg 대표자/전화번호 추출 보강",
+      "targetFiles": ["ocr-server/extractors/representative.py", "ocr-server/main.py"],
+      "expectedImprovement": "+2건 (a1.jpg no_3, no_4)",
+      "regressionGuard": "baseline 9개 + receipt_generalization 17개 no_3/no_4 회귀 확인",
+      "priority": "HIGH"
+    },
+    {
+      "name": "T-25b",
+      "description": "주소 괄호 후 공백 + 도로명 번지 공백 규칙",
+      "targetFiles": ["ocr-server/extractors/address.py"],
+      "expectedImprovement": "+2~3건 (8.jpg, 10.jpg, 3.jpg/7.jpg 부분)",
+      "regressionGuard": "baseline 9개 + receipt_generalization 17개 no_5 회귀 확인. false positive 주의.",
+      "priority": "HIGH"
+    },
+    {
+      "name": "T-25c",
+      "description": "GT 2.jpg no_4 수동 확인 및 수정. form_or_handwritten amount policy 검토.",
+      "targetFiles": ["ground_truth.json 수동 확인", "ocr-server/amount_extractor.py"],
+      "expectedImprovement": "+1건 GT 수정, +0~1건 amount (a2.jpg)",
+      "regressionGuard": "form 문서 false positive 위험 높음. 신중 접근.",
+      "priority": "MEDIUM"
+    },
+    {
+      "name": "T-26",
+      "description": "receipt_generalization 17개 동일 GT 비교 확장",
+      "priority": "MEDIUM"
+    },
+    {
+      "name": "T-27",
+      "description": "a2.jpg handwritten qualityTags + OCR warning UI",
+      "priority": "LOW"
+    }
+  ]
+}
