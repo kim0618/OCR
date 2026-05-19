@@ -132,12 +132,18 @@ def detect_orientation(
     image: np.ndarray,
     ocr_engine,
     original_wh: tuple[int, int] | None = None,
+    target_short: int = 224,
+    skip_second_pass: bool = False,
 ) -> tuple[np.ndarray, dict]:
-    """Detect the best reading orientation among 0/90/180/270 degrees."""
+    """Detect the best reading orientation among 0/90/180/270 degrees.
+
+    target_short: thumbnail short-side in pixels (default 224; use 512 for invoice_statement).
+    skip_second_pass: if True, skip second-pass angles after first-pass scoring.
+                      Use for invoice_statement template to restrict to 0/180 only.
+    """
     h, w = image.shape[:2]
 
     short = min(h, w)
-    target_short = 224
     scale = target_short / short if short > target_short else 1.0
     sm_h, sm_w = int(h * scale), int(w * scale)
     small = cv2.resize(image, (sm_w, sm_h), interpolation=cv2.INTER_AREA) if scale < 1.0 else image
@@ -314,6 +320,11 @@ def detect_orientation(
             can_early_stop = True
             bailout_reason = "low_signal_portrait_bailout"
 
+    if skip_second_pass:
+        can_early_stop = True
+        if not bailout_reason:
+            bailout_reason = "skip_second_pass"
+
     if can_early_stop:
         early_stopped = True
     else:
@@ -346,6 +357,7 @@ def detect_orientation(
         "cropped_landscape": cropped_landscape,
         "conflict_landscape_hint": conflict_landscape_hint,
         "thumb_wh": [sm_w, sm_h],
+        "target_short": target_short,
         "pass_strategy": pass_strategy,
         "bailout_reason": bailout_reason,
         "first_pass_dominant": round(dominant, 1),

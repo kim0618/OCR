@@ -779,6 +779,24 @@ async def template_save(request: Request):
     if not replaced:
         rows.insert(0, row)
 
+    # Generate referenceOcr from image.src if not present
+    # Used for text-anchor homography alignment at RunOCR time
+    _body_img = body.get("image") if isinstance(body, dict) else None
+    if isinstance(_body_img, dict) and _body_img.get("src") and not body.get("referenceOcr"):
+        try:
+            _ref_ocr = _generate_reference_ocr(_body_img["src"], get_ocr_engine())
+            if _ref_ocr:
+                body["referenceOcr"] = _ref_ocr
+                row["template_json"] = body
+                # Update stored row
+                for idx2, r2 in enumerate(rows):
+                    if r2.get("template_id") == row["template_id"]:
+                        rows[idx2] = row
+                        break
+                _save_json(TEMPLATES_FILE, rows)
+        except Exception as _re:
+            print(f"[template_save] referenceOcr generation failed (non-blocking): {_re}")
+
     _save_json(TEMPLATES_FILE, rows)
     return {"resultMap": {"result": "success", "template": row}}
 
@@ -1010,6 +1028,40 @@ def get_ocr_engine():
             text_recognition_batch_size=30,
         )
     return _ocr_engine
+
+
+def _generate_reference_ocr(image_src_b64: str, ocr_engine) -> list:
+    """Run OCR on template reference image (base64 src) and return text+position list.
+    Stored as template_json.referenceOcr for text-anchor homography alignment.
+    """
+    try:
+        _m = re.search(r'base64,(.+)$', image_src_b64)
+        if not _m:
+            return []
+        _ref_arr = np.frombuffer(base64.b64decode(_m.group(1)), dtype=np.uint8)
+        _ref_img = cv2.imdecode(_ref_arr, cv2.IMREAD_COLOR)
+        if _ref_img is None:
+            return []
+        _result = ocr_engine.ocr(_ref_img)
+        _items = []
+        for _pts, _txt, _cf in _parse_ocr_lines(_result):
+            if not _txt or _cf < 0.5:
+                continue
+            _xs = [p[0] for p in _pts]
+            _ys = [p[1] for p in _pts]
+            _items.append({
+                "text": _txt,
+                "cx": round((min(_xs) + max(_xs)) / 2),
+                "cy": round((min(_ys) + max(_ys)) / 2),
+                "x": round(min(_xs)), "y": round(min(_ys)),
+                "w": round(max(_xs) - min(_xs)), "h": round(max(_ys) - min(_ys)),
+                "conf": round(_cf, 3),
+            })
+        print(f"[referenceOcr] generated {len(_items)} items from reference image")
+        return _items
+    except Exception as _e:
+        print(f"[referenceOcr] generation failed: {_e}")
+        return []
 
 
 def _ocr_crop_region(img, ocr, x, y, w, h):
@@ -1992,34 +2044,221 @@ async def ocr_extract(
         _orig_size_before_norm = [orig_w, orig_h]
         _applied_rotation = 0
         _norm_status = "applied"
+        # T-28b: invoice_statement uses 512px thumbnail + 0/180-only for better upside-down detection.
+        # Other templates retain default 224px 4-way detection (no performance regression).
+        _is_invoice_tmpl = (_template_doc_type == "invoice_statement")
+        _orient_target_short = 512 if _is_invoice_tmpl else 224
+        _orient_skip_second = _is_invoice_tmpl
         try:
-            img, _orient_meta_tmpl = detect_orientation(img, ocr, original_wh=(orig_w, orig_h))
+            img, _orient_meta_tmpl = detect_orientation(
+                img, ocr, original_wh=(orig_w, orig_h),
+                target_short=_orient_target_short,
+                skip_second_pass=_orient_skip_second,
+            )
             _applied_rotation = int(_orient_meta_tmpl.get("angle", 0) or 0)
             # 회전 후 새 크기로 갱신 (90/270 회전 시 가로/세로가 뒤바뀜)
             orig_h, orig_w = img.shape[:2]
             timings["template_detect_orientation_ms"] = _ms(time.time() - _t_norm0)
             if _applied_rotation != 0:
-                print(f"[template] T-28a normalized: rotation={_applied_rotation}")
+                print(f"[template] T-28b normalized: rotation={_applied_rotation}, target_short={_orient_target_short}")
         except Exception as _norm_e:
-            print(f"[template] T-28a normalization failed (using original image): {_norm_e}")
+            print(f"[template] T-28b normalization failed (using original image): {_norm_e}")
             timings["template_normalization_error"] = str(_norm_e)
             _norm_status = f"error: {_norm_e}"
+
+        # T-28h: restructured alignment pipeline — OCR once, reuse everywhere.
+        #
+        # Structure:
+        #   1. Run full OCR once on rotated image → _tmpl_ocr_lines
+        #   2. Text-anchor homography: match texts vs referenceOcr → H matrix
+        #   3. warpPerspective: img aligned to template space
+        #   4. Transform _tmpl_ocr_lines to warped space using H → _tmpl_warped_ocr_lines
+        #   5. Region crops use warped img at template coords
+        #   6. Parser reuses _tmpl_warped_ocr_lines (no 2nd full OCR)
+        #
+        # Total OCR calls: 1 full + N small region crops (same as before, better alignment)
+        _homography_applied = False
+        _homography_status = "not_attempted"
+        _tmpl_H: np.ndarray | None = None
+        _tmpl_ocr_lines: list = []        # OCR lines in rotated-image space
+        _tmpl_warped_ocr_lines: list = [] # OCR lines transformed to warped space
+
+        # Step 1: Full OCR on rotated image (used for alignment + parser)
+        _t_ocr1 = time.time()
+        try:
+            _tmpl_ocr_lines = list(_parse_ocr_lines(ocr.ocr(img)))
+            timings["template_full_ocr_ms"] = _ms(time.time() - _t_ocr1)
+            print(f"[template] T-28h full OCR: {len(_tmpl_ocr_lines)} lines in {_ms(time.time()-_t_ocr1):.0f}ms")
+        except Exception as _ocr1_e:
+            print(f"[template] T-28h full OCR failed: {_ocr1_e}")
+            timings["template_full_ocr_ms"] = _ms(time.time() - _t_ocr1)
+
+        # Step 2: Text-anchor homography using referenceOcr + OCR lines
+        try:
+            _tj_ref_h = locals().get("template_json") or locals().get("_tj") or {}
+            if isinstance(_tj_ref_h, dict):
+                _img_h2 = _tj_ref_h.get("image") or {}
+                _ref_w = int((_img_h2.get("width") or 0)) if isinstance(_img_h2, dict) else 0
+                _ref_h_dim = int((_img_h2.get("height") or 0)) if isinstance(_img_h2, dict) else 0
+                _ref_ocr = _tj_ref_h.get("referenceOcr") or []
+
+                if _ref_w > 0 and _ref_h_dim > 0 and len(_ref_ocr) >= 6 and len(_tmpl_ocr_lines) >= 6:
+                    from collections import Counter as _Ctr
+                    # Build unique-text index from template reference OCR
+                    _rc = _Ctr(x["text"] for x in _ref_ocr)
+                    _ridx = {x["text"]: (x["cx"], x["cy"]) for x in _ref_ocr
+                             if _rc[x["text"]] == 1 and len(x["text"]) >= 2}
+                    # Match with upload OCR
+                    _uc = _Ctr(t for _, t, _ in _tmpl_ocr_lines)
+                    _pts_r, _pts_s = [], []
+                    for _pu, _tu, _cu in _tmpl_ocr_lines:
+                        if _cu < 0.6 or not _tu or len(_tu) < 2: continue
+                        if _uc[_tu] != 1 or _tu not in _ridx: continue
+                        _xu = [p[0] for p in _pu]; _yu = [p[1] for p in _pu]
+                        _pts_s.append([(min(_xu)+max(_xu))/2, (min(_yu)+max(_yu))/2])
+                        _pts_r.append(list(_ridx[_tu]))
+                    print(f"[template] T-28h text matches: {len(_pts_r)}")
+
+                    if len(_pts_r) >= 6:
+                        _H2, _msk2 = cv2.findHomography(
+                            np.float32(_pts_s).reshape(-1,1,2),
+                            np.float32(_pts_r).reshape(-1,1,2), cv2.RANSAC, 10.0)
+                        _ni2 = int(_msk2.sum()) if _msk2 is not None else 0
+                        if _H2 is not None and _ni2 >= 6:
+                            _tmpl_H = _H2
+                            img = cv2.warpPerspective(img, _H2, (_ref_w, _ref_h_dim))
+                            orig_h, orig_w = _ref_h_dim, _ref_w
+                            _homography_applied = True
+                            _homography_status = f"text_anchor inliers={_ni2}/{len(_pts_r)}"
+                            print(f"[template] T-28h text anchor: {_ni2} inliers → {_ref_w}x{_ref_h_dim}")
+                        else:
+                            _homography_status = f"ransac_failed inliers={_ni2}"
+                    else:
+                        _homography_status = f"too_few_matches={len(_pts_r)}"
+
+                    # ORB fallback if text anchor insufficient
+                    if not _homography_applied and isinstance(_img_h2, dict) and _img_h2.get("src"):
+                        _b64f = re.search(r'base64,(.+)$', _img_h2.get("src",""))
+                        if _b64f:
+                            _ri = cv2.imdecode(np.frombuffer(base64.b64decode(_b64f.group(1)),np.uint8), cv2.IMREAD_COLOR)
+                            if _ri is not None:
+                                def _rf(im):
+                                    h_,w_=im.shape[:2]; s_=min(h_,w_)
+                                    if s_>1024: sc_=1024/s_; return cv2.resize(im,(int(w_*sc_),int(h_*sc_)),interpolation=cv2.INTER_AREA),sc_
+                                    return im,1.0
+                                _rs,_ss=_rf(_ri); _us,_usc=_rf(img)
+                                _ob=cv2.ORB_create(nfeatures=1500)
+                                _kr,_dr=_ob.detectAndCompute(cv2.cvtColor(_rs,cv2.COLOR_BGR2GRAY),None)
+                                _ku,_du=_ob.detectAndCompute(cv2.cvtColor(_us,cv2.COLOR_BGR2GRAY),None)
+                                if _dr is not None and _du is not None and len(_dr)>=8 and len(_du)>=8:
+                                    _gd=sorted(cv2.BFMatcher(cv2.NORM_HAMMING,crossCheck=True).match(_dr,_du),key=lambda m:m.distance)[:80]
+                                    if len(_gd)>=10:
+                                        _pr2=np.float32([_kr[m.queryIdx].pt for m in _gd]).reshape(-1,1,2)/_ss
+                                        _pu2=np.float32([_ku[m.trainIdx].pt for m in _gd]).reshape(-1,1,2)/_usc
+                                        _Hf,_mf=cv2.findHomography(_pu2,_pr2,cv2.RANSAC,5.0)
+                                        _nif=int(_mf.sum()) if _mf is not None else 0
+                                        if _Hf is not None and _nif>=10:
+                                            _tmpl_H=_Hf
+                                            img=cv2.warpPerspective(img,_Hf,(_ref_w,_ref_h_dim))
+                                            orig_h,orig_w=_ref_h_dim,_ref_w
+                                            _homography_applied=True
+                                            _homography_status=f"orb_fallback inliers={_nif}"
+                                            print(f"[template] T-28h ORB fallback: {_nif} inliers → {_ref_w}x{_ref_h_dim}")
+
+        except Exception as _he2:
+            _homography_status = f"error: {_he2}"
+            print(f"[template] T-28h alignment failed: {_he2}")
+
+        # Step 4: Transform OCR lines to warped space using H (free — no re-OCR)
+        if _tmpl_H is not None and len(_tmpl_ocr_lines) > 0:
+            try:
+                def _transform_pts(pts, H):
+                    result = []
+                    for (x, y) in pts:
+                        p = H @ np.array([float(x), float(y), 1.0])
+                        result.append((p[0]/p[2], p[1]/p[2]))
+                    return result
+                _tmpl_warped_ocr_lines = [
+                    (_transform_pts(pts, _tmpl_H), txt, cf)
+                    for pts, txt, cf in _tmpl_ocr_lines
+                ]
+                print(f"[template] T-28h transformed {len(_tmpl_warped_ocr_lines)} OCR lines to warped space")
+            except Exception as _te2:
+                print(f"[template] T-28h OCR transform failed: {_te2}")
+                _tmpl_warped_ocr_lines = _tmpl_ocr_lines
+        else:
+            _tmpl_warped_ocr_lines = _tmpl_ocr_lines
+
+        # T-28e: encode final image (rotated + homography warped) for display
+        try:
+            _tok, _tenc = cv2.imencode('.jpg', img, [cv2.IMWRITE_JPEG_QUALITY, 82])
+            if _tok and _tenc is not None:
+                processed_b64 = base64.b64encode(_tenc.tobytes()).decode('utf-8')
+        except Exception as _te:
+            print(f"[template] T-28e processed_image encode failed: {_te}")
+
+        # T-28c: template region coordinate normalization
+        # Region coordinates are saved in template source image space (template_json.image.width/height).
+        # Scale to current normalized image dimensions when sizes differ (e.g. smartphone vs scanned doc).
+        _coord_scale_x = 1.0
+        _coord_scale_y = 1.0
+        _tmpl_coord_base = [0, 0]
+        try:
+            _tj_ref_c = locals().get("template_json") or locals().get("_tj") or {}
+            if isinstance(_tj_ref_c, dict):
+                _img_c = _tj_ref_c.get("image") or {}
+                if isinstance(_img_c, dict):
+                    _ts_w = int(_img_c.get("width") or 0)
+                    _ts_h = int(_img_c.get("height") or 0)
+                    if _ts_w > 0 and _ts_h > 0 and (_ts_w != orig_w or _ts_h != orig_h):
+                        _coord_scale_x = orig_w / _ts_w
+                        _coord_scale_y = orig_h / _ts_h
+                        _tmpl_coord_base = [_ts_w, _ts_h]
+        except Exception:
+            pass
 
         # templateImageNormalization meta — 추가 OCR 없이 normalized image pipeline 상태 노출
         _tmpl_img_norm_debug: dict = {
             "enabled": True,
             "appliedRotation": _applied_rotation,
+            "orientationTargetShort": _orient_target_short,
+            "orientationMode": "invoice_template_0_180" if _orient_skip_second else "default_4way",
             "deskewApplied": False,
             "resizeApplied": False,
             "originalSize": _orig_size_before_norm,
             "normalizedSize": [orig_w, orig_h],
             "scaleX": 1.0,
             "scaleY": 1.0,
+            "coordScaleX": round(_coord_scale_x, 4),
+            "coordScaleY": round(_coord_scale_y, 4),
+            "coordBaseSize": _tmpl_coord_base,
+            "homographyApplied": _homography_applied,
+            "homographyStatus": _homography_status,
             "usedForRegionCrop": True,
             "usedForTableCrop": True,
             "usedForParser": True,
             "status": _norm_status,
         }
+
+        if _coord_scale_x != 1.0 or _coord_scale_y != 1.0:
+            def _scale_region_coords(r: dict) -> dict:
+                r2 = dict(r)
+                r2["x"] = r.get("x", 0) * _coord_scale_x
+                r2["y"] = r.get("y", 0) * _coord_scale_y
+                r2["width"] = r.get("width", 0) * _coord_scale_x
+                r2["height"] = r.get("height", 0) * _coord_scale_y
+                tbl = r.get("table")
+                if isinstance(tbl, dict) and tbl.get("colX"):
+                    r2["table"] = dict(tbl)
+                    r2["table"]["colX"] = [
+                        cx * _coord_scale_x
+                        for cx in tbl["colX"]
+                        if isinstance(cx, (int, float))
+                    ]
+                return r2
+            region_list = [_scale_region_coords(r) for r in region_list]
+            print(f"[template] T-28c coord: scale=({_coord_scale_x:.3f},{_coord_scale_y:.3f}) "
+                  f"base={_tmpl_coord_base} img=[{orig_w},{orig_h}]")
 
         for idx, region in enumerate(region_list):
             rx = int(region.get("x", 0))
@@ -2053,7 +2292,12 @@ async def ocr_extract(
                     if row_text:
                         full_lines.append(row_text)
             else:
-                text, conf = _ocr_crop_region(img, ocr, rx, ry, rw, rh)
+                # T-28j: expand crop by 25px to tolerate warp residuals (~20px for narrow fields)
+                # Gap between adjacent fields is ≥28px so no bleed-over risk
+                _tmpl_xm = 25 if _homography_applied else 0
+                text, conf = _ocr_crop_region(img, ocr,
+                                              rx - _tmpl_xm, ry - _tmpl_xm,
+                                              rw + 2 * _tmpl_xm, rh + 2 * _tmpl_xm)
                 fields.append({
                     "name": name,
                     "field_type": field_type,
@@ -2063,6 +2307,37 @@ async def ocr_extract(
                 })
                 if text:
                     full_lines.append(text)
+
+        # T-28i: fallback for empty/low-confidence field crops using warped OCR lines.
+        # Narrow region crops (h≈40px) can miss text after warp due to sub-pixel offset.
+        # _tmpl_warped_ocr_lines already contains all text in the warped image space — use it.
+        if _tmpl_warped_ocr_lines:
+            for _fi28, _ri28 in zip(fields, region_list):
+                if _fi28.get("field_type") == "table":
+                    continue
+                if (_fi28.get("value") or "").strip():
+                    continue  # already has value from crop
+                _rx28 = float(_ri28.get("x", 0))
+                _ry28 = float(_ri28.get("y", 0))
+                _rw28 = float(_ri28.get("width", 0))
+                _rh28 = float(_ri28.get("height", 0))
+                _mg28 = max(20.0, _rh28 * 0.5)  # moderate margin for warp residuals
+                _cands: list = []
+                for _wp, _wt, _wc in _tmpl_warped_ocr_lines:
+                    if not _wt or _wc < 0.3:
+                        continue
+                    _wxs = [p[0] for p in _wp]; _wys = [p[1] for p in _wp]
+                    _wcx = (min(_wxs) + max(_wxs)) / 2
+                    _wcy = (min(_wys) + max(_wys)) / 2
+                    if (_rx28 - _mg28 <= _wcx <= _rx28 + _rw28 + _mg28 and
+                            _ry28 - _mg28 <= _wcy <= _ry28 + _rh28 + _mg28):
+                        _cands.append((_wc, _wt))
+                if _cands:
+                    _cands.sort(key=lambda c: c[0], reverse=True)
+                    _fb_val = " ".join(t for _, t in _cands[:3])
+                    _fi28["value"] = _fb_val
+                    _fi28["confidence"] = round(_cands[0][0], 4)
+                    _fi28["source"] = "ocr_lines_fallback"
 
         # T-6j-fix: classify doc_type from template region text.
         # T-9-fix: explicit documentType payload > template metadata documentType > classify_document.
@@ -2081,18 +2356,21 @@ async def ocr_extract(
             f"classified={_classified_doc_type} lines={len(full_lines)})"
         )
 
-        # T-6j-fix: for invoice_statement, run full-image OCR to obtain ocr_lines_raw
-        # (needed by extract_invoice_statement_fields for field/table extraction).
-        # Coordinates are in img space; ocr_w/ocr_h default to orig_w/orig_h so
-        # the tableBounds scaling factor from regions is 1.0 (no transform applied).
+        # T-6j-fix: for invoice_statement, obtain ocr_lines_raw for parser.
+        # Step 4 (T-28g): reuse early OCR from T-28g text-anchor alignment if available,
+        # avoiding a redundant full-image OCR pass on the aligned image.
         if doc_type == "invoice_statement":
-            try:
-                _tmpl_inv_result = ocr.ocr(img)
-                ocr_lines_raw = _parse_ocr_lines(_tmpl_inv_result)
-                print(f"[template/invoice_statement] full OCR: {len(ocr_lines_raw)} lines")
-            except Exception as _tmpl_inv_e:
-                print(f"[template/invoice_statement] full OCR failed: {_tmpl_inv_e}")
-                ocr_lines_raw = []
+            # T-28h: reuse transformed OCR lines (no 2nd full OCR needed)
+            if _tmpl_warped_ocr_lines:
+                ocr_lines_raw = _tmpl_warped_ocr_lines
+                print(f"[template/invoice_statement] T-28h reused {len(ocr_lines_raw)} transformed OCR lines")
+            else:
+                try:
+                    ocr_lines_raw = list(_parse_ocr_lines(ocr.ocr(img)))
+                    print(f"[template/invoice_statement] fallback OCR: {len(ocr_lines_raw)} lines")
+                except Exception as _tmpl_inv_e:
+                    print(f"[template/invoice_statement] OCR failed: {_tmpl_inv_e}")
+                    ocr_lines_raw = []
 
     else:
         # === 전체 이미지 OCR ===
@@ -2591,6 +2869,90 @@ async def ocr_extract(
             _f["original"] = _orig  # preserve raw OCR as "OCR 원본"
             _f["value"] = _norm     # set normalized value as "최종값"
             print(f"[T26a-fix] {_ko}: {_orig!r} → {_norm!r}")
+
+    # T-28d: supplement invoice_statement template field values from full-image OCR / parser data.
+    # Template coordinate crops fail when uploaded image has different scale/offset than template.
+    # The parser runs full-image OCR and correctly locates all text regardless of image layout.
+    # Step 1: supplement empty biz numbers in document_fields from party_candidates / ocr_lines_raw.
+    # Step 2: patch template field["value"] with document_fields values for all patchable koFields.
+    # Does NOT overwrite if crop already matches parser value (safe for normal 1.jpg case).
+    if doc_type == "invoice_statement" and region_list and "document_fields" in response and ocr_lines_raw:
+        _t28d_doc: dict = response["document_fields"]
+        _t28d_inv: dict = extract_debug.get("invoice_statement", {})
+        _t28d_pc: dict = _t28d_inv.get("party_candidates", {})
+        _t28d_split_x: float = float(_t28d_pc.get("split_x") or 1500)
+
+        # Supplement supplierBusinessNo from party_candidates.bizs (x < split_x)
+        if not _t28d_doc.get("supplierBusinessNo"):
+            for _e28 in (_t28d_pc.get("bizs") or []):
+                if len(_e28) >= 3 and float(_e28[0]) < _t28d_split_x and _e28[2]:
+                    _t28d_doc["supplierBusinessNo"] = str(_e28[2])
+                    print(f"[T28d] supplierBusinessNo from party_candidates: {_e28[2]!r}")
+                    break
+
+        # Supplement buyerBusinessNo: search ocr_lines_raw for 10-digit number in right half
+        # Validate using Korean business number checksum to filter out date/doc-number false positives.
+        def _valid_kr_biz(s: str) -> bool:
+            if len(s) != 10 or not s.isdigit():
+                return False
+            m_ = [1, 3, 7, 1, 3, 7, 1, 3, 5]
+            total_ = sum(int(s[i]) * m_[i] for i in range(9))
+            total_ += int(int(s[8]) * 5 / 10)
+            return (10 - total_ % 10) % 10 == int(s[9])
+
+        if not _t28d_doc.get("buyerBusinessNo"):
+            _biz10 = re.compile(r'\d{10}')
+            for _pts28, _txt28, _cf28 in ocr_lines_raw:
+                if not _txt28 or _cf28 < 0.5:
+                    continue
+                _xs28 = [p[0] for p in _pts28] if _pts28 else [0]
+                _cx28 = sum(_xs28) / max(len(_xs28), 1)
+                if _cx28 <= _t28d_split_x:
+                    continue
+                _clean28 = re.sub(r'[-\s]', '', _txt28)
+                for _m28 in _biz10.finditer(_clean28):
+                    _cand = _m28.group()
+                    if _valid_kr_biz(_cand):
+                        _t28d_doc["buyerBusinessNo"] = _cand
+                        print(f"[T28d] buyerBusinessNo from ocr_lines: {_cand!r} in {_txt28!r}")
+                        break
+                if _t28d_doc.get("buyerBusinessNo"):
+                    break
+
+        # Patch template fields from (supplemented) document_fields
+        # T-28d: patch template fields from parser/OCR when direct crop is unreliable.
+        # With T-28h warped OCR space, parser correctly assigns supplier vs buyer
+        # (split_x in template space separates left=supplier, right=buyer).
+        # Addresses and names are now correctly extracted by the parser in warped space.
+        _T28D_MAP: dict[str, str] = {
+            "공급자 사업자 번호": "supplierBusinessNo",
+            "공급자 사업자번호": "supplierBusinessNo",
+            "공급자 주소": "supplierAddress",
+            "공급자 사업장 주소": "supplierAddress",
+            # 성명(representative): parser assigns wrong person — use direct crop instead
+            # "공급자 성명": "supplierRepresentative",
+            "공급받는자 사업자 번호": "buyerBusinessNo",
+            "공급받는자 사업자번호": "buyerBusinessNo",
+            "공급받는자 주소": "buyerAddress",
+            "공급받는자 사업장 주소": "buyerAddress",
+            # "공급받는자 성명": "buyerRepresentative",
+            "합계금액": "totalAmount",
+            "합계": "totalAmount",
+        }
+        for _f28, _r28 in zip(fields, region_list):
+            _ko28 = ((_r28.get("koField") or "")).strip()
+            _dk28 = _T28D_MAP.get(_ko28)
+            if not _dk28:
+                continue
+            _nv28 = _t28d_doc.get(_dk28, "")
+            if not _nv28:
+                continue
+            _ov28 = (_f28.get("value") or "")
+            if _ov28 == _nv28:
+                continue
+            _f28["original"] = _ov28
+            _f28["value"] = _nv28
+            print(f"[T28d] {_ko28}: {_ov28!r} → {_nv28!r}")
 
     if processed_b64:
         response["processed_image"] = f"data:image/jpeg;base64,{processed_b64}"

@@ -1,0 +1,103 @@
+{
+  "task": "T-28c",
+  "title": "template region coordinate normalization for captured invoice image",
+  "date": "2026-05-19",
+  "tool": "Claude Code",
+  "model": "Claude Sonnet 4.6",
+
+  "backupFiles": [
+    "backup/main_20260519_2300_before_T28c_template_coordinate_normalization.py"
+  ],
+
+  "modifiedFiles": [
+    "ocr-server/main.py"
+  ],
+
+  "problemAnalysis": {
+    "rootCause": "Template region coordinates saved in template source image space. Applied directly to normalized image without scaling.",
+    "templateBase": {"width": 2483, "height": 3511, "source": "template_json.image.width/height"},
+    "normalizedImage_1_1_jpg": {"width": 3000, "height": 4000, "note": "after 180° rotation"},
+    "scaleX": 1.2082,
+    "scaleY": 1.1393,
+    "field1_y_without_scale": {"y": 405, "ratio": "10.1%", "expected_ratio": "11.5%"},
+    "field1_y_with_scale": {"y": 461, "ratio": "11.5%", "correct": true},
+    "field9_y_without_scale": {"y": 3155, "ratio": "78.9%", "expected_ratio": "89.9%"},
+    "field9_y_with_scale": {"y": 3594, "ratio": "89.8%", "correct": true}
+  },
+
+  "implementation": {
+    "location": "main.py, between T-28b normalization block and region loop",
+    "approach": "Scale region_list in-place before region loop. All downstream code uses scaled coords.",
+    "scaleSource": "template_json.image.width/height vs orig_w/orig_h (after orientation normalization)",
+    "scaledComponents": [
+      "region.x / region.y / region.width / region.height",
+      "region.table.colX (T-6j absolute column guide positions)"
+    ],
+    "notScaled": [
+      "region.colGuides (relative 0-1 positions, no scaling needed)",
+      "columnGuides form field (assumed to be in OCR space)"
+    ],
+    "metaAdded": ["coordScaleX", "coordScaleY", "coordBaseSize"]
+  },
+
+  "coordinateTransform": {
+    "template": "2483x3511 (1.jpg)",
+    "normalized_1_1_jpg": "3000x4000",
+    "scaleX": 1.2082,
+    "scaleY": 1.1393,
+    "fields": [
+      {"name": "field_1 (사업자번호)", "before": [250, 405, 695, 110], "after": [302, 461, 840, 125]},
+      {"name": "field_2 (공급자상호)", "before": [263, 524, 400, 40], "after": [318, 597, 483, 46]},
+      {"name": "field_3 (공급자주소)", "before": [255, 642, 700, 40], "after": [308, 731, 846, 46]},
+      {"name": "field_5 (수신자사업자)", "before": [1433, 396, 500, 40], "after": [1731, 451, 604, 46]},
+      {"name": "field_9 (합계금액)", "before": [1940, 3155, 477, 75], "after": [2344, 3594, 576, 85]},
+      {"name": "table_1 (품목표)", "before": [47, 831, 2300, 2200], "after": [57, 947, 2779, 2506]}
+    ]
+  },
+
+  "regressionProtection": {
+    "normal_1_jpg": {
+      "templateBase": "2483x3511",
+      "normalizedSize": "2483x3511",
+      "scaleX": 1.0,
+      "scaleY": 1.0,
+      "regionListModified": false,
+      "note": "Same size → no scaling → existing behavior preserved"
+    },
+    "testset_7samples": {
+      "path": "non-template (full-image OCR)",
+      "t28c_affects": false,
+      "rowCount": "7/7 exact expected"
+    }
+  },
+
+  "performanceImpact": {
+    "additionalOcr": 0,
+    "computationCost": "list comprehension over 9-11 regions (microseconds)",
+    "timingChange": "negligible"
+  },
+
+  "pyCompile": "PASS",
+  "frontendChanges": "none",
+
+  "serverStatus": {
+    "pid": 4656,
+    "startTime": "2026-05-19 19:33:43",
+    "t28cLoaded": false,
+    "note": "Server restart required to load T-28c changes"
+  },
+
+  "knownLimitations": [
+    "Simple proportional scale assumes document fills image frame proportionally",
+    "If 1-1.jpg has significant background margin offset, scale alone may not fully correct all fields",
+    "T-28d (document bbox offset correction) may be needed if residual errors remain after testing"
+  ],
+
+  "nextSteps": [
+    "Restart server to load T-28c",
+    "Test flipped 1-1.jpg: verify field_1=118-81-00450, field_9=18,098,750, tableRows=28",
+    "Test normal 1.jpg: verify all baseline values preserved",
+    "Run All 7 samples: verify rowCount 7/7 exact",
+    "If residual errors remain for offset-heavy images: implement T-28d document offset correction"
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "task": "T-28b-LIVE-PROOF",
+  "title": "template orientation actual runtime proof",
+  "date": "2026-05-19",
+  "tool": "Claude Code",
+  "model": "Claude Sonnet 4.6",
+  "code_changes": "none",
+
+  "server": {
+    "port": 9099,
+    "pid": 6020,
+    "startTime": "2026-05-19 19:11:24",
+    "preprocess_py_modified": "2026-05-19 19:06",
+    "main_py_modified": "2026-05-19 19:07",
+    "t28b_loaded": true,
+    "proof": "server start (19:11:24) > code modify (19:06~19:07)"
+  },
+
+  "apiCall": {
+    "endpoint": "http://localhost:9099/ocr/extract",
+    "method": "POST",
+    "file": "c:/OCR/mysuit-ocr/public/data/testsets/invoice_statement/1/1-1.jpg",
+    "template_id": "TPL-31D13CF3",
+    "responseFile": "C:\\Users\\user\\AppData\\Local\\Temp\\t28b_raw_response.json",
+    "responseSize": "625352 bytes",
+    "screenshotMatchConfirmed": true
+  },
+
+  "templateImageNormalization": {
+    "enabled": true,
+    "appliedRotation": 180,
+    "orientationTargetShort": 512,
+    "orientationMode": "invoice_template_0_180",
+    "originalSize": [3000, 4000],
+    "normalizedSize": [3000, 4000],
+    "usedForRegionCrop": true,
+    "usedForTableCrop": true,
+    "usedForParser": true,
+    "status": "applied"
+  },
+
+  "fieldResults": {
+    "region_crops": {
+      "field_1": {"value": "서울 [배달]", "expected": "118-81-00450", "correct": false},
+      "field_2": {"value": "부광약품(주)", "expected": "부광약품(주)", "correct": true},
+      "field_3": {"value": "-1 -T - 등록", "expected": "서울특별시 동작구 상도로7", "correct": false},
+      "field_9": {"value": "30 7,3 그", "expected": "18,098,750", "correct": false},
+      "table_1": {"rowCount": 26, "expected": 28}
+    },
+    "parser_document_fields": {
+      "supplierCompany": {"value": "부광약품(주)", "correct": true},
+      "supplierAddress": {"value": "서울특별시 동작구 상도로7", "correct": true},
+      "buyerCompany": {"value": "백제약품(주)영등포지점", "correct": true},
+      "totalAmount": {"value": "18,098,750", "correct": true},
+      "supplierBusinessNo": {"value": "", "expected": "118-81-00450", "correct": false},
+      "buyerBusinessNo": {"value": "", "correct": false},
+      "tableRows": {"value": "", "correct": false}
+    },
+    "parser_found_in_extract_debug": {
+      "bizs": [{"x": 882, "y": 764, "value": "118-81-00450"}],
+      "companies": [
+        {"x": 2056, "y": 828, "value": "백제약품(주)영등포지점"},
+        {"x": 866, "y": 874, "value": "부 광약 품(주"}
+      ],
+      "page_size": [2913, 3731]
+    }
+  },
+
+  "caseConfirmation": "C",
+  "caseDescription": "appliedRotation=180 (correct), but region crop fields still wrong",
+  "rootCause": {
+    "type": "template_coordinate_resolution_mismatch",
+    "template_designed_for": "1.jpg: 2483x3511",
+    "applied_to": "1-1.jpg rotated 180: 3000x4000",
+    "scale_x": 1.208,
+    "scale_y": 1.139,
+    "field1_offset_xy_px": [52, 57],
+    "field9_offset_xy_px": [404, 441]
+  },
+
+  "t28bOrientationDetection": "WORKING_CORRECTLY",
+  "t28bParserOutput": "WORKING_CORRECTLY",
+  "t28bRegionCrop": "FAILING_DUE_TO_COORD_MISMATCH",
+
+  "performance": {
+    "processing_time_sec": 197.91,
+    "t28a_expected_sec": 110,
+    "t27_fail_threshold_sec": 153,
+    "regression": true,
+    "note": "197.91s exceeds both T-28a baseline (110s) and T-27 fail threshold (153s). Needs investigation."
+  },
+
+  "nextSteps": [
+    "Investigate region crop coordinate scaling for resolution-mismatched images",
+    "Check if 1.jpg also gives wrong fields with TPL-31D13CF3 (to confirm template designed for which image)",
+    "Investigate performance regression: why 197s vs expected 110s",
+    "Check invoice_statement parser BIZ assignment logic when only 1 BIZ found",
+    "Consider using document_fields (parser output) for invoice_statement field display instead of region crops"
+  ]
+}

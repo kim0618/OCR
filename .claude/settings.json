@@ -49,14 +49,40 @@
       "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\OCR\\\\mysuit-ocr\\\\src\\\\app\\\\autorestore\")",
       "PowerShell(Copy-Item \"c:\\\\OCR\\\\mysuit-ocr\\\\src\\\\lib\\\\autofillEngine.ts\" \"c:\\\\OCR\\\\backup\\\\autofillEngine_20260518_before_HISTORY_RESTORE_2C.ts\")",
       "PowerShell(Copy-Item \"c:\\\\OCR\\\\mysuit-ocr\\\\src\\\\components\\\\upload\\\\UploadWorkspace.tsx\" \"c:\\\\OCR\\\\backup\\\\UploadWorkspace_20260518_before_HISTORY_RESTORE_2C.tsx\")",
-      "PowerShell(Copy-Item \"c:\\\\OCR\\\\mysuit-ocr\\\\src\\\\lib\\\\historyStore.ts\" \"c:\\\\OCR\\\\backup\\\\historyStore_20260518_before_HISTORY_RESTORE_2C.ts\")"
+      "PowerShell(Copy-Item \"c:\\\\OCR\\\\mysuit-ocr\\\\src\\\\lib\\\\historyStore.ts\" \"c:\\\\OCR\\\\backup\\\\historyStore_20260518_before_HISTORY_RESTORE_2C.ts\")",
+      "Bash(cp c:/OCR/ocr-server/preprocess.py \"c:/OCR/backup/preprocess_20260519_2200_before_T28b_orientation_invoice.py\")",
+      "Bash(cp c:/OCR/ocr-server/main.py \"c:/OCR/backup/main_20260519_2200_before_T28b_orientation_invoice.py\")",
+      "Bash(.venv/Scripts/python.exe -m py_compile preprocess.py)",
+      "PowerShell(Get-Process -Name python,python3,uvicorn -ErrorAction SilentlyContinue)",
+      "PowerShell(netstat -ano)",
+      "Bash(python3 -c ' *)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\({k:v for k,v in d.items\\(\\) if k!='items'}, ensure_ascii=False, indent=2\\)\\); [print\\(json.dumps\\(i, ensure_ascii=False, indent=2\\)\\) for i in d.get\\('items',[]\\)[:3]]\")",
+      "Bash(curl -s -X POST http://localhost:9099/ocr/extract -F file=@c:/OCR/mysuit-ocr/public/data/testsets/invoice_statement/1/1-1.jpg -F template_id=TPL-31D13CF3 -o /tmp/t28b_raw_response.json -w 'HTTP_STATUS:%{http_code} TIME:%{time_total}s')",
+      "Bash(mkdir -p /c/temp && ls /c/temp/t28b_call.py 2>/dev/null && echo \"file exists\")",
+      "Bash(c:/OCR/ocr-server/.venv/Scripts/python.exe c:/temp/t28b_call.py)",
+      "PowerShell(Get-Process python -ErrorAction SilentlyContinue)",
+      "Bash(python3 -c \"import json; f=open\\('ocr-server/data/templates.json'\\); data=json.load\\(f\\); tpl=[t for t in data.get\\('templates',[]\\) if t.get\\('id'\\)=='TPL-31D13CF3']; print\\(json.dumps\\(tpl[0] if tpl else {}, indent=2\\)[:5000]\\)\")",
+      "PowerShell($json = Get-Content 'c:/OCR/ocr-server/data/templates.json' -Raw | ConvertFrom-Json; $tpl = $json.templates | Where-Object { $_.id -eq 'TPL-31D13CF3' }; if \\($tpl\\) { $tpl | ConvertTo-Json -Depth 20 | Select-Object -First 200 } else { \"Not found\" })",
+      "Bash(python3)",
+      "Bash(identify -format \"%wx%h\" mysuit-ocr/public/data/testsets/invoice_statement/1.jpg)",
+      "Bash(identify -verbose mysuit-ocr/public/data/testsets/invoice_statement/1.jpg)",
+      "Bash(c:/OCR/ocr-server/.venv/Scripts/python.exe -)",
+      "Bash(2>&1)",
+      "PowerShell(Get-Process python -ErrorAction SilentlyContinue | Where-Object { $_.Id -ne $PID } | Select-Object Id, StartTime | Format-Table)",
+      "Bash(c:/OCR/ocr-server/.venv/Scripts/python.exe -c ' *)",
+      "WebSearch",
+      "Bash(grep -v \"^$\")",
+      "Bash(powershell -Command '\\(Get-Content '\\\\''c:/OCR/ocr-server/data/templates.json'\\\\'' -Encoding UTF8 | ConvertFrom-Json\\).templates | Where-Object { $_.templateId -eq '\\\\''TPL-31D13CF3'\\\\'' } | ConvertTo-Json -Depth 10')",
+      "Bash(powershell -Command 'Get-Content '\\\\''c:/OCR/ocr-server/data/templates.json'\\\\'' | ConvertFrom-Json | Select-Object -ExpandProperty templates | Select-Object templateId | Where-Object { $_.templateId -like '\\\\''*31D13*'\\\\'' }')",
+      "Bash(python)"
     ],
     "additionalDirectories": [
       "c:\\OCR\\ocr-server",
       "c:\\OCR\\docs",
       "c:\\OCR\\mysuit-ocr\\src\\components\\test",
       "c:\\OCR\\mysuit-ocr\\src\\components\\upload",
-      "c:\\OCR\\mysuit-ocr\\src\\components\\history"
+      "c:\\OCR\\mysuit-ocr\\src\\components\\history",
+      "C:\\temp"
     ]
   }
 }

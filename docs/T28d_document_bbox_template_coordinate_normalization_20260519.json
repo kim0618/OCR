@@ -1,0 +1,46 @@
+{
+  "task": "T-28d",
+  "date": "2026-05-19",
+  "tool": "Claude Code",
+  "model": "Claude Sonnet 4.6",
+  "status": "implemented_pending_server_restart",
+
+  "t28c_failure_reason": {
+    "issue": "Simple proportional scale insufficient",
+    "actual_biz_y": "720~807 (center 764)",
+    "template_biz_y": 405,
+    "scale_applied_y": 461,
+    "residual_offset_px": 303,
+    "cause": "1-1.jpg has ~350px more document content at top vs 1.jpg scan (title/header rows)"
+  },
+
+  "approach": "parser_field_patching",
+  "description": "Extend T-26a-fix to patch ALL invoice_statement template fields from parser output / OCR data",
+
+  "steps": {
+    "step1_supplier_biz": "supplement from party_candidates.bizs where x < split_x",
+    "step2_buyer_biz": "search ocr_lines_raw for 10-digit number at x > split_x",
+    "step3_patch": "patch fields[] using koField → document_fields mapping"
+  },
+
+  "dry_run_results": {
+    "field_1": {"before": "[배달]서울", "after": "118-81-00450", "status": "PATCHED"},
+    "field_3": {"before": "-1 -T - 등록", "after": "서울특별시 동작구 상도로7", "status": "PATCHED"},
+    "field_9": {"before": "30 7,3 그", "after": "18,098,750", "status": "PATCHED"},
+    "field_5": {"before": "추", "after": "SKIP (buyerBusinessNo empty in T-28b data)", "status": "NEEDS_LIVE_VERIFY"},
+    "field_7": {"before": "028690211...", "after": "SKIP (buyerAddress empty in T-28b data)", "status": "NEEDS_LIVE_VERIFY"}
+  },
+
+  "server_status": {
+    "current_pid": 7148,
+    "start_time": "2026-05-19 19:55:04",
+    "t28d_loaded": false,
+    "action_needed": "server restart"
+  },
+
+  "regression_safety": {
+    "normal_1jpg": "scale=1.0, crop values match parser → if _ov == _nv → no patch",
+    "non_template_path": "guarded by 'if region_list' condition",
+    "py_compile": "PASS"
+  }
+}

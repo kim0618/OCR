@@ -1,0 +1,102 @@
+{
+  "task": "T-28b",
+  "title": "invoice_statement orientation detection improvement",
+  "date": "2026-05-19",
+  "tool": "Claude Code",
+  "model": "Claude Sonnet 4.6",
+  "status": "implemented_pending_live_validation",
+
+  "backupFiles": [
+    "backup/preprocess_20260519_2200_before_T28b_orientation_invoice.py",
+    "backup/main_20260519_2200_before_T28b_orientation_invoice.py"
+  ],
+
+  "modifiedFiles": [
+    "ocr-server/preprocess.py",
+    "ocr-server/main.py"
+  ],
+
+  "rootCause": {
+    "description": "detect_orientation used hardcoded target_short=224px thumbnail. At 224px, small Korean/numeric text in invoice_statement is insufficient to differentiate 0deg vs 180deg scores, causing angle=0 return on upside-down documents.",
+    "affectedPath": "invoice_statement template RunOCR path only"
+  },
+
+  "changes": {
+    "preprocess_py": {
+      "file": "ocr-server/preprocess.py",
+      "changes": [
+        "Added target_short: int = 224 parameter (default unchanged for backward compat)",
+        "Added skip_second_pass: bool = False parameter",
+        "Replaced hardcoded target_short=224 with parameter",
+        "skip_second_pass=True forces early stop after first_pass (0/180 only)",
+        "Added target_short to return meta dict"
+      ]
+    },
+    "main_py": {
+      "file": "ocr-server/main.py",
+      "changes": [
+        "Added _is_invoice_tmpl = (_template_doc_type == 'invoice_statement') check",
+        "invoice_statement: target_short=512, skip_second_pass=True",
+        "other templates: target_short=224, skip_second_pass=False (unchanged)",
+        "templateImageNormalization meta: added orientationTargetShort, orientationMode fields"
+      ]
+    }
+  },
+
+  "expectedResults": {
+    "normal_1jpg": {
+      "appliedRotation": 0,
+      "supplierBusinessNo": "118-81-00450",
+      "supplierCompany": "부광약품(주)",
+      "buyerBusinessNo": "1138504425",
+      "buyerCompany": "백제약품(주)영등포지점",
+      "tableRows": 28,
+      "totalAmount": "18,098,750",
+      "orientationMode": "invoice_template_0_180",
+      "orientationTargetShort": 512
+    },
+    "flipped_1jpg": {
+      "appliedRotation": 180,
+      "supplierBusinessNo": "118-81-00450",
+      "supplierCompany": "부광약품(주)",
+      "buyerBusinessNo": "1138504425",
+      "buyerCompany": "백제약품(주)영등포지점",
+      "tableRows": 28,
+      "totalAmount": "18,098,750",
+      "orientationMode": "invoice_template_0_180",
+      "orientationTargetShort": 512
+    }
+  },
+
+  "performanceExpectation": {
+    "targetRange_sec": "110 +/- 15",
+    "failThreshold_sec": 153,
+    "note": "512px 2-pass vs 224px 2-4-pass. Total pixel count comparable. Should not regress to T-27 levels."
+  },
+
+  "baselineStatus": {
+    "T25d_cleanup": "maintained - no OCR logic change",
+    "T25g_spec_cleanup": "maintained - no OCR logic change",
+    "T25f_RESET": "maintained - no OCR logic change",
+    "T26a_fix": "maintained - no OCR logic change",
+    "invoice_7samples_rowCount_exact": "maintained - parser untouched",
+    "T28a_normalized_pipeline": "maintained - only parameter added",
+    "nonTemplate_receipt_path": "maintained - default params unchanged"
+  },
+
+  "pyCompile": {
+    "preprocess_py": "PASS",
+    "main_py": "PASS"
+  },
+
+  "frontendChanges": "none",
+
+  "nextSteps": [
+    "Live RunOCR: normal 1.jpg → verify appliedRotation=0, tableRows=28, totalAmount correct",
+    "Live RunOCR: flipped 1.jpg → verify appliedRotation=180, correct parse",
+    "Run All: invoice_statement 7 samples → rowCount exact 7/7",
+    "Monitor processing time: should remain ~110s not exceed 153s",
+    "Verify baseline_fast / google results unchanged (non-template path)",
+    "T-28c (if needed): handle 90/270 rotated invoice_statement separately"
+  ]
+}
