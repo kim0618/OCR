@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useUi } from "../common/AppProviders";
 
 type Field = {
   no: number;
@@ -18,6 +19,7 @@ export default function UnstructuredBuilder({
   selectedTemplateId?: string | null;
 }) {
   const isEditMode = !!selectedTemplateId;
+  const ui = useUi();
   const [templateName, setTemplateName] = useState("");
   const [fields, setFields] = useState<Field[]>([]);
   const [selectedNo, setSelectedNo] = useState<number | null>(null);
@@ -40,9 +42,10 @@ export default function UnstructuredBuilder({
     }
   }, [selectedTemplate]);
 
-  const handleSave = () => {
-    if (!templateName.trim()) { alert("템플릿명을 입력해주세요."); return; }
+  const handleSave = async () => {
     const name = templateName.trim();
+    if (!name) { await ui.alert("템플릿 명을 입력해주세요."); return; }
+    if (fields.length === 0) { await ui.alert("필드를 하나 이상 정의해주세요."); return; }
     const localTemplate = {
       template_id: selectedTemplateId || `LOCAL-${Date.now()}`,
       template_name: name,
@@ -67,7 +70,7 @@ export default function UnstructuredBuilder({
     } catch (err) {
       console.error("[local unstructured template save error]", err);
     }
-    alert(`[Mock] "${templateName}" ${isEditMode ? "수정" : "저장"} 완료`);
+    await ui.alert(isEditMode ? "템플릿이 수정되었습니다." : "템플릿이 저장되었습니다.");
   };
 
   const handleDelete = () => {
@@ -172,7 +175,7 @@ export default function UnstructuredBuilder({
           justifyContent: "flex-end",
         }}>
           <button onClick={handleDelete} className="ms-btn">삭제</button>
-          <button onClick={handleSave} className="ms-btn"
+          <button onClick={() => void handleSave()} className="ms-btn"
             style={{ background: "var(--accent)", color: "#fff", border: "none" }}>
             {isEditMode ? "수정" : "저장"}
           </button>

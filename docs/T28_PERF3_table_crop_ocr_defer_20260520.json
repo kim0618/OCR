@@ -1,0 +1,94 @@
+{
+  "task": "T-28-PERF-3",
+  "title": "table crop OCR defer lazy optimization",
+  "date": "2026-05-20",
+  "tool": "Claude Code (VSCode Extension)",
+  "model": "Claude Sonnet 4.6",
+  "backup": [
+    "ocr-server/backup/main_20260520_before_T28_PERF3_table_crop_defer.py"
+  ],
+  "modifiedFiles": [
+    "ocr-server/main.py"
+  ],
+  "edits": [
+    {
+      "id": "Edit1",
+      "description": "초기화 변수 추가",
+      "location": "main.py line ~1974",
+      "added": ["_deferred_table_fields: list[int] = []", "_deferred_table_regions: list[dict] = []"]
+    },
+    {
+      "id": "Edit2",
+      "description": "region loop table 분기에 defer 로직 삽입",
+      "location": "main.py line ~2120",
+      "condition": "_inv_doc_type == 'invoice_statement'",
+      "behavior": "placeholder fields.append + deferred list에 기록, _ocr_table_region 미실행"
+    },
+    {
+      "id": "Edit3",
+      "description": "extract_invoice_statement_fields 이후 deferred field resolve",
+      "location": "main.py line ~2677",
+      "skipPath": {
+        "condition": "len(document_fields.tableRows) > 0",
+        "action": "value = '표 데이터 (N행)', table_data = [], tableOcrDebug.tableCropOcrSkipped = true"
+      },
+      "fallbackPath": {
+        "condition": "len(document_fields.tableRows) == 0 or missing",
+        "action": "_ocr_table_region 실행 후 fields 업데이트, tableOcrDebug.fallbackUsed = true"
+      }
+    }
+  ],
+  "applyConditions": {
+    "templateRunOCR": true,
+    "docType": "invoice_statement",
+    "tableRowsExists": true,
+    "tableRowsCount": "> 0"
+  },
+  "fallbackConditions": {
+    "nonInvoiceTemplate": "_inv_doc_type != invoice_statement → 기존 경로",
+    "tableRowsEmpty": "resolve 단계에서 _ocr_table_region fallback 실행"
+  },
+  "bottleneck": {
+    "before_거래1_table_crop_sec": 33,
+    "before_total_7files_sec": 268,
+    "expected_saving_sec": 51
+  },
+  "codexPreValidation": {
+    "판정": "PASS",
+    "rowCount_7_7": true,
+    "columnOrder_7_7": true,
+    "cleanJSON_rows_maintained": true,
+    "previewCustomValidationUnaffected": true
+  },
+  "perFile": [
+    {"file": "1.jpg", "expectedRowCount": 28, "tableRowsExists": true, "columnOrder": ["itemName","spec","manufacturingNo","expiryDate","quantity","unitPrice","amount"]},
+    {"file": "2.pdf", "expectedRowCount": 13, "tableRowsExists": true, "columnOrder": ["itemCode","itemName","quantity","consumerUnitPrice","supplyUnitPrice","supplyAmount"]},
+    {"file": "3.pdf", "expectedRowCount": 1,  "tableRowsExists": true, "columnOrder": ["itemName","quantity","unitPrice","manufacturer"]},
+    {"file": "4.pdf", "expectedRowCount": 1,  "tableRowsExists": true, "columnOrder": ["itemName","lotNo","unit","quantity","unitPrice","supplyAmount","taxAmount","totalAmount"]},
+    {"file": "5.pdf", "expectedRowCount": 6,  "tableRowsExists": true, "columnOrder": ["itemName","itemCode","quantity","unitPrice","amount"]},
+    {"file": "6.pdf", "expectedRowCount": 6,  "tableRowsExists": true, "columnOrder": ["itemCode","itemName","quantity","expiryDate"]},
+    {"file": "7.pdf", "expectedRowCount": 1,  "tableRowsExists": true, "columnOrder": ["itemName","unit","quantity"]}
+  ],
+  "tableDataChange": {
+    "before": "fields[i].table_data = [[{value, confidence, ...}, ...]]",
+    "afterSkip": "fields[i].table_data = []",
+    "afterFallback": "fields[i].table_data = [[{value, confidence, ...}, ...]] (기존과 동일)",
+    "fieldValue_afterSkip": "표 데이터 (N행)",
+    "uiImpact": "없음 (Preview/Clean JSON/Custom/Validation은 document_fields.tableRows 사용)"
+  },
+  "validation": {
+    "py_compile": "PASS",
+    "npm_typecheck": "N/A (frontend 수정 없음)",
+    "npm_build": "N/A (frontend 수정 없음)"
+  },
+  "remainingRisks": [
+    "extract_invoice_statement_fields 예외 발생 시 deferred field가 빈 placeholder로 남음 (fallback 경로는 tableRows=[] → _ocr_table_region 실행으로 복구)",
+    "fields[i].table_data를 직접 참조하는 frontend 경로가 있다면 빈 배열로 바뀌는 것이 영향을 줄 수 있음 (Codex 검증에서는 영향 없음 확인)"
+  ],
+  "nextTasks": [
+    "실제 RunOCR 거래_1~거래_7 before/after 시간 측정",
+    "timings에 table_crop_ocr_skipped / skip_reason 주입",
+    "T-28-PERF-4: ocr_lines_raw 재사용 최적화 검토",
+    "발표용 성능 개선 수치 정리"
+  ]
+}

@@ -1,0 +1,4357 @@
+{
+  "tool": "Codex",
+  "model": "Codex",
+  "operationCodeModified": false,
+  "repoDirtyBeforeWork": true,
+  "gitStatusShort": "fatal: detected dubious ownership in repository at 'D:/Free_Vue/OCR'\n'D:/Free_Vue/OCR' is owned by:\n\tDESKTOP-C4EV6UM/jinsung (S-1-5-21-2021129721-2391521148-1384908961-1001)\nbut the current user is:\n\tDESKTOP-C4EV6UM/CodexSandboxOffline (S-1-5-21-2021129721-2391521148-1384908961-1003)\nTo add an exception for this directory, call:\n\n\tgit config --global --add safe.directory D:/Free_Vue/OCR",
+  "script": "D:\\Free_Vue\\OCR\\tmp\\codex_receipt_unstructured_template_optimality_recheck.py",
+  "apiUrl": "http://127.0.0.1:9099/ocr/extract",
+  "template": {
+    "templateName": "영수증",
+    "templateId": "TPL-003",
+    "fieldCount": 5,
+    "regionsCount": 0,
+    "modeInferred": "unstructured"
+  },
+  "baselineDir": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\baseline",
+  "excludedFiles": [
+    "9.jpg"
+  ],
+  "targetFiles": [
+    "1.jpg",
+    "2.jpg",
+    "3.jpg",
+    "4.jpg",
+    "7.jpg",
+    "8.jpg",
+    "10.jpg",
+    "a1.jpg",
+    "a2.jpg"
+  ],
+  "staticAnalysis": {
+    "unstructuredTemplatePath": "TPL-003 has no regions, so RunOCR sends template_id/model_id without regions and backend takes the non-region full OCR receipt path.",
+    "ocrCallStructure": "detect_document -> detect_orientation -> OCR image resize/preprocess -> full OCR -> conditional upper re-OCR -> conditional amount re-OCR -> conditional handwritten-total re-OCR.",
+    "upperReOcrCondition": "upper re-OCR runs when upper_bbox exists and pre-extract did not fill businessNo, company, representative, tel, and address. It is skipped only when upper_ready is true.",
+    "amountReOcrCondition": "amount re-OCR is skipped for bank_slip/form_or_handwritten/invoice_statement or when pre_amount_strong is true; otherwise it runs if amount_bbox exists.",
+    "downscaleEvidence": "main.py uses ocr_max_w=950 and comments state 850px regressed small receipt digits/separators, so lower default downscale remains unsafe without A/B GT evidence.",
+    "responseSlimEvidence": "Unstructured response includes processed_image, original_image, full_text, extract_debug/timings by default; these dominate bytes but not OCR processing_time.",
+    "autofillBoundary": "Frontend autofill runs after API in UploadWorkspace; this API script measures backend OCR/parser only. Cache key should not include frontend history unless caching post-autofill UI result.",
+    "outputFieldsDependency": "OCR cache, response slim, and semantic re-OCR gating can be designed independently of outputFields/no_1~no_6 and future info/tables UI.",
+    "rgEvidence": {
+      "main": "441:    field_sources = {k: \"\" for k in result}\n446:            debug[\"field_sources\"] = field_sources\n461:                field_sources[k] = \"upper_block\"\n468:                field_sources[k] = \"upper_block\"\n473:        if v and not before.get(k) and not field_sources[k]:\n474:            field_sources[k] = \"full_ocr\"\n483:        field_sources[\"주소\"] = rescued_address_source or \"address_rescue\"\n494:        field_sources[\"회사명\"] = rescued_source or \"company_rescue\"\n509:                field_sources[\"사업자번호\"] = \"biz_rescue_relaxed\"\n536:                    field_sources[\"총합계금액\"] = c.get(\"source\", \"full_ocr\")\n541:        debug[\"field_sources\"] = field_sources\n625:    extract_debug: dict,\n634:    ta = extract_debug.get(\"total_amount\") or {}\n636:    review_required = bool(extract_debug.get(\"total_amount_review_required\"))\n648:            \"source\": extract_debug.get(\"field_sources\", {}).get(k, \"\"),\n669:        \"review_code\": extract_debug.get(\"total_amount_review_code\", \"\") if review_required else \"\",\n670:        \"review_reason\": extract_debug.get(\"total_amount_review_reason\", \"\") if review_required else \"\",\n677:            \"candidate_count\": (extract_debug.get(\"candidate_counts\") or {}).get(\"merged\"),\n1267:def _detect_handwritten_total_bbox(\n1343:def _extract_handwritten_total_from_lines(lines: list) -> tuple[str, dict]:\n1389:        \"status\": \"selected_handwritten_total\",\n1395:            \"source\": \"handwritten_total_reocr\",\n1924:    timings[\"original_image_wh\"] = [orig_w, orig_h]\n1939:        print(f\"[original_image] encode error (ignored): {_orig_e}\")\n1970:    extract_debug: dict = {}\n2182:        extract_debug = {\"document_classification\": _tmpl_doc_info, \"doc_type\": doc_type}\n2203:        # processed_image == original_image로 채워 History 패널이 비지 않도록 한다.\n2257:        #    850px는 일반 영수증의 작은 숫자/구분자 인식에서 회귀가 커서 완충 복원.\n2260:        ocr_max_w = 950\n2262:        if ddw > ocr_max_w:\n2263:            os_ = ocr_max_w / ddw\n2264:            ocr_img = cv2.resize(doc_deskewed, (ocr_max_w, int(ddh * os_)), interpolation=cv2.INTER_AREA)\n2266:            os_ = ocr_max_w / ddw\n2267:            ocr_img = cv2.resize(doc_deskewed, (ocr_max_w, int(ddh * os_)), interpolation=cv2.INTER_CUBIC)\n2287:        timings[\"processed_image_wh\"] = [ocr_w, ocr_h]\n2356:        upper_ready = bool(\n2370:        pre_amount_strong = bool(\n2387:        timings[\"upper_reocr_skipped_by_pre\"] = upper_ready\n2389:        if upper_bbox and not upper_ready:\n2392:            timings[\"upper_reocr_total_ms\"] = _ms(time.time() - t_u1)\n2393:            timings[\"upper_reocr_ran\"] = True\n2396:            timings[\"upper_reocr_total_ms\"] = 0.0\n2397:            timings[\"upper_reocr_ran\"] = False\n2398:            if upper_ready:\n2403:        #   - 그 외: pre_amount_strong 이면 스킵\n2412:        timings[\"amount_reocr_skipped_by_doc_type\"] = skip_by_doc\n2413:        timings[\"amount_reocr_skipped_by_pre\"] = (not skip_by_doc) and pre_amount_strong\n2414:        if amount_bbox and not pre_amount_strong:\n2417:            timings[\"amount_reocr_total_ms\"] = _ms(time.time() - t_a1)\n2418:            timings[\"amount_reocr_ran\"] = True\n2421:            timings[\"amount_reocr_total_ms\"] = 0.0\n2422:            timings[\"amount_reocr_ran\"] = False\n2423:            if pre_amount_strong and not skip_by_doc:\n2428:        extract_debug: dict = {\"document_classification\": doc_info, \"doc_type\": doc_type}\n2434:            debug=extract_debug,\n2438:        handwritten_total_bbox = None\n2439:        handwritten_total_lines = []\n2440:        handwritten_total_debug = {}\n2442:        ta_status = (extract_debug.get(\"total_amount\") or {}).get(\"status\", \"\")\n2450:            handwritten_total_bbox = _detect_handwritten_total_bbox(ocr_lines_raw, ocr_h, ocr_w, doc_type=doc_type)\n2451:            timings[\"detect_handwritten_total_bbox_ms\"] = _ms(time.time() - _t_ht0)\n2452:            timings[\"handwritten_total_bbox_ocr_coords\"] = list(handwritten_total_bbox) if handwritten_total_bbox else None\n2453:            if handwritten_total_bbox:\n2455:                handwritten_total_lines = _reocr_block(\n2458:                    handwritten_total_bbox,\n2462:                timings[\"handwritten_total_reocr_total_ms\"] = _ms(time.time() - t_ht1)\n2463:                timings[\"handwritten_total_reocr_ran\"] = True\n2464:                hand_value, handwritten_total_debug = _extract_handwritten_total_from_lines(handwritten_total_lines)\n2467:                    extract_debug.setdefault(\"field_sources\", {})[\"총합계금액\"] = \"handwritten_total_reocr\"\n2468:                    extract_debug[\"total_amount\"] = {\n2469:                        **(extract_debug.get(\"total_amount\") or {}),\n2470:                        **handwritten_total_debug,\n2471:                        \"policy\": \"handwritten_total_reocr_fallback\",\n2473:                    extract_debug[\"total_amount_review_required\"] = False\n2474:                    extract_debug.pop(\"total_amount_review_code\", None)\n2475:                    extract_debug.pop(\"total_amount_review_reason\", None)\n2477:                    f\"[REOCR hand_total] bbox={handwritten_total_bbox} \"\n2478:                    f\"lines={len(handwritten_total_lines)} value={hand_value or '-'} \"\n2482:                timings[\"handwritten_total_reocr_total_ms\"] = 0.0\n2483:                timings[\"handwritten_total_reocr_ran\"] = False\n2485:            timings[\"detect_handwritten_total_bbox_ms\"] = 0.0\n2486:            timings[\"handwritten_total_reocr_total_ms\"] = 0.0\n2487:            timings[\"handwritten_total_reocr_ran\"] = False\n2492:            extract_debug[\"upper_block_bbox\"] = [round(ux * bbox_sx), round(uy * bbox_sy),\n2494:            extract_debug[\"upper_block_used\"] = len(upper_lines) > 0\n2495:            extract_debug[\"upper_block_ocr_text\"] = \"\\n\".join(t for _, t, _ in upper_lines)\n2498:            extract_debug[\"amount_block_bbox\"] = [round(ax * bbox_sx), round(ay * bbox_sy),\n2500:            extract_debug[\"amount_block_used\"] = len(amount_lines) > 0\n2501:            extract_debug[\"amount_block_ocr_text\"] = \"\\n\".join(t for _, t, _ in amount_lines)\n2502:        if handwritten_total_bbox:\n2503:            hx, hy, hw, hh = handwritten_total_bbox\n2504:            extract_debug[\"handwritten_total_bbox\"] = [round(hx * bbox_sx), round(hy * bbox_sy),\n2506:            extract_debug[\"handwritten_total_used\"] = bool(receipt_fields.get(\"총합계금액\") and extract_debug.get(\"field_sources\", {}).get(\"총합계금액\") == \"handwritten_total_reocr\")\n2507:            extract_debug[\"handwritten_total_ocr_text\"] = \"\\n\".join(t for _, t, _ in handwritten_total_lines)\n2508:            if handwritten_total_debug:\n2509:                extract_debug[\"handwritten_total_debug\"] = handwritten_total_debug\n2514:        ta = extract_debug.get(\"total_amount\") or {}\n2519:            review_flag = \"REVIEW\" if extract_debug.get(\"total_amount_review_required\") else \"ok\"\n2526:                f\"src={extract_debug.get('field_sources', {}).get('총합계금액', '-')} \"\n2528:                f\"cands={extract_debug.get('candidate_counts')} \"\n2664:            extract_debug[\"invoice_statement\"] = invoice_debug.get(\"invoice_statement\", invoice_debug)\n2756:        response[\"processed_image\"] = f\"data:image/jpeg;base64,{processed_b64}\"\n2758:        response[\"original_image\"] = f\"data:image/jpeg;base64,{original_b64}\"\n2760:    # T-6j-fix: expose extract_debug for template (region_list) path too\n2762:    if region_list and extract_debug:\n2763:        extract_debug[\"template_path\"] = True\n2764:        response[\"extract_debug\"] = extract_debug\n2773:        timings[\"debug_mode\"] = True  # 비-템플릿 경로는 항상 extract_debug 포함\n2774:        extract_debug[\"timings\"] = timings\n2775:        response[\"extract_debug\"] = extract_debug\n2776:        # 최상위에도 검토 필요 플래그 노출 (프론트가 extract_debug 파싱 안 해도 읽도록)\n2778:            extract_debug.get(\"total_amount_review_required\")\n2780:        if extract_debug.get(\"total_amount_review_required\"):\n2781:            response[\"total_amount_review_code\"] = extract_debug.get(\"total_amount_review_code\", \"\")\n2782:            response[\"total_amount_review_reason\"] = extract_debug.get(\"total_amount_review_reason\", \"\")\n2783:        response[\"doc_type\"] = extract_debug.get(\"doc_type\", \"unknown\")\n2791:                doc_type=extract_debug.get(\"doc_type\", \"unknown\"),\n2792:                doc_classification=extract_debug.get(\"document_classification\") or {},\n2793:                extract_debug=extract_debug,\n2797:                upper_block_text=extract_debug.get(\"upper_block_ocr_text\", \"\"),\n2798:                amount_block_text=extract_debug.get(\"amount_block_ocr_text\", \"\"),\n2818:            f\"orig={timings.get('original_image_wh')} ocr_img={timings.get('ocr_image_wh')} \"\n2819:            f\"doc={extract_debug.get('doc_type')} \"\n2820:            f\"upper_ran={timings.get('upper_reocr_ran')} amount_ran={timings.get('amount_reocr_ran')} \"",
+      "frontend": "26:} from \"@/lib/autofillEngine\";\n33:  regions?: Region[];\n152:  // appendHistoryRun 시점의 immutable 메타(no/en/ko/original/applied/autofillAction/suggestions)\n169:            id: String(item?.template_id ?? \"\"),\n172:            regions: Array.isArray(item?.template_json?.regions) ? item.template_json.regions : [],\n247:            id: t.template_id,\n249:            regions: Array.isArray(t.template_json?.regions) ? t.template_json.regions : t.regions,\n337:          // so that canvas regions and overlay bboxes align with the rendered image.\n436:    // receipt_fields / finance_fields 기반으로 fields 를 재구성한다.\n437:    // 템플릿이 있고 region-based(mode !== \"unstructured\") 이면 백엔드가 region 별로\n439:    if (template && template.mode !== \"unstructured\") {\n440:      // Enrich raw.fields with ko/en labels from template regions so the\n442:      const regions: any[] = (template as any).regions ?? [];\n444:        const region = regions[i] ?? {};\n454:    const receiptFields = raw.receipt_fields ?? {};\n460:    // 백엔드 receipt_fields 키: 회사명, 사업자번호, 대표자, tel, 주소, 총합계금액\n461:    // 템플릿이 koField=\"전화번호\" 로 정의되어 있어도 receipt_fields[\"tel\"] 을 가져오게 함.\n726:    if (field.autofillAction === \"corrected\" || field.autofillAction === \"filled\") return \"restored\";\n742:      const lookupValue = field.autofillAction === \"corrected\"\n745:      if (field.autofillAction === \"filled\" && !field.original) {\n797:    if (isRunOcr && template?.regions?.length) {\n798:      return template.regions.map((region, index) => ({\n832:    const useRegionTemplate = !!activeTemplate && activeTemplate.mode !== \"unstructured\";\n836:      if (activeTemplateId) formData.append(\"template_id\", activeTemplateId);\n837:      if (useRegionTemplate && activeTemplate?.regions?.length) {\n838:        formData.append(\"regions\", JSON.stringify(activeTemplate.regions));\n862:      let autofillSuggestions: AutofillSuggestion[] = [];\n863:      let autofillSummary: AutofillRunSummary = {\n877:          json?.receipt_fields?.[\"사업자번호\"],\n882:          autofillSummary = {\n911:          autofillSuggestions = [...businessNumberSuggestion, ...internalSuggestions];\n914:            suggestions: autofillSuggestions,\n917:          const confirmedCount = resultFields.filter((field) => field.autofillAction === \"confirmed\").length;\n918:          const correctedCount = resultFields.filter((field) => field.autofillAction === \"corrected\").length;\n919:          const filledCount = resultFields.filter((field) => field.autofillAction === \"filled\").length;\n923:            return autofillSuggestions.some((suggestion) => normalizeAutofillFieldKey(suggestion.field) === key && canAutoApplySuggestion(suggestion));\n926:            autofillSuggestions.length === 0 ? \"no_candidates\" :\n931:          autofillSummary = {\n934:            candidateCount: autofillSuggestions.length,\n947:        console.warn(\"[autofill] skipped\", err);\n949:        autofillSummary = {\n959:      runResult.autofill_summary = autofillSummary;\n961:      if (runResult.processed_image) {\n962:        setProcessedImageUrl(runResult.processed_image);\n970:      // OCR 데이터 표는 백엔드 raw OCR 결과를 그대로 보여준다 (정제된 receipt_fields 가 아님).\n971:      // 출력 필드 표는 runResult.fields(receipt_fields/template 매핑) 를 사용 → 명확한 분리.\n974:        activeTemplate.mode !== \"unstructured\" &&\n975:        (activeTemplate.regions?.length ?? 0) > 0;\n990:      // 출력 필드 표 데이터 — 정제된 결과(runResult.fields = template/receipt_fields 매핑) 기반.\n1000:              autofillSuggestions,\n1011:              autofillAction: ocrF?.autofillAction,\n1020:            const suggestions = suggestionsForHistoryField({ en, ko }, autofillSuggestions);\n1030:              autofillAction: f.autofillAction,\n1040:        image_url: runResult.processed_image,\n1042:        processed_image_url: runResult.processed_image ?? null,\n1043:        original_image_url: runResult.original_image ?? null,\n1047:        autofill_summary: autofillSummary,\n1156:  // immutable 메타(no/en/ko/original/applied/autofillAction/suggestions)는 initialOutputFields 에서 보존.\n1172:        autofillAction: field.autofillAction ?? base?.autofillAction,\n1204:              regions={canvasRegions}\n1256:              const url = `/ocr/revalidate?regions=${encodeURIComponent(JSON.stringify(targets))}`;\n1285:              const url = `/ocr/revalidate?regions=${encodeURIComponent(JSON.stringify(targets))}`;"
+    }
+  },
+  "rounds": [
+    [
+      {
+        "round": 1,
+        "fileName": "1.jpg",
+        "filePath": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\baseline\\1.jpg",
+        "imageSize": [
+          1382,
+          1037
+        ],
+        "fileSizeBytes": 610113,
+        "fileSha256": "d89d3d16f84d49a5e022b0fb5b506a2deadae15f5c1c822cc1d12d368e843de1",
+        "wallClockSeconds": 24.174,
+        "processing_time": 24.12,
+        "doc_type": "receipt_card",
+        "fieldSummary": {
+          "fieldKeys": [
+            "회사명",
+            "사업자번호",
+            "대표자",
+            "tel",
+            "주소",
+            "총합계금액"
+          ],
+          "fieldCount": 6,
+          "filledCount": 6,
+          "emptyCount": 0,
+          "fillRate": 1.0,
+          "majorFields": {
+            "회사명": "(주)안전볼트",
+            "사업자번호": "138-81-68468",
+            "대표자": "윤봉상",
+            "tel": "031-479-0485",
+            "주소": "경기 안양시 동안구 호계동 555-9 국",
+            "총합계금액": "10,560"
+          }
+        },
+        "filledCount": 6,
+        "emptyCount": 0,
+        "fillRate": 1.0,
+        "majorFields": {
+          "회사명": "(주)안전볼트",
+          "사업자번호": "138-81-68468",
+          "대표자": "윤봉상",
+          "tel": "031-479-0485",
+          "주소": "경기 안양시 동안구 호계동 555-9 국",
+          "총합계금액": "10,560"
+        },
+        "semanticDetection": {
+          "businessNoDetected": true,
+          "totalAmountDetected": true,
+          "merchantNameDetected": true,
+          "phoneDetected": true,
+          "addressDetected": true
+        },
+        "status": "PASS",
+        "timings": {
+          "image_read_ms": 0.0,
+          "image_decode_ms": 19.5,
+          "original_image_wh": [
+            1382,
+            1037
+          ],
+          "engine_acquire_ms": 61.0,
+          "detect_document_source": "auto",
+          "detect_document_ms": 12.0,
+          "detect_orientation_ms": 9665.7,
+          "doc_img_wh_after_orientation": [
+            771,
+            657
+          ],
+          "preview_prep_ms": 7.0,
+          "display_image_wh": [
+            771,
+            657
+          ],
+          "ocr_image_prep_ms": 13.0,
+          "ocr_image_wh": [
+            771,
+            657
+          ],
+          "processed_image_wh": [
+            771,
+            657
+          ],
+          "full_ocr_ms": 7948.2,
+          "parse_and_build_fields_ms": 0.0,
+          "classify_document_ms": 2.0,
+          "pre_extract_ms": 5.0,
+          "detect_upper_bbox_ms": 0.0,
+          "upper_bbox_ocr_coords": [
+            0,
+            152,
+            771,
+            184
+          ],
+          "upper_reocr_skipped_by_pre": false,
+          "reocr_upper_crop_ms": 0.0,
+          "reocr_upper_preprocess_ms": 20.0,
+          "reocr_upper_ocr_ms": 4589.1,
+          "reocr_upper_crop_wh_before": [
+            771,
+            184
+          ],
+          "reocr_upper_crop_wh_after": [
+            2597,
+            620
+          ],
+          "upper_reocr_total_ms": 4610.1,
+          "upper_reocr_ran": true,
+          "detect_amount_bbox_ms": 0.0,
+          "amount_bbox_ocr_coords": [
+            0,
+            328,
+            771,
+            135
+          ],
+          "amount_reocr_skipped_by_doc_type": false,
+          "amount_reocr_skipped_by_pre": false,
+          "reocr_amount_crop_ms": 0.0,
+          "reocr_amount_preprocess_ms": 8.0,
+          "reocr_amount_ocr_ms": 1759.8,
+          "reocr_amount_crop_wh_before": [
+            771,
+            135
+          ],
+          "reocr_amount_crop_wh_after": [
+            2284,
+            400
+          ],
+          "amount_reocr_total_ms": 1767.8,
+          "amount_reocr_ran": true,
+          "detect_handwritten_total_bbox_ms": 0.0,
+          "handwritten_total_reocr_total_ms": 0.0,
+          "handwritten_total_reocr_ran": false,
+          "field_extract_ms": 5.5,
+          "total_ms": 24116.9,
+          "paddle_device": "cpu",
+          "cpu_threads": 16,
+          "debug_mode": true,
+          "response_assembly_ms": 1.0
+        },
+        "ocrCallBreakdown": {
+          "detectOrientationMs": 9665.7,
+          "fullOcrMs": 7948.2,
+          "upperReOcrMs": 4610.1,
+          "amountReOcrMs": 1767.8,
+          "handwrittenReOcrMs": 0.0,
+          "reOcrTotalMs": 6377.900000000001,
+          "processingTimeMs": 24120.0,
+          "reOcrSharePercent": 26.44,
+          "upperRan": true,
+          "amountRan": true,
+          "handwrittenRan": false
+        },
+        "fieldSources": {
+          "회사명": "upper_block",
+          "사업자번호": "upper_block",
+          "대표자": "upper_block",
+          "tel": "upper_block",
+          "주소": "upper_block",
+          "총합계금액": "amount_block"
+        },
+        "fieldsRecoveredByReOcr": [
+          {
+            "field": "회사명",
+            "source": "upper_block"
+          },
+          {
+            "field": "사업자번호",
+            "source": "upper_block"
+          },
+          {
+            "field": "대표자",
+            "source": "upper_block"
+          },
+          {
+            "field": "tel",
+            "source": "upper_block"
+          },
+          {
+            "field": "주소",
+            "source": "upper_block"
+          },
+          {
+            "field": "총합계금액",
+            "source": "amount_block"
+          }
+        ],
+        "canSkipReOcrSafelyFromCurrentEvidence": "no",
+        "responseSizes": {
+          "raw": 675803,
+          "noImages": 13696,
+          "noImagesNoDebug": 4434,
+          "cleanJson": 503
+        },
+        "jsonSerializationMs": {
+          "raw": 2.485,
+          "noImagesNoDebug": 0.037
+        },
+        "stableProjection": {
+          "doc_type": "receipt_card",
+          "receipt_fields": {
+            "tel": "031-479-0485",
+            "대표자": "윤봉상",
+            "사업자번호": "138-81-68468",
+            "주소": "경기 안양시 동안구 호계동 555-9 국",
+            "총합계금액": "10,560",
+            "회사명": "(주)안전볼트"
+          },
+          "fillRate": 1.0,
+          "semantic": {
+            "businessNoDetected": true,
+            "totalAmountDetected": true,
+            "merchantNameDetected": true,
+            "phoneDetected": true,
+            "addressDetected": true
+          }
+        }
+      },
+      {
+        "round": 1,
+        "fileName": "2.jpg",
+        "filePath": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\baseline\\2.jpg",
+        "imageSize": [
+          1382,
+          1037
+        ],
+        "fileSizeBytes": 533154,
+        "fileSha256": "492deadbf61adc5f66d1dccc5afb32ec329e16efd3e41f0e16442978f6e41164",
+        "wallClockSeconds": 29.96,
+        "processing_time": 29.9,
+        "doc_type": "receipt_card",
+        "fieldSummary": {
+          "fieldKeys": [
+            "회사명",
+            "사업자번호",
+            "대표자",
+            "tel",
+            "주소",
+            "총합계금액"
+          ],
+          "fieldCount": 6,
+          "filledCount": 6,
+          "emptyCount": 0,
+          "fillRate": 1.0,
+          "majorFields": {
+            "회사명": "화성툴",
+            "사업자번호": "138-08-99333",
+            "대표자": "이태주",
+            "tel": "031-479-0090",
+            "주소": "경기 안양시 동안구 엘에스로 92 8동140호",
+            "총합계금액": "11,000"
+          }
+        },
+        "filledCount": 6,
+        "emptyCount": 0,
+        "fillRate": 1.0,
+        "majorFields": {
+          "회사명": "화성툴",
+          "사업자번호": "138-08-99333",
+          "대표자": "이태주",
+          "tel": "031-479-0090",
+          "주소": "경기 안양시 동안구 엘에스로 92 8동140호",
+          "총합계금액": "11,000"
+        },
+        "semanticDetection": {
+          "businessNoDetected": true,
+          "totalAmountDetected": true,
+          "merchantNameDetected": true,
+          "phoneDetected": true,
+          "addressDetected": true
+        },
+        "status": "PASS",
+        "timings": {
+          "image_read_ms": 0.0,
+          "image_decode_ms": 11.5,
+          "original_image_wh": [
+            1382,
+            1037
+          ],
+          "engine_acquire_ms": 41.0,
+          "detect_document_source": "auto",
+          "detect_document_ms": 8.0,
+          "detect_orientation_ms": 14329.7,
+          "doc_img_wh_after_orientation": [
+            790,
+            657
+          ],
+          "preview_prep_ms": 7.0,
+          "display_image_wh": [
+            790,
+            657
+          ],
+          "ocr_image_prep_ms": 14.0,
+          "ocr_image_wh": [
+            790,
+            657
+          ],
+          "processed_image_wh": [
+            790,
+            657
+          ],
+          "full_ocr_ms": 9664.1,
+          "parse_and_build_fields_ms": 1.0,
+          "classify_document_ms": 0.0,
+          "pre_extract_ms": 3.0,
+          "detect_upper_bbox_ms": 0.0,
+          "upper_bbox_ocr_coords": [
+            0,
+            121,
+            790,
+            223
+          ],
+          "upper_reocr_skipped_by_pre": false,
+          "reocr_upper_crop_ms": 0.0,
+          "reocr_upper_preprocess_ms": 14.0,
+          "reocr_upper_ocr_ms": 5797.0,
+          "reocr_upper_crop_wh_before": [
+            790,
+            223
+          ],
+          "reocr_upper_crop_wh_after": [
+            2196,
+            620
+          ],
+          "upper_reocr_total_ms": 5812.6,
+          "upper_reocr_ran": true,
+          "detect_amount_bbox_ms": 0.0,
+          "amount_bbox_ocr_coords": [
+            0,
+            328,
+            790,
+            173
+          ],
+          "amount_reocr_skipped_by_doc_type": false,
+          "amount_reocr_skipped_by_pre": true,
+          "amount_reocr_total_ms": 0.0,
+          "amount_reocr_ran": false,
+          "detect_handwritten_total_bbox_ms": 0.0,
+          "handwritten_total_reocr_total_ms": 0.0,
+          "handwritten_total_reocr_ran": false,
+          "field_extract_ms": 6.1,
+          "total_ms": 29898.0,
+          "paddle_device": "cpu",
+          "cpu_threads": 16,
+          "debug_mode": true,
+          "response_assembly_ms": 1.5
+        },
+        "ocrCallBreakdown": {
+          "detectOrientationMs": 14329.7,
+          "fullOcrMs": 9664.1,
+          "upperReOcrMs": 5812.6,
+          "amountReOcrMs": 0.0,
+          "handwrittenReOcrMs": 0.0,
+          "reOcrTotalMs": 5812.6,
+          "processingTimeMs": 29900.0,
+          "reOcrSharePercent": 19.44,
+          "upperRan": true,
+          "amountRan": false,
+          "handwrittenRan": false
+        },
+        "fieldSources": {
+          "회사명": "upper_block",
+          "사업자번호": "upper_block",
+          "대표자": "upper_block",
+          "tel": "upper_block",
+          "주소": "upper_block",
+          "총합계금액": "full_ocr"
+        },
+        "fieldsRecoveredByReOcr": [
+          {
+            "field": "회사명",
+            "source": "upper_block"
+          },
+          {
+            "field": "사업자번호",
+            "source": "upper_block"
+          },
+          {
+            "field": "대표자",
+            "source": "upper_block"
+          },
+          {
+            "field": "tel",
+            "source": "upper_block"
+          },
+          {
+            "field": "주소",
+            "source": "upper_block"
+          }
+        ],
+        "canSkipReOcrSafelyFromCurrentEvidence": "no",
+        "responseSizes": {
+          "raw": 671624,
+          "noImages": 15725,
+          "noImagesNoDebug": 5095,
+          "cleanJson": 502
+        },
+        "jsonSerializationMs": {
+          "raw": 1.994,
+          "noImagesNoDebug": 0.029
+        },
+        "stableProjection": {
+          "doc_type": "receipt_card",
+          "receipt_fields": {
+            "tel": "031-479-0090",
+            "대표자": "이태주",
+            "사업자번호": "138-08-99333",
+            "주소": "경기 안양시 동안구 엘에스로 92 8동140호",
+            "총합계금액": "11,000",
+            "회사명": "화성툴"
+          },
+          "fillRate": 1.0,
+          "semantic": {
+            "businessNoDetected": true,
+            "totalAmountDetected": true,
+            "merchantNameDetected": true,
+            "phoneDetected": true,
+            "addressDetected": true
+          }
+        }
+      },
+      {
+        "round": 1,
+        "fileName": "3.jpg",
+        "filePath": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\baseline\\3.jpg",
+        "imageSize": [
+          1382,
+          1037
+        ],
+        "fileSizeBytes": 568668,
+        "fileSha256": "c6917fc6b0579010f2c61328e23a8253bc20d9bba6ba548e04d7f94b59c8b6fe",
+        "wallClockSeconds": 29.044,
+        "processing_time": 28.94,
+        "doc_type": "receipt_card",
+        "fieldSummary": {
+          "fieldKeys": [
+            "회사명",
+            "사업자번호",
+            "대표자",
+            "tel",
+            "주소",
+            "총합계금액"
+          ],
+          "fieldCount": 6,
+          "filledCount": 6,
+          "emptyCount": 0,
+          "fillRate": 1.0,
+          "majorFields": {
+            "회사명": "세광전기조명",
+            "사업자번호": "119-10-88385",
+            "대표자": "이정은",
+            "tel": "031-479-2280",
+            "주소": "경기 안양시 동안구 엘에스로 76 (호계동)7-117.11",
+            "총합계금액": "33,000"
+          }
+        },
+        "filledCount": 6,
+        "emptyCount": 0,
+        "fillRate": 1.0,
+        "majorFields": {
+          "회사명": "세광전기조명",
+          "사업자번호": "119-10-88385",
+          "대표자": "이정은",
+          "tel": "031-479-2280",
+          "주소": "경기 안양시 동안구 엘에스로 76 (호계동)7-117.11",
+          "총합계금액": "33,000"
+        },
+        "semanticDetection": {
+          "businessNoDetected": true,
+          "totalAmountDetected": true,
+          "merchantNameDetected": true,
+          "phoneDetected": true,
+          "addressDetected": true
+        },
+        "status": "PASS",
+        "timings": {
+          "image_read_ms": 0.0,
+          "image_decode_ms": 13.5,
+          "original_image_wh": [
+            1382,
+            1037
+          ],
+          "engine_acquire_ms": 42.0,
+          "detect_document_source": "auto",
+          "detect_document_ms": 10.0,
+          "detect_orientation_ms": 13779.4,
+          "doc_img_wh_after_orientation": [
+            819,
+            622
+          ],
+          "preview_prep_ms": 7.0,
+          "display_image_wh": [
+            819,
+            622
+          ],
+          "ocr_image_prep_ms": 13.5,
+          "ocr_image_wh": [
+            819,
+            622
+          ],
+          "processed_image_wh": [
+            819,
+            622
+          ],
+          "full_ocr_ms": 10020.6,
+          "parse_and_build_fields_ms": 0.0,
+          "classify_document_ms": 0.0,
+          "pre_extract_ms": 5.0,
+          "detect_upper_bbox_ms": 0.0,
+          "upper_bbox_ocr_coords": [
+            0,
+            65,
+            819,
+            211
+          ],
+          "upper_reocr_skipped_by_pre": false,
+          "reocr_upper_crop_ms": 0.0,
+          "reocr_upper_preprocess_ms": 21.0,
+          "reocr_upper_ocr_ms": 5019.1,
+          "reocr_upper_crop_wh_before": [
+            819,
+            211
+          ],
+          "reocr_upper_crop_wh_after": [
+            2406,
+            620
+          ],
+          "upper_reocr_total_ms": 5041.1,
+          "upper_reocr_ran": true,
+          "detect_amount_bbox_ms": 1.0,
+          "amount_bbox_ocr_coords": [
+            0,
+            311,
+            819,
+            236
+          ],
+          "amount_reocr_skipped_by_doc_type": false,
+          "amount_reocr_skipped_by_pre": true,
+          "amount_reocr_total_ms": 0.0,
+          "amount_reocr_ran": false,
+          "detect_handwritten_total_bbox_ms": 0.0,
+          "handwritten_total_reocr_total_ms": 0.0,
+          "handwritten_total_reocr_ran": false,
+          "field_extract_ms": 7.5,
+          "total_ms": 28942.8,
+          "paddle_device": "cpu",
+          "cpu_threads": 16,
+          "debug_mode": true,
+          "response_assembly_ms": 1.0
+        },
+        "ocrCallBreakdown": {
+          "detectOrientationMs": 13779.4,
+          "fullOcrMs": 10020.6,
+          "upperReOcrMs": 5041.1,
+          "amountReOcrMs": 0.0,
+          "handwrittenReOcrMs": 0.0,
+          "reOcrTotalMs": 5041.1,
+          "processingTimeMs": 28940.0,
+          "reOcrSharePercent": 17.42,
+          "upperRan": true,
+          "amountRan": false,
+          "handwrittenRan": false
+        },
+        "fieldSources": {
+          "회사명": "upper_block",
+          "사업자번호": "upper_block",
+          "대표자": "",
+          "tel": "upper_block",
+          "주소": "upper_block",
+          "총합계금액": "full_ocr"
+        },
+        "fieldsRecoveredByReOcr": [
+          {
+            "field": "회사명",
+            "source": "upper_block"
+          },
+          {
+            "field": "사업자번호",
+            "source": "upper_block"
+          },
+          {
+            "field": "tel",
+            "source": "upper_block"
+          },
+          {
+            "field": "주소",
+            "source": "upper_block"
+          }
+        ],
+        "canSkipReOcrSafelyFromCurrentEvidence": "no",
+        "responseSizes": {
+          "raw": 665774,
+          "noImages": 13967,
+          "noImagesNoDebug": 3755,
+          "cleanJson": 520
+        },
+        "jsonSerializationMs": {
+          "raw": 3.343,
+          "noImagesNoDebug": 0.052
+        },
+        "stableProjection": {
+          "doc_type": "receipt_card",
+          "receipt_fields": {
+            "tel": "031-479-2280",
+            "대표자": "이정은",
+            "사업자번호": "119-10-88385",
+            "주소": "경기 안양시 동안구 엘에스로 76 (호계동)7-117.11",
+            "총합계금액": "33,000",
+            "회사명": "세광전기조명"
+          },
+          "fillRate": 1.0,
+          "semantic": {
+            "businessNoDetected": true,
+            "totalAmountDetected": true,
+            "merchantNameDetected": true,
+            "phoneDetected": true,
+            "addressDetected": true
+          }
+        }
+      },
+      {
+        "round": 1,
+        "fileName": "4.jpg",
+        "filePath": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\baseline\\4.jpg",
+        "imageSize": [
+          1382,
+          1037
+        ],
+        "fileSizeBytes": 595088,
+        "fileSha256": "4ebf0812677b5fbca8d54ecd374b66e3242bdf1875f9e302fad7df3386dff54a",
+        "wallClockSeconds": 21.976,
+        "processing_time": 21.93,
+        "doc_type": "receipt_card",
+        "fieldSummary": {
+          "fieldKeys": [
+            "회사명",
+            "사업자번호",
+            "대표자",
+            "tel",
+            "주소",
+            "총합계금액"
+          ],
+          "fieldCount": 6,
+          "filledCount": 6,
+          "emptyCount": 0,
+          "fillRate": 1.0,
+          "majorFields": {
+            "회사명": "가행점",
+            "사업자번호": "123-23-94265",
+            "대표자": "정영달",
+            "tel": "031-479-3690",
+            "주소": "경기 안양시 동안구 엘에스로 92",
+            "총합계금액": "17,600"
+          }
+        },
+        "filledCount": 6,
+        "emptyCount": 0,
+        "fillRate": 1.0,
+        "majorFields": {
+          "회사명": "가행점",
+          "사업자번호": "123-23-94265",
+          "대표자": "정영달",
+          "tel": "031-479-3690",
+          "주소": "경기 안양시 동안구 엘에스로 92",
+          "총합계금액": "17,600"
+        },
+        "semanticDetection": {
+          "businessNoDetected": true,
+          "totalAmountDetected": true,
+          "merchantNameDetected": true,
+          "phoneDetected": true,
+          "addressDetected": true
+        },
+        "status": "PASS",
+        "timings": {
+          "image_read_ms": 1.0,
+          "image_decode_ms": 15.6,
+          "original_image_wh": [
+            1382,
+            1037
+          ],
+          "engine_acquire_ms": 53.0,
+          "detect_document_source": "auto",
+          "detect_document_ms": 10.2,
+          "detect_orientation_ms": 9432.0,
+          "doc_img_wh_after_orientation": [
+            813,
+            687
+          ],
+          "preview_prep_ms": 10.0,
+          "display_image_wh": [
+            813,
+            687
+          ],
+          "ocr_image_prep_ms": 15.0,
+          "ocr_image_wh": [
+            813,
+            687
+          ],
+          "processed_image_wh": [
+            813,
+            687
+          ],
+          "full_ocr_ms": 8197.5,
+          "parse_and_build_fields_ms": 0.0,
+          "classify_document_ms": 2.0,
+          "pre_extract_ms": 3.0,
+          "detect_upper_bbox_ms": 0.0,
+          "upper_bbox_ocr_coords": [
+            0,
+            150,
+            813,
+            168
+          ],
+          "upper_reocr_skipped_by_pre": false,
+          "reocr_upper_crop_ms": 0.0,
+          "reocr_upper_preprocess_ms": 23.5,
+          "reocr_upper_ocr_ms": 4152.5,
+          "reocr_upper_crop_wh_before": [
+            813,
+            168
+          ],
+          "reocr_upper_crop_wh_after": [
+            3000,
+            620
+          ],
+          "upper_reocr_total_ms": 4183.0,
+          "upper_reocr_ran": true,
+          "detect_amount_bbox_ms": 0.0,
+          "amount_bbox_ocr_coords": [
+            0,
+            343,
+            813,
+            125
+          ],
+          "amount_reocr_skipped_by_doc_type": false,
+          "amount_reocr_skipped_by_pre": true,
+          "amount_reocr_total_ms": 0.0,
+          "amount_reocr_ran": false,
+          "detect_handwritten_total_bbox_ms": 0.0,
+          "handwritten_total_reocr_total_ms": 0.0,
+          "handwritten_total_reocr_ran": false,
+          "field_extract_ms": 4.0,
+          "total_ms": 21926.3,
+          "paddle_device": "cpu",
+          "cpu_threads": 16,
+          "debug_mode": true,
+          "response_assembly_ms": 2.0
+        },
+        "ocrCallBreakdown": {
+          "detectOrientationMs": 9432.0,
+          "fullOcrMs": 8197.5,
+          "upperReOcrMs": 4183.0,
+          "amountReOcrMs": 0.0,
+          "handwrittenReOcrMs": 0.0,
+          "reOcrTotalMs": 4183.0,
+          "processingTimeMs": 21930.0,
+          "reOcrSharePercent": 19.07,
+          "upperRan": true,
+          "amountRan": false,
+          "handwrittenRan": false
+        },
+        "fieldSources": {
+          "회사명": "company_rescue",
+          "사업자번호": "upper_block",
+          "대표자": "upper_block",
+          "tel": "upper_block",
+          "주소": "upper_block",
+          "총합계금액": "full_ocr"
+        },
+        "fieldsRecoveredByReOcr": [
+          {
+            "field": "사업자번호",
+            "source": "upper_block"
+          },
+          {
+            "field": "대표자",
+            "source": "upper_block"
+          },
+          {
+            "field": "tel",
+            "source": "upper_block"
+          },
+          {
+            "field": "주소",
+            "source": "upper_block"
+          }
+        ],
+        "canSkipReOcrSafelyFromCurrentEvidence": "no",
+        "responseSizes": {
+          "raw": 726495,
+          "noImages": 17328,
+          "noImagesNoDebug": 4283,
+          "cleanJson": 491
+        },
+        "jsonSerializationMs": {
+          "raw": 2.811,
+          "noImagesNoDebug": 0.03
+        },
+        "stableProjection": {
+          "doc_type": "receipt_card",
+          "receipt_fields": {
+            "tel": "031-479-3690",
+            "대표자": "정영달",
+            "사업자번호": "123-23-94265",
+            "주소": "경기 안양시 동안구 엘에스로 92",
+            "총합계금액": "17,600",
+            "회사명": "가행점"
+          },
+          "fillRate": 1.0,
+          "semantic": {
+            "businessNoDetected": true,
+            "totalAmountDetected": true,
+            "merchantNameDetected": true,
+            "phoneDetected": true,
+            "addressDetected": true
+          }
+        }
+      },
+      {
+        "round": 1,
+        "fileName": "7.jpg",
+        "filePath": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\baseline\\7.jpg",
+        "imageSize": [
+          1037,
+          1382
+        ],
+        "fileSizeBytes": 254537,
+        "fileSha256": "475f83d318159a88346578861937f4f94f2eb9809f7985f3f0505b92b8211490",
+        "wallClockSeconds": 15.986,
+        "processing_time": 15.95,
+        "doc_type": "receipt_card",
+        "fieldSummary": {
+          "fieldKeys": [
+            "회사명",
+            "사업자번호",
+            "대표자",
+            "tel",
+            "주소",
+            "총합계금액"
+          ],
+          "fieldCount": 6,
+          "filledCount": 6,
+          "emptyCount": 0,
+          "fillRate": 1.0,
+          "majorFields": {
+            "회사명": "서울집",
+            "사업자번호": "581-10-00658",
+            "대표자": "신미남",
+            "tel": "031-388-1080",
+            "주소": "경기도 의왕시 경수대로 209 102호(고천동,의왕월드 비전)",
+            "총합계금액": "35,000"
+          }
+        },
+        "filledCount": 6,
+        "emptyCount": 0,
+        "fillRate": 1.0,
+        "majorFields": {
+          "회사명": "서울집",
+          "사업자번호": "581-10-00658",
+          "대표자": "신미남",
+          "tel": "031-388-1080",
+          "주소": "경기도 의왕시 경수대로 209 102호(고천동,의왕월드 비전)",
+          "총합계금액": "35,000"
+        },
+        "semanticDetection": {
+          "businessNoDetected": true,
+          "totalAmountDetected": true,
+          "merchantNameDetected": true,
+          "phoneDetected": true,
+          "addressDetected": true
+        },
+        "status": "PASS",
+        "timings": {
+          "image_read_ms": 0.0,
+          "image_decode_ms": 10.0,
+          "original_image_wh": [
+            1037,
+            1382
+          ],
+          "engine_acquire_ms": 40.0,
+          "detect_document_source": "auto",
+          "detect_document_ms": 7.0,
+          "detect_orientation_ms": 1166.7,
+          "doc_img_wh_after_orientation": [
+            1037,
+            1382
+          ],
+          "preview_prep_ms": 31.0,
+          "display_image_wh": [
+            1037,
+            1382
+          ],
+          "ocr_image_prep_ms": 31.5,
+          "ocr_image_wh": [
+            950,
+            1266
+          ],
+          "processed_image_wh": [
+            950,
+            1266
+          ],
+          "full_ocr_ms": 8383.1,
+          "parse_and_build_fields_ms": 0.0,
+          "classify_document_ms": 1.0,
+          "pre_extract_ms": 3.0,
+          "detect_upper_bbox_ms": 1.0,
+          "upper_bbox_ocr_coords": [
+            0,
+            415,
+            950,
+            236
+          ],
+          "upper_reocr_skipped_by_pre": false,
+          "reocr_upper_crop_ms": 0.0,
+          "reocr_upper_preprocess_ms": 16.5,
+          "reocr_upper_ocr_ms": 6253.3,
+          "reocr_upper_crop_wh_before": [
+            950,
+            236
+          ],
+          "reocr_upper_crop_wh_after": [
+            2495,
+            620
+          ],
+          "upper_reocr_total_ms": 6271.8,
+          "upper_reocr_ran": true,
+          "detect_amount_bbox_ms": 0.0,
+          "amount_bbox_ocr_coords": [
+            0,
+            633,
+            950,
+            227
+          ],
+          "amount_reocr_skipped_by_doc_type": false,
+          "amount_reocr_skipped_by_pre": true,
+          "amount_reocr_total_ms": 0.0,
+          "amount_reocr_ran": false,
+          "detect_handwritten_total_bbox_ms": 0.0,
+          "handwritten_total_reocr_total_ms": 0.0,
+          "handwritten_total_reocr_ran": false,
+          "field_extract_ms": 7.0,
+          "total_ms": 15953.1,
+          "paddle_device": "cpu",
+          "cpu_threads": 16,
+          "debug_mode": true,
+          "response_assembly_ms": 1.0
+        },
+        "ocrCallBreakdown": {
+          "detectOrientationMs": 1166.7,
+          "fullOcrMs": 8383.1,
+          "upperReOcrMs": 6271.8,
+          "amountReOcrMs": 0.0,
+          "handwrittenReOcrMs": 0.0,
+          "reOcrTotalMs": 6271.8,
+          "processingTimeMs": 15950.0,
+          "reOcrSharePercent": 39.32,
+          "upperRan": true,
+          "amountRan": false,
+          "handwrittenRan": false
+        },
+        "fieldSources": {
+          "회사명": "upper_block",
+          "사업자번호": "upper_block",
+          "대표자": "",
+          "tel": "upper_block",
+          "주소": "full_ocr",
+          "총합계금액": "full_ocr"
+        },
+        "fieldsRecoveredByReOcr": [
+          {
+            "field": "회사명",
+            "source": "upper_block"
+          },
+          {
+            "field": "사업자번호",
+            "source": "upper_block"
+          },
+          {
+            "field": "tel",
+            "source": "upper_block"
+          }
+        ],
+        "canSkipReOcrSafelyFromCurrentEvidence": "no",
+        "responseSizes": {
+          "raw": 736658,
+          "noImages": 12163,
+          "noImagesNoDebug": 4765,
+          "cleanJson": 523
+        },
+        "jsonSerializationMs": {
+          "raw": 2.231,
+          "noImagesNoDebug": 0.031
+        },
+        "stableProjection": {
+          "doc_type": "receipt_card",
+          "receipt_fields": {
+            "tel": "031-388-1080",
+            "대표자": "신미남",
+            "사업자번호": "581-10-00658",
+            "주소": "경기도 의왕시 경수대로 209 102호(고천동,의왕월드 비전)",
+            "총합계금액": "35,000",
+            "회사명": "서울집"
+          },
+          "fillRate": 1.0,
+          "semantic": {
+            "businessNoDetected": true,
+            "totalAmountDetected": true,
+            "merchantNameDetected": true,
+            "phoneDetected": true,
+            "addressDetected": true
+          }
+        }
+      },
+      {
+        "round": 1,
+        "fileName": "8.jpg",
+        "filePath": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\baseline\\8.jpg",
+        "imageSize": [
+          1037,
+          1382
+        ],
+        "fileSizeBytes": 279573,
+        "fileSha256": "9a61c305a9e3aadefe27f07470f62b69dbcc8ac997ebc34d44763871e89f9b1d",
+        "wallClockSeconds": 19.925,
+        "processing_time": 19.88,
+        "doc_type": "medical_receipt",
+        "fieldSummary": {
+          "fieldKeys": [
+            "회사명",
+            "사업자번호",
+            "대표자",
+            "tel",
+            "주소",
+            "총합계금액"
+          ],
+          "fieldCount": 6,
+          "filledCount": 6,
+          "emptyCount": 0,
+          "fillRate": 1.0,
+          "majorFields": {
+            "회사명": "효성온누리약국",
+            "사업자번호": "134-04-13602",
+            "대표자": "최성환",
+            "tel": "031-455-9955",
+            "주소": "경기 의왕시 경수대로237",
+            "총합계금액": "11,000"
+          }
+        },
+        "filledCount": 6,
+        "emptyCount": 0,
+        "fillRate": 1.0,
+        "majorFields": {
+          "회사명": "효성온누리약국",
+          "사업자번호": "134-04-13602",
+          "대표자": "최성환",
+          "tel": "031-455-9955",
+          "주소": "경기 의왕시 경수대로237",
+          "총합계금액": "11,000"
+        },
+        "semanticDetection": {
+          "businessNoDetected": true,
+          "totalAmountDetected": true,
+          "merchantNameDetected": true,
+          "phoneDetected": true,
+          "addressDetected": true
+        },
+        "status": "PASS",
+        "timings": {
+          "image_read_ms": 0.0,
+          "image_decode_ms": 18.0,
+          "original_image_wh": [
+            1037,
+            1382
+          ],
+          "engine_acquire_ms": 42.5,
+          "detect_document_source": "auto",
+          "detect_document_ms": 11.0,
+          "detect_orientation_ms": 2228.9,
+          "doc_img_wh_after_orientation": [
+            1037,
+            1382
+          ],
+          "preview_prep_ms": 30.0,
+          "display_image_wh": [
+            1037,
+            1382
+          ],
+          "ocr_image_prep_ms": 33.5,
+          "ocr_image_wh": [
+            950,
+            1266
+          ],
+          "processed_image_wh": [
+            950,
+            1266
+          ],
+          "full_ocr_ms": 8046.4,
+          "parse_and_build_fields_ms": 0.0,
+          "classify_document_ms": 0.0,
+          "pre_extract_ms": 3.0,
+          "detect_upper_bbox_ms": 0.0,
+          "upper_bbox_ocr_coords": [
+            0,
+            377,
+            950,
+            430
+          ],
+          "upper_reocr_skipped_by_pre": false,
+          "reocr_upper_crop_ms": 0.0,
+          "reocr_upper_preprocess_ms": 9.0,
+          "reocr_upper_ocr_ms": 5849.3,
+          "reocr_upper_crop_wh_before": [
+            950,
+            430
+          ],
+          "reocr_upper_crop_wh_after": [
+            1369,
+            620
+          ],
+          "upper_reocr_total_ms": 5858.3,
+          "upper_reocr_ran": true,
+          "detect_amount_bbox_ms": 0.0,
+          "amount_bbox_ocr_coords": [
+            0,
+            582,
+            950,
+            253
+          ],
+          "amount_reocr_skipped_by_doc_type": false,
+          "amount_reocr_skipped_by_pre": false,
+          "reocr_amount_crop_ms": 0.0,
+          "reocr_amount_preprocess_ms": 6.0,
+          "reocr_amount_ocr_ms": 3589.4,
+          "reocr_amount_crop_wh_before": [
+            950,
+            253
+          ],
+          "reocr_amount_crop_wh_after": [
+            1501,
+            400
+          ],
+          "amount_reocr_total_ms": 3596.4,
+          "amount_reocr_ran": true,
+          "detect_handwritten_total_bbox_ms": 0.0,
+          "handwritten_total_reocr_total_ms": 0.0,
+          "handwritten_total_reocr_ran": false,
+          "field_extract_ms": 9.0,
+          "total_ms": 19878.1,
+          "paddle_device": "cpu",
+          "cpu_threads": 16,
+          "debug_mode": true,
+          "response_assembly_ms": 1.0
+        },
+        "ocrCallBreakdown": {
+          "detectOrientationMs": 2228.9,
+          "fullOcrMs": 8046.4,
+          "upperReOcrMs": 5858.3,
+          "amountReOcrMs": 3596.4,
+          "handwrittenReOcrMs": 0.0,
+          "reOcrTotalMs": 9454.7,
+          "processingTimeMs": 19880.0,
+          "reOcrSharePercent": 47.56,
+          "upperRan": true,
+          "amountRan": true,
+          "handwrittenRan": false
+        },
+        "fieldSources": {
+          "회사명": "upper_block",
+          "사업자번호": "upper_block",
+          "대표자": "upper_block",
+          "tel": "upper_block",
+          "주소": "upper_block",
+          "총합계금액": "amount_block"
+        },
+        "fieldsRecoveredByReOcr": [
+          {
+            "field": "회사명",
+            "source": "upper_block"
+          },
+          {
+            "field": "사업자번호",
+            "source": "upper_block"
+          },
+          {
+            "field": "대표자",
+            "source": "upper_block"
+          },
+          {
+            "field": "tel",
+            "source": "upper_block"
+          },
+          {
+            "field": "주소",
+            "source": "upper_block"
+          },
+          {
+            "field": "총합계금액",
+            "source": "amount_block"
+          }
+        ],
+        "canSkipReOcrSafelyFromCurrentEvidence": "no",
+        "responseSizes": {
+          "raw": 771798,
+          "noImages": 14327,
+          "noImagesNoDebug": 4515,
+          "cleanJson": 493
+        },
+        "jsonSerializationMs": {
+          "raw": 2.465,
+          "noImagesNoDebug": 0.034
+        },
+        "stableProjection": {
+          "doc_type": "medical_receipt",
+          "receipt_fields": {
+            "tel": "031-455-9955",
+            "대표자": "최성환",
+            "사업자번호": "134-04-13602",
+            "주소": "경기 의왕시 경수대로237",
+            "총합계금액": "11,000",
+            "회사명": "효성온누리약국"
+          },
+          "fillRate": 1.0,
+          "semantic": {
+            "businessNoDetected": true,
+            "totalAmountDetected": true,
+            "merchantNameDetected": true,
+            "phoneDetected": true,
+            "addressDetected": true
+          }
+        }
+      },
+      {
+        "round": 1,
+        "fileName": "10.jpg",
+        "filePath": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\baseline\\10.jpg",
+        "imageSize": [
+          1037,
+          1382
+        ],
+        "fileSizeBytes": 264220,
+        "fileSha256": "9eb659d8eb576e78882cc8279f23c9c208b5b2b38aa0677e28f21005f6b84796",
+        "wallClockSeconds": 16.53,
+        "processing_time": 16.49,
+        "doc_type": "receipt_card",
+        "fieldSummary": {
+          "fieldKeys": [
+            "회사명",
+            "사업자번호",
+            "대표자",
+            "tel",
+            "주소",
+            "총합계금액"
+          ],
+          "fieldCount": 6,
+          "filledCount": 6,
+          "emptyCount": 0,
+          "fillRate": 1.0,
+          "majorFields": {
+            "회사명": "토탈철물",
+            "사업자번호": "761-21-00890",
+            "대표자": "전용민",
+            "tel": "010-9388-9936",
+            "주소": "경기 의왕시 효행로 47 (오전동)1층",
+            "총합계금액": "19,250"
+          }
+        },
+        "filledCount": 6,
+        "emptyCount": 0,
+        "fillRate": 1.0,
+        "majorFields": {
+          "회사명": "토탈철물",
+          "사업자번호": "761-21-00890",
+          "대표자": "전용민",
+          "tel": "010-9388-9936",
+          "주소": "경기 의왕시 효행로 47 (오전동)1층",
+          "총합계금액": "19,250"
+        },
+        "semanticDetection": {
+          "businessNoDetected": true,
+          "totalAmountDetected": true,
+          "merchantNameDetected": true,
+          "phoneDetected": true,
+          "addressDetected": true
+        },
+        "status": "PASS",
+        "timings": {
+          "image_read_ms": 0.0,
+          "image_decode_ms": 10.0,
+          "original_image_wh": [
+            1037,
+            1382
+          ],
+          "engine_acquire_ms": 40.0,
+          "detect_document_source": "auto",
+          "detect_document_ms": 8.0,
+          "detect_orientation_ms": 1724.7,
+          "doc_img_wh_after_orientation": [
+            1037,
+            1382
+          ],
+          "preview_prep_ms": 29.5,
+          "display_image_wh": [
+            1037,
+            1382
+          ],
+          "ocr_image_prep_ms": 32.0,
+          "ocr_image_wh": [
+            950,
+            1266
+          ],
+          "processed_image_wh": [
+            950,
+            1266
+          ],
+          "full_ocr_ms": 8172.5,
+          "parse_and_build_fields_ms": 1.0,
+          "classify_document_ms": 0.0,
+          "pre_extract_ms": 4.0,
+          "detect_upper_bbox_ms": 0.0,
+          "upper_bbox_ocr_coords": [
+            0,
+            367,
+            950,
+            395
+          ],
+          "upper_reocr_skipped_by_pre": false,
+          "reocr_upper_crop_ms": 0.0,
+          "reocr_upper_preprocess_ms": 9.0,
+          "reocr_upper_ocr_ms": 6448.9,
+          "reocr_upper_crop_wh_before": [
+            950,
+            395
+          ],
+          "reocr_upper_crop_wh_after": [
+            1491,
+            620
+          ],
+          "upper_reocr_total_ms": 6458.9,
+          "upper_reocr_ran": true,
+          "detect_amount_bbox_ms": 0.0,
+          "amount_bbox_ocr_coords": [
+            0,
+            633,
+            950,
+            227
+          ],
+          "amount_reocr_skipped_by_doc_type": false,
+          "amount_reocr_skipped_by_pre": true,
+          "amount_reocr_total_ms": 0.0,
+          "amount_reocr_ran": false,
+          "detect_handwritten_total_bbox_ms": 0.0,
+          "handwritten_total_reocr_total_ms": 0.0,
+          "handwritten_total_reocr_ran": false,
+          "field_extract_ms": 9.0,
+          "total_ms": 16490.6,
+          "paddle_device": "cpu",
+          "cpu_threads": 16,
+          "debug_mode": true,
+          "response_assembly_ms": 1.0
+        },
+        "ocrCallBreakdown": {
+          "detectOrientationMs": 1724.7,
+          "fullOcrMs": 8172.5,
+          "upperReOcrMs": 6458.9,
+          "amountReOcrMs": 0.0,
+          "handwrittenReOcrMs": 0.0,
+          "reOcrTotalMs": 6458.9,
+          "processingTimeMs": 16490.0,
+          "reOcrSharePercent": 39.17,
+          "upperRan": true,
+          "amountRan": false,
+          "handwrittenRan": false
+        },
+        "fieldSources": {
+          "회사명": "upper_block",
+          "사업자번호": "upper_block",
+          "대표자": "upper_block",
+          "tel": "upper_block",
+          "주소": "upper_block",
+          "총합계금액": "full_ocr"
+        },
+        "fieldsRecoveredByReOcr": [
+          {
+            "field": "회사명",
+            "source": "upper_block"
+          },
+          {
+            "field": "사업자번호",
+            "source": "upper_block"
+          },
+          {
+            "field": "대표자",
+            "source": "upper_block"
+          },
+          {
+            "field": "tel",
+            "source": "upper_block"
+          },
+          {
+            "field": "주소",
+            "source": "upper_block"
+          }
+        ],
+        "canSkipReOcrSafelyFromCurrentEvidence": "no",
+        "responseSizes": {
+          "raw": 743450,
+          "noImages": 17719,
+          "noImagesNoDebug": 5603,
+          "cleanJson": 498
+        },
+        "jsonSerializationMs": {
+          "raw": 2.342,
+          "noImagesNoDebug": 0.041
+        },
+        "stableProjection": {
+          "doc_type": "receipt_card",
+          "receipt_fields": {
+            "tel": "010-9388-9936",
+            "대표자": "전용민",
+            "사업자번호": "761-21-00890",
+            "주소": "경기 의왕시 효행로 47 (오전동)1층",
+            "총합계금액": "19,250",
+            "회사명": "토탈철물"
+          },
+          "fillRate": 1.0,
+          "semantic": {
+            "businessNoDetected": true,
+            "totalAmountDetected": true,
+            "merchantNameDetected": true,
+            "phoneDetected": true,
+            "addressDetected": true
+          }
+        }
+      },
+      {
+        "round": 1,
+        "fileName": "a1.jpg",
+        "filePath": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\baseline\\a1.jpg",
+        "imageSize": [
+          1037,
+          1382
+        ],
+        "fileSizeBytes": 427263,
+        "fileSha256": "3778434907d8b506d29634042ad4c0fd2f47b46943ce4ce0544f379d888ca394",
+        "wallClockSeconds": 22.803,
+        "processing_time": 22.75,
+        "doc_type": "receipt_pos",
+        "fieldSummary": {
+          "fieldKeys": [
+            "회사명",
+            "사업자번호",
+            "대표자",
+            "tel",
+            "주소",
+            "총합계금액"
+          ],
+          "fieldCount": 6,
+          "filledCount": 3,
+          "emptyCount": 3,
+          "fillRate": 0.5,
+          "majorFields": {
+            "회사명": "기계공구",
+            "사업자번호": "123-23-94265",
+            "대표자": "",
+            "tel": "",
+            "주소": "",
+            "총합계금액": "110,000"
+          }
+        },
+        "filledCount": 3,
+        "emptyCount": 3,
+        "fillRate": 0.5,
+        "majorFields": {
+          "회사명": "기계공구",
+          "사업자번호": "123-23-94265",
+          "대표자": "",
+          "tel": "",
+          "주소": "",
+          "총합계금액": "110,000"
+        },
+        "semanticDetection": {
+          "businessNoDetected": true,
+          "totalAmountDetected": true,
+          "merchantNameDetected": true,
+          "phoneDetected": true,
+          "addressDetected": false
+        },
+        "status": "WARN",
+        "timings": {
+          "image_read_ms": 0.0,
+          "image_decode_ms": 13.0,
+          "original_image_wh": [
+            1037,
+            1382
+          ],
+          "engine_acquire_ms": 45.5,
+          "detect_document_source": "auto",
+          "detect_document_ms": 11.0,
+          "detect_orientation_ms": 7940.6,
+          "doc_img_wh_after_orientation": [
+            752,
+            1072
+          ],
+          "preview_prep_ms": 8.0,
+          "display_image_wh": [
+            752,
+            1072
+          ],
+          "ocr_image_prep_ms": 39.5,
+          "ocr_image_wh": [
+            950,
+            1354
+          ],
+          "processed_image_wh": [
+            950,
+            1354
+          ],
+          "full_ocr_ms": 8877.3,
+          "parse_and_build_fields_ms": 0.0,
+          "classify_document_ms": 0.0,
+          "pre_extract_ms": 3.0,
+          "detect_upper_bbox_ms": 0.0,
+          "upper_bbox_ocr_coords": [
+            0,
+            0,
+            950,
+            189
+          ],
+          "upper_reocr_skipped_by_pre": false,
+          "reocr_upper_crop_ms": 0.0,
+          "reocr_upper_preprocess_ms": 18.0,
+          "reocr_upper_ocr_ms": 5780.2,
+          "reocr_upper_crop_wh_before": [
+            950,
+            189
+          ],
+          "reocr_upper_crop_wh_after": [
+            3116,
+            620
+          ],
+          "upper_reocr_total_ms": 5800.2,
+          "upper_reocr_ran": true,
+          "detect_amount_bbox_ms": 0.0,
+          "amount_bbox_ocr_coords": [
+            0,
+            514,
+            950,
+            406
+          ],
+          "amount_reocr_skipped_by_doc_type": false,
+          "amount_reocr_skipped_by_pre": true,
+          "amount_reocr_total_ms": 0.0,
+          "amount_reocr_ran": false,
+          "detect_handwritten_total_bbox_ms": 0.0,
+          "handwritten_total_reocr_total_ms": 0.0,
+          "handwritten_total_reocr_ran": false,
+          "field_extract_ms": 7.0,
+          "total_ms": 22746.2,
+          "paddle_device": "cpu",
+          "cpu_threads": 16,
+          "debug_mode": true,
+          "response_assembly_ms": 1.0
+        },
+        "ocrCallBreakdown": {
+          "detectOrientationMs": 7940.6,
+          "fullOcrMs": 8877.3,
+          "upperReOcrMs": 5800.2,
+          "amountReOcrMs": 0.0,
+          "handwrittenReOcrMs": 0.0,
+          "reOcrTotalMs": 5800.2,
+          "processingTimeMs": 22750.0,
+          "reOcrSharePercent": 25.5,
+          "upperRan": true,
+          "amountRan": false,
+          "handwrittenRan": false
+        },
+        "fieldSources": {
+          "회사명": "full_ocr",
+          "사업자번호": "upper_block",
+          "대표자": "",
+          "tel": "",
+          "주소": "",
+          "총합계금액": "full_ocr"
+        },
+        "fieldsRecoveredByReOcr": [
+          {
+            "field": "사업자번호",
+            "source": "upper_block"
+          }
+        ],
+        "canSkipReOcrSafelyFromCurrentEvidence": "no",
+        "responseSizes": {
+          "raw": 976130,
+          "noImages": 15443,
+          "noImagesNoDebug": 5250,
+          "cleanJson": 432
+        },
+        "jsonSerializationMs": {
+          "raw": 3.052,
+          "noImagesNoDebug": 0.039
+        },
+        "stableProjection": {
+          "doc_type": "receipt_pos",
+          "receipt_fields": {
+            "tel": "",
+            "대표자": "",
+            "사업자번호": "123-23-94265",
+            "주소": "",
+            "총합계금액": "110,000",
+            "회사명": "기계공구"
+          },
+          "fillRate": 0.5,
+          "semantic": {
+            "businessNoDetected": true,
+            "totalAmountDetected": true,
+            "merchantNameDetected": true,
+            "phoneDetected": true,
+            "addressDetected": false
+          }
+        }
+      },
+      {
+        "round": 1,
+        "fileName": "a2.jpg",
+        "filePath": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\baseline\\a2.jpg",
+        "imageSize": [
+          1037,
+          1382
+        ],
+        "fileSizeBytes": 507993,
+        "fileSha256": "1cf7fa1680af4d531761773e414736b0fae55d99b3c16e285674f42537692cf5",
+        "wallClockSeconds": 25.037,
+        "processing_time": 24.99,
+        "doc_type": "form_or_handwritten",
+        "fieldSummary": {
+          "fieldKeys": [
+            "회사명",
+            "사업자번호",
+            "대표자",
+            "tel",
+            "주소",
+            "총합계금액"
+          ],
+          "fieldCount": 6,
+          "filledCount": 5,
+          "emptyCount": 1,
+          "fillRate": 0.8333,
+          "majorFields": {
+            "회사명": "세광전기조명",
+            "사업자번호": "119-10-88385",
+            "대표자": "이정",
+            "tel": "031-479-2280",
+            "주소": "경기도 안양시 동안구 엘에스로 76,7-117, (호계동, 국제유통단지)",
+            "총합계금액": ""
+          }
+        },
+        "filledCount": 5,
+        "emptyCount": 1,
+        "fillRate": 0.8333,
+        "majorFields": {
+          "회사명": "세광전기조명",
+          "사업자번호": "119-10-88385",
+          "대표자": "이정",
+          "tel": "031-479-2280",
+          "주소": "경기도 안양시 동안구 엘에스로 76,7-117, (호계동, 국제유통단지)",
+          "총합계금액": ""
+        },
+        "semanticDetection": {
+          "businessNoDetected": true,
+          "totalAmountDetected": false,
+          "merchantNameDetected": true,
+          "phoneDetected": true,
+          "addressDetected": true
+        },
+        "status": "WARN",
+        "timings": {
+          "image_read_ms": 0.0,
+          "image_decode_ms": 12.0,
+          "original_image_wh": [
+            1037,
+            1382
+          ],
+          "engine_acquire_ms": 45.5,
+          "detect_document_source": "auto",
+          "detect_document_ms": 9.0,
+          "detect_orientation_ms": 9978.4,
+          "doc_img_wh_after_orientation": [
+            764,
+            1114
+          ],
+          "preview_prep_ms": 14.5,
+          "display_image_wh": [
+            764,
+            1114
+          ],
+          "ocr_image_prep_ms": 22.0,
+          "ocr_image_wh": [
+            764,
+            1114
+          ],
+          "processed_image_wh": [
+            764,
+            1114
+          ],
+          "full_ocr_ms": 7813.0,
+          "parse_and_build_fields_ms": 0.0,
+          "classify_document_ms": 1.0,
+          "pre_extract_ms": 3.0,
+          "detect_upper_bbox_ms": 0.0,
+          "upper_bbox_ocr_coords": [
+            0,
+            184,
+            764,
+            467
+          ],
+          "upper_reocr_skipped_by_pre": false,
+          "reocr_upper_crop_ms": 0.0,
+          "reocr_upper_preprocess_ms": 8.0,
+          "reocr_upper_ocr_ms": 6341.9,
+          "reocr_upper_crop_wh_before": [
+            764,
+            467
+          ],
+          "reocr_upper_crop_wh_after": [
+            1014,
+            620
+          ],
+          "upper_reocr_total_ms": 6350.9,
+          "upper_reocr_ran": true,
+          "detect_amount_bbox_ms": 0.0,
+          "amount_bbox_ocr_coords": null,
+          "amount_reocr_skipped_by_doc_type": true,
+          "amount_reocr_skipped_by_pre": false,
+          "amount_reocr_total_ms": 0.0,
+          "amount_reocr_ran": false,
+          "detect_handwritten_total_bbox_ms": 0.0,
+          "handwritten_total_bbox_ocr_coords": [
+            366,
+            636,
+            336,
+            222
+          ],
+          "reocr_hand_total_crop_ms": 0.0,
+          "reocr_hand_total_preprocess_ms": 9.0,
+          "reocr_hand_total_ocr_ms": 719.6,
+          "reocr_hand_total_crop_wh_before": [
+            336,
+            222
+          ],
+          "reocr_hand_total_crop_wh_after": [
+            787,
+            520
+          ],
+          "handwritten_total_reocr_total_ms": 728.6,
+          "handwritten_total_reocr_ran": true,
+          "field_extract_ms": 737.1,
+          "total_ms": 24987.4,
+          "paddle_device": "cpu",
+          "cpu_threads": 16,
+          "debug_mode": true,
+          "response_assembly_ms": 1.0
+        },
+        "ocrCallBreakdown": {
+          "detectOrientationMs": 9978.4,
+          "fullOcrMs": 7813.0,
+          "upperReOcrMs": 6350.9,
+          "amountReOcrMs": 0.0,
+          "handwrittenReOcrMs": 728.6,
+          "reOcrTotalMs": 7079.5,
+          "processingTimeMs": 24990.0,
+          "reOcrSharePercent": 28.33,
+          "upperRan": true,
+          "amountRan": false,
+          "handwrittenRan": true
+        },
+        "fieldSources": {
+          "회사명": "upper_block",
+          "사업자번호": "upper_block",
+          "대표자": "full_ocr",
+          "tel": "full_ocr",
+          "주소": "full_ocr",
+          "총합계금액": ""
+        },
+        "fieldsRecoveredByReOcr": [
+          {
+            "field": "회사명",
+            "source": "upper_block"
+          },
+          {
+            "field": "사업자번호",
+            "source": "upper_block"
+          }
+        ],
+        "canSkipReOcrSafelyFromCurrentEvidence": "no",
+        "responseSizes": {
+          "raw": 946797,
+          "noImages": 10682,
+          "noImagesNoDebug": 5099,
+          "cleanJson": 533
+        },
+        "jsonSerializationMs": {
+          "raw": 3.597,
+          "noImagesNoDebug": 0.048
+        },
+        "stableProjection": {
+          "doc_type": "form_or_handwritten",
+          "receipt_fields": {
+            "tel": "031-479-2280",
+            "대표자": "이정",
+            "사업자번호": "119-10-88385",
+            "주소": "경기도 안양시 동안구 엘에스로 76,7-117, (호계동, 국제유통단지)",
+            "총합계금액": "",
+            "회사명": "세광전기조명"
+          },
+          "fillRate": 0.8333,
+          "semantic": {
+            "businessNoDetected": true,
+            "totalAmountDetected": false,
+            "merchantNameDetected": true,
+            "phoneDetected": true,
+            "addressDetected": true
+          }
+        }
+      }
+    ],
+    [
+      {
+        "round": 2,
+        "fileName": "1.jpg",
+        "filePath": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\baseline\\1.jpg",
+        "imageSize": [
+          1382,
+          1037
+        ],
+        "fileSizeBytes": 610113,
+        "fileSha256": "d89d3d16f84d49a5e022b0fb5b506a2deadae15f5c1c822cc1d12d368e843de1",
+        "wallClockSeconds": 28.351,
+        "processing_time": 28.28,
+        "doc_type": "receipt_card",
+        "fieldSummary": {
+          "fieldKeys": [
+            "회사명",
+            "사업자번호",
+            "대표자",
+            "tel",
+            "주소",
+            "총합계금액"
+          ],
+          "fieldCount": 6,
+          "filledCount": 6,
+          "emptyCount": 0,
+          "fillRate": 1.0,
+          "majorFields": {
+            "회사명": "(주)안전볼트",
+            "사업자번호": "138-81-68468",
+            "대표자": "윤봉상",
+            "tel": "031-479-0485",
+            "주소": "경기 안양시 동안구 호계동 555-9 국",
+            "총합계금액": "10,560"
+          }
+        },
+        "filledCount": 6,
+        "emptyCount": 0,
+        "fillRate": 1.0,
+        "majorFields": {
+          "회사명": "(주)안전볼트",
+          "사업자번호": "138-81-68468",
+          "대표자": "윤봉상",
+          "tel": "031-479-0485",
+          "주소": "경기 안양시 동안구 호계동 555-9 국",
+          "총합계금액": "10,560"
+        },
+        "semanticDetection": {
+          "businessNoDetected": true,
+          "totalAmountDetected": true,
+          "merchantNameDetected": true,
+          "phoneDetected": true,
+          "addressDetected": true
+        },
+        "status": "PASS",
+        "timings": {
+          "image_read_ms": 0.0,
+          "image_decode_ms": 13.0,
+          "original_image_wh": [
+            1382,
+            1037
+          ],
+          "engine_acquire_ms": 47.5,
+          "detect_document_source": "auto",
+          "detect_document_ms": 9.0,
+          "detect_orientation_ms": 10836.9,
+          "doc_img_wh_after_orientation": [
+            771,
+            657
+          ],
+          "preview_prep_ms": 8.0,
+          "display_image_wh": [
+            771,
+            657
+          ],
+          "ocr_image_prep_ms": 14.0,
+          "ocr_image_wh": [
+            771,
+            657
+          ],
+          "processed_image_wh": [
+            771,
+            657
+          ],
+          "full_ocr_ms": 8636.7,
+          "parse_and_build_fields_ms": 0.0,
+          "classify_document_ms": 1.0,
+          "pre_extract_ms": 5.0,
+          "detect_upper_bbox_ms": 0.0,
+          "upper_bbox_ocr_coords": [
+            0,
+            152,
+            771,
+            184
+          ],
+          "upper_reocr_skipped_by_pre": false,
+          "reocr_upper_crop_ms": 0.0,
+          "reocr_upper_preprocess_ms": 19.0,
+          "reocr_upper_ocr_ms": 5515.8,
+          "reocr_upper_crop_wh_before": [
+            771,
+            184
+          ],
+          "reocr_upper_crop_wh_after": [
+            2597,
+            620
+          ],
+          "upper_reocr_total_ms": 5535.8,
+          "upper_reocr_ran": true,
+          "detect_amount_bbox_ms": 0.0,
+          "amount_bbox_ocr_coords": [
+            0,
+            328,
+            771,
+            135
+          ],
+          "amount_reocr_skipped_by_doc_type": false,
+          "amount_reocr_skipped_by_pre": false,
+          "reocr_amount_crop_ms": 0.0,
+          "reocr_amount_preprocess_ms": 12.0,
+          "reocr_amount_ocr_ms": 3154.6,
+          "reocr_amount_crop_wh_before": [
+            771,
+            135
+          ],
+          "reocr_amount_crop_wh_after": [
+            2284,
+            400
+          ],
+          "amount_reocr_total_ms": 3167.6,
+          "amount_reocr_ran": true,
+          "detect_handwritten_total_bbox_ms": 0.0,
+          "handwritten_total_reocr_total_ms": 0.0,
+          "handwritten_total_reocr_ran": false,
+          "field_extract_ms": 7.0,
+          "total_ms": 28283.6,
+          "paddle_device": "cpu",
+          "cpu_threads": 16,
+          "debug_mode": true,
+          "response_assembly_ms": 1.0
+        },
+        "ocrCallBreakdown": {
+          "detectOrientationMs": 10836.9,
+          "fullOcrMs": 8636.7,
+          "upperReOcrMs": 5535.8,
+          "amountReOcrMs": 3167.6,
+          "handwrittenReOcrMs": 0.0,
+          "reOcrTotalMs": 8703.4,
+          "processingTimeMs": 28280.0,
+          "reOcrSharePercent": 30.78,
+          "upperRan": true,
+          "amountRan": true,
+          "handwrittenRan": false
+        },
+        "fieldSources": {
+          "회사명": "upper_block",
+          "사업자번호": "upper_block",
+          "대표자": "upper_block",
+          "tel": "upper_block",
+          "주소": "upper_block",
+          "총합계금액": "amount_block"
+        },
+        "fieldsRecoveredByReOcr": [
+          {
+            "field": "회사명",
+            "source": "upper_block"
+          },
+          {
+            "field": "사업자번호",
+            "source": "upper_block"
+          },
+          {
+            "field": "대표자",
+            "source": "upper_block"
+          },
+          {
+            "field": "tel",
+            "source": "upper_block"
+          },
+          {
+            "field": "주소",
+            "source": "upper_block"
+          },
+          {
+            "field": "총합계금액",
+            "source": "amount_block"
+          }
+        ],
+        "canSkipReOcrSafelyFromCurrentEvidence": "no",
+        "responseSizes": {
+          "raw": 675804,
+          "noImages": 13697,
+          "noImagesNoDebug": 4434,
+          "cleanJson": 503
+        },
+        "jsonSerializationMs": {
+          "raw": 3.278,
+          "noImagesNoDebug": 0.05
+        },
+        "stableProjection": {
+          "doc_type": "receipt_card",
+          "receipt_fields": {
+            "tel": "031-479-0485",
+            "대표자": "윤봉상",
+            "사업자번호": "138-81-68468",
+            "주소": "경기 안양시 동안구 호계동 555-9 국",
+            "총합계금액": "10,560",
+            "회사명": "(주)안전볼트"
+          },
+          "fillRate": 1.0,
+          "semantic": {
+            "businessNoDetected": true,
+            "totalAmountDetected": true,
+            "merchantNameDetected": true,
+            "phoneDetected": true,
+            "addressDetected": true
+          }
+        }
+      },
+      {
+        "round": 2,
+        "fileName": "2.jpg",
+        "filePath": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\baseline\\2.jpg",
+        "imageSize": [
+          1382,
+          1037
+        ],
+        "fileSizeBytes": 533154,
+        "fileSha256": "492deadbf61adc5f66d1dccc5afb32ec329e16efd3e41f0e16442978f6e41164",
+        "wallClockSeconds": 35.716,
+        "processing_time": 35.66,
+        "doc_type": "receipt_card",
+        "fieldSummary": {
+          "fieldKeys": [
+            "회사명",
+            "사업자번호",
+            "대표자",
+            "tel",
+            "주소",
+            "총합계금액"
+          ],
+          "fieldCount": 6,
+          "filledCount": 6,
+          "emptyCount": 0,
+          "fillRate": 1.0,
+          "majorFields": {
+            "회사명": "화성툴",
+            "사업자번호": "138-08-99333",
+            "대표자": "이태주",
+            "tel": "031-479-0090",
+            "주소": "경기 안양시 동안구 엘에스로 92 8동140호",
+            "총합계금액": "11,000"
+          }
+        },
+        "filledCount": 6,
+        "emptyCount": 0,
+        "fillRate": 1.0,
+        "majorFields": {
+          "회사명": "화성툴",
+          "사업자번호": "138-08-99333",
+          "대표자": "이태주",
+          "tel": "031-479-0090",
+          "주소": "경기 안양시 동안구 엘에스로 92 8동140호",
+          "총합계금액": "11,000"
+        },
+        "semanticDetection": {
+          "businessNoDetected": true,
+          "totalAmountDetected": true,
+          "merchantNameDetected": true,
+          "phoneDetected": true,
+          "addressDetected": true
+        },
+        "status": "PASS",
+        "timings": {
+          "image_read_ms": 0.0,
+          "image_decode_ms": 17.0,
+          "original_image_wh": [
+            1382,
+            1037
+          ],
+          "engine_acquire_ms": 54.5,
+          "detect_document_source": "auto",
+          "detect_document_ms": 11.0,
+          "detect_orientation_ms": 17322.7,
+          "doc_img_wh_after_orientation": [
+            790,
+            657
+          ],
+          "preview_prep_ms": 8.0,
+          "display_image_wh": [
+            790,
+            657
+          ],
+          "ocr_image_prep_ms": 16.0,
+          "ocr_image_wh": [
+            790,
+            657
+          ],
+          "processed_image_wh": [
+            790,
+            657
+          ],
+          "full_ocr_ms": 11421.6,
+          "parse_and_build_fields_ms": 0.0,
+          "classify_document_ms": 0.0,
+          "pre_extract_ms": 3.5,
+          "detect_upper_bbox_ms": 0.0,
+          "upper_bbox_ocr_coords": [
+            0,
+            121,
+            790,
+            223
+          ],
+          "upper_reocr_skipped_by_pre": false,
+          "reocr_upper_crop_ms": 0.0,
+          "reocr_upper_preprocess_ms": 13.0,
+          "reocr_upper_ocr_ms": 6785.5,
+          "reocr_upper_crop_wh_before": [
+            790,
+            223
+          ],
+          "reocr_upper_crop_wh_after": [
+            2196,
+            620
+          ],
+          "upper_reocr_total_ms": 6800.0,
+          "upper_reocr_ran": true,
+          "detect_amount_bbox_ms": 0.0,
+          "amount_bbox_ocr_coords": [
+            0,
+            328,
+            790,
+            173
+          ],
+          "amount_reocr_skipped_by_doc_type": false,
+          "amount_reocr_skipped_by_pre": true,
+          "amount_reocr_total_ms": 0.0,
+          "amount_reocr_ran": false,
+          "detect_handwritten_total_bbox_ms": 0.0,
+          "handwritten_total_reocr_total_ms": 0.0,
+          "handwritten_total_reocr_ran": false,
+          "field_extract_ms": 6.0,
+          "total_ms": 35661.2,
+          "paddle_device": "cpu",
+          "cpu_threads": 16,
+          "debug_mode": true,
+          "response_assembly_ms": 1.0
+        },
+        "ocrCallBreakdown": {
+          "detectOrientationMs": 17322.7,
+          "fullOcrMs": 11421.6,
+          "upperReOcrMs": 6800.0,
+          "amountReOcrMs": 0.0,
+          "handwrittenReOcrMs": 0.0,
+          "reOcrTotalMs": 6800.0,
+          "processingTimeMs": 35660.0,
+          "reOcrSharePercent": 19.07,
+          "upperRan": true,
+          "amountRan": false,
+          "handwrittenRan": false
+        },
+        "fieldSources": {
+          "회사명": "upper_block",
+          "사업자번호": "upper_block",
+          "대표자": "upper_block",
+          "tel": "upper_block",
+          "주소": "upper_block",
+          "총합계금액": "full_ocr"
+        },
+        "fieldsRecoveredByReOcr": [
+          {
+            "field": "회사명",
+            "source": "upper_block"
+          },
+          {
+            "field": "사업자번호",
+            "source": "upper_block"
+          },
+          {
+            "field": "대표자",
+            "source": "upper_block"
+          },
+          {
+            "field": "tel",
+            "source": "upper_block"
+          },
+          {
+            "field": "주소",
+            "source": "upper_block"
+          }
+        ],
+        "canSkipReOcrSafelyFromCurrentEvidence": "no",
+        "responseSizes": {
+          "raw": 671627,
+          "noImages": 15728,
+          "noImagesNoDebug": 5096,
+          "cleanJson": 502
+        },
+        "jsonSerializationMs": {
+          "raw": 2.493,
+          "noImagesNoDebug": 0.034
+        },
+        "stableProjection": {
+          "doc_type": "receipt_card",
+          "receipt_fields": {
+            "tel": "031-479-0090",
+            "대표자": "이태주",
+            "사업자번호": "138-08-99333",
+            "주소": "경기 안양시 동안구 엘에스로 92 8동140호",
+            "총합계금액": "11,000",
+            "회사명": "화성툴"
+          },
+          "fillRate": 1.0,
+          "semantic": {
+            "businessNoDetected": true,
+            "totalAmountDetected": true,
+            "merchantNameDetected": true,
+            "phoneDetected": true,
+            "addressDetected": true
+          }
+        }
+      },
+      {
+        "round": 2,
+        "fileName": "3.jpg",
+        "filePath": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\baseline\\3.jpg",
+        "imageSize": [
+          1382,
+          1037
+        ],
+        "fileSizeBytes": 568668,
+        "fileSha256": "c6917fc6b0579010f2c61328e23a8253bc20d9bba6ba548e04d7f94b59c8b6fe",
+        "wallClockSeconds": 28.693,
+        "processing_time": 28.65,
+        "doc_type": "receipt_card",
+        "fieldSummary": {
+          "fieldKeys": [
+            "회사명",
+            "사업자번호",
+            "대표자",
+            "tel",
+            "주소",
+            "총합계금액"
+          ],
+          "fieldCount": 6,
+          "filledCount": 6,
+          "emptyCount": 0,
+          "fillRate": 1.0,
+          "majorFields": {
+            "회사명": "세광전기조명",
+            "사업자번호": "119-10-88385",
+            "대표자": "이정은",
+            "tel": "031-479-2280",
+            "주소": "경기 안양시 동안구 엘에스로 76 (호계동)7-117.11",
+            "총합계금액": "33,000"
+          }
+        },
+        "filledCount": 6,
+        "emptyCount": 0,
+        "fillRate": 1.0,
+        "majorFields": {
+          "회사명": "세광전기조명",
+          "사업자번호": "119-10-88385",
+          "대표자": "이정은",
+          "tel": "031-479-2280",
+          "주소": "경기 안양시 동안구 엘에스로 76 (호계동)7-117.11",
+          "총합계금액": "33,000"
+        },
+        "semanticDetection": {
+          "businessNoDetected": true,
+          "totalAmountDetected": true,
+          "merchantNameDetected": true,
+          "phoneDetected": true,
+          "addressDetected": true
+        },
+        "status": "PASS",
+        "timings": {
+          "image_read_ms": 0.0,
+          "image_decode_ms": 15.6,
+          "original_image_wh": [
+            1382,
+            1037
+          ],
+          "engine_acquire_ms": 43.9,
+          "detect_document_source": "auto",
+          "detect_document_ms": 14.0,
+          "detect_orientation_ms": 14847.1,
+          "doc_img_wh_after_orientation": [
+            819,
+            622
+          ],
+          "preview_prep_ms": 12.0,
+          "display_image_wh": [
+            819,
+            622
+          ],
+          "ocr_image_prep_ms": 18.0,
+          "ocr_image_wh": [
+            819,
+            622
+          ],
+          "processed_image_wh": [
+            819,
+            622
+          ],
+          "full_ocr_ms": 9228.9,
+          "parse_and_build_fields_ms": 0.0,
+          "classify_document_ms": 1.1,
+          "pre_extract_ms": 5.0,
+          "detect_upper_bbox_ms": 0.9,
+          "upper_bbox_ocr_coords": [
+            0,
+            65,
+            819,
+            211
+          ],
+          "upper_reocr_skipped_by_pre": false,
+          "reocr_upper_crop_ms": 0.0,
+          "reocr_upper_preprocess_ms": 27.0,
+          "reocr_upper_ocr_ms": 4424.7,
+          "reocr_upper_crop_wh_before": [
+            819,
+            211
+          ],
+          "reocr_upper_crop_wh_after": [
+            2406,
+            620
+          ],
+          "upper_reocr_total_ms": 4453.7,
+          "upper_reocr_ran": true,
+          "detect_amount_bbox_ms": 0.0,
+          "amount_bbox_ocr_coords": [
+            0,
+            311,
+            819,
+            236
+          ],
+          "amount_reocr_skipped_by_doc_type": false,
+          "amount_reocr_skipped_by_pre": true,
+          "amount_reocr_total_ms": 0.0,
+          "amount_reocr_ran": false,
+          "detect_handwritten_total_bbox_ms": 0.0,
+          "handwritten_total_reocr_total_ms": 0.0,
+          "handwritten_total_reocr_ran": false,
+          "field_extract_ms": 7.0,
+          "total_ms": 28648.2,
+          "paddle_device": "cpu",
+          "cpu_threads": 16,
+          "debug_mode": true,
+          "response_assembly_ms": 1.0
+        },
+        "ocrCallBreakdown": {
+          "detectOrientationMs": 14847.1,
+          "fullOcrMs": 9228.9,
+          "upperReOcrMs": 4453.7,
+          "amountReOcrMs": 0.0,
+          "handwrittenReOcrMs": 0.0,
+          "reOcrTotalMs": 4453.7,
+          "processingTimeMs": 28650.0,
+          "reOcrSharePercent": 15.55,
+          "upperRan": true,
+          "amountRan": false,
+          "handwrittenRan": false
+        },
+        "fieldSources": {
+          "회사명": "upper_block",
+          "사업자번호": "upper_block",
+          "대표자": "",
+          "tel": "upper_block",
+          "주소": "upper_block",
+          "총합계금액": "full_ocr"
+        },
+        "fieldsRecoveredByReOcr": [
+          {
+            "field": "회사명",
+            "source": "upper_block"
+          },
+          {
+            "field": "사업자번호",
+            "source": "upper_block"
+          },
+          {
+            "field": "tel",
+            "source": "upper_block"
+          },
+          {
+            "field": "주소",
+            "source": "upper_block"
+          }
+        ],
+        "canSkipReOcrSafelyFromCurrentEvidence": "no",
+        "responseSizes": {
+          "raw": 665774,
+          "noImages": 13967,
+          "noImagesNoDebug": 3755,
+          "cleanJson": 520
+        },
+        "jsonSerializationMs": {
+          "raw": 2.672,
+          "noImagesNoDebug": 0.029
+        },
+        "stableProjection": {
+          "doc_type": "receipt_card",
+          "receipt_fields": {
+            "tel": "031-479-2280",
+            "대표자": "이정은",
+            "사업자번호": "119-10-88385",
+            "주소": "경기 안양시 동안구 엘에스로 76 (호계동)7-117.11",
+            "총합계금액": "33,000",
+            "회사명": "세광전기조명"
+          },
+          "fillRate": 1.0,
+          "semantic": {
+            "businessNoDetected": true,
+            "totalAmountDetected": true,
+            "merchantNameDetected": true,
+            "phoneDetected": true,
+            "addressDetected": true
+          }
+        }
+      },
+      {
+        "round": 2,
+        "fileName": "4.jpg",
+        "filePath": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\baseline\\4.jpg",
+        "imageSize": [
+          1382,
+          1037
+        ],
+        "fileSizeBytes": 595088,
+        "fileSha256": "4ebf0812677b5fbca8d54ecd374b66e3242bdf1875f9e302fad7df3386dff54a",
+        "wallClockSeconds": 22.922,
+        "processing_time": 22.88,
+        "doc_type": "receipt_card",
+        "fieldSummary": {
+          "fieldKeys": [
+            "회사명",
+            "사업자번호",
+            "대표자",
+            "tel",
+            "주소",
+            "총합계금액"
+          ],
+          "fieldCount": 6,
+          "filledCount": 6,
+          "emptyCount": 0,
+          "fillRate": 1.0,
+          "majorFields": {
+            "회사명": "가행점",
+            "사업자번호": "123-23-94265",
+            "대표자": "정영달",
+            "tel": "031-479-3690",
+            "주소": "경기 안양시 동안구 엘에스로 92",
+            "총합계금액": "17,600"
+          }
+        },
+        "filledCount": 6,
+        "emptyCount": 0,
+        "fillRate": 1.0,
+        "majorFields": {
+          "회사명": "가행점",
+          "사업자번호": "123-23-94265",
+          "대표자": "정영달",
+          "tel": "031-479-3690",
+          "주소": "경기 안양시 동안구 엘에스로 92",
+          "총합계금액": "17,600"
+        },
+        "semanticDetection": {
+          "businessNoDetected": true,
+          "totalAmountDetected": true,
+          "merchantNameDetected": true,
+          "phoneDetected": true,
+          "addressDetected": true
+        },
+        "status": "PASS",
+        "timings": {
+          "image_read_ms": 1.0,
+          "image_decode_ms": 16.0,
+          "original_image_wh": [
+            1382,
+            1037
+          ],
+          "engine_acquire_ms": 45.0,
+          "detect_document_source": "auto",
+          "detect_document_ms": 8.0,
+          "detect_orientation_ms": 9923.0,
+          "doc_img_wh_after_orientation": [
+            813,
+            687
+          ],
+          "preview_prep_ms": 10.5,
+          "display_image_wh": [
+            813,
+            687
+          ],
+          "ocr_image_prep_ms": 14.0,
+          "ocr_image_wh": [
+            813,
+            687
+          ],
+          "processed_image_wh": [
+            813,
+            687
+          ],
+          "full_ocr_ms": 8255.7,
+          "parse_and_build_fields_ms": 1.0,
+          "classify_document_ms": 1.0,
+          "pre_extract_ms": 2.0,
+          "detect_upper_bbox_ms": 0.0,
+          "upper_bbox_ocr_coords": [
+            0,
+            150,
+            813,
+            168
+          ],
+          "upper_reocr_skipped_by_pre": false,
+          "reocr_upper_crop_ms": 0.0,
+          "reocr_upper_preprocess_ms": 28.0,
+          "reocr_upper_ocr_ms": 4571.7,
+          "reocr_upper_crop_wh_before": [
+            813,
+            168
+          ],
+          "reocr_upper_crop_wh_after": [
+            3000,
+            620
+          ],
+          "upper_reocr_total_ms": 4601.7,
+          "upper_reocr_ran": true,
+          "detect_amount_bbox_ms": 0.0,
+          "amount_bbox_ocr_coords": [
+            0,
+            343,
+            813,
+            125
+          ],
+          "amount_reocr_skipped_by_doc_type": false,
+          "amount_reocr_skipped_by_pre": true,
+          "amount_reocr_total_ms": 0.0,
+          "amount_reocr_ran": false,
+          "detect_handwritten_total_bbox_ms": 0.0,
+          "handwritten_total_reocr_total_ms": 0.0,
+          "handwritten_total_reocr_ran": false,
+          "field_extract_ms": 5.0,
+          "total_ms": 22883.9,
+          "paddle_device": "cpu",
+          "cpu_threads": 16,
+          "debug_mode": true,
+          "response_assembly_ms": 1.0
+        },
+        "ocrCallBreakdown": {
+          "detectOrientationMs": 9923.0,
+          "fullOcrMs": 8255.7,
+          "upperReOcrMs": 4601.7,
+          "amountReOcrMs": 0.0,
+          "handwrittenReOcrMs": 0.0,
+          "reOcrTotalMs": 4601.7,
+          "processingTimeMs": 22880.0,
+          "reOcrSharePercent": 20.11,
+          "upperRan": true,
+          "amountRan": false,
+          "handwrittenRan": false
+        },
+        "fieldSources": {
+          "회사명": "company_rescue",
+          "사업자번호": "upper_block",
+          "대표자": "upper_block",
+          "tel": "upper_block",
+          "주소": "upper_block",
+          "총합계금액": "full_ocr"
+        },
+        "fieldsRecoveredByReOcr": [
+          {
+            "field": "사업자번호",
+            "source": "upper_block"
+          },
+          {
+            "field": "대표자",
+            "source": "upper_block"
+          },
+          {
+            "field": "tel",
+            "source": "upper_block"
+          },
+          {
+            "field": "주소",
+            "source": "upper_block"
+          }
+        ],
+        "canSkipReOcrSafelyFromCurrentEvidence": "no",
+        "responseSizes": {
+          "raw": 726494,
+          "noImages": 17327,
+          "noImagesNoDebug": 4283,
+          "cleanJson": 491
+        },
+        "jsonSerializationMs": {
+          "raw": 3.24,
+          "noImagesNoDebug": 0.042
+        },
+        "stableProjection": {
+          "doc_type": "receipt_card",
+          "receipt_fields": {
+            "tel": "031-479-3690",
+            "대표자": "정영달",
+            "사업자번호": "123-23-94265",
+            "주소": "경기 안양시 동안구 엘에스로 92",
+            "총합계금액": "17,600",
+            "회사명": "가행점"
+          },
+          "fillRate": 1.0,
+          "semantic": {
+            "businessNoDetected": true,
+            "totalAmountDetected": true,
+            "merchantNameDetected": true,
+            "phoneDetected": true,
+            "addressDetected": true
+          }
+        }
+      },
+      {
+        "round": 2,
+        "fileName": "7.jpg",
+        "filePath": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\baseline\\7.jpg",
+        "imageSize": [
+          1037,
+          1382
+        ],
+        "fileSizeBytes": 254537,
+        "fileSha256": "475f83d318159a88346578861937f4f94f2eb9809f7985f3f0505b92b8211490",
+        "wallClockSeconds": 18.667,
+        "processing_time": 18.64,
+        "doc_type": "receipt_card",
+        "fieldSummary": {
+          "fieldKeys": [
+            "회사명",
+            "사업자번호",
+            "대표자",
+            "tel",
+            "주소",
+            "총합계금액"
+          ],
+          "fieldCount": 6,
+          "filledCount": 6,
+          "emptyCount": 0,
+          "fillRate": 1.0,
+          "majorFields": {
+            "회사명": "서울집",
+            "사업자번호": "581-10-00658",
+            "대표자": "신미남",
+            "tel": "031-388-1080",
+            "주소": "경기도 의왕시 경수대로 209 102호(고천동,의왕월드 비전)",
+            "총합계금액": "35,000"
+          }
+        },
+        "filledCount": 6,
+        "emptyCount": 0,
+        "fillRate": 1.0,
+        "majorFields": {
+          "회사명": "서울집",
+          "사업자번호": "581-10-00658",
+          "대표자": "신미남",
+          "tel": "031-388-1080",
+          "주소": "경기도 의왕시 경수대로 209 102호(고천동,의왕월드 비전)",
+          "총합계금액": "35,000"
+        },
+        "semanticDetection": {
+          "businessNoDetected": true,
+          "totalAmountDetected": true,
+          "merchantNameDetected": true,
+          "phoneDetected": true,
+          "addressDetected": true
+        },
+        "status": "PASS",
+        "timings": {
+          "image_read_ms": 0.0,
+          "image_decode_ms": 12.0,
+          "original_image_wh": [
+            1037,
+            1382
+          ],
+          "engine_acquire_ms": 47.6,
+          "detect_document_source": "auto",
+          "detect_document_ms": 8.0,
+          "detect_orientation_ms": 1366.7,
+          "doc_img_wh_after_orientation": [
+            1037,
+            1382
+          ],
+          "preview_prep_ms": 34.5,
+          "display_image_wh": [
+            1037,
+            1382
+          ],
+          "ocr_image_prep_ms": 38.0,
+          "ocr_image_wh": [
+            950,
+            1266
+          ],
+          "processed_image_wh": [
+            950,
+            1266
+          ],
+          "full_ocr_ms": 10118.7,
+          "parse_and_build_fields_ms": 0.0,
+          "classify_document_ms": 1.0,
+          "pre_extract_ms": 4.0,
+          "detect_upper_bbox_ms": 0.0,
+          "upper_bbox_ocr_coords": [
+            0,
+            415,
+            950,
+            236
+          ],
+          "upper_reocr_skipped_by_pre": false,
+          "reocr_upper_crop_ms": 0.0,
+          "reocr_upper_preprocess_ms": 18.0,
+          "reocr_upper_ocr_ms": 6980.2,
+          "reocr_upper_crop_wh_before": [
+            950,
+            236
+          ],
+          "reocr_upper_crop_wh_after": [
+            2495,
+            620
+          ],
+          "upper_reocr_total_ms": 6999.2,
+          "upper_reocr_ran": true,
+          "detect_amount_bbox_ms": 1.0,
+          "amount_bbox_ocr_coords": [
+            0,
+            633,
+            950,
+            227
+          ],
+          "amount_reocr_skipped_by_doc_type": false,
+          "amount_reocr_skipped_by_pre": true,
+          "amount_reocr_total_ms": 0.0,
+          "amount_reocr_ran": false,
+          "detect_handwritten_total_bbox_ms": 0.0,
+          "handwritten_total_reocr_total_ms": 0.0,
+          "handwritten_total_reocr_ran": false,
+          "field_extract_ms": 7.0,
+          "total_ms": 18637.6,
+          "paddle_device": "cpu",
+          "cpu_threads": 16,
+          "debug_mode": true,
+          "response_assembly_ms": 1.0
+        },
+        "ocrCallBreakdown": {
+          "detectOrientationMs": 1366.7,
+          "fullOcrMs": 10118.7,
+          "upperReOcrMs": 6999.2,
+          "amountReOcrMs": 0.0,
+          "handwrittenReOcrMs": 0.0,
+          "reOcrTotalMs": 6999.2,
+          "processingTimeMs": 18640.0,
+          "reOcrSharePercent": 37.55,
+          "upperRan": true,
+          "amountRan": false,
+          "handwrittenRan": false
+        },
+        "fieldSources": {
+          "회사명": "upper_block",
+          "사업자번호": "upper_block",
+          "대표자": "",
+          "tel": "upper_block",
+          "주소": "full_ocr",
+          "총합계금액": "full_ocr"
+        },
+        "fieldsRecoveredByReOcr": [
+          {
+            "field": "회사명",
+            "source": "upper_block"
+          },
+          {
+            "field": "사업자번호",
+            "source": "upper_block"
+          },
+          {
+            "field": "tel",
+            "source": "upper_block"
+          }
+        ],
+        "canSkipReOcrSafelyFromCurrentEvidence": "no",
+        "responseSizes": {
+          "raw": 736659,
+          "noImages": 12164,
+          "noImagesNoDebug": 4765,
+          "cleanJson": 523
+        },
+        "jsonSerializationMs": {
+          "raw": 2.564,
+          "noImagesNoDebug": 0.036
+        },
+        "stableProjection": {
+          "doc_type": "receipt_card",
+          "receipt_fields": {
+            "tel": "031-388-1080",
+            "대표자": "신미남",
+            "사업자번호": "581-10-00658",
+            "주소": "경기도 의왕시 경수대로 209 102호(고천동,의왕월드 비전)",
+            "총합계금액": "35,000",
+            "회사명": "서울집"
+          },
+          "fillRate": 1.0,
+          "semantic": {
+            "businessNoDetected": true,
+            "totalAmountDetected": true,
+            "merchantNameDetected": true,
+            "phoneDetected": true,
+            "addressDetected": true
+          }
+        }
+      },
+      {
+        "round": 2,
+        "fileName": "8.jpg",
+        "filePath": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\baseline\\8.jpg",
+        "imageSize": [
+          1037,
+          1382
+        ],
+        "fileSizeBytes": 279573,
+        "fileSha256": "9a61c305a9e3aadefe27f07470f62b69dbcc8ac997ebc34d44763871e89f9b1d",
+        "wallClockSeconds": 23.149,
+        "processing_time": 23.09,
+        "doc_type": "medical_receipt",
+        "fieldSummary": {
+          "fieldKeys": [
+            "회사명",
+            "사업자번호",
+            "대표자",
+            "tel",
+            "주소",
+            "총합계금액"
+          ],
+          "fieldCount": 6,
+          "filledCount": 6,
+          "emptyCount": 0,
+          "fillRate": 1.0,
+          "majorFields": {
+            "회사명": "효성온누리약국",
+            "사업자번호": "134-04-13602",
+            "대표자": "최성환",
+            "tel": "031-455-9955",
+            "주소": "경기 의왕시 경수대로237",
+            "총합계금액": "11,000"
+          }
+        },
+        "filledCount": 6,
+        "emptyCount": 0,
+        "fillRate": 1.0,
+        "majorFields": {
+          "회사명": "효성온누리약국",
+          "사업자번호": "134-04-13602",
+          "대표자": "최성환",
+          "tel": "031-455-9955",
+          "주소": "경기 의왕시 경수대로237",
+          "총합계금액": "11,000"
+        },
+        "semanticDetection": {
+          "businessNoDetected": true,
+          "totalAmountDetected": true,
+          "merchantNameDetected": true,
+          "phoneDetected": true,
+          "addressDetected": true
+        },
+        "status": "PASS",
+        "timings": {
+          "image_read_ms": 0.0,
+          "image_decode_ms": 11.0,
+          "original_image_wh": [
+            1037,
+            1382
+          ],
+          "engine_acquire_ms": 43.5,
+          "detect_document_source": "auto",
+          "detect_document_ms": 10.0,
+          "detect_orientation_ms": 2576.9,
+          "doc_img_wh_after_orientation": [
+            1037,
+            1382
+          ],
+          "preview_prep_ms": 36.0,
+          "display_image_wh": [
+            1037,
+            1382
+          ],
+          "ocr_image_prep_ms": 40.0,
+          "ocr_image_wh": [
+            950,
+            1266
+          ],
+          "processed_image_wh": [
+            950,
+            1266
+          ],
+          "full_ocr_ms": 9117.6,
+          "parse_and_build_fields_ms": 1.0,
+          "classify_document_ms": 0.0,
+          "pre_extract_ms": 4.0,
+          "detect_upper_bbox_ms": 0.0,
+          "upper_bbox_ocr_coords": [
+            0,
+            377,
+            950,
+            430
+          ],
+          "upper_reocr_skipped_by_pre": false,
+          "reocr_upper_crop_ms": 0.0,
+          "reocr_upper_preprocess_ms": 11.5,
+          "reocr_upper_ocr_ms": 7405.8,
+          "reocr_upper_crop_wh_before": [
+            950,
+            430
+          ],
+          "reocr_upper_crop_wh_after": [
+            1369,
+            620
+          ],
+          "upper_reocr_total_ms": 7417.3,
+          "upper_reocr_ran": true,
+          "detect_amount_bbox_ms": 0.0,
+          "amount_bbox_ocr_coords": [
+            0,
+            582,
+            950,
+            253
+          ],
+          "amount_reocr_skipped_by_doc_type": false,
+          "amount_reocr_skipped_by_pre": false,
+          "reocr_amount_crop_ms": 0.0,
+          "reocr_amount_preprocess_ms": 5.0,
+          "reocr_amount_ocr_ms": 3819.5,
+          "reocr_amount_crop_wh_before": [
+            950,
+            253
+          ],
+          "reocr_amount_crop_wh_after": [
+            1501,
+            400
+          ],
+          "amount_reocr_total_ms": 3825.5,
+          "amount_reocr_ran": true,
+          "detect_handwritten_total_bbox_ms": 0.0,
+          "handwritten_total_reocr_total_ms": 0.0,
+          "handwritten_total_reocr_ran": false,
+          "field_extract_ms": 11.0,
+          "total_ms": 23094.9,
+          "paddle_device": "cpu",
+          "cpu_threads": 16,
+          "debug_mode": true,
+          "response_assembly_ms": 1.0
+        },
+        "ocrCallBreakdown": {
+          "detectOrientationMs": 2576.9,
+          "fullOcrMs": 9117.6,
+          "upperReOcrMs": 7417.3,
+          "amountReOcrMs": 3825.5,
+          "handwrittenReOcrMs": 0.0,
+          "reOcrTotalMs": 11242.8,
+          "processingTimeMs": 23090.0,
+          "reOcrSharePercent": 48.69,
+          "upperRan": true,
+          "amountRan": true,
+          "handwrittenRan": false
+        },
+        "fieldSources": {
+          "회사명": "upper_block",
+          "사업자번호": "upper_block",
+          "대표자": "upper_block",
+          "tel": "upper_block",
+          "주소": "upper_block",
+          "총합계금액": "amount_block"
+        },
+        "fieldsRecoveredByReOcr": [
+          {
+            "field": "회사명",
+            "source": "upper_block"
+          },
+          {
+            "field": "사업자번호",
+            "source": "upper_block"
+          },
+          {
+            "field": "대표자",
+            "source": "upper_block"
+          },
+          {
+            "field": "tel",
+            "source": "upper_block"
+          },
+          {
+            "field": "주소",
+            "source": "upper_block"
+          },
+          {
+            "field": "총합계금액",
+            "source": "amount_block"
+          }
+        ],
+        "canSkipReOcrSafelyFromCurrentEvidence": "no",
+        "responseSizes": {
+          "raw": 771800,
+          "noImages": 14329,
+          "noImagesNoDebug": 4515,
+          "cleanJson": 493
+        },
+        "jsonSerializationMs": {
+          "raw": 2.841,
+          "noImagesNoDebug": 0.042
+        },
+        "stableProjection": {
+          "doc_type": "medical_receipt",
+          "receipt_fields": {
+            "tel": "031-455-9955",
+            "대표자": "최성환",
+            "사업자번호": "134-04-13602",
+            "주소": "경기 의왕시 경수대로237",
+            "총합계금액": "11,000",
+            "회사명": "효성온누리약국"
+          },
+          "fillRate": 1.0,
+          "semantic": {
+            "businessNoDetected": true,
+            "totalAmountDetected": true,
+            "merchantNameDetected": true,
+            "phoneDetected": true,
+            "addressDetected": true
+          }
+        }
+      },
+      {
+        "round": 2,
+        "fileName": "10.jpg",
+        "filePath": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\baseline\\10.jpg",
+        "imageSize": [
+          1037,
+          1382
+        ],
+        "fileSizeBytes": 264220,
+        "fileSha256": "9eb659d8eb576e78882cc8279f23c9c208b5b2b38aa0677e28f21005f6b84796",
+        "wallClockSeconds": 21.13,
+        "processing_time": 21.07,
+        "doc_type": "receipt_card",
+        "fieldSummary": {
+          "fieldKeys": [
+            "회사명",
+            "사업자번호",
+            "대표자",
+            "tel",
+            "주소",
+            "총합계금액"
+          ],
+          "fieldCount": 6,
+          "filledCount": 6,
+          "emptyCount": 0,
+          "fillRate": 1.0,
+          "majorFields": {
+            "회사명": "토탈철물",
+            "사업자번호": "761-21-00890",
+            "대표자": "전용민",
+            "tel": "010-9388-9936",
+            "주소": "경기 의왕시 효행로 47 (오전동)1층",
+            "총합계금액": "19,250"
+          }
+        },
+        "filledCount": 6,
+        "emptyCount": 0,
+        "fillRate": 1.0,
+        "majorFields": {
+          "회사명": "토탈철물",
+          "사업자번호": "761-21-00890",
+          "대표자": "전용민",
+          "tel": "010-9388-9936",
+          "주소": "경기 의왕시 효행로 47 (오전동)1층",
+          "총합계금액": "19,250"
+        },
+        "semanticDetection": {
+          "businessNoDetected": true,
+          "totalAmountDetected": true,
+          "merchantNameDetected": true,
+          "phoneDetected": true,
+          "addressDetected": true
+        },
+        "status": "PASS",
+        "timings": {
+          "image_read_ms": 0.0,
+          "image_decode_ms": 13.0,
+          "original_image_wh": [
+            1037,
+            1382
+          ],
+          "engine_acquire_ms": 45.0,
+          "detect_document_source": "auto",
+          "detect_document_ms": 14.6,
+          "detect_orientation_ms": 2937.2,
+          "doc_img_wh_after_orientation": [
+            1037,
+            1382
+          ],
+          "preview_prep_ms": 41.0,
+          "display_image_wh": [
+            1037,
+            1382
+          ],
+          "ocr_image_prep_ms": 48.2,
+          "ocr_image_wh": [
+            950,
+            1266
+          ],
+          "processed_image_wh": [
+            950,
+            1266
+          ],
+          "full_ocr_ms": 9946.0,
+          "parse_and_build_fields_ms": 0.0,
+          "classify_document_ms": 1.0,
+          "pre_extract_ms": 4.0,
+          "detect_upper_bbox_ms": 0.0,
+          "upper_bbox_ocr_coords": [
+            0,
+            367,
+            950,
+            395
+          ],
+          "upper_reocr_skipped_by_pre": false,
+          "reocr_upper_crop_ms": 0.0,
+          "reocr_upper_preprocess_ms": 13.5,
+          "reocr_upper_ocr_ms": 7991.0,
+          "reocr_upper_crop_wh_before": [
+            950,
+            395
+          ],
+          "reocr_upper_crop_wh_after": [
+            1491,
+            620
+          ],
+          "upper_reocr_total_ms": 8005.6,
+          "upper_reocr_ran": true,
+          "detect_amount_bbox_ms": 1.0,
+          "amount_bbox_ocr_coords": [
+            0,
+            633,
+            950,
+            227
+          ],
+          "amount_reocr_skipped_by_doc_type": false,
+          "amount_reocr_skipped_by_pre": true,
+          "amount_reocr_total_ms": 0.0,
+          "amount_reocr_ran": false,
+          "detect_handwritten_total_bbox_ms": 0.0,
+          "handwritten_total_reocr_total_ms": 0.0,
+          "handwritten_total_reocr_ran": false,
+          "field_extract_ms": 10.5,
+          "total_ms": 21067.0,
+          "paddle_device": "cpu",
+          "cpu_threads": 16,
+          "debug_mode": true,
+          "response_assembly_ms": 1.0
+        },
+        "ocrCallBreakdown": {
+          "detectOrientationMs": 2937.2,
+          "fullOcrMs": 9946.0,
+          "upperReOcrMs": 8005.6,
+          "amountReOcrMs": 0.0,
+          "handwrittenReOcrMs": 0.0,
+          "reOcrTotalMs": 8005.6,
+          "processingTimeMs": 21070.0,
+          "reOcrSharePercent": 38.0,
+          "upperRan": true,
+          "amountRan": false,
+          "handwrittenRan": false
+        },
+        "fieldSources": {
+          "회사명": "upper_block",
+          "사업자번호": "upper_block",
+          "대표자": "upper_block",
+          "tel": "upper_block",
+          "주소": "upper_block",
+          "총합계금액": "full_ocr"
+        },
+        "fieldsRecoveredByReOcr": [
+          {
+            "field": "회사명",
+            "source": "upper_block"
+          },
+          {
+            "field": "사업자번호",
+            "source": "upper_block"
+          },
+          {
+            "field": "대표자",
+            "source": "upper_block"
+          },
+          {
+            "field": "tel",
+            "source": "upper_block"
+          },
+          {
+            "field": "주소",
+            "source": "upper_block"
+          }
+        ],
+        "canSkipReOcrSafelyFromCurrentEvidence": "no",
+        "responseSizes": {
+          "raw": 743453,
+          "noImages": 17722,
+          "noImagesNoDebug": 5603,
+          "cleanJson": 498
+        },
+        "jsonSerializationMs": {
+          "raw": 2.656,
+          "noImagesNoDebug": 0.05
+        },
+        "stableProjection": {
+          "doc_type": "receipt_card",
+          "receipt_fields": {
+            "tel": "010-9388-9936",
+            "대표자": "전용민",
+            "사업자번호": "761-21-00890",
+            "주소": "경기 의왕시 효행로 47 (오전동)1층",
+            "총합계금액": "19,250",
+            "회사명": "토탈철물"
+          },
+          "fillRate": 1.0,
+          "semantic": {
+            "businessNoDetected": true,
+            "totalAmountDetected": true,
+            "merchantNameDetected": true,
+            "phoneDetected": true,
+            "addressDetected": true
+          }
+        }
+      },
+      {
+        "round": 2,
+        "fileName": "a1.jpg",
+        "filePath": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\baseline\\a1.jpg",
+        "imageSize": [
+          1037,
+          1382
+        ],
+        "fileSizeBytes": 427263,
+        "fileSha256": "3778434907d8b506d29634042ad4c0fd2f47b46943ce4ce0544f379d888ca394",
+        "wallClockSeconds": 23.883,
+        "processing_time": 23.84,
+        "doc_type": "receipt_pos",
+        "fieldSummary": {
+          "fieldKeys": [
+            "회사명",
+            "사업자번호",
+            "대표자",
+            "tel",
+            "주소",
+            "총합계금액"
+          ],
+          "fieldCount": 6,
+          "filledCount": 3,
+          "emptyCount": 3,
+          "fillRate": 0.5,
+          "majorFields": {
+            "회사명": "기계공구",
+            "사업자번호": "123-23-94265",
+            "대표자": "",
+            "tel": "",
+            "주소": "",
+            "총합계금액": "110,000"
+          }
+        },
+        "filledCount": 3,
+        "emptyCount": 3,
+        "fillRate": 0.5,
+        "majorFields": {
+          "회사명": "기계공구",
+          "사업자번호": "123-23-94265",
+          "대표자": "",
+          "tel": "",
+          "주소": "",
+          "총합계금액": "110,000"
+        },
+        "semanticDetection": {
+          "businessNoDetected": true,
+          "totalAmountDetected": true,
+          "merchantNameDetected": true,
+          "phoneDetected": true,
+          "addressDetected": false
+        },
+        "status": "WARN",
+        "timings": {
+          "image_read_ms": 0.0,
+          "image_decode_ms": 13.5,
+          "original_image_wh": [
+            1037,
+            1382
+          ],
+          "engine_acquire_ms": 49.0,
+          "detect_document_source": "auto",
+          "detect_document_ms": 9.0,
+          "detect_orientation_ms": 9726.1,
+          "doc_img_wh_after_orientation": [
+            752,
+            1072
+          ],
+          "preview_prep_ms": 8.0,
+          "display_image_wh": [
+            752,
+            1072
+          ],
+          "ocr_image_prep_ms": 32.5,
+          "ocr_image_wh": [
+            950,
+            1354
+          ],
+          "processed_image_wh": [
+            950,
+            1354
+          ],
+          "full_ocr_ms": 8432.3,
+          "parse_and_build_fields_ms": 0.0,
+          "classify_document_ms": 1.0,
+          "pre_extract_ms": 2.0,
+          "detect_upper_bbox_ms": 0.0,
+          "upper_bbox_ocr_coords": [
+            0,
+            0,
+            950,
+            189
+          ],
+          "upper_reocr_skipped_by_pre": false,
+          "reocr_upper_crop_ms": 0.0,
+          "reocr_upper_preprocess_ms": 15.0,
+          "reocr_upper_ocr_ms": 5540.3,
+          "reocr_upper_crop_wh_before": [
+            950,
+            189
+          ],
+          "reocr_upper_crop_wh_after": [
+            3116,
+            620
+          ],
+          "upper_reocr_total_ms": 5557.3,
+          "upper_reocr_ran": true,
+          "detect_amount_bbox_ms": 0.0,
+          "amount_bbox_ocr_coords": [
+            0,
+            514,
+            950,
+            406
+          ],
+          "amount_reocr_skipped_by_doc_type": false,
+          "amount_reocr_skipped_by_pre": true,
+          "amount_reocr_total_ms": 0.0,
+          "amount_reocr_ran": false,
+          "detect_handwritten_total_bbox_ms": 0.0,
+          "handwritten_total_reocr_total_ms": 0.0,
+          "handwritten_total_reocr_ran": false,
+          "field_extract_ms": 6.0,
+          "total_ms": 23837.7,
+          "paddle_device": "cpu",
+          "cpu_threads": 16,
+          "debug_mode": true,
+          "response_assembly_ms": 1.0
+        },
+        "ocrCallBreakdown": {
+          "detectOrientationMs": 9726.1,
+          "fullOcrMs": 8432.3,
+          "upperReOcrMs": 5557.3,
+          "amountReOcrMs": 0.0,
+          "handwrittenReOcrMs": 0.0,
+          "reOcrTotalMs": 5557.3,
+          "processingTimeMs": 23840.0,
+          "reOcrSharePercent": 23.31,
+          "upperRan": true,
+          "amountRan": false,
+          "handwrittenRan": false
+        },
+        "fieldSources": {
+          "회사명": "full_ocr",
+          "사업자번호": "upper_block",
+          "대표자": "",
+          "tel": "",
+          "주소": "",
+          "총합계금액": "full_ocr"
+        },
+        "fieldsRecoveredByReOcr": [
+          {
+            "field": "사업자번호",
+            "source": "upper_block"
+          }
+        ],
+        "canSkipReOcrSafelyFromCurrentEvidence": "no",
+        "responseSizes": {
+          "raw": 976129,
+          "noImages": 15442,
+          "noImagesNoDebug": 5250,
+          "cleanJson": 432
+        },
+        "jsonSerializationMs": {
+          "raw": 3.213,
+          "noImagesNoDebug": 0.035
+        },
+        "stableProjection": {
+          "doc_type": "receipt_pos",
+          "receipt_fields": {
+            "tel": "",
+            "대표자": "",
+            "사업자번호": "123-23-94265",
+            "주소": "",
+            "총합계금액": "110,000",
+            "회사명": "기계공구"
+          },
+          "fillRate": 0.5,
+          "semantic": {
+            "businessNoDetected": true,
+            "totalAmountDetected": true,
+            "merchantNameDetected": true,
+            "phoneDetected": true,
+            "addressDetected": false
+          }
+        }
+      },
+      {
+        "round": 2,
+        "fileName": "a2.jpg",
+        "filePath": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\baseline\\a2.jpg",
+        "imageSize": [
+          1037,
+          1382
+        ],
+        "fileSizeBytes": 507993,
+        "fileSha256": "1cf7fa1680af4d531761773e414736b0fae55d99b3c16e285674f42537692cf5",
+        "wallClockSeconds": 25.055,
+        "processing_time": 24.99,
+        "doc_type": "form_or_handwritten",
+        "fieldSummary": {
+          "fieldKeys": [
+            "회사명",
+            "사업자번호",
+            "대표자",
+            "tel",
+            "주소",
+            "총합계금액"
+          ],
+          "fieldCount": 6,
+          "filledCount": 5,
+          "emptyCount": 1,
+          "fillRate": 0.8333,
+          "majorFields": {
+            "회사명": "세광전기조명",
+            "사업자번호": "119-10-88385",
+            "대표자": "이정",
+            "tel": "031-479-2280",
+            "주소": "경기도 안양시 동안구 엘에스로 76,7-117, (호계동, 국제유통단지)",
+            "총합계금액": ""
+          }
+        },
+        "filledCount": 5,
+        "emptyCount": 1,
+        "fillRate": 0.8333,
+        "majorFields": {
+          "회사명": "세광전기조명",
+          "사업자번호": "119-10-88385",
+          "대표자": "이정",
+          "tel": "031-479-2280",
+          "주소": "경기도 안양시 동안구 엘에스로 76,7-117, (호계동, 국제유통단지)",
+          "총합계금액": ""
+        },
+        "semanticDetection": {
+          "businessNoDetected": true,
+          "totalAmountDetected": false,
+          "merchantNameDetected": true,
+          "phoneDetected": true,
+          "addressDetected": true
+        },
+        "status": "WARN",
+        "timings": {
+          "image_read_ms": 1.0,
+          "image_decode_ms": 10.0,
+          "original_image_wh": [
+            1037,
+            1382
+          ],
+          "engine_acquire_ms": 48.0,
+          "detect_document_source": "auto",
+          "detect_document_ms": 14.0,
+          "detect_orientation_ms": 9610.3,
+          "doc_img_wh_after_orientation": [
+            764,
+            1114
+          ],
+          "preview_prep_ms": 12.5,
+          "display_image_wh": [
+            764,
+            1114
+          ],
+          "ocr_image_prep_ms": 24.0,
+          "ocr_image_wh": [
+            764,
+            1114
+          ],
+          "processed_image_wh": [
+            764,
+            1114
+          ],
+          "full_ocr_ms": 8076.0,
+          "parse_and_build_fields_ms": 0.0,
+          "classify_document_ms": 1.0,
+          "pre_extract_ms": 3.0,
+          "detect_upper_bbox_ms": 0.0,
+          "upper_bbox_ocr_coords": [
+            0,
+            184,
+            764,
+            467
+          ],
+          "upper_reocr_skipped_by_pre": false,
+          "reocr_upper_crop_ms": 0.0,
+          "reocr_upper_preprocess_ms": 6.0,
+          "reocr_upper_ocr_ms": 6437.9,
+          "reocr_upper_crop_wh_before": [
+            764,
+            467
+          ],
+          "reocr_upper_crop_wh_after": [
+            1014,
+            620
+          ],
+          "upper_reocr_total_ms": 6444.9,
+          "upper_reocr_ran": true,
+          "detect_amount_bbox_ms": 0.0,
+          "amount_bbox_ocr_coords": null,
+          "amount_reocr_skipped_by_doc_type": true,
+          "amount_reocr_skipped_by_pre": false,
+          "amount_reocr_total_ms": 0.0,
+          "amount_reocr_ran": false,
+          "detect_handwritten_total_bbox_ms": 0.0,
+          "handwritten_total_bbox_ocr_coords": [
+            366,
+            636,
+            336,
+            222
+          ],
+          "reocr_hand_total_crop_ms": 0.0,
+          "reocr_hand_total_preprocess_ms": 7.0,
+          "reocr_hand_total_ocr_ms": 734.1,
+          "reocr_hand_total_crop_wh_before": [
+            336,
+            222
+          ],
+          "reocr_hand_total_crop_wh_after": [
+            787,
+            520
+          ],
+          "handwritten_total_reocr_total_ms": 742.1,
+          "handwritten_total_reocr_ran": true,
+          "field_extract_ms": 750.1,
+          "total_ms": 24994.7,
+          "paddle_device": "cpu",
+          "cpu_threads": 16,
+          "debug_mode": true,
+          "response_assembly_ms": 1.0
+        },
+        "ocrCallBreakdown": {
+          "detectOrientationMs": 9610.3,
+          "fullOcrMs": 8076.0,
+          "upperReOcrMs": 6444.9,
+          "amountReOcrMs": 0.0,
+          "handwrittenReOcrMs": 742.1,
+          "reOcrTotalMs": 7187.0,
+          "processingTimeMs": 24990.0,
+          "reOcrSharePercent": 28.76,
+          "upperRan": true,
+          "amountRan": false,
+          "handwrittenRan": true
+        },
+        "fieldSources": {
+          "회사명": "upper_block",
+          "사업자번호": "upper_block",
+          "대표자": "full_ocr",
+          "tel": "full_ocr",
+          "주소": "full_ocr",
+          "총합계금액": ""
+        },
+        "fieldsRecoveredByReOcr": [
+          {
+            "field": "회사명",
+            "source": "upper_block"
+          },
+          {
+            "field": "사업자번호",
+            "source": "upper_block"
+          }
+        ],
+        "canSkipReOcrSafelyFromCurrentEvidence": "no",
+        "responseSizes": {
+          "raw": 946798,
+          "noImages": 10683,
+          "noImagesNoDebug": 5099,
+          "cleanJson": 533
+        },
+        "jsonSerializationMs": {
+          "raw": 3.957,
+          "noImagesNoDebug": 0.061
+        },
+        "stableProjection": {
+          "doc_type": "form_or_handwritten",
+          "receipt_fields": {
+            "tel": "031-479-2280",
+            "대표자": "이정",
+            "사업자번호": "119-10-88385",
+            "주소": "경기도 안양시 동안구 엘에스로 76,7-117, (호계동, 국제유통단지)",
+            "총합계금액": "",
+            "회사명": "세광전기조명"
+          },
+          "fillRate": 0.8333,
+          "semantic": {
+            "businessNoDetected": true,
+            "totalAmountDetected": false,
+            "merchantNameDetected": true,
+            "phoneDetected": true,
+            "addressDetected": true
+          }
+        }
+      }
+    ]
+  ],
+  "baselineRecheckSummary": {
+    "round1AvgProcessing": 22.772,
+    "round1AvgWall": 22.826,
+    "round1AvgFillRate": 0.9259,
+    "round2AvgProcessing": 25.233,
+    "round2AvgWall": 25.285,
+    "round2AvgFillRate": 0.9259,
+    "slowestRound1": [
+      {
+        "fileName": "2.jpg",
+        "processing_time": 29.9,
+        "wallClockSeconds": 29.96,
+        "fillRate": 1.0
+      },
+      {
+        "fileName": "3.jpg",
+        "processing_time": 28.94,
+        "wallClockSeconds": 29.044,
+        "fillRate": 1.0
+      },
+      {
+        "fileName": "a2.jpg",
+        "processing_time": 24.99,
+        "wallClockSeconds": 25.037,
+        "fillRate": 0.8333
+      },
+      {
+        "fileName": "1.jpg",
+        "processing_time": 24.12,
+        "wallClockSeconds": 24.174,
+        "fillRate": 1.0
+      },
+      {
+        "fileName": "a1.jpg",
+        "processing_time": 22.75,
+        "wallClockSeconds": 22.803,
+        "fillRate": 0.5
+      }
+    ]
+  },
+  "reOcrAnalysis": {
+    "rows": [
+      {
+        "fileName": "1.jpg",
+        "fullOcrMs": 7948.2,
+        "upperReOcrMs": 4610.1,
+        "amountReOcrMs": 1767.8,
+        "handwrittenReOcrMs": 0.0,
+        "reOcrTotalMs": 6377.900000000001,
+        "processingTime": 24.12,
+        "reOcrSharePercent": 26.44,
+        "upperRan": true,
+        "amountRan": true,
+        "handwrittenRan": false,
+        "fieldsRecoveredByReOcr": [
+          {
+            "field": "회사명",
+            "source": "upper_block"
+          },
+          {
+            "field": "사업자번호",
+            "source": "upper_block"
+          },
+          {
+            "field": "대표자",
+            "source": "upper_block"
+          },
+          {
+            "field": "tel",
+            "source": "upper_block"
+          },
+          {
+            "field": "주소",
+            "source": "upper_block"
+          },
+          {
+            "field": "총합계금액",
+            "source": "amount_block"
+          }
+        ],
+        "canSkipSafely": "no",
+        "fillRate": 1.0,
+        "businessNoDetected": true,
+        "totalAmountDetected": true
+      },
+      {
+        "fileName": "2.jpg",
+        "fullOcrMs": 9664.1,
+        "upperReOcrMs": 5812.6,
+        "amountReOcrMs": 0.0,
+        "handwrittenReOcrMs": 0.0,
+        "reOcrTotalMs": 5812.6,
+        "processingTime": 29.9,
+        "reOcrSharePercent": 19.44,
+        "upperRan": true,
+        "amountRan": false,
+        "handwrittenRan": false,
+        "fieldsRecoveredByReOcr": [
+          {
+            "field": "회사명",
+            "source": "upper_block"
+          },
+          {
+            "field": "사업자번호",
+            "source": "upper_block"
+          },
+          {
+            "field": "대표자",
+            "source": "upper_block"
+          },
+          {
+            "field": "tel",
+            "source": "upper_block"
+          },
+          {
+            "field": "주소",
+            "source": "upper_block"
+          }
+        ],
+        "canSkipSafely": "no",
+        "fillRate": 1.0,
+        "businessNoDetected": true,
+        "totalAmountDetected": true
+      },
+      {
+        "fileName": "3.jpg",
+        "fullOcrMs": 10020.6,
+        "upperReOcrMs": 5041.1,
+        "amountReOcrMs": 0.0,
+        "handwrittenReOcrMs": 0.0,
+        "reOcrTotalMs": 5041.1,
+        "processingTime": 28.94,
+        "reOcrSharePercent": 17.42,
+        "upperRan": true,
+        "amountRan": false,
+        "handwrittenRan": false,
+        "fieldsRecoveredByReOcr": [
+          {
+            "field": "회사명",
+            "source": "upper_block"
+          },
+          {
+            "field": "사업자번호",
+            "source": "upper_block"
+          },
+          {
+            "field": "tel",
+            "source": "upper_block"
+          },
+          {
+            "field": "주소",
+            "source": "upper_block"
+          }
+        ],
+        "canSkipSafely": "no",
+        "fillRate": 1.0,
+        "businessNoDetected": true,
+        "totalAmountDetected": true
+      },
+      {
+        "fileName": "4.jpg",
+        "fullOcrMs": 8197.5,
+        "upperReOcrMs": 4183.0,
+        "amountReOcrMs": 0.0,
+        "handwrittenReOcrMs": 0.0,
+        "reOcrTotalMs": 4183.0,
+        "processingTime": 21.93,
+        "reOcrSharePercent": 19.07,
+        "upperRan": true,
+        "amountRan": false,
+        "handwrittenRan": false,
+        "fieldsRecoveredByReOcr": [
+          {
+            "field": "사업자번호",
+            "source": "upper_block"
+          },
+          {
+            "field": "대표자",
+            "source": "upper_block"
+          },
+          {
+            "field": "tel",
+            "source": "upper_block"
+          },
+          {
+            "field": "주소",
+            "source": "upper_block"
+          }
+        ],
+        "canSkipSafely": "no",
+        "fillRate": 1.0,
+        "businessNoDetected": true,
+        "totalAmountDetected": true
+      },
+      {
+        "fileName": "7.jpg",
+        "fullOcrMs": 8383.1,
+        "upperReOcrMs": 6271.8,
+        "amountReOcrMs": 0.0,
+        "handwrittenReOcrMs": 0.0,
+        "reOcrTotalMs": 6271.8,
+        "processingTime": 15.95,
+        "reOcrSharePercent": 39.32,
+        "upperRan": true,
+        "amountRan": false,
+        "handwrittenRan": false,
+        "fieldsRecoveredByReOcr": [
+          {
+            "field": "회사명",
+            "source": "upper_block"
+          },
+          {
+            "field": "사업자번호",
+            "source": "upper_block"
+          },
+          {
+            "field": "tel",
+            "source": "upper_block"
+          }
+        ],
+        "canSkipSafely": "no",
+        "fillRate": 1.0,
+        "businessNoDetected": true,
+        "totalAmountDetected": true
+      },
+      {
+        "fileName": "8.jpg",
+        "fullOcrMs": 8046.4,
+        "upperReOcrMs": 5858.3,
+        "amountReOcrMs": 3596.4,
+        "handwrittenReOcrMs": 0.0,
+        "reOcrTotalMs": 9454.7,
+        "processingTime": 19.88,
+        "reOcrSharePercent": 47.56,
+        "upperRan": true,
+        "amountRan": true,
+        "handwrittenRan": false,
+        "fieldsRecoveredByReOcr": [
+          {
+            "field": "회사명",
+            "source": "upper_block"
+          },
+          {
+            "field": "사업자번호",
+            "source": "upper_block"
+          },
+          {
+            "field": "대표자",
+            "source": "upper_block"
+          },
+          {
+            "field": "tel",
+            "source": "upper_block"
+          },
+          {
+            "field": "주소",
+            "source": "upper_block"
+          },
+          {
+            "field": "총합계금액",
+            "source": "amount_block"
+          }
+        ],
+        "canSkipSafely": "no",
+        "fillRate": 1.0,
+        "businessNoDetected": true,
+        "totalAmountDetected": true
+      },
+      {
+        "fileName": "10.jpg",
+        "fullOcrMs": 8172.5,
+        "upperReOcrMs": 6458.9,
+        "amountReOcrMs": 0.0,
+        "handwrittenReOcrMs": 0.0,
+        "reOcrTotalMs": 6458.9,
+        "processingTime": 16.49,
+        "reOcrSharePercent": 39.17,
+        "upperRan": true,
+        "amountRan": false,
+        "handwrittenRan": false,
+        "fieldsRecoveredByReOcr": [
+          {
+            "field": "회사명",
+            "source": "upper_block"
+          },
+          {
+            "field": "사업자번호",
+            "source": "upper_block"
+          },
+          {
+            "field": "대표자",
+            "source": "upper_block"
+          },
+          {
+            "field": "tel",
+            "source": "upper_block"
+          },
+          {
+            "field": "주소",
+            "source": "upper_block"
+          }
+        ],
+        "canSkipSafely": "no",
+        "fillRate": 1.0,
+        "businessNoDetected": true,
+        "totalAmountDetected": true
+      },
+      {
+        "fileName": "a1.jpg",
+        "fullOcrMs": 8877.3,
+        "upperReOcrMs": 5800.2,
+        "amountReOcrMs": 0.0,
+        "handwrittenReOcrMs": 0.0,
+        "reOcrTotalMs": 5800.2,
+        "processingTime": 22.75,
+        "reOcrSharePercent": 25.5,
+        "upperRan": true,
+        "amountRan": false,
+        "handwrittenRan": false,
+        "fieldsRecoveredByReOcr": [
+          {
+            "field": "사업자번호",
+            "source": "upper_block"
+          }
+        ],
+        "canSkipSafely": "no",
+        "fillRate": 0.5,
+        "businessNoDetected": true,
+        "totalAmountDetected": true
+      },
+      {
+        "fileName": "a2.jpg",
+        "fullOcrMs": 7813.0,
+        "upperReOcrMs": 6350.9,
+        "amountReOcrMs": 0.0,
+        "handwrittenReOcrMs": 728.6,
+        "reOcrTotalMs": 7079.5,
+        "processingTime": 24.99,
+        "reOcrSharePercent": 28.33,
+        "upperRan": true,
+        "amountRan": false,
+        "handwrittenRan": true,
+        "fieldsRecoveredByReOcr": [
+          {
+            "field": "회사명",
+            "source": "upper_block"
+          },
+          {
+            "field": "사업자번호",
+            "source": "upper_block"
+          }
+        ],
+        "canSkipSafely": "no",
+        "fillRate": 0.8333,
+        "businessNoDetected": true,
+        "totalAmountDetected": false
+      }
+    ],
+    "avgReOcrMs": 6275.5,
+    "upperRanFiles": [
+      "1.jpg",
+      "2.jpg",
+      "3.jpg",
+      "4.jpg",
+      "7.jpg",
+      "8.jpg",
+      "10.jpg",
+      "a1.jpg",
+      "a2.jpg"
+    ],
+    "amountRanFiles": [
+      "1.jpg",
+      "8.jpg"
+    ],
+    "handwrittenRanFiles": [
+      "a2.jpg"
+    ],
+    "whyWarn": [
+      "upper re-OCR ran for all measured files; current response-only data cannot prove it can be removed without A/B disabling it.",
+      "field_sources show upper_block contributions for some top fields, so unconditional skip risks company/business/phone/address recall.",
+      "a1/a2 are lower-fill/edge samples; gating should remain conservative there.",
+      "amount re-OCR ran only on selected files, but totalAmount recovery is a critical field; skip only when full/pre extract has strong total."
+    ],
+    "safeGatingConditionsToTest": [
+      "Skip upper re-OCR only if pre/full OCR already has businessNo, totalAmount, merchantName, phone, and address with high confidence.",
+      "Keep upper re-OCR if businessNo, phone, address, or merchantName is blank.",
+      "Keep amount re-OCR if totalAmount is blank, low-confidence, review-required, or doc_type is hard/unknown-like.",
+      "Keep all re-OCR for low fillRate candidates, blurry/small-text/quality-tagged images, and a1/a2-like edge cases.",
+      "Roll out behind an option and compare GT before/after; any field loss is FAIL."
+    ],
+    "verdict": "WARN"
+  },
+  "cacheStability": {
+    "stableCount": 9,
+    "totalCompared": 9,
+    "allStable": true,
+    "rows": [
+      {
+        "fileName": "1.jpg",
+        "stableProjectionSame": true,
+        "docType1": "receipt_card",
+        "docType2": "receipt_card",
+        "fillRate1": 1.0,
+        "fillRate2": 1.0,
+        "processing1": 24.12,
+        "processing2": 28.28,
+        "wall1": 24.174,
+        "wall2": 28.351
+      },
+      {
+        "fileName": "2.jpg",
+        "stableProjectionSame": true,
+        "docType1": "receipt_card",
+        "docType2": "receipt_card",
+        "fillRate1": 1.0,
+        "fillRate2": 1.0,
+        "processing1": 29.9,
+        "processing2": 35.66,
+        "wall1": 29.96,
+        "wall2": 35.716
+      },
+      {
+        "fileName": "3.jpg",
+        "stableProjectionSame": true,
+        "docType1": "receipt_card",
+        "docType2": "receipt_card",
+        "fillRate1": 1.0,
+        "fillRate2": 1.0,
+        "processing1": 28.94,
+        "processing2": 28.65,
+        "wall1": 29.044,
+        "wall2": 28.693
+      },
+      {
+        "fileName": "4.jpg",
+        "stableProjectionSame": true,
+        "docType1": "receipt_card",
+        "docType2": "receipt_card",
+        "fillRate1": 1.0,
+        "fillRate2": 1.0,
+        "processing1": 21.93,
+        "processing2": 22.88,
+        "wall1": 21.976,
+        "wall2": 22.922
+      },
+      {
+        "fileName": "7.jpg",
+        "stableProjectionSame": true,
+        "docType1": "receipt_card",
+        "docType2": "receipt_card",
+        "fillRate1": 1.0,
+        "fillRate2": 1.0,
+        "processing1": 15.95,
+        "processing2": 18.64,
+        "wall1": 15.986,
+        "wall2": 18.667
+      },
+      {
+        "fileName": "8.jpg",
+        "stableProjectionSame": true,
+        "docType1": "medical_receipt",
+        "docType2": "medical_receipt",
+        "fillRate1": 1.0,
+        "fillRate2": 1.0,
+        "processing1": 19.88,
+        "processing2": 23.09,
+        "wall1": 19.925,
+        "wall2": 23.149
+      },
+      {
+        "fileName": "10.jpg",
+        "stableProjectionSame": true,
+        "docType1": "receipt_card",
+        "docType2": "receipt_card",
+        "fillRate1": 1.0,
+        "fillRate2": 1.0,
+        "processing1": 16.49,
+        "processing2": 21.07,
+        "wall1": 16.53,
+        "wall2": 21.13
+      },
+      {
+        "fileName": "a1.jpg",
+        "stableProjectionSame": true,
+        "docType1": "receipt_pos",
+        "docType2": "receipt_pos",
+        "fillRate1": 0.5,
+        "fillRate2": 0.5,
+        "processing1": 22.75,
+        "processing2": 23.84,
+        "wall1": 22.803,
+        "wall2": 23.883
+      },
+      {
+        "fileName": "a2.jpg",
+        "stableProjectionSame": true,
+        "docType1": "form_or_handwritten",
+        "docType2": "form_or_handwritten",
+        "fillRate1": 0.8333,
+        "fillRate2": 0.8333,
+        "processing1": 24.99,
+        "processing2": 24.99,
+        "wall1": 25.037,
+        "wall2": 25.055
+      }
+    ],
+    "cacheKeyRecommendation": [
+      "fileSha256",
+      "templateId",
+      "template updatedAt or template hash",
+      "OCR model/version/language config",
+      "preprocessing options: debugPreprocessing, autoApplyPreprocessing, qualityTagsJson",
+      "documentType hint",
+      "backend code/version for OCR/parser policy"
+    ],
+    "invalidation": [
+      "file bytes changed",
+      "template changed",
+      "OCR model or PaddleOCR config changed",
+      "preprocessing policy/options changed",
+      "parser/amount/regex policy changed",
+      "debug/autoApply options changed"
+    ],
+    "verdict": "PASS"
+  },
+  "responseSlimAnalysis": {
+    "avgRawBytes": 768281,
+    "avgNoImagesBytes": 14561,
+    "avgNoImagesNoDebugBytes": 4755,
+    "avgCleanJsonBytes": 499,
+    "avgRawSerializationMs": 2.702,
+    "avgSlimSerializationMs": 0.038,
+    "effectOnProcessingTime": "Not material: processing_time is dominated by OCR/preprocessing before response serialization.",
+    "effectOnWallUi": "Likely useful for transfer, browser JSON parse, Raw JSON rendering, and history storage size.",
+    "previewRisk": "processed_image/original_image are used by UploadWorkspace for preview/history; slim default needs explicit includeImages or separate image path.",
+    "verdict": "PASS for UI/transport optimization, not a core OCR processing_time optimization."
+  },
+  "downscaleRecheck": {
+    "currentPolicy": "OCR image width is capped/upscaled to 950px with min 760px.",
+    "evidence": "main.py comment says 850px caused regression on small receipt digits/separators, so 950px was restored.",
+    "decision": "Do not recommend below-950 default downscale without separate strict A/B.",
+    "verdict": "FAIL for default optimization"
+  },
+  "outputFieldsDependency": {
+    "OCR cache": "independent",
+    "response slim": "independent if structured receipt_fields/full_text/debug flags are handled",
+    "re-OCR gating": "can be independent if based on semantic completeness/confidence",
+    "downscale": "independent but accuracy-risky",
+    "no_1~no_6 shortcut": "dependent and excluded"
+  },
+  "futureInfoTablesCompatibility": {
+    "compatibleCandidates": [
+      "OCR cache",
+      "response slim",
+      "semantic re-OCR gating after A/B"
+    ],
+    "incompatibleCandidates": [
+      "outputFields/no_1~no_6 shortcut"
+    ],
+    "note": "Recommended candidates operate on OCR execution, response payload, or semantic fields, not on current outputFields names."
+  },
+  "finalRanking": [
+    {
+      "rank": 1,
+      "candidate": "OCR cache",
+      "verdict": "PASS",
+      "expectedBenefit": "Highest for repeated same file/template/options; can avoid OCR and parser work on cache hit.",
+      "singleRunBenefit": "None on first run.",
+      "repeatRunBenefit": "Very high.",
+      "risk": "Low with complete key/invalidation.",
+      "implementationScope": "Backend cache around final OCR/parser response or OCR-line artifacts.",
+      "futureInfoTablesCompatibility": "Compatible and independent from outputFields/no_1~no_6.",
+      "nextValidationNeeded": "Implement dry-run cache lookup/hash logging, then assert stableProjection equality on all baseline files."
+    },
+    {
+      "rank": 2,
+      "candidate": "Response slim / opt-in images+debug",
+      "verdict": "PASS",
+      "expectedBenefit": "Large payload reduction and faster UI parse/render/history storage; not a core OCR time reduction.",
+      "singleRunBenefit": "Moderate for wall/UI after OCR; low for backend processing_time.",
+      "repeatRunBenefit": "Moderate storage/network benefit.",
+      "risk": "Low if preview/history can request images/debug explicitly.",
+      "implementationScope": "API response flags and frontend request behavior.",
+      "futureInfoTablesCompatibility": "Compatible; clean info/tables needs structured values, not base64/debug.",
+      "nextValidationNeeded": "Check Preview, Raw JSON, History detail with includeImages/includeDebug toggles."
+    },
+    {
+      "rank": 3,
+      "candidate": "Conservative semantic upper/amount re-OCR gating",
+      "verdict": "WARN",
+      "expectedBenefit": "Best single-run OCR-time lever if safe; measured re-OCR share can be significant.",
+      "singleRunBenefit": "Potentially high, but not yet safe.",
+      "repeatRunBenefit": "Also helps uncached runs.",
+      "risk": "Medium/high until A/B proves no loss of company/businessNo/phone/address/total.",
+      "implementationScope": "Backend gating based on semantic completeness/confidence, not UI field names.",
+      "futureInfoTablesCompatibility": "Compatible if based on semantic extracted fields.",
+      "nextValidationNeeded": "A/B disable only when proposed safe conditions pass; compare GT/fillRate per file."
+    },
+    {
+      "rank": 4,
+      "candidate": "Parser regex micro-optimization",
+      "verdict": "WARN low priority",
+      "expectedBenefit": "Small compared with OCR/re-OCR.",
+      "singleRunBenefit": "Low.",
+      "repeatRunBenefit": "Low.",
+      "risk": "Medium because parser changes can alter values.",
+      "implementationScope": "Parser profiling only before any edits.",
+      "futureInfoTablesCompatibility": "Compatible.",
+      "nextValidationNeeded": "Profile parser on saved OCR lines; do not change regex without GT pass."
+    },
+    {
+      "rank": 5,
+      "candidate": "Downscale below current 950px",
+      "verdict": "FAIL for default",
+      "expectedBenefit": "Could reduce full OCR but current code already resizes to 950px.",
+      "singleRunBenefit": "Possible but unsafe.",
+      "repeatRunBenefit": "Possible but unsafe.",
+      "risk": "High: existing code comment records 850px receipt digit/separator regression.",
+      "implementationScope": "Would affect OCR input policy.",
+      "futureInfoTablesCompatibility": "Technically independent but accuracy risk affects future info/tables.",
+      "nextValidationNeeded": "Only revisit with separate 900/850/800 tmp A/B and strict GT pass."
+    },
+    {
+      "rank": 99,
+      "candidate": "outputFields/no_1~no_6 shortcut",
+      "verdict": "FAIL/excluded",
+      "expectedBenefit": "Not considered.",
+      "singleRunBenefit": "Irrelevant.",
+      "repeatRunBenefit": "Irrelevant.",
+      "risk": "Conflicts with future info/tables and task constraints.",
+      "implementationScope": "Do not pursue.",
+      "futureInfoTablesCompatibility": "Not compatible.",
+      "nextValidationNeeded": "None."
+    }
+  ],
+  "conclusion": {
+    "isCurrentBest": true,
+    "safestCandidate": "OCR cache, followed by response slim",
+    "bestSingleRunCandidate": "Conservative semantic re-OCR gating, but still WARN and requires A/B before recommendation",
+    "bestRepeatedRunCandidate": "OCR cache",
+    "nowRecommended": [
+      "OCR cache dry-run/implementation",
+      "response slim with opt-in images/debug"
+    ],
+    "notRecommendedNow": [
+      "unconditional re-OCR skip",
+      "below-950 downscale",
+      "outputFields/no_1~no_6 shortcuts"
+    ]
+  },
+  "preApplyValidationNeeded": [
+    "For cache: implement lookup dry-run and confirm stableProjection equality on target set.",
+    "For response slim: verify Preview image, History detail, Raw JSON/debug with explicit include flags.",
+    "For re-OCR gating: run A/B disabling only under proposed safe conditions and require zero loss on semantic fields/fillRate.",
+    "Do not pursue below-950 downscale unless 900/850/800 tmp experiment passes all required fields."
+  ]
+}

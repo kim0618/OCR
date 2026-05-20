@@ -12,6 +12,8 @@ type AlertOptions = {
   title?: string;
   message: string;
   okText?: string;
+  /** message보다 우선해서 렌더되는 커스텀 본문 (JSX 가능) */
+  body?: React.ReactNode;
 };
 
 type ConfirmOptions = {
@@ -19,6 +21,8 @@ type ConfirmOptions = {
   message: string;
   okText?: string;
   cancelText?: string;
+  /** message보다 우선해서 렌더되는 커스텀 본문 (JSX 가능) */
+  body?: React.ReactNode;
 };
 
 type AlertState =
@@ -27,6 +31,7 @@ type AlertState =
       open: true;
       title?: string;
       message: string;
+      body?: React.ReactNode;
       kind: "alert";
       okText?: string;
       resolve: () => void;
@@ -35,6 +40,7 @@ type AlertState =
       open: true;
       title?: string;
       message: string;
+      body?: React.ReactNode;
       kind: "confirm";
       okText?: string;
       cancelText?: string;
@@ -140,17 +146,17 @@ function Modal({
           {title}
         </div>
 
-        {/* 본문 */}
+        {/* 본문 — body가 있으면 우선 렌더, 없으면 message(pre-wrap) */}
         <div
           style={{
             padding: "18px 20px",
             fontSize: 14,
             lineHeight: 1.65,
             color: "var(--text)",
-            whiteSpace: "pre-wrap",
+            whiteSpace: state.body ? "normal" : "pre-wrap",
           }}
         >
-          {state.message}
+          {state.body ?? state.message}
         </div>
 
         {/* 푸터 */}
@@ -303,6 +309,7 @@ export default function AppProviders({
           open: true,
           kind: "alert",
           message: normalized.message,
+          body: normalized.body,
           title: normalized.title,
           okText: normalized.okText,
           resolve,
@@ -322,6 +329,7 @@ export default function AppProviders({
           open: true,
           kind: "confirm",
           message: normalized.message,
+          body: normalized.body,
           title: normalized.title,
           okText: normalized.okText,
           cancelText: normalized.cancelText,

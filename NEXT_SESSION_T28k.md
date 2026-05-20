@@ -2,7 +2,7 @@
 
 **작성일:** 2026-05-19  
 **도구:** Claude Code / Claude Sonnet 4.6  
-**프로젝트:** c:/OCR  
+**프로젝트:** OCR  
 
 ---
 

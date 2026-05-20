@@ -1,0 +1,1137 @@
+{
+  "tool": "Codex",
+  "model": "Codex",
+  "operationCodeModified": false,
+  "repoDirtyBeforeWork": true,
+  "gitStatusShort": "fatal: detected dubious ownership in repository at 'D:/Free_Vue/OCR'\n'D:/Free_Vue/OCR' is owned by:\n\tDESKTOP-C4EV6UM/jinsung (S-1-5-21-2021129721-2391521148-1384908961-1001)\nbut the current user is:\n\tDESKTOP-C4EV6UM/CodexSandboxOffline (S-1-5-21-2021129721-2391521148-1384908961-1003)\nTo add an exception for this directory, call:\n\n\tgit config --global --add safe.directory D:/Free_Vue/OCR",
+  "script": "D:\\Free_Vue\\OCR\\tmp\\codex_t28_perf3_column_order_pre_apply_validation.py",
+  "apiUrl": "http://127.0.0.1:9099/ocr/extract",
+  "targetMapping": [
+    {
+      "templateName": "거래_1",
+      "templateId": "TPL-31D13CF3",
+      "inputFile": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\invoice_statement\\1.jpg",
+      "expectedRowCount": 28
+    },
+    {
+      "templateName": "거래_2",
+      "templateId": "TPL-5A8C2374",
+      "inputFile": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\invoice_statement\\2.pdf",
+      "expectedRowCount": 13
+    },
+    {
+      "templateName": "거래_3",
+      "templateId": "TPL-E4B15A22",
+      "inputFile": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\invoice_statement\\3.pdf",
+      "expectedRowCount": 1
+    },
+    {
+      "templateName": "거래_4",
+      "templateId": "TPL-FD07531C",
+      "inputFile": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\invoice_statement\\4.pdf",
+      "expectedRowCount": 1
+    },
+    {
+      "templateName": "거래_5",
+      "templateId": "TPL-B8936EDE",
+      "inputFile": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\invoice_statement\\5.pdf",
+      "expectedRowCount": 6
+    },
+    {
+      "templateName": "거래_6",
+      "templateId": "TPL-95328E52",
+      "inputFile": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\invoice_statement\\6.pdf",
+      "expectedRowCount": 6
+    },
+    {
+      "templateName": "거래_7",
+      "templateId": "TPL-3AFD383E",
+      "inputFile": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\invoice_statement\\7.pdf",
+      "expectedRowCount": 1
+    }
+  ],
+  "columnOrderSourceStaticAnalysis": {
+    "sourceSummary": {
+      "Preview": "OcrResultPanel.tsx uses docTableDisplayCols = buildInvoicePreviewCols(docTableMeta, docTableRows), then renders headers/cells in that order.",
+      "CleanJSON": "Clean JSON uses cleanTableRowsFromObjects(docTableRows, docTableDisplayCols), so object insertion order follows docTableDisplayCols, not tableRows key order.",
+      "Custom": "Custom table branch uses docTableDisplayCols for colgroup, header, cells, and textarea edit columns.",
+      "Validation": "Validation table branch uses docTableDisplayCols for colgroup, header, and cells.",
+      "TestWorkspace": "TestWorkspace has an equivalent getDisplayTableColumns path using tableMeta / expected columns and tableRows.",
+      "table_data": "table_data is only a fallback when document_fields.tableRows/docTableDisplayCols is not available; it is not the normal column order source for invoice_statement RunOCR Preview.",
+      "objectKeyOrder": "Current structured path does not rely on document_fields.tableRows object key order for display or Clean JSON; it indexes each row by ordered column keys.",
+      "priority": "buildInvoicePreviewCols priority is tableMeta.expectedColumnKeys, then tableMeta.columns, then INVOICE_TABLE_COL_PRIORITY with hasValue and dedup filters."
+    },
+    "rgEvidence": {
+      "OcrResultPanel": "17:  buildInvoicePreviewCols,\n181:  table_data?: unknown;\n705:  const parseTableField = (value: string) => {\n736:        const { rowLabel: rawRowLabel } = parseTableField(f.value);\n752:      .map(({ f, i }) => ({ idx: i + 1, label: fieldLabelFull(f), ...parseTableField(f.value) }))\n775:  // fix8/PREVIEW-9A: 공통 helper buildInvoicePreviewCols 사용\n776:  const docTableDisplayCols = useMemo(\n777:    () => (docTableRows ? buildInvoicePreviewCols(docTableMeta, docTableRows) : null),\n786:    const displayKeys = new Set((docTableDisplayCols ?? []).map((c) => c.key));\n816:  }, [docTableRows, docTableMeta, docTableDisplayCols]);\n819:  const cleanTableRowsFromObjects = (\n866:        if (docTableRows && docTableDisplayCols && docTableDisplayCols.length > 0) {\n867:          rows = cleanTableRowsFromObjects(docTableRows, docTableDisplayCols);\n869:          rows = cleanTableRowsFromObjects(f.tableRows, null);\n870:        } else if (Array.isArray(f.table_data)) {\n871:          rows = cleanTableRowsFromCells(f.table_data);\n885:  }, [editedFields, docTableRows, docTableDisplayCols, templateName]);\n1123:                    if (tableIdx === 0 && docTableRows && docTableDisplayCols) {\n1124:                      // PREVIEW-9A-fix2: buildInvoicePreviewCols가 dedup 포함 완전 처리\n1125:                      // docTableDisplayCols를 그대로 사용 (별도 필터 불필요)\n1126:                      const finalDisplayCols = docTableDisplayCols;\n1433:                    if (docTableRows && docTableDisplayCols && docTableDisplayCols.length > 0) {\n1461:                                {docTableDisplayCols.map((col) => (\n1467:                                  {docTableDisplayCols.map((col) => (\n1486:                                    {docTableDisplayCols.map((col) => (\n1524:                    // fallback: raw parseTableField (docTableRows 없는 경우)\n1525:                    const { rows, displayRows, isSingleCol, rowLabel: rawRowLabel } = parseTableField(field.value);\n1655:                            const hasStructured = docTableRows && docTableDisplayCols && docTableDisplayCols.length > 0;\n1657:                              const { rowLabel: raw } = parseTableField(item.field.value);\n1710:                                        {docTableDisplayCols!.map((col) => (\n1716:                                          {docTableDisplayCols!.map((col) => (\n1735:                                            {docTableDisplayCols!.map((col) => (",
+      "invoiceTableDisplay": "18: * buildInvoicePreviewCols / allowlist 기반 hasValue fallback에서 제외됨.\n20:export const INVOICE_TABLE_COL_PRIORITY: readonly InvoiceDisplayCol[] = [\n49:  ...Object.fromEntries(INVOICE_TABLE_COL_PRIORITY.map((c) => [c.key, c.labelKo])),\n105:export function hasMeaningfulTableValue(\n158: *   1. tableMeta.expectedColumnKeys → 순서·라벨 참고 + hasValue 필터\n159: *   2. tableMeta.columns → 순서·라벨 참고 + hasValue 필터\n160: *   3. INVOICE_TABLE_COL_PRIORITY allowlist + hasValue fallback\n170:export function buildInvoicePreviewCols(\n177:  // 1순위: expectedColumnKeys\n178:  const expKeys = tableMeta?.expectedColumnKeys;\n195:  // 3순위: INVOICE_TABLE_COL_PRIORITY allowlist\n197:    candidateKeys = INVOICE_TABLE_COL_PRIORITY.map((c) => c.key);\n209:    .filter((k) => hasMeaningfulTableValue(rows, k))\n233:    hasMeaningfulTableValue(rows, \"itemCode\") &&\n234:    !hasMeaningfulTableValue(rows, \"manufacturingNo\")\n254:  if (hasMeaningfulTableValue(rows, \"rowIndex\")) {",
+      "TestWorkspace": "36:import { resolveProfile, FINANCE_COLUMNS, FINANCE_TIER1_FIELDS, DOCUMENT_COLUMNS, DOCUMENT_PARTY_FIELDS, isNotApplicableField, getExpectedTableColumns, TABLE_COLUMN_META } from \"@/lib/profiles\";\n78:  // T-11: invoice tableRows 메트릭\n79:  tableRowsWithData: number;     // tableRows를 반환한 샘플 수\n80:  tableRowsWarningCount: number; // valueMappingWarnings가 있는 샘플 수\n299:// ── T-4: canonical tableRows / tableMeta 타입 ─────────────────────────────────\n341:  const raw = (documentFields as Record<string, unknown> | null)?.tableRows;\n360:  // T-6b: 샘플별 tableExpectedColumns override — tableProfile 전역 기준보다 우선\n361:  const allColumnKeySet = new Set<string>(TABLE_COLUMN_META.map((m) => m.key));\n365:  const sampleOverride = invoiceProfile?.tableExpectedColumns;\n374:  // T-4: 실제 tableMeta/tableRows에서 actualColumns 및 extractionStatus를 읽음\n376:  const tableRows = getInvoiceTableRows(documentFields);\n379:  // Actual fallback: tableRows에 값이 있는 컬럼도 Actual로 간주\n383:      : TABLE_COLUMN_META\n384:          .filter((m) => tableRows.some((row) => {\n396:  // extractionStatus: tableMeta 우선, 없으면 tableRows 유무로 판정\n403:  } else if (tableRows.length > 0) {\n770:  tableExpectedColumns?: { required: string[]; optional?: string[] } | null,\n781:  // T-6f: pass tableExpectedColumns from manifest invoiceProfile to backend extractor\n782:  if (tableExpectedColumns) {\n783:    form.append(\"tableExpectedColumns\", JSON.stringify(tableExpectedColumns));\n1208:      // T-6f: pass tableExpectedColumns from manifest invoiceProfile\n1210:      const _runOneTec = _runOneMeta?.invoiceProfile?.tableExpectedColumns ?? null;\n1279:        // T-6f: pass tableExpectedColumns from manifest invoiceProfile\n1281:        const _runAllTec = _runAllMeta?.invoiceProfile?.tableExpectedColumns ?? null;\n1352:        map.set(dt, { documentType: dt, total: 0, selected: 0, suppressed: 0, unknown: 0, error: 0, notRun: 0, fieldFilled, financeFieldFilled, documentFieldFilled, tableRowsWithData: 0, tableRowsWarningCount: 0, rowExactCount: 0, rowShortCount: 0, rowOverCount: 0, rowUnknownCount: 0, missingFieldCounts: {}, warningTypeCounts: {} });\n1387:          // T-11: tableRows 메트릭 집계\n1389:          if (tMeta?.rowCount && tMeta.rowCount > 0) row.tableRowsWithData++;\n1390:          if (tMeta?.valueMappingWarnings && tMeta.valueMappingWarnings.length > 0) row.tableRowsWarningCount++;\n1402:          const tableRowsData = getInvoiceTableRows(docFields as unknown as Record<string, string> | null);\n1403:          const requiredCols = manifestItem?.invoiceProfile?.tableExpectedColumns?.required ?? [];\n1404:          if (requiredCols.length > 0 && tableRowsData.length > 0) {\n1406:              const hasValue = tableRowsData.some((r) => {\n1584:      const tableRows = getInvoiceTableRows(docFields as unknown as Record<string, string> | null);\n1593:      const requiredCols = manifestItem?.invoiceProfile?.tableExpectedColumns?.required ?? [];\n1594:      const missingFields = tableRows.length > 0\n1595:        ? requiredCols.filter((k) => !tableRows.some((r) => {\n1636:          tableRowsWithData: r.tableRowsWithData,\n1637:          tableRowsWarningCount: r.tableRowsWarningCount,\n1693:      lines.push(`| ${r.documentType} | ${r.total} | ${r.selected} | ${r.suppressed} | ${r.notRun} | ${r.tableRowsWithData} | ${r.rowExactCount} | ${r.rowShortCount} | ${r.rowOverCount} |`);\n4436:  const colLabelMap = Object.fromEntries(TABLE_COLUMN_META.map((m) => [m.key, m.labelKo]));\n4467:          {invoiceProfile?.tableExpectedColumns && (\n4543:// T-6e-fix2/static/T-6e-fix3/T-6k: manifest tableExpectedColumns → ordered display column keys.\n4548:  tableExpectedColumns: InvoiceProfile[\"tableExpectedColumns\"] | undefined\n4550:  if (!tableExpectedColumns) return [];\n4552:  const displayArr = tableExpectedColumns.display;\n4563:  for (const k of (tableExpectedColumns.required ?? [])) {\n4573:  tableExpectedColumns: InvoiceProfile[\"tableExpectedColumns\"] | undefined\n4575:  const displayArr = tableExpectedColumns?.display;\n4621:function getDisplayTableColumns(\n4623:  tableRows: CanonicalTableRow[],\n4629:  // T-6e-fix2: expected mode — manifest tableExpectedColumns를 최우선으로 사용\n4650:      tableRows.some((row) => {\n4671:    tableRows.some((row) => {\n4680:  tableRows,\n4685:  tableRows: CanonicalTableRow[];\n4696:    () => getManifestExpectedColKeys(invoiceProfile?.tableExpectedColumns),\n4697:    [invoiceProfile?.tableExpectedColumns]\n4714:  const rowCount = tableMeta?.rowCount ?? (tableRows.length > 0 ? tableRows.length : Number(documentFields?.rowCount ?? 0) || 0);\n4717:  const extractionStatus: string = metaStatus || (tableRows.length > 0 ? \"partial\" : tableDetected ? \"parser_not_ready\" : \"not_extracted\");\n4721:    () => getManifestDisplayLabelMap(invoiceProfile?.tableExpectedColumns),\n4722:    [invoiceProfile?.tableExpectedColumns]\n4731:  const displayCols = getDisplayTableColumns(tableMeta, tableRows, displayMode, manifestExpectedColKeys);\n4735:  const manifestRequiredKeys = invoiceProfile?.tableExpectedColumns?.required ?? [];\n4737:    tableRows.length > 0\n4738:      ? ALL_CANONICAL_COLS.filter((col) => tableRows.some((row) => {\n4856:      {tableRows.length > 0 ? (\n4893:                {tableRows.map((row, rowIdx) => (\n4923:              {showRaw ? \"tableRows JSON 숨기기\" : \"원본 tableRows JSON 보기\"}\n4933:              {JSON.stringify(tableRows, null, 2)}\n5042:      {/* T-4: 표 추출 결과 — tableRows/tableMeta 표시 */}\n5045:          tableRows={getInvoiceTableRows(documentFields)}\n5932:        {/* ── 거래명세서 sub-table (document 전용 컬럼 + T-11: tableRows 메트릭) ── */}\n5948:                  {/* T-11/T-12a: tableRows 메트릭 */}\n5962:                      {/* T-11/T-12a: tableRows 메트릭 */}\n5963:                      <td style={{ ...tdSm, textAlign: \"center\", color: row.tableRowsWithData === runCount && runCount > 0 ? \"#22c55e\" : row.tableRowsWithData > 0 ? \"#f59e0b\" : \"rgba(255,255,255,0.25)\" }}>\n5964:                        {runCount > 0 ? `${row.tableRowsWithData}/${runCount}` : \"—\"}\n5975:                      <td style={{ ...tdSm, textAlign: \"center\", color: row.tableRowsWarningCount > 0 ? \"#f59e0b\" : \"rgba(255,255,255,0.25)\" }}>\n5976:                        {runCount > 0 ? (row.tableRowsWarningCount || \"—\") : \"—\"}"
+    }
+  },
+  "results": [
+    {
+      "templateName": "거래_1",
+      "templateId": "TPL-31D13CF3",
+      "inputFile": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\invoice_statement\\1.jpg",
+      "expectedRowCount": 28,
+      "api": {
+        "apiUrl": "http://127.0.0.1:9099/ocr/extract",
+        "wallSeconds": 80.699,
+        "statusCode": 200,
+        "responseBytes": 677648
+      },
+      "processing_time": 80.53,
+      "documentFieldsRowCount": 28,
+      "afterDocumentFieldsRowCount": 28,
+      "rowCountMaintained": true,
+      "beforeColumnKeys": [
+        "itemName",
+        "spec",
+        "manufacturingNo",
+        "expiryDate",
+        "quantity",
+        "unitPrice",
+        "amount"
+      ],
+      "afterColumnKeys": [
+        "itemName",
+        "spec",
+        "manufacturingNo",
+        "expiryDate",
+        "quantity",
+        "unitPrice",
+        "amount"
+      ],
+      "columnOrderSame": true,
+      "cleanJsonBeforeColumnKeys": [
+        "itemName",
+        "spec",
+        "manufacturingNo",
+        "expiryDate",
+        "quantity",
+        "unitPrice",
+        "amount"
+      ],
+      "cleanJsonAfterColumnKeys": [
+        "itemName",
+        "spec",
+        "manufacturingNo",
+        "expiryDate",
+        "quantity",
+        "unitPrice",
+        "amount"
+      ],
+      "cleanJsonColumnOrderSame": true,
+      "cleanJsonRowsMaintained": true,
+      "previewColumnKeys": [
+        "itemName",
+        "spec",
+        "manufacturingNo",
+        "expiryDate",
+        "quantity",
+        "unitPrice",
+        "amount"
+      ],
+      "customColumnKeys": [
+        "itemName",
+        "spec",
+        "manufacturingNo",
+        "expiryDate",
+        "quantity",
+        "unitPrice",
+        "amount"
+      ],
+      "validationColumnKeys": [
+        "itemName",
+        "spec",
+        "manufacturingNo",
+        "expiryDate",
+        "quantity",
+        "unitPrice",
+        "amount"
+      ],
+      "tableDataFallbackColumnKeys": [
+        "itemName",
+        "spec",
+        "serialNo",
+        "manufacturingNo",
+        "expiryDate",
+        "quantity",
+        "consumerUnitPrice"
+      ],
+      "tableDataIsColumnOrderSource": false,
+      "tableRowsSampleRowKeys": [
+        "rowIndex",
+        "itemCode",
+        "itemName",
+        "spec",
+        "lotNo",
+        "serialNo",
+        "manufacturingNo",
+        "expiryDate",
+        "quantity",
+        "unit",
+        "unitPrice",
+        "supplyAmount",
+        "taxAmount",
+        "amount",
+        "totalAmount",
+        "manufacturer",
+        "insuranceCode",
+        "remark",
+        "_rawText",
+        "_confidence",
+        "_source",
+        "manufacturingExpiryComposite",
+        "serialLotComposite"
+      ],
+      "objectKeyOrderDependency": false,
+      "tableMetaExpectedColumnKeys": [
+        "itemName",
+        "spec",
+        "manufacturingNo",
+        "expiryDate",
+        "quantity",
+        "unitPrice",
+        "amount",
+        "lotNo",
+        "unit",
+        "supplyAmount",
+        "taxAmount",
+        "totalAmount",
+        "remark"
+      ],
+      "tableMetaColumns": [
+        "rowIndex",
+        "itemCode",
+        "itemName",
+        "spec",
+        "lotNo",
+        "manufacturingNo",
+        "expiryDate",
+        "quantity",
+        "unitPrice",
+        "amount"
+      ],
+      "firstRowBefore": {
+        "itemName": "헥사메딘액0.12%",
+        "spec": "15m|*6포",
+        "manufacturingNo": "24027",
+        "expiryDate": "20270205",
+        "quantity": "400",
+        "unitPrice": "1,050",
+        "amount": "420,000"
+      },
+      "firstRowAfter": {
+        "itemName": "헥사메딘액0.12%",
+        "spec": "15m|*6포",
+        "manufacturingNo": "24027",
+        "expiryDate": "20270205",
+        "quantity": "400",
+        "unitPrice": "1,050",
+        "amount": "420,000"
+      },
+      "rowsValueSampleSame": true,
+      "majorFields": {
+        "supplierCompany": "부광약품(주)",
+        "buyerCompany": "백제약품(주)영등포지점",
+        "totalAmount": "18,098,750",
+        "rowCount": "28"
+      }
+    },
+    {
+      "templateName": "거래_2",
+      "templateId": "TPL-5A8C2374",
+      "inputFile": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\invoice_statement\\2.pdf",
+      "expectedRowCount": 13,
+      "api": {
+        "apiUrl": "http://127.0.0.1:9099/ocr/extract",
+        "wallSeconds": 55.775,
+        "statusCode": 200,
+        "responseBytes": 604296
+      },
+      "processing_time": 55.62,
+      "documentFieldsRowCount": 13,
+      "afterDocumentFieldsRowCount": 13,
+      "rowCountMaintained": true,
+      "beforeColumnKeys": [
+        "itemCode",
+        "itemName",
+        "quantity",
+        "consumerUnitPrice",
+        "supplyUnitPrice",
+        "supplyAmount"
+      ],
+      "afterColumnKeys": [
+        "itemCode",
+        "itemName",
+        "quantity",
+        "consumerUnitPrice",
+        "supplyUnitPrice",
+        "supplyAmount"
+      ],
+      "columnOrderSame": true,
+      "cleanJsonBeforeColumnKeys": [
+        "itemCode",
+        "itemName",
+        "quantity",
+        "consumerUnitPrice",
+        "supplyUnitPrice",
+        "supplyAmount"
+      ],
+      "cleanJsonAfterColumnKeys": [
+        "itemCode",
+        "itemName",
+        "quantity",
+        "consumerUnitPrice",
+        "supplyUnitPrice",
+        "supplyAmount"
+      ],
+      "cleanJsonColumnOrderSame": true,
+      "cleanJsonRowsMaintained": true,
+      "previewColumnKeys": [
+        "itemCode",
+        "itemName",
+        "quantity",
+        "consumerUnitPrice",
+        "supplyUnitPrice",
+        "supplyAmount"
+      ],
+      "customColumnKeys": [
+        "itemCode",
+        "itemName",
+        "quantity",
+        "consumerUnitPrice",
+        "supplyUnitPrice",
+        "supplyAmount"
+      ],
+      "validationColumnKeys": [
+        "itemCode",
+        "itemName",
+        "quantity",
+        "consumerUnitPrice",
+        "supplyUnitPrice",
+        "supplyAmount"
+      ],
+      "tableDataFallbackColumnKeys": [
+        "itemName",
+        "spec",
+        "serialNo",
+        "manufacturingNo",
+        "expiryDate",
+        "quantity",
+        "consumerUnitPrice",
+        "supplyUnitPrice",
+        "unitPrice"
+      ],
+      "tableDataIsColumnOrderSource": false,
+      "tableRowsSampleRowKeys": [
+        "rowIndex",
+        "itemCode",
+        "itemName",
+        "spec",
+        "lotNo",
+        "serialNo",
+        "manufacturingNo",
+        "expiryDate",
+        "quantity",
+        "unit",
+        "unitPrice",
+        "supplyAmount",
+        "taxAmount",
+        "amount",
+        "totalAmount",
+        "manufacturer",
+        "insuranceCode",
+        "remark",
+        "_rawText",
+        "_confidence",
+        "_source",
+        "consumerUnitPrice",
+        "supplyUnitPrice",
+        "serialLotComposite"
+      ],
+      "objectKeyOrderDependency": false,
+      "tableMetaExpectedColumnKeys": [
+        "rowIndex",
+        "itemCode",
+        "itemName",
+        "quantity",
+        "consumerUnitPrice",
+        "supplyUnitPrice",
+        "supplyAmount",
+        "insuranceCode",
+        "amount",
+        "totalAmount",
+        "remark"
+      ],
+      "tableMetaColumns": [
+        "rowIndex",
+        "itemCode",
+        "itemName",
+        "lotNo",
+        "quantity",
+        "supplyAmount"
+      ],
+      "firstRowBefore": {
+        "itemCode": "OP-AF0100",
+        "itemName": "오스템아세클로페낙정100T 33220",
+        "quantity": "53210",
+        "consumerUnitPrice": "14,080",
+        "supplyUnitPrice": "14,080",
+        "supplyAmount": "140,800"
+      },
+      "firstRowAfter": {
+        "itemCode": "OP-AF0100",
+        "itemName": "오스템아세클로페낙정100T 33220",
+        "quantity": "53210",
+        "consumerUnitPrice": "14,080",
+        "supplyUnitPrice": "14,080",
+        "supplyAmount": "140,800"
+      },
+      "rowsValueSampleSame": true,
+      "majorFields": {
+        "supplierCompany": "오스템임플란트(주)",
+        "buyerCompany": "백제약품(주)영등포지점",
+        "totalAmount": "376,638,215",
+        "rowCount": "13"
+      }
+    },
+    {
+      "templateName": "거래_3",
+      "templateId": "TPL-E4B15A22",
+      "inputFile": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\invoice_statement\\3.pdf",
+      "expectedRowCount": 1,
+      "api": {
+        "apiUrl": "http://127.0.0.1:9099/ocr/extract",
+        "wallSeconds": 23.255,
+        "statusCode": 200,
+        "responseBytes": 226614
+      },
+      "processing_time": 23.23,
+      "documentFieldsRowCount": 1,
+      "afterDocumentFieldsRowCount": 1,
+      "rowCountMaintained": true,
+      "beforeColumnKeys": [
+        "itemName",
+        "quantity",
+        "unitPrice",
+        "manufacturer"
+      ],
+      "afterColumnKeys": [
+        "itemName",
+        "quantity",
+        "unitPrice",
+        "manufacturer"
+      ],
+      "columnOrderSame": true,
+      "cleanJsonBeforeColumnKeys": [
+        "itemName",
+        "quantity",
+        "unitPrice",
+        "manufacturer"
+      ],
+      "cleanJsonAfterColumnKeys": [
+        "itemName",
+        "quantity",
+        "unitPrice",
+        "manufacturer"
+      ],
+      "cleanJsonColumnOrderSame": true,
+      "cleanJsonRowsMaintained": true,
+      "previewColumnKeys": [
+        "itemName",
+        "quantity",
+        "unitPrice",
+        "manufacturer"
+      ],
+      "customColumnKeys": [
+        "itemName",
+        "quantity",
+        "unitPrice",
+        "manufacturer"
+      ],
+      "validationColumnKeys": [
+        "itemName",
+        "quantity",
+        "unitPrice",
+        "manufacturer"
+      ],
+      "tableDataFallbackColumnKeys": [
+        "itemName"
+      ],
+      "tableDataIsColumnOrderSource": false,
+      "tableRowsSampleRowKeys": [
+        "rowIndex",
+        "itemCode",
+        "itemName",
+        "spec",
+        "lotNo",
+        "serialNo",
+        "manufacturingNo",
+        "expiryDate",
+        "quantity",
+        "unit",
+        "unitPrice",
+        "supplyAmount",
+        "taxAmount",
+        "amount",
+        "totalAmount",
+        "manufacturer",
+        "insuranceCode",
+        "remark",
+        "_rawText",
+        "_confidence",
+        "_source",
+        "manufacturingExpiryComposite"
+      ],
+      "objectKeyOrderDependency": false,
+      "tableMetaExpectedColumnKeys": [
+        "rowIndex",
+        "insuranceCode",
+        "itemName",
+        "spec",
+        "quantity",
+        "unitPrice",
+        "amount",
+        "manufacturer",
+        "manufacturingExpiryComposite",
+        "lotNo",
+        "serialNo",
+        "remark"
+      ],
+      "tableMetaColumns": [
+        "rowIndex",
+        "itemName",
+        "expiryDate",
+        "quantity",
+        "unitPrice",
+        "manufacturer"
+      ],
+      "firstRowBefore": {
+        "itemName": "669700020에스피씨세파클러캡슬250mg 30 캡슐",
+        "quantity": "30",
+        "unitPrice": "10,044",
+        "manufacturer": "301.320(주)에스피"
+      },
+      "firstRowAfter": {
+        "itemName": "669700020에스피씨세파클러캡슬250mg 30 캡슐",
+        "quantity": "30",
+        "unitPrice": "10,044",
+        "manufacturer": "301.320(주)에스피"
+      },
+      "rowsValueSampleSame": true,
+      "majorFields": {
+        "supplierCompany": "주식회사 예일선",
+        "buyerCompany": "백제약품(주)영등포지점",
+        "totalAmount": "301,320",
+        "rowCount": "1"
+      }
+    },
+    {
+      "templateName": "거래_4",
+      "templateId": "TPL-FD07531C",
+      "inputFile": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\invoice_statement\\4.pdf",
+      "expectedRowCount": 1,
+      "api": {
+        "apiUrl": "http://127.0.0.1:9099/ocr/extract",
+        "wallSeconds": 21.075,
+        "statusCode": 200,
+        "responseBytes": 260309
+      },
+      "processing_time": 21.0,
+      "documentFieldsRowCount": 1,
+      "afterDocumentFieldsRowCount": 1,
+      "rowCountMaintained": true,
+      "beforeColumnKeys": [
+        "itemName",
+        "lotNo",
+        "unit",
+        "quantity",
+        "unitPrice",
+        "supplyAmount",
+        "taxAmount",
+        "totalAmount"
+      ],
+      "afterColumnKeys": [
+        "itemName",
+        "lotNo",
+        "unit",
+        "quantity",
+        "unitPrice",
+        "supplyAmount",
+        "taxAmount",
+        "totalAmount"
+      ],
+      "columnOrderSame": true,
+      "cleanJsonBeforeColumnKeys": [
+        "itemName",
+        "lotNo",
+        "unit",
+        "quantity",
+        "unitPrice",
+        "supplyAmount",
+        "taxAmount",
+        "totalAmount"
+      ],
+      "cleanJsonAfterColumnKeys": [
+        "itemName",
+        "lotNo",
+        "unit",
+        "quantity",
+        "unitPrice",
+        "supplyAmount",
+        "taxAmount",
+        "totalAmount"
+      ],
+      "cleanJsonColumnOrderSame": true,
+      "cleanJsonRowsMaintained": true,
+      "previewColumnKeys": [
+        "itemName",
+        "lotNo",
+        "unit",
+        "quantity",
+        "unitPrice",
+        "supplyAmount",
+        "taxAmount",
+        "totalAmount"
+      ],
+      "customColumnKeys": [
+        "itemName",
+        "lotNo",
+        "unit",
+        "quantity",
+        "unitPrice",
+        "supplyAmount",
+        "taxAmount",
+        "totalAmount"
+      ],
+      "validationColumnKeys": [
+        "itemName",
+        "lotNo",
+        "unit",
+        "quantity",
+        "unitPrice",
+        "supplyAmount",
+        "taxAmount",
+        "totalAmount"
+      ],
+      "tableDataFallbackColumnKeys": [
+        "itemName",
+        "spec",
+        "serialNo",
+        "manufacturingNo",
+        "expiryDate",
+        "quantity"
+      ],
+      "tableDataIsColumnOrderSource": false,
+      "tableRowsSampleRowKeys": [
+        "rowIndex",
+        "itemCode",
+        "itemName",
+        "spec",
+        "lotNo",
+        "serialNo",
+        "manufacturingNo",
+        "expiryDate",
+        "quantity",
+        "unit",
+        "unitPrice",
+        "supplyAmount",
+        "taxAmount",
+        "amount",
+        "totalAmount",
+        "manufacturer",
+        "insuranceCode",
+        "remark",
+        "_rawText",
+        "_confidence",
+        "_source",
+        "manufacturingExpiryComposite",
+        "serialLotComposite"
+      ],
+      "objectKeyOrderDependency": false,
+      "tableMetaExpectedColumnKeys": [
+        "itemName",
+        "lotNo",
+        "unit",
+        "quantity",
+        "unitPrice",
+        "supplyAmount",
+        "taxAmount",
+        "amount",
+        "totalAmount",
+        "remark"
+      ],
+      "tableMetaColumns": [
+        "rowIndex",
+        "itemName",
+        "lotNo",
+        "serialNo",
+        "expiryDate",
+        "quantity",
+        "unit",
+        "unitPrice",
+        "supplyAmount",
+        "taxAmount"
+      ],
+      "firstRowBefore": {
+        "itemName": "클리마로플란정",
+        "lotNo": "0360823-231024-200811",
+        "unit": "BOX",
+        "quantity": "1,000",
+        "unitPrice": "28,336.00",
+        "supplyAmount": "25,760,000",
+        "taxAmount": "2,578,000",
+        "totalAmount": "28,338,000"
+      },
+      "firstRowAfter": {
+        "itemName": "클리마로플란정",
+        "lotNo": "0360823-231024-200811",
+        "unit": "BOX",
+        "quantity": "1,000",
+        "unitPrice": "28,336.00",
+        "supplyAmount": "25,760,000",
+        "taxAmount": "2,578,000",
+        "totalAmount": "28,338,000"
+      },
+      "rowsValueSampleSame": true,
+      "majorFields": {
+        "supplierCompany": "주식회사 엘벼아브노바",
+        "buyerCompany": "백계약품(주)형둥표지점",
+        "totalAmount": "28,338,000",
+        "rowCount": "1"
+      }
+    },
+    {
+      "templateName": "거래_5",
+      "templateId": "TPL-B8936EDE",
+      "inputFile": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\invoice_statement\\5.pdf",
+      "expectedRowCount": 6,
+      "api": {
+        "apiUrl": "http://127.0.0.1:9099/ocr/extract",
+        "wallSeconds": 26.807,
+        "statusCode": 200,
+        "responseBytes": 286205
+      },
+      "processing_time": 26.69,
+      "documentFieldsRowCount": 6,
+      "afterDocumentFieldsRowCount": 6,
+      "rowCountMaintained": true,
+      "beforeColumnKeys": [
+        "itemName",
+        "itemCode",
+        "quantity",
+        "unitPrice",
+        "amount"
+      ],
+      "afterColumnKeys": [
+        "itemName",
+        "itemCode",
+        "quantity",
+        "unitPrice",
+        "amount"
+      ],
+      "columnOrderSame": true,
+      "cleanJsonBeforeColumnKeys": [
+        "itemName",
+        "itemCode",
+        "quantity",
+        "unitPrice",
+        "amount"
+      ],
+      "cleanJsonAfterColumnKeys": [
+        "itemName",
+        "itemCode",
+        "quantity",
+        "unitPrice",
+        "amount"
+      ],
+      "cleanJsonColumnOrderSame": true,
+      "cleanJsonRowsMaintained": true,
+      "previewColumnKeys": [
+        "itemName",
+        "itemCode",
+        "quantity",
+        "unitPrice",
+        "amount"
+      ],
+      "customColumnKeys": [
+        "itemName",
+        "itemCode",
+        "quantity",
+        "unitPrice",
+        "amount"
+      ],
+      "validationColumnKeys": [
+        "itemName",
+        "itemCode",
+        "quantity",
+        "unitPrice",
+        "amount"
+      ],
+      "tableDataFallbackColumnKeys": [
+        "itemName",
+        "spec",
+        "serialNo",
+        "manufacturingNo",
+        "expiryDate"
+      ],
+      "tableDataIsColumnOrderSource": false,
+      "tableRowsSampleRowKeys": [
+        "rowIndex",
+        "itemCode",
+        "itemName",
+        "spec",
+        "lotNo",
+        "serialNo",
+        "manufacturingNo",
+        "expiryDate",
+        "quantity",
+        "unit",
+        "unitPrice",
+        "supplyAmount",
+        "taxAmount",
+        "amount",
+        "totalAmount",
+        "manufacturer",
+        "insuranceCode",
+        "remark",
+        "_rawText",
+        "_confidence",
+        "_source"
+      ],
+      "objectKeyOrderDependency": false,
+      "tableMetaExpectedColumnKeys": [
+        "itemName",
+        "itemCode",
+        "quantity",
+        "unitPrice",
+        "amount",
+        "supplyAmount",
+        "taxAmount",
+        "totalAmount",
+        "remark"
+      ],
+      "tableMetaColumns": [
+        "rowIndex",
+        "itemCode",
+        "itemName",
+        "quantity",
+        "unitPrice",
+        "amount"
+      ],
+      "firstRowBefore": {
+        "itemName": "두피나액30ML",
+        "itemCode": "DPNL30M",
+        "quantity": "10Q",
+        "unitPrice": "2,730",
+        "amount": "273,000"
+      },
+      "firstRowAfter": {
+        "itemName": "두피나액30ML",
+        "itemCode": "DPNL30M",
+        "quantity": "10Q",
+        "unitPrice": "2,730",
+        "amount": "273,000"
+      },
+      "rowsValueSampleSame": true,
+      "majorFields": {
+        "supplierCompany": "일양약품",
+        "buyerCompany": "백제약품(주)영등포지점",
+        "totalAmount": "3,351,298",
+        "rowCount": "6"
+      }
+    },
+    {
+      "templateName": "거래_6",
+      "templateId": "TPL-95328E52",
+      "inputFile": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\invoice_statement\\6.pdf",
+      "expectedRowCount": 6,
+      "api": {
+        "apiUrl": "http://127.0.0.1:9099/ocr/extract",
+        "wallSeconds": 19.453,
+        "statusCode": 200,
+        "responseBytes": 179586
+      },
+      "processing_time": 19.41,
+      "documentFieldsRowCount": 6,
+      "afterDocumentFieldsRowCount": 6,
+      "rowCountMaintained": true,
+      "beforeColumnKeys": [
+        "itemCode",
+        "itemName",
+        "quantity",
+        "expiryDate"
+      ],
+      "afterColumnKeys": [
+        "itemCode",
+        "itemName",
+        "quantity",
+        "expiryDate"
+      ],
+      "columnOrderSame": true,
+      "cleanJsonBeforeColumnKeys": [
+        "itemCode",
+        "itemName",
+        "quantity",
+        "expiryDate"
+      ],
+      "cleanJsonAfterColumnKeys": [
+        "itemCode",
+        "itemName",
+        "quantity",
+        "expiryDate"
+      ],
+      "cleanJsonColumnOrderSame": true,
+      "cleanJsonRowsMaintained": true,
+      "previewColumnKeys": [
+        "itemCode",
+        "itemName",
+        "quantity",
+        "expiryDate"
+      ],
+      "customColumnKeys": [
+        "itemCode",
+        "itemName",
+        "quantity",
+        "expiryDate"
+      ],
+      "validationColumnKeys": [
+        "itemCode",
+        "itemName",
+        "quantity",
+        "expiryDate"
+      ],
+      "tableDataFallbackColumnKeys": [
+        "itemName",
+        "spec",
+        "serialNo"
+      ],
+      "tableDataIsColumnOrderSource": false,
+      "tableRowsSampleRowKeys": [
+        "rowIndex",
+        "itemCode",
+        "itemName",
+        "spec",
+        "lotNo",
+        "serialNo",
+        "manufacturingNo",
+        "expiryDate",
+        "quantity",
+        "unit",
+        "unitPrice",
+        "supplyAmount",
+        "taxAmount",
+        "amount",
+        "totalAmount",
+        "manufacturer",
+        "insuranceCode",
+        "remark",
+        "_rawText",
+        "_confidence",
+        "_source",
+        "manufacturingExpiryComposite",
+        "serialLotComposite"
+      ],
+      "objectKeyOrderDependency": false,
+      "tableMetaExpectedColumnKeys": [
+        "rowIndex",
+        "itemCode",
+        "itemName",
+        "quantity",
+        "lotNo",
+        "expiryDate",
+        "serialNo",
+        "manufacturingNo",
+        "unit",
+        "remark"
+      ],
+      "tableMetaColumns": [
+        "rowIndex",
+        "itemCode",
+        "itemName",
+        "lotNo",
+        "expiryDate",
+        "quantity"
+      ],
+      "firstRowBefore": {
+        "itemCode": "ATT100T",
+        "itemName": "알코텔정100T",
+        "quantity": "10",
+        "expiryDate": "260403"
+      },
+      "firstRowAfter": {
+        "itemCode": "ATT100T",
+        "itemName": "알코텔정100T",
+        "quantity": "10",
+        "expiryDate": "260403"
+      },
+      "rowsValueSampleSame": true,
+      "majorFields": {
+        "supplierCompany": "",
+        "buyerCompany": "백제약품(주)영등포지점",
+        "totalAmount": "",
+        "rowCount": "6"
+      }
+    },
+    {
+      "templateName": "거래_7",
+      "templateId": "TPL-3AFD383E",
+      "inputFile": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\invoice_statement\\7.pdf",
+      "expectedRowCount": 1,
+      "api": {
+        "apiUrl": "http://127.0.0.1:9099/ocr/extract",
+        "wallSeconds": 16.376,
+        "statusCode": 200,
+        "responseBytes": 223806
+      },
+      "processing_time": 16.33,
+      "documentFieldsRowCount": 1,
+      "afterDocumentFieldsRowCount": 1,
+      "rowCountMaintained": true,
+      "beforeColumnKeys": [
+        "itemName",
+        "unit",
+        "quantity"
+      ],
+      "afterColumnKeys": [
+        "itemName",
+        "unit",
+        "quantity"
+      ],
+      "columnOrderSame": true,
+      "cleanJsonBeforeColumnKeys": [
+        "itemName",
+        "unit",
+        "quantity"
+      ],
+      "cleanJsonAfterColumnKeys": [
+        "itemName",
+        "unit",
+        "quantity"
+      ],
+      "cleanJsonColumnOrderSame": true,
+      "cleanJsonRowsMaintained": true,
+      "previewColumnKeys": [
+        "itemName",
+        "unit",
+        "quantity"
+      ],
+      "customColumnKeys": [
+        "itemName",
+        "unit",
+        "quantity"
+      ],
+      "validationColumnKeys": [
+        "itemName",
+        "unit",
+        "quantity"
+      ],
+      "tableDataFallbackColumnKeys": [
+        "itemName"
+      ],
+      "tableDataIsColumnOrderSource": false,
+      "tableRowsSampleRowKeys": [
+        "rowIndex",
+        "itemCode",
+        "itemName",
+        "spec",
+        "lotNo",
+        "serialNo",
+        "manufacturingNo",
+        "expiryDate",
+        "quantity",
+        "unit",
+        "unitPrice",
+        "supplyAmount",
+        "taxAmount",
+        "amount",
+        "totalAmount",
+        "manufacturer",
+        "insuranceCode",
+        "remark",
+        "_rawText",
+        "_confidence",
+        "_source",
+        "serialLotComposite",
+        "manufacturingExpiryComposite"
+      ],
+      "objectKeyOrderDependency": false,
+      "tableMetaExpectedColumnKeys": [
+        "itemName",
+        "serialLotComposite",
+        "unit",
+        "quantity",
+        "manufacturingNo",
+        "remark"
+      ],
+      "tableMetaColumns": [
+        "rowIndex",
+        "itemName",
+        "serialNo",
+        "expiryDate",
+        "quantity",
+        "unit"
+      ],
+      "firstRowBefore": {
+        "itemName": "클리마토플란정",
+        "unit": "BOX",
+        "quantity": "1,000"
+      },
+      "firstRowAfter": {
+        "itemName": "클리마토플란정",
+        "unit": "BOX",
+        "quantity": "1,000"
+      },
+      "rowsValueSampleSame": true,
+      "majorFields": {
+        "supplierCompany": "주식회사 엘비아브노바",
+        "buyerCompany": "백제약품(주)영등포지점",
+        "totalAmount": "",
+        "rowCount": "1"
+      }
+    }
+  ],
+  "passConditions": {
+    "rowCount7of7": true,
+    "columnOrderSame7of7": true,
+    "cleanJsonColumnOrderSame7of7": true,
+    "cleanJsonRowsMaintained7of7": true,
+    "noTableDataColumnOrderDependency": true,
+    "noObjectKeyOrderDependency": true
+  },
+  "verdict": "PASS",
+  "applyMustInclude": [
+    "Limit optimization to Template RunOCR + invoice_statement only.",
+    "Do not apply to unstructured OCR, unstructured templates, or receipt paths.",
+    "Skip table crop OCR only when document_fields.tableRows exists and len(tableRows) > 0.",
+    "Run existing _ocr_table_region fallback when tableRows is missing or empty.",
+    "Use buildInvoicePreviewCols/docTableDisplayCols or the same ordering rules for Preview, Clean JSON, Custom, and Validation.",
+    "Build Clean JSON rows as ordered objects from column keys, never from raw tableRows object key order.",
+    "Use a compact table field value such as '표 데이터 (N행)'.",
+    "Omit or empty table_data in the default response; keep fallback/debug option if Raw JSON compatibility is needed."
+  ],
+  "fallbackPseudoCode": [
+    "if is_template_run and doc_type == 'invoice_statement' and document_fields.get('tableRows'):",
+    "    table_rows = document_fields['tableRows']",
+    "    skip _ocr_table_region",
+    "    table_field['value'] = f\"표 데이터 ({len(table_rows)}행)\"",
+    "    table_field.pop('table_data', None)",
+    "    column_keys = buildInvoicePreviewCols(tableMeta, table_rows)  # frontend/helper-equivalent order",
+    "else:",
+    "    run existing _ocr_table_region fallback"
+  ],
+  "risks": [
+    "If future UI code bypasses docTableDisplayCols and iterates Object.keys(tableRows[0]), column order can drift.",
+    "Raw JSON consumers using fields[].table_data may need a debug/legacy option.",
+    "Backend implementation must ensure document_fields.tableRows is available before deciding to skip table crop OCR.",
+    "New templates without tableMeta.expectedColumnKeys/tableMeta.columns should still use canonical priority fallback."
+  ],
+  "nextPromptMustInclude": [
+    "Preserve buildInvoicePreviewCols/docTableDisplayCols as the single UI column order source.",
+    "Do not derive Clean JSON table order from document_fields.tableRows object key order.",
+    "Add fallback to existing table crop OCR when document_fields.tableRows is absent/empty.",
+    "Keep scope to invoice_statement template RunOCR only.",
+    "After implementation, rerun 거래_1~거래_7 and compare rowCount plus before/after column keys."
+  ]
+}

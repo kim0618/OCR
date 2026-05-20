@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import AppShell from "../../components/layout/AppShell";
 import UnstructuredBuilder from "../../components/template/UnstructuredBuilder";
+import { getTemplateImage } from "@/lib/imageStore";
 
 const OcrAnnotator = dynamic(
   () => import("../../components/ocr/OcrAnnotator"),
@@ -84,11 +85,14 @@ function ModeCard({
 }
 
 
+type TooltipInfo = { imgSrc: string; x: number; y: number };
+
 export default function Page() {
   const [mode, setMode] = useState<Mode>("template");
   const [savedTemplates, setSavedTemplates] = useState<SavedTemplate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<SavedTemplate | null>(null);
   const [resetKey, setResetKey] = useState(0);
+  const [tooltip, setTooltip] = useState<TooltipInfo | null>(null);
 
   const handleModeChange = (next: Mode) => {
     setSelectedTemplate(null);
@@ -98,7 +102,19 @@ export default function Page() {
 
   useEffect(() => {
     const refreshSavedTemplates = () => {
-      setSavedTemplates(readSavedTemplates());
+      const base = readSavedTemplates();
+      setSavedTemplates(base);
+      // UI-IMG-IDB-1: localStorage에 src 없는 템플릿은 IndexedDB에서 hydrate
+      void (async () => {
+        const hydrated = await Promise.all(base.map(async (t) => {
+          if (t?.templateJson?.image?.src) return t;
+          if (!t?.id || !t?.templateJson?.image) return t;
+          const src = await getTemplateImage(t.id);
+          if (!src) return t;
+          return { ...t, templateJson: { ...t.templateJson, image: { ...t.templateJson.image, src } } };
+        }));
+        setSavedTemplates(hydrated);
+      })();
     };
     refreshSavedTemplates();
     const onRefresh = () => refreshSavedTemplates();
@@ -177,6 +193,12 @@ export default function Page() {
                       setMode(template.mode === "unstructured" ? "unstructured" : "template");
                     }}
                     title={template.name}
+                    onMouseEnter={(e) => {
+                      if (!imgSrc) return;
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      setTooltip({ imgSrc, x: rect.left + rect.width / 2, y: rect.bottom + 10 });
+                    }}
+                    onMouseLeave={() => setTooltip(null)}
                   >
                     {template.mode === "unstructured" ? (
                       <span className="uw-runocr-template-card-preview">
@@ -229,6 +251,31 @@ export default function Page() {
           )}
         </div>
       </div>
+      {tooltip && (
+        <div
+          className="template-hover-tooltip"
+          style={{
+            position: "fixed",
+            top: tooltip.y,
+            left: Math.min(
+              Math.max(tooltip.x - 160, 8),
+              (typeof window !== "undefined" ? window.innerWidth : 1200) - 328,
+            ),
+            zIndex: 9999,
+            borderRadius: 8,
+            overflow: "hidden",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.35)",
+            pointerEvents: "none",
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={tooltip.imgSrc}
+            alt=""
+            style={{ width: 320, height: "auto", display: "block", borderRadius: 6 }}
+          />
+        </div>
+      )}
     </AppShell>
   );
 }

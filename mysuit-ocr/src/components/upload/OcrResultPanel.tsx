@@ -176,6 +176,9 @@ export type OcrFieldResult = {
   overlayAdoption?: FieldOverlayAdoption;
   en?: string;
   ko?: string;
+  label?: string;
+  tableRows?: Record<string, unknown>[];
+  table_data?: unknown;
 };
 
 export type OcrResult = {
@@ -186,6 +189,24 @@ export type OcrResult = {
   processed_image?: string;
   original_image?: string;
   autofill_summary?: AutofillRunSummary;
+};
+
+type CleanJsonInfo = {
+  key: string;
+  label: string;
+  value: string;
+};
+
+type CleanJsonTable = {
+  key: string;
+  label: string;
+  rows: Record<string, string>[];
+};
+
+type CleanJsonResult = {
+  templateName: string;
+  info?: CleanJsonInfo[];
+  tables?: CleanJsonTable[];
 };
 
 type Props = {
@@ -723,16 +744,6 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
     return md;
   };
 
-  // Table field list for JSX rendering in Preview tab (separate from Markdown)
-  const previewTableFields = useMemo(() =>
-    editedFields
-      .map((f, i) => ({ f, i }))
-      .filter(({ f }) => f.field_type === "table")
-      .map(({ f, i }) => ({ idx: i + 1, label: fieldLabelFull(f), ...parseTableField(f.value) }))
-      .filter(({ nonEmpty }) => nonEmpty.length > 0),
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  [editedFields]);
-
   // invoice_statement structured tableRows + tableMeta (document_fields에서 추출)
   const docTableRows = useMemo(() => {
     const df = (result as Record<string, unknown>).document_fields as Record<string, unknown> | null | undefined;
@@ -756,6 +767,17 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
     () => (docTableRows ? buildInvoicePreviewCols(docTableMeta, docTableRows) : null),
     [docTableRows, docTableMeta],
   );
+
+  // Table field list for JSX rendering in Preview tab (separate from Markdown)
+  // T-28-PERF-3: docTableRows가 있으면 nonEmpty가 비어도 table field를 포함 (defer 최적화 대응)
+  const previewTableFields = useMemo(() =>
+    editedFields
+      .map((f, i) => ({ f, i }))
+      .filter(({ f }) => f.field_type === "table")
+      .map(({ f, i }) => ({ idx: i + 1, label: fieldLabelFull(f), ...parseTableField(f.value) }))
+      .filter(({ nonEmpty }) => nonEmpty.length > 0 || (!!docTableRows && docTableRows.length > 0)),
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  [editedFields, docTableRows]);
 
   // PREVIEW-9B: expected 컬럼 중 tableRows에 값이 없는 핵심 컬럼 → 품목표 제목에 안내 배지
   // 배지에 표시할 key allowlist — 사용자 확인이 필요한 항목만 (amount/remark 등 제외)
@@ -794,9 +816,76 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
     return `확인 필요: ${labels} 미인식`;
   }, [docTableRows, docTableMeta, docTableDisplayCols]);
 
-  const toJson = () => {
-    return JSON.stringify({ fields: editedFields, processing_time: result.processing_time }, null, 2);
+  // UI-JSON-1: Clean JSON builder — 사용자용 정제된 JSON (debug 필드 제외)
+  const cleanTableRowsFromObjects = (
+    rows: Record<string, unknown>[],
+    cols: { key: string }[] | null | undefined,
+  ): Record<string, string>[] => {
+    const orderedKeys = cols && cols.length > 0
+      ? cols.map((col) => col.key)
+      : INVOICE_TABLE_COL_PRIORITY.map((col) => col.key).filter((key) => hasMeaningfulValue(rows, key));
+    return rows.map((row) => {
+      const obj: Record<string, string> = {};
+      for (const key of orderedKeys) obj[key] = normalizeCell(row[key]);
+      return obj;
+    });
   };
+
+  const cleanTableRowsFromCells = (raw: unknown): Record<string, string>[] => {
+    if (!Array.isArray(raw)) return [];
+    const rows = raw.filter((row): row is unknown[] => Array.isArray(row));
+    if (rows.length === 0) return [];
+    const fallbackKeys = INVOICE_TABLE_COL_PRIORITY
+      .map((col) => col.key)
+      .filter((key) => !["itemCode", "lotNo", "unit", "supplyAmount", "taxAmount", "totalAmount", "remark"].includes(key));
+    return rows.map((row) => {
+      const obj: Record<string, string> = {};
+      row.forEach((cell, ci) => {
+        const key = fallbackKeys[ci] ?? `col_${ci + 1}`;
+        const value = cell && typeof cell === "object" && "value" in cell
+          ? (cell as { value?: unknown }).value
+          : cell;
+        obj[key] = normalizeCell(value);
+      });
+      return obj;
+    });
+  };
+
+  const cleanJson: CleanJsonResult = useMemo(() => {
+    const info = editedFields
+      .filter((f) => f.field_type === "field")
+      .map((f) => ({
+        key: f.name,
+        label: f.ko || f.label || f.name,
+        value: f.value ?? "",
+      }));
+
+    const tables = editedFields
+      .filter((f) => f.field_type === "table")
+      .map((f) => {
+        let rows: Record<string, string>[] = [];
+        if (docTableRows && docTableDisplayCols && docTableDisplayCols.length > 0) {
+          rows = cleanTableRowsFromObjects(docTableRows, docTableDisplayCols);
+        } else if (Array.isArray(f.tableRows) && f.tableRows.length > 0) {
+          rows = cleanTableRowsFromObjects(f.tableRows, null);
+        } else if (Array.isArray(f.table_data)) {
+          rows = cleanTableRowsFromCells(f.table_data);
+        } else if (f.value) {
+          try {
+            rows = cleanTableRowsFromCells(JSON.parse(f.value));
+          } catch { /* ignore malformed legacy table value */ }
+        }
+        return { key: f.name, label: f.ko || f.label || f.name, rows };
+      });
+
+    const result: CleanJsonResult = { templateName: templateName ?? "" };
+    if (info.length > 0) result.info = info;
+    if (tables.length > 0) result.tables = tables;
+    return result;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editedFields, docTableRows, docTableDisplayCols, templateName]);
+
+  const toCleanJson = () => JSON.stringify(cleanJson, null, 2);
 
   const handleCopy = async (text: string) => {
     await navigator.clipboard.writeText(text);
@@ -981,10 +1070,10 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                 JSON
               </button>
               <div style={{ flex: 1 }} />
-              <button type="button" className="ms-btn-sm" onClick={() => handleExport(previewMode === "markdown" ? toMarkdown() : toJson(), previewMode === "markdown" ? "md" : "json")}>
+              <button type="button" className="ms-btn-sm" onClick={() => handleExport(previewMode === "markdown" ? toMarkdown() : toCleanJson(), previewMode === "markdown" ? "md" : "json")}>
                 내보내기
               </button>
-              <button type="button" className="ms-btn-sm" onClick={() => void handleCopy(previewMode === "markdown" ? toMarkdown() : toJson())}>
+              <button type="button" className="ms-btn-sm" onClick={() => void handleCopy(previewMode === "markdown" ? toMarkdown() : toCleanJson())}>
                 복사
               </button>
             </div>
@@ -1200,7 +1289,7 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                 )}
               </div>
             ) : (
-              <pre className="or-preview-content">{toJson()}</pre>
+              <pre className="or-preview-content">{toCleanJson()}</pre>
             )}
           </div>
         )}

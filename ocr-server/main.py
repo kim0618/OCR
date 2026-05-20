@@ -779,24 +779,6 @@ async def template_save(request: Request):
     if not replaced:
         rows.insert(0, row)
 
-    # Generate referenceOcr from image.src if not present
-    # Used for text-anchor homography alignment at RunOCR time
-    _body_img = body.get("image") if isinstance(body, dict) else None
-    if isinstance(_body_img, dict) and _body_img.get("src") and not body.get("referenceOcr"):
-        try:
-            _ref_ocr = _generate_reference_ocr(_body_img["src"], get_ocr_engine())
-            if _ref_ocr:
-                body["referenceOcr"] = _ref_ocr
-                row["template_json"] = body
-                # Update stored row
-                for idx2, r2 in enumerate(rows):
-                    if r2.get("template_id") == row["template_id"]:
-                        rows[idx2] = row
-                        break
-                _save_json(TEMPLATES_FILE, rows)
-        except Exception as _re:
-            print(f"[template_save] referenceOcr generation failed (non-blocking): {_re}")
-
     _save_json(TEMPLATES_FILE, rows)
     return {"resultMap": {"result": "success", "template": row}}
 
@@ -1028,40 +1010,6 @@ def get_ocr_engine():
             text_recognition_batch_size=30,
         )
     return _ocr_engine
-
-
-def _generate_reference_ocr(image_src_b64: str, ocr_engine) -> list:
-    """Run OCR on template reference image (base64 src) and return text+position list.
-    Stored as template_json.referenceOcr for text-anchor homography alignment.
-    """
-    try:
-        _m = re.search(r'base64,(.+)$', image_src_b64)
-        if not _m:
-            return []
-        _ref_arr = np.frombuffer(base64.b64decode(_m.group(1)), dtype=np.uint8)
-        _ref_img = cv2.imdecode(_ref_arr, cv2.IMREAD_COLOR)
-        if _ref_img is None:
-            return []
-        _result = ocr_engine.ocr(_ref_img)
-        _items = []
-        for _pts, _txt, _cf in _parse_ocr_lines(_result):
-            if not _txt or _cf < 0.5:
-                continue
-            _xs = [p[0] for p in _pts]
-            _ys = [p[1] for p in _pts]
-            _items.append({
-                "text": _txt,
-                "cx": round((min(_xs) + max(_xs)) / 2),
-                "cy": round((min(_ys) + max(_ys)) / 2),
-                "x": round(min(_xs)), "y": round(min(_ys)),
-                "w": round(max(_xs) - min(_xs)), "h": round(max(_ys) - min(_ys)),
-                "conf": round(_cf, 3),
-            })
-        print(f"[referenceOcr] generated {len(_items)} items from reference image")
-        return _items
-    except Exception as _e:
-        print(f"[referenceOcr] generation failed: {_e}")
-        return []
 
 
 def _ocr_crop_region(img, ocr, x, y, w, h):
@@ -2023,242 +1971,143 @@ async def ocr_extract(
     ocr_lines_raw: list = []
     ocr_w: int = orig_w
     ocr_h: int = orig_h
+    # T-28-PERF-3: deferred table crop OCR lists (resolved after extract_invoice_statement_fields)
+    _deferred_table_fields: list[int] = []
+    _deferred_table_regions: list[dict] = []
 
     if region_list:
         # === 템플릿 영역 기반 OCR ===
-        # T-28a: Template RunOCR shared normalized image pipeline.
-        # 비정형 경로(line ~2199)와 동일한 detect_orientation을 region crop 이전에 적용한다.
-        # 전체 문서를 먼저 정상 방향으로 정규화한 뒤 field/table/parser 모두 같은 normalized image를 사용한다.
-        #
-        # 원칙:
-        # - 좌표 기준 유지를 위해 resize/deskew는 적용하지 않는다 (방향만 정규화).
-        # - 정상 입력에서 detect_orientation은 angle=0 → 회전 없음 → 회귀 방지.
-        # - 90/270 회전 시 img.shape에 따라 orig_w/orig_h 갱신.
-        # - field crop, table crop, invoice_statement parser 모두 같은 normalized img 사용.
-        #
-        # T-28a가 폐기한 T-27 구조:
-        # - T-27a-fix / T-27a-fix2의 anchor 기반 fallback OCR (정상 입력에서도 768px 풀 OCR 1~2회 강제) 제거.
-        # - templateOrientationDebug (추가 OCR 비용 발생하던 debug) 제거.
-        # - 대신 templateImageNormalization 메타를 추가 OCR 없이 노출.
-        _t_norm0 = time.time()
-        _orig_size_before_norm = [orig_w, orig_h]
-        _applied_rotation = 0
-        _norm_status = "applied"
-        # T-28b: invoice_statement uses 512px thumbnail + 0/180-only for better upside-down detection.
-        # Other templates retain default 224px 4-way detection (no performance regression).
-        _is_invoice_tmpl = (_template_doc_type == "invoice_statement")
-        _orient_target_short = 512 if _is_invoice_tmpl else 224
-        _orient_skip_second = _is_invoice_tmpl
-        try:
-            img, _orient_meta_tmpl = detect_orientation(
-                img, ocr, original_wh=(orig_w, orig_h),
-                target_short=_orient_target_short,
-                skip_second_pass=_orient_skip_second,
-            )
-            _applied_rotation = int(_orient_meta_tmpl.get("angle", 0) or 0)
-            # 회전 후 새 크기로 갱신 (90/270 회전 시 가로/세로가 뒤바뀜)
-            orig_h, orig_w = img.shape[:2]
-            timings["template_detect_orientation_ms"] = _ms(time.time() - _t_norm0)
-            if _applied_rotation != 0:
-                print(f"[template] T-28b normalized: rotation={_applied_rotation}, target_short={_orient_target_short}")
-        except Exception as _norm_e:
-            print(f"[template] T-28b normalization failed (using original image): {_norm_e}")
-            timings["template_normalization_error"] = str(_norm_e)
-            _norm_status = f"error: {_norm_e}"
+        # T-27a: 템플릿 RunOCR 경로도 비정형 경로(line ~2076)와 동일한 detect_orientation 적용.
+        # 템플릿 region 좌표는 정상 방향 이미지 기준으로 저장되어 있으므로,
+        # 뒤집힌 이미지에 그대로 적용하면 잘못된 영역을 crop함.
+        # 비정형 경로에서 이미 안정적으로 동작하는 detect_orientation을 재사용해서
+        # 입력 이미지를 정상 방향으로 맞춘 뒤 region crop을 수행한다.
+        # 정상 방향 입력에서는 detect_orientation이 angle=0을 반환 → 회전 없음 → 회귀 방지.
+        _t_orient_tmpl0 = time.time()
+        _orient_angle_tmpl = 0
+        # [DISABLED 20260520] T-27a detect_orientation 비활성화.
+        # 사유: 1차 발표(다음 주)에서는 템플릿 경로를 정방향 이미지로만 시연.
+        # 복원 방법: 아래 try/except 블록의 주석을 풀 것.
+        # try:
+        #     img, _orient_meta_tmpl = detect_orientation(img, ocr, original_wh=(orig_w, orig_h))
+        #     _orient_angle_tmpl = int(_orient_meta_tmpl.get("angle", 0) or 0)
+        #     # 회전 후 새 크기로 갱신 (90/270 회전 시 가로/세로가 뒤바뀜)
+        #     orig_h, orig_w = img.shape[:2]
+        #     timings["template_detect_orientation_ms"] = _ms(time.time() - _t_orient_tmpl0)
+        #     timings["template_orientation_angle"] = _orient_angle_tmpl
+        #     if _orient_angle_tmpl != 0:
+        #         print(f"[template] orientation auto-corrected (detect_orientation): angle={_orient_angle_tmpl}")
+        # except Exception as _orient_tmpl_e:
+        #     print(f"[template] detect_orientation failed (using original image): {_orient_tmpl_e}")
+        #     timings["template_detect_orientation_error"] = str(_orient_tmpl_e)
+        timings["template_detect_orientation_ms"] = _ms(time.time() - _t_orient_tmpl0)
+        timings["template_orientation_angle"] = 0
 
-        # T-28h: restructured alignment pipeline — OCR once, reuse everywhere.
-        #
-        # Structure:
-        #   1. Run full OCR once on rotated image → _tmpl_ocr_lines
-        #   2. Text-anchor homography: match texts vs referenceOcr → H matrix
-        #   3. warpPerspective: img aligned to template space
-        #   4. Transform _tmpl_ocr_lines to warped space using H → _tmpl_warped_ocr_lines
-        #   5. Region crops use warped img at template coords
-        #   6. Parser reuses _tmpl_warped_ocr_lines (no 2nd full OCR)
-        #
-        # Total OCR calls: 1 full + N small region crops (same as before, better alignment)
-        _homography_applied = False
-        _homography_status = "not_attempted"
-        _tmpl_H: np.ndarray | None = None
-        _tmpl_ocr_lines: list = []        # OCR lines in rotated-image space
-        _tmpl_warped_ocr_lines: list = [] # OCR lines transformed to warped space
-
-        # Step 1: Full OCR on rotated image (used for alignment + parser)
-        _t_ocr1 = time.time()
-        try:
-            _tmpl_ocr_lines = list(_parse_ocr_lines(ocr.ocr(img)))
-            timings["template_full_ocr_ms"] = _ms(time.time() - _t_ocr1)
-            print(f"[template] T-28h full OCR: {len(_tmpl_ocr_lines)} lines in {_ms(time.time()-_t_ocr1):.0f}ms")
-        except Exception as _ocr1_e:
-            print(f"[template] T-28h full OCR failed: {_ocr1_e}")
-            timings["template_full_ocr_ms"] = _ms(time.time() - _t_ocr1)
-
-        # Step 2: Text-anchor homography using referenceOcr + OCR lines
-        try:
-            _tj_ref_h = locals().get("template_json") or locals().get("_tj") or {}
-            if isinstance(_tj_ref_h, dict):
-                _img_h2 = _tj_ref_h.get("image") or {}
-                _ref_w = int((_img_h2.get("width") or 0)) if isinstance(_img_h2, dict) else 0
-                _ref_h_dim = int((_img_h2.get("height") or 0)) if isinstance(_img_h2, dict) else 0
-                _ref_ocr = _tj_ref_h.get("referenceOcr") or []
-
-                if _ref_w > 0 and _ref_h_dim > 0 and len(_ref_ocr) >= 6 and len(_tmpl_ocr_lines) >= 6:
-                    from collections import Counter as _Ctr
-                    # Build unique-text index from template reference OCR
-                    _rc = _Ctr(x["text"] for x in _ref_ocr)
-                    _ridx = {x["text"]: (x["cx"], x["cy"]) for x in _ref_ocr
-                             if _rc[x["text"]] == 1 and len(x["text"]) >= 2}
-                    # Match with upload OCR
-                    _uc = _Ctr(t for _, t, _ in _tmpl_ocr_lines)
-                    _pts_r, _pts_s = [], []
-                    for _pu, _tu, _cu in _tmpl_ocr_lines:
-                        if _cu < 0.6 or not _tu or len(_tu) < 2: continue
-                        if _uc[_tu] != 1 or _tu not in _ridx: continue
-                        _xu = [p[0] for p in _pu]; _yu = [p[1] for p in _pu]
-                        _pts_s.append([(min(_xu)+max(_xu))/2, (min(_yu)+max(_yu))/2])
-                        _pts_r.append(list(_ridx[_tu]))
-                    print(f"[template] T-28h text matches: {len(_pts_r)}")
-
-                    if len(_pts_r) >= 6:
-                        _H2, _msk2 = cv2.findHomography(
-                            np.float32(_pts_s).reshape(-1,1,2),
-                            np.float32(_pts_r).reshape(-1,1,2), cv2.RANSAC, 10.0)
-                        _ni2 = int(_msk2.sum()) if _msk2 is not None else 0
-                        if _H2 is not None and _ni2 >= 6:
-                            _tmpl_H = _H2
-                            img = cv2.warpPerspective(img, _H2, (_ref_w, _ref_h_dim))
-                            orig_h, orig_w = _ref_h_dim, _ref_w
-                            _homography_applied = True
-                            _homography_status = f"text_anchor inliers={_ni2}/{len(_pts_r)}"
-                            print(f"[template] T-28h text anchor: {_ni2} inliers → {_ref_w}x{_ref_h_dim}")
-                        else:
-                            _homography_status = f"ransac_failed inliers={_ni2}"
-                    else:
-                        _homography_status = f"too_few_matches={len(_pts_r)}"
-
-                    # ORB fallback if text anchor insufficient
-                    if not _homography_applied and isinstance(_img_h2, dict) and _img_h2.get("src"):
-                        _b64f = re.search(r'base64,(.+)$', _img_h2.get("src",""))
-                        if _b64f:
-                            _ri = cv2.imdecode(np.frombuffer(base64.b64decode(_b64f.group(1)),np.uint8), cv2.IMREAD_COLOR)
-                            if _ri is not None:
-                                def _rf(im):
-                                    h_,w_=im.shape[:2]; s_=min(h_,w_)
-                                    if s_>1024: sc_=1024/s_; return cv2.resize(im,(int(w_*sc_),int(h_*sc_)),interpolation=cv2.INTER_AREA),sc_
-                                    return im,1.0
-                                _rs,_ss=_rf(_ri); _us,_usc=_rf(img)
-                                _ob=cv2.ORB_create(nfeatures=1500)
-                                _kr,_dr=_ob.detectAndCompute(cv2.cvtColor(_rs,cv2.COLOR_BGR2GRAY),None)
-                                _ku,_du=_ob.detectAndCompute(cv2.cvtColor(_us,cv2.COLOR_BGR2GRAY),None)
-                                if _dr is not None and _du is not None and len(_dr)>=8 and len(_du)>=8:
-                                    _gd=sorted(cv2.BFMatcher(cv2.NORM_HAMMING,crossCheck=True).match(_dr,_du),key=lambda m:m.distance)[:80]
-                                    if len(_gd)>=10:
-                                        _pr2=np.float32([_kr[m.queryIdx].pt for m in _gd]).reshape(-1,1,2)/_ss
-                                        _pu2=np.float32([_ku[m.trainIdx].pt for m in _gd]).reshape(-1,1,2)/_usc
-                                        _Hf,_mf=cv2.findHomography(_pu2,_pr2,cv2.RANSAC,5.0)
-                                        _nif=int(_mf.sum()) if _mf is not None else 0
-                                        if _Hf is not None and _nif>=10:
-                                            _tmpl_H=_Hf
-                                            img=cv2.warpPerspective(img,_Hf,(_ref_w,_ref_h_dim))
-                                            orig_h,orig_w=_ref_h_dim,_ref_w
-                                            _homography_applied=True
-                                            _homography_status=f"orb_fallback inliers={_nif}"
-                                            print(f"[template] T-28h ORB fallback: {_nif} inliers → {_ref_w}x{_ref_h_dim}")
-
-        except Exception as _he2:
-            _homography_status = f"error: {_he2}"
-            print(f"[template] T-28h alignment failed: {_he2}")
-
-        # Step 4: Transform OCR lines to warped space using H (free — no re-OCR)
-        if _tmpl_H is not None and len(_tmpl_ocr_lines) > 0:
-            try:
-                def _transform_pts(pts, H):
-                    result = []
-                    for (x, y) in pts:
-                        p = H @ np.array([float(x), float(y), 1.0])
-                        result.append((p[0]/p[2], p[1]/p[2]))
-                    return result
-                _tmpl_warped_ocr_lines = [
-                    (_transform_pts(pts, _tmpl_H), txt, cf)
-                    for pts, txt, cf in _tmpl_ocr_lines
-                ]
-                print(f"[template] T-28h transformed {len(_tmpl_warped_ocr_lines)} OCR lines to warped space")
-            except Exception as _te2:
-                print(f"[template] T-28h OCR transform failed: {_te2}")
-                _tmpl_warped_ocr_lines = _tmpl_ocr_lines
-        else:
-            _tmpl_warped_ocr_lines = _tmpl_ocr_lines
-
-        # T-28e: encode final image (rotated + homography warped) for display
-        try:
-            _tok, _tenc = cv2.imencode('.jpg', img, [cv2.IMWRITE_JPEG_QUALITY, 82])
-            if _tok and _tenc is not None:
-                processed_b64 = base64.b64encode(_tenc.tobytes()).decode('utf-8')
-        except Exception as _te:
-            print(f"[template] T-28e processed_image encode failed: {_te}")
-
-        # T-28c: template region coordinate normalization
-        # Region coordinates are saved in template source image space (template_json.image.width/height).
-        # Scale to current normalized image dimensions when sizes differ (e.g. smartphone vs scanned doc).
-        _coord_scale_x = 1.0
-        _coord_scale_y = 1.0
-        _tmpl_coord_base = [0, 0]
-        try:
-            _tj_ref_c = locals().get("template_json") or locals().get("_tj") or {}
-            if isinstance(_tj_ref_c, dict):
-                _img_c = _tj_ref_c.get("image") or {}
-                if isinstance(_img_c, dict):
-                    _ts_w = int(_img_c.get("width") or 0)
-                    _ts_h = int(_img_c.get("height") or 0)
-                    if _ts_w > 0 and _ts_h > 0 and (_ts_w != orig_w or _ts_h != orig_h):
-                        _coord_scale_x = orig_w / _ts_w
-                        _coord_scale_y = orig_h / _ts_h
-                        _tmpl_coord_base = [_ts_w, _ts_h]
-        except Exception:
-            pass
-
-        # templateImageNormalization meta — 추가 OCR 없이 normalized image pipeline 상태 노출
-        _tmpl_img_norm_debug: dict = {
-            "enabled": True,
-            "appliedRotation": _applied_rotation,
-            "orientationTargetShort": _orient_target_short,
-            "orientationMode": "invoice_template_0_180" if _orient_skip_second else "default_4way",
-            "deskewApplied": False,
-            "resizeApplied": False,
-            "originalSize": _orig_size_before_norm,
-            "normalizedSize": [orig_w, orig_h],
-            "scaleX": 1.0,
-            "scaleY": 1.0,
-            "coordScaleX": round(_coord_scale_x, 4),
-            "coordScaleY": round(_coord_scale_y, 4),
-            "coordBaseSize": _tmpl_coord_base,
-            "homographyApplied": _homography_applied,
-            "homographyStatus": _homography_status,
-            "usedForRegionCrop": True,
-            "usedForTableCrop": True,
-            "usedForParser": True,
-            "status": _norm_status,
+        # T-27a-fix2: invoice_statement 한정 anchor 기반 cross-check fallback (강화판).
+        # detect_orientation의 thumbnail(224px)이 큰 invoice_statement 문서에서 점수 차이가
+        # 미세해 angle=0을 잘못 추천할 수 있다. 이 경우 region crop이 뒤집힌 이미지에
+        # 정상 방향 좌표를 적용해 깨진다. 따라서 invoice_statement이면 OCR 텍스트에서
+        # 핵심 anchor 카운트를 비교해 더 안정적으로 방향을 결정한다.
+        # 새 알고리즘 추가가 아니라, 기존 detect_orientation 결과를 OCR anchor로 검증하는 fallback.
+        # T-27a-fix2 강화: orig < 5, rot >= orig+2 AND rot >= 4, anchor 목록 15개로 확장.
+        _inv_doc_type = (_template_doc_type or documentType or "").strip()
+        _tmpl_orient_debug: dict = {
+            "enabled": _inv_doc_type == "invoice_statement",
+            "docType": _inv_doc_type,
+            "detectOrientationAngle": int(timings.get("template_orientation_angle", 0) or 0),
+            "fallbackChecked": False,
+            "fallbackApplied": False,
+            "appliedRotation": "none",
+            "originalAnchorCount": None,
+            "rotated180AnchorCount": None,
+            "usedImageForRegionCrop": "original",
+            "usedImageForTableCrop": "original",
+            "usedImageForParser": "original",
+            "reason": "docType not invoice_statement — fallback skipped",
         }
+        # [DISABLED 20260520] T-27a-fix2 anchor-based 180° fallback 비활성화.
+        # 사유: 1차 발표용 회전 보정 전면 비활성화 (정방향 이미지만 시연).
+        # 복원 방법: 아래 `if False and` → `if`로 되돌릴 것.
+        if False and _inv_doc_type == "invoice_statement":
+            _t_anchor0 = time.time()
+            # 확장된 anchor 목록 (15개): 뒤집힌 이미지에서 정상 OCR되면 많이 발견되는 키워드
+            _INV_ANCHORS = (
+                "거래명세서", "공급자", "공급받는자", "사업자", "품목",
+                "규격", "수량", "단가", "금액", "합계",
+                "등록번호", "상호", "사업장주소", "유효기간", "소계",
+            )
 
-        if _coord_scale_x != 1.0 or _coord_scale_y != 1.0:
-            def _scale_region_coords(r: dict) -> dict:
-                r2 = dict(r)
-                r2["x"] = r.get("x", 0) * _coord_scale_x
-                r2["y"] = r.get("y", 0) * _coord_scale_y
-                r2["width"] = r.get("width", 0) * _coord_scale_x
-                r2["height"] = r.get("height", 0) * _coord_scale_y
-                tbl = r.get("table")
-                if isinstance(tbl, dict) and tbl.get("colX"):
-                    r2["table"] = dict(tbl)
-                    r2["table"]["colX"] = [
-                        cx * _coord_scale_x
-                        for cx in tbl["colX"]
-                        if isinstance(cx, (int, float))
-                    ]
-                return r2
-            region_list = [_scale_region_coords(r) for r in region_list]
-            print(f"[template] T-28c coord: scale=({_coord_scale_x:.3f},{_coord_scale_y:.3f}) "
-                  f"base={_tmpl_coord_base} img=[{orig_w},{orig_h}]")
+            def _count_inv_anchors_t27a(_test_img):
+                try:
+                    # 768px short-side thumb: detect_orientation의 224보다 크고 full size보다 작아
+                    # 한글 anchor 인식에 충분한 해상도 + 처리 속도 균형.
+                    _h0, _w0 = _test_img.shape[:2]
+                    _short = min(_h0, _w0)
+                    _target = 768
+                    if _short > _target:
+                        _sc = _target / _short
+                        _thumb = cv2.resize(_test_img, (int(_w0 * _sc), int(_h0 * _sc)),
+                                            interpolation=cv2.INTER_AREA)
+                    else:
+                        _thumb = _test_img
+                    _r = ocr.ocr(_thumb)
+                    _lines = _parse_ocr_lines(_r)
+                    _texts = " ".join(t for _, t, _ in _lines if t)
+                    return sum(1 for anc in _INV_ANCHORS if anc in _texts)
+                except Exception:
+                    return 0
+
+            try:
+                _tmpl_orient_debug["fallbackChecked"] = True
+                _orig_anchors = _count_inv_anchors_t27a(img)
+                _tmpl_orient_debug["originalAnchorCount"] = _orig_anchors
+                if _orig_anchors < 5:
+                    # anchor 신호 약함 → 180도 회전 image에서 anchor 카운트 비교
+                    _rotated_180_img = cv2.rotate(img, cv2.ROTATE_180)
+                    _rot_anchors = _count_inv_anchors_t27a(_rotated_180_img)
+                    _tmpl_orient_debug["rotated180AnchorCount"] = _rot_anchors
+                    # T-27a-fix2: 강화된 조건 — 차이가 +2 이상이고 절대값도 4 이상이어야 적용
+                    if _rot_anchors >= _orig_anchors + 2 and _rot_anchors >= 4:
+                        img = _rotated_180_img
+                        orig_h, orig_w = img.shape[:2]
+                        _tmpl_orient_debug["fallbackApplied"] = True
+                        _tmpl_orient_debug["appliedRotation"] = "180"
+                        _tmpl_orient_debug["usedImageForRegionCrop"] = "rotated180"
+                        _tmpl_orient_debug["usedImageForTableCrop"] = "rotated180"
+                        _tmpl_orient_debug["usedImageForParser"] = "rotated180"
+                        _tmpl_orient_debug["reason"] = (
+                            f"fallback APPLIED: rot180_anchors={_rot_anchors} >= orig_anchors+2({_orig_anchors+2}) "
+                            f"AND rot180_anchors >= 4"
+                        )
+                        print(
+                            f"[template] T-27a-fix2 anchor fallback APPLIED: "
+                            f"180-rot anchors={_rot_anchors} >= orig+2({_orig_anchors+2}) AND >= 4"
+                        )
+                        timings["template_anchor_fallback_applied"] = True
+                        timings["template_anchor_orig"] = _orig_anchors
+                        timings["template_anchor_rot180"] = _rot_anchors
+                    else:
+                        _tmpl_orient_debug["fallbackApplied"] = False
+                        _tmpl_orient_debug["reason"] = (
+                            f"fallback NOT applied: rot180={_rot_anchors} orig={_orig_anchors} "
+                            f"(need rot>=orig+2 AND rot>=4)"
+                        )
+                        timings["template_anchor_fallback_applied"] = False
+                        timings["template_anchor_orig"] = _orig_anchors
+                        timings["template_anchor_rot180"] = _rot_anchors
+                else:
+                    _tmpl_orient_debug["fallbackApplied"] = False
+                    _tmpl_orient_debug["reason"] = (
+                        f"fallback skipped: orig_anchors={_orig_anchors} >= 5 (image already well-oriented)"
+                    )
+                    timings["template_anchor_fallback_applied"] = False
+                    timings["template_anchor_orig"] = _orig_anchors
+                timings["template_anchor_fallback_ms"] = _ms(time.time() - _t_anchor0)
+                _tmpl_orient_debug["fallbackMs"] = timings["template_anchor_fallback_ms"]
+            except Exception as _anc_e:
+                print(f"[template] T-27a-fix2 anchor fallback failed (using current image): {_anc_e}")
+                timings["template_anchor_fallback_error"] = str(_anc_e)
+                _tmpl_orient_debug["reason"] = f"fallback error: {_anc_e}"
 
         for idx, region in enumerate(region_list):
             rx = int(region.get("x", 0))
@@ -2269,35 +2118,47 @@ async def ocr_extract(
             name = region.get("name", f"field_{idx + 1}")
 
             if field_type == "table":
-                table_rows = _ocr_table_region(img, ocr, region)
-                avg_conf = 0.0
-                total = 0
-                for row in table_rows:
-                    for cell in row:
-                        if cell.get("confidence", 0) > 0:
-                            avg_conf += cell["confidence"]
-                            total += 1
-                avg_conf = round(avg_conf / total, 4) if total > 0 else 0.0
+                # T-28-PERF-3: invoice_statement Template RunOCR에서 table crop OCR을 defer.
+                # _inv_doc_type이 invoice_statement이면 _ocr_table_region을 지금 실행하지 않고
+                # placeholder를 fields에 추가한 뒤 extract_invoice_statement_fields 이후에 resolve.
+                # tableRows가 없으면 _ocr_table_region fallback을 실행한다.
+                if _inv_doc_type == "invoice_statement":
+                    _deferred_table_fields.append(len(fields))
+                    _deferred_table_regions.append(region)
+                    fields.append({
+                        "name": name,
+                        "field_type": "table",
+                        "value": "",
+                        "confidence": 0.0,
+                        "bbox": [rx, ry, rw, rh],
+                        "table_data": [],
+                        "_deferred": True,
+                    })
+                else:
+                    table_rows = _ocr_table_region(img, ocr, region)
+                    avg_conf = 0.0
+                    total = 0
+                    for row in table_rows:
+                        for cell in row:
+                            if cell.get("confidence", 0) > 0:
+                                avg_conf += cell["confidence"]
+                                total += 1
+                    avg_conf = round(avg_conf / total, 4) if total > 0 else 0.0
 
-                fields.append({
-                    "name": name,
-                    "field_type": "table",
-                    "value": json.dumps(table_rows, ensure_ascii=False),
-                    "confidence": avg_conf,
-                    "bbox": [rx, ry, rw, rh],
-                    "table_data": table_rows,
-                })
-                for row in table_rows:
-                    row_text = " | ".join(c["value"] for c in row if c["value"])
-                    if row_text:
-                        full_lines.append(row_text)
+                    fields.append({
+                        "name": name,
+                        "field_type": "table",
+                        "value": json.dumps(table_rows, ensure_ascii=False),
+                        "confidence": avg_conf,
+                        "bbox": [rx, ry, rw, rh],
+                        "table_data": table_rows,
+                    })
+                    for row in table_rows:
+                        row_text = " | ".join(c["value"] for c in row if c["value"])
+                        if row_text:
+                            full_lines.append(row_text)
             else:
-                # T-28j: expand crop by 25px to tolerate warp residuals (~20px for narrow fields)
-                # Gap between adjacent fields is ≥28px so no bleed-over risk
-                _tmpl_xm = 25 if _homography_applied else 0
-                text, conf = _ocr_crop_region(img, ocr,
-                                              rx - _tmpl_xm, ry - _tmpl_xm,
-                                              rw + 2 * _tmpl_xm, rh + 2 * _tmpl_xm)
+                text, conf = _ocr_crop_region(img, ocr, rx, ry, rw, rh)
                 fields.append({
                     "name": name,
                     "field_type": field_type,
@@ -2307,37 +2168,6 @@ async def ocr_extract(
                 })
                 if text:
                     full_lines.append(text)
-
-        # T-28i: fallback for empty/low-confidence field crops using warped OCR lines.
-        # Narrow region crops (h≈40px) can miss text after warp due to sub-pixel offset.
-        # _tmpl_warped_ocr_lines already contains all text in the warped image space — use it.
-        if _tmpl_warped_ocr_lines:
-            for _fi28, _ri28 in zip(fields, region_list):
-                if _fi28.get("field_type") == "table":
-                    continue
-                if (_fi28.get("value") or "").strip():
-                    continue  # already has value from crop
-                _rx28 = float(_ri28.get("x", 0))
-                _ry28 = float(_ri28.get("y", 0))
-                _rw28 = float(_ri28.get("width", 0))
-                _rh28 = float(_ri28.get("height", 0))
-                _mg28 = max(20.0, _rh28 * 0.5)  # moderate margin for warp residuals
-                _cands: list = []
-                for _wp, _wt, _wc in _tmpl_warped_ocr_lines:
-                    if not _wt or _wc < 0.3:
-                        continue
-                    _wxs = [p[0] for p in _wp]; _wys = [p[1] for p in _wp]
-                    _wcx = (min(_wxs) + max(_wxs)) / 2
-                    _wcy = (min(_wys) + max(_wys)) / 2
-                    if (_rx28 - _mg28 <= _wcx <= _rx28 + _rw28 + _mg28 and
-                            _ry28 - _mg28 <= _wcy <= _ry28 + _rh28 + _mg28):
-                        _cands.append((_wc, _wt))
-                if _cands:
-                    _cands.sort(key=lambda c: c[0], reverse=True)
-                    _fb_val = " ".join(t for _, t in _cands[:3])
-                    _fi28["value"] = _fb_val
-                    _fi28["confidence"] = round(_cands[0][0], 4)
-                    _fi28["source"] = "ocr_lines_fallback"
 
         # T-6j-fix: classify doc_type from template region text.
         # T-9-fix: explicit documentType payload > template metadata documentType > classify_document.
@@ -2356,21 +2186,23 @@ async def ocr_extract(
             f"classified={_classified_doc_type} lines={len(full_lines)})"
         )
 
-        # T-6j-fix: for invoice_statement, obtain ocr_lines_raw for parser.
-        # Step 4 (T-28g): reuse early OCR from T-28g text-anchor alignment if available,
-        # avoiding a redundant full-image OCR pass on the aligned image.
+        # T-6j-fix: for invoice_statement, run full-image OCR to obtain ocr_lines_raw
+        # (needed by extract_invoice_statement_fields for field/table extraction).
+        # Coordinates are in img space; ocr_w/ocr_h default to orig_w/orig_h so
+        # the tableBounds scaling factor from regions is 1.0 (no transform applied).
         if doc_type == "invoice_statement":
-            # T-28h: reuse transformed OCR lines (no 2nd full OCR needed)
-            if _tmpl_warped_ocr_lines:
-                ocr_lines_raw = _tmpl_warped_ocr_lines
-                print(f"[template/invoice_statement] T-28h reused {len(ocr_lines_raw)} transformed OCR lines")
-            else:
-                try:
-                    ocr_lines_raw = list(_parse_ocr_lines(ocr.ocr(img)))
-                    print(f"[template/invoice_statement] fallback OCR: {len(ocr_lines_raw)} lines")
-                except Exception as _tmpl_inv_e:
-                    print(f"[template/invoice_statement] OCR failed: {_tmpl_inv_e}")
-                    ocr_lines_raw = []
+            try:
+                _tmpl_inv_result = ocr.ocr(img)
+                ocr_lines_raw = _parse_ocr_lines(_tmpl_inv_result)
+                print(f"[template/invoice_statement] full OCR: {len(ocr_lines_raw)} lines")
+            except Exception as _tmpl_inv_e:
+                print(f"[template/invoice_statement] full OCR failed: {_tmpl_inv_e}")
+                ocr_lines_raw = []
+
+        # [DEMO 20260520] 템플릿 경로에서 회전/전처리 비활성화 상태이므로
+        # processed_image == original_image로 채워 History 패널이 비지 않도록 한다.
+        if not processed_b64 and original_b64:
+            processed_b64 = original_b64
 
     else:
         # === 전체 이미지 OCR ===
@@ -2448,7 +2280,7 @@ async def ocr_extract(
         ocr_img = cv2.addWeighted(ocr_img, 1.5, blur, -0.5, 0)
 
         ocr_h, ocr_w = ocr_img.shape[:2]
-        _, img_encoded = cv2.imencode('.jpg', ocr_img, [cv2.IMWRITE_JPEG_QUALITY, 95])
+        _, img_encoded = cv2.imencode('.jpg', ocr_img, [cv2.IMWRITE_JPEG_QUALITY, 85])
         processed_b64 = base64.b64encode(img_encoded.tobytes()).decode('utf-8')
         timings["ocr_image_prep_ms"] = _ms(time.time() - _t_ocrp0)
         timings["ocr_image_wh"] = [ocr_w, ocr_h]
@@ -2706,9 +2538,9 @@ async def ocr_extract(
         "receipt_fields": receipt_fields,
         "processing_time": round(elapsed, 2),
     }
-    # T-28a: templateImageNormalization meta — normalized image pipeline 상태 (추가 OCR 없음)
-    if "_tmpl_img_norm_debug" in locals():
-        response["templateImageNormalization"] = _tmpl_img_norm_debug
+    # T-27a-fix2: templateOrientationDebug — 항상 포함 (invoice_statement 외에도 enabled=false로 포함)
+    if "_tmpl_orient_debug" in locals():
+        response["templateOrientationDebug"] = _tmpl_orient_debug
     # finance_profile Tier-1 추출: doc_type == "bank_slip" 분기에서만 실행
     # _apply_doc_type_amount_policy / receipt_fields 완전 무수정 (docs/FINANCE_PARSER_TARGET §5.2)
     if doc_type == "bank_slip":
@@ -2842,6 +2674,56 @@ async def ocr_extract(
         except Exception as _ie:
             print(f"[invoice_statement] extractor error (response unaffected): {_ie}")
 
+    # T-28-PERF-3: deferred table field resolution.
+    # invoice_statement Template RunOCR에서 defer된 table field를 document_fields.tableRows로 resolve.
+    # tableRows가 있으면 table crop OCR을 skip; 없으면 _ocr_table_region fallback을 실행.
+    if _deferred_table_fields:
+        _df_doc = response.get("document_fields") or {}
+        _df_rows = _df_doc.get("tableRows") or []
+        _df_row_count = len(_df_rows)
+        if _df_row_count > 0:
+            _tableOcrDebug = {
+                "tableCropOcrSkipped": True,
+                "skipReason": "document_fields.tableRows available",
+                "rowCount": _df_row_count,
+                "fallbackUsed": False,
+            }
+            for _fi, _fr in zip(_deferred_table_fields, _deferred_table_regions):
+                _f = fields[_fi]
+                _f["value"] = f"표 데이터 ({_df_row_count}행)"
+                _f["confidence"] = 1.0
+                _f["table_data"] = []
+                _f["tableOcrDebug"] = _tableOcrDebug
+                _f.pop("_deferred", None)
+            print(f"[T28-PERF3] table crop OCR skipped: rowCount={_df_row_count} (tableRows available)")
+        else:
+            for _fi, _fr in zip(_deferred_table_fields, _deferred_table_regions):
+                _fallback_rows = _ocr_table_region(img, ocr, _fr)
+                _avg_conf = 0.0
+                _total = 0
+                for _row in _fallback_rows:
+                    for _cell in _row:
+                        if _cell.get("confidence", 0) > 0:
+                            _avg_conf += _cell["confidence"]
+                            _total += 1
+                _avg_conf = round(_avg_conf / _total, 4) if _total > 0 else 0.0
+                _f = fields[_fi]
+                _f["value"] = json.dumps(_fallback_rows, ensure_ascii=False)
+                _f["confidence"] = _avg_conf
+                _f["table_data"] = _fallback_rows
+                _f["tableOcrDebug"] = {
+                    "tableCropOcrSkipped": False,
+                    "skipReason": "document_fields.tableRows empty — fallback executed",
+                    "rowCount": len(_fallback_rows),
+                    "fallbackUsed": True,
+                }
+                _f.pop("_deferred", None)
+                for _row in _fallback_rows:
+                    _row_text = " | ".join(c["value"] for c in _row if c["value"])
+                    if _row_text:
+                        full_lines.append(_row_text)
+            print(f"[T28-PERF3] table crop OCR fallback executed (tableRows empty/missing)")
+
     # T-26a-fix: patch template field values with normalized party company names.
     # Template path raw.fields[i].value = raw OCR text; document_fields has normalized values.
     # Update field["value"] → normalized, field["original"] → raw OCR (shown as "OCR 원본").
@@ -2870,90 +2752,6 @@ async def ocr_extract(
             _f["value"] = _norm     # set normalized value as "최종값"
             print(f"[T26a-fix] {_ko}: {_orig!r} → {_norm!r}")
 
-    # T-28d: supplement invoice_statement template field values from full-image OCR / parser data.
-    # Template coordinate crops fail when uploaded image has different scale/offset than template.
-    # The parser runs full-image OCR and correctly locates all text regardless of image layout.
-    # Step 1: supplement empty biz numbers in document_fields from party_candidates / ocr_lines_raw.
-    # Step 2: patch template field["value"] with document_fields values for all patchable koFields.
-    # Does NOT overwrite if crop already matches parser value (safe for normal 1.jpg case).
-    if doc_type == "invoice_statement" and region_list and "document_fields" in response and ocr_lines_raw:
-        _t28d_doc: dict = response["document_fields"]
-        _t28d_inv: dict = extract_debug.get("invoice_statement", {})
-        _t28d_pc: dict = _t28d_inv.get("party_candidates", {})
-        _t28d_split_x: float = float(_t28d_pc.get("split_x") or 1500)
-
-        # Supplement supplierBusinessNo from party_candidates.bizs (x < split_x)
-        if not _t28d_doc.get("supplierBusinessNo"):
-            for _e28 in (_t28d_pc.get("bizs") or []):
-                if len(_e28) >= 3 and float(_e28[0]) < _t28d_split_x and _e28[2]:
-                    _t28d_doc["supplierBusinessNo"] = str(_e28[2])
-                    print(f"[T28d] supplierBusinessNo from party_candidates: {_e28[2]!r}")
-                    break
-
-        # Supplement buyerBusinessNo: search ocr_lines_raw for 10-digit number in right half
-        # Validate using Korean business number checksum to filter out date/doc-number false positives.
-        def _valid_kr_biz(s: str) -> bool:
-            if len(s) != 10 or not s.isdigit():
-                return False
-            m_ = [1, 3, 7, 1, 3, 7, 1, 3, 5]
-            total_ = sum(int(s[i]) * m_[i] for i in range(9))
-            total_ += int(int(s[8]) * 5 / 10)
-            return (10 - total_ % 10) % 10 == int(s[9])
-
-        if not _t28d_doc.get("buyerBusinessNo"):
-            _biz10 = re.compile(r'\d{10}')
-            for _pts28, _txt28, _cf28 in ocr_lines_raw:
-                if not _txt28 or _cf28 < 0.5:
-                    continue
-                _xs28 = [p[0] for p in _pts28] if _pts28 else [0]
-                _cx28 = sum(_xs28) / max(len(_xs28), 1)
-                if _cx28 <= _t28d_split_x:
-                    continue
-                _clean28 = re.sub(r'[-\s]', '', _txt28)
-                for _m28 in _biz10.finditer(_clean28):
-                    _cand = _m28.group()
-                    if _valid_kr_biz(_cand):
-                        _t28d_doc["buyerBusinessNo"] = _cand
-                        print(f"[T28d] buyerBusinessNo from ocr_lines: {_cand!r} in {_txt28!r}")
-                        break
-                if _t28d_doc.get("buyerBusinessNo"):
-                    break
-
-        # Patch template fields from (supplemented) document_fields
-        # T-28d: patch template fields from parser/OCR when direct crop is unreliable.
-        # With T-28h warped OCR space, parser correctly assigns supplier vs buyer
-        # (split_x in template space separates left=supplier, right=buyer).
-        # Addresses and names are now correctly extracted by the parser in warped space.
-        _T28D_MAP: dict[str, str] = {
-            "공급자 사업자 번호": "supplierBusinessNo",
-            "공급자 사업자번호": "supplierBusinessNo",
-            "공급자 주소": "supplierAddress",
-            "공급자 사업장 주소": "supplierAddress",
-            # 성명(representative): parser assigns wrong person — use direct crop instead
-            # "공급자 성명": "supplierRepresentative",
-            "공급받는자 사업자 번호": "buyerBusinessNo",
-            "공급받는자 사업자번호": "buyerBusinessNo",
-            "공급받는자 주소": "buyerAddress",
-            "공급받는자 사업장 주소": "buyerAddress",
-            # "공급받는자 성명": "buyerRepresentative",
-            "합계금액": "totalAmount",
-            "합계": "totalAmount",
-        }
-        for _f28, _r28 in zip(fields, region_list):
-            _ko28 = ((_r28.get("koField") or "")).strip()
-            _dk28 = _T28D_MAP.get(_ko28)
-            if not _dk28:
-                continue
-            _nv28 = _t28d_doc.get(_dk28, "")
-            if not _nv28:
-                continue
-            _ov28 = (_f28.get("value") or "")
-            if _ov28 == _nv28:
-                continue
-            _f28["original"] = _ov28
-            _f28["value"] = _nv28
-            print(f"[T28d] {_ko28}: {_ov28!r} → {_nv28!r}")
-
     if processed_b64:
         response["processed_image"] = f"data:image/jpeg;base64,{processed_b64}"
     if original_b64:
@@ -2965,6 +2763,15 @@ async def ocr_extract(
         extract_debug["template_path"] = True
         response["extract_debug"] = extract_debug
         response["doc_type"] = doc_type
+
+    # 비정형 경로와 동일하게 히스토리 OCR 데이터에 전체 raw 라인을 포함.
+    # invoice_statement 템플릿 RunOCR에서 ocr_lines_raw가 채워져 있을 때만 추가.
+    if region_list and ocr_lines_raw:
+        response["ocr_lines"] = [
+            {"text": text, "confidence": round(float(conf), 4)}
+            for _, text, conf in ocr_lines_raw
+            if text and float(conf) >= 0.3
+        ]
 
     # 금액 추출 디버그 메타 (프론트 TEST 탭에서 활용 가능)
     if not region_list:

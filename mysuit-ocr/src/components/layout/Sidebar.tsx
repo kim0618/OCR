@@ -63,9 +63,6 @@ const DEFAULT_ITEMS: NavItem[] = [
   { label: "RunOCR",    href: "/runocr",       icon: "upload" },
   { label: "History",   href: "/history",      icon: "history" },
   { label: "Restore",    href: "/autorestore",  icon: "restore" },
-  { label: "BUpload",   href: "/upload",       icon: "upload" },
-  { label: "BTemplate", href: "/btemplate",    icon: "template" },
-  { label: "BHistory",  href: "/bhistory",     icon: "history" },
   { label: "Test",      href: "/test",         icon: "test" },
 ];
 

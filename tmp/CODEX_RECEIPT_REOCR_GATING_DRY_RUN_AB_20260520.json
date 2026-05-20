@@ -1,0 +1,1834 @@
+{
+  "tool": "Codex",
+  "model": "Codex",
+  "operationCodeModified": false,
+  "repoDirtyBeforeWork": true,
+  "gitStatusShort": "fatal: detected dubious ownership in repository at 'D:/Free_Vue/OCR'\n'D:/Free_Vue/OCR' is owned by:\n\tDESKTOP-C4EV6UM/jinsung (S-1-5-21-2021129721-2391521148-1384908961-1001)\nbut the current user is:\n\tDESKTOP-C4EV6UM/CodexSandboxOffline (S-1-5-21-2021129721-2391521148-1384908961-1003)\nTo add an exception for this directory, call:\n\n\tgit config --global --add safe.directory D:/Free_Vue/OCR",
+  "script": "D:\\Free_Vue\\OCR\\tmp\\codex_receipt_reocr_gating_dry_run_ab.py",
+  "apiUrl": "http://127.0.0.1:9099/ocr/extract",
+  "template": {
+    "templateName": "영수증",
+    "templateId": "TPL-003",
+    "regionsCount": 0,
+    "modeInferred": "unstructured"
+  },
+  "targetFiles": [
+    "1.jpg",
+    "2.jpg",
+    "3.jpg",
+    "4.jpg",
+    "7.jpg",
+    "8.jpg",
+    "10.jpg",
+    "a1.jpg",
+    "a2.jpg"
+  ],
+  "excludedFiles": [
+    "9.jpg"
+  ],
+  "staticAnalysis": {
+    "preReOcrDataAvailability": "Current response exposes final receipt_fields and field_sources, but not fullOcrOnlyFields/pre-reOCR receipt_fields; therefore candidates depending on pre-reOCR completeness cannot be PASS-confirmed.",
+    "upperCondition": "main.py upper_ready skips upper re-OCR only when pre_fields already has businessNo/company/representative/tel/address, but those pre_fields are not returned in response.",
+    "amountCondition": "main.py pre_amount_strong can skip amount re-OCR; response has final total_amount debug and field_sources, but not a complete candidate-level before/after diff.",
+    "outputFieldsIndependence": "Dry-run candidates use semantic fields in receipt_fields/field_sources, not no_1~no_6 or outputFields UI keys.",
+    "rgEvidence": {
+      "main": "441:    field_sources = {k: \"\" for k in result}\n446:            debug[\"field_sources\"] = field_sources\n461:                field_sources[k] = \"upper_block\"\n468:                field_sources[k] = \"upper_block\"\n473:        if v and not before.get(k) and not field_sources[k]:\n474:            field_sources[k] = \"full_ocr\"\n483:        field_sources[\"주소\"] = rescued_address_source or \"address_rescue\"\n494:        field_sources[\"회사명\"] = rescued_source or \"company_rescue\"\n509:                field_sources[\"사업자번호\"] = \"biz_rescue_relaxed\"\n536:                    field_sources[\"총합계금액\"] = c.get(\"source\", \"full_ocr\")\n541:        debug[\"field_sources\"] = field_sources\n648:            \"source\": extract_debug.get(\"field_sources\", {}).get(k, \"\"),\n1267:def _detect_handwritten_total_bbox(\n1343:def _extract_handwritten_total_from_lines(lines: list) -> tuple[str, dict]:\n1389:        \"status\": \"selected_handwritten_total\",\n1395:            \"source\": \"handwritten_total_reocr\",\n2342:        pre_fields = extract_receipt_fields(\n2356:        upper_ready = bool(\n2358:                pre_fields.get(\"사업자번호\") and\n2359:                pre_fields.get(\"회사명\") and\n2360:                pre_fields.get(\"대표자\") and\n2361:                pre_fields.get(\"tel\") and\n2362:                pre_fields.get(\"주소\")\n2370:        pre_amount_strong = bool(\n2387:        timings[\"upper_reocr_skipped_by_pre\"] = upper_ready\n2389:        if upper_bbox and not upper_ready:\n2392:            timings[\"upper_reocr_total_ms\"] = _ms(time.time() - t_u1)\n2393:            timings[\"upper_reocr_ran\"] = True\n2396:            timings[\"upper_reocr_total_ms\"] = 0.0\n2397:            timings[\"upper_reocr_ran\"] = False\n2398:            if upper_ready:\n2403:        #   - 그 외: pre_amount_strong 이면 스킵\n2412:        timings[\"amount_reocr_skipped_by_doc_type\"] = skip_by_doc\n2413:        timings[\"amount_reocr_skipped_by_pre\"] = (not skip_by_doc) and pre_amount_strong\n2414:        if amount_bbox and not pre_amount_strong:\n2417:            timings[\"amount_reocr_total_ms\"] = _ms(time.time() - t_a1)\n2418:            timings[\"amount_reocr_ran\"] = True\n2421:            timings[\"amount_reocr_total_ms\"] = 0.0\n2422:            timings[\"amount_reocr_ran\"] = False\n2423:            if pre_amount_strong and not skip_by_doc:\n2438:        handwritten_total_bbox = None\n2439:        handwritten_total_lines = []\n2440:        handwritten_total_debug = {}\n2450:            handwritten_total_bbox = _detect_handwritten_total_bbox(ocr_lines_raw, ocr_h, ocr_w, doc_type=doc_type)\n2451:            timings[\"detect_handwritten_total_bbox_ms\"] = _ms(time.time() - _t_ht0)\n2452:            timings[\"handwritten_total_bbox_ocr_coords\"] = list(handwritten_total_bbox) if handwritten_total_bbox else None\n2453:            if handwritten_total_bbox:\n2455:                handwritten_total_lines = _reocr_block(\n2458:                    handwritten_total_bbox,\n2462:                timings[\"handwritten_total_reocr_total_ms\"] = _ms(time.time() - t_ht1)\n2463:                timings[\"handwritten_total_reocr_ran\"] = True\n2464:                hand_value, handwritten_total_debug = _extract_handwritten_total_from_lines(handwritten_total_lines)\n2467:                    extract_debug.setdefault(\"field_sources\", {})[\"총합계금액\"] = \"handwritten_total_reocr\"\n2470:                        **handwritten_total_debug,\n2471:                        \"policy\": \"handwritten_total_reocr_fallback\",\n2477:                    f\"[REOCR hand_total] bbox={handwritten_total_bbox} \"\n2478:                    f\"lines={len(handwritten_total_lines)} value={hand_value or '-'} \"\n2482:                timings[\"handwritten_total_reocr_total_ms\"] = 0.0\n2483:                timings[\"handwritten_total_reocr_ran\"] = False\n2485:            timings[\"detect_handwritten_total_bbox_ms\"] = 0.0\n2486:            timings[\"handwritten_total_reocr_total_ms\"] = 0.0\n2487:            timings[\"handwritten_total_reocr_ran\"] = False\n2502:        if handwritten_total_bbox:\n2503:            hx, hy, hw, hh = handwritten_total_bbox\n2504:            extract_debug[\"handwritten_total_bbox\"] = [round(hx * bbox_sx), round(hy * bbox_sy),\n2506:            extract_debug[\"handwritten_total_used\"] = bool(receipt_fields.get(\"총합계금액\") and extract_debug.get(\"field_sources\", {}).get(\"총합계금액\") == \"handwritten_total_reocr\")\n2507:            extract_debug[\"handwritten_total_ocr_text\"] = \"\\n\".join(t for _, t, _ in handwritten_total_lines)\n2508:            if handwritten_total_debug:\n2509:                extract_debug[\"handwritten_total_debug\"] = handwritten_total_debug\n2526:                f\"src={extract_debug.get('field_sources', {}).get('총합계금액', '-')} \"\n2820:            f\"upper_ran={timings.get('upper_reocr_ran')} amount_ran={timings.get('amount_reocr_ran')} \"",
+      "frontend": "26:} from \"@/lib/autofillEngine\";\n152:  // appendHistoryRun 시점의 immutable 메타(no/en/ko/original/applied/autofillAction/suggestions)\n436:    // receipt_fields / finance_fields 기반으로 fields 를 재구성한다.\n437:    // 템플릿이 있고 region-based(mode !== \"unstructured\") 이면 백엔드가 region 별로\n439:    if (template && template.mode !== \"unstructured\") {\n454:    const receiptFields = raw.receipt_fields ?? {};\n460:    // 백엔드 receipt_fields 키: 회사명, 사업자번호, 대표자, tel, 주소, 총합계금액\n461:    // 템플릿이 koField=\"전화번호\" 로 정의되어 있어도 receipt_fields[\"tel\"] 을 가져오게 함.\n726:    if (field.autofillAction === \"corrected\" || field.autofillAction === \"filled\") return \"restored\";\n742:      const lookupValue = field.autofillAction === \"corrected\"\n745:      if (field.autofillAction === \"filled\" && !field.original) {\n832:    const useRegionTemplate = !!activeTemplate && activeTemplate.mode !== \"unstructured\";\n862:      let autofillSuggestions: AutofillSuggestion[] = [];\n863:      let autofillSummary: AutofillRunSummary = {\n877:          json?.receipt_fields?.[\"사업자번호\"],\n882:          autofillSummary = {\n911:          autofillSuggestions = [...businessNumberSuggestion, ...internalSuggestions];\n914:            suggestions: autofillSuggestions,\n917:          const confirmedCount = resultFields.filter((field) => field.autofillAction === \"confirmed\").length;\n918:          const correctedCount = resultFields.filter((field) => field.autofillAction === \"corrected\").length;\n919:          const filledCount = resultFields.filter((field) => field.autofillAction === \"filled\").length;\n923:            return autofillSuggestions.some((suggestion) => normalizeAutofillFieldKey(suggestion.field) === key && canAutoApplySuggestion(suggestion));\n926:            autofillSuggestions.length === 0 ? \"no_candidates\" :\n931:          autofillSummary = {\n934:            candidateCount: autofillSuggestions.length,\n947:        console.warn(\"[autofill] skipped\", err);\n949:        autofillSummary = {\n959:      runResult.autofill_summary = autofillSummary;\n970:      // OCR 데이터 표는 백엔드 raw OCR 결과를 그대로 보여준다 (정제된 receipt_fields 가 아님).\n971:      // 출력 필드 표는 runResult.fields(receipt_fields/template 매핑) 를 사용 → 명확한 분리.\n974:        activeTemplate.mode !== \"unstructured\" &&\n993:      // 출력 필드 표 데이터 — 정제된 결과(runResult.fields = template/receipt_fields 매핑) 기반.\n996:      const outputFieldsForHistory: HistoryOutputField[] = tplFields.length\n1003:              autofillSuggestions,\n1014:              autofillAction: ocrF?.autofillAction,\n1023:            const suggestions = suggestionsForHistoryField({ en, ko }, autofillSuggestions);\n1033:              autofillAction: f.autofillAction,\n1049:        output_fields: outputFieldsForHistory,\n1050:        autofill_summary: autofillSummary,\n1065:      setInitialOutputFields(outputFieldsForHistory);\n1159:  // immutable 메타(no/en/ko/original/applied/autofillAction/suggestions)는 initialOutputFields 에서 보존.\n1175:        autofillAction: field.autofillAction ?? base?.autofillAction,"
+    }
+  },
+  "baseline": {
+    "items": [
+      {
+        "fileName": "1.jpg",
+        "filePath": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\baseline\\1.jpg",
+        "imageSize": [
+          1382,
+          1037
+        ],
+        "processing_time": 25.27,
+        "wallClockSeconds": 25.314,
+        "responseSizeBytes": 675804,
+        "doc_type": "receipt_card",
+        "receiptFields": {
+          "회사명": "(주)안전볼트",
+          "사업자번호": "138-81-68468",
+          "대표자": "윤봉상",
+          "tel": "031-479-0485",
+          "주소": "경기 안양시 동안구 호계동 555-9 국",
+          "총합계금액": "10,560"
+        },
+        "fieldSummary": {
+          "fieldCount": 6,
+          "filledCount": 6,
+          "emptyCount": 0,
+          "fillRate": 1.0,
+          "coreValues": {
+            "회사명": "(주)안전볼트",
+            "사업자번호": "138-81-68468",
+            "대표자": "윤봉상",
+            "tel": "031-479-0485",
+            "주소": "경기 안양시 동안구 호계동 555-9 국",
+            "총합계금액": "10,560"
+          }
+        },
+        "filledCount": 6,
+        "emptyCount": 0,
+        "fillRate": 1.0,
+        "semanticDetection": {
+          "merchantNameDetected": true,
+          "businessNoDetected": true,
+          "phoneDetected": true,
+          "addressDetected": true,
+          "totalAmountDetected": true
+        },
+        "fieldSources": {
+          "회사명": "upper_block",
+          "사업자번호": "upper_block",
+          "대표자": "upper_block",
+          "tel": "upper_block",
+          "주소": "upper_block",
+          "총합계금액": "amount_block"
+        },
+        "fieldsFromUpperBlock": [
+          "회사명",
+          "사업자번호",
+          "대표자",
+          "tel",
+          "주소"
+        ],
+        "fieldsFromAmountBlock": [
+          "총합계금액"
+        ],
+        "fieldsFromFullOcr": [],
+        "fieldsFromOther": [],
+        "reOcrCriticalFields": [
+          "tel",
+          "대표자",
+          "사업자번호",
+          "주소",
+          "총합계금액",
+          "회사명"
+        ],
+        "upperReOcrUsed": true,
+        "amountReOcrUsed": true,
+        "handwrittenReOcrUsed": false,
+        "ocrTimings": {
+          "detectOrientationMs": 10238.4,
+          "fullOcrMs": 7904.0,
+          "upperReOcrMs": 4884.0,
+          "amountReOcrMs": 2124.8,
+          "handwrittenReOcrMs": 0.0,
+          "reOcrTotalMs": 7008.8,
+          "reOcrSharePercent": 27.74
+        },
+        "canSkipUpperSafelyByEvidence": false,
+        "canSkipAmountSafelyByEvidence": false,
+        "status": "PASS"
+      },
+      {
+        "fileName": "2.jpg",
+        "filePath": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\baseline\\2.jpg",
+        "imageSize": [
+          1382,
+          1037
+        ],
+        "processing_time": 42.83,
+        "wallClockSeconds": 42.896,
+        "responseSizeBytes": 671627,
+        "doc_type": "receipt_card",
+        "receiptFields": {
+          "회사명": "화성툴",
+          "사업자번호": "138-08-99333",
+          "대표자": "이태주",
+          "tel": "031-479-0090",
+          "주소": "경기 안양시 동안구 엘에스로 92 8동140호",
+          "총합계금액": "11,000"
+        },
+        "fieldSummary": {
+          "fieldCount": 6,
+          "filledCount": 6,
+          "emptyCount": 0,
+          "fillRate": 1.0,
+          "coreValues": {
+            "회사명": "화성툴",
+            "사업자번호": "138-08-99333",
+            "대표자": "이태주",
+            "tel": "031-479-0090",
+            "주소": "경기 안양시 동안구 엘에스로 92 8동140호",
+            "총합계금액": "11,000"
+          }
+        },
+        "filledCount": 6,
+        "emptyCount": 0,
+        "fillRate": 1.0,
+        "semanticDetection": {
+          "merchantNameDetected": true,
+          "businessNoDetected": true,
+          "phoneDetected": true,
+          "addressDetected": true,
+          "totalAmountDetected": true
+        },
+        "fieldSources": {
+          "회사명": "upper_block",
+          "사업자번호": "upper_block",
+          "대표자": "upper_block",
+          "tel": "upper_block",
+          "주소": "upper_block",
+          "총합계금액": "full_ocr"
+        },
+        "fieldsFromUpperBlock": [
+          "회사명",
+          "사업자번호",
+          "대표자",
+          "tel",
+          "주소"
+        ],
+        "fieldsFromAmountBlock": [],
+        "fieldsFromFullOcr": [
+          "총합계금액"
+        ],
+        "fieldsFromOther": [],
+        "reOcrCriticalFields": [
+          "tel",
+          "대표자",
+          "사업자번호",
+          "주소",
+          "회사명"
+        ],
+        "upperReOcrUsed": true,
+        "amountReOcrUsed": false,
+        "handwrittenReOcrUsed": false,
+        "ocrTimings": {
+          "detectOrientationMs": 20838.3,
+          "fullOcrMs": 12931.4,
+          "upperReOcrMs": 8948.6,
+          "amountReOcrMs": 0.0,
+          "handwrittenReOcrMs": 0.0,
+          "reOcrTotalMs": 8948.6,
+          "reOcrSharePercent": 20.89
+        },
+        "canSkipUpperSafelyByEvidence": false,
+        "canSkipAmountSafelyByEvidence": false,
+        "status": "PASS"
+      },
+      {
+        "fileName": "3.jpg",
+        "filePath": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\baseline\\3.jpg",
+        "imageSize": [
+          1382,
+          1037
+        ],
+        "processing_time": 26.98,
+        "wallClockSeconds": 27.051,
+        "responseSizeBytes": 665773,
+        "doc_type": "receipt_card",
+        "receiptFields": {
+          "회사명": "세광전기조명",
+          "사업자번호": "119-10-88385",
+          "대표자": "이정은",
+          "tel": "031-479-2280",
+          "주소": "경기 안양시 동안구 엘에스로 76 (호계동)7-117.11",
+          "총합계금액": "33,000"
+        },
+        "fieldSummary": {
+          "fieldCount": 6,
+          "filledCount": 6,
+          "emptyCount": 0,
+          "fillRate": 1.0,
+          "coreValues": {
+            "회사명": "세광전기조명",
+            "사업자번호": "119-10-88385",
+            "대표자": "이정은",
+            "tel": "031-479-2280",
+            "주소": "경기 안양시 동안구 엘에스로 76 (호계동)7-117.11",
+            "총합계금액": "33,000"
+          }
+        },
+        "filledCount": 6,
+        "emptyCount": 0,
+        "fillRate": 1.0,
+        "semanticDetection": {
+          "merchantNameDetected": true,
+          "businessNoDetected": true,
+          "phoneDetected": true,
+          "addressDetected": true,
+          "totalAmountDetected": true
+        },
+        "fieldSources": {
+          "회사명": "upper_block",
+          "사업자번호": "upper_block",
+          "대표자": "",
+          "tel": "upper_block",
+          "주소": "upper_block",
+          "총합계금액": "full_ocr"
+        },
+        "fieldsFromUpperBlock": [
+          "회사명",
+          "사업자번호",
+          "tel",
+          "주소"
+        ],
+        "fieldsFromAmountBlock": [],
+        "fieldsFromFullOcr": [
+          "총합계금액"
+        ],
+        "fieldsFromOther": [],
+        "reOcrCriticalFields": [
+          "tel",
+          "사업자번호",
+          "주소",
+          "회사명"
+        ],
+        "upperReOcrUsed": true,
+        "amountReOcrUsed": false,
+        "handwrittenReOcrUsed": false,
+        "ocrTimings": {
+          "detectOrientationMs": 14717.4,
+          "fullOcrMs": 8207.9,
+          "upperReOcrMs": 3936.1,
+          "amountReOcrMs": 0.0,
+          "handwrittenReOcrMs": 0.0,
+          "reOcrTotalMs": 3936.1,
+          "reOcrSharePercent": 14.59
+        },
+        "canSkipUpperSafelyByEvidence": false,
+        "canSkipAmountSafelyByEvidence": false,
+        "status": "PASS"
+      },
+      {
+        "fileName": "4.jpg",
+        "filePath": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\baseline\\4.jpg",
+        "imageSize": [
+          1382,
+          1037
+        ],
+        "processing_time": 20.67,
+        "wallClockSeconds": 20.729,
+        "responseSizeBytes": 726494,
+        "doc_type": "receipt_card",
+        "receiptFields": {
+          "회사명": "가행점",
+          "사업자번호": "123-23-94265",
+          "대표자": "정영달",
+          "tel": "031-479-3690",
+          "주소": "경기 안양시 동안구 엘에스로 92",
+          "총합계금액": "17,600"
+        },
+        "fieldSummary": {
+          "fieldCount": 6,
+          "filledCount": 6,
+          "emptyCount": 0,
+          "fillRate": 1.0,
+          "coreValues": {
+            "회사명": "가행점",
+            "사업자번호": "123-23-94265",
+            "대표자": "정영달",
+            "tel": "031-479-3690",
+            "주소": "경기 안양시 동안구 엘에스로 92",
+            "총합계금액": "17,600"
+          }
+        },
+        "filledCount": 6,
+        "emptyCount": 0,
+        "fillRate": 1.0,
+        "semanticDetection": {
+          "merchantNameDetected": true,
+          "businessNoDetected": true,
+          "phoneDetected": true,
+          "addressDetected": true,
+          "totalAmountDetected": true
+        },
+        "fieldSources": {
+          "회사명": "company_rescue",
+          "사업자번호": "upper_block",
+          "대표자": "upper_block",
+          "tel": "upper_block",
+          "주소": "upper_block",
+          "총합계금액": "full_ocr"
+        },
+        "fieldsFromUpperBlock": [
+          "사업자번호",
+          "대표자",
+          "tel",
+          "주소"
+        ],
+        "fieldsFromAmountBlock": [],
+        "fieldsFromFullOcr": [
+          "총합계금액"
+        ],
+        "fieldsFromOther": [
+          "회사명"
+        ],
+        "reOcrCriticalFields": [
+          "tel",
+          "대표자",
+          "사업자번호",
+          "주소"
+        ],
+        "upperReOcrUsed": true,
+        "amountReOcrUsed": false,
+        "handwrittenReOcrUsed": false,
+        "ocrTimings": {
+          "detectOrientationMs": 8586.4,
+          "fullOcrMs": 7733.3,
+          "upperReOcrMs": 4252.1,
+          "amountReOcrMs": 0.0,
+          "handwrittenReOcrMs": 0.0,
+          "reOcrTotalMs": 4252.1,
+          "reOcrSharePercent": 20.57
+        },
+        "canSkipUpperSafelyByEvidence": false,
+        "canSkipAmountSafelyByEvidence": false,
+        "status": "PASS"
+      },
+      {
+        "fileName": "7.jpg",
+        "filePath": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\baseline\\7.jpg",
+        "imageSize": [
+          1037,
+          1382
+        ],
+        "processing_time": 16.14,
+        "wallClockSeconds": 16.158,
+        "responseSizeBytes": 736658,
+        "doc_type": "receipt_card",
+        "receiptFields": {
+          "회사명": "서울집",
+          "사업자번호": "581-10-00658",
+          "대표자": "신미남",
+          "tel": "031-388-1080",
+          "주소": "경기도 의왕시 경수대로 209 102호(고천동,의왕월드 비전)",
+          "총합계금액": "35,000"
+        },
+        "fieldSummary": {
+          "fieldCount": 6,
+          "filledCount": 6,
+          "emptyCount": 0,
+          "fillRate": 1.0,
+          "coreValues": {
+            "회사명": "서울집",
+            "사업자번호": "581-10-00658",
+            "대표자": "신미남",
+            "tel": "031-388-1080",
+            "주소": "경기도 의왕시 경수대로 209 102호(고천동,의왕월드 비전)",
+            "총합계금액": "35,000"
+          }
+        },
+        "filledCount": 6,
+        "emptyCount": 0,
+        "fillRate": 1.0,
+        "semanticDetection": {
+          "merchantNameDetected": true,
+          "businessNoDetected": true,
+          "phoneDetected": true,
+          "addressDetected": true,
+          "totalAmountDetected": true
+        },
+        "fieldSources": {
+          "회사명": "upper_block",
+          "사업자번호": "upper_block",
+          "대표자": "",
+          "tel": "upper_block",
+          "주소": "full_ocr",
+          "총합계금액": "full_ocr"
+        },
+        "fieldsFromUpperBlock": [
+          "회사명",
+          "사업자번호",
+          "tel"
+        ],
+        "fieldsFromAmountBlock": [],
+        "fieldsFromFullOcr": [
+          "주소",
+          "총합계금액"
+        ],
+        "fieldsFromOther": [],
+        "reOcrCriticalFields": [
+          "tel",
+          "사업자번호",
+          "회사명"
+        ],
+        "upperReOcrUsed": true,
+        "amountReOcrUsed": false,
+        "handwrittenReOcrUsed": false,
+        "ocrTimings": {
+          "detectOrientationMs": 1275.1,
+          "fullOcrMs": 8552.4,
+          "upperReOcrMs": 6172.4,
+          "amountReOcrMs": 0.0,
+          "handwrittenReOcrMs": 0.0,
+          "reOcrTotalMs": 6172.4,
+          "reOcrSharePercent": 38.24
+        },
+        "canSkipUpperSafelyByEvidence": false,
+        "canSkipAmountSafelyByEvidence": false,
+        "status": "PASS"
+      },
+      {
+        "fileName": "8.jpg",
+        "filePath": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\baseline\\8.jpg",
+        "imageSize": [
+          1037,
+          1382
+        ],
+        "processing_time": 20.41,
+        "wallClockSeconds": 20.431,
+        "responseSizeBytes": 771798,
+        "doc_type": "medical_receipt",
+        "receiptFields": {
+          "회사명": "효성온누리약국",
+          "사업자번호": "134-04-13602",
+          "대표자": "최성환",
+          "tel": "031-455-9955",
+          "주소": "경기 의왕시 경수대로237",
+          "총합계금액": "11,000"
+        },
+        "fieldSummary": {
+          "fieldCount": 6,
+          "filledCount": 6,
+          "emptyCount": 0,
+          "fillRate": 1.0,
+          "coreValues": {
+            "회사명": "효성온누리약국",
+            "사업자번호": "134-04-13602",
+            "대표자": "최성환",
+            "tel": "031-455-9955",
+            "주소": "경기 의왕시 경수대로237",
+            "총합계금액": "11,000"
+          }
+        },
+        "filledCount": 6,
+        "emptyCount": 0,
+        "fillRate": 1.0,
+        "semanticDetection": {
+          "merchantNameDetected": true,
+          "businessNoDetected": true,
+          "phoneDetected": true,
+          "addressDetected": true,
+          "totalAmountDetected": true
+        },
+        "fieldSources": {
+          "회사명": "upper_block",
+          "사업자번호": "upper_block",
+          "대표자": "upper_block",
+          "tel": "upper_block",
+          "주소": "upper_block",
+          "총합계금액": "amount_block"
+        },
+        "fieldsFromUpperBlock": [
+          "회사명",
+          "사업자번호",
+          "대표자",
+          "tel",
+          "주소"
+        ],
+        "fieldsFromAmountBlock": [
+          "총합계금액"
+        ],
+        "fieldsFromFullOcr": [],
+        "fieldsFromOther": [],
+        "reOcrCriticalFields": [
+          "tel",
+          "대표자",
+          "사업자번호",
+          "주소",
+          "총합계금액",
+          "회사명"
+        ],
+        "upperReOcrUsed": true,
+        "amountReOcrUsed": true,
+        "handwrittenReOcrUsed": false,
+        "ocrTimings": {
+          "detectOrientationMs": 2283.9,
+          "fullOcrMs": 8510.1,
+          "upperReOcrMs": 5977.4,
+          "amountReOcrMs": 3507.9,
+          "handwrittenReOcrMs": 0.0,
+          "reOcrTotalMs": 9485.3,
+          "reOcrSharePercent": 46.47
+        },
+        "canSkipUpperSafelyByEvidence": false,
+        "canSkipAmountSafelyByEvidence": false,
+        "status": "PASS"
+      },
+      {
+        "fileName": "10.jpg",
+        "filePath": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\baseline\\10.jpg",
+        "imageSize": [
+          1037,
+          1382
+        ],
+        "processing_time": 16.5,
+        "wallClockSeconds": 16.528,
+        "responseSizeBytes": 743451,
+        "doc_type": "receipt_card",
+        "receiptFields": {
+          "회사명": "토탈철물",
+          "사업자번호": "761-21-00890",
+          "대표자": "전용민",
+          "tel": "010-9388-9936",
+          "주소": "경기 의왕시 효행로 47 (오전동)1층",
+          "총합계금액": "19,250"
+        },
+        "fieldSummary": {
+          "fieldCount": 6,
+          "filledCount": 6,
+          "emptyCount": 0,
+          "fillRate": 1.0,
+          "coreValues": {
+            "회사명": "토탈철물",
+            "사업자번호": "761-21-00890",
+            "대표자": "전용민",
+            "tel": "010-9388-9936",
+            "주소": "경기 의왕시 효행로 47 (오전동)1층",
+            "총합계금액": "19,250"
+          }
+        },
+        "filledCount": 6,
+        "emptyCount": 0,
+        "fillRate": 1.0,
+        "semanticDetection": {
+          "merchantNameDetected": true,
+          "businessNoDetected": true,
+          "phoneDetected": true,
+          "addressDetected": true,
+          "totalAmountDetected": true
+        },
+        "fieldSources": {
+          "회사명": "upper_block",
+          "사업자번호": "upper_block",
+          "대표자": "upper_block",
+          "tel": "upper_block",
+          "주소": "upper_block",
+          "총합계금액": "full_ocr"
+        },
+        "fieldsFromUpperBlock": [
+          "회사명",
+          "사업자번호",
+          "대표자",
+          "tel",
+          "주소"
+        ],
+        "fieldsFromAmountBlock": [],
+        "fieldsFromFullOcr": [
+          "총합계금액"
+        ],
+        "fieldsFromOther": [],
+        "reOcrCriticalFields": [
+          "tel",
+          "대표자",
+          "사업자번호",
+          "주소",
+          "회사명"
+        ],
+        "upperReOcrUsed": true,
+        "amountReOcrUsed": false,
+        "handwrittenReOcrUsed": false,
+        "ocrTimings": {
+          "detectOrientationMs": 1948.3,
+          "fullOcrMs": 8183.0,
+          "upperReOcrMs": 6225.1,
+          "amountReOcrMs": 0.0,
+          "handwrittenReOcrMs": 0.0,
+          "reOcrTotalMs": 6225.1,
+          "reOcrSharePercent": 37.73
+        },
+        "canSkipUpperSafelyByEvidence": false,
+        "canSkipAmountSafelyByEvidence": false,
+        "status": "PASS"
+      },
+      {
+        "fileName": "a1.jpg",
+        "filePath": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\baseline\\a1.jpg",
+        "imageSize": [
+          1037,
+          1382
+        ],
+        "processing_time": 22.02,
+        "wallClockSeconds": 22.091,
+        "responseSizeBytes": 976129,
+        "doc_type": "receipt_pos",
+        "receiptFields": {
+          "회사명": "기계공구",
+          "사업자번호": "123-23-94265",
+          "대표자": "",
+          "tel": "",
+          "주소": "",
+          "총합계금액": "110,000"
+        },
+        "fieldSummary": {
+          "fieldCount": 6,
+          "filledCount": 3,
+          "emptyCount": 3,
+          "fillRate": 0.5,
+          "coreValues": {
+            "회사명": "기계공구",
+            "사업자번호": "123-23-94265",
+            "대표자": "",
+            "tel": "",
+            "주소": "",
+            "총합계금액": "110,000"
+          }
+        },
+        "filledCount": 3,
+        "emptyCount": 3,
+        "fillRate": 0.5,
+        "semanticDetection": {
+          "merchantNameDetected": true,
+          "businessNoDetected": true,
+          "phoneDetected": true,
+          "addressDetected": false,
+          "totalAmountDetected": true
+        },
+        "fieldSources": {
+          "회사명": "full_ocr",
+          "사업자번호": "upper_block",
+          "대표자": "",
+          "tel": "",
+          "주소": "",
+          "총합계금액": "full_ocr"
+        },
+        "fieldsFromUpperBlock": [
+          "사업자번호"
+        ],
+        "fieldsFromAmountBlock": [],
+        "fieldsFromFullOcr": [
+          "회사명",
+          "총합계금액"
+        ],
+        "fieldsFromOther": [],
+        "reOcrCriticalFields": [
+          "사업자번호"
+        ],
+        "upperReOcrUsed": true,
+        "amountReOcrUsed": false,
+        "handwrittenReOcrUsed": false,
+        "ocrTimings": {
+          "detectOrientationMs": 8696.9,
+          "fullOcrMs": 7379.2,
+          "upperReOcrMs": 5836.8,
+          "amountReOcrMs": 0.0,
+          "handwrittenReOcrMs": 0.0,
+          "reOcrTotalMs": 5836.8,
+          "reOcrSharePercent": 26.51
+        },
+        "canSkipUpperSafelyByEvidence": false,
+        "canSkipAmountSafelyByEvidence": false,
+        "status": "WARN"
+      },
+      {
+        "fileName": "a2.jpg",
+        "filePath": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\baseline\\a2.jpg",
+        "imageSize": [
+          1037,
+          1382
+        ],
+        "processing_time": 24.77,
+        "wallClockSeconds": 24.802,
+        "responseSizeBytes": 946798,
+        "doc_type": "form_or_handwritten",
+        "receiptFields": {
+          "회사명": "세광전기조명",
+          "사업자번호": "119-10-88385",
+          "대표자": "이정",
+          "tel": "031-479-2280",
+          "주소": "경기도 안양시 동안구 엘에스로 76,7-117, (호계동, 국제유통단지)",
+          "총합계금액": ""
+        },
+        "fieldSummary": {
+          "fieldCount": 6,
+          "filledCount": 5,
+          "emptyCount": 1,
+          "fillRate": 0.8333,
+          "coreValues": {
+            "회사명": "세광전기조명",
+            "사업자번호": "119-10-88385",
+            "대표자": "이정",
+            "tel": "031-479-2280",
+            "주소": "경기도 안양시 동안구 엘에스로 76,7-117, (호계동, 국제유통단지)",
+            "총합계금액": ""
+          }
+        },
+        "filledCount": 5,
+        "emptyCount": 1,
+        "fillRate": 0.8333,
+        "semanticDetection": {
+          "merchantNameDetected": true,
+          "businessNoDetected": true,
+          "phoneDetected": true,
+          "addressDetected": true,
+          "totalAmountDetected": false
+        },
+        "fieldSources": {
+          "회사명": "upper_block",
+          "사업자번호": "upper_block",
+          "대표자": "full_ocr",
+          "tel": "full_ocr",
+          "주소": "full_ocr",
+          "총합계금액": ""
+        },
+        "fieldsFromUpperBlock": [
+          "회사명",
+          "사업자번호"
+        ],
+        "fieldsFromAmountBlock": [],
+        "fieldsFromFullOcr": [
+          "대표자",
+          "tel",
+          "주소"
+        ],
+        "fieldsFromOther": [],
+        "reOcrCriticalFields": [
+          "사업자번호",
+          "회사명"
+        ],
+        "upperReOcrUsed": true,
+        "amountReOcrUsed": false,
+        "handwrittenReOcrUsed": true,
+        "ocrTimings": {
+          "detectOrientationMs": 9895.7,
+          "fullOcrMs": 7750.5,
+          "upperReOcrMs": 6297.4,
+          "amountReOcrMs": 0.0,
+          "handwrittenReOcrMs": 710.6,
+          "reOcrTotalMs": 7008.0,
+          "reOcrSharePercent": 28.29
+        },
+        "canSkipUpperSafelyByEvidence": false,
+        "canSkipAmountSafelyByEvidence": true,
+        "status": "WARN"
+      }
+    ],
+    "avgProcessingSeconds": 23.954,
+    "avgWallClockSeconds": 24.0,
+    "avgFillRate": 0.9259,
+    "upperReOcrFiles": [
+      "1.jpg",
+      "2.jpg",
+      "3.jpg",
+      "4.jpg",
+      "7.jpg",
+      "8.jpg",
+      "10.jpg",
+      "a1.jpg",
+      "a2.jpg"
+    ],
+    "amountReOcrFiles": [
+      "1.jpg",
+      "8.jpg"
+    ],
+    "handwrittenReOcrFiles": [
+      "a2.jpg"
+    ]
+  },
+  "reOcrContribution": [
+    {
+      "fileName": "1.jpg",
+      "upperReOcrUsed": true,
+      "amountReOcrUsed": true,
+      "handwrittenReOcrUsed": false,
+      "fieldsFromUpperBlock": [
+        "회사명",
+        "사업자번호",
+        "대표자",
+        "tel",
+        "주소"
+      ],
+      "fieldsFromAmountBlock": [
+        "총합계금액"
+      ],
+      "fieldsFromFullOcr": [],
+      "reOcrCriticalFields": [
+        "tel",
+        "대표자",
+        "사업자번호",
+        "주소",
+        "총합계금액",
+        "회사명"
+      ],
+      "canSkipUpperSafelyByEvidence": false,
+      "canSkipAmountSafelyByEvidence": false,
+      "timings": {
+        "detectOrientationMs": 10238.4,
+        "fullOcrMs": 7904.0,
+        "upperReOcrMs": 4884.0,
+        "amountReOcrMs": 2124.8,
+        "handwrittenReOcrMs": 0.0,
+        "reOcrTotalMs": 7008.8,
+        "reOcrSharePercent": 27.74
+      }
+    },
+    {
+      "fileName": "2.jpg",
+      "upperReOcrUsed": true,
+      "amountReOcrUsed": false,
+      "handwrittenReOcrUsed": false,
+      "fieldsFromUpperBlock": [
+        "회사명",
+        "사업자번호",
+        "대표자",
+        "tel",
+        "주소"
+      ],
+      "fieldsFromAmountBlock": [],
+      "fieldsFromFullOcr": [
+        "총합계금액"
+      ],
+      "reOcrCriticalFields": [
+        "tel",
+        "대표자",
+        "사업자번호",
+        "주소",
+        "회사명"
+      ],
+      "canSkipUpperSafelyByEvidence": false,
+      "canSkipAmountSafelyByEvidence": false,
+      "timings": {
+        "detectOrientationMs": 20838.3,
+        "fullOcrMs": 12931.4,
+        "upperReOcrMs": 8948.6,
+        "amountReOcrMs": 0.0,
+        "handwrittenReOcrMs": 0.0,
+        "reOcrTotalMs": 8948.6,
+        "reOcrSharePercent": 20.89
+      }
+    },
+    {
+      "fileName": "3.jpg",
+      "upperReOcrUsed": true,
+      "amountReOcrUsed": false,
+      "handwrittenReOcrUsed": false,
+      "fieldsFromUpperBlock": [
+        "회사명",
+        "사업자번호",
+        "tel",
+        "주소"
+      ],
+      "fieldsFromAmountBlock": [],
+      "fieldsFromFullOcr": [
+        "총합계금액"
+      ],
+      "reOcrCriticalFields": [
+        "tel",
+        "사업자번호",
+        "주소",
+        "회사명"
+      ],
+      "canSkipUpperSafelyByEvidence": false,
+      "canSkipAmountSafelyByEvidence": false,
+      "timings": {
+        "detectOrientationMs": 14717.4,
+        "fullOcrMs": 8207.9,
+        "upperReOcrMs": 3936.1,
+        "amountReOcrMs": 0.0,
+        "handwrittenReOcrMs": 0.0,
+        "reOcrTotalMs": 3936.1,
+        "reOcrSharePercent": 14.59
+      }
+    },
+    {
+      "fileName": "4.jpg",
+      "upperReOcrUsed": true,
+      "amountReOcrUsed": false,
+      "handwrittenReOcrUsed": false,
+      "fieldsFromUpperBlock": [
+        "사업자번호",
+        "대표자",
+        "tel",
+        "주소"
+      ],
+      "fieldsFromAmountBlock": [],
+      "fieldsFromFullOcr": [
+        "총합계금액"
+      ],
+      "reOcrCriticalFields": [
+        "tel",
+        "대표자",
+        "사업자번호",
+        "주소"
+      ],
+      "canSkipUpperSafelyByEvidence": false,
+      "canSkipAmountSafelyByEvidence": false,
+      "timings": {
+        "detectOrientationMs": 8586.4,
+        "fullOcrMs": 7733.3,
+        "upperReOcrMs": 4252.1,
+        "amountReOcrMs": 0.0,
+        "handwrittenReOcrMs": 0.0,
+        "reOcrTotalMs": 4252.1,
+        "reOcrSharePercent": 20.57
+      }
+    },
+    {
+      "fileName": "7.jpg",
+      "upperReOcrUsed": true,
+      "amountReOcrUsed": false,
+      "handwrittenReOcrUsed": false,
+      "fieldsFromUpperBlock": [
+        "회사명",
+        "사업자번호",
+        "tel"
+      ],
+      "fieldsFromAmountBlock": [],
+      "fieldsFromFullOcr": [
+        "주소",
+        "총합계금액"
+      ],
+      "reOcrCriticalFields": [
+        "tel",
+        "사업자번호",
+        "회사명"
+      ],
+      "canSkipUpperSafelyByEvidence": false,
+      "canSkipAmountSafelyByEvidence": false,
+      "timings": {
+        "detectOrientationMs": 1275.1,
+        "fullOcrMs": 8552.4,
+        "upperReOcrMs": 6172.4,
+        "amountReOcrMs": 0.0,
+        "handwrittenReOcrMs": 0.0,
+        "reOcrTotalMs": 6172.4,
+        "reOcrSharePercent": 38.24
+      }
+    },
+    {
+      "fileName": "8.jpg",
+      "upperReOcrUsed": true,
+      "amountReOcrUsed": true,
+      "handwrittenReOcrUsed": false,
+      "fieldsFromUpperBlock": [
+        "회사명",
+        "사업자번호",
+        "대표자",
+        "tel",
+        "주소"
+      ],
+      "fieldsFromAmountBlock": [
+        "총합계금액"
+      ],
+      "fieldsFromFullOcr": [],
+      "reOcrCriticalFields": [
+        "tel",
+        "대표자",
+        "사업자번호",
+        "주소",
+        "총합계금액",
+        "회사명"
+      ],
+      "canSkipUpperSafelyByEvidence": false,
+      "canSkipAmountSafelyByEvidence": false,
+      "timings": {
+        "detectOrientationMs": 2283.9,
+        "fullOcrMs": 8510.1,
+        "upperReOcrMs": 5977.4,
+        "amountReOcrMs": 3507.9,
+        "handwrittenReOcrMs": 0.0,
+        "reOcrTotalMs": 9485.3,
+        "reOcrSharePercent": 46.47
+      }
+    },
+    {
+      "fileName": "10.jpg",
+      "upperReOcrUsed": true,
+      "amountReOcrUsed": false,
+      "handwrittenReOcrUsed": false,
+      "fieldsFromUpperBlock": [
+        "회사명",
+        "사업자번호",
+        "대표자",
+        "tel",
+        "주소"
+      ],
+      "fieldsFromAmountBlock": [],
+      "fieldsFromFullOcr": [
+        "총합계금액"
+      ],
+      "reOcrCriticalFields": [
+        "tel",
+        "대표자",
+        "사업자번호",
+        "주소",
+        "회사명"
+      ],
+      "canSkipUpperSafelyByEvidence": false,
+      "canSkipAmountSafelyByEvidence": false,
+      "timings": {
+        "detectOrientationMs": 1948.3,
+        "fullOcrMs": 8183.0,
+        "upperReOcrMs": 6225.1,
+        "amountReOcrMs": 0.0,
+        "handwrittenReOcrMs": 0.0,
+        "reOcrTotalMs": 6225.1,
+        "reOcrSharePercent": 37.73
+      }
+    },
+    {
+      "fileName": "a1.jpg",
+      "upperReOcrUsed": true,
+      "amountReOcrUsed": false,
+      "handwrittenReOcrUsed": false,
+      "fieldsFromUpperBlock": [
+        "사업자번호"
+      ],
+      "fieldsFromAmountBlock": [],
+      "fieldsFromFullOcr": [
+        "회사명",
+        "총합계금액"
+      ],
+      "reOcrCriticalFields": [
+        "사업자번호"
+      ],
+      "canSkipUpperSafelyByEvidence": false,
+      "canSkipAmountSafelyByEvidence": false,
+      "timings": {
+        "detectOrientationMs": 8696.9,
+        "fullOcrMs": 7379.2,
+        "upperReOcrMs": 5836.8,
+        "amountReOcrMs": 0.0,
+        "handwrittenReOcrMs": 0.0,
+        "reOcrTotalMs": 5836.8,
+        "reOcrSharePercent": 26.51
+      }
+    },
+    {
+      "fileName": "a2.jpg",
+      "upperReOcrUsed": true,
+      "amountReOcrUsed": false,
+      "handwrittenReOcrUsed": true,
+      "fieldsFromUpperBlock": [
+        "회사명",
+        "사업자번호"
+      ],
+      "fieldsFromAmountBlock": [],
+      "fieldsFromFullOcr": [
+        "대표자",
+        "tel",
+        "주소"
+      ],
+      "reOcrCriticalFields": [
+        "사업자번호",
+        "회사명"
+      ],
+      "canSkipUpperSafelyByEvidence": false,
+      "canSkipAmountSafelyByEvidence": true,
+      "timings": {
+        "detectOrientationMs": 9895.7,
+        "fullOcrMs": 7750.5,
+        "upperReOcrMs": 6297.4,
+        "amountReOcrMs": 0.0,
+        "handwrittenReOcrMs": 710.6,
+        "reOcrTotalMs": 7008.0,
+        "reOcrSharePercent": 28.29
+      }
+    }
+  ],
+  "candidateResults": [
+    {
+      "candidate": "A_strict_all_core_present",
+      "upperSkipFileCount": 0,
+      "amountSkipFileCount": 0,
+      "estimatedSavedSeconds": 0.0,
+      "estimatedAverageSavedSeconds": 0.0,
+      "lossFiles": [],
+      "unknownFiles": [
+        "1.jpg",
+        "2.jpg",
+        "3.jpg",
+        "4.jpg",
+        "7.jpg",
+        "8.jpg",
+        "10.jpg",
+        "a1.jpg",
+        "a2.jpg"
+      ],
+      "verdict": "WARN",
+      "rows": [
+        {
+          "fileName": "1.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "unknown_pre_reocr_stage",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "2.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "unknown_pre_reocr_stage",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "3.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "unknown_pre_reocr_stage",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "4.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "unknown_pre_reocr_stage",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "7.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "unknown_pre_reocr_stage",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "8.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "unknown_pre_reocr_stage",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "10.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "unknown_pre_reocr_stage",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "a1.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "unknown_pre_reocr_stage",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "a2.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "unknown_pre_reocr_stage",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        }
+      ]
+    },
+    {
+      "candidate": "B_business_amount_merchant_present",
+      "upperSkipFileCount": 0,
+      "amountSkipFileCount": 0,
+      "estimatedSavedSeconds": 0.0,
+      "estimatedAverageSavedSeconds": 0.0,
+      "lossFiles": [],
+      "unknownFiles": [
+        "1.jpg",
+        "2.jpg",
+        "3.jpg",
+        "4.jpg",
+        "7.jpg",
+        "8.jpg",
+        "10.jpg",
+        "a1.jpg",
+        "a2.jpg"
+      ],
+      "verdict": "WARN",
+      "rows": [
+        {
+          "fileName": "1.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "unknown_pre_reocr_stage",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "2.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "unknown_pre_reocr_stage",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "3.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "unknown_pre_reocr_stage",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "4.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "unknown_pre_reocr_stage",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "7.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "unknown_pre_reocr_stage",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "8.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "unknown_pre_reocr_stage",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "10.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "unknown_pre_reocr_stage",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "a1.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "unknown_pre_reocr_stage",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "a2.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "unknown_pre_reocr_stage",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        }
+      ]
+    },
+    {
+      "candidate": "C_amount_only_gating",
+      "upperSkipFileCount": 0,
+      "amountSkipFileCount": 1,
+      "estimatedSavedSeconds": 0.711,
+      "estimatedAverageSavedSeconds": 0.079,
+      "lossFiles": [],
+      "unknownFiles": [],
+      "verdict": "PASS",
+      "rows": [
+        {
+          "fileName": "1.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "keep_amount_reocr_amount_block_contributed",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "2.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "amount_reocr_not_run",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "3.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "amount_reocr_not_run",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "4.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "amount_reocr_not_run",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "7.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "amount_reocr_not_run",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "8.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "keep_amount_reocr_amount_block_contributed",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "10.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "amount_reocr_not_run",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "a1.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "amount_reocr_not_run",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "a2.jpg",
+          "skipUpper": false,
+          "skipAmount": true,
+          "reason": "skip_amount_no_amount_block_contribution",
+          "savedMsEstimate": 710.6,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        }
+      ]
+    },
+    {
+      "candidate": "D_low_risk_skip_only",
+      "upperSkipFileCount": 0,
+      "amountSkipFileCount": 1,
+      "estimatedSavedSeconds": 0.711,
+      "estimatedAverageSavedSeconds": 0.079,
+      "lossFiles": [],
+      "unknownFiles": [],
+      "verdict": "PASS",
+      "rows": [
+        {
+          "fileName": "1.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "keep_reocr_field_source_contributed_or_not_run",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "2.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "keep_reocr_field_source_contributed_or_not_run",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "3.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "keep_reocr_field_source_contributed_or_not_run",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "4.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "keep_reocr_field_source_contributed_or_not_run",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "7.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "keep_reocr_field_source_contributed_or_not_run",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "8.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "keep_reocr_field_source_contributed_or_not_run",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "10.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "keep_reocr_field_source_contributed_or_not_run",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "a1.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "keep_reocr_field_source_contributed_or_not_run",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "a2.jpg",
+          "skipUpper": false,
+          "skipAmount": true,
+          "reason": "skip_only_when_no_reocr_field_source_contribution",
+          "savedMsEstimate": 710.6,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        }
+      ]
+    },
+    {
+      "candidate": "E_quality_guarded",
+      "upperSkipFileCount": 0,
+      "amountSkipFileCount": 0,
+      "estimatedSavedSeconds": 0.0,
+      "estimatedAverageSavedSeconds": 0.0,
+      "lossFiles": [],
+      "unknownFiles": [],
+      "verdict": "WARN_NO_SAFE_SPEEDUP",
+      "rows": [
+        {
+          "fileName": "1.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "keep_reocr_contributed_to_final_fields",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "2.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "keep_reocr_contributed_to_final_fields",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "3.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "keep_reocr_contributed_to_final_fields",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "4.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "keep_reocr_contributed_to_final_fields",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "7.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "keep_reocr_contributed_to_final_fields",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "8.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "keep_reocr_contributed_to_final_fields",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "10.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "keep_reocr_contributed_to_final_fields",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "a1.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "keep_hard_or_low_fill_sample",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "a2.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "keep_hard_or_low_fill_sample",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        }
+      ]
+    },
+    {
+      "candidate": "F_no_skip_baseline",
+      "upperSkipFileCount": 0,
+      "amountSkipFileCount": 0,
+      "estimatedSavedSeconds": 0.0,
+      "estimatedAverageSavedSeconds": 0.0,
+      "lossFiles": [],
+      "unknownFiles": [],
+      "verdict": "PASS_BASELINE_NO_SPEEDUP",
+      "rows": [
+        {
+          "fileName": "1.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "baseline_no_skip",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "2.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "baseline_no_skip",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "3.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "baseline_no_skip",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "4.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "baseline_no_skip",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "7.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "baseline_no_skip",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "8.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "baseline_no_skip",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "10.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "baseline_no_skip",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "a1.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "baseline_no_skip",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        },
+        {
+          "fileName": "a2.jpg",
+          "skipUpper": false,
+          "skipAmount": false,
+          "reason": "baseline_no_skip",
+          "savedMsEstimate": 0,
+          "lostFields": [],
+          "criticalLostFields": [],
+          "fillRateDropEstimate": 0,
+          "hasLossRisk": false
+        }
+      ]
+    }
+  ],
+  "instrumentationNeeded": [
+    "fullOcrOnlyFields: fields extracted before upper/amount/handwritten re-OCR",
+    "preReOcrSemanticCompleteness: merchant/business/rep/tel/address/total booleans before re-OCR",
+    "upperBlockRecoveredFields: exact diff between pre_fields and final fields",
+    "amountBlockRecoveredFields: exact diff and selected total candidate before/after amount re-OCR",
+    "reOcrDecisionTrace: wouldSkipUpperReOcr, wouldSkipAmountReOcr, skipReason, keepReason",
+    "qualityTags: small_text/blur/shadow/handwritten-like flags used as gating guards"
+  ],
+  "futureInfoTablesCompatibility": {
+    "semanticCompletenessCandidates": "compatible with future info/tables because they operate on canonical receipt fields, not outputFields/no_1~no_6.",
+    "noShortcutPolicy": "no_1~no_6 or current outputFields-specific shortcuts remain excluded."
+  },
+  "finalRecommendation": {
+    "conclusion": "safe_pass_candidate_exists",
+    "safePassCandidate": "C_amount_only_gating",
+    "mostEffectiveCandidateByEstimatedTime": "C_amount_only_gating",
+    "mostEffectiveEstimatedSavedSeconds": 0.711,
+    "operationalApplyNow": true,
+    "recommendedNextStep": "운영 반영 가능 후보가 있으면 해당 조건만 좁게 반영",
+    "reason": "Current response lacks pre-reOCR fields; all upper re-OCR runs contributed to final fields, so skip cannot be proven safe from baseline response alone."
+  }
+}

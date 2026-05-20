@@ -10,6 +10,7 @@ import CornerAdjust, { type Corner } from "./CornerAdjust";
 import FileDropzone from "../common/FileDropzone";
 import type { Region, FieldType, LoadedImage } from "../ocr/core/types";
 import { appendHistoryRun, updateHistoryRun, syncHistoryIndexAndDetailOnCreate, type HistoryDetailDocumentFields, type HistoryOcrField, type HistoryOutputField } from "@/lib/historyStore";
+import { getTemplateImage } from "@/lib/imageStore";
 import { extractBizNumber } from "@/lib/bizNumber";
 import {
   applyAutofillToOutputFields,
@@ -36,6 +37,8 @@ type TemplateItem = {
   documentType?: string;
   // T-10-overlay-scale-fix: original image dimensions for overlay scale correction
   image?: { width: number; height: number };
+  // UI-IMG-IDB-1: 카드 썸네일용 base64 dataURL (IndexedDB에서 hydrate)
+  imageSrc?: string;
 };
 
 const DEFAULT_TEMPLATES: TemplateItem[] = [];
@@ -115,6 +118,7 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
   const [templates, setTemplates] = useState<TemplateItem[]>(DEFAULT_TEMPLATES);
   const [selectedModelId, setSelectedModelId] = useState<string>(MODEL_OPTIONS[0].id);
   const [runOcrTemplateMode, setRunOcrTemplateMode] = useState<RunOcrTemplateMode>("template");
+  const [cardTooltip, setCardTooltip] = useState<{ imgSrc: string; x: number; y: number } | null>(null);
   const isRunOcr = variant === "runocr";
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -160,6 +164,8 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
           const imgMeta = item?.template_json?.image;
           const imgW = typeof imgMeta?.width === "number" ? imgMeta.width : null;
           const imgH = typeof imgMeta?.height === "number" ? imgMeta.height : null;
+          // UI-IMG-IDB-1: localStorage에 src 남아있을 수 있음 (구버전 템플릿). IDB hydration은 별도 단계.
+          const inlineSrc = typeof imgMeta?.src === "string" ? imgMeta.src : undefined;
           return {
             id: String(item?.template_id ?? ""),
             name: String(item?.template_name ?? ""),
@@ -170,6 +176,7 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
             documentType: String(item?.template_json?.documentType ?? ""),
             // T-10-overlay-scale-fix: original image dimensions for overlay scale correction
             ...(imgW && imgH ? { image: { width: imgW, height: imgH } } : {}),
+            ...(inlineSrc ? { imageSrc: inlineSrc } : {}),
           };
         })
         .filter((item) => item.id && item.name);
@@ -208,11 +215,24 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
     if (fieldIndexFromOcrRegionId(canvasSelectedId) != null) setCanvasSelectedId(null);
   }, [selectedFieldIndex, canvasRegions, canvasSelectedId]);
 
+  // UI-IMG-IDB-1: 템플릿 카드용 이미지를 IndexedDB에서 hydrate.
+  // localStorage에 inlineSrc(구버전) 있으면 그대로 사용, 없으면 IDB 조회.
+  async function hydrateTemplateImages(items: TemplateItem[]): Promise<TemplateItem[]> {
+    return Promise.all(items.map(async (t) => {
+      if (t.imageSrc) return t;
+      if (!t.image || !t.id) return t;
+      const src = await getTemplateImage(t.id);
+      return src ? { ...t, imageSrc: src } : t;
+    }));
+  }
+
   useEffect(() => {
     (async () => {
       const localTemplates = loadLocalTemplates();
       if (isRunOcr) {
         setTemplates(localTemplates);
+        const hydrated = await hydrateTemplateImages(localTemplates);
+        setTemplates(hydrated);
         return;
       }
       try {
@@ -223,6 +243,7 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
           const imgMeta = t.template_json?.image;
           const imgW = typeof imgMeta?.width === "number" ? imgMeta.width : null;
           const imgH = typeof imgMeta?.height === "number" ? imgMeta.height : null;
+          const inlineSrc = typeof imgMeta?.src === "string" ? imgMeta.src : undefined;
           return {
             id: t.template_id,
             name: t.template_name,
@@ -231,12 +252,18 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
             documentType: String(t.template_json?.documentType ?? ""),
             // T-10-overlay-scale-fix: original image dimensions
             ...(imgW && imgH ? { image: { width: imgW, height: imgH } } : {}),
+            ...(inlineSrc ? { imageSrc: inlineSrc } : {}),
           };
         });
-        setTemplates(mergeTemplates(mapped, localTemplates));
+        const merged = mergeTemplates(mapped, localTemplates);
+        setTemplates(merged);
+        const hydrated = await hydrateTemplateImages(merged);
+        setTemplates(hydrated);
         // 기본값: 전체 인식 (빈 값)
       } catch {
         setTemplates(localTemplates);
+        const hydrated = await hydrateTemplateImages(localTemplates);
+        setTemplates(hydrated);
         // 서버 미실행 시 무시 (기본값: 빈 목록)
       }
     })();
@@ -947,20 +974,32 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
         !!activeTemplate &&
         activeTemplate.mode !== "unstructured" &&
         (activeTemplate.regions?.length ?? 0) > 0;
-      const ocrFieldsForHistory: HistoryOcrField[] = rawOcrFields.map((f: OcrFieldResult, idx: number) => {
-        // region-based 템플릿일 때만 raw OCR 라인 i 가 template.fields[i] 와 1:1 대응됨.
-        // unstructured / 템플릿 없음 일 때 raw 라인은 template.fields 와 무관하므로 enrich 안 함.
-        const tf = isRegionBased ? activeTemplate?.fields?.[idx] : undefined;
-        return {
-          name: f.name,
-          en: tf?.enField,
-          ko: tf?.koField,
-          field_type: f.field_type,
-          value: f.value,
-          confidence: f.confidence,
-          bbox: f.bbox,
-        };
-      });
+      // 비정형 경로와 동일하게: 백엔드가 ocr_lines(전체 raw 라인)를 반환하면 우선 사용.
+      // 없으면 기존 template region 필드 기반 fallback.
+      const rawOcrLines: { text: string; confidence: number }[] =
+        Array.isArray((json as any)?.ocr_lines) ? (json as any).ocr_lines : [];
+      const ocrFieldsForHistory: HistoryOcrField[] = rawOcrLines.length > 0
+        ? rawOcrLines.map((line, idx) => ({
+            name: `field_${idx + 1}`,
+            field_type: "field" as const,
+            value: line.text,
+            confidence: line.confidence,
+          }))
+        : rawOcrFields.map((f: OcrFieldResult, idx: number) => {
+            const tf = isRegionBased ? activeTemplate?.fields?.[idx] : undefined;
+            const koFromRegion = isRegionBased
+              ? String((activeTemplate?.regions?.[idx] as Record<string, unknown> | undefined)?.koField ?? "").trim()
+              : "";
+            return {
+              name: f.name,
+              en: tf?.enField,
+              ko: tf?.koField || koFromRegion || undefined,
+              field_type: f.field_type,
+              value: f.value,
+              confidence: f.confidence,
+              bbox: f.bbox,
+            };
+          });
       // 출력 필드 표 데이터 — 정제된 결과(runResult.fields = template/receipt_fields 매핑) 기반.
       const tplFields = activeTemplate?.fields ?? [];
       const structuredFields: OcrFieldResult[] = (runResult.fields ?? []) as OcrFieldResult[];
@@ -976,7 +1015,7 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
             return {
               no: tf.no ?? idx + 1,
               en: tf.enField ?? `field_${idx + 1}`,
-              ko: tf.koField ?? "",
+              ko: tf.koField || ocrF?.ko || "",
               original,
               modified,
               confidence: Number(ocrF?.confidence ?? 0),
@@ -1298,6 +1337,13 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
                       setActiveTemplateId(template.id);
                     }}
                     title={template.name}
+                    onMouseEnter={(e) => {
+                      const imgSrc = template.imageSrc;
+                      if (!imgSrc) return;
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      setCardTooltip({ imgSrc, x: rect.left + rect.width / 2, y: rect.bottom + 10 });
+                    }}
+                    onMouseLeave={() => setCardTooltip(null)}
                   >
                     {template.mode === "unstructured" ? (
                       <span className="uw-runocr-template-card-preview">
@@ -1305,6 +1351,15 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
                           src="/images/unstructured-template-preview.svg"
                           alt=""
                           className="uw-template-card-img"
+                        />
+                      </span>
+                    ) : template.imageSrc ? (
+                      <span className="uw-runocr-template-card-preview">
+                        <img
+                          src={template.imageSrc}
+                          alt=""
+                          className="uw-template-card-img"
+                          style={{ objectFit: "cover" }}
                         />
                       </span>
                     ) : (
@@ -1499,6 +1554,31 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
           )}
         </button>
       </aside>
+      {cardTooltip && (
+        <div
+          className="template-hover-tooltip"
+          style={{
+            position: "fixed",
+            top: cardTooltip.y,
+            left: Math.min(
+              Math.max(cardTooltip.x - 160, 8),
+              (typeof window !== "undefined" ? window.innerWidth : 1200) - 328,
+            ),
+            zIndex: 9999,
+            borderRadius: 8,
+            overflow: "hidden",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.35)",
+            pointerEvents: "none",
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={cardTooltip.imgSrc}
+            alt=""
+            style={{ width: 320, height: "auto", display: "block", borderRadius: 6 }}
+          />
+        </div>
+      )}
     </div>
   );
 }

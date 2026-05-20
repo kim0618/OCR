@@ -230,7 +230,7 @@ export default function OcrRightPanel(props: Props) {
           className="ms-input"
           style={{ width: "100%" }}
         />
-        <h2 className="oc-label" style={{ marginTop: 8 }}>문서 유형 (documentType)</h2>
+        <h2 className="oc-label" style={{ marginTop: 8 }}>문서 유형</h2>
         <select
           value={documentType}
           onChange={(e) => setDocumentType(e.target.value)}

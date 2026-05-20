@@ -5,6 +5,8 @@ import type { FieldType, LoadedImage, Region } from "./core/types";
 import { buildExportPayload } from "./core/export";
 import OcrCanvasPane from "./OcrCanvasPane";
 import OcrRightPanel from "./OcrRightPanel";
+import { saveTemplateImage, getTemplateImage, deleteTemplateImage } from "@/lib/imageStore";
+import { useUi } from "../common/AppProviders";
 
 const LOCAL_TEMPLATES_KEY = "mysuit_ocr_templates";
 
@@ -16,6 +18,7 @@ export default function OcrAnnotator({
   selectedTemplateId?: string | null;
 }) {
   const isEditMode = !!selectedTemplateId;
+  const ui = useUi();
   const imgRef = useRef<HTMLImageElement | null>(null);
 
   const DEFAULT_ZOOM_PCT = 100;
@@ -66,14 +69,18 @@ export default function OcrAnnotator({
     setDocumentType(String(selectedTemplate.documentType ?? ""));
 
     // 저장된 이미지 dataURL이 있으면 loaded 상태 복원
+    // UI-IMG-IDB-1: localStorage에 src 없으면 IndexedDB에서 fallback 조회
     const savedSrc = selectedTemplate.image?.src;
+    const fileName = String(selectedTemplate.file?.name ?? "");
+    const w = Number(selectedTemplate.image?.width ?? 0);
+    const h = Number(selectedTemplate.image?.height ?? 0);
     if (savedSrc) {
-      setLoaded({
-        src: savedSrc,
-        fileName: String(selectedTemplate.file?.name ?? ""),
-        naturalWidth: Number(selectedTemplate.image?.width ?? 0),
-        naturalHeight: Number(selectedTemplate.image?.height ?? 0),
-      });
+      setLoaded({ src: savedSrc, fileName, naturalWidth: w, naturalHeight: h });
+    } else if (selectedTemplateId && w > 0 && h > 0) {
+      void (async () => {
+        const idbSrc = await getTemplateImage(selectedTemplateId);
+        if (idbSrc) setLoaded({ src: idbSrc, fileName, naturalWidth: w, naturalHeight: h });
+      })();
     }
 
     if (Array.isArray(selectedTemplate.regions)) {
@@ -83,7 +90,7 @@ export default function OcrAnnotator({
       setRowTemplateTargetId(null);
       setColGuideTargetId(null);
     }
-  }, [selectedTemplate]);
+  }, [selectedTemplate, selectedTemplateId]);
 
   async function onPickFile(file: File) {
     const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
@@ -210,6 +217,8 @@ export default function OcrAnnotator({
         const list = Array.isArray(current) ? current : [];
         const next = list.filter((item: any) => item?.template_id !== selectedTemplateId);
         localStorage.setItem(LOCAL_TEMPLATES_KEY, JSON.stringify(next));
+        // UI-IMG-IDB-1: IndexedDB의 템플릿 이미지도 정리 (fire-and-forget)
+        void deleteTemplateImage(selectedTemplateId);
         window.dispatchEvent(new Event("mysuit-ocr-template-saved"));
       } catch (err) {
         console.error("[template delete error]", err);
@@ -224,10 +233,21 @@ export default function OcrAnnotator({
   }
 
   async function saveTemplateJson() {
-    if (!loaded) return;
+    if (!loaded) {
+      await ui.alert("파일을 선택해주세요.");
+      return;
+    }
     const name = templateName.trim();
     if (!name) {
-      alert("템플릿명을 입력해주세요.");
+      await ui.alert("템플릿 명을 입력해주세요.");
+      return;
+    }
+    if (!documentType) {
+      await ui.alert("문서 유형을 선택해주세요.");
+      return;
+    }
+    if (regions.length === 0) {
+      await ui.alert("필드를 하나 이상 정의해주세요.");
       return;
     }
     // edit mode: include template_id so backend updates by ID instead of creating new
@@ -236,10 +256,20 @@ export default function OcrAnnotator({
       : exportPayload;
     const txt = JSON.stringify(serverPayload, null, 2);
 
+    // UI-IMG-IDB-1: 큰 base64 이미지(image.src)는 IndexedDB로 보내고, localStorage에는 메타만 저장.
+    const templateId = selectedTemplateId || `LOCAL-${Date.now()}`;
+    const imgSrc: string | undefined = (exportPayload as any)?.image?.src;
+    if (imgSrc) {
+      void saveTemplateImage(templateId, imgSrc);
+    }
+    const localExportPayload: any = imgSrc
+      ? { ...exportPayload, image: { ...(exportPayload as any).image, src: undefined } }
+      : exportPayload;
+
     const localTemplate = {
-      template_id: selectedTemplateId || `LOCAL-${Date.now()}`,
+      template_id: templateId,
       template_name: name,
-      template_json: exportPayload,
+      template_json: localExportPayload,
       updated_at: new Date().toISOString(),
     };
     try {
@@ -361,7 +391,7 @@ export default function OcrAnnotator({
           <button type="button" onClick={handleDelete} className="ms-btn">
             삭제
           </button>
-          <button type="button" onClick={() => void saveTemplateJson()} disabled={!loaded}
+          <button type="button" onClick={() => void saveTemplateJson()}
             className="ms-btn"
             style={{ background: "var(--accent)", color: "#fff", border: "none" }}>
             {isEditMode ? "수정" : "저장"}

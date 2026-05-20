@@ -1,0 +1,1168 @@
+{
+  "tool": "Codex",
+  "model": "Codex",
+  "operationCodeModified": false,
+  "repoDirtyBeforeWork": true,
+  "gitStatusShort": "fatal: detected dubious ownership in repository at 'D:/Free_Vue/OCR'\n'D:/Free_Vue/OCR' is owned by:\n\tDESKTOP-C4EV6UM/jinsung (S-1-5-21-2021129721-2391521148-1384908961-1001)\nbut the current user is:\n\tDESKTOP-C4EV6UM/CodexSandboxOffline (S-1-5-21-2021129721-2391521148-1384908961-1003)\nTo add an exception for this directory, call:\n\n\tgit config --global --add safe.directory D:/Free_Vue/OCR",
+  "script": "D:\\Free_Vue\\OCR\\tmp\\codex_t28_perf3_table_crop_defer_pre_apply_validation.py",
+  "apiUrl": "http://127.0.0.1:9099/ocr/extract",
+  "targetMapping": [
+    {
+      "templateName": "거래_1",
+      "templateId": "TPL-31D13CF3",
+      "inputFile": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\invoice_statement\\1.jpg",
+      "expectedRowCount": 28
+    },
+    {
+      "templateName": "거래_2",
+      "templateId": "TPL-5A8C2374",
+      "inputFile": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\invoice_statement\\2.pdf",
+      "expectedRowCount": 13
+    },
+    {
+      "templateName": "거래_3",
+      "templateId": "TPL-E4B15A22",
+      "inputFile": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\invoice_statement\\3.pdf",
+      "expectedRowCount": 1
+    },
+    {
+      "templateName": "거래_4",
+      "templateId": "TPL-FD07531C",
+      "inputFile": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\invoice_statement\\4.pdf",
+      "expectedRowCount": 1
+    },
+    {
+      "templateName": "거래_5",
+      "templateId": "TPL-B8936EDE",
+      "inputFile": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\invoice_statement\\5.pdf",
+      "expectedRowCount": 6
+    },
+    {
+      "templateName": "거래_6",
+      "templateId": "TPL-95328E52",
+      "inputFile": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\invoice_statement\\6.pdf",
+      "expectedRowCount": 6
+    },
+    {
+      "templateName": "거래_7",
+      "templateId": "TPL-3AFD383E",
+      "inputFile": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\invoice_statement\\7.pdf",
+      "expectedRowCount": 1
+    }
+  ],
+  "staticConsumerAnalysis": {
+    "backend": {
+      "tableCropOcrCall": "ocr-server/main.py:2118 calls _ocr_table_region(img, ocr, region) for field_type == 'table'",
+      "tableDataCreation": "ocr-server/main.py:2134 stores fields[].table_data and table field value=json.dumps(table_rows)",
+      "documentFieldsTableRows": "ocr-server/main.py:2631 calls extract_invoice_statement_fields(...); invoice_statement.py returns document_fields.tableRows",
+      "orderingRisk": "Current code runs table crop OCR before invoice_statement parser creates document_fields.tableRows, so defer requires moving/guarding the table branch or a second pass."
+    },
+    "frontend": {
+      "preview": "OcrResultPanel.tsx:757-778 builds docTableRows/docTableDisplayCols from result.document_fields.tableRows; preview table at ~1123 prefers docTableRows.",
+      "cleanJson": "OcrResultPanel.tsx:866-871 uses docTableRows first, f.tableRows second, f.table_data third.",
+      "custom": "OcrResultPanel.tsx:1432-1524 uses docTableRows first; parseTableField(field.value) is fallback only.",
+      "validation": "OcrResultPanel.tsx:1654-1733 uses docTableRows first; field.value parse is fallback/row label only.",
+      "history": "historyStore.ts and DetailHistoryView.tsx persist/display document_fields.tableRows; no required table_data dependency found.",
+      "testWorkspace": "TestWorkspace uses document_fields.tableRows/tableMeta metrics; table_data not required for invoice table display.",
+      "rawJson": "Raw JSON will lose table_data debug detail unless an opt-in debug/includeTableDataOcr path keeps old behavior."
+    },
+    "rgEvidence": {
+      "backendTableData": "ocr-server/main.py:1502:def _ocr_table_region(img, ocr, region):\nocr-server/main.py:1687:        doc_fields = response.get(\"document_fields\") or {}\nocr-server/main.py:1779:                _var_table_rows = _var_doc_fields.get(\"tableRows\") or []\nocr-server/main.py:2118:                table_rows = _ocr_table_region(img, ocr, region)\nocr-server/main.py:2134:                    \"table_data\": table_rows,\nocr-server/main.py:2631:            document_fields = extract_invoice_statement_fields(\nocr-server/main.py:2638:            response[\"document_fields\"] = document_fields\nocr-server/main.py:2640:            _tec_used = (document_fields.get(\"tableMeta\") or {}).get(\"expectedColumnsUsed\", False)\nocr-server/main.py:2641:            _src = (document_fields.get(\"tableMeta\") or {}).get(\"extractionSource\", \"\")\nocr-server/main.py:2643:                f\"[invoice_statement] supplier={document_fields.get('supplierCompany')} \"\nocr-server/main.py:2644:                f\"buyer={document_fields.get('buyerCompany')} date={document_fields.get('issueDate')} \"\nocr-server/main.py:2645:                f\"total={document_fields.get('totalAmount')} table={document_fields.get('tableDetected')} \"\nocr-server/main.py:2646:                f\"rows={document_fields.get('rowCount')} tec={'yes' if _tec else 'no'} \"\nocr-server/main.py:2653:    # Template path raw.fields[i].value = raw OCR text; document_fields has normalized values.\nocr-server/main.py:2655:    # Only applies: invoice_statement + template (region_list) path + document_fields present.\nocr-server/main.py:2656:    # Does NOT touch address, bizNumber, representative, tableRows, or any other field.\nocr-server/main.py:2657:    if doc_type == \"invoice_statement\" and region_list and \"document_fields\" in response:\nocr-server/main.py:2658:        _t26a_doc = response[\"document_fields\"]\nocr-server/extractors/invoice_statement.py:191:# T-3: canonical tableRows\nocr-server/extractors/invoice_statement.py:506:def _is_bad_table_data_row(text: str) -> bool:\nocr-server/extractors/invoice_statement.py:578:    if _is_bad_table_data_row(text) or _is_table_header_only_row(text):\nocr-server/extractors/invoice_statement.py:610:        if _is_bad_table_data_row(text) or _is_table_header_only_row(text):\nocr-server/extractors/invoice_statement.py:619:def _table_data_candidate_text(rows: list[list[OcrLine]], idx: int, page_h: float) -> str:\nocr-server/extractors/invoice_statement.py:621:    if _is_bad_table_data_row(text) or _is_table_header_only_row(text):\nocr-server/extractors/invoice_statement.py:648:    if _is_bad_table_data_row(text):\nocr-server/extractors/invoice_statement.py:5727:            candidate = _table_data_candidate_text(rows, idx, page_h)\nocr-server/extractors/invoice_statement.py:5742:            if (candidate := _table_data_candidate_text(rows, idx, page_h))\nocr-server/extractors/invoice_statement.py:5765:            and not _is_bad_table_data_row(line.text)\nocr-server/extractors/invoice_statement.py:5804:            if _is_bad_table_data_row(text) or _is_table_header_only_row(text):\nocr-server/extractors/invoice_statement.py:6037:        \"tableRows\": table_items,\nocr-server/extractors/invoice_statement.py:6043:# ── T-3: canonical tableRows helpers ─────────────────────────────────────────\nocr-server/extractors/invoice_statement.py:6535:        \"tableRows\": canonical_rows,\nocr-server/extractors/invoice_statement.py:6537:        \"tableRowsDebug\": {\nocr-server/extractors/invoice_statement.py:6873:        table.get(\"tableRows\") or table.get(\"items\") or [],\nocr-server/extractors/invoice_statement.py:6933:        and canonical[\"tableRows\"]\nocr-server/extractors/invoice_statement.py:6935:        _t7a_row = canonical[\"tableRows\"][0]\nocr-server/extractors/invoice_statement.py:6966:            canonical[\"tableRows\"],\nocr-server/extractors/invoice_statement.py:6978:            if _t8a_all_keys and canonical[\"tableRows\"]:\nocr-server/extractors/invoice_statement.py:6979:                _t8a_n = len(canonical[\"tableRows\"])\nocr-server/extractors/invoice_statement.py:6982:                    if sum(1 for r in canonical[\"tableRows\"] if str(r.get(k) or \"\").strip()) > 0\nocr-server/extractors/invoice_statement.py:6988:                    for r in canonical[\"tableRows\"]\nocr-server/extractors/invoice_statement.py:7013:            \"tableRows\": canonical[\"tableRows\"],\nocr-server/extractors/invoice_statement.py:7045:            \"tableRowsDebug\": canonical[\"tableRowsDebug\"],",
+      "frontendTableData": "mysuit-ocr/src/lib/historyStore.ts:80:  // HISTORY-DETAIL-1: detail.runSnapshot.documentFields 전달 (거래명세서 tableRows 등)\nmysuit-ocr/src/lib/historyStore.ts:81:  document_fields?: HistoryDetailDocumentFields;\nmysuit-ocr/src/lib/historyStore.ts:360:  tableRows?: unknown[];\nmysuit-ocr/src/lib/historyStore.ts:555:  const tableRowCount = Array.isArray(extra?.documentFields?.tableRows)\nmysuit-ocr/src/lib/historyStore.ts:556:    ? extra!.documentFields!.tableRows!.length\nmysuit-ocr/src/lib/historyStore.ts:572: * 품목표 편집 후 [저장] 시 detail.runSnapshot.documentFields.tableRows 갱신.\nmysuit-ocr/src/lib/historyStore.ts:577:  tableRows: unknown[],\nmysuit-ocr/src/lib/historyStore.ts:588:        tableRows,\nmysuit-ocr/src/lib/historyStore.ts:739:    document_fields: detail.runSnapshot?.documentFields,\nmysuit-ocr/src/components/history/DetailHistoryView.tsx:431:    const rawRows = item?.document_fields?.tableRows;\nmysuit-ocr/src/components/history/DetailHistoryView.tsx:445:  const [tableRowsOpen, setTableRowsOpen] = useState(false);\nmysuit-ocr/src/components/history/DetailHistoryView.tsx:448:  // HISTORY-DETAIL-1: detail.runSnapshot.documentFields.tableRows 표시\nmysuit-ocr/src/components/history/DetailHistoryView.tsx:449:  const tableRows = useMemo((): Record<string, unknown>[] | null => {\nmysuit-ocr/src/components/history/DetailHistoryView.tsx:450:    const df = item?.document_fields;\nmysuit-ocr/src/components/history/DetailHistoryView.tsx:452:    const rows = df.tableRows;\nmysuit-ocr/src/components/history/DetailHistoryView.tsx:458:    () => (item?.document_fields?.tableMeta ?? null) as Record<string, unknown> | null,\nmysuit-ocr/src/components/history/DetailHistoryView.tsx:463:    () => (tableRows ? buildInvoicePreviewCols(tableMeta, tableRows) : null),\nmysuit-ocr/src/components/history/DetailHistoryView.tsx:464:    [tableRows, tableMeta],\nmysuit-ocr/src/components/history/DetailHistoryView.tsx:488:      // HISTORY-DETAIL-1: legacy store 반환값에 document_fields 보존 (편집된 tableRows 반영)\nmysuit-ocr/src/components/history/DetailHistoryView.tsx:489:      const savedDocFields = item.document_fields\nmysuit-ocr/src/components/history/DetailHistoryView.tsx:490:        ? { ...item.document_fields, tableRows: editedTableRows ?? item.document_fields.tableRows }\nmysuit-ocr/src/components/history/DetailHistoryView.tsx:492:      onSaved?.({ ...updated, document_fields: savedDocFields });\nmysuit-ocr/src/components/history/DetailHistoryView.tsx:499:      // 편집된 tableRows 저장 (실패해도 기존 저장 유지)\nmysuit-ocr/src/components/history/DetailHistoryView.tsx:504:          console.warn(\"[history-detail] tableRows save failed\", e);\nmysuit-ocr/src/components/history/DetailHistoryView.tsx:702:          <div style={{ ...sectionStyle, flex: tableRowsOpen ? 7 : 1 }}>\nmysuit-ocr/src/components/history/DetailHistoryView.tsx:758:                              ? `표 데이터${tableRows ? ` (${tableRows.length}행)` : \"\"}`\nmysuit-ocr/src/components/history/DetailHistoryView.tsx:785:            {/* HISTORY-DETAIL-1: 품목표 — 접이식, tableRows가 있을 때만 표시 */}\nmysuit-ocr/src/components/history/DetailHistoryView.tsx:786:            {tableRows && tableRows.length > 0 && tableDisplayCols && tableDisplayCols.length > 0 && (\nmysuit-ocr/src/components/history/DetailHistoryView.tsx:811:                    <span>표 데이터 · {tableRows.length}행</span>\nmysuit-ocr/src/components/history/DetailHistoryView.tsx:812:                    <span style={{ fontSize: 10 }}>{tableRowsOpen ? \"▲\" : \"▼\"}</span>\nmysuit-ocr/src/components/history/DetailHistoryView.tsx:815:                {tableRowsOpen && (\nmysuit-ocr/src/components/history/DetailHistoryView.tsx:846:                        {(editedTableRows ?? tableRows)!.map((row, ri) => (\nmysuit-ocr/src/components/history/DetailHistoryView.tsx:855:                                      const base = prev ?? (tableRows ? tableRows.map((r) => ({ ...r })) : []);\nmysuit-ocr/src/components/history/DetailHistoryView.tsx:876:          <div style={{ ...sectionStyle, flex: tableRowsOpen ? 3 : 1 }}>\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:180:  tableRows?: Record<string, unknown>[];\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:181:  table_data?: unknown;\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:705:  const parseTableField = (value: string) => {\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:736:        const { rowLabel: rawRowLabel } = parseTableField(f.value);\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:737:        const rowLabel = docTableRows ? `${docTableRows.length}행` : rawRowLabel;\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:752:      .map(({ f, i }) => ({ idx: i + 1, label: fieldLabelFull(f), ...parseTableField(f.value) }))\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:757:  // invoice_statement structured tableRows + tableMeta (document_fields에서 추출)\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:758:  const docTableRows = useMemo(() => {\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:759:    const df = (result as Record<string, unknown>).document_fields as Record<string, unknown> | null | undefined;\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:761:    const rows = df.tableRows;\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:767:    const df = (result as Record<string, unknown>).document_fields as Record<string, unknown> | null | undefined;\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:777:    () => (docTableRows ? buildInvoicePreviewCols(docTableMeta, docTableRows) : null),\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:778:    [docTableRows, docTableMeta],\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:781:  // PREVIEW-9B: expected 컬럼 중 tableRows에 값이 없는 핵심 컬럼 → 품목표 제목에 안내 배지\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:785:    if (!docTableRows || !docTableMeta) return \"\";\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:807:        if (!displayKeys.has(key) && !hasMeaningfulValue(docTableRows, key)) {\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:816:  }, [docTableRows, docTableMeta, docTableDisplayCols]);\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:866:        if (docTableRows && docTableDisplayCols && docTableDisplayCols.length > 0) {\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:867:          rows = cleanTableRowsFromObjects(docTableRows, docTableDisplayCols);\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:868:        } else if (Array.isArray(f.tableRows) && f.tableRows.length > 0) {\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:869:          rows = cleanTableRowsFromObjects(f.tableRows, null);\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:870:        } else if (Array.isArray(f.table_data)) {\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:871:          rows = cleanTableRowsFromCells(f.table_data);\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:885:  }, [editedFields, docTableRows, docTableDisplayCols, templateName]);\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:1123:                    if (tableIdx === 0 && docTableRows && docTableDisplayCols) {\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:1133:                                {docTableRows.length}행\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:1175:                                  {docTableRows.map((row, ri) => (\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:1432:                    // UI-CUSTOM-1: docTableRows 기반 표 표시 (Preview와 동일 컬럼/helper 재사용)\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:1433:                    if (docTableRows && docTableDisplayCols && docTableDisplayCols.length > 0) {\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:1435:                        docTableRows.map((r) => {\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:1444:                              표 데이터 · {docTableRows.length}행\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:1503:                                              const base = prev ?? docTableRows.map((r) => {\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:1524:                    // fallback: raw parseTableField (docTableRows 없는 경우)\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:1525:                    const { rows, displayRows, isSingleCol, rowLabel: rawRowLabel } = parseTableField(field.value);\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:1654:                            // UI-VALIDATION-1: docTableRows 기반 표 표시 (Preview/Custom과 동일 helper 재사용)\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:1655:                            const hasStructured = docTableRows && docTableDisplayCols && docTableDisplayCols.length > 0;\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:1656:                            const rowLabel = docTableRows ? `${docTableRows.length}행` : (() => {\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:1657:                              const { rowLabel: raw } = parseTableField(item.field.value);\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:1701:                                {/* 표 데이터: docTableRows 기반 */}\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:1733:                                        {docTableRows!.map((row, ri) => (\nmysuit-ocr/src/components/upload/OcrResultPanel.tsx:1749:                                  docTableRows && docTableRows.length === 0 ? (\nmysuit-ocr/src/components/test/TestWorkspace.tsx:78:  // T-11: invoice tableRows 메트릭\nmysuit-ocr/src/components/test/TestWorkspace.tsx:79:  tableRowsWithData: number;     // tableRows를 반환한 샘플 수\nmysuit-ocr/src/components/test/TestWorkspace.tsx:80:  tableRowsWarningCount: number; // valueMappingWarnings가 있는 샘플 수\nmysuit-ocr/src/components/test/TestWorkspace.tsx:299:// ── T-4: canonical tableRows / tableMeta 타입 ─────────────────────────────────\nmysuit-ocr/src/components/test/TestWorkspace.tsx:341:  const raw = (documentFields as Record<string, unknown> | null)?.tableRows;\nmysuit-ocr/src/components/test/TestWorkspace.tsx:374:  // T-4: 실제 tableMeta/tableRows에서 actualColumns 및 extractionStatus를 읽음\nmysuit-ocr/src/components/test/TestWorkspace.tsx:376:  const tableRows = getInvoiceTableRows(documentFields);\nmysuit-ocr/src/components/test/TestWorkspace.tsx:379:  // Actual fallback: tableRows에 값이 있는 컬럼도 Actual로 간주\nmysuit-ocr/src/components/test/TestWorkspace.tsx:384:          .filter((m) => tableRows.some((row) => {\nmysuit-ocr/src/components/test/TestWorkspace.tsx:396:  // extractionStatus: tableMeta 우선, 없으면 tableRows 유무로 판정\nmysuit-ocr/src/components/test/TestWorkspace.tsx:403:  } else if (tableRows.length > 0) {\nmysuit-ocr/src/components/test/TestWorkspace.tsx:711:  const explicit = data.document_fields ?? data.invoice_fields;\nmysuit-ocr/src/components/test/TestWorkspace.tsx:1352:        map.set(dt, { documentType: dt, total: 0, selected: 0, suppressed: 0, unknown: 0, error: 0, notRun: 0, fieldFilled, financeFieldFilled, documentFieldFilled, tableRowsWithData: 0, tableRowsWarningCount: 0, rowExactCount: 0, rowShortCount: 0, rowOverCount: 0, rowUnknownCount: 0, missingFieldCounts: {}, warningTypeCounts: {} });\nmysuit-ocr/src/components/test/TestWorkspace.tsx:1387:          // T-11: tableRows 메트릭 집계\nmysuit-ocr/src/components/test/TestWorkspace.tsx:1389:          if (tMeta?.rowCount && tMeta.rowCount > 0) row.tableRowsWithData++;\nmysuit-ocr/src/components/test/TestWorkspace.tsx:1390:          if (tMeta?.valueMappingWarnings && tMeta.valueMappingWarnings.length > 0) row.tableRowsWarningCount++;\nmysuit-ocr/src/components/test/TestWorkspace.tsx:1402:          const tableRowsData = getInvoiceTableRows(docFields as unknown as Record<string, string> | null);\nmysuit-ocr/src/components/test/TestWorkspace.tsx:1404:          if (requiredCols.length > 0 && tableRowsData.length > 0) {\nmysuit-ocr/src/components/test/TestWorkspace.tsx:1406:              const hasValue = tableRowsData.some((r) => {\nmysuit-ocr/src/components/test/TestWorkspace.tsx:1584:      const tableRows = getInvoiceTableRows(docFields as unknown as Record<string, string> | null);\nmysuit-ocr/src/components/test/TestWorkspace.tsx:1594:      const missingFields = tableRows.length > 0\nmysuit-ocr/src/components/test/TestWorkspace.tsx:1595:        ? requiredCols.filter((k) => !tableRows.some((r) => {\nmysuit-ocr/src/components/test/TestWorkspace.tsx:1636:          tableRowsWithData: r.tableRowsWithData,\nmysuit-ocr/src/components/test/TestWorkspace.tsx:1637:          tableRowsWarningCount: r.tableRowsWarningCount,\nmysuit-ocr/src/components/test/TestWorkspace.tsx:1693:      lines.push(`| ${r.documentType} | ${r.total} | ${r.selected} | ${r.suppressed} | ${r.notRun} | ${r.tableRowsWithData} | ${r.rowExactCount} | ${r.rowShortCount} | ${r.rowOverCount} |`);\nmysuit-ocr/src/components/test/TestWorkspace.tsx:4623:  tableRows: CanonicalTableRow[],\nmysuit-ocr/src/components/test/TestWorkspace.tsx:4650:      tableRows.some((row) => {\nmysuit-ocr/src/components/test/TestWorkspace.tsx:4671:    tableRows.some((row) => {\nmysuit-ocr/src/components/test/TestWorkspace.tsx:4680:  tableRows,\nmysuit-ocr/src/components/test/TestWorkspace.tsx:4685:  tableRows: CanonicalTableRow[];\nmysuit-ocr/src/components/test/TestWorkspace.tsx:4714:  const rowCount = tableMeta?.rowCount ?? (tableRows.length > 0 ? tableRows.length : Number(documentFields?.rowCount ?? 0) || 0);\nmysuit-ocr/src/components/test/TestWorkspace.tsx:4717:  const extractionStatus: string = metaStatus || (tableRows.length > 0 ? \"partial\" : tableDetected ? \"parser_not_ready\" : \"not_extracted\");\nmysuit-ocr/src/components/test/TestWorkspace.tsx:4731:  const displayCols = getDisplayTableColumns(tableMeta, tableRows, displayMode, manifestExpectedColKeys);\nmysuit-ocr/src/components/test/TestWorkspace.tsx:4737:    tableRows.length > 0\nmysuit-ocr/src/components/test/TestWorkspace.tsx:4738:      ? ALL_CANONICAL_COLS.filter((col) => tableRows.some((row) => {\nmysuit-ocr/src/components/test/TestWorkspace.tsx:4856:      {tableRows.length > 0 ? (\nmysuit-ocr/src/components/test/TestWorkspace.tsx:4893:                {tableRows.map((row, rowIdx) => (\nmysuit-ocr/src/components/test/TestWorkspace.tsx:4923:              {showRaw ? \"tableRows JSON 숨기기\" : \"원본 tableRows JSON 보기\"}\nmysuit-ocr/src/components/test/TestWorkspace.tsx:4933:              {JSON.stringify(tableRows, null, 2)}\nmysuit-ocr/src/components/test/TestWorkspace.tsx:5042:      {/* T-4: 표 추출 결과 — tableRows/tableMeta 표시 */}\nmysuit-ocr/src/components/test/TestWorkspace.tsx:5045:          tableRows={getInvoiceTableRows(documentFields)}\nmysuit-ocr/src/components/test/TestWorkspace.tsx:5932:        {/* ── 거래명세서 sub-table (document 전용 컬럼 + T-11: tableRows 메트릭) ── */}\nmysuit-ocr/src/components/test/TestWorkspace.tsx:5948:                  {/* T-11/T-12a: tableRows 메트릭 */}\nmysuit-ocr/src/components/test/TestWorkspace.tsx:5962:                      {/* T-11/T-12a: tableRows 메트릭 */}\nmysuit-ocr/src/components/test/TestWorkspace.tsx:5963:                      <td style={{ ...tdSm, textAlign: \"center\", color: row.tableRowsWithData === runCount && runCount > 0 ? \"#22c55e\" : row.tableRowsWithData > 0 ? \"#f59e0b\" : \"rgba(255,255,255,0.25)\" }}>\nmysuit-ocr/src/components/test/TestWorkspace.tsx:5964:                        {runCount > 0 ? `${row.tableRowsWithData}/${runCount}` : \"—\"}\nmysuit-ocr/src/components/test/TestWorkspace.tsx:5975:                      <td style={{ ...tdSm, textAlign: \"center\", color: row.tableRowsWarningCount > 0 ? \"#f59e0b\" : \"rgba(255,255,255,0.25)\" }}>\nmysuit-ocr/src/components/test/TestWorkspace.tsx:5976:                        {runCount > 0 ? (row.tableRowsWarningCount || \"—\") : \"—\"}"
+    }
+  },
+  "results": [
+    {
+      "templateName": "거래_1",
+      "templateId": "TPL-31D13CF3",
+      "inputFile": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\invoice_statement\\1.jpg",
+      "expectedRowCount": 28,
+      "regionCount": 10,
+      "tableRegion": {
+        "id": "table_1",
+        "name": "table_1",
+        "fieldType": "table",
+        "x": 47,
+        "y": 831,
+        "width": 2361,
+        "height": 2317,
+        "koField": "품목표",
+        "table": {
+          "mode": "repeat",
+          "rowTemplate": {
+            "x": 47,
+            "y": 831,
+            "width": 2361,
+            "height": 82
+          },
+          "rows": [
+            {
+              "x": 47,
+              "y": 831,
+              "width": 2361,
+              "height": 82
+            },
+            {
+              "x": 47,
+              "y": 913,
+              "width": 2361,
+              "height": 82
+            },
+            {
+              "x": 47,
+              "y": 995,
+              "width": 2361,
+              "height": 82
+            },
+            {
+              "x": 47,
+              "y": 1077,
+              "width": 2361,
+              "height": 82
+            },
+            {
+              "x": 47,
+              "y": 1159,
+              "width": 2361,
+              "height": 82
+            },
+            {
+              "x": 47,
+              "y": 1241,
+              "width": 2361,
+              "height": 82
+            },
+            {
+              "x": 47,
+              "y": 1323,
+              "width": 2361,
+              "height": 82
+            },
+            {
+              "x": 47,
+              "y": 1405,
+              "width": 2361,
+              "height": 82
+            },
+            {
+              "x": 47,
+              "y": 1487,
+              "width": 2361,
+              "height": 82
+            },
+            {
+              "x": 47,
+              "y": 1569,
+              "width": 2361,
+              "height": 82
+            },
+            {
+              "x": 47,
+              "y": 1651,
+              "width": 2361,
+              "height": 82
+            },
+            {
+              "x": 47,
+              "y": 1733,
+              "width": 2361,
+              "height": 82
+            },
+            {
+              "x": 47,
+              "y": 1815,
+              "width": 2361,
+              "height": 82
+            },
+            {
+              "x": 47,
+              "y": 1897,
+              "width": 2361,
+              "height": 82
+            },
+            {
+              "x": 47,
+              "y": 1979,
+              "width": 2361,
+              "height": 82
+            },
+            {
+              "x": 47,
+              "y": 2061,
+              "width": 2361,
+              "height": 82
+            },
+            {
+              "x": 47,
+              "y": 2143,
+              "width": 2361,
+              "height": 82
+            },
+            {
+              "x": 47,
+              "y": 2225,
+              "width": 2361,
+              "height": 82
+            },
+            {
+              "x": 47,
+              "y": 2307,
+              "width": 2361,
+              "height": 82
+            },
+            {
+              "x": 47,
+              "y": 2389,
+              "width": 2361,
+              "height": 82
+            },
+            {
+              "x": 47,
+              "y": 2471,
+              "width": 2361,
+              "height": 82
+            },
+            {
+              "x": 47,
+              "y": 2553,
+              "width": 2361,
+              "height": 82
+            },
+            {
+              "x": 47,
+              "y": 2635,
+              "width": 2361,
+              "height": 82
+            },
+            {
+              "x": 47,
+              "y": 2717,
+              "width": 2361,
+              "height": 82
+            },
+            {
+              "x": 47,
+              "y": 2799,
+              "width": 2361,
+              "height": 82
+            },
+            {
+              "x": 47,
+              "y": 2881,
+              "width": 2361,
+              "height": 82
+            },
+            {
+              "x": 47,
+              "y": 2963,
+              "width": 2361,
+              "height": 82
+            },
+            {
+              "x": 47,
+              "y": 3045,
+              "width": 2361,
+              "height": 82
+            }
+          ],
+          "colGuides": [
+            0.39246778989098113,
+            0.4945490584737363,
+            0.6035678889990088,
+            0.6967294350842417,
+            0.8047571853320118,
+            0.8969276511397423
+          ],
+          "colX": [
+            974,
+            1215,
+            1472,
+            1692,
+            1947,
+            2165
+          ],
+          "stopKeywords": []
+        }
+      },
+      "api": {
+        "apiUrl": "http://127.0.0.1:9099/ocr/extract",
+        "wallSeconds": 83.139,
+        "statusCode": 200,
+        "responseBytes": 677647
+      },
+      "processing_time": 82.9,
+      "responseSizeBytes": 695651,
+      "deferredResponseSizeBytes": 672378,
+      "sizeReductionBytes": 23273,
+      "fieldCount": 10,
+      "tableFieldCount": 1,
+      "fieldsTableDataPresent": true,
+      "documentFieldsTableRowsPresent": true,
+      "documentFieldsTableRowsRowCount": 28,
+      "cleanJsonRowsRowCount": 28,
+      "virtualDeferredCleanJsonRowsRowCount": 28,
+      "rowCountMatch": true,
+      "virtualDeferredRowCountMatch": true,
+      "majorFields": {
+        "supplierBusinessNo": null,
+        "supplierCompany": "부광약품(주)",
+        "buyerBusinessNo": null,
+        "buyerCompany": "백제약품(주)영등포지점",
+        "issueDate": "2024-03-07",
+        "totalAmount": "18,098,750",
+        "rowCount": "28"
+      },
+      "firstRowPreview": {
+        "rowIndex": 1,
+        "itemCode": "",
+        "itemName": "헥사메딘액0.12%",
+        "spec": "15m|*6포",
+        "lotNo": "24027",
+        "serialNo": "",
+        "manufacturingNo": "24027",
+        "expiryDate": "20270205",
+        "quantity": "400",
+        "unit": "",
+        "unitPrice": "1,050",
+        "supplyAmount": "",
+        "taxAmount": "",
+        "amount": "420,000",
+        "totalAmount": "",
+        "manufacturer": "",
+        "insuranceCode": "",
+        "remark": "",
+        "_rawText": "헥사메딘액0.12% 15m|*6포 24027 20270205 400 1,050 420,000",
+        "_confidence": null,
+        "_source": "invoice_statement_table_parser",
+        "manufacturingExpiryComposite": "24027 / 20270205",
+        "serialLotComposite": "24027"
+      },
+      "virtualTableFieldSample": {
+        "name": "table_1",
+        "field_type": "table",
+        "value": "표 데이터 (28행)",
+        "confidence": 0.9769,
+        "bbox": [
+          47,
+          831,
+          2361,
+          2317
+        ],
+        "tableOcrDebug": {
+          "tableCropOcrSkipped": true,
+          "skipReason": "document_fields.tableRows available",
+          "rowCount": 28,
+          "fallbackUsed": false
+        }
+      },
+      "estimatedSavedSeconds": 33.0,
+      "estimatedAfterProcessingTime": 49.9,
+      "riskLevel": "low"
+    },
+    {
+      "templateName": "거래_2",
+      "templateId": "TPL-5A8C2374",
+      "inputFile": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\invoice_statement\\2.pdf",
+      "expectedRowCount": 13,
+      "regionCount": 9,
+      "tableRegion": {
+        "id": "table_1",
+        "name": "table_1",
+        "fieldType": "table",
+        "x": 112,
+        "y": 599,
+        "width": 1468,
+        "height": 1134,
+        "koField": "품목표",
+        "table": {
+          "mode": "repeat",
+          "rowTemplate": null,
+          "rows": [],
+          "colGuides": [
+            0.037194473963868165,
+            0.18703506907545156,
+            0.4803400637619553,
+            0.5494155154091391,
+            0.6631243358129649,
+            0.7821466524973432,
+            0.9043570669500529
+          ],
+          "colX": [
+            167,
+            387,
+            818,
+            919,
+            1086,
+            1261,
+            1440
+          ],
+          "stopKeywords": []
+        }
+      },
+      "api": {
+        "apiUrl": "http://127.0.0.1:9099/ocr/extract",
+        "wallSeconds": 72.154,
+        "statusCode": 200,
+        "responseBytes": 604296
+      },
+      "processing_time": 71.96,
+      "responseSizeBytes": 616492,
+      "deferredResponseSizeBytes": 601331,
+      "sizeReductionBytes": 15161,
+      "fieldCount": 9,
+      "tableFieldCount": 1,
+      "fieldsTableDataPresent": true,
+      "documentFieldsTableRowsPresent": true,
+      "documentFieldsTableRowsRowCount": 13,
+      "cleanJsonRowsRowCount": 13,
+      "virtualDeferredCleanJsonRowsRowCount": 13,
+      "rowCountMatch": true,
+      "virtualDeferredRowCountMatch": true,
+      "majorFields": {
+        "supplierBusinessNo": null,
+        "supplierCompany": "오스템임플란트(주)",
+        "buyerBusinessNo": null,
+        "buyerCompany": "백제약품(주)영등포지점",
+        "issueDate": "2024-07-15",
+        "totalAmount": "376,638,215",
+        "rowCount": "13"
+      },
+      "firstRowPreview": {
+        "rowIndex": 1,
+        "itemCode": "OP-AF0100",
+        "itemName": "오스템아세클로페낙정100T 33220",
+        "spec": "",
+        "lotNo": "53210",
+        "serialNo": "",
+        "manufacturingNo": "",
+        "expiryDate": "",
+        "quantity": "53210",
+        "unit": "",
+        "unitPrice": "",
+        "supplyAmount": "140,800",
+        "taxAmount": "",
+        "amount": "",
+        "totalAmount": "",
+        "manufacturer": "",
+        "insuranceCode": "",
+        "remark": "",
+        "_rawText": "1 OP-AF0100 오스템아세클로페낙정100T 53210 33220 14,080 14,080 140,800",
+        "_confidence": null,
+        "_source": "invoice_statement_table_parser",
+        "consumerUnitPrice": "14,080",
+        "supplyUnitPrice": "14,080",
+        "serialLotComposite": "53210"
+      },
+      "virtualTableFieldSample": {
+        "name": "table_1",
+        "field_type": "table",
+        "value": "표 데이터 (13행)",
+        "confidence": 0.9269,
+        "bbox": [
+          112,
+          599,
+          1468,
+          1134
+        ],
+        "tableOcrDebug": {
+          "tableCropOcrSkipped": true,
+          "skipReason": "document_fields.tableRows available",
+          "rowCount": 13,
+          "fallbackUsed": false
+        }
+      },
+      "estimatedSavedSeconds": 10.042,
+      "estimatedAfterProcessingTime": 61.918,
+      "riskLevel": "low"
+    },
+    {
+      "templateName": "거래_3",
+      "templateId": "TPL-E4B15A22",
+      "inputFile": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\invoice_statement\\3.pdf",
+      "expectedRowCount": 1,
+      "regionCount": 10,
+      "tableRegion": {
+        "id": "table_1",
+        "name": "table_1",
+        "fieldType": "table",
+        "x": 54,
+        "y": 358,
+        "width": 1553,
+        "height": 85,
+        "koField": "품목표",
+        "table": {
+          "mode": "repeat",
+          "rowTemplate": null,
+          "rows": [],
+          "colGuides": [
+            0.01966813243105442,
+            0.11881188118811879,
+            0.35917291631259324,
+            0.4910891089108911,
+            0.5722772277227722,
+            0.6792079207920793,
+            0.7841584158415841,
+            0.8817925253197433
+          ],
+          "colX": [
+            85,
+            239,
+            612,
+            817,
+            943,
+            1109,
+            1272,
+            1423
+          ],
+          "stopKeywords": []
+        }
+      },
+      "api": {
+        "apiUrl": "http://127.0.0.1:9099/ocr/extract",
+        "wallSeconds": 29.696,
+        "statusCode": 200,
+        "responseBytes": 226614
+      },
+      "processing_time": 29.62,
+      "responseSizeBytes": 229408,
+      "deferredResponseSizeBytes": 228505,
+      "sizeReductionBytes": 903,
+      "fieldCount": 10,
+      "tableFieldCount": 1,
+      "fieldsTableDataPresent": true,
+      "documentFieldsTableRowsPresent": true,
+      "documentFieldsTableRowsRowCount": 1,
+      "cleanJsonRowsRowCount": 1,
+      "virtualDeferredCleanJsonRowsRowCount": 1,
+      "rowCountMatch": true,
+      "virtualDeferredRowCountMatch": true,
+      "majorFields": {
+        "supplierBusinessNo": null,
+        "supplierCompany": "주식회사 예일선",
+        "buyerBusinessNo": null,
+        "buyerCompany": "백제약품(주)영등포지점",
+        "issueDate": "2024-07-29",
+        "totalAmount": "301,320",
+        "rowCount": "1"
+      },
+      "firstRowPreview": {
+        "rowIndex": 1,
+        "itemCode": "",
+        "itemName": "669700020에스피씨세파클러캡슬250mg 30 캡슐",
+        "spec": "",
+        "lotNo": "",
+        "serialNo": "",
+        "manufacturingNo": "",
+        "expiryDate": "20261204",
+        "quantity": "30",
+        "unit": "",
+        "unitPrice": "10,044",
+        "supplyAmount": "",
+        "taxAmount": "",
+        "amount": "",
+        "totalAmount": "",
+        "manufacturer": "301.320(주)에스피",
+        "insuranceCode": "",
+        "remark": "",
+        "_rawText": "669700020에스피씨세파클러캡슬250mg 30 캡슐 30 10,044 301.320(주)에스피 20261204",
+        "_confidence": null,
+        "_source": "invoice_statement_table_parser",
+        "manufacturingExpiryComposite": "20261204"
+      },
+      "virtualTableFieldSample": {
+        "name": "table_1",
+        "field_type": "table",
+        "value": "표 데이터 (1행)",
+        "confidence": 0.9757,
+        "bbox": [
+          54,
+          358,
+          1553,
+          85
+        ],
+        "tableOcrDebug": {
+          "tableCropOcrSkipped": true,
+          "skipReason": "document_fields.tableRows available",
+          "rowCount": 1,
+          "fallbackUsed": false
+        }
+      },
+      "estimatedSavedSeconds": 0.796,
+      "estimatedAfterProcessingTime": 28.824,
+      "riskLevel": "low"
+    },
+    {
+      "templateName": "거래_4",
+      "templateId": "TPL-FD07531C",
+      "inputFile": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\invoice_statement\\4.pdf",
+      "expectedRowCount": 1,
+      "regionCount": 10,
+      "tableRegion": {
+        "id": "table_1",
+        "name": "table_1",
+        "fieldType": "table",
+        "x": 276,
+        "y": 806,
+        "width": 1090,
+        "height": 42,
+        "koField": "품목표",
+        "table": {
+          "mode": "repeat",
+          "rowTemplate": null,
+          "rows": [],
+          "colGuides": [
+            0.2832618025751073,
+            0.4692417739628039,
+            0.5364806866952789,
+            0.6366237482117311,
+            0.7525035765379113,
+            0.8855507868383404
+          ],
+          "colX": [
+            585,
+            787,
+            861,
+            970,
+            1096,
+            1241
+          ],
+          "stopKeywords": []
+        }
+      },
+      "api": {
+        "apiUrl": "http://127.0.0.1:9099/ocr/extract",
+        "wallSeconds": 25.857,
+        "statusCode": 200,
+        "responseBytes": 260309
+      },
+      "processing_time": 25.8,
+      "responseSizeBytes": 263669,
+      "deferredResponseSizeBytes": 262928,
+      "sizeReductionBytes": 741,
+      "fieldCount": 10,
+      "tableFieldCount": 1,
+      "fieldsTableDataPresent": true,
+      "documentFieldsTableRowsPresent": true,
+      "documentFieldsTableRowsRowCount": 1,
+      "cleanJsonRowsRowCount": 1,
+      "virtualDeferredCleanJsonRowsRowCount": 1,
+      "rowCountMatch": true,
+      "virtualDeferredRowCountMatch": true,
+      "majorFields": {
+        "supplierBusinessNo": null,
+        "supplierCompany": "주식회사 엘벼아브노바",
+        "buyerBusinessNo": null,
+        "buyerCompany": "백계약품(주)형둥표지점",
+        "issueDate": "2024-07-02",
+        "totalAmount": "28,338,000",
+        "rowCount": "1"
+      },
+      "firstRowPreview": {
+        "rowIndex": 1,
+        "itemCode": "",
+        "itemName": "클리마로플란정",
+        "spec": "",
+        "lotNo": "0360823-231024-200811",
+        "serialNo": "0360823-231024-200811",
+        "manufacturingNo": "",
+        "expiryDate": "231024",
+        "quantity": "1,000",
+        "unit": "BOX",
+        "unitPrice": "28,336.00",
+        "supplyAmount": "25,760,000",
+        "taxAmount": "2,578,000",
+        "amount": "",
+        "totalAmount": "28,338,000",
+        "manufacturer": "",
+        "insuranceCode": "",
+        "remark": "",
+        "_rawText": "클리마로플란정 0360823-231024-200811 BOX 1,000 28,336.00 25,760,000 2,578,000",
+        "_confidence": null,
+        "_source": "invoice_statement_table_parser",
+        "manufacturingExpiryComposite": "231024",
+        "serialLotComposite": "0360823-231024-200811 / 0360823-231024-200811"
+      },
+      "virtualTableFieldSample": {
+        "name": "table_1",
+        "field_type": "table",
+        "value": "표 데이터 (1행)",
+        "confidence": 0.9275,
+        "bbox": [
+          276,
+          806,
+          1090,
+          42
+        ],
+        "tableOcrDebug": {
+          "tableCropOcrSkipped": true,
+          "skipReason": "document_fields.tableRows available",
+          "rowCount": 1,
+          "fallbackUsed": false
+        }
+      },
+      "estimatedSavedSeconds": 0.276,
+      "estimatedAfterProcessingTime": 25.524,
+      "riskLevel": "low"
+    },
+    {
+      "templateName": "거래_5",
+      "templateId": "TPL-B8936EDE",
+      "inputFile": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\invoice_statement\\5.pdf",
+      "expectedRowCount": 6,
+      "regionCount": 11,
+      "tableRegion": {
+        "id": "table_1",
+        "name": "table_1",
+        "fieldType": "table",
+        "x": 68,
+        "y": 433,
+        "width": 1503,
+        "height": 407,
+        "koField": "품목표",
+        "table": {
+          "mode": "repeat",
+          "rowTemplate": {
+            "x": 68,
+            "y": 433,
+            "width": 1503,
+            "height": 68
+          },
+          "rows": [
+            {
+              "x": 68,
+              "y": 433,
+              "width": 1503,
+              "height": 68
+            },
+            {
+              "x": 68,
+              "y": 501,
+              "width": 1503,
+              "height": 68
+            },
+            {
+              "x": 68,
+              "y": 569,
+              "width": 1503,
+              "height": 68
+            },
+            {
+              "x": 68,
+              "y": 636,
+              "width": 1503,
+              "height": 68
+            },
+            {
+              "x": 68,
+              "y": 704,
+              "width": 1503,
+              "height": 68
+            },
+            {
+              "x": 68,
+              "y": 772,
+              "width": 1503,
+              "height": 68
+            }
+          ],
+          "colGuides": [
+            0.4611451942740286,
+            0.5807770961145194,
+            0.6687116564417177,
+            0.7903885480572598
+          ],
+          "colX": [
+            761,
+            941,
+            1073,
+            1256
+          ],
+          "stopKeywords": []
+        }
+      },
+      "api": {
+        "apiUrl": "http://127.0.0.1:9099/ocr/extract",
+        "wallSeconds": 25.005,
+        "statusCode": 200,
+        "responseBytes": 286205
+      },
+      "processing_time": 24.94,
+      "responseSizeBytes": 290868,
+      "deferredResponseSizeBytes": 287089,
+      "sizeReductionBytes": 3779,
+      "fieldCount": 11,
+      "tableFieldCount": 1,
+      "fieldsTableDataPresent": true,
+      "documentFieldsTableRowsPresent": true,
+      "documentFieldsTableRowsRowCount": 6,
+      "cleanJsonRowsRowCount": 6,
+      "virtualDeferredCleanJsonRowsRowCount": 6,
+      "rowCountMatch": true,
+      "virtualDeferredRowCountMatch": true,
+      "majorFields": {
+        "supplierBusinessNo": null,
+        "supplierCompany": "일양약품",
+        "buyerBusinessNo": null,
+        "buyerCompany": "백제약품(주)영등포지점",
+        "issueDate": "2024-07-22",
+        "totalAmount": "3,351,298",
+        "rowCount": "6"
+      },
+      "firstRowPreview": {
+        "rowIndex": 1,
+        "itemCode": "DPNL30M",
+        "itemName": "두피나액30ML",
+        "spec": "",
+        "lotNo": "",
+        "serialNo": "",
+        "manufacturingNo": "",
+        "expiryDate": "",
+        "quantity": "10Q",
+        "unit": "",
+        "unitPrice": "2,730",
+        "supplyAmount": "",
+        "taxAmount": "",
+        "amount": "273,000",
+        "totalAmount": "",
+        "manufacturer": "",
+        "insuranceCode": "",
+        "remark": "",
+        "_rawText": "두피나액30ML DPNL30M 10Q 2,730 273,000",
+        "_confidence": null,
+        "_source": "invoice_statement_table_parser"
+      },
+      "virtualTableFieldSample": {
+        "name": "table_1",
+        "field_type": "table",
+        "value": "표 데이터 (6행)",
+        "confidence": 0.9581,
+        "bbox": [
+          68,
+          433,
+          1503,
+          407
+        ],
+        "tableOcrDebug": {
+          "tableCropOcrSkipped": true,
+          "skipReason": "document_fields.tableRows available",
+          "rowCount": 6,
+          "fallbackUsed": false
+        }
+      },
+      "estimatedSavedSeconds": 3.69,
+      "estimatedAfterProcessingTime": 21.25,
+      "riskLevel": "low"
+    },
+    {
+      "templateName": "거래_6",
+      "templateId": "TPL-95328E52",
+      "inputFile": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\invoice_statement\\6.pdf",
+      "expectedRowCount": 6,
+      "regionCount": 6,
+      "tableRegion": {
+        "id": "table_1",
+        "name": "table_1",
+        "fieldType": "table",
+        "x": 66,
+        "y": 621,
+        "width": 1515,
+        "height": 277,
+        "koField": "품목표",
+        "table": {
+          "mode": "repeat",
+          "rowTemplate": {
+            "x": 66,
+            "y": 621,
+            "width": 1515,
+            "height": 37
+          },
+          "rows": [
+            {
+              "x": 66,
+              "y": 621,
+              "width": 1515,
+              "height": 37
+            },
+            {
+              "x": 66,
+              "y": 658,
+              "width": 1515,
+              "height": 37
+            },
+            {
+              "x": 66,
+              "y": 694,
+              "width": 1515,
+              "height": 37
+            },
+            {
+              "x": 66,
+              "y": 731,
+              "width": 1515,
+              "height": 37
+            },
+            {
+              "x": 66,
+              "y": 768,
+              "width": 1515,
+              "height": 37
+            },
+            {
+              "x": 66,
+              "y": 805,
+              "width": 1515,
+              "height": 37
+            },
+            {
+              "x": 66,
+              "y": 842,
+              "width": 1515,
+              "height": 37
+            }
+          ],
+          "colGuides": [
+            0.037525354969574015,
+            0.17342799188640973,
+            0.5720081135902637,
+            0.6501014198782962,
+            0.8417849898580122
+          ],
+          "colX": [
+            123,
+            329,
+            933,
+            1051,
+            1341
+          ],
+          "stopKeywords": []
+        }
+      },
+      "api": {
+        "apiUrl": "http://127.0.0.1:9099/ocr/extract",
+        "wallSeconds": 17.683,
+        "statusCode": 200,
+        "responseBytes": 179586
+      },
+      "processing_time": 17.64,
+      "responseSizeBytes": 183431,
+      "deferredResponseSizeBytes": 179512,
+      "sizeReductionBytes": 3919,
+      "fieldCount": 6,
+      "tableFieldCount": 1,
+      "fieldsTableDataPresent": true,
+      "documentFieldsTableRowsPresent": true,
+      "documentFieldsTableRowsRowCount": 6,
+      "cleanJsonRowsRowCount": 6,
+      "virtualDeferredCleanJsonRowsRowCount": 6,
+      "rowCountMatch": true,
+      "virtualDeferredRowCountMatch": true,
+      "majorFields": {
+        "supplierBusinessNo": null,
+        "supplierCompany": "",
+        "buyerBusinessNo": null,
+        "buyerCompany": "백제약품(주)영등포지점",
+        "issueDate": "2024-07-19",
+        "totalAmount": "",
+        "rowCount": "6"
+      },
+      "firstRowPreview": {
+        "rowIndex": 1,
+        "itemCode": "ATT100T",
+        "itemName": "알코텔정100T",
+        "spec": "",
+        "lotNo": "23001",
+        "serialNo": "",
+        "manufacturingNo": "",
+        "expiryDate": "260403",
+        "quantity": "10",
+        "unit": "",
+        "unitPrice": "",
+        "supplyAmount": "",
+        "taxAmount": "",
+        "amount": "",
+        "totalAmount": "",
+        "manufacturer": "",
+        "insuranceCode": "",
+        "remark": "",
+        "_rawText": "1 ATT100T 알코텔정100T 10 23001 260403",
+        "_confidence": null,
+        "_source": "invoice_statement_table_parser",
+        "manufacturingExpiryComposite": "260403",
+        "serialLotComposite": "23001"
+      },
+      "virtualTableFieldSample": {
+        "name": "table_1",
+        "field_type": "table",
+        "value": "표 데이터 (6행)",
+        "confidence": 0.9797,
+        "bbox": [
+          66,
+          621,
+          1515,
+          277
+        ],
+        "tableOcrDebug": {
+          "tableCropOcrSkipped": true,
+          "skipReason": "document_fields.tableRows available",
+          "rowCount": 6,
+          "fallbackUsed": false
+        }
+      },
+      "estimatedSavedSeconds": 2.532,
+      "estimatedAfterProcessingTime": 15.108,
+      "riskLevel": "low"
+    },
+    {
+      "templateName": "거래_7",
+      "templateId": "TPL-3AFD383E",
+      "inputFile": "D:\\Free_Vue\\OCR\\mysuit-ocr\\public\\data\\testsets\\invoice_statement\\7.pdf",
+      "expectedRowCount": 1,
+      "regionCount": 10,
+      "tableRegion": {
+        "id": "table_1",
+        "name": "table_1",
+        "fieldType": "table",
+        "x": 70,
+        "y": 961,
+        "width": 1513,
+        "height": 72,
+        "koField": "품목표",
+        "table": {
+          "mode": "repeat",
+          "rowTemplate": null,
+          "rows": [],
+          "colGuides": [
+            0.3728115345005149,
+            0.6652935118434604,
+            0.783728115345005
+          ],
+          "colX": [
+            634,
+            1077,
+            1256
+          ],
+          "stopKeywords": []
+        }
+      },
+      "api": {
+        "apiUrl": "http://127.0.0.1:9099/ocr/extract",
+        "wallSeconds": 15.256,
+        "statusCode": 200,
+        "responseBytes": 223806
+      },
+      "processing_time": 15.19,
+      "responseSizeBytes": 228967,
+      "deferredResponseSizeBytes": 228578,
+      "sizeReductionBytes": 389,
+      "fieldCount": 10,
+      "tableFieldCount": 1,
+      "fieldsTableDataPresent": true,
+      "documentFieldsTableRowsPresent": true,
+      "documentFieldsTableRowsRowCount": 1,
+      "cleanJsonRowsRowCount": 1,
+      "virtualDeferredCleanJsonRowsRowCount": 1,
+      "rowCountMatch": true,
+      "virtualDeferredRowCountMatch": true,
+      "majorFields": {
+        "supplierBusinessNo": null,
+        "supplierCompany": "주식회사 엘비아브노바",
+        "buyerBusinessNo": null,
+        "buyerCompany": "백제약품(주)영등포지점",
+        "issueDate": "2024-07-02",
+        "totalAmount": "",
+        "rowCount": "1"
+      },
+      "firstRowPreview": {
+        "rowIndex": 1,
+        "itemCode": "",
+        "itemName": "클리마토플란정",
+        "spec": "",
+        "lotNo": "",
+        "serialNo": "0350623-231024-260811",
+        "manufacturingNo": "",
+        "expiryDate": "231024",
+        "quantity": "1,000",
+        "unit": "BOX",
+        "unitPrice": "",
+        "supplyAmount": "",
+        "taxAmount": "",
+        "amount": "",
+        "totalAmount": "",
+        "manufacturer": "",
+        "insuranceCode": "",
+        "remark": "",
+        "_rawText": "클리마토플란정 0350623-231024-260811 BOX 1,000",
+        "_confidence": null,
+        "_source": "invoice_statement_table_parser",
+        "serialLotComposite": "0350623-231024-260811",
+        "manufacturingExpiryComposite": "231024"
+      },
+      "virtualTableFieldSample": {
+        "name": "table_1",
+        "field_type": "table",
+        "value": "표 데이터 (1행)",
+        "confidence": 0.9966,
+        "bbox": [
+          70,
+          961,
+          1513,
+          72
+        ],
+        "tableOcrDebug": {
+          "tableCropOcrSkipped": true,
+          "skipReason": "document_fields.tableRows available",
+          "rowCount": 1,
+          "fallbackUsed": false
+        }
+      },
+      "estimatedSavedSeconds": 0.657,
+      "estimatedAfterProcessingTime": 14.533,
+      "riskLevel": "low"
+    }
+  ],
+  "passConditions": {
+    "documentFieldsTableRows7of7": true,
+    "cleanJsonRows7of7": true,
+    "virtualDeferredRows7of7": true,
+    "staticConsumersPreferDocumentFieldsTableRows": true,
+    "fallbackConditionClear": true
+  },
+  "baselinePassCount": 7,
+  "cleanJsonPassCount": 7,
+  "virtualDeferredPassCount": 7,
+  "estimatedTotalProcessingSeconds": 268.05,
+  "estimatedTotalSavedSeconds": 50.993,
+  "estimatedAverageSavedSeconds": 7.285,
+  "verdict": "PASS",
+  "applyConditions": [
+    "Apply only on template RunOCR path.",
+    "Apply only when doc_type/documentType is invoice_statement.",
+    "Apply only when document_fields.tableRows exists and len(tableRows) > 0.",
+    "Set table field value to a compact summary such as '표 데이터 (N행)'.",
+    "Omit or empty table_data in the default response.",
+    "Keep existing _ocr_table_region fallback when tableRows is missing/empty or when includeTableDataOcr/debug flag is requested."
+  ],
+  "fallbackPseudoCode": [
+    "if is_template_run and doc_type == 'invoice_statement' and document_fields.get('tableRows'):",
+    "    skip table crop OCR",
+    "    table_field['value'] = f\"표 데이터 ({len(tableRows)}행)\"",
+    "    table_field.pop('table_data', None)",
+    "    table_field['tableOcrDebug'] = {... tableCropOcrSkipped: true ...}",
+    "else:",
+    "    run existing _ocr_table_region fallback"
+  ],
+  "risks": [
+    "Raw JSON/debug consumers that expect fields[].table_data will see reduced debug detail by default.",
+    "Any external integration reading table_1.value as stringified JSON would need migration or an opt-in legacy flag.",
+    "The backend currently creates document_fields after table crop OCR, so implementation must reorder or defer table field materialization carefully.",
+    "New invoice_statement templates without document_fields.tableRows must keep the existing fallback.",
+    "History/TestWorkspace should continue to persist document_fields.tableRows; do not remove that structure."
+  ],
+  "nextPromptMustInclude": [
+    "No behavior change for non-invoice_statement and unstructured OCR paths.",
+    "Fallback to _ocr_table_region when document_fields.tableRows is absent or empty.",
+    "Optional includeTableDataOcr/debug flag for Raw JSON compatibility.",
+    "Preserve document_fields.tableRows/tableMeta and processing_time.",
+    "Run 거래_1~거래_7 regression after implementation and compare expected rowCount."
+  ]
+}

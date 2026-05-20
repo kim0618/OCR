@@ -6,7 +6,7 @@ import api from "@/lib/axios";
 import CreateHistoryPopup, { type HistoryPopupForm } from "./popup/CreateHistoryPopup";
 import EditHistoryPopup, { type HistoryPopupRow } from "./popup/EditHistoryPopup";
 import DetailHistoryView from "./DetailHistoryView";
-import { readHistoryListWithFallback, readHistoryDetailWithFallback, deleteHistoryRun, type RunStatus, type HistoryRunRecord } from "@/lib/historyStore";
+import { readHistoryListWithFallback, readHistoryDetailWithFallback, deleteHistoryRun, clearHistoryRuns, hydrateHistoryRecordImages, type RunStatus, type HistoryRunRecord } from "@/lib/historyStore";
 
 type HistoryRow = HistoryPopupRow & { status?: RunStatus };
 
@@ -223,6 +223,26 @@ export default function HistoryWorkspace() {
               <button type="button" className="hw-btn-primary" onClick={() => void boardList()}>
                 조회
               </button>
+              <button
+                type="button"
+                className="hw-btn-primary"
+                style={{ background: "#dc2626" }}
+                onClick={async () => {
+                  const ok = await ui.confirm({
+                    title: "전체 삭제",
+                    message: "모든 히스토리 기록을 삭제할까요? (되돌릴 수 없습니다)",
+                    okText: "삭제",
+                    cancelText: "취소",
+                  });
+                  if (!ok) return;
+                  const before = rows.length;
+                  clearHistoryRuns();
+                  await boardList();
+                  await ui.alert(`전체 히스토리가 삭제되었습니다. (${before}건 → 0건)`);
+                }}
+              >
+                전체 삭제
+              </button>
             </div>
           </div>
         </div>
@@ -273,8 +293,11 @@ export default function HistoryWorkspace() {
                           type="button"
                           className="ms-btn-sm"
                           // HISTORY-STRUCTURE-2C: details 우선, fallback → mysuit_ocr_history
-                          onClick={() => {
-                            setDetailRecord(readHistoryDetailWithFallback(row.job_id));
+                          // UI-IMG-IDB-1: 이미지는 IndexedDB에서 비동기 hydrate
+                          onClick={async () => {
+                            const base = readHistoryDetailWithFallback(row.job_id);
+                            const hydrated = await hydrateHistoryRecordImages(base);
+                            setDetailRecord(hydrated);
                           }}
                         >
                           상세보기
@@ -287,7 +310,14 @@ export default function HistoryWorkspace() {
                           onClick={async () => {
                             const ok = await ui.confirm({
                               title: "삭제",
-                              message: `이 히스토리 행을 삭제할까요?\n${row.file_name} · ${row.created_at}`,
+                              message: "삭제하시겠습니까?",
+                              body: (
+                                <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12, color: "var(--muted)" }}>
+                                  <div><span style={{ color: "var(--text)", fontWeight: 700 }}>템플릿명</span>&nbsp;&nbsp;{row.template_name ?? "-"}</div>
+                                  <div><span style={{ color: "var(--text)", fontWeight: 700 }}>파일명</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{row.file_name}</div>
+                                  <div><span style={{ color: "var(--text)", fontWeight: 700 }}>일시</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{row.created_at}</div>
+                                </div>
+                              ),
                               okText: "삭제",
                               cancelText: "취소",
                             });

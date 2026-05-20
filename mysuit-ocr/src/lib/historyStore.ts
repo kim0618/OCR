@@ -1,5 +1,8 @@
 // TEMP: 히스토리 DB 미구축 상태에서 RunOCR/Upload 실행 결과를
 // 브라우저 localStorage 에 기록한다. DB 준비되면 이 모듈만 교체하면 됨.
+// UI-IMG-IDB-1: 이미지(base64 dataURL)는 localStorage 5MB 제약을 피해
+// IndexedDB(`mysuit_ocr_images`)에 별도 저장한다. localStorage에는 메타만 유지.
+import { saveImage as idbSaveImage, getImage as idbGetImage, deleteImagesFor as idbDeleteImagesFor, clearAllImages as idbClearAllImages } from "./imageStore";
 
 const STORAGE_KEY = "mysuit_ocr_history";
 const MAX_RECORDS = 50; // localStorage 5MB 제약 보호
@@ -167,10 +170,22 @@ export function appendHistoryRun(
     output_fields: partial.output_fields,
     autofill_summary: partial.autofill_summary,
   };
+  // UI-IMG-IDB-1: 큰 이미지는 IndexedDB로, localStorage에는 메타만 저장.
+  // record 변수는 호출처/sync에 그대로 전달되므로 in-memory에서는 이미지 url 유지.
+  const _idbOriginal = record.original_image_url;
+  const _idbProcessed = record.processed_image_url;
+  void idbSaveImage(record.job_id, "original", _idbOriginal);
+  void idbSaveImage(record.job_id, "processed", _idbProcessed);
+  const storedRecord: HistoryRunRecord = {
+    ...record,
+    image_url: undefined,
+    original_image_url: null,
+    processed_image_url: null,
+  };
   if (typeof window !== "undefined") {
     try {
       const prev = readHistoryRuns();
-      const next = [record, ...prev].slice(0, MAX_RECORDS);
+      const next = [storedRecord, ...prev].slice(0, MAX_RECORDS);
       tryWriteHistory(next);
     } catch (e) {
       if (!isQuotaExceededError(e)) {
@@ -178,7 +193,24 @@ export function appendHistoryRun(
         return record;
       }
       const prev = readHistoryRuns();
-      const compactRecord = { ...record, image_url: undefined };
+      // Quota exceeded: first try preserving the new record's images by stripping
+      // images from older records. This keeps the most recent RunOCR's
+      // original_image_url / processed_image_url available in the detail view.
+      const prevStripped = withoutStoredImages(prev);
+      for (const limit of FALLBACK_RECORD_LIMITS) {
+        try {
+          tryWriteHistory([storedRecord, ...prevStripped].slice(0, limit));
+          console.warn(`[historyStore] quota exceeded; kept latest images, stripped older records (limit=${limit})`);
+          return record;
+        } catch (retryError) {
+          if (!isQuotaExceededError(retryError)) {
+            console.warn("[historyStore] retry-keep-latest failed", retryError instanceof Error ? retryError.message : retryError);
+            return record;
+          }
+        }
+      }
+      // Even the latest record's images don't fit — fall back to full-compact mode.
+      const compactRecord = { ...storedRecord, image_url: undefined };
       const compactNext = withoutStoredImages([compactRecord, ...prev]);
       for (const limit of FALLBACK_RECORD_LIMITS) {
         try {
@@ -237,6 +269,8 @@ export function clearHistoryRuns() {
     // HISTORY-STRUCTURE-2D: index/detail도 함께 정리
     try { window.localStorage.removeItem(HISTORY_INDEX_KEY); } catch { /* ignore */ }
     try { window.localStorage.removeItem(HISTORY_DETAILS_KEY); } catch { /* ignore */ }
+    // UI-IMG-IDB-1: IndexedDB의 모든 이미지도 비움 (fire-and-forget)
+    void idbClearAllImages();
   }
 }
 
@@ -275,6 +309,8 @@ export function deleteHistoryRun(jobId: string): boolean {
   const prev = readHistoryRuns();
   const next = prev.filter((r) => r.job_id !== jobId);
   if (next.length === prev.length) return false;
+  // UI-IMG-IDB-1: IndexedDB의 해당 record 이미지도 정리 (fire-and-forget)
+  void idbDeleteImagesFor(jobId);
   try {
     tryWriteHistory(next);
   } catch (e) {
@@ -378,7 +414,50 @@ export function readHistoryDetails(): Record<string, HistoryDetailRecord> {
 
 function writeHistoryDetails(details: Record<string, HistoryDetailRecord>): void {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(HISTORY_DETAILS_KEY, JSON.stringify(details));
+  try {
+    window.localStorage.setItem(HISTORY_DETAILS_KEY, JSON.stringify(details));
+    return;
+  } catch (e) {
+    if (!isQuotaExceededError(e)) throw e;
+  }
+  // Quota exceeded: strip images from OLDER details, keep latest record's images.
+  // Determine "latest" by createdAt in legacy mysuit_ocr_history (already saved by appendHistoryRun).
+  const legacy = readHistoryRuns();
+  const latestId = legacy[0]?.job_id; // appendHistoryRun prepends newest
+  const stripped: Record<string, HistoryDetailRecord> = {};
+  for (const [id, d] of Object.entries(details)) {
+    if (id === latestId) {
+      stripped[id] = d;
+    } else {
+      stripped[id] = { ...d, images: undefined };
+    }
+  }
+  try {
+    window.localStorage.setItem(HISTORY_DETAILS_KEY, JSON.stringify(stripped));
+    console.warn("[historyStore] details quota exceeded; stripped images from older detail records, kept latest");
+    return;
+  } catch (e2) {
+    if (!isQuotaExceededError(e2)) throw e2;
+  }
+  // Still exceeded: keep ONLY latest detail.
+  if (latestId && details[latestId]) {
+    try {
+      window.localStorage.setItem(HISTORY_DETAILS_KEY, JSON.stringify({ [latestId]: details[latestId] }));
+      console.warn("[historyStore] details quota exceeded; kept only latest detail record");
+      return;
+    } catch (e3) {
+      if (!isQuotaExceededError(e3)) throw e3;
+      // Final fallback: strip images from latest too
+      try {
+        window.localStorage.setItem(HISTORY_DETAILS_KEY, JSON.stringify({
+          [latestId]: { ...details[latestId], images: undefined },
+        }));
+        console.warn("[historyStore] details quota exceeded; saved latest detail without images");
+      } catch {
+        console.warn("[historyStore] details quota exceeded; details not saved");
+      }
+    }
+  }
 }
 
 // ── Upsert ───────────────────────────────────────────────────────────────────
@@ -455,11 +534,8 @@ export function buildHistoryDetail(
       outputFieldsSnapshot: record.output_fields,
       autofillSummary: record.autofill_summary,
     },
-    images: {
-      originalImageUrl: record.original_image_url,
-      processedImageUrl: record.processed_image_url,
-      imageUrl: record.image_url,
-    },
+    // UI-IMG-IDB-1: 이미지는 IndexedDB에 별도 저장 — details에는 메타만 남김.
+    images: undefined,
   };
 }
 
@@ -672,6 +748,25 @@ export function detailToHistoryRunRecord(
  * detail 없음 / parse 오류:
  *   - readHistoryRuns()에서 job_id 일치 항목 반환 (기존 동작 완전 유지)
  */
+/**
+ * UI-IMG-IDB-1: IndexedDB에 저장된 이미지를 record에 hydrate.
+ * 상세보기 진입 시 호출. localStorage에서 읽은 record에는 이미지 url이 비어있고,
+ * 실제 base64 dataURL은 IndexedDB에 있다.
+ */
+export async function hydrateHistoryRecordImages(record: HistoryRunRecord | null): Promise<HistoryRunRecord | null> {
+  if (!record) return null;
+  const [original, processed] = await Promise.all([
+    idbGetImage(record.job_id, "original"),
+    idbGetImage(record.job_id, "processed"),
+  ]);
+  return {
+    ...record,
+    original_image_url: original ?? record.original_image_url ?? null,
+    processed_image_url: processed ?? record.processed_image_url ?? null,
+    image_url: processed ?? record.image_url,
+  };
+}
+
 export function readHistoryDetailWithFallback(historyId: string): HistoryRunRecord | null {
   try {
     const details = readHistoryDetails();
