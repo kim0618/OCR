@@ -7,6 +7,12 @@ _BIZ_RE = re.compile(r"(?<!\d)([0-9OIlSB]{3})[-\s.]([0-9OIlSB]{2})[-\s.]([0-9OIl
 _AMOUNT_RE = re.compile(r"(?<!\d)([0-9OIlSB]{1,3}(?:[,.][0-9OIlSB]{3})+|[0-9OIlSB]{4,})(?!\d)")
 _PHONE_RE = re.compile(r"(?:TEL|Tel|tel|\uc804\ud654)?[:\s(]*(?<!\d)(?:0\d{1,2})[-)\s]?\d{3,4}[-\s]?\d{4}(?!\d)")
 
+# T-GERI3-POSTSPLIT-1: column postsplit patterns for invoice_statement.
+# Applied only when header detection failed and target columns are empty.
+_POSTSPLIT_INSURANCE_PREFIX_RE = re.compile(r"^(\d{8,11})(?=\S)")
+_POSTSPLIT_AMOUNT_PREFIX_RE = re.compile(r"^(\d{1,3}(?:[.,]\d{3})+)(?=\D|$)")
+_POSTSPLIT_AMOUNT_DOT_FORMAT_RE = re.compile(r"^\d{1,3}(?:\.\d{3})+$")
+
 _COMPANY_ANCHOR_RE = re.compile(
     r"\uc0c1\s*\ud638(?:\uba85)?|\uc0c1\uc810\uba85|\uac70\ub798\ucc98\uba85|"
     r"\ub0a9\ud488\ucc98|\ud310\ub9e4\uc790|\uacf5\uae09\uc790|\ubc95\uc778\uba85"
@@ -6815,6 +6821,77 @@ def _normalize_invoice_party_fields(fields: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _apply_invoice_column_postsplit(
+    rows: list[dict],
+    meta: dict,
+    table_expected_columns: dict[str, list[str]] | None,
+) -> list[str]:
+    """T-GERI3-POSTSPLIT-1: split composite columns when header detection failed.
+
+    Two rules, applied per row when the target column is in expectedColumns
+    AND currently empty:
+
+      R1) insuranceCode <- itemName prefix matching 8-11 digit code.
+      R2) amount <- manufacturer prefix matching thousand-separated number.
+          OCR-misread '.' between 3-digit groups is normalized to ','.
+
+    Guards:
+      - target column must be present in expectedColumns
+      - target column must currently be empty
+      - splitting must not leave the source column empty
+      - non-matching rows are left untouched (no-op, no warning)
+
+    Returns warning strings for tableMeta.valueMappingWarnings (one per rule applied).
+    """
+    if not rows:
+        return []
+    expected: set[str] = set()
+    if table_expected_columns:
+        expected.update(table_expected_columns.get("required") or [])
+        expected.update(table_expected_columns.get("optional") or [])
+    if not expected:
+        expected.update(meta.get("expectedColumnKeys") or [])
+
+    r1_applied = 0
+    r2_applied = 0
+    _EMPTY = ("", "-")
+
+    for row in rows:
+        if "insuranceCode" in expected:
+            name = str(row.get("itemName") or "").strip()
+            current = str(row.get("insuranceCode") or "").strip()
+            if name and current in _EMPTY:
+                m = _POSTSPLIT_INSURANCE_PREFIX_RE.match(name)
+                if m:
+                    rest = name[m.end():].lstrip()
+                    if rest:
+                        row["insuranceCode"] = m.group(1)
+                        row["itemName"] = rest
+                        r1_applied += 1
+
+        if "amount" in expected:
+            mfr = str(row.get("manufacturer") or "").strip()
+            current = str(row.get("amount") or "").strip()
+            if mfr and current in _EMPTY:
+                m = _POSTSPLIT_AMOUNT_PREFIX_RE.match(mfr)
+                if m:
+                    amt = m.group(1)
+                    if _POSTSPLIT_AMOUNT_DOT_FORMAT_RE.match(amt):
+                        amt = amt.replace(".", ",")
+                    rest = mfr[m.end():].lstrip()
+                    if rest:
+                        row["amount"] = amt
+                        row["manufacturer"] = rest
+                        r2_applied += 1
+
+    warnings: list[str] = []
+    if r1_applied:
+        warnings.append(f"insuranceCode:postsplit_from_itemName:{r1_applied}_rows")
+    if r2_applied:
+        warnings.append(f"amount:postsplit_from_manufacturer:{r2_applied}_rows")
+    return warnings
+
+
 def extract_invoice_statement_fields(
     ocr_lines_raw: list[tuple],
     debug: dict[str, Any] | None = None,
@@ -6994,6 +7071,52 @@ def extract_invoice_statement_fields(
                 canonical["tableMeta"]["expectedMissingKeys"] = _t8a_missing_keys
         if _t8a.get("warnings"):
             canonical["tableMeta"].setdefault("valueMappingWarnings", []).extend(_t8a["warnings"])
+
+    # T-GERI3-POSTSPLIT-1: split composite columns when header detection failed.
+    # Recovers insuranceCode/amount from itemName/manufacturer when those expected
+    # columns exist but are empty (e.g. blue invoice form where header row was not
+    # detected and parser fell back to template_colguides_expected_columns).
+    if canonical.get("tableRows"):
+        _postsplit_warnings = _apply_invoice_column_postsplit(
+            canonical["tableRows"],
+            canonical["tableMeta"],
+            table_expected_columns,
+        )
+        if _postsplit_warnings:
+            canonical["tableMeta"].setdefault("valueMappingWarnings", []).extend(_postsplit_warnings)
+            # Recompute expectedFilledKeys / expectedMissingKeys since columns changed.
+            if table_expected_columns:
+                _ps_all_keys = list(dict.fromkeys(
+                    (table_expected_columns.get("required") or [])
+                    + (table_expected_columns.get("optional") or [])
+                ))
+                if _ps_all_keys and canonical["tableRows"]:
+                    _ps_filled = [
+                        k for k in _ps_all_keys
+                        if sum(1 for r in canonical["tableRows"] if str(r.get(k) or "").strip()) > 0
+                    ]
+                    _ps_missing = [k for k in _ps_all_keys if k not in _ps_filled]
+                    _ps_total = len(canonical["tableRows"]) * len(_ps_all_keys)
+                    _ps_filled_cells = sum(
+                        sum(1 for k in _ps_all_keys if str(r.get(k) or "").strip())
+                        for r in canonical["tableRows"]
+                    )
+                    canonical["tableMeta"]["expectedValueFillRate"] = (
+                        round(_ps_filled_cells / _ps_total * 100, 1) if _ps_total else 0.0
+                    )
+                    canonical["tableMeta"]["expectedFilledKeys"] = _ps_filled
+                    canonical["tableMeta"]["expectedMissingKeys"] = _ps_missing
+            # Drop now-resolved ocr_source_missing warnings for split-recovered keys.
+            _ps_resolved_keys = set()
+            for _w in _postsplit_warnings:
+                if _w.startswith("insuranceCode:postsplit"): _ps_resolved_keys.add("insuranceCode")
+                if _w.startswith("amount:postsplit"): _ps_resolved_keys.add("amount")
+            if _ps_resolved_keys:
+                _existing = canonical["tableMeta"].get("valueMappingWarnings") or []
+                canonical["tableMeta"]["valueMappingWarnings"] = [
+                    w for w in _existing
+                    if not any(w.startswith(f"{k}:ocr_source_missing") for k in _ps_resolved_keys)
+                ]
 
     # T-26a: apply company name spacing normalization to actual output fields
     fields.update(
