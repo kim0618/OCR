@@ -443,7 +443,6 @@ export default function DetailHistoryView({ item, onBack, onSaved }: Props) {
   }, [item]);
 
   const ocrRows = useMemo(() => item?.ocr_fields ?? [], [item]);
-  const [tableRowsOpen, setTableRowsOpen] = useState(false);
   const [editedTableRows, setEditedTableRows] = useState<Record<string, unknown>[] | null>(null);
 
   // HISTORY-DETAIL-1: detail.runSnapshot.documentFields.tableRows 표시
@@ -724,7 +723,7 @@ export default function DetailHistoryView({ item, onBack, onSaved }: Props) {
         </div>
 
         <div style={rightPaneStyle}>
-          <div style={{ ...sectionStyle, flex: tableRowsOpen ? 7 : 1 }}>
+          <div style={{ ...sectionStyle, flex: 1 }}>
             <div style={sectionHeaderStyle}>
               <div style={sectionLabelStyle}>출력 필드</div>
               <div style={{ display: "flex", gap: 8 }}>
@@ -800,12 +799,10 @@ export default function DetailHistoryView({ item, onBack, onSaved }: Props) {
                   )}
                 </tbody>
               </table>
-              {/* HISTORY-DETAIL-1: 품목표 — 출력필드와 단일 스크롤, 접이식 */}
+              {/* HISTORY-DETAIL-1: 품목표 — 출력필드와 단일 스크롤, 항상 펼침 */}
               {tableRows && tableRows.length > 0 && tableDisplayCols && tableDisplayCols.length > 0 && (
                 <>
-                  <button
-                    type="button"
-                    onClick={() => setTableRowsOpen((v) => !v)}
+                  <div
                     style={{
                       display: "flex",
                       alignItems: "center",
@@ -815,13 +812,6 @@ export default function DetailHistoryView({ item, onBack, onSaved }: Props) {
                       paddingBottom: 10,
                       borderTop: "1px solid var(--border)",
                       marginTop: 4,
-                      background: "transparent",
-                      border: "none",
-                      borderTopWidth: 1,
-                      borderTopStyle: "solid",
-                      borderTopColor: "var(--border)",
-                      cursor: "pointer",
-                      textAlign: "left",
                     }}
                   >
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -840,74 +830,71 @@ export default function DetailHistoryView({ item, onBack, onSaved }: Props) {
                         </span>
                       )}
                     </div>
-                    <span style={{ fontSize: 12, color: "var(--muted)", display: "flex", alignItems: "center", gap: 6 }}>
-                      <span>{tableRows.length}행</span>
-                      <span style={{ fontSize: 10 }}>{tableRowsOpen ? "▲" : "▼"}</span>
+                    <span style={{ fontSize: 12, color: "var(--muted)" }}>
+                      {tableRows.length}행
                     </span>
-                  </button>
-                  {tableRowsOpen && (
-                    <div style={{ overflowX: "auto", borderRadius: 8, border: "1px solid var(--border)" }}>
-                      <table style={{ ...tableStyle, tableLayout: "fixed", minWidth: "100%" }}>
-                        <colgroup>
+                  </div>
+                  <div style={{ overflowX: "auto", borderRadius: 8, border: "1px solid var(--border)" }}>
+                    <table style={{ ...tableStyle, tableLayout: "fixed", minWidth: "100%" }}>
+                      <colgroup>
+                        {tableDisplayCols.map((col) => (
+                          <col key={col.key} style={{ width: tblColWidth(col.key) }} />
+                        ))}
+                      </colgroup>
+                      <tbody>
+                        <tr>
                           {tableDisplayCols.map((col) => (
-                            <col key={col.key} style={{ width: tblColWidth(col.key) }} />
-                          ))}
-                        </colgroup>
-                        <tbody>
-                          <tr>
-                            {tableDisplayCols.map((col) => (
-                              <th key={col.key} style={tblThStyle}>
-                                <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={col.labelKo}>
-                                  {col.labelKo}
+                            <th key={col.key} style={tblThStyle}>
+                              <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={col.labelKo}>
+                                {col.labelKo}
+                              </div>
+                              {col.labelKo !== col.key && (
+                                <div title={col.key} style={{
+                                  fontSize: 10,
+                                  opacity: 0.5,
+                                  marginTop: 1,
+                                  fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                                  whiteSpace: "nowrap",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                }}>
+                                  ({col.key})
                                 </div>
-                                {col.labelKo !== col.key && (
-                                  <div title={col.key} style={{
-                                    fontSize: 10,
-                                    opacity: 0.5,
-                                    marginTop: 1,
-                                    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-                                    whiteSpace: "nowrap",
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                  }}>
-                                    ({col.key})
-                                  </div>
-                                )}
-                              </th>
+                              )}
+                            </th>
+                          ))}
+                        </tr>
+                        {(editedTableRows ?? tableRows)!.map((row, ri) => (
+                          <tr key={ri}>
+                            {tableDisplayCols.map((col) => (
+                              <td key={col.key} style={{ ...tblTdStyle, padding: "3px 6px" }}>
+                                <input
+                                  type="text"
+                                  value={normalizeTableCell(row[col.key])}
+                                  onChange={(e) => {
+                                    setEditedTableRows((prev) => {
+                                      const base = prev ?? (tableRows ? tableRows.map((r) => ({ ...r })) : []);
+                                      return base.map((r, i) => i === ri ? { ...r, [col.key]: e.target.value } : r);
+                                    });
+                                  }}
+                                  style={{
+                                    ...tblInputStyle,
+                                    textAlign: tblDataAlign(col.key),
+                                  }}
+                                />
+                              </td>
                             ))}
                           </tr>
-                          {(editedTableRows ?? tableRows)!.map((row, ri) => (
-                            <tr key={ri}>
-                              {tableDisplayCols.map((col) => (
-                                <td key={col.key} style={{ ...tblTdStyle, padding: "3px 6px" }}>
-                                  <input
-                                    type="text"
-                                    value={normalizeTableCell(row[col.key])}
-                                    onChange={(e) => {
-                                      setEditedTableRows((prev) => {
-                                        const base = prev ?? (tableRows ? tableRows.map((r) => ({ ...r })) : []);
-                                        return base.map((r, i) => i === ri ? { ...r, [col.key]: e.target.value } : r);
-                                      });
-                                    }}
-                                    style={{
-                                      ...tblInputStyle,
-                                      textAlign: tblDataAlign(col.key),
-                                    }}
-                                  />
-                                </td>
-                              ))}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </>
               )}
             </div>
           </div>
 
-          <div style={{ ...sectionStyle, flex: tableRowsOpen ? 3 : 1 }}>
+          <div style={{ ...sectionStyle, flex: 1 }}>
             <div style={sectionHeaderStyle}>
               <div style={sectionLabelStyle}>OCR 데이터</div>
             </div>

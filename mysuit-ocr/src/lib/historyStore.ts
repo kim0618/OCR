@@ -2,7 +2,7 @@
 // 브라우저 localStorage 에 기록한다. DB 준비되면 이 모듈만 교체하면 됨.
 // UI-IMG-IDB-1: 이미지(base64 dataURL)는 localStorage 5MB 제약을 피해
 // IndexedDB(`mysuit_ocr_images`)에 별도 저장한다. localStorage에는 메타만 유지.
-import { saveImage as idbSaveImage, getImage as idbGetImage, deleteImagesFor as idbDeleteImagesFor, clearAllImages as idbClearAllImages } from "./imageStore";
+import { saveImage as idbSaveImage, getImage as idbGetImage, deleteImagesFor as idbDeleteImagesFor } from "./imageStore";
 
 const STORAGE_KEY = "mysuit_ocr_history";
 const MAX_RECORDS = 50; // localStorage 5MB 제약 보호
@@ -265,12 +265,27 @@ export function updateHistoryRun(
 
 export function clearHistoryRuns() {
   if (typeof window !== "undefined") {
+    // UI-IMG-IDB-1: 삭제 전 historyId 들을 수집해 history 이미지만 정리.
+    // (이전엔 clearAllImages 로 store 전체를 비워 `tpl:` 템플릿 이미지까지 같이 지워지는 버그가 있었음)
+    let historyIds: string[] = [];
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const list = JSON.parse(raw);
+        if (Array.isArray(list)) {
+          historyIds = list
+            .map((item: any) => item?.job_id)
+            .filter((id: unknown): id is string => typeof id === "string" && id.length > 0);
+        }
+      }
+    } catch { /* ignore */ }
+
     window.localStorage.removeItem(STORAGE_KEY);
     // HISTORY-STRUCTURE-2D: index/detail도 함께 정리
     try { window.localStorage.removeItem(HISTORY_INDEX_KEY); } catch { /* ignore */ }
     try { window.localStorage.removeItem(HISTORY_DETAILS_KEY); } catch { /* ignore */ }
-    // UI-IMG-IDB-1: IndexedDB의 모든 이미지도 비움 (fire-and-forget)
-    void idbClearAllImages();
+    // history 이미지만 삭제 — 템플릿 이미지(`tpl:` 키)는 보존 (fire-and-forget)
+    historyIds.forEach((id) => { void idbDeleteImagesFor(id); });
   }
 }
 
