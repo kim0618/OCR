@@ -208,10 +208,16 @@ export default function OcrAnnotator({
     setColGuideTargetId(null);
   }
 
-  function handleDelete() {
+  async function handleDelete() {
     if (selectedTemplateId) {
       // 편집 모드 — 저장된 템플릿 삭제
-      if (!confirm(`"${templateName || selectedTemplateId}" 템플릿을 삭제하시겠습니까?`)) return;
+      const ok = await ui.confirm({
+        title: "템플릿 삭제",
+        message: `"${templateName || selectedTemplateId}" 템플릿을 삭제하시겠습니까?`,
+        okText: "삭제",
+        cancelText: "취소",
+      });
+      if (!ok) return;
       try {
         const current = JSON.parse(localStorage.getItem(LOCAL_TEMPLATES_KEY) || "[]");
         const list = Array.isArray(current) ? current : [];
@@ -224,10 +230,16 @@ export default function OcrAnnotator({
         console.error("[template delete error]", err);
       }
       resetForm();
-      alert("템플릿이 삭제되었습니다.");
+      await ui.alert("템플릿이 삭제되었습니다.");
     } else {
       // 새 템플릿 작성 중 — 폼 초기화
-      if (!confirm("작성 중인 내용을 초기화하시겠습니까?")) return;
+      const ok = await ui.confirm({
+        title: "초기화",
+        message: "작성 중인 내용을 초기화하시겠습니까?",
+        okText: "초기화",
+        cancelText: "취소",
+      });
+      if (!ok) return;
       resetForm();
     }
   }
@@ -250,6 +262,14 @@ export default function OcrAnnotator({
       await ui.alert("필드를 하나 이상 정의해주세요.");
       return;
     }
+    // 저장/수정 전 확인 다이얼로그
+    const proceed = await ui.confirm({
+      title: isEditMode ? "템플릿 수정" : "템플릿 저장",
+      message: `"${name}" 템플릿을 ${isEditMode ? "수정" : "저장"}하시겠습니까?`,
+      okText: isEditMode ? "수정" : "저장",
+      cancelText: "취소",
+    });
+    if (!proceed) return;
     // edit mode: include template_id so backend updates by ID instead of creating new
     const serverPayload = selectedTemplateId
       ? { ...exportPayload, template_id: selectedTemplateId }
@@ -293,10 +313,10 @@ export default function OcrAnnotator({
         body: txt,
       });
       if (!res.ok) throw new Error("template save failed");
-      alert(isEditMode ? "템플릿이 수정되었습니다." : "템플릿이 저장되었습니다.");
+      await ui.alert(isEditMode ? "템플릿이 수정되었습니다." : "템플릿이 저장되었습니다.");
     } catch (err) {
       console.error("[template save error]", err);
-      alert("임시 저장소에 저장되었습니다. 서버 저장은 아직 연결되지 않았습니다.");
+      await ui.alert("임시 저장소에 저장되었습니다. 서버 저장은 아직 연결되지 않았습니다.");
     }
 
   }

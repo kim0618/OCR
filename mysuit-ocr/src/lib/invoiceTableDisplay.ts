@@ -109,6 +109,40 @@ export function hasMeaningfulTableValue(
   return rows.some((row) => !isMeaninglessTableValue(normalizeTableCell(row[key])));
 }
 
+// ── UI-PREVIEW-ROWINDEX-1: rowIndex 표시 정책 ────────────────────────────────
+
+/**
+ * UI-PREVIEW-ROWINDEX-1: rowIndex 컬럼을 사용자 표시 컬럼으로 노출할지 결정.
+ *
+ * 표시 (true) 조건 — 다음 중 하나라도 true:
+ *   1. externalExpectedKeys (manifest tableExpectedColumns / template tableColumns 등
+ *      caller가 전달한 expected keys 집합)에 "rowIndex" 포함
+ *   2. tableMeta.expectedColumnKeys 에 "rowIndex" 포함 (백엔드가 실제 컬럼으로 선언)
+ *
+ * 다음 신호 단독으로는 표시하지 않음 (parser 내부 1..N 생성 가능성):
+ *   - tableMeta.columns 에 "rowIndex" 가 있는 경우
+ *   - tableRows 안에 rowIndex 값이 채워져 있는 경우
+ *
+ * 본 함수는 표시 정책만 결정하며 document_fields.tableRows 원본은 변경하지 않는다.
+ */
+export function shouldDisplayRowIndex(
+  tableMeta: Record<string, unknown> | null | undefined,
+  externalExpectedKeys?: readonly string[] | null,
+): boolean {
+  if (externalExpectedKeys && externalExpectedKeys.length > 0) {
+    for (const k of externalExpectedKeys) {
+      if (k === "rowIndex") return true;
+    }
+  }
+  const expKeys = tableMeta?.expectedColumnKeys;
+  if (Array.isArray(expKeys)) {
+    for (const k of expKeys) {
+      if (String(k) === "rowIndex") return true;
+    }
+  }
+  return false;
+}
+
 // ── 중복 제거 유틸 (lot/mfg/itemCode — private) ───────────────────────────────
 
 const _LOT_KEYS = new Set(["lotNo", "serialLot", "lot", "lotNumber"]);
@@ -170,6 +204,7 @@ function _meaninglessOrDupRatio(
 export function buildInvoicePreviewCols(
   tableMeta: Record<string, unknown> | null | undefined,
   rows: Record<string, unknown>[],
+  externalExpectedKeys?: readonly string[] | null,
 ): InvoiceDisplayCol[] {
   // 후보 키 목록 결정 (순서/라벨 참고용)
   let candidateKeys: string[] = [];
@@ -243,15 +278,13 @@ export function buildInvoicePreviewCols(
     }
   }
 
-  // UI-PREVIEW-9D: rowIndex 실제 OCR 값이 있으면 맨 앞에 추가
-  // - UI에서 index+1을 임의 생성하지 않음 (row[col.key] 직접 읽기)
+  // UI-PREVIEW-ROWINDEX-1: rowIndex prepend 정책
+  // - 값 존재만으로(hasMeaningfulTableValue) prepend 하지 않음 (parser 1..N 생성 가능)
+  // - tableMeta.expectedColumnKeys 또는 externalExpectedKeys 에 rowIndex 가 있을 때만 prepend
   // - 라벨 우선순위:
   //   1. tableMeta.columnLabels?.rowIndex (forward-compatible: 백엔드가 원본 헤더 추가 시 자동 적용)
   //   2. INVOICE_COL_LABEL_MAP["rowIndex"] = "번호" (현재 fallback)
-  //   3. "번호"
-  // - 현재 백엔드 tableMeta에 columnLabels 없음 (invoice_statement.py 분석으로 확인)
-  //   → 원본 "NO" 라벨 복원 불가 → "번호" fallback 사용
-  if (hasMeaningfulTableValue(rows, "rowIndex")) {
+  if (shouldDisplayRowIndex(tableMeta, externalExpectedKeys)) {
     cols = [{ key: "rowIndex", labelKo: resolveLabel("rowIndex") }, ...cols];
   }
 

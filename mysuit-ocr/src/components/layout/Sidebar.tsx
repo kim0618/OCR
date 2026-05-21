@@ -63,7 +63,6 @@ const DEFAULT_ITEMS: NavItem[] = [
   { label: "RunOCR",    href: "/runocr",       icon: "upload" },
   { label: "History",   href: "/history",      icon: "history" },
   { label: "Restore",    href: "/autorestore",  icon: "restore" },
-  { label: "Test",      href: "/test",         icon: "test" },
 ];
 
 export default function Sidebar({

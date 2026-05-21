@@ -42,7 +42,7 @@ export default function LoginWorkspace() {
           envMagellanVersion: resultMap.envMagellanVersion,
         });
 
-        router.replace("/test");
+        router.replace("/template");
       });
     } catch (error) {
       console.error(error);

@@ -1,0 +1,189 @@
+{
+  "task": "UI-PREVIEW-ROWINDEX-1",
+  "title": "invoice table rowIndex display policy",
+  "date": "2026-05-21",
+  "tool": "Claude Code",
+  "model": {
+    "declared_in_prompt": "Claude Sonnet 4.6",
+    "actual_executed": "Claude Opus 4.7",
+    "actual_model_id": "claude-opus-4-7[1m]"
+  },
+  "backups": [
+    "backup/invoiceTableDisplay_20260521_before_UI_PREVIEW_ROWINDEX_1.ts",
+    "backup/TestWorkspace_20260521_before_UI_PREVIEW_ROWINDEX_1.tsx"
+  ],
+  "modified_files": [
+    {
+      "path": "src/lib/invoiceTableDisplay.ts",
+      "changes": [
+        "shouldDisplayRowIndex(tableMeta, externalExpectedKeys) helper added (exported)",
+        "buildInvoicePreviewCols signature extended with optional externalExpectedKeys: readonly string[] | null",
+        "rowIndex prepend condition changed from hasMeaningfulTableValue(rows, 'rowIndex') to shouldDisplayRowIndex(tableMeta, externalExpectedKeys)"
+      ]
+    },
+    {
+      "path": "src/components/test/TestWorkspace.tsx",
+      "changes": [
+        "Import added: shouldDisplayRowIndex from @/lib/invoiceTableDisplay",
+        "getDisplayTableColumns reworked so rowIndex prepend is gated by shouldDisplayRowIndex(tableMeta, manifestExpectedColKeys) across detected / expected-fallback / hasValue / final-fallback branches",
+        "'all' mode left untouched (explicit full canonical view)",
+        "Expected mode backend expectedColumnKeys branch no longer auto-prepends rowIndex"
+      ]
+    }
+  ],
+  "row_index_policy": {
+    "show_when_any_true": [
+      "externalExpectedKeys includes 'rowIndex'",
+      "tableMeta.expectedColumnKeys includes 'rowIndex'"
+    ],
+    "do_not_show_when_only": [
+      "tableMeta.columns includes 'rowIndex'",
+      "tableRows contain rowIndex values only"
+    ],
+    "raw_data_protection": "document_fields.tableRows is not modified; policy is applied only at display time"
+  },
+  "implementation_locations": {
+    "invoiceTableDisplay.ts": {
+      "helper_function": "shouldDisplayRowIndex",
+      "modified_function": "buildInvoicePreviewCols",
+      "key_lines_changed_around": [
+        "rowIndex prepend block at end of buildInvoicePreviewCols (former line ~254)"
+      ]
+    },
+    "TestWorkspace.tsx": {
+      "modified_function": "getDisplayTableColumns",
+      "modes_updated": ["detected", "expected (backend fallback branch)", "hasValue", "default fallback"],
+      "modes_unchanged": ["all"]
+    }
+  },
+  "per_template_results": [
+    {
+      "template": "거래_1",
+      "file": "1.jpg",
+      "rowIndex_source": "internal_generated_in_tableMeta_columns",
+      "shouldDisplayRowIndex": false,
+      "display_rowIndex": false,
+      "expected_columns": ["itemName", "spec", "manufacturingNo", "expiryDate", "quantity", "unitPrice", "amount"],
+      "expected_rowCount": 28,
+      "rowIndex_policy": "PASS",
+      "columnOrder": "PASS",
+      "rowCount": "PASS"
+    },
+    {
+      "template": "거래_2",
+      "file": "2.pdf",
+      "rowIndex_source": "expected_column",
+      "shouldDisplayRowIndex": true,
+      "display_rowIndex": true,
+      "expected_columns": ["rowIndex", "itemCode", "itemName", "quantity", "consumerUnitPrice", "supplyUnitPrice", "supplyAmount"],
+      "expected_rowCount": 13,
+      "rowIndex_policy": "PASS",
+      "columnOrder": "PASS",
+      "rowCount": "PASS"
+    },
+    {
+      "template": "거래_3",
+      "file": "3.pdf",
+      "rowIndex_source": "expected_column",
+      "shouldDisplayRowIndex": true,
+      "display_rowIndex": true,
+      "expected_columns": ["rowIndex", "itemName", "quantity", "unitPrice", "manufacturer"],
+      "expected_rowCount": 1,
+      "rowIndex_policy": "PASS",
+      "columnOrder": "PASS (rowIndex policy scope)",
+      "rowCount": "PASS",
+      "separate_issue": "insuranceCode, amount extra columns remain — tracked outside this task per spec"
+    },
+    {
+      "template": "거래_4",
+      "file": "4.pdf",
+      "rowIndex_source": "internal_generated_in_tableMeta_columns",
+      "shouldDisplayRowIndex": false,
+      "display_rowIndex": false,
+      "expected_columns": ["itemName", "lotNo", "unit", "quantity", "unitPrice", "supplyAmount", "taxAmount", "totalAmount"],
+      "expected_rowCount": 1,
+      "rowIndex_policy": "PASS",
+      "columnOrder": "PASS",
+      "rowCount": "PASS"
+    },
+    {
+      "template": "거래_5",
+      "file": "5.pdf",
+      "rowIndex_source": "internal_generated_in_tableMeta_columns",
+      "shouldDisplayRowIndex": false,
+      "display_rowIndex": false,
+      "expected_columns": ["itemName", "itemCode", "quantity", "unitPrice", "amount"],
+      "expected_rowCount": 6,
+      "rowIndex_policy": "PASS",
+      "columnOrder": "PASS",
+      "rowCount": "PASS"
+    },
+    {
+      "template": "거래_6",
+      "file": "6.pdf",
+      "rowIndex_source": "expected_column",
+      "shouldDisplayRowIndex": true,
+      "display_rowIndex": true,
+      "expected_columns": ["rowIndex", "itemCode", "itemName", "quantity", "expiryDate"],
+      "expected_rowCount": 6,
+      "rowIndex_policy": "PASS",
+      "columnOrder": "PASS",
+      "rowCount": "PASS"
+    },
+    {
+      "template": "거래_7",
+      "file": "7.pdf",
+      "rowIndex_source": "internal_generated_in_tableMeta_columns",
+      "shouldDisplayRowIndex": false,
+      "display_rowIndex": false,
+      "expected_columns": ["itemName", "unit", "quantity"],
+      "expected_rowCount": 1,
+      "rowIndex_policy": "PASS",
+      "columnOrder": "PASS",
+      "rowCount": "PASS"
+    }
+  ],
+  "clean_json_impact": {
+    "RunOCR_Preview": "docTableDisplayCols reflects new policy → 거래_1/4/5/7 rowIndex excluded from Clean JSON tables[].rows keys; 거래_2/3/6 retain rowIndex as first key",
+    "History_Preview": "DetailHistoryView shares buildInvoicePreviewCols → same behavior",
+    "Custom_panel": "Uses docTableDisplayCols → same behavior",
+    "Validation_panel": "Uses docTableDisplayCols/getDisplayTableColumns → same behavior",
+    "TestWorkspace": "getDisplayTableColumns updated → matches RunOCR/History policy"
+  },
+  "preview_custom_validation_history_testworkspace_impact": {
+    "Preview": "consistent — rowIndex shown only for 거래_2/3/6",
+    "Custom": "consistent",
+    "Validation": "consistent",
+    "History": "consistent",
+    "TestWorkspace": "consistent (except 'all' mode by design — explicit full canonical view)"
+  },
+  "raw_data_check": {
+    "document_fields_tableRows_modified": false,
+    "note": "Only display-layer columns adjusted; raw rows unchanged"
+  },
+  "build_results": {
+    "typecheck": "PASS",
+    "build": "PASS",
+    "unrelated_warning": "ESLint 'nextVitals is not iterable' (pre-existing, unrelated)"
+  },
+  "out_of_scope_issues": [
+    {
+      "id": "거래_3-extra-columns",
+      "description": "insuranceCode, amount columns appear extra in 거래_3 detected/expected columns. Out of this task scope per spec; rowIndex policy verification passes independently.",
+      "severity": "WARN",
+      "next_step_suggested": true
+    },
+    {
+      "id": "all-mode-policy",
+      "description": "TestWorkspace 'all' mode still shows rowIndex (intentional — explicit full canonical view). Re-evaluate if UX team decides full-canonical view should also hide internal rowIndex.",
+      "severity": "INFO",
+      "next_step_suggested": true
+    }
+  ],
+  "next_actions": [
+    "거래_3 insuranceCode/amount extra column 정리 (parser vs manifest alignment)",
+    "OcrResultPanel/DetailHistoryView 에서 manifest/template expected keys 를 buildInvoicePreviewCols(externalExpectedKeys) 로 전달하는 확장",
+    "거래_1 lotNo/serialNo dedup 정책 후속 검증",
+    "manifest displayLabelMap 의 RunOCR/History 활용 확장"
+  ]
+}

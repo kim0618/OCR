@@ -46,6 +46,14 @@ export default function UnstructuredBuilder({
     const name = templateName.trim();
     if (!name) { await ui.alert("템플릿 명을 입력해주세요."); return; }
     if (fields.length === 0) { await ui.alert("필드를 하나 이상 정의해주세요."); return; }
+    // 저장/수정 전 확인 다이얼로그
+    const proceed = await ui.confirm({
+      title: isEditMode ? "템플릿 수정" : "템플릿 저장",
+      message: `"${name}" 템플릿을 ${isEditMode ? "수정" : "저장"}하시겠습니까?`,
+      okText: isEditMode ? "수정" : "저장",
+      cancelText: "취소",
+    });
+    if (!proceed) return;
     const localTemplate = {
       template_id: selectedTemplateId || `LOCAL-${Date.now()}`,
       template_name: name,
@@ -73,10 +81,16 @@ export default function UnstructuredBuilder({
     await ui.alert(isEditMode ? "템플릿이 수정되었습니다." : "템플릿이 저장되었습니다.");
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (selectedTemplateId) {
       // 편집 모드 — 저장된 템플릿 삭제
-      if (!confirm(`"${templateName || selectedTemplateId}" 템플릿을 삭제하시겠습니까?`)) return;
+      const ok = await ui.confirm({
+        title: "템플릿 삭제",
+        message: `"${templateName || selectedTemplateId}" 템플릿을 삭제하시겠습니까?`,
+        okText: "삭제",
+        cancelText: "취소",
+      });
+      if (!ok) return;
       try {
         const current = JSON.parse(localStorage.getItem(LOCAL_TEMPLATES_KEY) || "[]");
         const list = Array.isArray(current) ? current : [];
@@ -89,10 +103,16 @@ export default function UnstructuredBuilder({
       setTemplateName("");
       setFields([]);
       setSelectedNo(null);
-      alert("템플릿이 삭제되었습니다.");
+      await ui.alert("템플릿이 삭제되었습니다.");
     } else {
       // 새 비정형 작성 중 — 폼 초기화
-      if (!confirm("작성 중인 내용을 초기화하시겠습니까?")) return;
+      const ok = await ui.confirm({
+        title: "초기화",
+        message: "작성 중인 내용을 초기화하시겠습니까?",
+        okText: "초기화",
+        cancelText: "취소",
+      });
+      if (!ok) return;
       setTemplateName("");
       setFields([]);
       setSelectedNo(null);

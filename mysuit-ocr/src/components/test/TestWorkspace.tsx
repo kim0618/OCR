@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { extractBizNumber, normalizeBizNumber } from "@/lib/bizNumber";
 import { useUi } from "../common/AppProviders";
-import { INVOICE_COL_LABEL_MAP } from "@/lib/invoiceTableDisplay";
+import { INVOICE_COL_LABEL_MAP, shouldDisplayRowIndex } from "@/lib/invoiceTableDisplay";
 
 import {
   Entry,
@@ -4618,41 +4618,52 @@ function resolveDisplayColValue(row: CanonicalTableRow, col: string): string {
 
 // T-6a/T-6e-fix/T-6e-fix2/T-6e-fix3: 문서별 실제 감지 컬럼을 동적으로 계산
 // T-6e-fix3: manifestExpectedColKeys와 반환값이 string[]로 확장 (커스텀 display key 허용)
+// UI-PREVIEW-ROWINDEX-1: rowIndex prepend는 shouldDisplayRowIndex(tableMeta, manifestExpectedColKeys)
+//   기준으로만 적용. tableMeta.columns 또는 rows 값 존재만으로는 prepend 하지 않음.
 function getDisplayTableColumns(
   tableMeta: CanonicalTableMeta | null,
   tableRows: CanonicalTableRow[],
   mode: TableDisplayMode,
   manifestExpectedColKeys?: string[],  // T-6e-fix3: string[] (custom keys 포함)
 ): string[] {
+  // "all" 모드는 명시적인 "전체 canonical 표시" 옵션 — 정책 적용 대상 아님
   if (mode === "all") return [...ALL_CANONICAL_COLS];
+
+  const showRowIndex = shouldDisplayRowIndex(
+    tableMeta as Record<string, unknown> | null | undefined,
+    manifestExpectedColKeys,
+  );
 
   // T-6e-fix2: expected mode — manifest tableExpectedColumns를 최우선으로 사용
   if (mode === "expected") {
     // 1순위: manifest expected columns (custom key 포함 허용)
+    // manifest 자체가 권위 있음 — rowIndex 포함 여부는 manifest에 따름
     if (manifestExpectedColKeys && manifestExpectedColKeys.length > 0) {
       return manifestExpectedColKeys;
     }
     // 2순위: backend tableMeta.expectedColumnKeys (T-6e에서 추가된 필드)
+    // expectedColumnKeys 자체가 권위 있음 — rowIndex 자동 prepend 하지 않음
     const expKeys = tableMeta?.expectedColumnKeys ?? [];
     if (expKeys.length > 0) {
-      const validKeys = expKeys
+      return expKeys
         .filter((k) => ALL_COL_KEY_SET.has(k))
         .map((k) => k as TableColumnKey);
-      return validKeys.includes("rowIndex" as TableColumnKey)
-        ? validKeys
-        : (["rowIndex" as TableColumnKey, ...validKeys]);
     }
     // fallthrough to detected
   }
 
   if (mode === "hasValue") {
-    const withValue = ALL_CANONICAL_COLS.filter((col) =>
-      tableRows.some((row) => {
+    const withValue = ALL_CANONICAL_COLS.filter((col) => {
+      if (col === "rowIndex" && !showRowIndex) return false;
+      return tableRows.some((row) => {
         const v = row[col as keyof CanonicalTableRow];
         return v != null && v !== "" && v !== 0;
-      })
-    );
-    return withValue.length > 0 ? withValue : ["rowIndex" as TableColumnKey, "itemName" as TableColumnKey];
+      });
+    });
+    if (withValue.length > 0) return withValue;
+    return showRowIndex
+      ? ["rowIndex" as TableColumnKey, "itemName" as TableColumnKey]
+      : ["itemName" as TableColumnKey];
   }
 
   // mode === "detected": tableMeta.columns 우선
@@ -4660,20 +4671,22 @@ function getDisplayTableColumns(
     const metaCols = tableMeta.columns
       .filter((c) => ALL_COL_KEY_SET.has(c))
       .map((c) => c as TableColumnKey);
-    const result: TableColumnKey[] = metaCols.includes("rowIndex")
-      ? metaCols
-      : (["rowIndex" as TableColumnKey, ...metaCols]);
-    return result;
+    const baseCols = metaCols.filter((c) => c !== "rowIndex");
+    return showRowIndex ? (["rowIndex" as TableColumnKey, ...baseCols]) : baseCols;
   }
 
   // fallback: 값이 있는 컬럼
-  const withValue = ALL_CANONICAL_COLS.filter((col) =>
-    tableRows.some((row) => {
+  const withValue = ALL_CANONICAL_COLS.filter((col) => {
+    if (col === "rowIndex" && !showRowIndex) return false;
+    return tableRows.some((row) => {
       const v = row[col as keyof CanonicalTableRow];
       return v != null && v !== "" && v !== 0;
-    })
-  );
-  return withValue.length > 0 ? withValue : ["rowIndex" as TableColumnKey, "itemName" as TableColumnKey, "quantity" as TableColumnKey];
+    });
+  });
+  if (withValue.length > 0) return withValue;
+  return showRowIndex
+    ? ["rowIndex" as TableColumnKey, "itemName" as TableColumnKey, "quantity" as TableColumnKey]
+    : ["itemName" as TableColumnKey, "quantity" as TableColumnKey];
 }
 
 function InvoiceTableRowsPanel({
