@@ -1026,9 +1026,12 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
             };
           })
         : structuredFields.map((f: OcrFieldResult, idx: number) => {
+            // 정형 템플릿은 template.fields[] 가 비어 있어 이 분기를 타지만,
+            // runResult.fields 는 이미 region.koField/enField 로 enrich 되어 있으므로
+            // 그것을 우선 사용한다. 비어 있으면 기존 name 기반 fallback.
             const isKorean = /[가-힯]/.test(f.name);
-            const en = isKorean ? "" : f.name;
-            const ko = isKorean ? f.name : "";
+            const en = (typeof f.en === "string" && f.en) ? f.en : (isKorean ? "" : f.name);
+            const ko = (typeof f.ko === "string" && f.ko) ? f.ko : (isKorean ? f.name : "");
             const original = originalRunFields[idx]?.value ?? "";
             const suggestions = suggestionsForHistoryField({ en, ko }, autofillSuggestions);
             return {
