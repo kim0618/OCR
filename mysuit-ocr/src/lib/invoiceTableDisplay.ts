@@ -150,6 +150,17 @@ const _MFG_KEYS = new Set(["manufacturingNo", "manufactureNo", "mfgNo"]);
 const _ITEMCODE_KEYS = new Set(["itemCode", "productCode"]);
 const _PREFIX_MATCH_MIN_LEN = 4;
 
+// ── 3D-4 INVOICE-TABLE-DISPLAY-POLICY-FIX: summary keys never shown as row column ──
+// totalAmount는 문서 레벨 합계로 보고 row column에서 제외한다.
+// supplyAmount, taxAmount, amount는 row column으로 유지한다.
+// 향후 totalAmount가 실제 item-row column인 문서가 등장하면 explicit 예외 추가 필요.
+const _SUMMARY_KEYS = new Set(["totalAmount"]);
+
+// 3D-4: composite key 중 expectedColumnKeys에서 explicit으로 요청되면 표시 허용할 키.
+// manufacturingExpiryComposite 등 다른 composite는 isInternalTableKey 정책 그대로 유지.
+// trade_7 serialLotComposite 표시를 위함이며 trade_3 manufacturingExpiryComposite는 영향 없음.
+const _EXPLICIT_COMPOSITE_ALLOWLIST = new Set(["serialLotComposite"]);
+
 function _meaningfulRatio(rows: Record<string, unknown>[], key: string): number {
   if (rows.length === 0) return 0;
   let cnt = 0;
@@ -206,30 +217,57 @@ export function buildInvoicePreviewCols(
   rows: Record<string, unknown>[],
   externalExpectedKeys?: readonly string[] | null,
 ): InvoiceDisplayCol[] {
+  // 3D-4: explicitly-expected key set — caller (backend expectedColumnKeys
+  // 또는 manifest/template externalExpectedKeys)가 명시한 키. 사용처:
+  //  - lot 노이즈 rule 면제 (trade_6 정상 lotNo 표시 보장)
+  //  - composite key는 _EXPLICIT_COMPOSITE_ALLOWLIST와 교집합일 때만 internal 필터 우회
+  //    (trade_7 serialLotComposite 표시; trade_3 manufacturingExpiryComposite는 그대로 필터)
+  // lot/mfg dup / serialNo dup / itemCode 5% rule은 explicit 여부와 무관하게 그대로 적용.
+  // totalAmount 등 _SUMMARY_KEYS는 explicit 여부와 무관하게 항상 제외.
+  const explicitlyExpected = new Set<string>();
+  const expectedFromMeta = tableMeta?.expectedColumnKeys;
+  if (Array.isArray(expectedFromMeta)) {
+    for (const k of expectedFromMeta) explicitlyExpected.add(String(k));
+  }
+  if (externalExpectedKeys) {
+    for (const k of externalExpectedKeys) explicitlyExpected.add(String(k));
+  }
+  const isExplicit = (k: string) => explicitlyExpected.has(k);
+  // 3D-4: explicit composite allowlist — composite 중 사용자에게 표시 허용된 키만 internal 필터 우회.
+  const isAllowedComposite = (k: string) => _EXPLICIT_COMPOSITE_ALLOWLIST.has(k) && isExplicit(k);
+
   // 후보 키 목록 결정 (순서/라벨 참고용)
   let candidateKeys: string[] = [];
 
   // 1순위: expectedColumnKeys
+  // 3D-4: rowIndex/_SUMMARY_KEYS 제외, isInternalTableKey 필터는 _EXPLICIT_COMPOSITE_ALLOWLIST 항목만 우회.
   const expKeys = tableMeta?.expectedColumnKeys;
   if (Array.isArray(expKeys) && expKeys.length > 0) {
     candidateKeys = expKeys
       .map(String)
-      .filter((k) => k !== "rowIndex" && !isInternalTableKey(k));
+      .filter((k) =>
+        k !== "rowIndex"
+        && !_SUMMARY_KEYS.has(k)
+        && (!isInternalTableKey(k) || isAllowedComposite(k)),
+      );
   }
 
   // 2순위: detected columns
+  // detected 키는 explicit이 아니므로 internal 필터 유지. _SUMMARY_KEYS는 제외.
   if (candidateKeys.length === 0) {
     const detCols = tableMeta?.columns;
     if (Array.isArray(detCols) && detCols.length > 0) {
       candidateKeys = detCols
         .map(String)
-        .filter((k) => k !== "rowIndex" && !isInternalTableKey(k));
+        .filter((k) => k !== "rowIndex" && !_SUMMARY_KEYS.has(k) && !isInternalTableKey(k));
     }
   }
 
-  // 3순위: INVOICE_TABLE_COL_PRIORITY allowlist
+  // 3순위: INVOICE_TABLE_COL_PRIORITY allowlist (totalAmount summary 키 제외)
   if (candidateKeys.length === 0) {
-    candidateKeys = INVOICE_TABLE_COL_PRIORITY.map((c) => c.key);
+    candidateKeys = INVOICE_TABLE_COL_PRIORITY
+      .map((c) => c.key)
+      .filter((k) => !_SUMMARY_KEYS.has(k));
   }
 
   // T-PREVIEW-LABEL-1: tableMeta.columnLabels 우선 사용 (원본 헤더 라벨)
@@ -253,6 +291,7 @@ export function buildInvoicePreviewCols(
   });
 
   // lot/mfg 중복 제거 (prefix match 포함, 95% 이상이면 lotNo 숨김)
+  // 3D-4 note: explicit 여부와 무관하게 적용 — lotNo가 mfg와 dup이면 노이즈로 보고 숨김 유지.
   const mfgKey = cols.find((c) => _MFG_KEYS.has(c.key))?.key;
   if (mfgKey) {
     const toRemove = new Set<string>();
@@ -262,13 +301,16 @@ export function buildInvoicePreviewCols(
     if (toRemove.size > 0) cols = cols.filter((c) => !toRemove.has(c.key));
   }
 
-  // lot 노이즈 제거: itemCode 기반 표에서 mfgNo 없으면 lotNo는 OCR 노이즈
+  // lot 노이즈 제거: itemCode 기반 표에서 mfgNo 없으면 lotNo는 OCR 노이즈로 간주
+  // 3D-4: explicit lot 키는 면제 (trade_6 정상 lotNo 표시 보장)
+  const lotColsImplicit = cols.filter((c) => _LOT_KEYS.has(c.key) && !isExplicit(c.key));
   if (
-    cols.some((c) => _LOT_KEYS.has(c.key)) &&
+    lotColsImplicit.length > 0 &&
     hasMeaningfulTableValue(rows, "itemCode") &&
     !hasMeaningfulTableValue(rows, "manufacturingNo")
   ) {
-    cols = cols.filter((c) => !_LOT_KEYS.has(c.key));
+    const removeKeys = new Set(lotColsImplicit.map((c) => c.key));
+    cols = cols.filter((c) => !removeKeys.has(c.key));
   }
 
   // serialNo vs lotNo 중복 제거 (95% 이상 동일이면 serialNo 숨김)

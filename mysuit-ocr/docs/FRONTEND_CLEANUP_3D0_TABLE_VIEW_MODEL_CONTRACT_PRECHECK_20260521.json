@@ -1,0 +1,312 @@
+{
+  "task": "CODEX_FRONTEND_CLEANUP_3D0_TABLE_VIEW_MODEL_CONTRACT_PRECHECK_NO_PROD_MODIFY",
+  "generatedAt": "2026-05-21T17:17:24",
+  "toolAndModel": {
+    "tool": "Codex",
+    "model": "Codex"
+  },
+  "noProductionCodeModifiedByThisTask": true,
+  "createdFiles": [
+    "tmp/codex_table_view_model_contract_precheck.py",
+    "docs/FRONTEND_CLEANUP_3D0_TABLE_VIEW_MODEL_CONTRACT_PRECHECK_20260521.md",
+    "docs/FRONTEND_CLEANUP_3D0_TABLE_VIEW_MODEL_CONTRACT_PRECHECK_20260521.json"
+  ],
+  "staticInputs": {
+    "structuredInputs": {
+      "docTableRows": {
+        "line": 665,
+        "shape": "Record<string, unknown>[] from result.document_fields.tableRows; null if missing/empty",
+        "usedIn": [
+          "Preview rows",
+          "Custom edit row initialization",
+          "Validation rows",
+          "Clean JSON rows",
+          "Markdown table summary"
+        ]
+      },
+      "docTableMeta": {
+        "line": 673,
+        "shape": "Record<string, unknown> from result.document_fields.tableMeta; null if missing",
+        "usedIn": [
+          "buildInvoicePreviewCols",
+          "missingExpectedWarning"
+        ]
+      },
+      "docTableDisplayCols": {
+        "line": 683,
+        "shape": "InvoiceDisplayCol[] = { key: string; labelKo: string }[]",
+        "source": "buildInvoicePreviewCols(docTableMeta, docTableRows)",
+        "usedIn": [
+          "Preview header/body",
+          "Custom header/body",
+          "Validation header/body",
+          "Clean JSON ordered rows"
+        ]
+      },
+      "customTableEdits": {
+        "line": 233,
+        "shape": "Record<string, string>[] | null",
+        "usedIn": [
+          "Custom textarea values only"
+        ]
+      },
+      "alignWidth": {
+        "widthLine": 34,
+        "alignLine": 43,
+        "note": "currently local UI helpers in OcrResultPanel; view model can encode width/align or leave to UI"
+      },
+      "normalization": {
+        "import": "normalizeTableCell as normalizeCell",
+        "usageCount": 7,
+        "source": "invoiceTableDisplay.normalizeTableCell"
+      }
+    },
+    "policySources": {
+      "buildInvoicePreviewCols": true,
+      "shouldDisplayRowIndex": true,
+      "cleanJsonUsesDocTableDisplayCols": true,
+      "rowIndexPolicy": "rowIndex is resolved before view model through docTableDisplayCols; tableMeta.columns alone is not sufficient."
+    },
+    "locations": {
+      "previewStructuredRows": 1036,
+      "customEditRows": 1295,
+      "validationStructuredRows": 1594,
+      "missingExpectedWarning": 702
+    }
+  },
+  "cleanJsonVsViewModel": {
+    "judgement": "기존 Clean JSON fixture 일부 재사용 가능하지만 table_view_model_v1 fixture 별도 필요",
+    "why": [
+      "Clean JSON tables.rows is user export payload, not UI render model.",
+      "Clean JSON rows are ordered objects keyed by docTableDisplayCols but do not include columns metadata.",
+      "Clean JSON does not include cell displayValue/isEmpty/align/width/rowIndex metadata.",
+      "Preview/Custom/Validation need rendering metadata and mode-specific decoration decisions.",
+      "Clean JSON fixture can still guard ordered row values and rowIndex/column order baseline."
+    ],
+    "cleanJsonHas": [
+      "templateName",
+      "info",
+      "tables[].rows ordered by docTableDisplayCols"
+    ],
+    "viewModelNeeds": [
+      "columns",
+      "rows",
+      "cells",
+      "displayValue",
+      "isEmpty",
+      "align",
+      "width",
+      "row/column indexes",
+      "meta flags"
+    ],
+    "reuse": {
+      "possible": true,
+      "scope": "ordered raw values and rowIndex/column key baseline",
+      "insufficientFor": [
+        "column labels",
+        "width/align",
+        "empty cell display",
+        "cell metadata",
+        "Custom edit overlay",
+        "Validation decoration"
+      ]
+    }
+  },
+  "helperNameCandidates": [
+    {
+      "name": "buildStructuredTableViewModel",
+      "pros": "좁고 명확하다. docTableRows + displayCols 구조화 테이블 전용이라는 현재 1차 범위와 잘 맞는다.",
+      "cons": "거래명세서 전용 정책이 숨어 보일 수 있다.",
+      "scope": "structured rows only",
+      "recommendation": "RECOMMENDED"
+    },
+    {
+      "name": "buildOcrTableViewModel",
+      "pros": "향후 범용 OCR table 모델까지 확장하기 좋다.",
+      "cons": "현재 단계에는 범위가 넓고 legacy fallback까지 포함해야 할 것처럼 보인다.",
+      "scope": "too broad for first helper",
+      "recommendation": "NO"
+    },
+    {
+      "name": "buildTableRowsViewModel",
+      "pros": "rows 변환 책임을 드러낸다.",
+      "cons": "columns/cells/meta까지 담는 output과 이름이 조금 맞지 않는다.",
+      "scope": "medium",
+      "recommendation": "MAYBE"
+    },
+    {
+      "name": "buildInvoiceStructuredTableViewModel",
+      "pros": "거래명세서 rowIndex/column policy와 결합되어 있음을 명확히 한다.",
+      "cons": "helper가 displayCols만 받는다면 invoice 전용 이름이 과하게 좁다.",
+      "scope": "invoice-specific",
+      "recommendation": "MAYBE_LATER"
+    }
+  ],
+  "recommendedContract": {
+    "recommendedName": "buildStructuredTableViewModel",
+    "why": "First helper should be structured table only, not OCR-table universal and not invoice-only by name. rowIndex/column decisions are already embodied in displayCols.",
+    "inputType": "type BuildStructuredTableViewModelInput = {\n  rows: ReadonlyArray<Record<string, unknown>>;\n  displayCols: ReadonlyArray<{\n    key: string;\n    labelKo: string;\n  }>;\n  emptyValue?: string; // default \"-\"\n};",
+    "outputType": "type StructuredTableColumn = {\n  key: string;\n  label: string;\n  index: number;\n  align: \"left\" | \"center\" | \"right\";\n  width: string;\n  isNumeric: boolean;\n  isIndex: boolean;\n};\n\ntype StructuredTableCell = {\n  key: string;\n  label: string;\n  value: string;\n  displayValue: string;\n  isEmpty: boolean;\n  align: \"left\" | \"center\" | \"right\";\n  columnIndex: number;\n  rowIndex: number;\n};\n\ntype StructuredTableRow = {\n  index: number;\n  sourceRow: Record<string, unknown>;\n  cells: StructuredTableCell[];\n};\n\ntype StructuredTableViewModel = {\n  columns: StructuredTableColumn[];\n  rows: StructuredTableRow[];\n  meta: {\n    rowCount: number;\n    columnCount: number;\n    hasRows: boolean;\n    hasColumns: boolean;\n    hasEmptyCells: boolean;\n  };\n};",
+    "includeMode": false,
+    "modeDecision": "Do not include mode in first helper. Build base table model only; Preview/Custom/Validation should decorate it.",
+    "includeTableMeta": false,
+    "tableMetaDecision": "Do not pass tableMeta if displayCols is already computed. Recomputing policy here risks rowIndex/column-order drift.",
+    "includeCustomEdits": false,
+    "customEditDecision": "Keep customTableEdits overlay in Custom caller for first extraction. A later helper can accept editRows if needed.",
+    "includeValidationInfo": false,
+    "validationDecision": "Validation status/adoption/confidence are row wrapper decorations, not base structured table model.",
+    "includeLegacyFallback": false,
+    "legacyDecision": "Legacy parseTableField fallback has a different shape. Keep out of first helper; document buildLegacyTableViewModel as separate future candidate.",
+    "pureFunction": true,
+    "hookNeeded": false,
+    "exclude": [
+      "React nodes",
+      "JSX",
+      "event handlers",
+      "textarea callbacks",
+      "validation status UI",
+      "adoption badges",
+      "source/original/debug UI",
+      "OcrResultPanel state"
+    ]
+  },
+  "fixtureDecision": {
+    "decision": "Clean JSON fixture + table_view_model_v1 fixture 병행",
+    "needNewFixture": true,
+    "why": [
+      "view model output includes columns/cells/meta not present in Clean JSON.",
+      "rowIndex and column order still need direct helper output checks.",
+      "Custom/Validation decorations are excluded initially, making view model fixture stable and small."
+    ],
+    "targetRoot": "tmp/fixtures/table_view_model_v1/",
+    "recommendedCases": [
+      "trade_1",
+      "trade_2",
+      "trade_3",
+      "trade_7"
+    ],
+    "optionalCases": [
+      "trade_4",
+      "trade_5",
+      "trade_6"
+    ],
+    "runner": "Node/TS helper direct runner after helper extraction; fixture lock can be generated from current OcrResultPanel-derived inputs before extraction.",
+    "notRecommended": "fixture 없이 typecheck/build + existing Clean JSON runner만 사용하는 것은 불충분"
+  },
+  "workBreakdown": [
+    {
+      "step": "3D-1 table_view_model_v1 fixture lock",
+      "description": "current structured table inputs/output contract 기준 JSON fixture 생성",
+      "pros": "helper 추출 전 기준선 확보",
+      "cons": "작업이 한 단계 늘어남",
+      "recommendation": "DO_FIRST"
+    },
+    {
+      "step": "3D-2 buildStructuredTableViewModel helper extraction",
+      "description": "src/lib helper 생성 후 OcrResultPanel에서 structured table rows/cells 모델만 사용",
+      "pros": "작고 검증 가능",
+      "cons": "JSX 중복은 아직 남음",
+      "recommendation": "DO_SECOND"
+    },
+    {
+      "step": "3D-3 view model direct runner",
+      "description": "helper를 직접 import해 fixture와 deep equality 비교",
+      "pros": "Clean JSON/Markdown runner와 같은 안전망",
+      "cons": "runner 작성 필요",
+      "recommendation": "DO_WITH_OR_AFTER_3D2"
+    },
+    {
+      "step": "3D-4 OcrResultPanel 적용 확대",
+      "description": "Preview/Custom/Validation에서 view model 사용 범위 확대",
+      "pros": "중복 감소",
+      "cons": "Custom/Validation 회귀 위험",
+      "recommendation": "LATER"
+    }
+  ],
+  "closeoutTiming": {
+    "doNow": false,
+    "recommendation": "3D contract -> fixture -> helper extraction -> direct runner 이후 close-out 생성 권장",
+    "reason": "지금 close-out하면 table view model 결과가 빠져 cleanup cycle 판단이 덜 닫힌다.",
+    "includeLater": [
+      "Clean JSON builder extraction",
+      "Markdown builder extraction",
+      "ocrResultFormatters extraction",
+      "table view model contract/fixture/helper result",
+      "deferred common renderer",
+      "deferred TestWorkspace cleanup",
+      "deferred trade_3 policy",
+      "known nextVitals stderr noise"
+    ]
+  },
+  "typecheck": {
+    "command": "npm.cmd run typecheck",
+    "exitCode": 0,
+    "status": "PASS",
+    "durationSeconds": 2.395,
+    "stdoutTail": "\n> mysuit-ocr@0.1.0 typecheck\n> tsc --noEmit\n\n",
+    "stderrTail": ""
+  },
+  "build": {
+    "command": "npm.cmd run build",
+    "exitCode": 0,
+    "status": "PASS",
+    "durationSeconds": 16.272,
+    "stdoutTail": "\n> mysuit-ocr@0.1.0 build\n> next build\n\n   ▲ Next.js 15.5.4\n   - Environments: .env.local\n\n   Creating an optimized production build ...\n ✓ Compiled successfully in 1839ms\n   Linting and checking validity of types ...\n   Collecting page data ...\n   Generating static pages (0/18) ...\n   Generating static pages (4/18) \n   Generating static pages (8/18) \n   Generating static pages (13/18) \n ✓ Generating static pages (18/18)\n   Finalizing page optimization ...\n   Collecting build traces ...\n\nRoute (app)                                 Size  First Load JS\n┌ ○ /                                      349 B         102 kB\n├ ○ /_not-found                            993 B         103 kB\n├ ƒ /api/autofill-cache                    141 B         102 kB\n├ ƒ /api/biz-validate                      141 B         102 kB\n├ ƒ /api/ground-truth                      141 B         102 kB\n├ ƒ /api/login                             141 B         102 kB\n├ ƒ /api/ocr-cache                         141 B         102 kB\n├ ƒ /api/ocr-extract                       141 B         102 kB\n├ ƒ /api/test-images                       141 B         102 kB\n├ ○ /autorestore                         3.13 kB         113 kB\n├ ○ /history                             9.08 kB         148 kB\n├ ○ /login                                4.1 kB         127 kB\n├ ○ /ocr                                 2.74 kB         113 kB\n├ ○ /runocr                              65.3 kB         184 kB\n├ ○ /template                            5.73 kB         116 kB\n└ ○ /test                                47.2 kB         157 kB\n+ First Load JS shared by all             102 kB\n  ├ chunks/255-4efeec91c7871d79.js       45.7 kB\n  ├ chunks/4bd1b696-c023c6e3521b1417.js  54.2 kB\n  └ other shared chunks (total)          2.15 kB\n\n\n○  (Static)   prerendered as static content\nƒ  (Dynamic)  server-rendered on demand\n\n",
+    "stderrTail": " ⨯ ESLint: nextVitals is not iterable\n"
+  },
+  "knownStderrNoise": {
+    "id": "ISSUE-FRONTEND-BUILD-LOG-1",
+    "message": "ESLint: nextVitals is not iterable",
+    "observed": true
+  },
+  "repoDirtyStatus": {
+    "isDirty": true,
+    "entries": [
+      " M src/components/upload/OcrResultPanel.tsx",
+      " M ../ocr-server/data/review_log.jsonl",
+      " M ../ocr-server/requirements.txt",
+      "?? docs/CLEAN_JSON_CONTRACT_20260521.json",
+      "?? docs/CLEAN_JSON_CONTRACT_20260521.md",
+      "?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.json",
+      "?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.md",
+      "?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.json",
+      "?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.md",
+      "?? docs/CLEAN_JSON_V1_FIXTURE_LOCK_20260521.json",
+      "?? docs/CLEAN_JSON_V1_FIXTURE_LOCK_20260521.md",
+      "?? docs/FRONTEND_CLEANUP_1B_JS_CLEAN_JSON_FIXTURE_RUNNER_20260521.json",
+      "?? docs/FRONTEND_CLEANUP_1B_JS_CLEAN_JSON_FIXTURE_RUNNER_20260521.md",
+      "?? docs/FRONTEND_CLEANUP_1_CLEAN_JSON_BUILDER_EXTRACT_20260521.json",
+      "?? docs/FRONTEND_CLEANUP_1_CLEAN_JSON_BUILDER_EXTRACT_20260521.md",
+      "?? docs/FRONTEND_CLEANUP_2B_MARKDOWN_BUILDER_EXTRACT_20260521.json",
+      "?? docs/FRONTEND_CLEANUP_2B_MARKDOWN_BUILDER_EXTRACT_20260521.md",
+      "?? docs/FRONTEND_CLEANUP_3A_PREVIEW_TABLE_BUILDER_PRECHECK_20260521.json",
+      "?? docs/FRONTEND_CLEANUP_3A_PREVIEW_TABLE_BUILDER_PRECHECK_20260521.md",
+      "?? docs/FRONTEND_CLEANUP_3C_TABLE_RENDERER_PRECHECK_20260521.json",
+      "?? docs/FRONTEND_CLEANUP_3C_TABLE_RENDERER_PRECHECK_20260521.md",
+      "?? docs/MARKDOWN_V1_CONTRACT_20260521.json",
+      "?? docs/MARKDOWN_V1_CONTRACT_20260521.md",
+      "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.json",
+      "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.md",
+      "?? docs/MARKDOWN_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.json",
+      "?? docs/MARKDOWN_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.md",
+      "?? docs/MARKDOWN_V1_FIXTURE_COVERAGE_EOL_PRECHECK_20260521.json",
+      "?? docs/MARKDOWN_V1_FIXTURE_COVERAGE_EOL_PRECHECK_20260521.md",
+      "?? docs/MARKDOWN_V1_FIXTURE_LOCK_20260521.json",
+      "?? docs/MARKDOWN_V1_FIXTURE_LOCK_20260521.md",
+      "?? src/lib/cleanJsonBuilder.ts",
+      "?? src/lib/markdownReportBuilder.ts",
+      "?? src/lib/ocrResultFormatters.ts",
+      "?? tmp/",
+      "?? ../ocr-server/requirements-aws.txt"
+    ],
+    "command": {
+      "command": "git -c safe.directory=D:/Free_Vue/OCR/mysuit-ocr status --short",
+      "exitCode": 0,
+      "status": "PASS",
+      "durationSeconds": 0.124,
+      "stdoutTail": " M src/components/upload/OcrResultPanel.tsx\n M ../ocr-server/data/review_log.jsonl\n M ../ocr-server/requirements.txt\n?? docs/CLEAN_JSON_CONTRACT_20260521.json\n?? docs/CLEAN_JSON_CONTRACT_20260521.md\n?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.json\n?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.md\n?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.json\n?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.md\n?? docs/CLEAN_JSON_V1_FIXTURE_LOCK_20260521.json\n?? docs/CLEAN_JSON_V1_FIXTURE_LOCK_20260521.md\n?? docs/FRONTEND_CLEANUP_1B_JS_CLEAN_JSON_FIXTURE_RUNNER_20260521.json\n?? docs/FRONTEND_CLEANUP_1B_JS_CLEAN_JSON_FIXTURE_RUNNER_20260521.md\n?? docs/FRONTEND_CLEANUP_1_CLEAN_JSON_BUILDER_EXTRACT_20260521.json\n?? docs/FRONTEND_CLEANUP_1_CLEAN_JSON_BUILDER_EXTRACT_20260521.md\n?? docs/FRONTEND_CLEANUP_2B_MARKDOWN_BUILDER_EXTRACT_20260521.json\n?? docs/FRONTEND_CLEANUP_2B_MARKDOWN_BUILDER_EXTRACT_20260521.md\n?? docs/FRONTEND_CLEANUP_3A_PREVIEW_TABLE_BUILDER_PRECHECK_20260521.json\n?? docs/FRONTEND_CLEANUP_3A_PREVIEW_TABLE_BUILDER_PRECHECK_20260521.md\n?? docs/FRONTEND_CLEANUP_3C_TABLE_RENDERER_PRECHECK_20260521.json\n?? docs/FRONTEND_CLEANUP_3C_TABLE_RENDERER_PRECHECK_20260521.md\n?? docs/MARKDOWN_V1_CONTRACT_20260521.json\n?? docs/MARKDOWN_V1_CONTRACT_20260521.md\n?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.json\n?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.md\n?? docs/MARKDOWN_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.json\n?? docs/MARKDOWN_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.md\n?? docs/MARKDOWN_V1_FIXTURE_COVERAGE_EOL_PRECHECK_20260521.json\n?? docs/MARKDOWN_V1_FIXTURE_COVERAGE_EOL_PRECHECK_20260521.md\n?? docs/MARKDOWN_V1_FIXTURE_LOCK_20260521.json\n?? docs/MARKDOWN_V1_FIXTURE_LOCK_20260521.md\n?? src/lib/cleanJsonBuilder.ts\n?? src/lib/markdownReportBuilder.ts\n?? src/lib/ocrResultFormatters.ts\n?? tmp/\n?? ../ocr-server/requirements-aws.txt\n",
+      "stderrTail": ""
+    }
+  },
+  "overallStatus": "PASS"
+}

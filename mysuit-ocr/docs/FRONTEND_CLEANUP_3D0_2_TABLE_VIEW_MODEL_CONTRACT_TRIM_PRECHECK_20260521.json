@@ -1,0 +1,532 @@
+{
+  "task": "CODEX_FRONTEND_CLEANUP_3D0_2_TABLE_VIEW_MODEL_CONTRACT_TRIM_PRECHECK_NO_PROD_MODIFY",
+  "generatedAt": "2026-05-21T17:48:35",
+  "toolAndModel": {
+    "tool": "Codex",
+    "model": "Codex"
+  },
+  "noProductionCodeModifiedByThisTask": true,
+  "createdFiles": [
+    "tmp/codex_table_view_model_contract_trim_precheck.py",
+    "docs/FRONTEND_CLEANUP_3D0_2_TABLE_VIEW_MODEL_CONTRACT_TRIM_PRECHECK_20260521.md",
+    "docs/FRONTEND_CLEANUP_3D0_2_TABLE_VIEW_MODEL_CONTRACT_TRIM_PRECHECK_20260521.json"
+  ],
+  "sourceFacts": {
+    "locations": {
+      "_IDX_KEYS": 28,
+      "_NUM_KEYS": 31,
+      "_invoiceColWidth": 34,
+      "_invoiceDataAlign": 43,
+      "customTableEdits": 233,
+      "customEditRows": 1295,
+      "customSetByRowAndColumn": 1369,
+      "previewNormalizeCell": 1043,
+      "validationNormalizeCell": 1043
+    },
+    "usageCounts": {
+      "_invoiceColWidth": 4,
+      "_invoiceDataAlign": 5,
+      "_NUM_KEYS": 6,
+      "_IDX_KEYS": 6,
+      "normalizeCell": 7,
+      "sourceRowLiteral": 0,
+      "hasEmptyCellsLiteral": 0
+    },
+    "policySources": {
+      "buildInvoicePreviewCols": true,
+      "normalizeTableCell": true,
+      "cleanJsonOrderedRows": true,
+      "doc3cExists": true,
+      "doc3d0Exists": true,
+      "doc3d0HadWideContract": true,
+      "doc3cSaidAlignWidthDiffers": true
+    }
+  },
+  "fieldTrimTable": [
+    {
+      "field": "columns.key",
+      "deriveFrom": "displayCols[].key",
+      "commonData": true,
+      "displayPolicy": false,
+      "customNeed": "yes",
+      "validationNeed": "yes",
+      "deriveFromArrayPosition": false,
+      "duplicate": "no",
+      "fixtureValue": true,
+      "recommendation": "include",
+      "reason": "primary column identity and rowIndex/column-order baseline"
+    },
+    {
+      "field": "columns.label",
+      "deriveFrom": "displayCols[].labelKo",
+      "commonData": true,
+      "displayPolicy": false,
+      "customNeed": "yes",
+      "validationNeed": "yes",
+      "deriveFromArrayPosition": false,
+      "duplicate": "no",
+      "fixtureValue": true,
+      "recommendation": "include",
+      "reason": "header label needed by all structured table branches"
+    },
+    {
+      "field": "columns.index",
+      "deriveFrom": "columns array index",
+      "commonData": false,
+      "displayPolicy": false,
+      "customNeed": "no",
+      "validationNeed": "no",
+      "deriveFromArrayPosition": true,
+      "duplicate": "yes",
+      "fixtureValue": false,
+      "recommendation": "exclude",
+      "reason": "derivable and brittle in fixture"
+    },
+    {
+      "field": "columns.align",
+      "deriveFrom": "_invoiceDataAlign(col.key)",
+      "commonData": false,
+      "displayPolicy": true,
+      "customNeed": "textarea style only",
+      "validationNeed": "style only",
+      "deriveFromArrayPosition": true,
+      "duplicate": "display policy",
+      "fixtureValue": false,
+      "recommendation": "exclude",
+      "reason": "renderer/style policy; can be added by later display policy helper"
+    },
+    {
+      "field": "columns.width",
+      "deriveFrom": "_invoiceColWidth(col.key)",
+      "commonData": false,
+      "displayPolicy": true,
+      "customNeed": "colgroup style",
+      "validationNeed": "colgroup style",
+      "deriveFromArrayPosition": true,
+      "duplicate": "display policy",
+      "fixtureValue": false,
+      "recommendation": "exclude",
+      "reason": "style policy likely to change independently"
+    },
+    {
+      "field": "columns.isNumeric",
+      "deriveFrom": "_NUM_KEYS.has(key)",
+      "commonData": false,
+      "displayPolicy": true,
+      "customNeed": "nowrap/style",
+      "validationNeed": "nowrap/style",
+      "deriveFromArrayPosition": true,
+      "duplicate": "display policy",
+      "fixtureValue": false,
+      "recommendation": "exclude",
+      "reason": "classification only supports style, not core data"
+    },
+    {
+      "field": "columns.isIndex",
+      "deriveFrom": "_IDX_KEYS.has(key)",
+      "commonData": false,
+      "displayPolicy": true,
+      "customNeed": "nowrap/style",
+      "validationNeed": "nowrap/style",
+      "deriveFromArrayPosition": true,
+      "duplicate": "display policy",
+      "fixtureValue": false,
+      "recommendation": "exclude",
+      "reason": "avoid confusion with actual rowIndex data column"
+    },
+    {
+      "field": "rows.rowIndex",
+      "deriveFrom": "rows array index",
+      "commonData": false,
+      "displayPolicy": false,
+      "customNeed": "row index available in map",
+      "validationNeed": "row index available in map",
+      "deriveFromArrayPosition": true,
+      "duplicate": "confusing with rowIndex column",
+      "fixtureValue": false,
+      "recommendation": "exclude",
+      "reason": "derive from array position and avoid naming collision"
+    },
+    {
+      "field": "rows.sourceRow",
+      "deriveFrom": "input rows[n]",
+      "commonData": false,
+      "displayPolicy": false,
+      "customNeed": "not needed; editRows uses row index + key",
+      "validationNeed": "not needed",
+      "deriveFromArrayPosition": false,
+      "duplicate": "large duplicate",
+      "fixtureValue": false,
+      "recommendation": "exclude",
+      "reason": "would bloat fixtures and duplicate raw OCR values"
+    },
+    {
+      "field": "cells.key",
+      "deriveFrom": "column key",
+      "commonData": true,
+      "displayPolicy": false,
+      "customNeed": "yes",
+      "validationNeed": "yes",
+      "deriveFromArrayPosition": false,
+      "duplicate": "no",
+      "fixtureValue": true,
+      "recommendation": "include",
+      "reason": "cell identity for edit overlay and assertions"
+    },
+    {
+      "field": "cells.label",
+      "deriveFrom": "columns.label by key/index",
+      "commonData": false,
+      "displayPolicy": false,
+      "customNeed": "no",
+      "validationNeed": "no",
+      "deriveFromArrayPosition": false,
+      "duplicate": "duplicates columns.label",
+      "fixtureValue": false,
+      "recommendation": "exclude",
+      "reason": "derive from columns; avoid repeated labels per cell"
+    },
+    {
+      "field": "cells.value",
+      "deriveFrom": "normalizeTableCell(row[key])",
+      "commonData": true,
+      "displayPolicy": false,
+      "customNeed": "textarea base value",
+      "validationNeed": "read-only value",
+      "deriveFromArrayPosition": false,
+      "duplicate": "no",
+      "fixtureValue": true,
+      "recommendation": "include",
+      "reason": "normalized canonical cell value before empty display replacement"
+    },
+    {
+      "field": "cells.displayValue",
+      "deriveFrom": "value or emptyValue",
+      "commonData": true,
+      "displayPolicy": false,
+      "customNeed": "optional display",
+      "validationNeed": "display",
+      "deriveFromArrayPosition": false,
+      "duplicate": "no",
+      "fixtureValue": true,
+      "recommendation": "include",
+      "reason": "captures '-' behavior without renderer logic"
+    },
+    {
+      "field": "cells.isEmpty",
+      "deriveFrom": "value === '' / meaningless",
+      "commonData": true,
+      "displayPolicy": false,
+      "customNeed": "useful",
+      "validationNeed": "useful",
+      "deriveFromArrayPosition": false,
+      "duplicate": "no",
+      "fixtureValue": true,
+      "recommendation": "include",
+      "reason": "small stable semantic flag"
+    },
+    {
+      "field": "cells.align",
+      "deriveFrom": "_invoiceDataAlign(key)",
+      "commonData": false,
+      "displayPolicy": true,
+      "customNeed": "style",
+      "validationNeed": "style",
+      "deriveFromArrayPosition": true,
+      "duplicate": "duplicates column display policy",
+      "fixtureValue": false,
+      "recommendation": "exclude",
+      "reason": "same reason as columns.align"
+    },
+    {
+      "field": "cells.rowIndex",
+      "deriveFrom": "rows array index",
+      "commonData": false,
+      "displayPolicy": false,
+      "customNeed": "no",
+      "validationNeed": "no",
+      "deriveFromArrayPosition": true,
+      "duplicate": "duplicate",
+      "fixtureValue": false,
+      "recommendation": "exclude",
+      "reason": "derive from row array"
+    },
+    {
+      "field": "cells.columnIndex",
+      "deriveFrom": "cells array index",
+      "commonData": false,
+      "displayPolicy": false,
+      "customNeed": "no",
+      "validationNeed": "no",
+      "deriveFromArrayPosition": true,
+      "duplicate": "duplicate",
+      "fixtureValue": false,
+      "recommendation": "exclude",
+      "reason": "derive from cell array"
+    },
+    {
+      "field": "meta.rowCount",
+      "deriveFrom": "rows.length",
+      "commonData": true,
+      "displayPolicy": false,
+      "customNeed": "summary",
+      "validationNeed": "summary",
+      "deriveFromArrayPosition": true,
+      "duplicate": "summary duplicate",
+      "fixtureValue": true,
+      "recommendation": "include",
+      "reason": "cheap and useful manifest/body sanity"
+    },
+    {
+      "field": "meta.columnCount",
+      "deriveFrom": "columns.length",
+      "commonData": true,
+      "displayPolicy": false,
+      "customNeed": "summary",
+      "validationNeed": "summary",
+      "deriveFromArrayPosition": true,
+      "duplicate": "summary duplicate",
+      "fixtureValue": true,
+      "recommendation": "include",
+      "reason": "cheap and useful fixture sanity"
+    },
+    {
+      "field": "meta.hasRows",
+      "deriveFrom": "rows.length > 0",
+      "commonData": true,
+      "displayPolicy": false,
+      "customNeed": "yes",
+      "validationNeed": "yes",
+      "deriveFromArrayPosition": true,
+      "duplicate": "summary duplicate",
+      "fixtureValue": true,
+      "recommendation": "include",
+      "reason": "clear guard for empty state"
+    },
+    {
+      "field": "meta.hasColumns",
+      "deriveFrom": "columns.length > 0",
+      "commonData": true,
+      "displayPolicy": false,
+      "customNeed": "yes",
+      "validationNeed": "yes",
+      "deriveFromArrayPosition": true,
+      "duplicate": "summary duplicate",
+      "fixtureValue": true,
+      "recommendation": "include",
+      "reason": "clear guard for empty state"
+    },
+    {
+      "field": "meta.hasEmptyCells",
+      "deriveFrom": "cells.some(isEmpty)",
+      "commonData": false,
+      "displayPolicy": false,
+      "customNeed": "not currently used",
+      "validationNeed": "not currently used",
+      "deriveFromArrayPosition": true,
+      "duplicate": "derive from cells",
+      "fixtureValue": false,
+      "recommendation": "exclude",
+      "reason": "derive easily; avoid fixture churn"
+    }
+  ],
+  "alignWidthDecision": {
+    "decision": "exclude_from_v1_contract",
+    "reason": "_invoiceColWidth/_invoiceDataAlign are shared today but are style policy, not shared data. Keep them in renderer/display policy for now."
+  },
+  "sourceRowDecision": {
+    "decision": "exclude",
+    "reason": "Custom edit write-back uses row index + col key; sourceRow duplicates raw input and bloats fixture."
+  },
+  "duplicateDecision": {
+    "cellsLabel": "exclude; derive from columns",
+    "indices": "exclude; derive from array positions and avoid rowIndex naming collision"
+  },
+  "hasEmptyCellsDecision": {
+    "decision": "exclude",
+    "reason": "derive from rows[].cells[].isEmpty; not currently used as UI input"
+  },
+  "finalContract": {
+    "selectedCandidate": "candidate_1_minimal",
+    "inputType": "type BuildStructuredTableViewModelInput = {\n  rows: ReadonlyArray<Record<string, unknown>>;\n  displayCols: ReadonlyArray<{\n    key: string;\n    labelKo: string;\n  }>;\n  emptyValue?: string; // default \"-\"\n};",
+    "outputType": "type StructuredTableViewModel = {\n  columns: Array<{\n    key: string;\n    label: string;\n  }>;\n  rows: Array<{\n    cells: Array<{\n      key: string;\n      value: string;\n      displayValue: string;\n      isEmpty: boolean;\n    }>;\n  }>;\n  meta: {\n    rowCount: number;\n    columnCount: number;\n    hasRows: boolean;\n    hasColumns: boolean;\n  };\n};",
+    "excludedGroups": {
+      "displayPolicy": [
+        "align",
+        "width",
+        "isNumeric",
+        "isIndex"
+      ],
+      "derivedIndexes": [
+        "columns.index",
+        "rows.rowIndex",
+        "cells.rowIndex",
+        "cells.columnIndex"
+      ],
+      "duplicates": [
+        "cells.label"
+      ],
+      "rawDuplication": [
+        "rows.sourceRow"
+      ],
+      "derivedMeta": [
+        "meta.hasEmptyCells"
+      ]
+    },
+    "why": [
+      "Fixture should lock shared data contract, not style policy.",
+      "Array positions provide indexes without serializing them.",
+      "columns.label makes cells.label redundant.",
+      "Custom edit overlay uses row position + cell key; sourceRow is not required.",
+      "hasEmptyCells is derivable from cells.isEmpty."
+    ]
+  },
+  "cleanJsonReuse": {
+    "judgement": "Clean JSON fixture는 보조 baseline으로만 사용하고 table_view_model_v1 fixture는 별도 필요",
+    "whyStillSeparate": [
+      "trim 후에도 columns가 추가된다.",
+      "trim 후에도 cells/displayValue/isEmpty가 추가된다.",
+      "trim 후에도 meta가 추가된다.",
+      "Clean JSON rows는 object rows이고 view model rows는 cells array다."
+    ],
+    "reuseFor": [
+      "ordered values",
+      "rowIndex/column key baseline",
+      "trade_3 locked behavior cross-check"
+    ],
+    "notReuseFor": [
+      "columns labels",
+      "displayValue empty replacement",
+      "isEmpty flags",
+      "view model meta"
+    ]
+  },
+  "fixtureInstruction3D1": {
+    "fixtureRoot": "tmp/fixtures/table_view_model_v1/",
+    "cases": [
+      "trade_1",
+      "trade_2",
+      "trade_3",
+      "trade_4",
+      "trade_5",
+      "trade_6",
+      "trade_7"
+    ],
+    "bodyShape": "StructuredTableViewModel only; metadata goes to manifest.json",
+    "manifest": [
+      "caseId",
+      "templateName",
+      "templateId",
+      "inputFile",
+      "fixturePath",
+      "rowCount",
+      "columnCount",
+      "rowIndexPolicy",
+      "status",
+      "notes"
+    ],
+    "rowCount": "compare to known invoice expected rowCount",
+    "columnCount": "columns.length in view model",
+    "rowIndexPolicy": "check columns.some(c.key === 'rowIndex') for include/exclude cases",
+    "trade3Locked": "record whether columns include insuranceCode/amount and preserve current behavior",
+    "cleanJsonAssist": "compare key/value baseline with Clean JSON rows as supplemental check only",
+    "equality": "deep equality on trimmed view model JSON",
+    "doNotInclude": [
+      "align",
+      "width",
+      "style",
+      "sourceRow",
+      "indices",
+      "cells.label",
+      "hasEmptyCells"
+    ]
+  },
+  "helperInstruction3D2": {
+    "helperName": "buildStructuredTableViewModel",
+    "fileCandidate": "src/lib/structuredTableViewModel.ts",
+    "input": "final trimmed input contract",
+    "output": "final trimmed output contract",
+    "exclude": [
+      "legacy fallback",
+      "mode",
+      "custom edits",
+      "validation decoration",
+      "React/DOM/localStorage/network",
+      "input mutation"
+    ],
+    "application": "Prefer helper extraction + direct runner first; OcrResultPanel adoption may be same step only if fixture runner passes and diff remains tiny."
+  },
+  "typecheck": {
+    "command": "npm.cmd run typecheck",
+    "exitCode": 0,
+    "status": "PASS",
+    "durationSeconds": 2.322,
+    "stdoutTail": "\n> mysuit-ocr@0.1.0 typecheck\n> tsc --noEmit\n\n",
+    "stderrTail": ""
+  },
+  "build": {
+    "command": "npm.cmd run build",
+    "exitCode": 0,
+    "status": "PASS",
+    "durationSeconds": 17.606,
+    "stdoutTail": "\n> mysuit-ocr@0.1.0 build\n> next build\n\n   ▲ Next.js 15.5.4\n   - Environments: .env.local\n\n   Creating an optimized production build ...\n ✓ Compiled successfully in 2.6s\n   Linting and checking validity of types ...\n   Collecting page data ...\n   Generating static pages (0/18) ...\n   Generating static pages (4/18) \n   Generating static pages (8/18) \n   Generating static pages (13/18) \n ✓ Generating static pages (18/18)\n   Finalizing page optimization ...\n   Collecting build traces ...\n\nRoute (app)                                 Size  First Load JS\n┌ ○ /                                      349 B         102 kB\n├ ○ /_not-found                            993 B         103 kB\n├ ƒ /api/autofill-cache                    141 B         102 kB\n├ ƒ /api/biz-validate                      141 B         102 kB\n├ ƒ /api/ground-truth                      141 B         102 kB\n├ ƒ /api/login                             141 B         102 kB\n├ ƒ /api/ocr-cache                         141 B         102 kB\n├ ƒ /api/ocr-extract                       141 B         102 kB\n├ ƒ /api/test-images                       141 B         102 kB\n├ ○ /autorestore                         3.13 kB         113 kB\n├ ○ /history                             9.08 kB         148 kB\n├ ○ /login                                4.1 kB         127 kB\n├ ○ /ocr                                 2.74 kB         113 kB\n├ ○ /runocr                              65.3 kB         184 kB\n├ ○ /template                            5.73 kB         116 kB\n└ ○ /test                                47.2 kB         157 kB\n+ First Load JS shared by all             102 kB\n  ├ chunks/255-4efeec91c7871d79.js       45.7 kB\n  ├ chunks/4bd1b696-c023c6e3521b1417.js  54.2 kB\n  └ other shared chunks (total)          2.15 kB\n\n\n○  (Static)   prerendered as static content\nƒ  (Dynamic)  server-rendered on demand\n\n",
+    "stderrTail": " ⨯ ESLint: nextVitals is not iterable\n"
+  },
+  "knownStderrNoise": {
+    "id": "ISSUE-FRONTEND-BUILD-LOG-1",
+    "message": "ESLint: nextVitals is not iterable",
+    "observed": true
+  },
+  "repoDirtyStatus": {
+    "isDirty": true,
+    "entries": [
+      " M src/components/upload/OcrResultPanel.tsx",
+      " M ../ocr-server/data/review_log.jsonl",
+      " M ../ocr-server/requirements.txt",
+      "?? docs/CLEAN_JSON_CONTRACT_20260521.json",
+      "?? docs/CLEAN_JSON_CONTRACT_20260521.md",
+      "?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.json",
+      "?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.md",
+      "?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.json",
+      "?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.md",
+      "?? docs/CLEAN_JSON_V1_FIXTURE_LOCK_20260521.json",
+      "?? docs/CLEAN_JSON_V1_FIXTURE_LOCK_20260521.md",
+      "?? docs/FRONTEND_CLEANUP_1B_JS_CLEAN_JSON_FIXTURE_RUNNER_20260521.json",
+      "?? docs/FRONTEND_CLEANUP_1B_JS_CLEAN_JSON_FIXTURE_RUNNER_20260521.md",
+      "?? docs/FRONTEND_CLEANUP_1_CLEAN_JSON_BUILDER_EXTRACT_20260521.json",
+      "?? docs/FRONTEND_CLEANUP_1_CLEAN_JSON_BUILDER_EXTRACT_20260521.md",
+      "?? docs/FRONTEND_CLEANUP_2B_MARKDOWN_BUILDER_EXTRACT_20260521.json",
+      "?? docs/FRONTEND_CLEANUP_2B_MARKDOWN_BUILDER_EXTRACT_20260521.md",
+      "?? docs/FRONTEND_CLEANUP_3A_PREVIEW_TABLE_BUILDER_PRECHECK_20260521.json",
+      "?? docs/FRONTEND_CLEANUP_3A_PREVIEW_TABLE_BUILDER_PRECHECK_20260521.md",
+      "?? docs/FRONTEND_CLEANUP_3C_TABLE_RENDERER_PRECHECK_20260521.json",
+      "?? docs/FRONTEND_CLEANUP_3C_TABLE_RENDERER_PRECHECK_20260521.md",
+      "?? docs/FRONTEND_CLEANUP_3D0_TABLE_VIEW_MODEL_CONTRACT_PRECHECK_20260521.json",
+      "?? docs/FRONTEND_CLEANUP_3D0_TABLE_VIEW_MODEL_CONTRACT_PRECHECK_20260521.md",
+      "?? docs/MARKDOWN_V1_CONTRACT_20260521.json",
+      "?? docs/MARKDOWN_V1_CONTRACT_20260521.md",
+      "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.json",
+      "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.md",
+      "?? docs/MARKDOWN_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.json",
+      "?? docs/MARKDOWN_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.md",
+      "?? docs/MARKDOWN_V1_FIXTURE_COVERAGE_EOL_PRECHECK_20260521.json",
+      "?? docs/MARKDOWN_V1_FIXTURE_COVERAGE_EOL_PRECHECK_20260521.md",
+      "?? docs/MARKDOWN_V1_FIXTURE_LOCK_20260521.json",
+      "?? docs/MARKDOWN_V1_FIXTURE_LOCK_20260521.md",
+      "?? src/lib/cleanJsonBuilder.ts",
+      "?? src/lib/markdownReportBuilder.ts",
+      "?? src/lib/ocrResultFormatters.ts",
+      "?? tmp/",
+      "?? ../ocr-server/requirements-aws.txt"
+    ],
+    "command": {
+      "command": "git -c safe.directory=D:/Free_Vue/OCR/mysuit-ocr status --short",
+      "exitCode": 0,
+      "status": "PASS",
+      "durationSeconds": 0.114,
+      "stdoutTail": " M src/components/upload/OcrResultPanel.tsx\n M ../ocr-server/data/review_log.jsonl\n M ../ocr-server/requirements.txt\n?? docs/CLEAN_JSON_CONTRACT_20260521.json\n?? docs/CLEAN_JSON_CONTRACT_20260521.md\n?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.json\n?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.md\n?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.json\n?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.md\n?? docs/CLEAN_JSON_V1_FIXTURE_LOCK_20260521.json\n?? docs/CLEAN_JSON_V1_FIXTURE_LOCK_20260521.md\n?? docs/FRONTEND_CLEANUP_1B_JS_CLEAN_JSON_FIXTURE_RUNNER_20260521.json\n?? docs/FRONTEND_CLEANUP_1B_JS_CLEAN_JSON_FIXTURE_RUNNER_20260521.md\n?? docs/FRONTEND_CLEANUP_1_CLEAN_JSON_BUILDER_EXTRACT_20260521.json\n?? docs/FRONTEND_CLEANUP_1_CLEAN_JSON_BUILDER_EXTRACT_20260521.md\n?? docs/FRONTEND_CLEANUP_2B_MARKDOWN_BUILDER_EXTRACT_20260521.json\n?? docs/FRONTEND_CLEANUP_2B_MARKDOWN_BUILDER_EXTRACT_20260521.md\n?? docs/FRONTEND_CLEANUP_3A_PREVIEW_TABLE_BUILDER_PRECHECK_20260521.json\n?? docs/FRONTEND_CLEANUP_3A_PREVIEW_TABLE_BUILDER_PRECHECK_20260521.md\n?? docs/FRONTEND_CLEANUP_3C_TABLE_RENDERER_PRECHECK_20260521.json\n?? docs/FRONTEND_CLEANUP_3C_TABLE_RENDERER_PRECHECK_20260521.md\n?? docs/FRONTEND_CLEANUP_3D0_TABLE_VIEW_MODEL_CONTRACT_PRECHECK_20260521.json\n?? docs/FRONTEND_CLEANUP_3D0_TABLE_VIEW_MODEL_CONTRACT_PRECHECK_20260521.md\n?? docs/MARKDOWN_V1_CONTRACT_20260521.json\n?? docs/MARKDOWN_V1_CONTRACT_20260521.md\n?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.json\n?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.md\n?? docs/MARKDOWN_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.json\n?? docs/MARKDOWN_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.md\n?? docs/MARKDOWN_V1_FIXTURE_COVERAGE_EOL_PRECHECK_20260521.json\n?? docs/MARKDOWN_V1_FIXTURE_COVERAGE_EOL_PRECHECK_20260521.md\n?? docs/MARKDOWN_V1_FIXTURE_LOCK_20260521.json\n?? docs/MARKDOWN_V1_FIXTURE_LOCK_20260521.md\n?? src/lib/cleanJsonBuilder.ts\n?? src/lib/markdownReportBuilder.ts\n?? src/lib/ocrResultFormatters.ts\n?? tmp/\n?? ../ocr-server/requirements-aws.txt\n",
+      "stderrTail": ""
+    }
+  },
+  "overallStatus": "PASS"
+}

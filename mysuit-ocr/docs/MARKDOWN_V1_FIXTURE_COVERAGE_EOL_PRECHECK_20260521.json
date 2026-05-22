@@ -1,0 +1,281 @@
+{
+  "task": "CODEX_FRONTEND_CLEANUP_2A_MARKDOWN_FIXTURE_COVERAGE_EOL_PRECHECK_NO_PROD_MODIFY",
+  "generatedAt": "2026-05-21T15:10:27",
+  "toolAndModel": {
+    "tool": "Codex",
+    "model": "Codex"
+  },
+  "noProductionCodeModifiedByThisTask": true,
+  "createdFiles": [
+    "tmp/codex_markdown_fixture_coverage_eol_precheck.py",
+    "docs/MARKDOWN_V1_FIXTURE_COVERAGE_EOL_PRECHECK_20260521.md",
+    "docs/MARKDOWN_V1_FIXTURE_COVERAGE_EOL_PRECHECK_20260521.json"
+  ],
+  "addedOrUpdatedFixtureFiles": [
+    "tmp\\fixtures\\markdown_v1\\invoice_statement\\trade_7_7pdf.md",
+    "tmp\\fixtures\\markdown_v1\\manifest.json"
+  ],
+  "api": {
+    "url": "http://127.0.0.1:9099/ocr/extract",
+    "source": "skipped_existing_trade7_fixture"
+  },
+  "lineEnding": {
+    "overall": "PASS",
+    "files": [
+      {
+        "path": "tmp\\fixtures\\markdown_v1\\invoice_statement\\trade_1_1jpg.md",
+        "bytes": 922,
+        "lineCount": 17,
+        "lfCount": 17,
+        "crlfCount": 0,
+        "loneCrCount": 0,
+        "lineEnding": "LF",
+        "endsWithNewline": true,
+        "trailingWhitespaceLines": 0,
+        "status": "PASS"
+      },
+      {
+        "path": "tmp\\fixtures\\markdown_v1\\invoice_statement\\trade_2_2pdf.md",
+        "bytes": 875,
+        "lineCount": 16,
+        "lfCount": 16,
+        "crlfCount": 0,
+        "loneCrCount": 0,
+        "lineEnding": "LF",
+        "endsWithNewline": true,
+        "trailingWhitespaceLines": 0,
+        "status": "PASS"
+      },
+      {
+        "path": "tmp\\fixtures\\markdown_v1\\invoice_statement\\trade_3_3pdf.md",
+        "bytes": 942,
+        "lineCount": 17,
+        "lfCount": 17,
+        "crlfCount": 0,
+        "loneCrCount": 0,
+        "lineEnding": "LF",
+        "endsWithNewline": true,
+        "trailingWhitespaceLines": 0,
+        "status": "PASS"
+      },
+      {
+        "path": "tmp\\fixtures\\markdown_v1\\invoice_statement\\trade_7_7pdf.md",
+        "bytes": 1011,
+        "lineCount": 17,
+        "lfCount": 17,
+        "crlfCount": 0,
+        "loneCrCount": 0,
+        "lineEnding": "LF",
+        "endsWithNewline": true,
+        "trailingWhitespaceLines": 0,
+        "status": "PASS"
+      },
+      {
+        "path": "tmp\\fixtures\\markdown_v1\\receipt\\tpl_003_1jpg.md",
+        "bytes": 471,
+        "lineCount": 13,
+        "lfCount": 13,
+        "crlfCount": 0,
+        "loneCrCount": 0,
+        "lineEnding": "LF",
+        "endsWithNewline": true,
+        "trailingWhitespaceLines": 0,
+        "status": "PASS"
+      },
+      {
+        "path": "tmp\\fixtures\\markdown_v1\\receipt\\tpl_003_2jpg.md",
+        "bytes": 470,
+        "lineCount": 13,
+        "lfCount": 13,
+        "crlfCount": 0,
+        "loneCrCount": 0,
+        "lineEnding": "LF",
+        "endsWithNewline": true,
+        "trailingWhitespaceLines": 0,
+        "status": "PASS"
+      }
+    ]
+  },
+  "comparisonPolicy": {
+    "recommended": "exact_string_equality_with_LF",
+    "lineEnding": "LF",
+    "helperOutput": "must use \\n",
+    "normalizeBeforeCompare": false,
+    "trailingWhitespace": "exact"
+  },
+  "coverageEvaluation": {
+    "previousFixtureCount": 5,
+    "newFixtureCount": 6,
+    "trade7Added": true,
+    "reason": "single-row table summary and rowIndex-excluded edge coverage before toMarkdown extraction"
+  },
+  "trade7": {
+    "caseId": "trade_7_7pdf",
+    "templateName": "거래_7",
+    "templateId": "TPL-3AFD383E",
+    "inputFile": "invoice_statement/7.pdf",
+    "fixturePath": "invoice_statement/trade_7_7pdf.md",
+    "fixtureBytes": 1011,
+    "lineCount": 17,
+    "rowIndexPolicy": "excluded_in_preview_clean_json_not_markdown",
+    "status": "PASS",
+    "notes": "coverage add: single-row table summary, rowIndex excluded case",
+    "writeAction": "kept_existing_locked",
+    "validation": {
+      "nonEmpty": true,
+      "startsWithHeading": true,
+      "hasMarkdownTableHeader": true
+    }
+  },
+  "manifestUpdate": {
+    "action": "updated_trade_7_case",
+    "caseCount": 6,
+    "manifestPath": "tmp\\fixtures\\markdown_v1\\manifest.json"
+  },
+  "closureDependencies": [
+    {
+      "dependency": "result.processing_time",
+      "source": "OcrResultPanel props/result closure",
+      "usedFor": "processing time summary",
+      "requiredInput": "processingTime: number",
+      "risk": "LOW"
+    },
+    {
+      "dependency": "editedFields",
+      "source": "component state",
+      "usedFor": "field rows and field count",
+      "requiredInput": "fields: OcrFieldResult[]",
+      "risk": "LOW"
+    },
+    {
+      "dependency": "fieldLabelFull",
+      "source": "local helper using resolveFieldLabel",
+      "usedFor": "label formatting",
+      "requiredInput": "helper can import resolveFieldLabel or receive labelResolver",
+      "risk": "MEDIUM"
+    },
+    {
+      "dependency": "parseTableField",
+      "source": "local helper",
+      "usedFor": "legacy table rowLabel fallback",
+      "requiredInput": "move local helper with markdown builder",
+      "risk": "LOW"
+    },
+    {
+      "dependency": "docTableRows",
+      "source": "useMemo from result.document_fields.tableRows",
+      "usedFor": "table summary N행 override",
+      "requiredInput": "docTableRows?: Record<string, unknown>[] | null",
+      "risk": "MEDIUM"
+    },
+    {
+      "dependency": "getAdoptionLabel",
+      "source": "local helper",
+      "usedFor": "채택 column",
+      "requiredInput": "move helper or expose adoption label function",
+      "risk": "LOW"
+    },
+    {
+      "dependency": "docTableDisplayCols",
+      "source": "buildInvoicePreviewCols useMemo",
+      "usedFor": "not used by Markdown v1",
+      "requiredInput": "not required",
+      "risk": "LOW"
+    },
+    {
+      "dependency": "tableMeta/documentFields",
+      "source": "result.document_fields",
+      "usedFor": "not directly used except docTableRows",
+      "requiredInput": "not required if docTableRows passed",
+      "risk": "LOW"
+    },
+    {
+      "dependency": "fileName/templateName/docType",
+      "source": "props/context",
+      "usedFor": "not used by Markdown v1",
+      "requiredInput": "not required for v1 exact output",
+      "risk": "LOW"
+    },
+    {
+      "dependency": "React state/hooks/DOM/window",
+      "source": "component runtime",
+      "usedFor": "not used inside toMarkdown body",
+      "requiredInput": "must remain absent",
+      "risk": "LOW"
+    }
+  ],
+  "helperInputContractProposal": {
+    "fields": "OcrFieldResult[]",
+    "processingTime": "number",
+    "docTableRows": "Record<string, unknown>[] | null | undefined",
+    "notRequiredForV1": [
+      "docTableDisplayCols",
+      "tableMeta",
+      "templateName",
+      "fileName",
+      "docType"
+    ]
+  },
+  "typecheck": {
+    "command": "npm.cmd run typecheck",
+    "exitCode": 0,
+    "status": "PASS",
+    "durationSeconds": 1.914,
+    "stdoutTail": "\n> mysuit-ocr@0.1.0 typecheck\n> tsc --noEmit\n\n",
+    "stderrTail": ""
+  },
+  "build": {
+    "command": "npm.cmd run build",
+    "exitCode": 0,
+    "status": "PASS",
+    "durationSeconds": 18.634,
+    "stdoutTail": "\n> mysuit-ocr@0.1.0 build\n> next build\n\n   ▲ Next.js 15.5.4\n   - Environments: .env.local\n\n   Creating an optimized production build ...\n ✓ Compiled successfully in 2.6s\n   Linting and checking validity of types ...\n   Collecting page data ...\n   Generating static pages (0/18) ...\n   Generating static pages (4/18) \n   Generating static pages (8/18) \n   Generating static pages (13/18) \n ✓ Generating static pages (18/18)\n   Finalizing page optimization ...\n   Collecting build traces ...\n\nRoute (app)                                 Size  First Load JS\n┌ ○ /                                      349 B         102 kB\n├ ○ /_not-found                            993 B         103 kB\n├ ƒ /api/autofill-cache                    141 B         102 kB\n├ ƒ /api/biz-validate                      141 B         102 kB\n├ ƒ /api/ground-truth                      141 B         102 kB\n├ ƒ /api/login                             141 B         102 kB\n├ ƒ /api/ocr-cache                         141 B         102 kB\n├ ƒ /api/ocr-extract                       141 B         102 kB\n├ ƒ /api/test-images                       141 B         102 kB\n├ ○ /autorestore                         3.13 kB         113 kB\n├ ○ /history                             9.08 kB         148 kB\n├ ○ /login                                4.1 kB         127 kB\n├ ○ /ocr                                 2.74 kB         113 kB\n├ ○ /runocr                              65.2 kB         183 kB\n├ ○ /template                            5.73 kB         116 kB\n└ ○ /test                                47.2 kB         157 kB\n+ First Load JS shared by all             102 kB\n  ├ chunks/255-4efeec91c7871d79.js       45.7 kB\n  ├ chunks/4bd1b696-c023c6e3521b1417.js  54.2 kB\n  └ other shared chunks (total)          2.15 kB\n\n\n○  (Static)   prerendered as static content\nƒ  (Dynamic)  server-rendered on demand\n\n",
+    "stderrTail": " ⨯ ESLint: nextVitals is not iterable\n"
+  },
+  "knownStderrNoise": {
+    "id": "ISSUE-FRONTEND-BUILD-LOG-1",
+    "message": "ESLint: nextVitals is not iterable",
+    "observed": true
+  },
+  "repoDirtyStatus": {
+    "isDirty": true,
+    "entries": [
+      " M src/components/upload/OcrResultPanel.tsx",
+      " M ../ocr-server/data/review_log.jsonl",
+      "?? docs/CLEAN_JSON_CONTRACT_20260521.json",
+      "?? docs/CLEAN_JSON_CONTRACT_20260521.md",
+      "?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.json",
+      "?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.md",
+      "?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.json",
+      "?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.md",
+      "?? docs/CLEAN_JSON_V1_FIXTURE_LOCK_20260521.json",
+      "?? docs/CLEAN_JSON_V1_FIXTURE_LOCK_20260521.md",
+      "?? docs/FRONTEND_CLEANUP_1B_JS_CLEAN_JSON_FIXTURE_RUNNER_20260521.json",
+      "?? docs/FRONTEND_CLEANUP_1B_JS_CLEAN_JSON_FIXTURE_RUNNER_20260521.md",
+      "?? docs/FRONTEND_CLEANUP_1_CLEAN_JSON_BUILDER_EXTRACT_20260521.json",
+      "?? docs/FRONTEND_CLEANUP_1_CLEAN_JSON_BUILDER_EXTRACT_20260521.md",
+      "?? docs/MARKDOWN_V1_CONTRACT_20260521.json",
+      "?? docs/MARKDOWN_V1_CONTRACT_20260521.md",
+      "?? docs/MARKDOWN_V1_FIXTURE_COVERAGE_EOL_PRECHECK_20260521.json",
+      "?? docs/MARKDOWN_V1_FIXTURE_COVERAGE_EOL_PRECHECK_20260521.md",
+      "?? docs/MARKDOWN_V1_FIXTURE_LOCK_20260521.json",
+      "?? docs/MARKDOWN_V1_FIXTURE_LOCK_20260521.md",
+      "?? src/lib/cleanJsonBuilder.ts",
+      "?? tmp/"
+    ],
+    "command": {
+      "command": "git -c safe.directory=D:/Free_Vue/OCR/mysuit-ocr status --short",
+      "exitCode": 0,
+      "status": "PASS",
+      "durationSeconds": 0.17,
+      "stdoutTail": " M src/components/upload/OcrResultPanel.tsx\n M ../ocr-server/data/review_log.jsonl\n?? docs/CLEAN_JSON_CONTRACT_20260521.json\n?? docs/CLEAN_JSON_CONTRACT_20260521.md\n?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.json\n?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.md\n?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.json\n?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.md\n?? docs/CLEAN_JSON_V1_FIXTURE_LOCK_20260521.json\n?? docs/CLEAN_JSON_V1_FIXTURE_LOCK_20260521.md\n?? docs/FRONTEND_CLEANUP_1B_JS_CLEAN_JSON_FIXTURE_RUNNER_20260521.json\n?? docs/FRONTEND_CLEANUP_1B_JS_CLEAN_JSON_FIXTURE_RUNNER_20260521.md\n?? docs/FRONTEND_CLEANUP_1_CLEAN_JSON_BUILDER_EXTRACT_20260521.json\n?? docs/FRONTEND_CLEANUP_1_CLEAN_JSON_BUILDER_EXTRACT_20260521.md\n?? docs/MARKDOWN_V1_CONTRACT_20260521.json\n?? docs/MARKDOWN_V1_CONTRACT_20260521.md\n?? docs/MARKDOWN_V1_FIXTURE_COVERAGE_EOL_PRECHECK_20260521.json\n?? docs/MARKDOWN_V1_FIXTURE_COVERAGE_EOL_PRECHECK_20260521.md\n?? docs/MARKDOWN_V1_FIXTURE_LOCK_20260521.json\n?? docs/MARKDOWN_V1_FIXTURE_LOCK_20260521.md\n?? src/lib/cleanJsonBuilder.ts\n?? tmp/\n",
+      "stderrTail": ""
+    }
+  },
+  "reviewLogRestoration": {
+    "path": "ocr-server\\data\\review_log.jsonl",
+    "restoredToPreRunBytes": true,
+    "existedBefore": true
+  },
+  "overallStatus": "PASS"
+}

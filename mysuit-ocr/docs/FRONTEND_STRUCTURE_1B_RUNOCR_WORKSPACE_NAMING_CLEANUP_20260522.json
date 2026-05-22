@@ -1,0 +1,82 @@
+{
+  "task": "FRONTEND-STRUCTURE-1B-RUNOCR-WORKSPACE-NAMING-CLEANUP",
+  "date": "2026-05-22",
+  "tool": "Claude Code (VSCode extension)",
+  "model": "claude-opus-4-7 (1M context)",
+  "purpose": [
+    "Rename leftover UploadWorkspace-series identifiers inside RunOcrWorkspace.tsx to RunOcrWorkspace-series",
+    "Naming cleanup only — no file move, no logic/JSX/state/API/FormData change, no import structure change"
+  ],
+  "backup": "backup/RunOcrWorkspace_20260522_before_FRONTEND_STRUCTURE_1B_RUNOCR_WORKSPACE_NAMING_CLEANUP.tsx",
+  "files_modified": [
+    "mysuit-ocr/src/components/runocr/RunOcrWorkspace.tsx"
+  ],
+  "identifier_renames": [
+    { "before": "type UploadWorkspaceVariant", "after": "type RunOcrWorkspaceVariant", "locations": ["line 47 definition", "line 51 reference"] },
+    { "before": "type UploadWorkspaceProps",   "after": "type RunOcrWorkspaceProps",   "locations": ["line 50 definition", "line 111 reference"] },
+    { "before": "export default function UploadWorkspace", "after": "export default function RunOcrWorkspace", "locations": ["line 111"] }
+  ],
+  "preserved_intentionally": {
+    "variant_string_literal_union": "\"upload\" | \"runocr\"",
+    "variant_default_value": "\"upload\"",
+    "reason": "Changing the string literal value risks runtime behavior change (variant routing). Out of scope for identifier-name cleanup."
+  },
+  "uploadworkspace_residual_search": {
+    "src_total_hits": 0,
+    "non_src_remaining_hits_intentional": ["docs/", "tmp/", "backup/"],
+    "note": "Past reports and backups intentionally retain the prior identifier name."
+  },
+  "runocrworkspace_search": [
+    "mysuit-ocr/src/app/runocr/page.tsx:4 (default import)",
+    "mysuit-ocr/src/app/runocr/page.tsx:9 (JSX usage)",
+    "mysuit-ocr/src/components/runocr/RunOcrWorkspace.tsx:47/50/51/111 (new identifier definitions and default export)"
+  ],
+  "scope_not_modified": [
+    "mysuit-ocr/src/components/runocr/ui/OcrResultPanel.tsx",
+    "mysuit-ocr/src/components/runocr/ui/OcrDocViewer.tsx",
+    "mysuit-ocr/src/components/runocr/ui/CornerAdjust.tsx",
+    "mysuit-ocr/src/components/test/TestWorkspace.tsx",
+    "mysuit-ocr/src/lib/invoiceTableDisplay.ts",
+    "mysuit-ocr/src/lib/structuredTableViewModel.ts",
+    "mysuit-ocr/src/lib/cleanJsonBuilder.ts",
+    "mysuit-ocr/src/lib/markdownReportBuilder.ts",
+    "mysuit-ocr/src/lib/ocrResultFormatters.ts",
+    "backend / parser / templates.json / manifest / GT / fixtures",
+    "RunOcrWorkspace.tsx internal JSX / hooks / state / API / FormData / function bodies (entirely unchanged)"
+  ],
+  "typecheck_build": {
+    "npm run typecheck": "PASS (exit 0)",
+    "npm run build":     "PASS (exit 0, Next.js 15.5.4, 18/18 static pages, /runocr 65.7 kB / 184 kB First Load JS — unchanged size)"
+  },
+  "fixture_runners": {
+    "table_view_model_v1": { "command": "node tmp/check_table_view_model_v1_fixtures_js.mjs", "result": "PASS 8/8" },
+    "clean_json_v1":       { "command": "node tmp/check_clean_json_v1_fixtures_js.mjs",       "result": "PASS 9/9 (internal typecheck=PASS, build=PASS)" },
+    "markdown_v1":         { "command": "python tmp/codex_markdown_contract_fixture_lock.py --check --phase post_RUNOCR_NAMING_CLEANUP_20260522", "result": "PASS 6/6 (.venv python used)" }
+  },
+  "known_stderr_noise": [
+    "Next build: '⨯ ESLint: nextVitals is not iterable' — appears in stderr but exit code 0 (non-blocking, recorded as expected)",
+    "Markdown runner needs .venv python (system python lacks 'requests'). Unrelated to rename."
+  ],
+  "logs": {
+    "stdout": "ocr-server/logs/codex_FRONTEND_STRUCTURE_1B_RUNOCR_WORKSPACE_NAMING_CLEANUP.out.log",
+    "stderr": "ocr-server/logs/codex_FRONTEND_STRUCTURE_1B_RUNOCR_WORKSPACE_NAMING_CLEANUP.err.log"
+  },
+  "next_suggestions": [
+    "RunOCR internal utils split precheck (Phase 2 candidate after folder stabilization)",
+    "buildOcrFormData / runOcrRequest / mapOcrResponse extraction candidate analysis",
+    "Template folder ownership precheck",
+    "Defer common/utils relocation until feature folders (runocr / test / template / history) are stabilized",
+    "TestWorkspace folder restructure pending user confirmation",
+    "Optional: review other internal aliases (e.g. RunOcrTemplateMode) for naming consistency"
+  ],
+  "success_criteria_met": {
+    "uploadworkspace_identifiers_cleaned_in_runocrworkspace_tsx": true,
+    "no_logic_changes": true,
+    "no_file_move": true,
+    "ui_files_unchanged": true,
+    "testworkspace_unchanged": true,
+    "typecheck_pass": true,
+    "build_pass": true,
+    "all_three_runners_pass": true
+  }
+}

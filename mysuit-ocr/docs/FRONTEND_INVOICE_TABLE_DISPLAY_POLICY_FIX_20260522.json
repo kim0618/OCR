@@ -1,0 +1,159 @@
+{
+  "task": "FRONTEND-CLEANUP-3D4-INVOICE-TABLE-DISPLAY-POLICY-FIX",
+  "toolAndModel": { "tool": "Claude Code", "model": "claude-opus-4-7" },
+  "date": "2026-05-22",
+  "goal": "Fix three invoice table display policy issues identified in 3D-3 manual smoke: trade_4 totalAmount row column exposure, trade_6 lotNo noise-suppression false positive, trade_7 serialLotComposite internal-filter false positive. invoiceTableDisplay.ts and Python re-impls only; helper/component code untouched; only trade_4/6/7 fixtures regenerate.",
+  "backupFiles": [
+    "mysuit-ocr/backup/invoiceTableDisplay_20260522_before_FRONTEND_CLEANUP_3D4_INVOICE_TABLE_DISPLAY_POLICY_FIX.ts",
+    "mysuit-ocr/backup/fixtures_3D4_safety_20260522/table_view_model_v1/* (entire snapshot)",
+    "mysuit-ocr/backup/fixtures_3D4_safety_20260522/clean_json_v1/* (entire snapshot)"
+  ],
+  "modifiedFiles": [
+    {
+      "path": "mysuit-ocr/src/lib/invoiceTableDisplay.ts",
+      "change": "Added _SUMMARY_KEYS={totalAmount} hard exclude; added _EXPLICIT_COMPOSITE_ALLOWLIST={serialLotComposite}; lot 노이즈 rule now exempts explicit lot keys; lot/mfg dup + serialNo dup + itemCode 5% rules remain unconditional."
+    },
+    {
+      "path": "mysuit-ocr/tmp/codex_table_view_model_input_fixture_prep.py",
+      "change": "Identical Python re-impl patch: SUMMARY_KEYS + EXPLICIT_COMPOSITE_ALLOWLIST + narrower lot 노이즈 exemption."
+    },
+    {
+      "path": "mysuit-ocr/tmp/codex_table_view_model_fixture_lock.py",
+      "change": "Identical Python re-impl patch."
+    },
+    {
+      "path": "mysuit-ocr/tmp/codex_clean_json_v1_fixture_lock.py",
+      "change": "Identical Python re-impl patch."
+    }
+  ],
+  "filesNotTouched": [
+    "src/components/upload/OcrResultPanel.tsx",
+    "src/lib/structuredTableViewModel.ts",
+    "src/lib/cleanJsonBuilder.ts",
+    "src/lib/markdownReportBuilder.ts",
+    "src/lib/ocrResultFormatters.ts",
+    "src/components/test/TestWorkspace.tsx",
+    "ocr-server/*",
+    "data/templates.json"
+  ],
+  "regeneratedFixtures": {
+    "intended": [
+      "tmp/fixtures/table_view_model_v1/inputs/trade_4_4pdf.input.json",
+      "tmp/fixtures/table_view_model_v1/inputs/trade_6_6pdf.input.json",
+      "tmp/fixtures/table_view_model_v1/inputs/trade_7_7pdf.input.json",
+      "tmp/fixtures/table_view_model_v1/invoice_statement/trade_4_4pdf.view_model.json",
+      "tmp/fixtures/table_view_model_v1/invoice_statement/trade_6_6pdf.view_model.json",
+      "tmp/fixtures/table_view_model_v1/invoice_statement/trade_7_7pdf.view_model.json",
+      "tmp/fixtures/clean_json_v1/invoice_statement/trade_4_4pdf.clean.json",
+      "tmp/fixtures/clean_json_v1/invoice_statement/trade_6_6pdf.clean.json",
+      "tmp/fixtures/clean_json_v1/invoice_statement/trade_7_7pdf.clean.json",
+      "tmp/fixtures/table_view_model_v1/manifest.json",
+      "tmp/fixtures/clean_json_v1/manifest.json"
+    ],
+    "preserved": {
+      "method": "diff against fixtures_3D4_safety_20260522 backup",
+      "trade_1_2_3_5": "all input/view_model/clean_json bytes-identical",
+      "synthetic_empty_rows": "bytes-identical",
+      "receipt_tpl_003_1jpg_2jpg_clean_json": "bytes-identical"
+    }
+  },
+  "policyChanges": {
+    "SUMMARY_KEYS": {
+      "set": ["totalAmount"],
+      "behavior": "hard-excluded from all candidate-key paths regardless of expectedColumnKeys",
+      "preservedKeys": ["supplyAmount", "taxAmount", "amount"]
+    },
+    "EXPLICIT_COMPOSITE_ALLOWLIST": {
+      "set": ["serialLotComposite"],
+      "behavior": "composite key bypasses isInternalTableKey only when (key in allowlist AND key in explicitlyExpected)",
+      "preservedComposites": ["manufacturingExpiryComposite"]
+    },
+    "lotNoiseRuleExemption": {
+      "rule": "remove lot keys if itemCode has value AND manufacturingNo has no value",
+      "exemption": "skip rule for lot keys where isExplicit(key) is true",
+      "affects": "trade_6 lotNo now displayed"
+    },
+    "unchangedDedupRules": {
+      "lotMfgDupRule": "still applies unconditionally — preserves trade_1 lotNo dup suppression",
+      "serialNoLotNoDupRule": "still applies unconditionally",
+      "itemCode5PercentRule": "still applies unconditionally"
+    },
+    "rowIndexPolicy": "shouldDisplayRowIndex unchanged"
+  },
+  "trade4Result": {
+    "before": ["itemName", "lotNo", "unit", "quantity", "unitPrice", "supplyAmount", "taxAmount", "totalAmount"],
+    "after": ["itemName", "lotNo", "unit", "quantity", "unitPrice", "supplyAmount", "taxAmount"],
+    "removed": ["totalAmount"],
+    "rowIndex": "excluded -> excluded (unchanged)"
+  },
+  "trade6Result": {
+    "before": ["rowIndex", "itemCode", "itemName", "quantity", "expiryDate"],
+    "after": ["rowIndex", "itemCode", "itemName", "quantity", "lotNo", "expiryDate"],
+    "added": ["lotNo"],
+    "rowIndex": "included -> included (unchanged)"
+  },
+  "trade7Result": {
+    "before": ["itemName", "unit", "quantity"],
+    "after": ["itemName", "serialLotComposite", "unit", "quantity"],
+    "added": ["serialLotComposite"],
+    "rowIndex": "excluded -> excluded (unchanged)"
+  },
+  "preservedCases": {
+    "trade_1_1jpg": "no change",
+    "trade_2_2pdf": "no change",
+    "trade_3_3pdf": "no change; insuranceCode=669700020, amount=301,320 (LOCKED) preserved",
+    "trade_5_5pdf": "no change",
+    "synthetic_empty_rows": "no change",
+    "tpl_003_1jpg": "no change",
+    "tpl_003_2jpg": "no change"
+  },
+  "tableViewModelRunner": {
+    "command": "node tmp/check_table_view_model_v1_fixtures_js.mjs",
+    "summary": { "overall": "PASS", "total": 8, "pass": 8, "fail": 0, "totalDiffs": 0, "totalForbiddenHits": 0 }
+  },
+  "cleanJsonRunner": {
+    "command": "node tmp/check_clean_json_v1_fixtures_js.mjs",
+    "summary": { "overall": "PASS", "total": 9, "pass": 9, "totalDiffs": 0 }
+  },
+  "markdownRunner": {
+    "command": "python tmp/codex_markdown_contract_fixture_lock.py --check --phase post_3D4_20260522",
+    "summary": { "overall": "PASS", "counts": { "PASS": 6 } }
+  },
+  "typecheck": { "command": "npm run typecheck", "status": "PASS", "exitCode": 0 },
+  "build": {
+    "command": "npm run build",
+    "status": "PASS",
+    "exitCode": 0,
+    "staticPages": "18/18",
+    "compileTime": "1.9s",
+    "runocrSize": "unchanged"
+  },
+  "knownStderrNoise": [
+    { "id": "ISSUE-FRONTEND-BUILD-LOG-1", "message": "ESLint: nextVitals is not iterable", "buildExitCode": 0, "preExisting": true }
+  ],
+  "iterationNotes": [
+    "1st pass (overly broad): explicit bypass applied to ALL dedup rules → trade_1 lotNo (dup of mfg) + trade_3 manufacturingExpiryComposite surfaced unexpectedly. Restored fixtures from safety backup.",
+    "2nd pass (narrower): SUMMARY_KEYS hard exclude + composite allowlist (only serialLotComposite) + lot 노이즈 rule explicit exemption ONLY. lot/mfg dup / serialNo dup / itemCode 5% rules remain unconditional. Result: only trade_4/6/7 changed as intended.",
+    "Manifest regeneration ordering: view_model_fixture_lock.py overwrites manifest, dropping inputFixturePath and lockedCurrentBehavior fields added by input_fixture_prep.py. Solution: run input_fixture_prep.py one more time AFTER view_model lock to restore those fields."
+  ],
+  "remainingRisks": [
+    "Manual smoke not yet performed in real browser — automatic checks pass but visual confirmation of trade_4/6/7 column changes recommended before cycle 1 close-out.",
+    "EXPLICIT_COMPOSITE_ALLOWLIST is hardcoded to {serialLotComposite}. Adding more composites in future requires explicit allowlist update OR a generalized template column definition mechanism.",
+    "trade_1 lotNo remains suppressed by lot/mfg dup rule even though it's in expectedColumnKeys. Acceptable now but may need re-evaluation when Template column definition is introduced.",
+    "Manifest regeneration order dependency between view_model_fixture_lock.py and input_fixture_prep.py — fragile. Consolidation into single script suggested for future.",
+    "ISSUE-FRONTEND-BUILD-LOG-1 stderr noise persists."
+  ],
+  "nextSuggestedTasks": [
+    "Manual smoke re-confirmation on /runocr for trade_4/6/7 column changes.",
+    "OcrResultPanel cleanup cycle 1 close-out report (mark manual smoke WARN resolved when smoke passes).",
+    "Custom / Validation view model migration (cycle 2 candidate).",
+    "Legacy parseTableField fallback view model (buildLegacyTableViewModel) — separate cycle.",
+    "Template table column definition introduction (would replace allowlist hardcoding).",
+    "TestWorkspace cleanup re-confirmation after cycle 1 close-out.",
+    "ISSUE-FRONTEND-BUILD-LOG-1 (eslint-config-next compatibility)."
+  ],
+  "logs": {
+    "out": "ocr-server/logs/codex_FRONTEND_CLEANUP_3D4_INVOICE_TABLE_DISPLAY_POLICY_FIX.out.log",
+    "err": "ocr-server/logs/codex_FRONTEND_CLEANUP_3D4_INVOICE_TABLE_DISPLAY_POLICY_FIX.err.log"
+  }
+}

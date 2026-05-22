@@ -1,0 +1,156 @@
+{
+  "task": "FRONTEND-STRUCTURE-3B-RUNOCR-DOC-COMMENTS",
+  "date": "2026-05-22",
+  "tool": "Claude Code (VSCode extension)",
+  "model": "claude-opus-4-7 (1M context)",
+  "purpose": [
+    "After RunOCR Cycle 1 (folder move / naming / utils split / layout split), add maintainer-facing doc comments to all 8 RunOCR operational files.",
+    "Make it possible for a new maintainer to open any of these files and immediately understand role, responsibility boundary, and modification cautions.",
+    "Comments-only patch — no logic / JSX / import / state / handler changes."
+  ],
+  "backups": [
+    "backup/RunOcrWorkspace_20260522_before_FRONTEND_STRUCTURE_3B_RUNOCR_DOC_COMMENTS.tsx",
+    "backup/RunOcrResultLayout_20260522_before_FRONTEND_STRUCTURE_3B_RUNOCR_DOC_COMMENTS.tsx",
+    "backup/OcrResultPanel_20260522_before_FRONTEND_STRUCTURE_3B_RUNOCR_DOC_COMMENTS.tsx",
+    "backup/OcrDocViewer_20260522_before_FRONTEND_STRUCTURE_3B_RUNOCR_DOC_COMMENTS.tsx",
+    "backup/CornerAdjust_20260522_before_FRONTEND_STRUCTURE_3B_RUNOCR_DOC_COMMENTS.tsx",
+    "backup/buildOcrFormData_20260522_before_FRONTEND_STRUCTURE_3B_RUNOCR_DOC_COMMENTS.ts",
+    "backup/runOcrRequest_20260522_before_FRONTEND_STRUCTURE_3B_RUNOCR_DOC_COMMENTS.ts",
+    "backup/mapOcrResponse_20260522_before_FRONTEND_STRUCTURE_3B_RUNOCR_DOC_COMMENTS.ts"
+  ],
+  "files_modified_operational": [
+    "mysuit-ocr/src/components/runocr/RunOcrWorkspace.tsx",
+    "mysuit-ocr/src/components/runocr/ui/RunOcrResultLayout.tsx",
+    "mysuit-ocr/src/components/runocr/ui/OcrResultPanel.tsx",
+    "mysuit-ocr/src/components/runocr/ui/OcrDocViewer.tsx",
+    "mysuit-ocr/src/components/runocr/ui/CornerAdjust.tsx",
+    "mysuit-ocr/src/components/runocr/utils/buildOcrFormData.ts",
+    "mysuit-ocr/src/components/runocr/utils/runOcrRequest.ts",
+    "mysuit-ocr/src/components/runocr/utils/mapOcrResponse.ts"
+  ],
+  "files_modified_verification_scripts_tmp_only": [
+    "mysuit-ocr/tmp/check_runocr_request_boundary_2b.mjs (strip comments before keyword leak scan; 3B-aware)",
+    "mysuit-ocr/tmp/check_runocr_response_mapping_boundary_2c.mjs (strip comments before forbidden-import scan; logic-only equality for buildOcrFormData backup compare)"
+  ],
+  "files_created": [
+    "mysuit-ocr/tmp/check_runocr_doc_comments_3b.mjs"
+  ],
+  "headers_added": {
+    "RunOcrWorkspace.tsx": "RunOCR 탭 최상위 Workspace. 상태/실행/오케스트레이션. Cross-links: FormData=utils/buildOcrFormData, API=utils/runOcrRequest, mapping=utils/mapOcrResponse, layout=ui/RunOcrResultLayout. history/autofill/restore still owned by Workspace.",
+    "RunOcrResultLayout.tsx": "결과 화면 layout 전용 presentational. node composition only — viewer/resultPanel/scanOverlay/hiddenFileInput. No OCR domain/API/history/autofill awareness; does not import child components directly.",
+    "OcrResultPanel.tsx": "Preview/Custom/Validation/Clean JSON/Markdown/Raw JSON 결과 패널. Delegates formatting to @/lib/cleanJsonBuilder, markdownReportBuilder, structuredTableViewModel, invoiceTableDisplay. No API/viewer/history responsibility; revalidate/partialOcr injected via parent callbacks.",
+    "OcrDocViewer.tsx": "Read-only document viewer with bbox overlay and scale computation. No OCR API/mapping/history; corner-adjust UI is separate (CornerAdjust); Custom-tab editing is OcrCanvasPane's job.",
+    "CornerAdjust.tsx": "Normalized corner adjustment UI. Click-to-place when <4 corners, drag-to-adjust when 4 corners. Coordinates exposed in 0~1 normalized space via onCornersChange. No API/mapping/history responsibility.",
+    "buildOcrFormData.ts": "/ocr/extract FormData composer. Maintains key contract: file / template_id / regions / model_id / documentType (with documented append order + conditions). Backend contract change requires parity check.",
+    "runOcrRequest.ts": "OCR API call helper: endpoint resolution + buildOcrFormData + fetch + !res.ok + res.json. No UI loading/error state, response mapping, history, autofill. Error('OCR 요청 실패') paired with workspace catch — do not edit.",
+    "mapOcrResponse.ts": "Raw OCR response -> OcrResult pure mapping. Forbidden: autofill/history/restore/localStorage/React. normalizeFieldKey is the dependency-injection seam to avoid direct autofillEngine import. Output shape change ripples to Preview/Custom/Validation/Clean JSON/Markdown."
+  },
+  "jsdoc_targets": {
+    "RunOcrWorkspace.tsx": ["export default function RunOcrWorkspace", "async function runOcr", "const handlePersistEdits", "const handleResultClose"],
+    "RunOcrResultLayout.tsx": ["export type RunOcrResultLayoutProps", "export default function RunOcrResultLayout"],
+    "OcrResultPanel.tsx": ["export default function OcrResultPanel (props groups summary)"],
+    "OcrDocViewer.tsx": ["export default function OcrDocViewer", "const updateScale"],
+    "CornerAdjust.tsx": ["export default function CornerAdjust"],
+    "buildOcrFormData.ts": ["export type BuildOcrFormDataInput", "export function buildOcrFormData"],
+    "runOcrRequest.ts": ["export type RunOcrRequestInput", "export async function runOcrRequest"],
+    "mapOcrResponse.ts": ["export type BuildRunOcrResultTemplate", "export type BuildRunOcrResultOptions", "export function buildRunOcrResult"]
+  },
+  "over_commenting_avoidance": [
+    "Did not comment simple setter/toggle handlers",
+    "Did not comment JSX node variables or derived useMemo locals",
+    "Did not annotate each prop field individually (OcrResultPanel: props-group summary only)",
+    "Did not repeat the same role description across files (cross-linked via short paths)",
+    "Did not duplicate import/export explanations"
+  ],
+  "comments_only_diff_verification": {
+    "method": "Per file: strip block + line comments, normalize whitespace to single spaces, compare with backup snapshot. Equal -> commentsOnly: true.",
+    "results": {
+      "RunOcrWorkspace.tsx": true,
+      "RunOcrResultLayout.tsx": true,
+      "OcrResultPanel.tsx": true,
+      "OcrDocViewer.tsx": true,
+      "CornerAdjust.tsx": true,
+      "buildOcrFormData.ts": true,
+      "runOcrRequest.ts": true,
+      "mapOcrResponse.ts": true
+    },
+    "all_files_comments_only": true
+  },
+  "doc_comments_static_check": {
+    "script": "tmp/check_runocr_doc_comments_3b.mjs",
+    "perFileOk": {
+      "workspace": true,
+      "resultLayout": true,
+      "resultPanel": true,
+      "docViewer": true,
+      "cornerAdjust": true,
+      "buildFormData": true,
+      "request": true,
+      "mapResponse": true
+    },
+    "controls_not_created": true,
+    "testworkspace_exists": true,
+    "result": "PASS"
+  },
+  "boundary_check_script_adjustments_for_3b": [
+    {
+      "script": "tmp/check_runocr_request_boundary_2b.mjs",
+      "change": "Strip block/line comments before keyword leak scan. JSDoc that mentions boundary keywords for documentation no longer triggers false-positive."
+    },
+    {
+      "script": "tmp/check_runocr_response_mapping_boundary_2c.mjs",
+      "change": "Strip comments before forbidden-import scan; widen buildOcrFormData backup-equality from byte-equal to comments-stripped + whitespace-normalized equality. Logic invariant preserved; doc comments tolerated."
+    }
+  ],
+  "runner_results": {
+    "doc_comments_3b":         { "command": "node tmp/check_runocr_doc_comments_3b.mjs",                                                                            "result": "PASS" },
+    "formdata_2a":             { "command": "node tmp/check_runocr_formdata_keys_2a.mjs",                                                                           "result": "PASS" },
+    "request_boundary_2b":     { "command": "node tmp/check_runocr_request_boundary_2b.mjs",                                                                        "result": "PASS (comment-aware)" },
+    "response_mapping_2c":     { "command": "node tmp/check_runocr_response_mapping_boundary_2c.mjs",                                                               "result": "PASS (comment-aware)" },
+    "result_layout_3a":        { "command": "node tmp/check_runocr_result_layout_boundary_3a.mjs",                                                                  "result": "PASS" },
+    "table_view_model_v1":     { "command": "node tmp/check_table_view_model_v1_fixtures_js.mjs",                                                                   "result": "PASS 8/8" },
+    "clean_json_v1":           { "command": "node tmp/check_clean_json_v1_fixtures_js.mjs",                                                                         "result": "PASS 9/9 (internal typecheck=PASS, build=PASS)" },
+    "markdown_v1":             { "command": "python tmp/codex_markdown_contract_fixture_lock.py --check --phase post_RUNOCR_DOC_COMMENTS_20260522",                 "result": "PASS 6/6 (.venv python)" }
+  },
+  "typecheck_build": {
+    "npm run typecheck": "PASS (exit 0)",
+    "npm run build":     "PASS (exit 0, Next.js 15.5.4, 18/18 static pages, /runocr 65.7 kB / 184 kB — unchanged from 3A)"
+  },
+  "known_stderr_noise": [
+    "Next build: '⨯ ESLint: nextVitals is not iterable' — exit 0 (non-blocking)",
+    "Markdown runner uses .venv python (system python lacks 'requests')."
+  ],
+  "logs": {
+    "stdout": "ocr-server/logs/codex_FRONTEND_STRUCTURE_3B_RUNOCR_DOC_COMMENTS.out.log",
+    "stderr": "ocr-server/logs/codex_FRONTEND_STRUCTURE_3B_RUNOCR_DOC_COMMENTS.err.log"
+  },
+  "remaining_issues": [
+    "RunOcrWorkspace runOcr() body still couples autofill/history/restore mapping (~500+ lines)",
+    "Main return (non-result branch) and RunOcrControls split still pending — HIGH risk due to ~26+ props",
+    "ocr-server/data/templates.json still dirty from earlier session"
+  ],
+  "next_suggestions": [
+    "RunOCR Cycle 1 close-out report (consolidate 1 / 1B / 2A / 2B / 2C / 3A / 3B)",
+    "Template folder ownership precheck",
+    "TPL-95328E52 dirty impact precheck",
+    "RunOcrControls split via smaller control groups (template topbar / model card / run button bar)",
+    "common/utils relocation after feature folders stabilize",
+    "TestWorkspace folder restructure pending user confirmation"
+  ],
+  "success_criteria_met": {
+    "headers_added_to_all_8_files": true,
+    "jsdoc_added_to_key_exports": true,
+    "over_commenting_avoided": true,
+    "no_logic_change": true,
+    "no_import_change": true,
+    "no_file_move": true,
+    "RunOcrControls_not_created": true,
+    "TestWorkspace_not_modified": true,
+    "doc_comments_static_check_pass": true,
+    "all_other_boundary_checks_pass": true,
+    "typecheck_pass": true,
+    "build_pass": true,
+    "all_fixture_runners_pass": true,
+    "comments_only_diff_verified": true
+  }
+}

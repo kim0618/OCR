@@ -4,10 +4,10 @@ import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import AppShell from "../../components/layout/AppShell";
-import TemplateWorkspace from "../../components/ocr/TemplateWorkspace";
+import TemplateWorkspace from "../../components/template/TemplateWorkspace";
 
 const OcrAnnotator = dynamic(
-  () => import("../../components/ocr/OcrAnnotator"),
+  () => import("../../components/template/ui/OcrAnnotator"),
   {
     ssr: false,
     loading: () => <div style={{ padding: 16 }}>OCR 로딩중...</div>,

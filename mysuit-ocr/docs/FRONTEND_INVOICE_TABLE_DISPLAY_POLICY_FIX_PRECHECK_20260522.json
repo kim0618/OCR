@@ -1,0 +1,1381 @@
+{
+  "generatedAt": "2026-05-22T10:21:34",
+  "task": "CODEX_FRONTEND_INVOICE_TABLE_DISPLAY_POLICY_FIX_PRECHECK_NO_PROD_MODIFY",
+  "toolAndModel": {
+    "tool": "Codex",
+    "model": "Codex"
+  },
+  "codeModified": false,
+  "fixturesModified": false,
+  "currentFlow": {
+    "docTableDisplayColsSource": "buildInvoicePreviewCols(docTableMeta, docTableRows)",
+    "previewUses": "buildStructuredTableViewModel({ rows: docTableRows, displayCols: docTableDisplayCols })",
+    "cleanJsonUses": "buildCleanJsonResult(..., docTableRows, docTableDisplayCols)",
+    "helperIssue": false
+  },
+  "tradeImpactMatrix": [
+    {
+      "caseId": "trade_1_1jpg",
+      "filename": "1.jpg",
+      "beforeColumns": [
+        "itemName",
+        "spec",
+        "manufacturingNo",
+        "expiryDate",
+        "quantity",
+        "unitPrice",
+        "amount"
+      ],
+      "outputColumns": [
+        "itemName",
+        "spec",
+        "manufacturingNo",
+        "expiryDate",
+        "quantity",
+        "unitPrice",
+        "amount"
+      ],
+      "cleanJsonColumns": [
+        "itemName",
+        "spec",
+        "manufacturingNo",
+        "expiryDate",
+        "quantity",
+        "unitPrice",
+        "amount"
+      ],
+      "expected": {
+        "required": [
+          "itemName",
+          "spec",
+          "manufacturingNo",
+          "expiryDate",
+          "quantity",
+          "unitPrice",
+          "amount"
+        ],
+        "optional": [
+          "lotNo",
+          "unit",
+          "supplyAmount",
+          "taxAmount",
+          "totalAmount",
+          "remark"
+        ],
+        "display": [
+          "itemName",
+          "spec",
+          "manufacturingNo",
+          "expiryDate",
+          "quantity",
+          "unitPrice",
+          "amount"
+        ],
+        "displayLabels": {
+          "itemName": "품목",
+          "spec": "규격",
+          "manufacturingNo": "제조번호",
+          "expiryDate": "유효기간",
+          "quantity": "수량",
+          "unitPrice": "단가",
+          "amount": "금액"
+        },
+        "notes": "Single invoice statement image. Primary sample for tableDetected, rowCount, and firstRowPreview."
+      },
+      "nonemptyValues": {
+        "_rawText": [
+          "헥사메딘액0.12% 15m|*6포 24027 20270205 400 1,050 420,000",
+          "더모픽스크림 30g 24001 20270116 100 4,490 449,000",
+          "하드칼추어블이지정 30T 23010 20250601 180 1,400 252,000",
+          "하드칼씨플러스정 60T 40 4,770 190, 800",
+          "레가론캡슬140 30C 23042 20260716 360 ^ 5,910 2,127,600",
+          "레가론캡슬140 500C 23030 20260525 10 98,590 985,900",
+          "뮤코론캡슬375mg 500C 23002 20280608 20 16,775 335,500",
+          "파자임정95mg 500T(B) 23058 20261212 20 38,820 . 776,400"
+        ],
+        "_source": [
+          "invoice_statement_table_parser",
+          "invoice_statement_table_parser",
+          "invoice_statement_table_parser",
+          "invoice_statement_table_parser",
+          "invoice_statement_table_parser",
+          "invoice_statement_table_parser",
+          "invoice_statement_table_parser",
+          "invoice_statement_table_parser"
+        ],
+        "amount": [
+          "420,000",
+          "449,000",
+          "252,000",
+          "190,800",
+          "2,127,600",
+          "985,900",
+          "335,500",
+          "776,400"
+        ],
+        "expiryDate": [
+          "20270205",
+          "20270116",
+          "20250601",
+          "20260716",
+          "20260525",
+          "20280608",
+          "20261212",
+          "260717"
+        ],
+        "itemCode": [
+          "C30915"
+        ],
+        "itemName": [
+          "헥사메딘액0.12%",
+          "더모픽스크림",
+          "하드칼추어블이지정",
+          "하드칼씨플러스정",
+          "레가론캡슬140",
+          "레가론캡슬140",
+          "뮤코론캡슬375mg",
+          "파자임정95mg"
+        ],
+        "lotNo": [
+          "24027",
+          "24001",
+          "23010",
+          "23042",
+          "23030",
+          "23002",
+          "23058",
+          "23010"
+        ],
+        "manufacturingExpiryComposite": [
+          "24027 / 20270205",
+          "24001 / 20270116",
+          "23010 / 20250601",
+          "23042 / 20260716",
+          "23030 / 20260525",
+          "23002 / 20280608",
+          "23058 / 20261212",
+          "23010-72ea / 260717"
+        ],
+        "manufacturingNo": [
+          "24027",
+          "24001",
+          "23010",
+          "23042",
+          "23030",
+          "23002",
+          "23058",
+          "23010-72ea"
+        ],
+        "quantity": [
+          "400",
+          "100",
+          "180",
+          "40",
+          "360",
+          "10",
+          "20",
+          "20"
+        ],
+        "rowIndex": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8"
+        ],
+        "serialLotComposite": [
+          "24027",
+          "24001",
+          "23010",
+          "23042",
+          "23030",
+          "23002",
+          "23058",
+          "23010"
+        ],
+        "spec": [
+          "15m|*6포",
+          "30g",
+          "30T",
+          "60T",
+          "30C",
+          "500C",
+          "500C",
+          "500T(B)"
+        ],
+        "unitPrice": [
+          "1,050",
+          "4,490",
+          "1,400",
+          "4,770",
+          "5,910",
+          "98,590",
+          "16,775",
+          "38,820"
+        ]
+      },
+      "tableMetaExpectedColumnKeys": [
+        "itemName",
+        "spec",
+        "manufacturingNo",
+        "expiryDate",
+        "quantity",
+        "unitPrice",
+        "amount",
+        "lotNo",
+        "unit",
+        "supplyAmount",
+        "taxAmount",
+        "totalAmount",
+        "remark"
+      ],
+      "tableMetaColumns": [
+        "rowIndex",
+        "itemCode",
+        "itemName",
+        "spec",
+        "lotNo",
+        "manufacturingNo",
+        "expiryDate",
+        "quantity",
+        "unitPrice",
+        "amount"
+      ],
+      "afterColumnsRecommended": [
+        "itemName",
+        "spec",
+        "manufacturingNo",
+        "expiryDate",
+        "quantity",
+        "unitPrice",
+        "amount"
+      ],
+      "addedColumns": [],
+      "removedColumns": [],
+      "rowIndexBefore": "excluded",
+      "rowIndexAfter": "excluded",
+      "cleanJsonFixtureImpact": [],
+      "tableViewModelFixtureImpact": [],
+      "risk": "low",
+      "notes": []
+    },
+    {
+      "caseId": "trade_2_2pdf",
+      "filename": "2.pdf",
+      "beforeColumns": [
+        "rowIndex",
+        "itemCode",
+        "itemName",
+        "quantity",
+        "consumerUnitPrice",
+        "supplyUnitPrice",
+        "supplyAmount"
+      ],
+      "outputColumns": [
+        "rowIndex",
+        "itemCode",
+        "itemName",
+        "quantity",
+        "consumerUnitPrice",
+        "supplyUnitPrice",
+        "supplyAmount"
+      ],
+      "cleanJsonColumns": [
+        "rowIndex",
+        "itemCode",
+        "itemName",
+        "quantity",
+        "consumerUnitPrice",
+        "supplyUnitPrice",
+        "supplyAmount"
+      ],
+      "expected": {
+        "required": [
+          "rowIndex",
+          "itemCode",
+          "itemName",
+          "quantity",
+          "consumerUnitPrice",
+          "supplyUnitPrice",
+          "supplyAmount",
+          "insuranceCode"
+        ],
+        "optional": [
+          "amount",
+          "totalAmount",
+          "remark"
+        ],
+        "display": [
+          "rowIndex",
+          "itemCode",
+          "itemName",
+          "quantity",
+          "consumerUnitPrice",
+          "supplyUnitPrice",
+          "supplyAmount",
+          "insuranceCode"
+        ],
+        "displayLabels": {
+          "rowIndex": "NO",
+          "itemCode": "품목코드",
+          "itemName": "품목명",
+          "quantity": "수량",
+          "consumerUnitPrice": "소비자단가",
+          "supplyUnitPrice": "공급단가",
+          "supplyAmount": "공급금액",
+          "insuranceCode": "보험No"
+        },
+        "notes": "Standard single-page invoice statement. Primary sample for two header blocks, totals, and item table structure. T-20: all DPI variants caused rowCount mismatch regression (13→17). OP-anchor complex structure. preprocessing_blocked."
+      },
+      "nonemptyValues": {
+        "_rawText": [
+          "1 OP-AF0100 오스템아세클로페낙정100T 53210 33220 14,080 14,080 140,800",
+          "2 OP-AL0500 ALMAFEN TABLET 500T 3 24,200 24,200 2,420,000",
+          "3 OP-AM0030 AMOXIS CAPSULE 30C 25과 21240 100 2,139 2,139 213.900",
+          "4 OP-AM0300 AMOXIS CAPSULE 300C 2240 429 100 21,384 21.384 2,138,400",
+          "5 OP-CF0030 CEFACLI CAPSULE 30C 232140 27.2 60 9,821 9,821 589,260",
+          "6 OP-CF0100 CEFACLI CAPSULE 100C 13240 32,736 32,736 3,928,320",
+          "7 OP-ES00028 오스템에스오메프라졸28정 x 9,831 9,831 589, 860",
+          "8 OP-L00030 LOXOLIFEN TABLET 30T 22.2 34024 300 3,300 3,300 990,000"
+        ],
+        "_source": [
+          "invoice_statement_table_parser",
+          "invoice_statement_table_parser",
+          "invoice_statement_table_parser",
+          "invoice_statement_table_parser",
+          "invoice_statement_table_parser",
+          "invoice_statement_table_parser",
+          "invoice_statement_table_parser",
+          "invoice_statement_table_parser"
+        ],
+        "consumerUnitPrice": [
+          "14,080",
+          "24,200",
+          "2,139",
+          "21,384",
+          "9,821",
+          "32,736",
+          "9,831",
+          "3,300"
+        ],
+        "itemCode": [
+          "OP-AF0100",
+          "OP-AL0500",
+          "OP-AM0030",
+          "OP-AM0300",
+          "OP-CF0030",
+          "OP-CF0100",
+          "OP-ES00028",
+          "OP-L00030"
+        ],
+        "itemName": [
+          "오스템아세클로페낙정100T 33220",
+          "ALMAFEN TABLET 500T 3",
+          "AMOXIS CAPSULE 30C 25과 21240",
+          "AMOXIS CAPSULE 300C 2240 429",
+          "CEFACLI CAPSULE 30C 232140 27.2",
+          "CEFACLI CAPSULE 100C 13240",
+          "오스템에스오메프라졸28정 x",
+          "LOXOLIFEN TABLET 30T 22.2 34024"
+        ],
+        "lotNo": [
+          "53210",
+          "0500",
+          "21240",
+          "0300",
+          "232140",
+          "13240",
+          "34024",
+          "00500"
+        ],
+        "quantity": [
+          "53210",
+          "100",
+          "100",
+          "60",
+          "300",
+          "40",
+          "200",
+          "300"
+        ],
+        "rowIndex": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8"
+        ],
+        "serialLotComposite": [
+          "53210",
+          "0500",
+          "21240",
+          "0300",
+          "232140",
+          "13240",
+          "34024",
+          "00500"
+        ],
+        "supplyAmount": [
+          "140,800",
+          "2,420,000",
+          "213.900",
+          "2,138,400",
+          "589,260",
+          "3,928,320",
+          "589,860",
+          "990,000"
+        ],
+        "supplyUnitPrice": [
+          "14,080",
+          "24,200",
+          "2,139",
+          "21.384",
+          "9,821",
+          "32,736",
+          "9,831",
+          "3,300"
+        ]
+      },
+      "tableMetaExpectedColumnKeys": [
+        "rowIndex",
+        "itemCode",
+        "itemName",
+        "quantity",
+        "consumerUnitPrice",
+        "supplyUnitPrice",
+        "supplyAmount",
+        "insuranceCode",
+        "amount",
+        "totalAmount",
+        "remark"
+      ],
+      "tableMetaColumns": [
+        "rowIndex",
+        "itemCode",
+        "itemName",
+        "lotNo",
+        "quantity",
+        "supplyAmount"
+      ],
+      "afterColumnsRecommended": [
+        "rowIndex",
+        "itemCode",
+        "itemName",
+        "quantity",
+        "consumerUnitPrice",
+        "supplyUnitPrice",
+        "supplyAmount"
+      ],
+      "addedColumns": [],
+      "removedColumns": [],
+      "rowIndexBefore": "included",
+      "rowIndexAfter": "included",
+      "cleanJsonFixtureImpact": [],
+      "tableViewModelFixtureImpact": [],
+      "risk": "low",
+      "notes": []
+    },
+    {
+      "caseId": "trade_3_3pdf",
+      "filename": "3.pdf",
+      "beforeColumns": [
+        "rowIndex",
+        "insuranceCode",
+        "itemName",
+        "quantity",
+        "unitPrice",
+        "amount",
+        "manufacturer"
+      ],
+      "outputColumns": [
+        "rowIndex",
+        "insuranceCode",
+        "itemName",
+        "quantity",
+        "unitPrice",
+        "amount",
+        "manufacturer"
+      ],
+      "cleanJsonColumns": [
+        "rowIndex",
+        "insuranceCode",
+        "itemName",
+        "quantity",
+        "unitPrice",
+        "amount",
+        "manufacturer"
+      ],
+      "expected": {
+        "required": [
+          "rowIndex",
+          "insuranceCode",
+          "itemName",
+          "spec",
+          "quantity",
+          "unitPrice",
+          "amount",
+          "manufacturer",
+          "manufacturingExpiryComposite"
+        ],
+        "optional": [
+          "lotNo",
+          "serialNo",
+          "remark"
+        ],
+        "display": [
+          "rowIndex",
+          "insuranceCode",
+          "itemName",
+          "spec",
+          "quantity",
+          "unitPrice",
+          "amount",
+          "manufacturer",
+          "manufacturingExpiryComposite"
+        ],
+        "displayLabels": {
+          "rowIndex": "순번",
+          "insuranceCode": "보험코드",
+          "itemName": "품명",
+          "spec": "규격",
+          "quantity": "수량",
+          "unitPrice": "단가",
+          "amount": "금액",
+          "manufacturer": "제조회사",
+          "manufacturingExpiryComposite": "제조번호/유효기간"
+        },
+        "notes": "Blue invoice statement form. Support sample for left/right header blocks and lower amount structure. T-20: render_dpi_200_grayscale recovered rowCount exact (original=2→expected=1). Single item table, simple structure. pdf_low_resolution issue — rowCount guard required before applying."
+      },
+      "nonemptyValues": {
+        "_rawText": [
+          "669700020에스피씨세파클러캡슬250mg 30 캡슐 30 10,044 301.320(주)에스피 20261204"
+        ],
+        "_source": [
+          "invoice_statement_table_parser"
+        ],
+        "amount": [
+          "301,320"
+        ],
+        "expiryDate": [
+          "20261204"
+        ],
+        "insuranceCode": [
+          "669700020"
+        ],
+        "itemName": [
+          "에스피씨세파클러캡슬250mg 30 캡슐"
+        ],
+        "manufacturer": [
+          "(주)에스피"
+        ],
+        "manufacturingExpiryComposite": [
+          "20261204"
+        ],
+        "quantity": [
+          "30"
+        ],
+        "rowIndex": [
+          "1"
+        ],
+        "unitPrice": [
+          "10,044"
+        ]
+      },
+      "tableMetaExpectedColumnKeys": [
+        "rowIndex",
+        "insuranceCode",
+        "itemName",
+        "spec",
+        "quantity",
+        "unitPrice",
+        "amount",
+        "manufacturer",
+        "manufacturingExpiryComposite",
+        "lotNo",
+        "serialNo",
+        "remark"
+      ],
+      "tableMetaColumns": [
+        "rowIndex",
+        "itemName",
+        "expiryDate",
+        "quantity",
+        "unitPrice",
+        "manufacturer"
+      ],
+      "afterColumnsRecommended": [
+        "rowIndex",
+        "insuranceCode",
+        "itemName",
+        "quantity",
+        "unitPrice",
+        "amount",
+        "manufacturer"
+      ],
+      "addedColumns": [],
+      "removedColumns": [],
+      "rowIndexBefore": "included",
+      "rowIndexAfter": "included",
+      "cleanJsonFixtureImpact": [],
+      "tableViewModelFixtureImpact": [],
+      "risk": "low",
+      "notes": [
+        "LOCKED_CURRENT_BEHAVIOR insuranceCode/amount remains unchanged"
+      ]
+    },
+    {
+      "caseId": "trade_4_4pdf",
+      "filename": "4.pdf",
+      "beforeColumns": [
+        "itemName",
+        "lotNo",
+        "unit",
+        "quantity",
+        "unitPrice",
+        "supplyAmount",
+        "taxAmount",
+        "totalAmount"
+      ],
+      "outputColumns": [
+        "itemName",
+        "lotNo",
+        "unit",
+        "quantity",
+        "unitPrice",
+        "supplyAmount",
+        "taxAmount",
+        "totalAmount"
+      ],
+      "cleanJsonColumns": [
+        "itemName",
+        "lotNo",
+        "unit",
+        "quantity",
+        "unitPrice",
+        "supplyAmount",
+        "taxAmount",
+        "totalAmount"
+      ],
+      "expected": {
+        "required": [
+          "itemName",
+          "lotNo",
+          "unit",
+          "quantity",
+          "unitPrice",
+          "supplyAmount",
+          "taxAmount"
+        ],
+        "optional": [
+          "amount",
+          "totalAmount",
+          "remark"
+        ],
+        "display": [
+          "itemName",
+          "lotNo",
+          "unit",
+          "quantity",
+          "unitPrice",
+          "supplyAmount",
+          "taxAmount"
+        ],
+        "displayLabels": {
+          "itemName": "품목명",
+          "lotNo": "LotNo.",
+          "unit": "단위",
+          "quantity": "수량",
+          "unitPrice": "단가",
+          "supplyAmount": "공급가액",
+          "taxAmount": "세액"
+        },
+        "notes": "Two-page invoice statement. Round 1 is page-1 structure checking only. OCR quality significantly degraded: party blocks garbled, addresses garbled."
+      },
+      "nonemptyValues": {
+        "_rawText": [
+          "클리마로플란정 0360823-231024-200811 BOX 1,000 28,336.00 25,760,000 2,578,000"
+        ],
+        "_source": [
+          "invoice_statement_table_parser"
+        ],
+        "expiryDate": [
+          "231024"
+        ],
+        "itemName": [
+          "클리마로플란정"
+        ],
+        "lotNo": [
+          "0360823-231024-200811"
+        ],
+        "manufacturingExpiryComposite": [
+          "231024"
+        ],
+        "quantity": [
+          "1,000"
+        ],
+        "rowIndex": [
+          "1"
+        ],
+        "serialLotComposite": [
+          "0360823-231024-200811 / 0360823-231024-200811"
+        ],
+        "serialNo": [
+          "0360823-231024-200811"
+        ],
+        "supplyAmount": [
+          "25,760,000"
+        ],
+        "taxAmount": [
+          "2,578,000"
+        ],
+        "totalAmount": [
+          "28,338,000"
+        ],
+        "unit": [
+          "BOX"
+        ],
+        "unitPrice": [
+          "28,336.00"
+        ]
+      },
+      "tableMetaExpectedColumnKeys": [
+        "itemName",
+        "lotNo",
+        "unit",
+        "quantity",
+        "unitPrice",
+        "supplyAmount",
+        "taxAmount",
+        "amount",
+        "totalAmount",
+        "remark"
+      ],
+      "tableMetaColumns": [
+        "rowIndex",
+        "itemName",
+        "lotNo",
+        "serialNo",
+        "expiryDate",
+        "quantity",
+        "unit",
+        "unitPrice",
+        "supplyAmount",
+        "taxAmount"
+      ],
+      "afterColumnsRecommended": [
+        "itemName",
+        "lotNo",
+        "unit",
+        "quantity",
+        "unitPrice",
+        "supplyAmount",
+        "taxAmount"
+      ],
+      "addedColumns": [],
+      "removedColumns": [
+        "totalAmount"
+      ],
+      "rowIndexBefore": "excluded",
+      "rowIndexAfter": "excluded",
+      "cleanJsonFixtureImpact": [
+        "totalAmount"
+      ],
+      "tableViewModelFixtureImpact": [
+        "totalAmount"
+      ],
+      "risk": "medium",
+      "notes": [
+        "totalAmount removed from item-row display; fixtures intentionally change if policy is adopted"
+      ]
+    },
+    {
+      "caseId": "trade_5_5pdf",
+      "filename": "5.pdf",
+      "beforeColumns": [
+        "itemName",
+        "itemCode",
+        "quantity",
+        "unitPrice",
+        "amount"
+      ],
+      "outputColumns": [
+        "itemName",
+        "itemCode",
+        "quantity",
+        "unitPrice",
+        "amount"
+      ],
+      "cleanJsonColumns": [
+        "itemName",
+        "itemCode",
+        "quantity",
+        "unitPrice",
+        "amount"
+      ],
+      "expected": {
+        "required": [
+          "itemName",
+          "itemCode",
+          "quantity",
+          "unitPrice",
+          "amount"
+        ],
+        "optional": [
+          "supplyAmount",
+          "taxAmount",
+          "totalAmount",
+          "remark"
+        ],
+        "display": [
+          "itemName",
+          "itemCode",
+          "quantity",
+          "unitPrice",
+          "amount"
+        ],
+        "displayLabels": {
+          "itemName": "품명",
+          "itemCode": "품목코드",
+          "quantity": "수량",
+          "unitPrice": "단가",
+          "amount": "금액"
+        },
+        "notes": "Long multi-page detail PDF. Deferred from round-1 complete extraction."
+      },
+      "nonemptyValues": {
+        "_rawText": [
+          "두피나액30ML DPNL30M 10Q 2,730 273,000",
+          "노루모에이스산250G캔 10 < INAP250G 100 4,000 400,000",
+          "노루모에스산15P NASP15P 200 2,300 460,000",
+          "나프록센나트륨정10T 100 NPRT10T 300 545 163,635",
+          "노루모듀얼액션현탁액4P NRDA4P 2,000 100,000",
+          "노루모에프내복액75ML NRFS75M 3,000 550 1,650,000"
+        ],
+        "_source": [
+          "invoice_statement_table_parser",
+          "invoice_statement_table_parser",
+          "invoice_statement_table_parser",
+          "invoice_statement_table_parser",
+          "invoice_statement_table_parser",
+          "invoice_statement_table_parser"
+        ],
+        "amount": [
+          "273,000",
+          "400,000",
+          "460,000",
+          "163,635",
+          "100,000",
+          "1,650,000"
+        ],
+        "itemCode": [
+          "DPNL30M",
+          "INAP250G",
+          "NASP15P",
+          "NPRT10T",
+          "NRDA4P",
+          "NRFS75M"
+        ],
+        "itemName": [
+          "두피나액30ML",
+          "노루모에이스산250G캔 10 <",
+          "노루모에스산15P",
+          "나프록센나트륨정10T 100",
+          "노루모듀얼액션현탁액4P",
+          "노루모에프내복액75ML"
+        ],
+        "quantity": [
+          "10Q",
+          "100",
+          "200",
+          "300",
+          "3,000"
+        ],
+        "rowIndex": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6"
+        ],
+        "unitPrice": [
+          "2,730",
+          "4,000",
+          "2,300",
+          "545",
+          "2,000",
+          "550"
+        ]
+      },
+      "tableMetaExpectedColumnKeys": [
+        "itemName",
+        "itemCode",
+        "quantity",
+        "unitPrice",
+        "amount",
+        "supplyAmount",
+        "taxAmount",
+        "totalAmount",
+        "remark"
+      ],
+      "tableMetaColumns": [
+        "rowIndex",
+        "itemCode",
+        "itemName",
+        "quantity",
+        "unitPrice",
+        "amount"
+      ],
+      "afterColumnsRecommended": [
+        "itemName",
+        "itemCode",
+        "quantity",
+        "unitPrice",
+        "amount"
+      ],
+      "addedColumns": [],
+      "removedColumns": [],
+      "rowIndexBefore": "excluded",
+      "rowIndexAfter": "excluded",
+      "cleanJsonFixtureImpact": [],
+      "tableViewModelFixtureImpact": [],
+      "risk": "low",
+      "notes": []
+    },
+    {
+      "caseId": "trade_6_6pdf",
+      "filename": "6.pdf",
+      "beforeColumns": [
+        "rowIndex",
+        "itemCode",
+        "itemName",
+        "quantity",
+        "expiryDate"
+      ],
+      "outputColumns": [
+        "rowIndex",
+        "itemCode",
+        "itemName",
+        "quantity",
+        "expiryDate"
+      ],
+      "cleanJsonColumns": [
+        "rowIndex",
+        "itemCode",
+        "itemName",
+        "quantity",
+        "expiryDate"
+      ],
+      "expected": {
+        "required": [
+          "rowIndex",
+          "itemCode",
+          "itemName",
+          "quantity",
+          "lotNo",
+          "expiryDate"
+        ],
+        "optional": [
+          "serialNo",
+          "manufacturingNo",
+          "unit",
+          "remark"
+        ],
+        "display": [
+          "rowIndex",
+          "itemCode",
+          "itemName",
+          "quantity",
+          "lotNo",
+          "expiryDate"
+        ],
+        "displayLabels": {
+          "rowIndex": "NO",
+          "itemCode": "제품코드",
+          "itemName": "제품명",
+          "quantity": "수량",
+          "lotNo": "LotNo",
+          "expiryDate": "유효일자"
+        },
+        "notes": "거래명세서 세부 내역 (수량/Lot No 중심). 공급자 정보 없음(선택 필드). 금액 합계 없음. supplier fields GT 미포함."
+      },
+      "nonemptyValues": {
+        "_rawText": [
+          "1 ATT100T 알코텔정100T 10 23001 260403",
+          "2 ATGT30T 액티글리정30T 10 23001 260809",
+          "3 OLGT30T 올고탄정10MG30T 30 T17322003 251213",
+          "4 ASZT28T 에소시움정20MG28T O",
+          "5 ALG30P 알드린현탁액1.5G30P 0",
+          "6 ANDC300C 앤디락생캡슬300C"
+        ],
+        "_source": [
+          "invoice_statement_table_parser",
+          "invoice_statement_table_parser",
+          "invoice_statement_table_parser",
+          "invoice_statement_table_parser",
+          "invoice_statement_table_parser",
+          "invoice_statement_table_parser"
+        ],
+        "expiryDate": [
+          "260403",
+          "260809",
+          "251213"
+        ],
+        "itemCode": [
+          "ATT100T",
+          "ATGT30T",
+          "OLGT30T",
+          "ASZT28T",
+          "ALG30P",
+          "ANDC300C"
+        ],
+        "itemName": [
+          "알코텔정100T",
+          "액티글리정30T",
+          "올고탄정10MG30T",
+          "에소시움정20MG28T",
+          "알드린현탁액1.5G30P",
+          "앤디락생캡슬300C"
+        ],
+        "lotNo": [
+          "23001",
+          "23001",
+          "T17322003"
+        ],
+        "manufacturingExpiryComposite": [
+          "260403",
+          "260809",
+          "251213"
+        ],
+        "quantity": [
+          "10",
+          "10",
+          "30",
+          "O",
+          "0"
+        ],
+        "rowIndex": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6"
+        ],
+        "serialLotComposite": [
+          "23001",
+          "23001",
+          "T17322003"
+        ]
+      },
+      "tableMetaExpectedColumnKeys": [
+        "rowIndex",
+        "itemCode",
+        "itemName",
+        "quantity",
+        "lotNo",
+        "expiryDate",
+        "serialNo",
+        "manufacturingNo",
+        "unit",
+        "remark"
+      ],
+      "tableMetaColumns": [
+        "rowIndex",
+        "itemCode",
+        "itemName",
+        "lotNo",
+        "expiryDate",
+        "quantity"
+      ],
+      "afterColumnsRecommended": [
+        "rowIndex",
+        "itemCode",
+        "itemName",
+        "quantity",
+        "lotNo",
+        "expiryDate"
+      ],
+      "addedColumns": [
+        "lotNo"
+      ],
+      "removedColumns": [],
+      "rowIndexBefore": "included",
+      "rowIndexAfter": "included",
+      "cleanJsonFixtureImpact": [
+        "lotNo"
+      ],
+      "tableViewModelFixtureImpact": [
+        "lotNo"
+      ],
+      "risk": "medium",
+      "notes": [
+        "lotNo added by expected/display override of itemCode+manufacturingNo-empty noise rule"
+      ]
+    },
+    {
+      "caseId": "trade_7_7pdf",
+      "filename": "7.pdf",
+      "beforeColumns": [
+        "itemName",
+        "unit",
+        "quantity"
+      ],
+      "outputColumns": [
+        "itemName",
+        "unit",
+        "quantity"
+      ],
+      "cleanJsonColumns": [
+        "itemName",
+        "unit",
+        "quantity"
+      ],
+      "expected": {
+        "required": [
+          "itemName",
+          "serialLotComposite",
+          "unit",
+          "quantity"
+        ],
+        "optional": [
+          "manufacturingNo",
+          "remark"
+        ],
+        "display": [
+          "itemName",
+          "serialLotComposite",
+          "unit",
+          "quantity"
+        ],
+        "displayLabels": {
+          "itemName": "품명",
+          "serialLotComposite": "시리얼/로트No.",
+          "unit": "단위",
+          "quantity": "수량"
+        },
+        "notes": "거래명세서 (수량/serial 중심). supplier address tail (302호/당산동4가/SK V1 센터)이 OCR 원문에 없어 partial match 유지. 금액 합계 없는 수량 중심 문서."
+      },
+      "nonemptyValues": {
+        "_rawText": [
+          "클리마토플란정 0350623-231024-260811 BOX 1,000"
+        ],
+        "_source": [
+          "invoice_statement_table_parser"
+        ],
+        "expiryDate": [
+          "231024"
+        ],
+        "itemName": [
+          "클리마토플란정"
+        ],
+        "manufacturingExpiryComposite": [
+          "231024"
+        ],
+        "quantity": [
+          "1,000"
+        ],
+        "rowIndex": [
+          "1"
+        ],
+        "serialLotComposite": [
+          "0350623-231024-260811"
+        ],
+        "serialNo": [
+          "0350623-231024-260811"
+        ],
+        "unit": [
+          "BOX"
+        ]
+      },
+      "tableMetaExpectedColumnKeys": [
+        "itemName",
+        "serialLotComposite",
+        "unit",
+        "quantity",
+        "manufacturingNo",
+        "remark"
+      ],
+      "tableMetaColumns": [
+        "rowIndex",
+        "itemName",
+        "serialNo",
+        "expiryDate",
+        "quantity",
+        "unit"
+      ],
+      "afterColumnsRecommended": [
+        "itemName",
+        "serialLotComposite",
+        "unit",
+        "quantity"
+      ],
+      "addedColumns": [
+        "serialLotComposite"
+      ],
+      "removedColumns": [],
+      "rowIndexBefore": "excluded",
+      "rowIndexAfter": "excluded",
+      "cleanJsonFixtureImpact": [
+        "serialLotComposite"
+      ],
+      "tableViewModelFixtureImpact": [
+        "serialLotComposite"
+      ],
+      "risk": "medium",
+      "notes": [
+        "serialLotComposite added as expected/display exception to internal/composite filter"
+      ]
+    }
+  ],
+  "policyCandidates": [
+    {
+      "id": "candidate_1_summary_key_hard_exclude",
+      "summary": "summary/doc-level key(totalAmount)를 table display에서 제외",
+      "pros": "trade_4 문제를 가장 작게 해결; supplyAmount/taxAmount는 유지 가능",
+      "cons": "totalAmount가 실제 품목표 컬럼인 문서가 있으면 숨겨짐",
+      "regressionRisk": "medium",
+      "fixtureImpact": "trade_4 table_view_model/Clean JSON fixture 갱신",
+      "recommendation": "adopt as targeted rule with fixture update intent"
+    },
+    {
+      "id": "candidate_2_lot_serial_key_allowlist",
+      "summary": "expected/display에 있는 lotNo/serialLotComposite를 값이 있으면 표시 허용",
+      "pros": "trade_6/7 원본 표 구조와 맞음",
+      "cons": "기존 노이즈 제거 규칙을 우회하므로 일부 샘플에서 중복/노이즈가 살아날 수 있음",
+      "regressionRisk": "medium",
+      "fixtureImpact": "trade_6/trade_7 table_view_model/Clean JSON fixture 갱신",
+      "recommendation": "adopt only when expected/display column explicitly includes the key"
+    },
+    {
+      "id": "candidate_3_expected_display_priority",
+      "summary": "manifest/template expected display columns를 우선하고 없는 key는 숨김",
+      "pros": "사용자 시각 기준과 가장 일관됨",
+      "cons": "runtime에서 template display definition 전달 경로가 약하면 적용 범위가 커짐",
+      "regressionRisk": "medium-high",
+      "fixtureImpact": "trade_4/6/7 plus possibly more if display source changes",
+      "recommendation": "longer-term direction; first fix can be a constrained subset"
+    },
+    {
+      "id": "candidate_4_known_issue_until_template_column_definition",
+      "summary": "Template table column definition 도입까지 known issue로 보류",
+      "pros": "현재 fixtures and cleanup stability 유지",
+      "cons": "manual smoke WARN 지속",
+      "regressionRisk": "low",
+      "fixtureImpact": "none",
+      "recommendation": "acceptable only if UX issue can wait"
+    },
+    {
+      "id": "candidate_5_backend_tableRows_policy",
+      "summary": "parser가 row-level이 아닌 doc-level key를 tableRows에 넣지 않게 수정",
+      "pros": "데이터 생성 계층을 근본적으로 정리",
+      "cons": "backend/parser 영향 범위와 OCR 회귀 위험이 큼",
+      "regressionRisk": "high",
+      "fixtureImpact": "API-derived fixtures broadly may need regeneration",
+      "recommendation": "not first fix; do separate backend precheck if needed"
+    }
+  ],
+  "recommendedPolicy": {
+    "phase1": [
+      "exclude totalAmount from table row display as summary key",
+      "allow lotNo when expected/display explicitly includes lotNo and rows have meaningful values",
+      "allow serialLotComposite when expected/display explicitly includes serialLotComposite and rows have meaningful values",
+      "keep empty/meaningless column hiding",
+      "preserve rowIndex policy and trade_3 locked behavior"
+    ],
+    "preferredScope": "frontend display policy in invoiceTableDisplay.ts, with explicit fixture update"
+  },
+  "fixtureUpdatePlan": [
+    {
+      "fixture": "tmp/fixtures/table_view_model_v1/inputs/trade_4_4pdf.input.json",
+      "reason": "displayCols changed",
+      "requiredIfPolicyApplied": true
+    },
+    {
+      "fixture": "tmp/fixtures/table_view_model_v1/invoice_statement/trade_4_4pdf.view_model.json",
+      "reason": "columns/cells/meta.columnCount changed",
+      "requiredIfPolicyApplied": true
+    },
+    {
+      "fixture": "tmp/fixtures/clean_json_v1/invoice_statement/trade_4_4pdf.clean.json",
+      "reason": "Clean JSON table rows use docTableDisplayCols",
+      "requiredIfPolicyApplied": true
+    },
+    {
+      "fixture": "tmp/fixtures/table_view_model_v1/inputs/trade_6_6pdf.input.json",
+      "reason": "displayCols changed",
+      "requiredIfPolicyApplied": true
+    },
+    {
+      "fixture": "tmp/fixtures/table_view_model_v1/invoice_statement/trade_6_6pdf.view_model.json",
+      "reason": "columns/cells/meta.columnCount changed",
+      "requiredIfPolicyApplied": true
+    },
+    {
+      "fixture": "tmp/fixtures/clean_json_v1/invoice_statement/trade_6_6pdf.clean.json",
+      "reason": "Clean JSON table rows use docTableDisplayCols",
+      "requiredIfPolicyApplied": true
+    },
+    {
+      "fixture": "tmp/fixtures/table_view_model_v1/inputs/trade_7_7pdf.input.json",
+      "reason": "displayCols changed",
+      "requiredIfPolicyApplied": true
+    },
+    {
+      "fixture": "tmp/fixtures/table_view_model_v1/invoice_statement/trade_7_7pdf.view_model.json",
+      "reason": "columns/cells/meta.columnCount changed",
+      "requiredIfPolicyApplied": true
+    },
+    {
+      "fixture": "tmp/fixtures/clean_json_v1/invoice_statement/trade_7_7pdf.clean.json",
+      "reason": "Clean JSON table rows use docTableDisplayCols",
+      "requiredIfPolicyApplied": true
+    },
+    {
+      "fixture": "tmp/fixtures/table_view_model_v1/manifest.json",
+      "reason": "columnCount/inputFixture metadata may change",
+      "requiredIfPolicyApplied": true
+    },
+    {
+      "fixture": "tmp/fixtures/clean_json_v1/manifest.json",
+      "reason": "rowKeys metadata may change",
+      "requiredIfPolicyApplied": true
+    }
+  ],
+  "smokeVerdict": {
+    "automaticChecks": "PASS",
+    "manualSmoke": "WARN_COLUMN_POLICY",
+    "technicalHelperMigration": "PASS",
+    "previewCleanJsonColumnPolicy": "FOLLOW_UP_REQUIRED"
+  },
+  "typecheck": {
+    "command": "npm.cmd run typecheck",
+    "status": "PASS",
+    "exitCode": 0,
+    "durationSeconds": 2.372,
+    "stdoutTail": "\n> mysuit-ocr@0.1.0 typecheck\n> tsc --noEmit\n\n",
+    "stderrTail": "",
+    "knownStderrNoise": false
+  },
+  "build": {
+    "command": "npm.cmd run build",
+    "status": "PASS",
+    "exitCode": 0,
+    "durationSeconds": 17.974,
+    "stdoutTail": "\n> mysuit-ocr@0.1.0 build\n> next build\n\n   ▲ Next.js 15.5.4\n   - Environments: .env.local\n\n   Creating an optimized production build ...\n ✓ Compiled successfully in 2.5s\n   Linting and checking validity of types ...\n   Collecting page data ...\n   Generating static pages (0/18) ...\n   Generating static pages (4/18) \n   Generating static pages (8/18) \n   Generating static pages (13/18) \n ✓ Generating static pages (18/18)\n   Finalizing page optimization ...\n   Collecting build traces ...\n\nRoute (app)                                 Size  First Load JS\n┌ ○ /                                      349 B         102 kB\n├ ○ /_not-found                            993 B         103 kB\n├ ƒ /api/autofill-cache                    141 B         102 kB\n├ ƒ /api/biz-validate                      141 B         102 kB\n├ ƒ /api/ground-truth                      141 B         102 kB\n├ ƒ /api/login                             141 B         102 kB\n├ ƒ /api/ocr-cache                         141 B         102 kB\n├ ƒ /api/ocr-extract                       141 B         102 kB\n├ ƒ /api/test-images                       141 B         102 kB\n├ ○ /autorestore                         3.13 kB         113 kB\n├ ○ /history                             9.08 kB         148 kB\n├ ○ /login                                4.1 kB         127 kB\n├ ○ /ocr                                 2.74 kB         113 kB\n├ ○ /runocr                              65.6 kB         184 kB\n├ ○ /template                            5.73 kB         116 kB\n└ ○ /test                                47.2 kB         157 kB\n+ First Load JS shared by all             102 kB\n  ├ chunks/255-4efeec91c7871d79.js       45.7 kB\n  ├ chunks/4bd1b696-c023c6e3521b1417.js  54.2 kB\n  └ other shared chunks (total)          2.15 kB\n\n\n○  (Static)   prerendered as static content\nƒ  (Dynamic)  server-rendered on demand\n\n",
+    "stderrTail": " ⨯ ESLint: nextVitals is not iterable\n",
+    "knownStderrNoise": true
+  },
+  "knownStderrNoise": {
+    "id": "ISSUE-FRONTEND-BUILD-LOG-1",
+    "message": "ESLint: nextVitals is not iterable",
+    "observed": true,
+    "blocking": false
+  }
+}

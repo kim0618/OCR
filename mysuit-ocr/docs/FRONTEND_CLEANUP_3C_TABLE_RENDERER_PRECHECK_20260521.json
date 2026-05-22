@@ -1,0 +1,542 @@
+{
+  "task": "CODEX_FRONTEND_CLEANUP_3C_TABLE_RENDERER_PRECHECK_NO_PROD_MODIFY",
+  "generatedAt": "2026-05-21T16:29:11",
+  "toolAndModel": {
+    "tool": "Codex",
+    "model": "Codex"
+  },
+  "noProductionCodeModifiedByThisTask": true,
+  "createdFiles": [
+    "tmp/codex_table_renderer_precheck.py",
+    "docs/FRONTEND_CLEANUP_3C_TABLE_RENDERER_PRECHECK_20260521.md",
+    "docs/FRONTEND_CLEANUP_3C_TABLE_RENDERER_PRECHECK_20260521.json"
+  ],
+  "staticLocations": {
+    "OcrResultPanel.tsx": {
+      "path": "src\\components\\upload\\OcrResultPanel.tsx",
+      "lineCount": 1649,
+      "locations": {
+        "docTableRows": 665,
+        "docTableMeta": 673,
+        "docTableDisplayCols": 683,
+        "previewTableFields": 690,
+        "previewRenderer": 981,
+        "customStructuredBranch": 1293,
+        "customFallbackBranch": 1385,
+        "validationStructuredBranch": 1515,
+        "missingExpectedWarning": 702,
+        "customTableEditsState": 233
+      },
+      "ranges": {
+        "previewRenderer": {
+          "start": 981,
+          "end": 1082
+        },
+        "customTableBranch": {
+          "start": 1293,
+          "end": 1422
+        },
+        "validationTableBranch": {
+          "start": 1515,
+          "end": 1521
+        }
+      },
+      "usageCounts": {
+        "docTableRows": 27,
+        "docTableDisplayCols": 16,
+        "parseTableField": 3,
+        "normalizeCell": 7,
+        "getAdoptionLabel": 6,
+        "fieldLabelFull": 4,
+        "orTableResult": 5
+      }
+    },
+    "ocrResultFormatters.ts": {
+      "path": "src\\lib\\ocrResultFormatters.ts",
+      "exports": {
+        "parseTableField": true,
+        "fieldLabel": true,
+        "fieldLabelFull": true,
+        "getAdoptionLabel": true
+      }
+    },
+    "invoiceTableDisplay.ts": {
+      "path": "src\\lib\\invoiceTableDisplay.ts",
+      "exports": {
+        "buildInvoicePreviewCols": true,
+        "shouldDisplayRowIndex": true,
+        "normalizeTableCell": true
+      }
+    },
+    "cleanJsonBuilder.ts": {
+      "path": "src\\lib\\cleanJsonBuilder.ts",
+      "usesDocTableDisplayCols": true,
+      "fallbackMentions": [
+        "field.tableRows",
+        "field.table_data",
+        "JSON.parse(field.value)"
+      ]
+    },
+    "markdownReportBuilder.ts": {
+      "path": "src\\lib\\markdownReportBuilder.ts",
+      "usesParseTableField": true,
+      "doesNotRenderStructuredRows": true
+    },
+    "DetailHistoryView.tsx": {
+      "path": "src\\components\\history\\DetailHistoryView.tsx",
+      "usesBuildInvoicePreviewCols": true,
+      "usesTableRows": true
+    },
+    "TestWorkspace.tsx": {
+      "path": "src\\components\\test\\TestWorkspace.tsx",
+      "usesBuildInvoicePreviewCols": false,
+      "usesShouldDisplayRowIndex": true,
+      "note": "reference only; out of scope for this extraction"
+    }
+  },
+  "dataFlows": {
+    "Preview": {
+      "source": "editedFields table fields + document_fields.tableRows/tableMeta",
+      "structuredCondition": "tableIdx === 0 && docTableRows && docTableDisplayCols",
+      "legacyFallback": "parseTableField(field.value).displayRows",
+      "columns": "docTableDisplayCols from buildInvoicePreviewCols",
+      "rowIndex": "via docTableDisplayCols only",
+      "cellValue": "normalizeCell(row[col.key]) || '-'",
+      "emptyCell": "'-'",
+      "editing": "read-only",
+      "meta": "row count and missingExpectedWarning badge"
+    },
+    "Custom": {
+      "source": "edited field item + docTableRows/docTableDisplayCols + customTableEdits",
+      "structuredCondition": "docTableRows && docTableDisplayCols.length > 0",
+      "legacyFallback": "parseTableField(field.value); firstRowPreview; displayRows",
+      "columns": "docTableDisplayCols",
+      "rowIndex": "via docTableDisplayCols only",
+      "cellValue": "textarea value from customTableEdits or normalized docTableRows",
+      "emptyCell": "empty string in textarea",
+      "editing": "editable textarea, setCustomTableEdits, onFocus/onBlur",
+      "meta": "adoption label, warning badge, row count"
+    },
+    "Validation": {
+      "source": "validation section rows + item.field + docTableRows/docTableDisplayCols",
+      "structuredCondition": "docTableRows && docTableDisplayCols.length > 0",
+      "legacyFallback": "rowLabel uses parseTableField(field.value); no legacy table body rendering in snippet",
+      "columns": "docTableDisplayCols",
+      "rowIndex": "via docTableDisplayCols only",
+      "cellValue": "normalizeCell(row[col.key]) || '-'",
+      "emptyCell": "'-' or empty table message",
+      "editing": "read-only, clickable validation row",
+      "meta": "validation status dot/classes, confidence, adoption, missingExpectedWarning"
+    }
+  },
+  "differenceMatrix": [
+    {
+      "axis": "data source",
+      "Preview": "previewTableFields + docTableRows",
+      "Custom": "field + docTableRows + customTableEdits",
+      "Validation": "validation item.field + docTableRows",
+      "same": false,
+      "canAbsorbWithProps": true,
+      "risk": "MEDIUM",
+      "notes": "same tableRows policy, but Custom/Validation wrap different item state"
+    },
+    {
+      "axis": "structured table",
+      "Preview": "first preview table only",
+      "Custom": "field_type table branch",
+      "Validation": "validation table item branch",
+      "same": false,
+      "canAbsorbWithProps": true,
+      "risk": "MEDIUM",
+      "notes": "conditions are similar but mounted in different UI contexts"
+    },
+    {
+      "axis": "legacy fallback",
+      "Preview": "renders displayRows body",
+      "Custom": "renders displayRows body + firstRowPreview",
+      "Validation": "rowLabel fallback only, no comparable body branch observed",
+      "same": false,
+      "canAbsorbWithProps": false,
+      "risk": "HIGH",
+      "notes": "fallback behavior differs enough to avoid one renderer now"
+    },
+    {
+      "axis": "docTableRows",
+      "Preview": "yes",
+      "Custom": "yes",
+      "Validation": "yes",
+      "same": true,
+      "canAbsorbWithProps": true,
+      "risk": "LOW",
+      "notes": "shared source"
+    },
+    {
+      "axis": "docTableDisplayCols",
+      "Preview": "yes",
+      "Custom": "yes",
+      "Validation": "yes",
+      "same": true,
+      "canAbsorbWithProps": true,
+      "risk": "LOW",
+      "notes": "shared column source"
+    },
+    {
+      "axis": "column order",
+      "Preview": "docTableDisplayCols",
+      "Custom": "docTableDisplayCols",
+      "Validation": "docTableDisplayCols",
+      "same": true,
+      "canAbsorbWithProps": true,
+      "risk": "LOW",
+      "notes": "same for structured rows"
+    },
+    {
+      "axis": "rowIndex policy",
+      "Preview": "docTableDisplayCols/shouldDisplayRowIndex",
+      "Custom": "docTableDisplayCols/shouldDisplayRowIndex",
+      "Validation": "docTableDisplayCols/shouldDisplayRowIndex",
+      "same": true,
+      "canAbsorbWithProps": true,
+      "risk": "LOW",
+      "notes": "do not recalculate in renderer"
+    },
+    {
+      "axis": "internal key filtering",
+      "Preview": "already in buildInvoicePreviewCols",
+      "Custom": "already in buildInvoicePreviewCols",
+      "Validation": "already in buildInvoicePreviewCols",
+      "same": true,
+      "canAbsorbWithProps": true,
+      "risk": "LOW",
+      "notes": "structured path aligned"
+    },
+    {
+      "axis": "cell normalization",
+      "Preview": "normalizeCell + '-'",
+      "Custom": "normalizeCell into editRows, textarea empty string",
+      "Validation": "normalizeCell + '-'",
+      "same": false,
+      "canAbsorbWithProps": true,
+      "risk": "MEDIUM",
+      "notes": "Custom edit model differs"
+    },
+    {
+      "axis": "empty cell",
+      "Preview": "'-'",
+      "Custom": "empty string in textarea",
+      "Validation": "'-'",
+      "same": false,
+      "canAbsorbWithProps": true,
+      "risk": "MEDIUM",
+      "notes": "prop can absorb but UX differs"
+    },
+    {
+      "axis": "header rendering",
+      "Preview": "labelKo + key subtitle",
+      "Custom": "labelKo + key subtitle, title differs",
+      "Validation": "labelKo + key subtitle inside validation block",
+      "same": false,
+      "canAbsorbWithProps": true,
+      "risk": "MEDIUM",
+      "notes": "mostly same markup but containers differ"
+    },
+    {
+      "axis": "alignment/width",
+      "Preview": "_invoiceColWidth/_invoiceDataAlign",
+      "Custom": "same + textarea padding 0",
+      "Validation": "same + validation margins",
+      "same": false,
+      "canAbsorbWithProps": true,
+      "risk": "MEDIUM",
+      "notes": "can share view model, renderer props may grow"
+    },
+    {
+      "axis": "editable",
+      "Preview": "no",
+      "Custom": "yes textarea/onChange/onBlur",
+      "Validation": "no",
+      "same": false,
+      "canAbsorbWithProps": true,
+      "risk": "HIGH",
+      "notes": "major reason against immediate common renderer"
+    },
+    {
+      "axis": "validation/GT status",
+      "Preview": "none",
+      "Custom": "none",
+      "Validation": "status dot/classes/confidence section",
+      "same": false,
+      "canAbsorbWithProps": false,
+      "risk": "HIGH",
+      "notes": "Validation wrapper is specialized"
+    },
+    {
+      "axis": "source/adoption/confidence",
+      "Preview": "not per table cell; warning badge",
+      "Custom": "adoption label in meta",
+      "Validation": "adoption + confidence + status",
+      "same": false,
+      "canAbsorbWithProps": true,
+      "risk": "MEDIUM",
+      "notes": "mode-specific meta"
+    },
+    {
+      "axis": "row label/summary",
+      "Preview": "row count next to title",
+      "Custom": "row count and firstRowPreview fallback",
+      "Validation": "rowLabel in validation value line",
+      "same": false,
+      "canAbsorbWithProps": true,
+      "risk": "MEDIUM",
+      "notes": "view model can supply labels"
+    },
+    {
+      "axis": "table field summary",
+      "Preview": "Markdown summary plus JSX table",
+      "Custom": "field value meta",
+      "Validation": "validation value line",
+      "same": false,
+      "canAbsorbWithProps": true,
+      "risk": "MEDIUM",
+      "notes": "containers differ"
+    },
+    {
+      "axis": "trade_3 locked behavior",
+      "Preview": "through docTableDisplayCols; warning badge possible",
+      "Custom": "same cols/edit rows",
+      "Validation": "same cols in validation table",
+      "same": true,
+      "canAbsorbWithProps": true,
+      "risk": "MEDIUM",
+      "notes": "fixture must guard insuranceCode/amount behavior"
+    }
+  ],
+  "abcDecision": {
+    "decision": "B",
+    "label": "view model / pure helper only",
+    "whyNotA": [
+      "difference axes are 12, more than the A threshold",
+      "HIGH-risk axes exist: legacy fallback, editable, validation/GT status",
+      "Custom textarea editing and Validation status wrapper would make a common renderer prop-heavy"
+    ],
+    "whyNotC": [
+      "structured table data policy is shared through docTableRows/docTableDisplayCols",
+      "rowIndex and column order are already centralized in buildInvoicePreviewCols",
+      "a pure view model can be fixture-tested without touching JSX"
+    ],
+    "recommendedNext": "Do not extract a common React renderer first. If continuing, extract a pure table view-model helper after creating preview/custom/validation view-model fixtures."
+  },
+  "bOption": {
+    "pureHelperPreferred": true,
+    "hookNeeded": false,
+    "candidateFiles": [
+      "src/lib/ocrTableViewModel.ts",
+      "src/lib/structuredTableViewModel.ts"
+    ],
+    "candidateHelpers": [
+      "buildStructuredTableViewModel",
+      "buildLegacyTableViewModel",
+      "buildOcrTableViewModel"
+    ],
+    "inputTypeDraft": {
+      "rows": "Record<string, unknown>[] | null",
+      "displayCols": "{ key: string; labelKo: string }[] | null",
+      "mode": "preview | custom | validation",
+      "editRows": "Record<string, string>[] | null for custom only",
+      "warnings": "missingExpectedWarning or warning flags"
+    },
+    "outputTypeDraft": {
+      "columns": "key/label/width/align",
+      "rows": "row index + cells",
+      "cells": "key/value/displayValue/align/empty/editable flags",
+      "flags": "hasStructured/hasLegacy/empty",
+      "modeMetadata": "rowLabel, warning badge, validation/adoption/confidence metadata as needed"
+    },
+    "reactDependency": "No React dependency required for view model. JSX stays in OcrResultPanel or later components."
+  },
+  "commonRendererPossibility": {
+    "recommendedNow": false,
+    "reason": "Too many mode-specific differences; common renderer props would become complex before fixtures exist.",
+    "possibleLaterAfter": [
+      "view model fixture lock",
+      "mode metadata contract",
+      "optional DOM/Playwright checks"
+    ]
+  },
+  "fixtureStrategy": {
+    "recommendation": "For B, create view-model JSON fixtures before extraction. Avoid DOM snapshot until/if common renderer extraction is attempted.",
+    "fixtureRootCandidate": "tmp/fixtures/table_view_model_v1/",
+    "cases": [
+      "invoice_statement trade_1~trade_7 structured docTableRows",
+      "trade_3 to lock insuranceCode/amount behavior",
+      "synthetic legacy parseTableField fallback without document_fields.tableRows",
+      "optional custom editRows fixture for textarea value behavior"
+    ],
+    "checkRunnerCandidate": "tmp/check_table_view_model_v1_fixtures_js.mjs or tsx",
+    "beforeAfter": "deep equality for view model JSON, plus existing Clean JSON and Markdown fixture runners",
+    "ifAChosenLater": "Use Playwright/screenshot or DOM snapshot only after view model fixture is stable."
+  },
+  "risks": [
+    {
+      "risk": "rowIndex policy regression",
+      "likelihood": "LOW",
+      "impact": "HIGH",
+      "mitigation": "Do not compute rowIndex in renderer; consume docTableDisplayCols only.",
+      "needsFixture": true
+    },
+    {
+      "risk": "trade_3 insuranceCode/amount locked behavior changes",
+      "likelihood": "MEDIUM",
+      "impact": "HIGH",
+      "mitigation": "Include trade_3 view model fixture and Clean JSON runner.",
+      "needsFixture": true
+    },
+    {
+      "risk": "Preview/Clean JSON column order divergence",
+      "likelihood": "LOW",
+      "impact": "HIGH",
+      "mitigation": "Keep shared docTableDisplayCols source.",
+      "needsFixture": true
+    },
+    {
+      "risk": "Custom textarea edit behavior breaks",
+      "likelihood": "MEDIUM",
+      "impact": "HIGH",
+      "mitigation": "Leave Custom JSX in place; model editRows separately.",
+      "needsFixture": true
+    },
+    {
+      "risk": "Validation status/GT wrapper breaks",
+      "likelihood": "MEDIUM",
+      "impact": "HIGH",
+      "mitigation": "Do not merge Validation renderer in first pass.",
+      "needsFixture": true
+    },
+    {
+      "risk": "adoption/confidence/source display omitted",
+      "likelihood": "MEDIUM",
+      "impact": "MEDIUM",
+      "mitigation": "Keep metadata outside core table renderer or model explicitly.",
+      "needsFixture": true
+    },
+    {
+      "risk": "legacy fallback omitted",
+      "likelihood": "MEDIUM",
+      "impact": "HIGH",
+      "mitigation": "Create synthetic fallback fixture before extraction.",
+      "needsFixture": true
+    },
+    {
+      "risk": "props explosion in common renderer",
+      "likelihood": "HIGH",
+      "impact": "MEDIUM",
+      "mitigation": "Choose B, not A, for next step.",
+      "needsFixture": false
+    },
+    {
+      "risk": "circular dependency",
+      "likelihood": "LOW",
+      "impact": "HIGH",
+      "mitigation": "View model may import invoiceTableDisplay/formatters only; not Clean JSON/Markdown.",
+      "needsFixture": false
+    },
+    {
+      "risk": "TestWorkspace policy divergence",
+      "likelihood": "LOW",
+      "impact": "MEDIUM",
+      "mitigation": "Reference only; handle in separate approved task.",
+      "needsFixture": false
+    }
+  ],
+  "closeoutPlan": {
+    "needed": true,
+    "createNow": false,
+    "candidateFiles": [
+      "docs/FRONTEND_CLEANUP_OCR_RESULT_PANEL_CYCLE_1_CLOSEOUT_20260521.md",
+      "docs/FRONTEND_CLEANUP_OCR_RESULT_PANEL_CYCLE_1_CLOSEOUT_20260521.json"
+    ],
+    "include": [
+      "Clean JSON builder extraction and fixture runners",
+      "Markdown builder extraction and fixture runners",
+      "ocrResultFormatters extraction",
+      "3A/3C table precheck conclusion",
+      "deferred renderer/view-model work",
+      "deferred trade_3 policy, TestWorkspace cleanup, nextVitals stderr noise"
+    ],
+    "reopenTriggers": [
+      "table view-model fixtures created",
+      "trade_3 insuranceCode/amount policy decided",
+      "TestWorkspace cleanup scope approved",
+      "Clean JSON v2 info/tables work starts"
+    ]
+  },
+  "typecheck": {
+    "command": "npm.cmd run typecheck",
+    "exitCode": 0,
+    "status": "PASS",
+    "durationSeconds": 2.172,
+    "stdoutTail": "\n> mysuit-ocr@0.1.0 typecheck\n> tsc --noEmit\n\n",
+    "stderrTail": ""
+  },
+  "build": {
+    "command": "npm.cmd run build",
+    "exitCode": 0,
+    "status": "PASS",
+    "durationSeconds": 16.183,
+    "stdoutTail": "\n> mysuit-ocr@0.1.0 build\n> next build\n\n   ▲ Next.js 15.5.4\n   - Environments: .env.local\n\n   Creating an optimized production build ...\n ✓ Compiled successfully in 2.5s\n   Linting and checking validity of types ...\n   Collecting page data ...\n   Generating static pages (0/18) ...\n   Generating static pages (4/18) \n   Generating static pages (8/18) \n   Generating static pages (13/18) \n ✓ Generating static pages (18/18)\n   Finalizing page optimization ...\n   Collecting build traces ...\n\nRoute (app)                                 Size  First Load JS\n┌ ○ /                                      349 B         102 kB\n├ ○ /_not-found                            993 B         103 kB\n├ ƒ /api/autofill-cache                    141 B         102 kB\n├ ƒ /api/biz-validate                      141 B         102 kB\n├ ƒ /api/ground-truth                      141 B         102 kB\n├ ƒ /api/login                             141 B         102 kB\n├ ƒ /api/ocr-cache                         141 B         102 kB\n├ ƒ /api/ocr-extract                       141 B         102 kB\n├ ƒ /api/test-images                       141 B         102 kB\n├ ○ /autorestore                         3.13 kB         113 kB\n├ ○ /history                             9.08 kB         148 kB\n├ ○ /login                                4.1 kB         127 kB\n├ ○ /ocr                                 2.74 kB         113 kB\n├ ○ /runocr                              65.3 kB         184 kB\n├ ○ /template                            5.73 kB         116 kB\n└ ○ /test                                47.2 kB         157 kB\n+ First Load JS shared by all             102 kB\n  ├ chunks/255-4efeec91c7871d79.js       45.7 kB\n  ├ chunks/4bd1b696-c023c6e3521b1417.js  54.2 kB\n  └ other shared chunks (total)          2.15 kB\n\n\n○  (Static)   prerendered as static content\nƒ  (Dynamic)  server-rendered on demand\n\n",
+    "stderrTail": " ⨯ ESLint: nextVitals is not iterable\n"
+  },
+  "knownStderrNoise": {
+    "id": "ISSUE-FRONTEND-BUILD-LOG-1",
+    "message": "ESLint: nextVitals is not iterable",
+    "observed": true
+  },
+  "repoDirtyStatus": {
+    "isDirty": true,
+    "entries": [
+      " M src/components/upload/OcrResultPanel.tsx",
+      " M ../ocr-server/data/review_log.jsonl",
+      " M ../ocr-server/requirements.txt",
+      "?? docs/CLEAN_JSON_CONTRACT_20260521.json",
+      "?? docs/CLEAN_JSON_CONTRACT_20260521.md",
+      "?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.json",
+      "?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.md",
+      "?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.json",
+      "?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.md",
+      "?? docs/CLEAN_JSON_V1_FIXTURE_LOCK_20260521.json",
+      "?? docs/CLEAN_JSON_V1_FIXTURE_LOCK_20260521.md",
+      "?? docs/FRONTEND_CLEANUP_1B_JS_CLEAN_JSON_FIXTURE_RUNNER_20260521.json",
+      "?? docs/FRONTEND_CLEANUP_1B_JS_CLEAN_JSON_FIXTURE_RUNNER_20260521.md",
+      "?? docs/FRONTEND_CLEANUP_1_CLEAN_JSON_BUILDER_EXTRACT_20260521.json",
+      "?? docs/FRONTEND_CLEANUP_1_CLEAN_JSON_BUILDER_EXTRACT_20260521.md",
+      "?? docs/FRONTEND_CLEANUP_2B_MARKDOWN_BUILDER_EXTRACT_20260521.json",
+      "?? docs/FRONTEND_CLEANUP_2B_MARKDOWN_BUILDER_EXTRACT_20260521.md",
+      "?? docs/FRONTEND_CLEANUP_3A_PREVIEW_TABLE_BUILDER_PRECHECK_20260521.json",
+      "?? docs/FRONTEND_CLEANUP_3A_PREVIEW_TABLE_BUILDER_PRECHECK_20260521.md",
+      "?? docs/MARKDOWN_V1_CONTRACT_20260521.json",
+      "?? docs/MARKDOWN_V1_CONTRACT_20260521.md",
+      "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.json",
+      "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.md",
+      "?? docs/MARKDOWN_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.json",
+      "?? docs/MARKDOWN_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.md",
+      "?? docs/MARKDOWN_V1_FIXTURE_COVERAGE_EOL_PRECHECK_20260521.json",
+      "?? docs/MARKDOWN_V1_FIXTURE_COVERAGE_EOL_PRECHECK_20260521.md",
+      "?? docs/MARKDOWN_V1_FIXTURE_LOCK_20260521.json",
+      "?? docs/MARKDOWN_V1_FIXTURE_LOCK_20260521.md",
+      "?? src/lib/cleanJsonBuilder.ts",
+      "?? src/lib/markdownReportBuilder.ts",
+      "?? src/lib/ocrResultFormatters.ts",
+      "?? tmp/",
+      "?? ../ocr-server/requirements-aws.txt"
+    ],
+    "command": {
+      "command": "git -c safe.directory=D:/Free_Vue/OCR/mysuit-ocr status --short",
+      "exitCode": 0,
+      "status": "PASS",
+      "durationSeconds": 0.122,
+      "stdoutTail": " M src/components/upload/OcrResultPanel.tsx\n M ../ocr-server/data/review_log.jsonl\n M ../ocr-server/requirements.txt\n?? docs/CLEAN_JSON_CONTRACT_20260521.json\n?? docs/CLEAN_JSON_CONTRACT_20260521.md\n?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.json\n?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.md\n?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.json\n?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.md\n?? docs/CLEAN_JSON_V1_FIXTURE_LOCK_20260521.json\n?? docs/CLEAN_JSON_V1_FIXTURE_LOCK_20260521.md\n?? docs/FRONTEND_CLEANUP_1B_JS_CLEAN_JSON_FIXTURE_RUNNER_20260521.json\n?? docs/FRONTEND_CLEANUP_1B_JS_CLEAN_JSON_FIXTURE_RUNNER_20260521.md\n?? docs/FRONTEND_CLEANUP_1_CLEAN_JSON_BUILDER_EXTRACT_20260521.json\n?? docs/FRONTEND_CLEANUP_1_CLEAN_JSON_BUILDER_EXTRACT_20260521.md\n?? docs/FRONTEND_CLEANUP_2B_MARKDOWN_BUILDER_EXTRACT_20260521.json\n?? docs/FRONTEND_CLEANUP_2B_MARKDOWN_BUILDER_EXTRACT_20260521.md\n?? docs/FRONTEND_CLEANUP_3A_PREVIEW_TABLE_BUILDER_PRECHECK_20260521.json\n?? docs/FRONTEND_CLEANUP_3A_PREVIEW_TABLE_BUILDER_PRECHECK_20260521.md\n?? docs/MARKDOWN_V1_CONTRACT_20260521.json\n?? docs/MARKDOWN_V1_CONTRACT_20260521.md\n?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.json\n?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.md\n?? docs/MARKDOWN_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.json\n?? docs/MARKDOWN_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.md\n?? docs/MARKDOWN_V1_FIXTURE_COVERAGE_EOL_PRECHECK_20260521.json\n?? docs/MARKDOWN_V1_FIXTURE_COVERAGE_EOL_PRECHECK_20260521.md\n?? docs/MARKDOWN_V1_FIXTURE_LOCK_20260521.json\n?? docs/MARKDOWN_V1_FIXTURE_LOCK_20260521.md\n?? src/lib/cleanJsonBuilder.ts\n?? src/lib/markdownReportBuilder.ts\n?? src/lib/ocrResultFormatters.ts\n?? tmp/\n?? ../ocr-server/requirements-aws.txt\n",
+      "stderrTail": ""
+    }
+  },
+  "overallStatus": "PASS"
+}

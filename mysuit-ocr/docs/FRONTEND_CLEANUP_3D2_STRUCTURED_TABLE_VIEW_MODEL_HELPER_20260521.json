@@ -1,0 +1,158 @@
+{
+  "task": "FRONTEND-CLEANUP-3D2 buildStructuredTableViewModel helper extraction with direct fixture runner",
+  "toolAndModel": { "tool": "Claude Code", "model": "claude-opus-4-7" },
+  "date": "2026-05-21",
+  "goal": "Create buildStructuredTableViewModel pure helper + JS direct runner; gate on 8/8 fixture deep equality. Do NOT apply to OcrResultPanel (3D-3 scope).",
+  "codeModification": {
+    "productionComponentsModified": false,
+    "existingHelpersModified": false,
+    "backendModified": false,
+    "templatesOrGtModified": false,
+    "fixturesModified": false,
+    "filesNotTouched": [
+      "src/components/upload/OcrResultPanel.tsx",
+      "src/components/test/TestWorkspace.tsx",
+      "src/lib/cleanJsonBuilder.ts",
+      "src/lib/markdownReportBuilder.ts",
+      "src/lib/ocrResultFormatters.ts",
+      "src/lib/invoiceTableDisplay.ts",
+      "ocr-server/*",
+      "data/templates.json",
+      "tmp/fixtures/table_view_model_v1/* (all 8 fixtures preserved)"
+    ]
+  },
+  "createdFiles": [
+    { "path": "mysuit-ocr/src/lib/structuredTableViewModel.ts", "lines": 130, "purpose": "pure helper buildStructuredTableViewModel" },
+    { "path": "mysuit-ocr/tmp/check_table_view_model_v1_fixtures_js.mjs", "lines": 270, "purpose": "JS direct runner using non-circular raw inputs" },
+    { "path": "mysuit-ocr/docs/FRONTEND_CLEANUP_3D2_STRUCTURED_TABLE_VIEW_MODEL_HELPER_20260521.md", "purpose": "human-readable report" },
+    { "path": "mysuit-ocr/docs/FRONTEND_CLEANUP_3D2_STRUCTURED_TABLE_VIEW_MODEL_HELPER_20260521.json", "purpose": "machine-readable report (this file)" },
+    { "path": "mysuit-ocr/docs/FRONTEND_CLEANUP_3D2_RUNNER_RESULT_20260521.json", "purpose": "runner self-generated machine summary" }
+  ],
+  "regressionSideArtifacts": [
+    { "path": "mysuit-ocr/docs/FRONTEND_CLEANUP_1B_JS_CLEAN_JSON_FIXTURE_RUNNER_20260521.{md,json}", "note": "Clean JSON runner auto-refreshes its own report; content unchanged except timestamp" },
+    { "path": "mysuit-ocr/docs/MARKDOWN_V1_FIXTURE_CHECK_regression_3D2_20260521_20260521.{md,json}", "note": "Markdown check report tagged with this task's phase" }
+  ],
+  "logs": {
+    "out": "ocr-server/logs/codex_FRONTEND_CLEANUP_3D2_STRUCTURED_TABLE_VIEW_MODEL_HELPER.out.log",
+    "err": "ocr-server/logs/codex_FRONTEND_CLEANUP_3D2_STRUCTURED_TABLE_VIEW_MODEL_HELPER.err.log",
+    "format": "single pair; all task sections appended with header lines"
+  },
+  "helperContract": {
+    "name": "buildStructuredTableViewModel",
+    "location": "src/lib/structuredTableViewModel.ts",
+    "input": {
+      "rows": "ReadonlyArray<Record<string, unknown>>",
+      "displayCols": "ReadonlyArray<{ key: string; labelKo: string }>",
+      "emptyValue": "string (default '-')"
+    },
+    "output": {
+      "columns": "Array<{ key: string; label: string }>",
+      "rows": "Array<{ cells: Array<{ key: string; value: string; displayValue: string; isEmpty: boolean }> }>",
+      "meta": "{ rowCount: number; columnCount: number; hasRows: boolean; hasColumns: boolean }"
+    },
+    "exportedTypes": [
+      "StructuredTableInputCol",
+      "StructuredTableViewModelCell",
+      "StructuredTableViewModelRow",
+      "StructuredTableViewModelColumn",
+      "StructuredTableViewModelMeta",
+      "StructuredTableViewModel",
+      "BuildStructuredTableViewModelInput"
+    ],
+    "internalDeps": "none (standalone; no @/lib/* imports)"
+  },
+  "cellNormalizationRule": {
+    "nullOrUndefined": "-> empty string \"\"",
+    "stringConversion": "String(raw)",
+    "unicodeDashNormalize": "U+2010, U+2011, U+2012, U+2013, U+2014, U+2212 -> '-'",
+    "whitespace": ".trim() (leading/trailing only)",
+    "preserved": ["Korean chars", "commas", "periods", "parentheses", "pipes |", "asterisks *", "ASCII hyphens"],
+    "noIsMeaninglessMapping": "Clean JSON's '-' / 'n/a' / 'null' string normalization NOT applied here",
+    "perCell": {
+      "value": "normalizeStructuredTableCell(row[col.key])",
+      "isEmpty": "value === \"\"",
+      "displayValue": "isEmpty ? emptyValue : value"
+    },
+    "verifiedAgainstPythonReimpl": "tmp/codex_table_view_model_fixture_lock.py:normalize_cell"
+  },
+  "tableViewModelRunner": {
+    "command": "node tmp/check_table_view_model_v1_fixtures_js.mjs",
+    "mode": "non-circular: raw input fixture -> helper -> output fixture deep equality",
+    "summary": { "overall": "PASS", "total": 8, "pass": 8, "fail": 0, "totalDiffs": 0, "totalForbiddenHits": 0 },
+    "cases": [
+      { "caseId": "trade_1_1jpg", "status": "PASS", "diffs": 0, "forbidden": 0, "rowIndex": "excluded" },
+      { "caseId": "trade_2_2pdf", "status": "PASS", "diffs": 0, "forbidden": 0, "rowIndex": "included" },
+      { "caseId": "trade_3_3pdf", "status": "PASS", "diffs": 0, "forbidden": 0, "rowIndex": "included", "trade3LockedBehaviorPass": true },
+      { "caseId": "trade_4_4pdf", "status": "PASS", "diffs": 0, "forbidden": 0, "rowIndex": "excluded" },
+      { "caseId": "trade_5_5pdf", "status": "PASS", "diffs": 0, "forbidden": 0, "rowIndex": "excluded" },
+      { "caseId": "trade_6_6pdf", "status": "PASS", "diffs": 0, "forbidden": 0, "rowIndex": "included" },
+      { "caseId": "trade_7_7pdf", "status": "PASS", "diffs": 0, "forbidden": 0, "rowIndex": "excluded" },
+      { "caseId": "synthetic_empty_rows", "status": "PASS", "diffs": 0, "forbidden": 0, "rowIndex": "excluded", "syntheticEmptyRowsPass": true }
+    ],
+    "policyChecks": {
+      "rowIndexExcludedPass": true,
+      "rowIndexIncludedPass": true,
+      "trade3LockedBehaviorPass": true,
+      "syntheticEmptyRowsPass": true
+    },
+    "purity": {
+      "reactHookFree": true,
+      "noBrowserOrNetworkAccess": true,
+      "noUiResponsibility": true,
+      "inputMutationFree": true
+    },
+    "forbiddenFieldCheck": {
+      "fieldsChecked": ["align", "width", "style", "isNumeric", "isIndex", "sourceRow", "indices", "hasEmptyCells", "rowIndex (as property name)"],
+      "totalHits": 0,
+      "note": "rowIndex is allowed as column.key/cell.key VALUE (legitimate column name); forbidden only as a property NAME on objects"
+    }
+  },
+  "cleanJsonRegression": {
+    "command": "node tmp/check_clean_json_v1_fixtures_js.mjs",
+    "summary": { "overall": "PASS", "total": 9, "pass": 9, "totalDiffs": 0 },
+    "note": "Clean JSON unaffected by view model helper addition"
+  },
+  "markdownRegression": {
+    "command": "python tmp/codex_markdown_contract_fixture_lock.py --check --phase regression_3D2_20260521",
+    "summary": { "overall": "PASS", "counts": { "PASS": 6 } },
+    "note": "Markdown unaffected; processing_time normalization policy preserved"
+  },
+  "typecheck": { "command": "npm run typecheck", "status": "PASS", "exitCode": 0 },
+  "build": {
+    "command": "npm run build",
+    "status": "PASS",
+    "exitCode": 0,
+    "staticPages": "18/18",
+    "compileTime": "2.3s",
+    "runocrSize": { "before": "65.3 kB", "after": "65.3 kB", "note": "helper not yet imported by any component; tree-shaken" },
+    "firstLoadJsShared": "102 kB (unchanged)"
+  },
+  "knownStderrNoise": [
+    {
+      "id": "ISSUE-FRONTEND-BUILD-LOG-1",
+      "message": "ESLint: nextVitals is not iterable",
+      "buildExitCode": 0,
+      "preExistingFrom": "CLEANUP-1 / 2A / 2B / 3D-1",
+      "actionable": false
+    },
+    {
+      "id": "TRANSIENT-3D2-ENOENT",
+      "message": "ENOENT structuredTableViewModel.ts on first runner attempt",
+      "rootCause": "Codex precheck-stage stub file was present but disappeared between read and runner execution (file system caching anomaly on Windows). Helper re-written; runner passed on retry.",
+      "actionable": false
+    }
+  ],
+  "remainingRisks": [
+    "Helper not yet applied to OcrResultPanel — 3D-3 scope.",
+    "Legacy parseTableField(field.value) fallback not covered — separate buildLegacyTableViewModel helper deferred.",
+    "거래_3 LOCKED insuranceCode/amount columns preserved (pass-through); policy change is a separate task.",
+    "ISSUE-FRONTEND-BUILD-LOG-1 stderr noise persists."
+  ],
+  "nextSuggestedTasks": [
+    "3D-3 OcrResultPanel adoption: small precheck or directly apply to Preview structured-table JSX first (smallest blast radius). Then optionally Custom/Validation.",
+    "OcrResultPanel cleanup cycle 1 close-out report (after 3D-3).",
+    "Legacy parseTableField fallback view model (buildLegacyTableViewModel) in separate cycle.",
+    "TestWorkspace re-confirmation (after cycle 1 close-out).",
+    "ISSUE-FRONTEND-BUILD-LOG-1 (eslint-config-next compatibility)."
+  ]
+}

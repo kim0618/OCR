@@ -1,0 +1,313 @@
+{
+  "task": "CODEX_FRONTEND_CLEANUP_3A_PREVIEW_TABLE_BUILDER_PRECHECK_NO_PROD_MODIFY",
+  "generatedAt": "2026-05-21T16:11:47",
+  "toolAndModel": {
+    "tool": "Codex",
+    "model": "Codex"
+  },
+  "noProductionCodeModifiedByThisTask": true,
+  "createdFiles": [
+    "tmp/codex_preview_table_builder_precheck.py",
+    "docs/FRONTEND_CLEANUP_3A_PREVIEW_TABLE_BUILDER_PRECHECK_20260521.md",
+    "docs/FRONTEND_CLEANUP_3A_PREVIEW_TABLE_BUILDER_PRECHECK_20260521.json"
+  ],
+  "staticFindings": {
+    "files": {
+      "OcrResultPanel.tsx": {
+        "path": "src\\components\\upload\\OcrResultPanel.tsx",
+        "lineCount": 1649,
+        "imports": {
+          "buildInvoicePreviewCols": true,
+          "normalizeTableCellAsNormalizeCell": true,
+          "parseTableField": true,
+          "buildCleanJsonResult": true,
+          "buildMarkdownReport": true
+        },
+        "locations": {
+          "filterInvoicePreviewDisplayCols": 108,
+          "toMarkdown": 657,
+          "docTableRowsUseMemo": 665,
+          "docTableMetaUseMemo": 673,
+          "docTableDisplayColsUseMemo": 683,
+          "previewTableFieldsUseMemo": 690,
+          "missingExpectedWarningUseMemo": 702,
+          "cleanJsonUseMemo": 737,
+          "previewMarkdownRender": 979,
+          "previewTableMap": 981,
+          "customStructuredTableBranch": 1293,
+          "validationStructuredTableBranch": 1515
+        },
+        "parseTableFieldCallLines": [
+          694,
+          1386,
+          1518
+        ],
+        "docTableDisplayColsLineCount": 16,
+        "docTableRowsLineCount": 27
+      },
+      "ocrResultFormatters.ts": {
+        "path": "src\\lib\\ocrResultFormatters.ts",
+        "exports": {
+          "fieldLabel": true,
+          "fieldLabelFull": true,
+          "getAdoptionLabel": true,
+          "parseTableField": true,
+          "isAmountLikeField": true
+        },
+        "purityCommentPresent": true
+      },
+      "invoiceTableDisplay.ts": {
+        "path": "src\\lib\\invoiceTableDisplay.ts",
+        "exports": {
+          "buildInvoicePreviewCols": true,
+          "shouldDisplayRowIndex": true,
+          "normalizeTableCell": true,
+          "hasMeaningfulTableValue": true
+        },
+        "rowIndexPolicyIgnoresTableMetaColumnsAlone": true
+      },
+      "cleanJsonBuilder.ts": {
+        "path": "src\\lib\\cleanJsonBuilder.ts",
+        "usesDocTableRows": true,
+        "usesDocTableDisplayCols": true,
+        "hasFallbacks": true
+      },
+      "markdownReportBuilder.ts": {
+        "path": "src\\lib\\markdownReportBuilder.ts",
+        "usesParseTableField": true,
+        "doesNotUseDisplayCols": true
+      },
+      "DetailHistoryView.tsx": {
+        "path": "src\\components\\history\\DetailHistoryView.tsx",
+        "usesBuildInvoicePreviewCols": true,
+        "usesTableRows": true
+      },
+      "TestWorkspace.tsx": {
+        "path": "src\\components\\test\\TestWorkspace.tsx",
+        "usesBuildInvoicePreviewCols": false,
+        "usesShouldDisplayRowIndex": true
+      }
+    }
+  },
+  "previewTableContract": {
+    "inputs": [
+      "editedFields: OcrFieldResult[]",
+      "result.document_fields.tableRows -> docTableRows",
+      "result.document_fields.tableMeta -> docTableMeta",
+      "docTableDisplayCols = buildInvoicePreviewCols(docTableMeta, docTableRows)",
+      "parseTableField(field.value) for legacy table field fallback"
+    ],
+    "previewTableFieldsShape": {
+      "idx": "1-based original field index",
+      "label": "fieldLabelFull(field)",
+      "rows": "ParsedTableField.rows from field.value",
+      "nonEmpty": "ParsedTableField.nonEmpty",
+      "displayRows": "ParsedTableField.displayRows",
+      "isSingleCol": "ParsedTableField.isSingleCol",
+      "rowLabel": "ParsedTableField.rowLabel"
+    },
+    "sourcePriority": [
+      "Preview JSX structured branch: document_fields.tableRows + docTableDisplayCols for first table field",
+      "Preview JSX fallback branch: parseTableField(field.value).displayRows",
+      "Clean JSON additionally supports field.tableRows, field.table_data, JSON.parse(field.value) fallbacks"
+    ],
+    "columnOrder": [
+      "Structured invoice preview uses docTableDisplayCols exactly as returned by buildInvoicePreviewCols",
+      "docTableDisplayCols uses tableMeta.expectedColumnKeys, then tableMeta.columns, then INVOICE_TABLE_COL_PRIORITY fallback",
+      "Structured preview does not use Object.keys(row) for display order",
+      "Legacy fallback displayRows uses cell array order from parseTableField(field.value)"
+    ],
+    "rowIndex": [
+      "Preview does not decide rowIndex directly in previewTableFields",
+      "Structured Preview follows docTableDisplayCols",
+      "docTableDisplayCols follows shouldDisplayRowIndex: externalExpectedKeys or tableMeta.expectedColumnKeys only",
+      "tableMeta.columns or row values alone do not display rowIndex"
+    ]
+  },
+  "extractionLayers": [
+    {
+      "layer": "pure data builder",
+      "candidate": "buildPreviewTableFields",
+      "extractable": true,
+      "scope": "editedFields table filtering + fieldLabelFull + parseTableField + docTableRows non-empty inclusion",
+      "inputs": [
+        "fields",
+        "docTableRows"
+      ],
+      "output": "PreviewTableField[] legacy parsed table descriptors",
+      "risk": "LOW-MEDIUM",
+      "note": "This is the safest first extraction; it does not touch JSX rendering."
+    },
+    {
+      "layer": "structured invoice table display data",
+      "candidate": "buildStructuredPreviewTableData",
+      "extractable": "later",
+      "scope": "combine docTableRows + docTableDisplayCols + missingExpectedWarning metadata",
+      "inputs": [
+        "docTableRows",
+        "docTableDisplayCols",
+        "missingExpectedWarning"
+      ],
+      "output": "rows/cols/warning metadata for JSX",
+      "risk": "MEDIUM",
+      "note": "Useful, but should follow a small PreviewTableFields extraction."
+    },
+    {
+      "layer": "JSX renderer",
+      "candidate": "PreviewInvoiceTable component",
+      "extractable": "not in first step",
+      "scope": "colgroup, header, body, cell alignment, low-confidence fallback cells",
+      "inputs": [
+        "cols",
+        "rows",
+        "align/width helpers"
+      ],
+      "output": "React nodes",
+      "risk": "HIGH",
+      "note": "Rendering is heavily coupled to CSS/classes and should be a later component split."
+    }
+  ],
+  "dependencyDirection": {
+    "recommended": [
+      "previewTableBuilder.ts may import ocrResultFormatters.ts",
+      "previewTableBuilder.ts may import invoiceTableDisplay.ts only if it computes structured cols; first step can avoid this",
+      "cleanJsonBuilder.ts remains Clean JSON output-only",
+      "markdownReportBuilder.ts remains Markdown output-only",
+      "OcrResultPanel.tsx remains the owner of React state, useMemo, JSX rendering, copy/export UI"
+    ],
+    "avoid": [
+      "previewTableBuilder.ts importing React or OcrResultPanel",
+      "previewTableBuilder.ts importing cleanJsonBuilder.ts or markdownReportBuilder.ts",
+      "cleanJsonBuilder.ts <-> previewTableBuilder.ts circular dependency",
+      "TestWorkspace.tsx included in this extraction scope"
+    ]
+  },
+  "fixtureStrategy": {
+    "needPreviewTableDataFixtures": true,
+    "recommendation": "Create tmp/fixtures/preview_table_v1 in a later step before extraction if the helper goes beyond previewTableFields filtering.",
+    "cases": [
+      "invoice_statement trade_1~trade_7 for structured docTableRows/rowIndex/column order",
+      "synthetic legacy table field without document_fields.tableRows for parseTableField fallback"
+    ],
+    "reuseCleanJsonFixtures": "Useful for API case coverage, but not sufficient because Preview fallback displayRows and JSX table descriptors are not Clean JSON output.",
+    "receiptFieldOnly": "Not necessary for Preview table fixture because there is no table field path."
+  },
+  "risks": [
+    {
+      "risk": "Preview JSX and data builder are coupled",
+      "likelihood": "MEDIUM",
+      "impact": "MEDIUM",
+      "mitigation": "First extract only previewTableFields pure data list; leave JSX in component.",
+      "needsFixture": true
+    },
+    {
+      "risk": "legacy table_data / field.value fallback omitted",
+      "likelihood": "MEDIUM",
+      "impact": "HIGH",
+      "mitigation": "Add synthetic legacy fallback fixture before broad extraction.",
+      "needsFixture": true
+    },
+    {
+      "risk": "rowIndex policy regression",
+      "likelihood": "LOW",
+      "impact": "HIGH",
+      "mitigation": "Keep rowIndex in buildInvoicePreviewCols; preview builder should consume cols, not recalculate policy.",
+      "needsFixture": true
+    },
+    {
+      "risk": "docTableDisplayCols not passed to structured renderer",
+      "likelihood": "MEDIUM",
+      "impact": "HIGH",
+      "mitigation": "Contract explicitly requires cols from OcrResultPanel useMemo.",
+      "needsFixture": true
+    },
+    {
+      "risk": "Clean JSON and Preview column order diverge",
+      "likelihood": "LOW-MEDIUM",
+      "impact": "HIGH",
+      "mitigation": "Both must continue using same docTableDisplayCols.",
+      "needsFixture": true
+    },
+    {
+      "risk": "Custom/Validation behavior changes accidentally",
+      "likelihood": "MEDIUM",
+      "impact": "MEDIUM",
+      "mitigation": "Do not move shared parseTableField or structured JSX branches in first extraction.",
+      "needsFixture": false
+    },
+    {
+      "risk": "History/TestWorkspace policy divergence",
+      "likelihood": "LOW",
+      "impact": "MEDIUM",
+      "mitigation": "Reference only in this stage; do not include in extraction scope.",
+      "needsFixture": false
+    }
+  ],
+  "typecheck": {
+    "command": "npm.cmd run typecheck",
+    "exitCode": 0,
+    "status": "PASS",
+    "durationSeconds": 2.211,
+    "stdoutTail": "\n> mysuit-ocr@0.1.0 typecheck\n> tsc --noEmit\n\n",
+    "stderrTail": ""
+  },
+  "build": {
+    "command": "npm.cmd run build",
+    "exitCode": 0,
+    "status": "PASS",
+    "durationSeconds": 16.028,
+    "stdoutTail": "\n> mysuit-ocr@0.1.0 build\n> next build\n\n   ▲ Next.js 15.5.4\n   - Environments: .env.local\n\n   Creating an optimized production build ...\n ✓ Compiled successfully in 2.4s\n   Linting and checking validity of types ...\n   Collecting page data ...\n   Generating static pages (0/18) ...\n   Generating static pages (4/18) \n   Generating static pages (8/18) \n   Generating static pages (13/18) \n ✓ Generating static pages (18/18)\n   Finalizing page optimization ...\n   Collecting build traces ...\n\nRoute (app)                                 Size  First Load JS\n┌ ○ /                                      349 B         102 kB\n├ ○ /_not-found                            993 B         103 kB\n├ ƒ /api/autofill-cache                    141 B         102 kB\n├ ƒ /api/biz-validate                      141 B         102 kB\n├ ƒ /api/ground-truth                      141 B         102 kB\n├ ƒ /api/login                             141 B         102 kB\n├ ƒ /api/ocr-cache                         141 B         102 kB\n├ ƒ /api/ocr-extract                       141 B         102 kB\n├ ƒ /api/test-images                       141 B         102 kB\n├ ○ /autorestore                         3.13 kB         113 kB\n├ ○ /history                             9.08 kB         148 kB\n├ ○ /login                                4.1 kB         127 kB\n├ ○ /ocr                                 2.74 kB         113 kB\n├ ○ /runocr                              65.3 kB         184 kB\n├ ○ /template                            5.73 kB         116 kB\n└ ○ /test                                47.2 kB         157 kB\n+ First Load JS shared by all             102 kB\n  ├ chunks/255-4efeec91c7871d79.js       45.7 kB\n  ├ chunks/4bd1b696-c023c6e3521b1417.js  54.2 kB\n  └ other shared chunks (total)          2.15 kB\n\n\n○  (Static)   prerendered as static content\nƒ  (Dynamic)  server-rendered on demand\n\n",
+    "stderrTail": " ⨯ ESLint: nextVitals is not iterable\n"
+  },
+  "knownStderrNoise": {
+    "id": "ISSUE-FRONTEND-BUILD-LOG-1",
+    "message": "ESLint: nextVitals is not iterable",
+    "observed": true
+  },
+  "repoDirtyStatus": {
+    "isDirty": true,
+    "entries": [
+      " M src/components/upload/OcrResultPanel.tsx",
+      " M ../ocr-server/data/review_log.jsonl",
+      " M ../ocr-server/requirements.txt",
+      "?? docs/CLEAN_JSON_CONTRACT_20260521.json",
+      "?? docs/CLEAN_JSON_CONTRACT_20260521.md",
+      "?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.json",
+      "?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.md",
+      "?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.json",
+      "?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.md",
+      "?? docs/CLEAN_JSON_V1_FIXTURE_LOCK_20260521.json",
+      "?? docs/CLEAN_JSON_V1_FIXTURE_LOCK_20260521.md",
+      "?? docs/FRONTEND_CLEANUP_1B_JS_CLEAN_JSON_FIXTURE_RUNNER_20260521.json",
+      "?? docs/FRONTEND_CLEANUP_1B_JS_CLEAN_JSON_FIXTURE_RUNNER_20260521.md",
+      "?? docs/FRONTEND_CLEANUP_1_CLEAN_JSON_BUILDER_EXTRACT_20260521.json",
+      "?? docs/FRONTEND_CLEANUP_1_CLEAN_JSON_BUILDER_EXTRACT_20260521.md",
+      "?? docs/FRONTEND_CLEANUP_2B_MARKDOWN_BUILDER_EXTRACT_20260521.json",
+      "?? docs/FRONTEND_CLEANUP_2B_MARKDOWN_BUILDER_EXTRACT_20260521.md",
+      "?? docs/MARKDOWN_V1_CONTRACT_20260521.json",
+      "?? docs/MARKDOWN_V1_CONTRACT_20260521.md",
+      "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.json",
+      "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.md",
+      "?? docs/MARKDOWN_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.json",
+      "?? docs/MARKDOWN_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.md",
+      "?? docs/MARKDOWN_V1_FIXTURE_COVERAGE_EOL_PRECHECK_20260521.json",
+      "?? docs/MARKDOWN_V1_FIXTURE_COVERAGE_EOL_PRECHECK_20260521.md",
+      "?? docs/MARKDOWN_V1_FIXTURE_LOCK_20260521.json",
+      "?? docs/MARKDOWN_V1_FIXTURE_LOCK_20260521.md",
+      "?? src/lib/cleanJsonBuilder.ts",
+      "?? src/lib/markdownReportBuilder.ts",
+      "?? src/lib/ocrResultFormatters.ts",
+      "?? tmp/",
+      "?? ../ocr-server/requirements-aws.txt"
+    ],
+    "command": {
+      "command": "git -c safe.directory=D:/Free_Vue/OCR/mysuit-ocr status --short",
+      "exitCode": 0,
+      "status": "PASS",
+      "durationSeconds": 0.077,
+      "stdoutTail": " M src/components/upload/OcrResultPanel.tsx\n M ../ocr-server/data/review_log.jsonl\n M ../ocr-server/requirements.txt\n?? docs/CLEAN_JSON_CONTRACT_20260521.json\n?? docs/CLEAN_JSON_CONTRACT_20260521.md\n?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.json\n?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.md\n?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.json\n?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.md\n?? docs/CLEAN_JSON_V1_FIXTURE_LOCK_20260521.json\n?? docs/CLEAN_JSON_V1_FIXTURE_LOCK_20260521.md\n?? docs/FRONTEND_CLEANUP_1B_JS_CLEAN_JSON_FIXTURE_RUNNER_20260521.json\n?? docs/FRONTEND_CLEANUP_1B_JS_CLEAN_JSON_FIXTURE_RUNNER_20260521.md\n?? docs/FRONTEND_CLEANUP_1_CLEAN_JSON_BUILDER_EXTRACT_20260521.json\n?? docs/FRONTEND_CLEANUP_1_CLEAN_JSON_BUILDER_EXTRACT_20260521.md\n?? docs/FRONTEND_CLEANUP_2B_MARKDOWN_BUILDER_EXTRACT_20260521.json\n?? docs/FRONTEND_CLEANUP_2B_MARKDOWN_BUILDER_EXTRACT_20260521.md\n?? docs/MARKDOWN_V1_CONTRACT_20260521.json\n?? docs/MARKDOWN_V1_CONTRACT_20260521.md\n?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.json\n?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.md\n?? docs/MARKDOWN_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.json\n?? docs/MARKDOWN_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.md\n?? docs/MARKDOWN_V1_FIXTURE_COVERAGE_EOL_PRECHECK_20260521.json\n?? docs/MARKDOWN_V1_FIXTURE_COVERAGE_EOL_PRECHECK_20260521.md\n?? docs/MARKDOWN_V1_FIXTURE_LOCK_20260521.json\n?? docs/MARKDOWN_V1_FIXTURE_LOCK_20260521.md\n?? src/lib/cleanJsonBuilder.ts\n?? src/lib/markdownReportBuilder.ts\n?? src/lib/ocrResultFormatters.ts\n?? tmp/\n?? ../ocr-server/requirements-aws.txt\n",
+      "stderrTail": ""
+    }
+  },
+  "overallStatus": "PASS"
+}

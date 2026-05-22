@@ -1,0 +1,130 @@
+{
+  "task": "FRONTEND-STRUCTURE-1-RUNOCR-FOLDER-MOVE",
+  "date": "2026-05-22",
+  "tool": "Claude Code (VSCode extension)",
+  "model": "claude-opus-4-7 (1M context)",
+  "phase": "Phase 1 — folder move / rename / import fix only",
+  "purpose": [
+    "Move src/components/upload -> src/components/runocr per confirmed target structure",
+    "Rename UploadWorkspace.tsx -> RunOcrWorkspace.tsx",
+    "Move 3 RunOCR-only UI components into src/components/runocr/ui",
+    "Fix only broken imports; no internal logic refactor"
+  ],
+  "backups": [
+    "backup/UploadWorkspace_20260522_before_FRONTEND_STRUCTURE_1_RUNOCR_FOLDER_MOVE.tsx",
+    "backup/OcrResultPanel_20260522_before_FRONTEND_STRUCTURE_1_RUNOCR_FOLDER_MOVE.tsx",
+    "backup/OcrDocViewer_20260522_before_FRONTEND_STRUCTURE_1_RUNOCR_FOLDER_MOVE.tsx",
+    "backup/CornerAdjust_20260522_before_FRONTEND_STRUCTURE_1_RUNOCR_FOLDER_MOVE.tsx"
+  ],
+  "moves": [
+    {
+      "from": "mysuit-ocr/src/components/upload/UploadWorkspace.tsx",
+      "to": "mysuit-ocr/src/components/runocr/RunOcrWorkspace.tsx",
+      "kind": "move+rename"
+    },
+    {
+      "from": "mysuit-ocr/src/components/upload/OcrResultPanel.tsx",
+      "to": "mysuit-ocr/src/components/runocr/ui/OcrResultPanel.tsx",
+      "kind": "move"
+    },
+    {
+      "from": "mysuit-ocr/src/components/upload/OcrDocViewer.tsx",
+      "to": "mysuit-ocr/src/components/runocr/ui/OcrDocViewer.tsx",
+      "kind": "move"
+    },
+    {
+      "from": "mysuit-ocr/src/components/upload/CornerAdjust.tsx",
+      "to": "mysuit-ocr/src/components/runocr/ui/CornerAdjust.tsx",
+      "kind": "move"
+    }
+  ],
+  "removed_dirs": [
+    "mysuit-ocr/src/components/upload"
+  ],
+  "import_edits": [
+    {
+      "file": "mysuit-ocr/src/app/runocr/page.tsx",
+      "changes": [
+        "import UploadWorkspace from '../../components/upload/UploadWorkspace' -> import RunOcrWorkspace from '../../components/runocr/RunOcrWorkspace'",
+        "<UploadWorkspace variant=\"runocr\" /> -> <RunOcrWorkspace variant=\"runocr\" />"
+      ]
+    },
+    {
+      "file": "mysuit-ocr/src/components/runocr/RunOcrWorkspace.tsx",
+      "changes": [
+        "./OcrResultPanel -> ./ui/OcrResultPanel",
+        "./OcrDocViewer -> ./ui/OcrDocViewer",
+        "./CornerAdjust -> ./ui/CornerAdjust"
+      ]
+    },
+    {
+      "file": "mysuit-ocr/src/components/runocr/ui/OcrResultPanel.tsx",
+      "changes": [
+        "../common/AppProviders -> ../../common/AppProviders (depth adjustment after move into ui/)"
+      ]
+    }
+  ],
+  "target_structure_realized": {
+    "src/components/runocr/RunOcrWorkspace.tsx": true,
+    "src/components/runocr/ui/OcrResultPanel.tsx": true,
+    "src/components/runocr/ui/OcrDocViewer.tsx": true,
+    "src/components/runocr/ui/CornerAdjust.tsx": true,
+    "src/components/runocr/utils/": "not created (out of Phase 1 scope)"
+  },
+  "residual_upload_refs": {
+    "components/upload": 0,
+    "@/components/upload": 0,
+    "../upload": 0,
+    "../../upload": 0,
+    "from_upload_path_imports": 0,
+    "note": "Identifier 'UploadWorkspace' still present as local type/function name inside RunOcrWorkspace.tsx (UploadWorkspaceVariant, UploadWorkspaceProps, export default function UploadWorkspace). Default-import consumer (page.tsx) uses alias 'RunOcrWorkspace'; runtime/type behavior unaffected. Internal symbol rename intentionally deferred to a later micro-step."
+  },
+  "no_internal_logic_changes": {
+    "RunOcrWorkspace.tsx": "only 3 import path lines changed",
+    "OcrResultPanel.tsx": "only 1 import path line changed",
+    "OcrDocViewer.tsx": "no changes",
+    "CornerAdjust.tsx": "no changes",
+    "TestWorkspace.tsx": "not modified",
+    "invoiceTableDisplay.ts": "not modified",
+    "structuredTableViewModel.ts": "not modified",
+    "cleanJsonBuilder.ts": "not modified",
+    "markdownReportBuilder.ts": "not modified",
+    "ocrResultFormatters.ts": "not modified",
+    "backend/parser/templates/manifest/GT/fixtures": "not modified"
+  },
+  "fixture_runners": {
+    "table_view_model_v1": { "command": "node tmp/check_table_view_model_v1_fixtures_js.mjs", "result": "PASS 8/8" },
+    "clean_json_v1":       { "command": "node tmp/check_clean_json_v1_fixtures_js.mjs",       "result": "PASS 9/9" },
+    "markdown_v1":         { "command": "python tmp/codex_markdown_contract_fixture_lock.py --check --phase post_RUNOCR_FOLDER_MOVE_20260522", "result": "PASS 6/6" }
+  },
+  "typecheck_build": {
+    "npm run typecheck": "PASS (exit 0)",
+    "npm run build":     "PASS (exit 0, Next.js 15.5.4, 18/18 static pages, /runocr 65.7 kB / 184 kB First Load JS)"
+  },
+  "known_stderr_noise": [
+    "Next build: '⨯ ESLint: nextVitals is not iterable' — appears in stderr but exit code 0 (non-blocking, recorded as expected)",
+    "First markdown fixture run with system python failed with ModuleNotFoundError: requests; retried with ocr-server/.venv python and passed 6/6. Unrelated to structure change."
+  ],
+  "logs": {
+    "stdout": "ocr-server/logs/codex_FRONTEND_STRUCTURE_1_RUNOCR_FOLDER_MOVE.out.log",
+    "stderr": "ocr-server/logs/codex_FRONTEND_STRUCTURE_1_RUNOCR_FOLDER_MOVE.err.log"
+  },
+  "next_suggestions": [
+    "RunOCR internal utils split precheck (review RunOcrWorkspace.tsx for buildOcrFormData / runOcrRequest / mapOcrResponse extraction candidates)",
+    "Template folder ownership precheck",
+    "Defer common/utils relocation until feature folders (runocr / test / template / history) are stabilized",
+    "TestWorkspace folder restructure pending user confirmation",
+    "Optional micro-step: rename UploadWorkspace local identifiers (UploadWorkspaceVariant/UploadWorkspaceProps/default export function name) to RunOcrWorkspace*"
+  ],
+  "success_criteria_met": {
+    "components/upload -> components/runocr moved": true,
+    "UploadWorkspace.tsx -> RunOcrWorkspace.tsx renamed": true,
+    "OcrResultPanel/OcrDocViewer/CornerAdjust -> runocr/ui moved": true,
+    "import paths fixed": true,
+    "no residual src/components/upload imports": true,
+    "no internal logic changes": true,
+    "fixture runners (3 kinds) all PASS": true,
+    "typecheck PASS": true,
+    "build PASS": true
+  }
+}

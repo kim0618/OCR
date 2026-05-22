@@ -7,7 +7,7 @@ import UnstructuredBuilder from "../../components/template/UnstructuredBuilder";
 import { getTemplateImage } from "@/lib/imageStore";
 
 const OcrAnnotator = dynamic(
-  () => import("../../components/ocr/OcrAnnotator"),
+  () => import("../../components/template/ui/OcrAnnotator"),
   {
     ssr: false,
     loading: () => <div style={{ padding: 16, color: "var(--muted)" }}>로딩중...</div>,

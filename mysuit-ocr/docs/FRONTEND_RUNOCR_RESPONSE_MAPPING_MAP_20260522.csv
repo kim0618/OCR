@@ -1,0 +1,43 @@
+﻿category,line,purpose,move,snippet
+rawJsonUsage,847,unknown,review,const rawOcrFields: OcrFieldResult[] = Array.isArray(json?.fields) ? (json.fields as OcrFieldResult[]) : [];
+rawJsonUsage,848,initial display result mapping,"yes, if buildRunOcrResult-only extraction","const runResult = isRunOcr ? buildRunOcrResult(json, activeTemplate) : json;"
+rawJsonUsage,865,autofill business number text source,no for Phase 2C; keep with autofill,"json?.full_text,"
+rawJsonUsage,869,autofill business number text source,no for Phase 2C; keep with autofill,"json?.receipt_fields?.[""사업자번호""],"
+rawJsonUsage,971,history raw OCR lines,no for Phase 2C; keep with history,Array.isArray((json as any)?.ocr_lines) ? (json as any).ocr_lines : [];
+rawJsonUsage,1044,history/detail snapshot,no for Phase 2C; keep with history,"processing_time: Number(json?.processing_time) || 0,"
+rawJsonUsage,1058,history/detail snapshot,no for Phase 2C; keep with history,"const rawDocFields = (json as Record<string, unknown>)?.document_fields as"
+autofill,854,autofill,defer,let autofillSuggestions: AutofillSuggestion[] = [];
+autofill,855,autofill,defer,let autofillSummary: AutofillRunSummary = {
+autofill,871,"extractBizNumber,businessNumber",defer,const businessNumber = extractBizNumber(businessText);
+autofill,872,businessNumber,defer,if (!businessNumber) {
+autofill,874,autofill,defer,autofillSummary = {
+autofill,884,businessNumber,defer,"businessNumber,"
+autofill,885,"collectInternalAutofillCandidates,businessNumber",defer,"candidates: collectInternalAutofillCandidates(businessNumber),"
+autofill,893,businessNumber,defer,const businessNumberSuggestion: AutofillSuggestion[] = hasBusinessNumberField
+autofill,896,businessNumber,defer,"value: businessNumber,"
+autofill,903,"autofill,businessNumber",defer,"autofillSuggestions = [...businessNumberSuggestion, ...internalSuggestions];"
+autofill,904,applyAutofillToOutputFields,defer,runResult.fields = applyAutofillToOutputFields({
+autofill,906,"autofill,suggestions",defer,"suggestions: autofillSuggestions,"
+autofill,909,autofill,defer,"const confirmedCount = resultFields.filter((field) => field.autofillAction === ""confirmed"").length;"
+autofill,910,autofill,defer,"const correctedCount = resultFields.filter((field) => field.autofillAction === ""corrected"").length;"
+autofill,911,autofill,defer,"const filledCount = resultFields.filter((field) => field.autofillAction === ""filled"").length;"
+autofill,915,autofill,defer,return autofillSuggestions.some((suggestion) => normalizeAutofillFieldKey(suggestion.field) === key && canAutoApplySuggestion(suggestion));
+autofill,918,autofill,defer,"autofillSuggestions.length === 0 ? ""no_candidates"" :"
+autofill,923,autofill,defer,autofillSummary = {
+autofill,925,businessNumber,defer,"businessNumber,"
+autofill,926,autofill,defer,"candidateCount: autofillSuggestions.length,"
+autofill,939,autofill,defer,"console.warn(""[autofill] skipped"", err);"
+autofill,941,autofill,defer,autofillSummary = {
+history,971,ocr_lines,defer,Array.isArray((json as any)?.ocr_lines) ? (json as any).ocr_lines : [];
+history,972,History,defer,const ocrFieldsForHistory: HistoryOcrField[] = rawOcrLines.length > 0
+history,997,"outputFieldsForHistory,History",defer,const outputFieldsForHistory: HistoryOutputField[] = tplFields.length
+history,1002,History,defer,const suggestions = suggestionsForHistoryField(
+history,1027,History,defer,"const suggestions = suggestionsForHistoryField({ en, ko }, autofillSuggestions);"
+history,1041,"appendHistoryRun,History",defer,const successRecord = appendHistoryRun({
+history,1044,processing_time,defer,"processing_time: Number(json?.processing_time) || 0,"
+history,1052,History,defer,"ocr_fields: ocrFieldsForHistory,"
+history,1053,"outputFieldsForHistory,History",defer,"output_fields: outputFieldsForHistory,"
+history,1058,document_fields,defer,"const rawDocFields = (json as Record<string, unknown>)?.document_fields as"
+history,1059,History,defer,HistoryDetailDocumentFields | undefined;
+history,1060,"syncHistoryIndexAndDetailOnCreate,History",defer,"syncHistoryIndexAndDetailOnCreate(successRecord, {"
+history,1069,"outputFieldsForHistory,History",defer,setInitialOutputFields(outputFieldsForHistory);

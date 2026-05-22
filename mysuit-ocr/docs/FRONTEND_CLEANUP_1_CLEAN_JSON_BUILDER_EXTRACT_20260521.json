@@ -1,0 +1,177 @@
+{
+  "task": "FRONTEND-CLEANUP-1 Clean JSON builder extraction with fixture check runner",
+  "toolAndModel": {
+    "tool": "Claude Code",
+    "model": "claude-opus-4-7"
+  },
+  "date": "2026-05-21",
+  "goal": "OcrResultPanel.tsx 내부 Clean JSON v1 생성 로직을 별도 순수 helper(src/lib/cleanJsonBuilder.ts)로 분리한다. 기능 변경 없음.",
+  "backupFiles": [
+    "mysuit-ocr/backup/OcrResultPanel_20260521_before_FRONTEND_CLEANUP_1_CLEAN_JSON_BUILDER_EXTRACT.tsx",
+    "mysuit-ocr/backup/codex_clean_json_v1_fixture_lock_20260521_before_FRONTEND_CLEANUP_1_CHECK_RUNNER.py"
+  ],
+  "modifiedFiles": [
+    {
+      "path": "mysuit-ocr/tmp/codex_clean_json_v1_fixture_lock.py",
+      "change": "Added --check (read-only) mode, deep_compare, check_cases, make_check_report_md, CLI args --phase/--check-report-json/--check-report-md. Capture path unchanged."
+    },
+    {
+      "path": "mysuit-ocr/src/components/upload/OcrResultPanel.tsx",
+      "change": "Removed local CleanJsonInfo/Table/Result types, removed local cleanTableRowsFromObjects/Cells, replaced inline cleanJson useMemo (70 lines) with buildCleanJsonResult call (11 lines). Removed unused INVOICE_TABLE_COL_PRIORITY import. All other tabs / handlers / state untouched.",
+      "linesBefore": 1789,
+      "linesAfter": 1714,
+      "delta": -75
+    }
+  ],
+  "newFiles": [
+    {
+      "path": "mysuit-ocr/src/lib/cleanJsonBuilder.ts",
+      "lines": 171,
+      "exports": [
+        "CleanJsonInfo",
+        "CleanJsonTable",
+        "CleanJsonResult",
+        "CleanJsonInputField",
+        "BuildCleanJsonInput",
+        "buildCleanJsonResult"
+      ]
+    }
+  ],
+  "fixtureCheckRunner": {
+    "scriptPath": "mysuit-ocr/tmp/codex_clean_json_v1_fixture_lock.py",
+    "newCli": ["--check", "--phase <tag>", "--check-report-json <path>", "--check-report-md <path>"],
+    "newFunctions": ["deep_compare", "summarize_invoice_actual", "check_cases", "make_check_report_md"],
+    "writeBehavior": "check mode never writes to fixtures, manifest, or capture report; only writes the check report under docs/CLEAN_JSON_V1_FIXTURE_CHECK_<phase>_20260521.{md,json}",
+    "reusableForFutureTasks": true
+  },
+  "preCheck": {
+    "phase": "pre_extraction_20260521",
+    "reportMd": "mysuit-ocr/docs/CLEAN_JSON_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.md",
+    "reportJson": "mysuit-ocr/docs/CLEAN_JSON_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.json",
+    "stdoutLog": "ocr-server/logs/codex_FRONTEND_CLEANUP_1_FIXTURE_CHECK_PRE.out.log",
+    "stderrLog": "ocr-server/logs/codex_FRONTEND_CLEANUP_1_FIXTURE_CHECK_PRE.err.log",
+    "apiUrl": "http://127.0.0.1:9137/ocr/extract",
+    "apiSource": "started_fallback_port",
+    "summary": { "overall": "PASS", "counts": { "PASS": 9 } },
+    "totalDiffs": 0
+  },
+  "helper": {
+    "name": "buildCleanJsonResult",
+    "path": "mysuit-ocr/src/lib/cleanJsonBuilder.ts",
+    "input": {
+      "templateName": "string | null | undefined",
+      "fields": "ReadonlyArray<CleanJsonInputField>",
+      "docTableRows": "Record<string, unknown>[] | null | undefined",
+      "docTableDisplayCols": "ReadonlyArray<{ key: string }> | null | undefined"
+    },
+    "output": {
+      "templateName": "string",
+      "info": "CleanJsonInfo[] | undefined",
+      "tables": "CleanJsonTable[] | undefined"
+    },
+    "responsibilities": [
+      "Build Clean JSON v1 payload",
+      "Convert field_type=field to info[] items",
+      "Convert field_type=table to tables[] items",
+      "Use provided docTableDisplayCols ordering for table rows (do NOT use Object.keys)",
+      "Legacy fallback chain: field.tableRows -> field.table_data -> JSON.parse(field.value)"
+    ],
+    "notResponsibleFor": [
+      "Raw JSON generation",
+      "React state / useMemo / DOM / storage",
+      "Copy / Export buttons",
+      "Preview / Custom / Validation rendering",
+      "OCR / parser processing",
+      "rowIndex policy (delegated to invoiceTableDisplay.buildInvoicePreviewCols)",
+      "거래_3 insuranceCode / amount policy (locked; see CLEAN_JSON_V1_FIXTURE_LOCK_20260521.md)"
+    ],
+    "purityChecks": [
+      "No react imports / hooks / JSX",
+      "No DOM / window / document / navigator / localStorage / URL / Blob access",
+      "No fetch / axios / network",
+      "No mutation of input objects",
+      "Only deps: @/lib/invoiceTableDisplay { INVOICE_TABLE_COL_PRIORITY, hasMeaningfulTableValue, normalizeTableCell }"
+    ]
+  },
+  "postCheck": {
+    "phase": "post_extraction_20260521",
+    "reportMd": "mysuit-ocr/docs/CLEAN_JSON_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.md",
+    "reportJson": "mysuit-ocr/docs/CLEAN_JSON_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.json",
+    "stdoutLog": "ocr-server/logs/codex_FRONTEND_CLEANUP_1_FIXTURE_CHECK_POST.out.log",
+    "stderrLog": "ocr-server/logs/codex_FRONTEND_CLEANUP_1_FIXTURE_CHECK_POST.err.log",
+    "apiUrl": "http://127.0.0.1:9137/ocr/extract",
+    "apiSource": "started_fallback_port",
+    "summary": { "overall": "PASS", "counts": { "PASS": 9 } },
+    "totalDiffs": 0,
+    "validationCaveat": "Python re-implementation in the check runner is used as the comparison source. This validates OCR pipeline stability and Python re-impl reproducibility, not JS extracted helper output directly. See 'remainingRisks'."
+  },
+  "rowIndexPolicyHeld": {
+    "rowIndexExcluded": ["거래_1", "거래_4", "거래_5", "거래_7"],
+    "rowIndexIncluded": ["거래_2", "거래_3", "거래_6"],
+    "verifiedIn": ["preCheck", "postCheck"]
+  },
+  "trade3LockedHeld": {
+    "extraRowKeys": ["insuranceCode", "amount"],
+    "verifiedIn": ["preCheck", "postCheck"],
+    "lockedCommentLocation": "src/lib/cleanJsonBuilder.ts (file header)"
+  },
+  "receiptFieldOnlyHeld": {
+    "templates": ["TPL-003"],
+    "files": ["1.jpg", "2.jpg"],
+    "infoCount": 6,
+    "tableCount": 0,
+    "tablesKeyOmitted": true
+  },
+  "noEffectAreas": [
+    "Raw JSON mode (toCleanJson unchanged)",
+    "Preview tab JSX",
+    "Custom tab JSX",
+    "Validation tab JSX",
+    "Copy/Export handlers",
+    "Markdown builder fieldsToMarkdown",
+    "Autosave / editedFieldsRef / onPersist",
+    "docTableRows / docTableMeta / docTableDisplayCols memos",
+    "buildInvoicePreviewCols and invoiceTableDisplay.ts (unchanged)",
+    "ocr-server backend / extractors / parsers / templates / manifest / GT"
+  ],
+  "typecheck": {
+    "command": "npm run typecheck",
+    "status": "PASS",
+    "exitCode": 0,
+    "stdoutLog": "ocr-server/logs/codex_FRONTEND_CLEANUP_1_TYPECHECK.out.log",
+    "stderrLog": "ocr-server/logs/codex_FRONTEND_CLEANUP_1_TYPECHECK.err.log"
+  },
+  "build": {
+    "command": "npm run build",
+    "status": "PASS",
+    "exitCode": 0,
+    "stdoutLog": "ocr-server/logs/codex_FRONTEND_CLEANUP_1_BUILD.out.log",
+    "stderrLog": "ocr-server/logs/codex_FRONTEND_CLEANUP_1_BUILD.err.log",
+    "staticPages": "18/18",
+    "runocrSize": { "before": "65.3 kB", "after": "65.2 kB" }
+  },
+  "knownStderrNoise": [
+    {
+      "id": "ISSUE-FRONTEND-BUILD-LOG-1",
+      "message": "ESLint: nextVitals is not iterable",
+      "buildExitCode": 0,
+      "preExistingFrom": "CLEAN_JSON_CONTRACT_20260521 / CLEAN_JSON_V1_FIXTURE_LOCK_20260521",
+      "actionable": false,
+      "trackedSeparatelyAs": "Suggested next task #5"
+    }
+  ],
+  "remainingRisks": [
+    "JS-side direct validation runner not yet built. Python check runner validates OCR + Python re-impl stability, not JS extracted helper directly. Mitigations: literal code move + typecheck/build + dep array preservation. Follow-up: add Node/ts-node runner that imports buildCleanJsonResult.",
+    "거래_3 insuranceCode/amount extra columns remain in v1 output (locked, not fixed).",
+    "Fixture check depends on fallback port 9137 when 9099 unavailable; CI would need backend pre-start or fallback tolerance.",
+    "ISSUE-FRONTEND-BUILD-LOG-1 stderr noise may mask future build failures.",
+    "Preview/Custom/Validation/Raw JSON not yet helper-ized; future tasks."
+  ],
+  "nextSuggestedTasks": [
+    "JS-side fixture check runner (Node/ts-node import of buildCleanJsonResult)",
+    "거래_3 insuranceCode/amount column policy decision (separate task)",
+    "previewTableFields / parseTableField common helper (src/lib/previewTableBuilder.ts)",
+    "fieldsToMarkdown extraction (src/lib/markdownReportBuilder.ts)",
+    "ISSUE-FRONTEND-BUILD-LOG-1 (eslint-config-next compatibility)"
+  ]
+}

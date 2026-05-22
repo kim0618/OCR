@@ -1,0 +1,403 @@
+{
+  "generatedAt": "2026-05-22T15:32:09+09:00",
+  "projectRoot": "D:\\Free_Vue\\OCR\\mysuit-ocr",
+  "cycleName": "RunOCR Cycle 1",
+  "codeModified": false,
+  "commentsAdded": false,
+  "currentStructure": {
+    "root": "src/components/runocr",
+    "files": [
+      {
+        "path": "src/components/runocr/RunOcrWorkspace.tsx",
+        "exists": true,
+        "lineCount": 1556,
+        "sizeBytes": 66973
+      },
+      {
+        "path": "src/components/runocr/ui/RunOcrResultLayout.tsx",
+        "exists": true,
+        "lineCount": 56,
+        "sizeBytes": 1813
+      },
+      {
+        "path": "src/components/runocr/ui/OcrResultPanel.tsx",
+        "exists": true,
+        "lineCount": 1692,
+        "sizeBytes": 81677
+      },
+      {
+        "path": "src/components/runocr/ui/OcrDocViewer.tsx",
+        "exists": true,
+        "lineCount": 250,
+        "sizeBytes": 10050
+      },
+      {
+        "path": "src/components/runocr/ui/CornerAdjust.tsx",
+        "exists": true,
+        "lineCount": 197,
+        "sizeBytes": 7461
+      },
+      {
+        "path": "src/components/runocr/utils/buildOcrFormData.ts",
+        "exists": true,
+        "lineCount": 54,
+        "sizeBytes": 2131
+      },
+      {
+        "path": "src/components/runocr/utils/runOcrRequest.ts",
+        "exists": true,
+        "lineCount": 61,
+        "sizeBytes": 2750
+      },
+      {
+        "path": "src/components/runocr/utils/mapOcrResponse.ts",
+        "exists": true,
+        "lineCount": 163,
+        "sizeBytes": 6791
+      }
+    ]
+  },
+  "completedTasks": [
+    {
+      "name": "FRONTEND-STRUCTURE-1-RUNOCR-FOLDER-MOVE",
+      "summary": "components/upload를 components/runocr로 이동하고 UploadWorkspace를 RunOcrWorkspace로 rename했다.",
+      "report": "docs/FRONTEND_STRUCTURE_1_RUNOCR_FOLDER_MOVE_20260522.md",
+      "reportExists": true
+    },
+    {
+      "name": "FRONTEND-STRUCTURE-1B-RUNOCR-WORKSPACE-NAMING-CLEANUP",
+      "summary": "UploadWorkspace 계열 내부 식별자를 RunOcrWorkspace 계열로 정리했다.",
+      "report": "docs/FRONTEND_STRUCTURE_1B_RUNOCR_WORKSPACE_NAMING_CLEANUP_20260522.md",
+      "reportExists": true
+    },
+    {
+      "name": "FRONTEND-STRUCTURE-2A-RUNOCR-BUILD-OCR-FORMDATA-EXTRACT",
+      "summary": "buildOcrFormData.ts를 생성하고 /ocr/extract FormData 구성을 분리했다. key parity PASS.",
+      "report": "docs/FRONTEND_STRUCTURE_2A_RUNOCR_BUILD_OCR_FORMDATA_EXTRACT_20260522.md",
+      "reportExists": true
+    },
+    {
+      "name": "FRONTEND-STRUCTURE-2B-RUNOCR-REQUEST-EXTRACT",
+      "summary": "runOcrRequest.ts를 생성하고 endpoint, fetch, ok check, json parse를 분리했다.",
+      "report": "docs/FRONTEND_STRUCTURE_2B_RUNOCR_REQUEST_EXTRACT_20260522.md",
+      "reportExists": true
+    },
+    {
+      "name": "FRONTEND-STRUCTURE-2C-RUNOCR-BUILD-RUN-OCR-RESULT-EXTRACT",
+      "summary": "mapOcrResponse.ts를 생성하고 buildRunOcrResult 순수 mapping을 분리했다.",
+      "report": "docs/FRONTEND_STRUCTURE_2C_RUNOCR_BUILD_RUN_OCR_RESULT_EXTRACT_20260522.md",
+      "reportExists": true
+    },
+    {
+      "name": "MARKDOWN-V1-TRADE7-FIXTURE-REBAKE",
+      "summary": "trade_7 markdown fixture drift를 현재 backend actual 기준으로 rebake해 markdown runner 6/6 PASS를 회복했다.",
+      "report": "docs/MARKDOWN_V1_TRADE7_FIXTURE_REBAKE_20260522.md",
+      "reportExists": true
+    },
+    {
+      "name": "FRONTEND-STRUCTURE-3A-RUNOCR-RESULT-LAYOUT-SPLIT",
+      "summary": "RunOcrResultLayout.tsx를 생성하고 결과 화면 layout을 node composition으로 분리했다.",
+      "report": "docs/FRONTEND_STRUCTURE_3A_RUNOCR_RESULT_LAYOUT_SPLIT_20260522.md",
+      "reportExists": true
+    },
+    {
+      "name": "FRONTEND-STRUCTURE-3B-RUNOCR-DOC-COMMENTS",
+      "summary": "RunOCR 8개 파일에 file header/JSDoc을 추가하고 comments-only 검증을 완료했다.",
+      "report": "docs/FRONTEND_STRUCTURE_3B_RUNOCR_DOC_COMMENTS_20260522.md",
+      "reportExists": true
+    }
+  ],
+  "fileRoles": [
+    {
+      "path": "src/components/runocr/RunOcrWorkspace.tsx",
+      "role": "RunOCR 전체 상태/흐름/orchestration",
+      "notes": "파일/템플릿/모델 상태, OCR 실행, history/autofill 흐름, viewer/result 조립을 담당한다."
+    },
+    {
+      "path": "src/components/runocr/ui/RunOcrResultLayout.tsx",
+      "role": "OCR 결과 화면 layout",
+      "notes": "viewer/resultPanel/scanOverlay/hiddenFileInput node 배치만 담당한다."
+    },
+    {
+      "path": "src/components/runocr/ui/OcrResultPanel.tsx",
+      "role": "Preview/Custom/Validation/Clean JSON/Markdown/Raw JSON 결과 패널",
+      "notes": "결과 표시와 tab별 UI를 담당하며 helper 기반 출력 계약과 연결된다."
+    },
+    {
+      "path": "src/components/runocr/ui/OcrDocViewer.tsx",
+      "role": "문서 viewer 및 bbox overlay",
+      "notes": "문서 이미지/PDF와 field overlay, 선택 interaction을 담당한다."
+    },
+    {
+      "path": "src/components/runocr/ui/CornerAdjust.tsx",
+      "role": "normalized corner 보정 UI",
+      "notes": "0~1 normalized corner 좌표를 표시하고 drag update를 상위로 전달한다."
+    },
+    {
+      "path": "src/components/runocr/utils/buildOcrFormData.ts",
+      "role": "/ocr/extract FormData 구성",
+      "notes": "backend multipart key 계약과 FormData key parity 검증 대상이다."
+    },
+    {
+      "path": "src/components/runocr/utils/runOcrRequest.ts",
+      "role": "OCR API 호출 경계",
+      "notes": "endpoint 결정, FormData 구성, fetch, ok/json 처리까지만 담당한다."
+    },
+    {
+      "path": "src/components/runocr/utils/mapOcrResponse.ts",
+      "role": "raw OCR response -> OcrResult 순수 mapping",
+      "notes": "history/autofill/restore/React state에 의존하지 않는 mapping boundary다."
+    }
+  ],
+  "responsibilityBoundaries": [
+    {
+      "responsibility": "OCR 요청 파라미터 구성",
+      "owner": "src/components/runocr/utils/buildOcrFormData.ts"
+    },
+    {
+      "responsibility": "OCR API 호출",
+      "owner": "src/components/runocr/utils/runOcrRequest.ts"
+    },
+    {
+      "responsibility": "raw response mapping",
+      "owner": "src/components/runocr/utils/mapOcrResponse.ts"
+    },
+    {
+      "responsibility": "결과 화면 layout",
+      "owner": "src/components/runocr/ui/RunOcrResultLayout.tsx"
+    },
+    {
+      "responsibility": "결과 표시 UI",
+      "owner": "src/components/runocr/ui/OcrResultPanel.tsx"
+    },
+    {
+      "responsibility": "문서 viewer",
+      "owner": "src/components/runocr/ui/OcrDocViewer.tsx"
+    },
+    {
+      "responsibility": "RunOCR 실행 orchestration/history/autofill",
+      "owner": "src/components/runocr/RunOcrWorkspace.tsx"
+    }
+  ],
+  "validationStatus": {
+    "tableViewModelRunner": {
+      "status": "PASS",
+      "result": "8/8",
+      "source": "recent completed task reports"
+    },
+    "cleanJsonRunner": {
+      "status": "PASS",
+      "result": "9/9",
+      "source": "recent completed task reports"
+    },
+    "markdownFixture": {
+      "status": "PASS",
+      "result": "6/6",
+      "source": "MARKDOWN-V1-TRADE7-FIXTURE-REBAKE and 3B reports"
+    },
+    "formDataKeyParity": {
+      "status": "PASS",
+      "source": "FRONTEND-STRUCTURE-2A"
+    },
+    "requestBoundaryStaticCheck": {
+      "status": "PASS",
+      "source": "FRONTEND-STRUCTURE-2B"
+    },
+    "responseMappingBoundaryStaticCheck": {
+      "status": "PASS",
+      "source": "FRONTEND-STRUCTURE-2C"
+    },
+    "resultLayoutBoundaryStaticCheck": {
+      "status": "PASS",
+      "source": "FRONTEND-STRUCTURE-3A"
+    },
+    "docCommentsStaticCheck": {
+      "status": "PASS",
+      "source": "FRONTEND-STRUCTURE-3B"
+    },
+    "typecheck": {
+      "command": "npm.cmd run typecheck",
+      "exitCode": 0,
+      "status": "PASS",
+      "stdoutTail": "\n> mysuit-ocr@0.1.0 typecheck\n> tsc --noEmit\n\n",
+      "stderrTail": "",
+      "knownStderrNoise": null
+    },
+    "build": {
+      "command": "npm.cmd run build",
+      "exitCode": 0,
+      "status": "PASS",
+      "stdoutTail": "\n> mysuit-ocr@0.1.0 build\n> next build\n\n   ▲ Next.js 15.5.4\n   - Environments: .env.local\n\n   Creating an optimized production build ...\n ✓ Compiled successfully in 2.2s\n   Linting and checking validity of types ...\n   Collecting page data ...\n   Generating static pages (0/18) ...\n   Generating static pages (4/18) \n   Generating static pages (8/18) \n   Generating static pages (13/18) \n ✓ Generating static pages (18/18)\n   Finalizing page optimization ...\n   Collecting build traces ...\n\nRoute (app)                                 Size  First Load JS\n┌ ○ /                                      349 B         102 kB\n├ ○ /_not-found                            993 B         103 kB\n├ ƒ /api/autofill-cache                    141 B         102 kB\n├ ƒ /api/biz-validate                      141 B         102 kB\n├ ƒ /api/ground-truth                      141 B         102 kB\n├ ƒ /api/login                             141 B         102 kB\n├ ƒ /api/ocr-cache                         141 B         102 kB\n├ ƒ /api/ocr-extract                       141 B         102 kB\n├ ƒ /api/test-images                       141 B         102 kB\n├ ○ /autorestore                         3.13 kB         113 kB\n├ ○ /history                             9.08 kB         149 kB\n├ ○ /login                                4.1 kB         127 kB\n├ ○ /ocr                                 2.74 kB         113 kB\n├ ○ /runocr                              65.7 kB         184 kB\n├ ○ /template                            5.73 kB         116 kB\n└ ○ /test                                47.3 kB         157 kB\n+ First Load JS shared by all             102 kB\n  ├ chunks/255-4efeec91c7871d79.js       45.7 kB\n  ├ chunks/4bd1b696-c023c6e3521b1417.js  54.2 kB\n  └ other shared chunks (total)          2.15 kB\n\n\n○  (Static)   prerendered as static content\nƒ  (Dynamic)  server-rendered on demand\n\n",
+      "stderrTail": " ⨯ ESLint: nextVitals is not iterable\n",
+      "knownStderrNoise": "ESLint: nextVitals is not iterable"
+    }
+  },
+  "remainingIssues": [
+    "runOcr() 본문에 autofill/history/restore orchestration 응집이 500+ 줄 남아 있다.",
+    "RunOcrControls는 props 26개+ 위험이 있어 한 번에 큰 컴포넌트로 분리하면 안 된다.",
+    "기본 화면 main return은 아직 미분리 상태다.",
+    "history/restore adapter 분리는 별도 precheck가 필요하다.",
+    "ocr-server/data/templates.json dirty 상태가 남아 있다.",
+    "TPL-95328E52 dirty 영향 precheck가 필요할 수 있다.",
+    "build stderr의 ESLint: nextVitals is not iterable은 exit 0 non-blocking known issue다.",
+    "TestWorkspace는 사용자 확인 전 작업 금지다."
+  ],
+  "reentryConditions": {
+    "cycle2": [
+      "Template folder ownership 정리 후 재진입한다.",
+      "RunOcrControls는 큰 단일 컴포넌트가 아니라 작은 control group 단위로 precheck한다.",
+      "후보: TemplateTopbar, FileUploadPanel, ModelOptionPanel, RunButtonBar, TemplateHoverTooltip."
+    ],
+    "cycle3": [
+      "History/Restore 구조 정리 후 재진입한다.",
+      "history/autofill orchestration adapter 분리를 검토한다.",
+      "후보: buildRunOcrHistoryRecord, applyRunOcrAutofill, restore/autofill adapter."
+    ],
+    "commonMigration": [
+      "feature 폴더 안정화 후 common/utils 이동 여부를 재점검한다.",
+      "runocr/utils 중 common 후보가 있는지 확인한다.",
+      "cleanJson/markdown/tableViewModel/invoiceTableDisplay와 import 경계를 확인한다."
+    ]
+  },
+  "nextSteps": [
+    "Template folder ownership precheck",
+    "Template folder 1차 구조 정리",
+    "TPL-95328E52 dirty 영향 precheck",
+    "RunOCR Cycle 2는 Template 구조 정리 후 재진입",
+    "common/utils 이동은 feature 폴더 안정화 후 진행",
+    "TestWorkspace는 사용자 확인 후 진행"
+  ],
+  "dirtyStatus": [
+    " M src/app/runocr/page.tsx",
+    "RM src/components/upload/UploadWorkspace.tsx -> src/components/runocr/RunOcrWorkspace.tsx",
+    "RM src/components/upload/CornerAdjust.tsx -> src/components/runocr/ui/CornerAdjust.tsx",
+    "RM src/components/upload/OcrDocViewer.tsx -> src/components/runocr/ui/OcrDocViewer.tsx",
+    "RM src/components/upload/OcrResultPanel.tsx -> src/components/runocr/ui/OcrResultPanel.tsx",
+    " M src/lib/invoiceTableDisplay.ts",
+    " M ../ocr-server/data/review_log.jsonl",
+    " M ../ocr-server/data/templates.json",
+    " M ../ocr-server/requirements.txt",
+    "?? docs/CLEAN_JSON_CONTRACT_20260521.json",
+    "?? docs/CLEAN_JSON_CONTRACT_20260521.md",
+    "?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.json",
+    "?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.md",
+    "?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.json",
+    "?? docs/CLEAN_JSON_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.md",
+    "?? docs/CLEAN_JSON_V1_FIXTURE_LOCK_20260521.json",
+    "?? docs/CLEAN_JSON_V1_FIXTURE_LOCK_20260521.md",
+    "?? docs/FRONTEND_CLEANUP_1B_JS_CLEAN_JSON_FIXTURE_RUNNER_20260521.json",
+    "?? docs/FRONTEND_CLEANUP_1B_JS_CLEAN_JSON_FIXTURE_RUNNER_20260521.md",
+    "?? docs/FRONTEND_CLEANUP_1_CLEAN_JSON_BUILDER_EXTRACT_20260521.json",
+    "?? docs/FRONTEND_CLEANUP_1_CLEAN_JSON_BUILDER_EXTRACT_20260521.md",
+    "?? docs/FRONTEND_CLEANUP_2B_MARKDOWN_BUILDER_EXTRACT_20260521.json",
+    "?? docs/FRONTEND_CLEANUP_2B_MARKDOWN_BUILDER_EXTRACT_20260521.md",
+    "?? docs/FRONTEND_CLEANUP_3A_PREVIEW_TABLE_BUILDER_PRECHECK_20260521.json",
+    "?? docs/FRONTEND_CLEANUP_3A_PREVIEW_TABLE_BUILDER_PRECHECK_20260521.md",
+    "?? docs/FRONTEND_CLEANUP_3C_TABLE_RENDERER_PRECHECK_20260521.json",
+    "?? docs/FRONTEND_CLEANUP_3C_TABLE_RENDERER_PRECHECK_20260521.md",
+    "?? docs/FRONTEND_CLEANUP_3D0_2_TABLE_VIEW_MODEL_CONTRACT_TRIM_PRECHECK_20260521.json",
+    "?? docs/FRONTEND_CLEANUP_3D0_2_TABLE_VIEW_MODEL_CONTRACT_TRIM_PRECHECK_20260521.md",
+    "?? docs/FRONTEND_CLEANUP_3D0_TABLE_VIEW_MODEL_CONTRACT_PRECHECK_20260521.json",
+    "?? docs/FRONTEND_CLEANUP_3D0_TABLE_VIEW_MODEL_CONTRACT_PRECHECK_20260521.md",
+    "?? docs/FRONTEND_CLEANUP_3D1_5_TABLE_VIEW_MODEL_INPUT_FIXTURE_PREP_20260521.json",
+    "?? docs/FRONTEND_CLEANUP_3D1_5_TABLE_VIEW_MODEL_INPUT_FIXTURE_PREP_20260521.md",
+    "?? docs/FRONTEND_CLEANUP_3D1_TABLE_VIEW_MODEL_FIXTURE_LOCK_20260521.json",
+    "?? docs/FRONTEND_CLEANUP_3D1_TABLE_VIEW_MODEL_FIXTURE_LOCK_20260521.md",
+    "?? docs/FRONTEND_CLEANUP_3D2_RUNNER_RESULT_20260521.json",
+    "?? docs/FRONTEND_CLEANUP_3D2_STRUCTURED_TABLE_VIEW_MODEL_HELPER_20260521.json",
+    "?? docs/FRONTEND_CLEANUP_3D2_STRUCTURED_TABLE_VIEW_MODEL_HELPER_20260521.md",
+    "?? docs/FRONTEND_CLEANUP_3D3_APPLY_STRUCTURED_TABLE_VIEW_MODEL_PREVIEW_ONLY_20260521.json",
+    "?? docs/FRONTEND_CLEANUP_3D3_APPLY_STRUCTURED_TABLE_VIEW_MODEL_PREVIEW_ONLY_20260521.md",
+    "?? docs/FRONTEND_CLEANUP_3D3_SMOKE_COLUMN_POLICY_PRECHECK_20260521.json",
+    "?? docs/FRONTEND_CLEANUP_3D3_SMOKE_COLUMN_POLICY_PRECHECK_20260521.md",
+    "?? docs/FRONTEND_CLEANUP_OCR_RESULT_PANEL_CYCLE_1_CLOSEOUT_20260521.json",
+    "?? docs/FRONTEND_CLEANUP_OCR_RESULT_PANEL_CYCLE_1_CLOSEOUT_20260521.md",
+    "?? docs/FRONTEND_FILE_INVENTORY_USAGE_PRECHECK_20260521.json",
+    "?? docs/FRONTEND_FILE_INVENTORY_USAGE_PRECHECK_20260521.md",
+    "?? docs/FRONTEND_FILE_INVENTORY_USAGE_PRECHECK_TABLE_20260521.csv",
+    "?? docs/FRONTEND_INVOICE_TABLE_DISPLAY_POLICY_FIX_20260522.json",
+    "?? docs/FRONTEND_INVOICE_TABLE_DISPLAY_POLICY_FIX_20260522.md",
+    "?? docs/FRONTEND_INVOICE_TABLE_DISPLAY_POLICY_FIX_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_INVOICE_TABLE_DISPLAY_POLICY_FIX_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_RUNOCR_COMMENT_PLAN_MAP_20260522.csv",
+    "?? docs/FRONTEND_RUNOCR_COMMENT_PLAN_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_RUNOCR_COMMENT_PLAN_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_RUNOCR_FOLDER_MOVE_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_RUNOCR_FOLDER_MOVE_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_RUNOCR_FOLDER_MOVE_PRECHECK_MAP_20260522.csv",
+    "?? docs/FRONTEND_RUNOCR_REQUEST_EXTRACT_MAP_20260522.csv",
+    "?? docs/FRONTEND_RUNOCR_REQUEST_EXTRACT_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_RUNOCR_REQUEST_EXTRACT_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_RUNOCR_RESPONSE_MAPPING_MAP_20260522.csv",
+    "?? docs/FRONTEND_RUNOCR_RESPONSE_MAPPING_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_RUNOCR_RESPONSE_MAPPING_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_RUNOCR_UI_SPLIT_MAP_20260522.csv",
+    "?? docs/FRONTEND_RUNOCR_UI_SPLIT_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_RUNOCR_UI_SPLIT_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_RUNOCR_UTILS_SPLIT_MAP_20260522.csv",
+    "?? docs/FRONTEND_RUNOCR_UTILS_SPLIT_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_RUNOCR_UTILS_SPLIT_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_STRUCTURE_1B_RUNOCR_WORKSPACE_NAMING_CLEANUP_20260522.json",
+    "?? docs/FRONTEND_STRUCTURE_1B_RUNOCR_WORKSPACE_NAMING_CLEANUP_20260522.md",
+    "?? docs/FRONTEND_STRUCTURE_1_RUNOCR_FOLDER_MOVE_20260522.json",
+    "?? docs/FRONTEND_STRUCTURE_1_RUNOCR_FOLDER_MOVE_20260522.md",
+    "?? docs/FRONTEND_STRUCTURE_2A_RUNOCR_BUILD_OCR_FORMDATA_EXTRACT_20260522.json",
+    "?? docs/FRONTEND_STRUCTURE_2A_RUNOCR_BUILD_OCR_FORMDATA_EXTRACT_20260522.md",
+    "?? docs/FRONTEND_STRUCTURE_2B_RUNOCR_REQUEST_EXTRACT_20260522.json",
+    "?? docs/FRONTEND_STRUCTURE_2B_RUNOCR_REQUEST_EXTRACT_20260522.md",
+    "?? docs/FRONTEND_STRUCTURE_2C_RUNOCR_BUILD_RUN_OCR_RESULT_EXTRACT_20260522.json",
+    "?? docs/FRONTEND_STRUCTURE_2C_RUNOCR_BUILD_RUN_OCR_RESULT_EXTRACT_20260522.md",
+    "?? docs/FRONTEND_STRUCTURE_3A_RUNOCR_RESULT_LAYOUT_SPLIT_20260522.json",
+    "?? docs/FRONTEND_STRUCTURE_3A_RUNOCR_RESULT_LAYOUT_SPLIT_20260522.md",
+    "?? docs/FRONTEND_STRUCTURE_3B_RUNOCR_DOC_COMMENTS_20260522.json",
+    "?? docs/FRONTEND_STRUCTURE_3B_RUNOCR_DOC_COMMENTS_20260522.md",
+    "?? docs/FRONTEND_TARGET_STRUCTURE_OWNERSHIP_MAP_20260522.csv",
+    "?? docs/FRONTEND_TARGET_STRUCTURE_OWNERSHIP_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_TARGET_STRUCTURE_OWNERSHIP_PRECHECK_20260522.md",
+    "?? docs/MARKDOWN_TRADE7_TEMPLATE_DRIFT_PRECHECK_20260522.json",
+    "?? docs/MARKDOWN_TRADE7_TEMPLATE_DRIFT_PRECHECK_20260522.md",
+    "?? docs/MARKDOWN_TRADE7_TEMPLATE_DRIFT_PRECHECK_DIFF_20260522.csv",
+    "?? docs/MARKDOWN_V1_CONTRACT_20260521.json",
+    "?? docs/MARKDOWN_V1_CONTRACT_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_3D3_20260521_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_3D3_20260521_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_3D4_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_3D4_20260522_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_RUNOCR_DOC_COMMENTS_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_RUNOCR_DOC_COMMENTS_20260522_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_RUNOCR_FOLDER_MOVE_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_RUNOCR_FOLDER_MOVE_20260522_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_RUNOCR_FORMDATA_EXTRACT_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_RUNOCR_FORMDATA_EXTRACT_20260522_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_RUNOCR_NAMING_CLEANUP_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_RUNOCR_NAMING_CLEANUP_20260522_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_RUNOCR_REQUEST_EXTRACT_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_RUNOCR_REQUEST_EXTRACT_20260522_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_RUNOCR_RESPONSE_MAPPING_2C_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_RUNOCR_RESPONSE_MAPPING_2C_20260522_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_RUNOCR_RESULT_LAYOUT_SPLIT_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_RUNOCR_RESULT_LAYOUT_SPLIT_20260522_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_TRADE7_REBAKE_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_TRADE7_REBAKE_20260522_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_regression_3D2_20260521_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_regression_3D2_20260521_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_COVERAGE_EOL_PRECHECK_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_COVERAGE_EOL_PRECHECK_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_LOCK_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_LOCK_20260521.md",
+    "?? docs/MARKDOWN_V1_TRADE7_FIXTURE_REBAKE_20260522.json",
+    "?? docs/MARKDOWN_V1_TRADE7_FIXTURE_REBAKE_20260522.md",
+    "?? src/components/runocr/ui/RunOcrResultLayout.tsx",
+    "?? src/components/runocr/utils/",
+    "?? src/lib/cleanJsonBuilder.ts",
+    "?? src/lib/markdownReportBuilder.ts",
+    "?? src/lib/ocrResultFormatters.ts",
+    "?? src/lib/structuredTableViewModel.ts",
+    "?? tmp/",
+    "?? ../ocr-server/requirements-aws.txt"
+  ]
+}

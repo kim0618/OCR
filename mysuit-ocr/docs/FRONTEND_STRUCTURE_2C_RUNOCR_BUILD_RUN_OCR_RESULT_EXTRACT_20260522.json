@@ -1,0 +1,150 @@
+{
+  "task": "FRONTEND-STRUCTURE-2C-RUNOCR-BUILD-RUN-OCR-RESULT-EXTRACT",
+  "date": "2026-05-22",
+  "tool": "Claude Code (VSCode extension)",
+  "model": "claude-opus-4-7 (1M context)",
+  "purpose": [
+    "Extract buildRunOcrResult (raw OCR response -> OcrResult mapping) out of RunOcrWorkspace.tsx into src/components/runocr/utils/mapOcrResponse.ts",
+    "Pure response-mapping helper only; no autofill/history/restore/setOcrResult/UI logic moves"
+  ],
+  "backups": [
+    "backup/RunOcrWorkspace_20260522_before_FRONTEND_STRUCTURE_2C_RUNOCR_BUILD_RUN_OCR_RESULT_EXTRACT.tsx",
+    "backup/buildOcrFormData_20260522_before_FRONTEND_STRUCTURE_2B_RUNOCR_REQUEST_EXTRACT.ts (reused as byte-equal baseline by boundary check)"
+  ],
+  "files_created": [
+    "mysuit-ocr/src/components/runocr/utils/mapOcrResponse.ts",
+    "mysuit-ocr/tmp/check_runocr_response_mapping_boundary_2c.mjs"
+  ],
+  "files_modified": [
+    "mysuit-ocr/src/components/runocr/RunOcrWorkspace.tsx"
+  ],
+  "moved_symbols": [
+    "function buildRunOcrResult (signature gains optional 3rd `options` arg for normalizer injection)",
+    "RECEIPT_ALIAS const (inside buildRunOcrResult)",
+    "pickValue helper (inside buildRunOcrResult)"
+  ],
+  "intentionally_not_moved": [
+    "normalizeAutofillFieldKey — stays in autofillEngine; caller passes it in via options.normalizeFieldKey",
+    "TemplateItem type — stays in RunOcrWorkspace.tsx (widely used there); mapOcrResponse uses a structural minimal BuildRunOcrResultTemplate"
+  ],
+  "mapOcrResponse_boundary": {
+    "path": "src/components/runocr/utils/mapOcrResponse.ts",
+    "exports": [
+      "type BuildRunOcrResultTemplate",
+      "type BuildRunOcrResultOptions",
+      "function buildRunOcrResult(raw, template?, options?): OcrResult"
+    ],
+    "allowed_imports": [
+      "OcrResult, OcrFieldResult from ../ui/OcrResultPanel"
+    ],
+    "forbidden_imports_verified_absent": [
+      "react / useState / useEffect / useMemo / useRef / useRouter",
+      "localStorage",
+      "@/lib/autofillEngine",
+      "@/lib/historyStore",
+      "@/lib/restoreProfileStore",
+      "@/lib/imageStore",
+      "appendHistoryRun / updateHistoryRun / syncHistoryIndexAndDetailOnCreate",
+      "setOcrResult / setCurrentJobId / setCurrentCreatedAt"
+    ],
+    "dependency_direction": "RunOcrWorkspace.tsx -> mapOcrResponse.ts (one-way, no cycle)"
+  },
+  "stays_in_workspace": [
+    "TemplateItem type definition",
+    "normalizeAutofillFieldKey import + injection at call site",
+    "raw_ocr_fields extraction (Array.isArray(json?.fields))",
+    "originalRunFields source-label transformation",
+    "extractBizNumber / collectInternalAutofillCandidates / buildAutofillSuggestionsFromCandidates / applyAutofillToOutputFields",
+    "appendHistoryRun / updateHistoryRun / syncHistoryIndexAndDetailOnCreate",
+    "setOcrResult / setCurrentJobId / setCurrentCreatedAt / setInitialOutputFields / setIsOcrRunning",
+    "try/catch/finally and 'OCR 처리 중 오류가 발생했습니다.' alert"
+  ],
+  "scope_not_modified": [
+    "mysuit-ocr/src/components/runocr/utils/runOcrRequest.ts",
+    "mysuit-ocr/src/components/runocr/utils/buildOcrFormData.ts (byte-for-byte equal to 2B backup)",
+    "mysuit-ocr/src/components/runocr/ui/OcrResultPanel.tsx",
+    "mysuit-ocr/src/components/runocr/ui/OcrDocViewer.tsx",
+    "mysuit-ocr/src/components/runocr/ui/CornerAdjust.tsx",
+    "mysuit-ocr/src/components/test/TestWorkspace.tsx",
+    "mysuit-ocr/src/lib/*",
+    "backend / parser / templates / fixtures (templates.json is dirty from a separate session — not modified here)"
+  ],
+  "response_mapping_static_check": {
+    "script": "tmp/check_runocr_response_mapping_boundary_2c.mjs",
+    "checks": {
+      "map_exists": true,
+      "map_exports_buildRunOcrResult": true,
+      "workspace_imports_from_map": true,
+      "workspace_no_inline_definition": true,
+      "workspace_calls_buildRunOcrResult": true,
+      "map_no_forbidden_imports": true,
+      "map_forbidden_offenders": [],
+      "workspace_keeps_autofill_history": true,
+      "workspace_missing_resident_keywords": [],
+      "buildOcrFormData_unchanged_vs_2B_backup": true,
+      "runOcrRequest_still_imports_builder": true,
+      "map_does_not_import_runOcrRequest": true,
+      "map_does_not_import_workspace": true
+    },
+    "result": "PASS"
+  },
+  "other_runners": {
+    "formdata_2a":           { "command": "node tmp/check_runocr_formdata_keys_2a.mjs",          "result": "PASS" },
+    "request_boundary_2b":   { "command": "node tmp/check_runocr_request_boundary_2b.mjs",       "result": "PASS" },
+    "table_view_model_v1":   { "command": "node tmp/check_table_view_model_v1_fixtures_js.mjs",  "result": "PASS 8/8" },
+    "clean_json_v1":         { "command": "node tmp/check_clean_json_v1_fixtures_js.mjs",        "result": "PASS 9/9 (internal typecheck=PASS, build=PASS)" },
+    "markdown_v1":           { "command": "python tmp/codex_markdown_contract_fixture_lock.py --check --phase post_RUNOCR_RESPONSE_MAPPING_2C_20260522", "result": "FAIL 5/6 — trade_7_7pdf drift caused by independent templates.json edit (TPL-3AFD383E region bbox shift); unrelated to 2C frontend-only extraction" }
+  },
+  "typecheck_build": {
+    "npm run typecheck": "PASS (exit 0)",
+    "npm run build":     "PASS (exit 0, Next.js 15.5.4, 18/18 static pages, /runocr 65.7 kB / 184 kB)"
+  },
+  "known_stderr_noise": [
+    "Next build: '⨯ ESLint: nextVitals is not iterable' — exit 0 (non-blocking)",
+    "Markdown runner needs .venv python (system python lacks 'requests'). Unrelated to extraction."
+  ],
+  "markdown_fail_root_cause": {
+    "case": "trade_7_7pdf",
+    "diff_at_line": 9,
+    "actual": "| 2 | 공급받는자 사업자 번호 (field_2) | 113-85-04425 | 100.0% | OCR |",
+    "expected": "| 2 | 공급받는자 사업자 번호 (field_2) | (113-85-04425) | 97.1% | OCR |",
+    "cause": "Pre-existing dirty edit in ocr-server/data/templates.json — TPL-3AFD383E region bbox coordinates (field_3/4/5) shifted by a few pixels in a separate session. This altered backend OCR extraction output for trade_7_7pdf. The 2C change is frontend-only (file move of a pure mapping function) and cannot affect the backend HTTP API that the Python markdown runner calls directly.",
+    "remediation": "Outside 2C scope — handle via templates.json rollback or fixture rebake in a separate task."
+  },
+  "logs": {
+    "stdout": "ocr-server/logs/codex_FRONTEND_STRUCTURE_2C_RUNOCR_BUILD_RUN_OCR_RESULT_EXTRACT.out.log",
+    "stderr": "ocr-server/logs/codex_FRONTEND_STRUCTURE_2C_RUNOCR_BUILD_RUN_OCR_RESULT_EXTRACT.err.log"
+  },
+  "remaining_issues": [
+    "markdown fixture trade_7_7pdf drift (pre-existing templates.json edit, not from 2C)",
+    "runOcr() body still couples autofill/history/restore mapping (~600 lines) — next phase target",
+    "buildRunOcrResult raw input still `any` to preserve downstream untyped consumption"
+  ],
+  "next_suggestions": [
+    "UI split precheck: RunOcrControls / RunOcrResultLayout",
+    "history adapter extraction precheck (appendHistoryRun/updateHistoryRun call cluster)",
+    "restore / autofill orchestration adapter (highest state coupling — last)",
+    "Template folder ownership precheck",
+    "common/utils relocation after feature folders stabilize",
+    "TestWorkspace folder restructure pending user confirmation",
+    "Separate task: resolve dirty templates.json (rollback or fixture rebake) to fix markdown drift"
+  ],
+  "success_criteria_met": {
+    "mapOcrResponse_created": true,
+    "buildRunOcrResult_moved_only": true,
+    "workspace_imports_from_map": true,
+    "callsite_semantics_preserved": true,
+    "autofill_history_restore_setocrresult_unchanged": true,
+    "map_has_no_history_autofill_restore_localstorage_react_deps": true,
+    "runOcrRequest_buildOcrFormData_untouched": true,
+    "ui_files_unchanged": true,
+    "testworkspace_unchanged": true,
+    "typecheck_pass": true,
+    "build_pass": true,
+    "response_mapping_boundary_check_pass": true,
+    "table_view_model_v1_pass": true,
+    "clean_json_v1_pass": true,
+    "markdown_v1_pass": false,
+    "markdown_v1_unrelated_to_2c": true
+  }
+}

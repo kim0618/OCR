@@ -1,0 +1,321 @@
+{
+  "task": "CODEX_CLEAN_JSON_CONTRACT_PRECHECK_NO_PROD_MODIFY",
+  "generatedAt": "2026-05-21T13:47:56",
+  "toolAndModel": {
+    "tool": "Codex",
+    "model": "Codex"
+  },
+  "noProductionCodeModifiedByThisTask": true,
+  "allowedOutputs": [
+    "tmp\\codex_clean_json_contract_precheck.py",
+    "docs\\CLEAN_JSON_CONTRACT_20260521.md",
+    "docs\\CLEAN_JSON_CONTRACT_20260521.json"
+  ],
+  "repoDirtyStatus": {
+    "statusCommand": {
+      "command": "git -c safe.directory=D:/Free_Vue/OCR status --short",
+      "exitCode": 0,
+      "status": "PASS",
+      "durationSeconds": 0.144,
+      "stdoutTail": "?? docs/CLEAN_JSON_CONTRACT_20260521.json\n?? docs/CLEAN_JSON_CONTRACT_20260521.md\n?? tmp/\n",
+      "stderrTail": ""
+    },
+    "isDirty": true,
+    "entries": [
+      "?? docs/CLEAN_JSON_CONTRACT_20260521.json",
+      "?? docs/CLEAN_JSON_CONTRACT_20260521.md",
+      "?? tmp/"
+    ]
+  },
+  "sourceFindings": {
+    "checkedFiles": {
+      "OcrResultPanel": "src\\components\\upload\\OcrResultPanel.tsx",
+      "invoiceTableDisplay": "src\\lib\\invoiceTableDisplay.ts",
+      "DetailHistoryView": "src\\components\\history\\DetailHistoryView.tsx",
+      "TestWorkspace": "src\\components\\test\\TestWorkspace.tsx"
+    },
+    "OcrResultPanel": {
+      "cleanJsonDefinedAtLine": 854,
+      "toCleanJsonDefinedAtLine": 888,
+      "docTableRowsFromDocumentFields": true,
+      "docTableMetaFromDocumentFields": true,
+      "docTableDisplayColsUsesBuildInvoicePreviewCols": true,
+      "cleanRowsUsesDisplayColumnOrder": true,
+      "cleanJsonInfoUsesFieldTypeField": true,
+      "cleanJsonTablesUsesFieldTypeTable": true,
+      "tableRowsPriority": [
+        "document_fields.tableRows + docTableDisplayCols",
+        "field.tableRows",
+        "field.table_data",
+        "JSON.parse(field.value) as legacy table_data"
+      ],
+      "hasFallbackFieldTableRows": true,
+      "hasFallbackTableData": true,
+      "hasFallbackValueJsonParse": true,
+      "templateNameFallback": "templateName ?? \"\"",
+      "copyExportUseCurrentMode": true,
+      "previewUsesDocTableDisplayCols": true,
+      "customUsesDocTableDisplayCols": true,
+      "rawJsonModeSeparate": false
+    },
+    "invoiceTableDisplay": {
+      "shouldDisplayRowIndexDefinedAtLine": 128,
+      "buildInvoicePreviewColsDefinedAtLine": 204,
+      "rowIndexAllowedByExternalExpectedKeys": true,
+      "rowIndexAllowedByExpectedColumnKeys": true,
+      "tableMetaColumnsNotStandaloneRowIndexSignal": true,
+      "rowValuesNotStandaloneRowIndexSignal": true,
+      "rowIndexPrependedByPolicy": true,
+      "internalKeysFiltered": true
+    },
+    "DetailHistoryView": {
+      "usesBuildInvoicePreviewCols": true,
+      "tableRowsFromDocumentFields": true,
+      "tableMetaFromDocumentFields": true
+    },
+    "TestWorkspace": {
+      "importsShouldDisplayRowIndex": true,
+      "getDisplayTableColumnsDefinedAtLine": 4623,
+      "allModeIntentionallyUnfiltered": true,
+      "expectedModeUsesManifestExpected": true,
+      "detectedModeFiltersRowIndexThenPolicyPrepends": true,
+      "hasValueModeSuppressesRowIndexUnlessPolicy": true
+    }
+  },
+  "currentCleanJsonFlow": [
+    "OcrResultPanel.tsx computes docTableRows from result.document_fields.tableRows.",
+    "docTableMeta is read from result.document_fields.tableMeta.",
+    "docTableDisplayCols is computed with buildInvoicePreviewCols(docTableMeta, docTableRows).",
+    "Clean JSON info is built from editedFields where field_type === 'field'.",
+    "Clean JSON tables are built from editedFields where field_type === 'table'.",
+    "For structured invoice rows, Clean JSON uses document_fields.tableRows ordered by docTableDisplayCols.",
+    "Legacy fallbacks are field.tableRows, field.table_data, and JSON.parse(field.value).",
+    "Copy/export serializes the currently selected markdown or Clean JSON representation."
+  ],
+  "cleanJsonV1Contract": {
+    "topLevel": {
+      "templateName": "Always present. Current code uses templateName ?? ''. documentType/doc_type is not substituted as templateName.",
+      "info": "Optional array. Present only when one or more field entries exist.",
+      "tables": "Optional array. Present only when one or more table entries exist.",
+      "forbiddenExpansionPattern": "Do not add top-level info2/info3/table2 keys."
+    },
+    "infoItems": {
+      "source": "editedFields filtered by field_type === 'field'.",
+      "shape": {
+        "key": "field.name",
+        "label": "field.ko || field.label || field.name",
+        "value": "field.value ?? ''"
+      },
+      "emptyValueRule": "null/undefined values become an empty string; empty strings remain included.",
+      "excludedByConstruction": [
+        "confidence",
+        "bbox",
+        "sourceBboxes",
+        "overlayAdoption",
+        "autofillAction",
+        "source",
+        "original"
+      ]
+    },
+    "tableItems": {
+      "source": "editedFields filtered by field_type === 'table'.",
+      "shape": {
+        "key": "field.name",
+        "label": "field.ko || field.label || field.name",
+        "rows": "array of ordered row objects"
+      },
+      "columnsOutput": "Current v1 does not emit a separate columns array in Clean JSON tables.",
+      "rowSourcePriority": [
+        "document_fields.tableRows when docTableDisplayCols exists",
+        "field.tableRows",
+        "field.table_data",
+        "JSON.parse(field.value) legacy table payload"
+      ],
+      "excludedByConstruction": [
+        "confidence",
+        "bbox",
+        "table_data raw cells",
+        "raw debug",
+        "tableMeta",
+        "valueMappingWarnings"
+      ]
+    },
+    "rowRules": {
+      "rowsAreArrays": true,
+      "rowObjectsAreOrderedByDisplayColumns": true,
+      "doNotUseObjectKeysForStructuredInvoiceRows": true,
+      "normalizeValuesWith": "normalizeCell(row[key])",
+      "legacyCellsFallback": "Cells are mapped to INVOICE_TABLE_COL_PRIORITY fallback keys, then col_N for overflow."
+    },
+    "rawResponseExcludedFromCleanJson": [
+      "extract_debug",
+      "templateImageNormalization",
+      "processing_time",
+      "full_text",
+      "document_fields",
+      "raw OCR/debug timing",
+      "processed_image",
+      "original_image"
+    ]
+  },
+  "rowIndexContract": {
+    "principle": "rowIndex is included only when it is an expected/display column, not merely because row data contains 1..N values.",
+    "displaySignals": [
+      "externalExpectedKeys includes rowIndex",
+      "tableMeta.expectedColumnKeys includes rowIndex"
+    ],
+    "nonSignals": [
+      "tableMeta.columns contains rowIndex",
+      "rows contain rowIndex values"
+    ],
+    "cleanJsonRule": "Clean JSON must follow docTableDisplayCols; it must not re-add rowIndex with Object.keys(row).",
+    "documentFieldsMutation": "document_fields.tableRows remains unchanged.",
+    "currentInvoiceExpectation": {
+      "exclude": [
+        "거래_1",
+        "거래_4",
+        "거래_5",
+        "거래_7"
+      ],
+      "include": [
+        "거래_2",
+        "거래_3",
+        "거래_6"
+      ],
+      "separateIssue": "거래_3 insuranceCode/amount extra columns are not a rowIndex policy issue."
+    }
+  },
+  "previewCleanJsonColumnContract": {
+    "previewSource": "Preview table columns use docTableDisplayCols from buildInvoicePreviewCols.",
+    "cleanJsonSource": "Clean JSON structured table rows use the same docTableDisplayCols.",
+    "guarantees": [
+      "Clean JSON table row key order equals Preview display column order for structured invoice tableRows.",
+      "Preview-hidden internal columns remain hidden in Clean JSON.",
+      "Preview-visible expected columns remain visible in Clean JSON.",
+      "Clean JSON builder must not depend on the original object key order of tableRows."
+    ],
+    "relatedSurfaces": {
+      "Custom": "OcrResultPanel custom table rendering also uses docTableDisplayCols when structured rows exist.",
+      "Validation": "Validation table rendering in OcrResultPanel uses structured row/display column path for table fields.",
+      "History": "DetailHistoryView computes tableDisplayCols with buildInvoicePreviewCols.",
+      "TestWorkspace": "Uses a separate getDisplayTableColumns path, but it imports shouldDisplayRowIndex and has matching rowIndex policy except intentional all mode."
+    }
+  },
+  "cleanJsonV2Direction": {
+    "status": "Future direction only. FRONTEND-CLEANUP-1 must keep v1 output unchanged.",
+    "principles": [
+      "Top-level keys remain templateName, info, tables.",
+      "Multiple info regions are represented as items in the info array, not info2/info3 keys.",
+      "Multiple tables are represented as items in the tables array, not table2/table3 keys.",
+      "Future info items may become sections with key, label, fields.",
+      "Future table items may carry key, label, rows and optional internal display metadata.",
+      "Do not introduce v2 shape as part of the first helper extraction."
+    ],
+    "exampleShape": {
+      "templateName": "영수증",
+      "info": [
+        {
+          "key": "info_1",
+          "label": "가맹점 정보",
+          "fields": [
+            {
+              "key": "merchantName",
+              "label": "상호",
+              "value": "세광전기조명"
+            }
+          ]
+        }
+      ],
+      "tables": [
+        {
+          "key": "table_1",
+          "label": "품목표",
+          "rows": []
+        }
+      ]
+    }
+  },
+  "helperExtractionDraft": {
+    "candidateNames": [
+      "buildCleanJsonResult",
+      "buildCleanOcrJson",
+      "createCleanJsonPayload"
+    ],
+    "recommendedName": "buildCleanJsonResult",
+    "inputDraft": {
+      "templateName": "string | null | undefined",
+      "fields": "OcrField[]",
+      "documentFields": "Record<string, unknown> | null | undefined",
+      "docTableRows": "Record<string, unknown>[] | null",
+      "docTableDisplayCols": "{ key: string }[] | null",
+      "tableMeta": "Record<string, unknown> | null | undefined"
+    },
+    "outputDraft": "CleanJsonV1Payload = { templateName: string; info?: CleanInfoItem[]; tables?: CleanTableItem[] }",
+    "responsibilities": [
+      "Build Clean JSON v1 only.",
+      "Normalize field values and table cell values.",
+      "Use provided display columns for structured table row order.",
+      "Preserve existing fallback behavior for field.tableRows/table_data/value JSON.",
+      "Exclude UI/debug/raw OCR fields from Clean JSON."
+    ],
+    "nonResponsibilities": [
+      "Do not compute Preview columns itself except through inputs supplied by caller.",
+      "Do not mutate result/document_fields/tableRows.",
+      "Do not build Raw JSON.",
+      "Do not know React state, hooks, copy/export UI, or preview mode.",
+      "Do not introduce Clean JSON v2 output shape yet."
+    ]
+  },
+  "beforeAfterValidationCriteria": [
+    "Clean JSON before/after deep equality for representative fixtures.",
+    "templateName unchanged.",
+    "info array unchanged.",
+    "tables array unchanged.",
+    "Invoice rows key order unchanged.",
+    "rowIndex policy unchanged: 거래_1/4/5/7 excluded, 거래_2/3/6 included.",
+    "거래_3 insuranceCode/amount behavior unchanged.",
+    "Preview column order equals Clean JSON row keys.",
+    "Raw JSON mode unchanged.",
+    "Copy/export behavior unchanged.",
+    "npm run typecheck PASS.",
+    "npm run build PASS."
+  ],
+  "recommendedFixtures": [
+    "invoice_statement 거래_1~거래_7",
+    "receipt TPL-003 baseline samples",
+    "field-only document",
+    "document with no tables",
+    "legacy table_data fallback document"
+  ],
+  "risks": [
+    "OcrResultPanel useMemo dependencies can regress if helper inputs are incomplete.",
+    "docTableDisplayCols can be omitted accidentally, causing Object.keys/fallback order drift.",
+    "Legacy field.tableRows/table_data/value fallback can be lost during extraction.",
+    "rowIndex can reappear if helper rebuilds keys from raw rows.",
+    "Applying v2 shape too early would be a breaking change.",
+    "Confusing current v1 info field-array with future v2 info section-array.",
+    "Mixing Clean JSON and Raw JSON responsibilities."
+  ],
+  "typecheck": {
+    "command": "npm.cmd run typecheck",
+    "exitCode": 0,
+    "status": "PASS",
+    "durationSeconds": 2.124,
+    "stdoutTail": "\n> mysuit-ocr@0.1.0 typecheck\n> tsc --noEmit\n\n",
+    "stderrTail": ""
+  },
+  "build": {
+    "command": "npm.cmd run build",
+    "exitCode": 0,
+    "status": "PASS",
+    "durationSeconds": 15.868,
+    "stdoutTail": "\n> mysuit-ocr@0.1.0 build\n> next build\n\n   ▲ Next.js 15.5.4\n   - Environments: .env.local\n\n   Creating an optimized production build ...\n ✓ Compiled successfully in 1728ms\n   Linting and checking validity of types ...\n   Collecting page data ...\n   Generating static pages (0/18) ...\n   Generating static pages (4/18) \n   Generating static pages (8/18) \n   Generating static pages (13/18) \n ✓ Generating static pages (18/18)\n   Finalizing page optimization ...\n   Collecting build traces ...\n\nRoute (app)                                 Size  First Load JS\n┌ ○ /                                      349 B         102 kB\n├ ○ /_not-found                            993 B         103 kB\n├ ƒ /api/autofill-cache                    141 B         102 kB\n├ ƒ /api/biz-validate                      141 B         102 kB\n├ ƒ /api/ground-truth                      141 B         102 kB\n├ ƒ /api/login                             141 B         102 kB\n├ ƒ /api/ocr-cache                         141 B         102 kB\n├ ƒ /api/ocr-extract                       141 B         102 kB\n├ ƒ /api/test-images                       141 B         102 kB\n├ ○ /autorestore                         3.13 kB         113 kB\n├ ○ /history                             9.08 kB         148 kB\n├ ○ /login                                4.1 kB         127 kB\n├ ○ /ocr                                 2.74 kB         113 kB\n├ ○ /runocr                              65.3 kB         184 kB\n├ ○ /template                            5.73 kB         116 kB\n└ ○ /test                                47.2 kB         157 kB\n+ First Load JS shared by all             102 kB\n  ├ chunks/255-4efeec91c7871d79.js       45.7 kB\n  ├ chunks/4bd1b696-c023c6e3521b1417.js  54.2 kB\n  └ other shared chunks (total)          2.15 kB\n\n\n○  (Static)   prerendered as static content\nƒ  (Dynamic)  server-rendered on demand\n\n",
+    "stderrTail": " ⨯ ESLint: nextVitals is not iterable\n"
+  },
+  "nextWork": [
+    "FRONTEND-CLEANUP-1: extract Clean JSON builder as a pure helper while preserving v1 output exactly.",
+    "Add before/after fixture comparison for invoice_statement 거래_1~거래_7.",
+    "Keep 거래_3 insuranceCode/amount as a separate policy task.",
+    "After helper extraction, consider shared table renderer and label map cleanup."
+  ]
+}

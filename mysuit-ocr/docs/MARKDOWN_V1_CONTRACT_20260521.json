@@ -1,0 +1,101 @@
+{
+  "task": "CODEX_FRONTEND_CLEANUP_2A_MARKDOWN_CONTRACT_FIXTURE_LOCK_NO_PROD_MODIFY",
+  "generatedAt": "2026-05-21T14:55:15",
+  "toolAndModel": {
+    "tool": "Codex",
+    "model": "Codex"
+  },
+  "noProductionCodeModifiedByThisTask": true,
+  "source": "src/components/upload/OcrResultPanel.tsx toMarkdown static analysis",
+  "staticFindings": {
+    "functionName": "toMarkdown",
+    "line": 707,
+    "usesEditedFields": true,
+    "usesProcessingTime": true,
+    "usesDocTableRowsForTableSummary": true,
+    "usesDocTableDisplayCols": false,
+    "expandsTableRows": false,
+    "copyExportPath": "previewMode === 'markdown' ? toMarkdown() : toCleanJson()"
+  },
+  "markdownV1Contract": {
+    "functionName": "toMarkdown",
+    "location": "src/components/upload/OcrResultPanel.tsx around line 707",
+    "inputs": [
+      "result.processing_time",
+      "editedFields",
+      "docTableRows for table row count summary",
+      "fieldLabelFull",
+      "parseTableField",
+      "getAdoptionLabel"
+    ],
+    "output": "Markdown string beginning with '# OCR 결과'",
+    "structure": [
+      "H1 heading",
+      "processing time bullet",
+      "field count bullet",
+      "Markdown table header: No / field label / value / confidence / adoption",
+      "one table row per edited field"
+    ],
+    "fieldOrder": "editedFields order is preserved",
+    "labelRule": "resolveFieldLabel primary + optional secondary in parentheses",
+    "valueRule": "non-table fields use field.value escaped for pipe and newline",
+    "tableRule": "table fields output only a summary like '표 데이터(N행)' when docTableRows exists; structured tableRows are not expanded",
+    "rowIndexRule": "Markdown v1 does not render table columns, so rowIndex include/exclude policy is not directly visible in Markdown output",
+    "excluded": [
+      "bbox",
+      "sourceBboxes",
+      "document_fields.tableRows detail",
+      "docTableDisplayCols",
+      "raw OCR debug",
+      "Clean JSON",
+      "Raw JSON"
+    ],
+    "copyExport": "Preview mode selects toMarkdown() for markdown copy/export; Clean JSON path is separate",
+    "lineEndingFixtureRule": "fixtures are stored with LF line endings"
+  },
+  "helperExtractionPlan": {
+    "candidateFile": "src/lib/markdownReportBuilder.ts",
+    "candidateHelperNames": [
+      "fieldsToMarkdown",
+      "buildFieldsMarkdown",
+      "buildMarkdownReport"
+    ],
+    "recommendedName": "fieldsToMarkdown",
+    "inputDraft": {
+      "processingTime": "number",
+      "fields": "ReadonlyArray<OcrFieldLike>",
+      "docTableRows": "ReadonlyArray<Record<string, unknown>> | null"
+    },
+    "output": "string",
+    "purityRequirements": [
+      "no React hooks",
+      "no DOM/window/localStorage/network",
+      "no input mutation",
+      "no copy/export/UI state responsibility"
+    ]
+  },
+  "beforeAfterValidation": [
+    "Exact string equality against tmp/fixtures/markdown_v1/*.md",
+    "Normalize line endings to LF before comparison",
+    "Do not trim trailing newline unless the current output changes explicitly",
+    "Copy/Export behavior unchanged",
+    "Clean JSON/Raw JSON unaffected",
+    "typecheck/build PASS"
+  ],
+  "typecheckAtContractTime": {
+    "command": "npm.cmd run typecheck",
+    "exitCode": 0,
+    "status": "PASS",
+    "durationSeconds": 2.388,
+    "stdoutTail": "\n> mysuit-ocr@0.1.0 typecheck\n> tsc --noEmit\n\n",
+    "stderrTail": ""
+  },
+  "buildAtContractTime": {
+    "command": "npm.cmd run build",
+    "exitCode": 0,
+    "status": "PASS",
+    "durationSeconds": 18.48,
+    "stdoutTail": "\n> mysuit-ocr@0.1.0 build\n> next build\n\n   ▲ Next.js 15.5.4\n   - Environments: .env.local\n\n   Creating an optimized production build ...\n ✓ Compiled successfully in 2.4s\n   Linting and checking validity of types ...\n   Collecting page data ...\n   Generating static pages (0/18) ...\n   Generating static pages (4/18) \n   Generating static pages (8/18) \n   Generating static pages (13/18) \n ✓ Generating static pages (18/18)\n   Finalizing page optimization ...\n   Collecting build traces ...\n\nRoute (app)                                 Size  First Load JS\n┌ ○ /                                      349 B         102 kB\n├ ○ /_not-found                            993 B         103 kB\n├ ƒ /api/autofill-cache                    141 B         102 kB\n├ ƒ /api/biz-validate                      141 B         102 kB\n├ ƒ /api/ground-truth                      141 B         102 kB\n├ ƒ /api/login                             141 B         102 kB\n├ ƒ /api/ocr-cache                         141 B         102 kB\n├ ƒ /api/ocr-extract                       141 B         102 kB\n├ ƒ /api/test-images                       141 B         102 kB\n├ ○ /autorestore                         3.13 kB         113 kB\n├ ○ /history                             9.08 kB         148 kB\n├ ○ /login                                4.1 kB         127 kB\n├ ○ /ocr                                 2.74 kB         113 kB\n├ ○ /runocr                              65.2 kB         183 kB\n├ ○ /template                            5.73 kB         116 kB\n└ ○ /test                                47.2 kB         157 kB\n+ First Load JS shared by all             102 kB\n  ├ chunks/255-4efeec91c7871d79.js       45.7 kB\n  ├ chunks/4bd1b696-c023c6e3521b1417.js  54.2 kB\n  └ other shared chunks (total)          2.15 kB\n\n\n○  (Static)   prerendered as static content\nƒ  (Dynamic)  server-rendered on demand\n\n",
+    "stderrTail": " ⨯ ESLint: nextVitals is not iterable\n"
+  }
+}

@@ -1,0 +1,188 @@
+{
+  "task": "FRONTEND-CLEANUP-2B toMarkdown helper extraction with Markdown fixture check runner",
+  "toolAndModel": {
+    "tool": "Claude Code",
+    "model": "claude-opus-4-7"
+  },
+  "date": "2026-05-21",
+  "goal": "Extract toMarkdown and shared formatters from OcrResultPanel.tsx into pure helpers. Markdown v1 output must match fixtures exactly modulo OCR processing_time line. No feature change.",
+  "boundaryPrinciple": "markdownReportBuilder.ts is markdown-only; Preview/Custom/Validation JSX must NOT import it. Shared formatters live in ocrResultFormatters.ts, imported by everyone (JSX + markdown builder).",
+  "backupFiles": [
+    "mysuit-ocr/backup/OcrResultPanel_20260521_before_FRONTEND_CLEANUP_2B_MARKDOWN_BUILDER_EXTRACT.tsx",
+    "mysuit-ocr/backup/codex_markdown_contract_fixture_lock_20260521_before_FRONTEND_CLEANUP_2B_CHECK_RUNNER.py"
+  ],
+  "modifiedFiles": [
+    {
+      "path": "mysuit-ocr/tmp/codex_markdown_contract_fixture_lock.py",
+      "change": "Added --check / --phase / --check-report-* args; compute_first_diff, check_fixtures, make_check_report_md, _normalize_for_compare functions; added trade_7_7pdf to CASES. Capture path unchanged."
+    },
+    {
+      "path": "mysuit-ocr/src/components/upload/OcrResultPanel.tsx",
+      "change": "Removed local fieldLabel/fieldLabelFull/getAdoptionLabel/isAmountLikeField/parseTableField/toMarkdown. Removed unused resolveFieldLabel import. Added imports for ocrResultFormatters + markdownReportBuilder. toMarkdown is now a thin wrapper around buildMarkdownReport. No JSX changes.",
+      "linesBefore": 1714,
+      "linesAfter": 1649,
+      "delta": -65
+    }
+  ],
+  "newFiles": [
+    {
+      "path": "mysuit-ocr/src/lib/ocrResultFormatters.ts",
+      "lines": 120,
+      "exports": [
+        "OcrFormatterField",
+        "OcrAdoptionLabel",
+        "TableCell",
+        "ParsedTableField",
+        "fieldLabel",
+        "fieldLabelFull",
+        "isAmountLikeField",
+        "getAdoptionLabel",
+        "parseTableField"
+      ]
+    },
+    {
+      "path": "mysuit-ocr/src/lib/markdownReportBuilder.ts",
+      "lines": 81,
+      "exports": [
+        "MarkdownReportField",
+        "BuildMarkdownReportInput",
+        "buildMarkdownReport"
+      ]
+    }
+  ],
+  "auditResults": {
+    "command": "Grep fieldLabel|fieldLabelFull|getAdoptionLabel|parseTableField|isAmountLikeField|toMarkdown across mysuit-ocr/src",
+    "sharedHelpers": [
+      { "name": "fieldLabelFull", "usedIn": ["toMarkdown", "Custom JSX (1308)", "Validation JSX (1603, 1690)"], "decision": "ocrResultFormatters.ts" },
+      { "name": "parseTableField", "usedIn": ["toMarkdown", "previewTableFields useMemo (759)", "Custom JSX (1451)", "Validation JSX (1583)"], "decision": "ocrResultFormatters.ts" },
+      { "name": "getAdoptionLabel", "usedIn": ["toMarkdown", "Custom JSX (1382, 1465, 1494)", "Validation JSX (1624, 1697)", "renderAdoption (445)"], "decision": "ocrResultFormatters.ts" },
+      { "name": "fieldLabel", "usedIn": ["Custom JSX (1310)", "Validation JSX (1604, 1691)", "isAmountLikeField (501)", "autofillDetailRows (551)"], "decision": "ocrResultFormatters.ts" },
+      { "name": "isAmountLikeField", "usedIn": ["actionMeta call (522)", "autofillDetailRows (547, 555)"], "decision": "ocrResultFormatters.ts (depends on fieldLabel)" }
+    ],
+    "markdownOnly": [
+      { "name": "toMarkdown", "usedIn": ["Preview Markdown render (1044)", "Copy (1001)", "Export (998)"], "decision": "markdownReportBuilder.ts" }
+    ],
+    "removedUnusedImport": "resolveFieldLabel"
+  },
+  "fixtureCheckRunner": {
+    "scriptPath": "mysuit-ocr/tmp/codex_markdown_contract_fixture_lock.py",
+    "newCli": ["--check", "--phase <tag>", "--check-report-json <path>", "--check-report-md <path>"],
+    "newFunctions": ["compute_first_diff", "check_fixtures", "make_check_report_md", "_normalize_for_compare"],
+    "writeBehavior": "check mode never writes fixtures, manifest, contract, or lock reports; only writes the check report under docs/MARKDOWN_V1_FIXTURE_CHECK_<phase>_20260521.{md,json}",
+    "comparisonPolicy": {
+      "lineEnding": "LF-strict, no CRLF normalization",
+      "equality": "exact string equality modulo OCR processing_time",
+      "normalized": "- 처리 시간: **N.NNs** line (non-deterministic across OCR runs; masked to **X.XX** on both sides before equality)",
+      "everythingElse": "compared byte-for-byte after UTF-8 decode"
+    },
+    "casesAdded": [
+      { "caseId": "trade_7_7pdf", "reason": "manifest had it (added by coverage precheck) but script CASES did not — fixed alignment" }
+    ]
+  },
+  "preMarkdownCheck": {
+    "phase": "pre_extraction_20260521",
+    "firstAttempt": { "status": "FAIL", "counts": { "FAIL": 5 }, "rootCauses": ["script CASES missing trade_7_7pdf", "OCR processing_time non-determinism leaks into byte equality"] },
+    "afterFix": { "status": "PASS", "counts": { "PASS": 6 }, "totalDiffs": 0 },
+    "reportMd": "mysuit-ocr/docs/MARKDOWN_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.md",
+    "reportJson": "mysuit-ocr/docs/MARKDOWN_V1_FIXTURE_CHECK_pre_extraction_20260521_20260521.json",
+    "apiUrl": "http://127.0.0.1:9141/ocr/extract",
+    "apiSource": "started_fallback_port"
+  },
+  "postMarkdownCheck": {
+    "phase": "post_extraction_20260521",
+    "summary": { "overall": "PASS", "counts": { "PASS": 6 } },
+    "totalDiffs": 0,
+    "reportMd": "mysuit-ocr/docs/MARKDOWN_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.md",
+    "reportJson": "mysuit-ocr/docs/MARKDOWN_V1_FIXTURE_CHECK_post_extraction_20260521_20260521.json",
+    "apiUrl": "http://127.0.0.1:9141/ocr/extract",
+    "apiSource": "started_fallback_port",
+    "perCaseBytes": [
+      { "caseId": "trade_1_1jpg", "actualBytes": 922, "expectedBytes": 922, "lines": 17 },
+      { "caseId": "trade_2_2pdf", "actualBytes": 875, "expectedBytes": 875, "lines": 16 },
+      { "caseId": "trade_3_3pdf", "actualBytes": 942, "expectedBytes": 942, "lines": 17 },
+      { "caseId": "trade_7_7pdf", "actualBytes": 1011, "expectedBytes": 1011, "lines": 17 },
+      { "caseId": "tpl_003_1jpg", "actualBytes": 471, "expectedBytes": 471, "lines": 13 },
+      { "caseId": "tpl_003_2jpg", "actualBytes": 470, "expectedBytes": 470, "lines": 13 }
+    ]
+  },
+  "cleanJsonJsRunnerCheck": {
+    "command": "node tmp/check_clean_json_v1_fixtures_js.mjs",
+    "result": "PASS",
+    "casesPassed": 9,
+    "totalDiffs": 0,
+    "perCase": [
+      { "caseId": "trade_1_1jpg", "diffs": 0 },
+      { "caseId": "trade_2_2pdf", "diffs": 0 },
+      { "caseId": "trade_3_3pdf", "diffs": 0 },
+      { "caseId": "trade_4_4pdf", "diffs": 0 },
+      { "caseId": "trade_5_5pdf", "diffs": 0 },
+      { "caseId": "trade_6_6pdf", "diffs": 0 },
+      { "caseId": "trade_7_7pdf", "diffs": 0 },
+      { "caseId": "tpl_003_1jpg", "diffs": 0 },
+      { "caseId": "tpl_003_2jpg", "diffs": 0 }
+    ],
+    "note": "runner internally re-runs npm typecheck/build as part of its own report; both PASS"
+  },
+  "boundaryVerification": {
+    "markdownReportBuilderImportedBy": ["mysuit-ocr/src/components/upload/OcrResultPanel.tsx"],
+    "ocrResultFormattersImportedBy": ["mysuit-ocr/src/components/upload/OcrResultPanel.tsx", "mysuit-ocr/src/lib/markdownReportBuilder.ts"],
+    "previewCustomValidationImportsMarkdownBuilder": false,
+    "testWorkspaceTouched": false,
+    "detailHistoryTouched": false
+  },
+  "noEffectAreas": [
+    "Preview tab JSX",
+    "Custom tab JSX",
+    "Validation tab JSX",
+    "Raw JSON mode",
+    "Clean JSON path (toCleanJson, cleanJson useMemo, cleanJsonBuilder.ts)",
+    "Copy/Export handlers",
+    "Autosave / editedFieldsRef / onPersist",
+    "renderAdoption / renderSourceBadge / getOriginalOcrValue / actionMeta",
+    "TestWorkspace.tsx, DetailHistoryView.tsx, invoiceTableDisplay.ts, invoiceFieldLabels.ts",
+    "ocr-server backend / extractors / parsers / templates / manifest / GT"
+  ],
+  "typecheck": {
+    "command": "npm run typecheck",
+    "status": "PASS",
+    "exitCode": 0
+  },
+  "build": {
+    "command": "npm run build",
+    "status": "PASS",
+    "exitCode": 0,
+    "staticPages": "18/18",
+    "compileTime": "2.3s",
+    "runocrSize": { "before": "65.2 kB", "after": "65.3 kB" },
+    "firstLoadJsShared": "102 kB (unchanged)"
+  },
+  "knownStderrNoise": [
+    {
+      "id": "ISSUE-FRONTEND-BUILD-LOG-1",
+      "message": "ESLint: nextVitals is not iterable",
+      "buildExitCode": 0,
+      "preExistingFrom": "FRONTEND-CLEANUP-1 / 2A",
+      "actionable": false,
+      "trackedSeparatelyAs": "Suggested next task #5"
+    }
+  ],
+  "remainingRisks": [
+    "Markdown fixture's OCR processing_time leaks non-determinism into v1 contract; --check masks the timing line but strict byte equality not possible without raw-OCR-snapshot replay or removing timing from helper output.",
+    "JS-side direct Markdown check runner not yet built (Python re-impl is the comparison source, like Clean JSON pre-1B).",
+    "Coverage: only 4 invoice cases (trade_1/2/3/7) and 2 receipt cases in markdown fixtures. trade_4/5/6 omitted as redundant (Markdown does not unfold tables).",
+    "ISSUE-FRONTEND-BUILD-LOG-1 stderr noise persists.",
+    "Preview/Custom/Validation JSX themselves not yet refactored — future task."
+  ],
+  "nextSuggestedTasks": [
+    "JS-side Markdown direct check runner (Node import of buildMarkdownReport, mirror Clean JSON 1B pattern)",
+    "거래_3 insuranceCode/amount Clean JSON v1 column policy decision",
+    "previewTableFields helper extraction (FRONTEND-CLEANUP-3 candidate; parseTableField already shared)",
+    "Custom / Validation JSX cleanup (larger PR, same contract → fixture → extract → check pattern)",
+    "ISSUE-FRONTEND-BUILD-LOG-1 (eslint-config-next compatibility)"
+  ],
+  "logs": {
+    "out": "ocr-server/logs/codex_FRONTEND_CLEANUP_2B_MARKDOWN_BUILDER_EXTRACT.out.log",
+    "err": "ocr-server/logs/codex_FRONTEND_CLEANUP_2B_MARKDOWN_BUILDER_EXTRACT.err.log",
+    "format": "single pair of files; all sections appended with header lines"
+  }
+}

@@ -1,0 +1,48 @@
+﻿name,line,category,recommendation,targetPath,risk,reason
+fileInputRef,114,file/preprocess state,utils/useRunOcrState.ts candidate,,,useRef
+uploadStartRef,115,file/preprocess state,utils/useRunOcrState.ts candidate,,,useRef
+activeTemplateId,117,template/model selection state,RunOcrWorkspace 유지 또는 useRunOcrState.ts,,,useState
+templates,118,template/model selection state,RunOcrWorkspace 유지 또는 useRunOcrState.ts,,,useState
+selectedModelId,119,template/model selection state,RunOcrWorkspace 유지 또는 useRunOcrState.ts,,,useState
+runOcrTemplateMode,120,template/model selection state,RunOcrWorkspace 유지 또는 useRunOcrState.ts,,,useState
+cardTooltip,121,template/model selection state,RunOcrWorkspace 유지 또는 useRunOcrState.ts,,,useState
+selectedFile,124,file/preprocess state,utils/useRunOcrState.ts candidate,,,useState
+previewUrl,125,file/preprocess state,utils/useRunOcrState.ts candidate,,,useState
+renderedUrl,126,file/preprocess state,utils/useRunOcrState.ts candidate,,,useState
+uploadDuration,127,file/preprocess state,utils/useRunOcrState.ts candidate,,,useState
+preprocessResult,128,file/preprocess state,utils/useRunOcrState.ts candidate,,,useState
+isPreprocessing,129,file/preprocess state,utils/useRunOcrState.ts candidate,,,useState
+ocrResult,132,OCR result/job state,utils/useRunOcr.ts candidate,,,useState
+isOcrRunning,133,OCR result/job state,utils/useRunOcr.ts candidate,,,useState
+selectedFieldIndex,134,result panel UI state,RunOcrWorkspace 유지 또는 ui local state candidate,,,useState
+processedImageUrl,135,other state,review,,,useState
+corners,136,viewer/canvas state,RunOcrWorkspace 유지; UI split later,,,useState
+showCornerAdjust,137,viewer/canvas state,RunOcrWorkspace 유지; UI split later,,,useState
+canvasImgRef,140,viewer/canvas state,RunOcrWorkspace 유지; UI split later,,,useRef
+canvasRegions,141,viewer/canvas state,RunOcrWorkspace 유지; UI split later,,,useState
+canvasSelectedId,142,viewer/canvas state,RunOcrWorkspace 유지; UI split later,,,useState
+canvasDrawMode,143,viewer/canvas state,RunOcrWorkspace 유지; UI split later,,,useState
+canvasZoom,144,viewer/canvas state,RunOcrWorkspace 유지; UI split later,,,useState
+rowTemplateTargetId,145,template/model selection state,RunOcrWorkspace 유지 또는 useRunOcrState.ts,,,useState
+colGuideTargetId,146,viewer/canvas state,RunOcrWorkspace 유지; UI split later,,,useState
+canvasLoaded,147,viewer/canvas state,RunOcrWorkspace 유지; UI split later,,,useState
+resultTab,148,OCR result/job state,utils/useRunOcr.ts candidate,,,useState
+currentJobId,151,OCR result/job state,utils/useRunOcr.ts candidate,,,useState
+currentCreatedAt,152,OCR result/job state,utils/useRunOcr.ts candidate,,,useState
+initialOutputFields,156,OCR result/job state,utils/useRunOcr.ts candidate,,,useState
+hintSections,272,derived state,keep until dependencies are reduced,,,useMemo
+useEffect@199,199,side effect,review after request/state split,,,useEffect
+useEffect@204,204,side effect,review after request/state split,,,useEffect
+useEffect@229,229,side effect,review after request/state split,,,useEffect
+useEffect@301,301,side effect,review after request/state split,,,useEffect
+useEffect@1097,1097,side effect,review after request/state split,,,useEffect
+useEffect@1127,1127,side effect,review after request/state split,,,useEffect
+buildOcrFormData,,request input builder,DO_FIRST,src/components/runocr/utils/buildOcrFormData.ts,LOW-MEDIUM,Pure-ish boundary with concrete output; easiest to diff by FormData keys.
+runOcrRequest,,network request,DO_FIRST_WITH_FORMDATA_OR_NEXT,src/components/runocr/utils/runOcrRequest.ts,MEDIUM,"Endpoint/fetch/error status handling is cohesive, but touches network behavior."
+mapOcrResponse,,response mapper,DO_LATER,src/components/runocr/utils/mapOcrResponse.ts,HIGH,Currently intertwined with autofill/history snapshot and state updates.
+useRunOcrState,,state bundle hook,DO_LATER,src/components/runocr/utils/useRunOcrState.ts,MEDIUM-HIGH,May reduce line count but risks creating a setter bucket without clarifying flow.
+useRunOcr,,flow hook,DEFER,src/components/runocr/utils/useRunOcr.ts,HIGH,Should happen after request/mapping/history seams are clearer.
+RunOcrControls,,UI component,DO_LATER,src/components/runocr/ui/RunOcrControls.tsx,MEDIUM-HIGH,Props are still broad; safer after request/state boundaries shrink.
+RunOcrResultLayout,,UI layout component,DO_LATER,src/components/runocr/ui/RunOcrResultLayout.tsx,HIGH,Would move many props and can obscure behavior if done before request split.
+history adapter,,history adapter,DEFER,src/components/runocr/utils/buildRunOcrHistorySnapshot.ts,HIGH,History snapshot preserves immutable autofill metadata; avoid in Phase 2A.
+restore/autofill adapter,,restore/autofill adapter,DEFER,src/components/runocr/utils/runAutofillForOcrResult.ts,HIGH,Cross-feature restore logic; needs dedicated adapter precheck.

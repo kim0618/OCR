@@ -1,0 +1,168 @@
+{
+  "task": "FRONTEND-STRUCTURE-4B-TEMPLATE-EDITOR-UI-MOVE",
+  "date": "2026-05-22",
+  "tool": "Claude Code (VSCode extension)",
+  "model": "claude-opus-4-7 (1M context)",
+  "purpose": [
+    "Move the two Template-private editor UI files OcrAnnotator.tsx and OcrRightPanel.tsx from components/ocr/ into components/template/ui/",
+    "No rename, no route policy change, no logic/JSX/state/handler/save/annotation edits",
+    "Keep OcrCanvasPane / ocr/core/* / UnstructuredBuilder / RunOCR / TestWorkspace untouched"
+  ],
+  "backups": [
+    "backup/OcrAnnotator_20260522_before_FRONTEND_STRUCTURE_4B_TEMPLATE_EDITOR_UI_MOVE.tsx",
+    "backup/OcrRightPanel_20260522_before_FRONTEND_STRUCTURE_4B_TEMPLATE_EDITOR_UI_MOVE.tsx",
+    "backup/app_ocr_page_20260522_before_FRONTEND_STRUCTURE_4B_TEMPLATE_EDITOR_UI_MOVE.tsx",
+    "backup/app_template_page_20260522_before_FRONTEND_STRUCTURE_4B_TEMPLATE_EDITOR_UI_MOVE.tsx"
+  ],
+  "moves": [
+    { "from": "mysuit-ocr/src/components/ocr/OcrAnnotator.tsx",   "to": "mysuit-ocr/src/components/template/ui/OcrAnnotator.tsx",   "method": "git mv", "lines": 442 },
+    { "from": "mysuit-ocr/src/components/ocr/OcrRightPanel.tsx",  "to": "mysuit-ocr/src/components/template/ui/OcrRightPanel.tsx",  "method": "git mv", "lines": 507 }
+  ],
+  "files_modified_operational": [
+    {
+      "path": "mysuit-ocr/src/components/template/ui/OcrAnnotator.tsx",
+      "import_fixes": [
+        { "before": "./core/types",         "after": "../../ocr/core/types" },
+        { "before": "./core/export",        "after": "../../ocr/core/export" },
+        { "before": "./OcrCanvasPane",      "after": "../../ocr/OcrCanvasPane" },
+        { "before": "./OcrRightPanel",      "after": "./OcrRightPanel" },
+        { "before": "../common/AppProviders","after": "../../common/AppProviders" }
+      ],
+      "body_jsx_state_handler_changes": "none"
+    },
+    {
+      "path": "mysuit-ocr/src/components/template/ui/OcrRightPanel.tsx",
+      "import_fixes": [
+        { "before": "./core/types", "after": "../../ocr/core/types" },
+        { "before": "./core/ops",   "after": "../../ocr/core/ops" },
+        { "before": "./core/table", "after": "../../ocr/core/table" }
+      ],
+      "body_jsx_state_handler_changes": "none"
+    },
+    {
+      "path": "mysuit-ocr/src/app/ocr/page.tsx",
+      "change": "dynamic import: '../../components/ocr/OcrAnnotator' -> '../../components/template/ui/OcrAnnotator' (line 10)"
+    },
+    {
+      "path": "mysuit-ocr/src/app/template/page.tsx",
+      "change": "dynamic import: '../../components/ocr/OcrAnnotator' -> '../../components/template/ui/OcrAnnotator' (line 10)"
+    }
+  ],
+  "files_modified_verification_scripts_tmp_only": [
+    "mysuit-ocr/tmp/check_template_workspace_move_4a.mjs (4B-aware relax: OcrAnnotator/OcrRightPanel path check now accepts either original ocr/ path OR new template/ui/ path)"
+  ],
+  "files_created": [
+    "mysuit-ocr/tmp/check_template_editor_ui_move_4b.mjs"
+  ],
+  "files_NOT_moved_explicit_phase4b_hold": [
+    "src/components/ocr/OcrCanvasPane.tsx (shared by OcrAnnotator + RunOcrWorkspace — common/ui candidate, solo Template move forbidden)",
+    "src/components/ocr/core/types.ts (COMMON_UTIL_CANDIDATE — RunOCR also depends)",
+    "src/components/ocr/core/ops.ts (Template utils candidate)",
+    "src/components/ocr/core/table.ts (Template utils candidate)",
+    "src/components/ocr/core/export.ts (Template utils candidate)",
+    "src/components/template/UnstructuredBuilder.tsx (already at template/)",
+    "src/components/runocr/* (not in scope; verified unchanged via 3B-backup logic-equivalence)",
+    "src/components/test/TestWorkspace.tsx (user confirmation required)"
+  ],
+  "rename_intentionally_deferred": [
+    "OcrRightPanel -> TemplateRightPanel rename: separate micro-step (importer-chain analysis + verification-script sync required)",
+    "OcrAnnotator name preserved (Template-private identifier rename is a later optional step)"
+  ],
+  "route_policy_preserved": {
+    "/ocr (app/ocr/page.tsx)": "Unchanged. TemplateWorkspace list + editor-mode <OcrAnnotator/> usage intact. Only the dynamic import string was rewritten.",
+    "/template (app/template/page.tsx)": "Unchanged. ModeCard + saved template grid + <OcrAnnotator/> + UnstructuredBuilder branching intact. Only the dynamic import string was rewritten."
+  },
+  "static_check_4b": {
+    "script": "tmp/check_template_editor_ui_move_4b.mjs",
+    "checks": {
+      "new_annotator_exists": true,
+      "new_right_panel_exists": true,
+      "old_annotator_absent": true,
+      "old_right_panel_absent": true,
+      "OcrCanvasPane_untouched_path": true,
+      "ocr_core_dir_untouched_path": true,
+      "TemplateWorkspace_present": true,
+      "UnstructuredBuilder_present": true,
+      "no_rename_TemplateRightPanel": true,
+      "runocr_workspace_unchanged_vs_3b_backup": true,
+      "test_workspace_present": true,
+      "ocr_route_imports_new": true,
+      "template_route_imports_new": true,
+      "ocr_route_no_old_import": true,
+      "template_route_no_old_import": true,
+      "ocr_route_policy_intact": true,
+      "template_route_policy_intact": true,
+      "annotator_imports_canvas_via_ocr": true,
+      "annotator_imports_core_via_ocr": true,
+      "annotator_imports_right_panel_local": true,
+      "annotator_imports_common_via_two_levels": true,
+      "right_panel_imports_core_via_ocr": true,
+      "annotator_logic_equivalent_vs_backup": true,
+      "right_panel_logic_equivalent_vs_backup": true,
+      "annotator_export_name_preserved": true,
+      "right_panel_export_name_preserved": true
+    },
+    "result": "PASS"
+  },
+  "runner_results": {
+    "template_editor_ui_move_4b":  { "command": "node tmp/check_template_editor_ui_move_4b.mjs",                                                            "result": "PASS" },
+    "template_workspace_move_4a":  { "command": "node tmp/check_template_workspace_move_4a.mjs",                                                            "result": "PASS (4B-aware relax of OcrAnnotator/OcrRightPanel path check)" },
+    "formdata_2a":                 { "command": "node tmp/check_runocr_formdata_keys_2a.mjs",                                                               "result": "PASS" },
+    "request_boundary_2b":         { "command": "node tmp/check_runocr_request_boundary_2b.mjs",                                                            "result": "PASS" },
+    "response_mapping_2c":         { "command": "node tmp/check_runocr_response_mapping_boundary_2c.mjs",                                                   "result": "PASS" },
+    "result_layout_3a":            { "command": "node tmp/check_runocr_result_layout_boundary_3a.mjs",                                                      "result": "PASS" },
+    "doc_comments_3b":             { "command": "node tmp/check_runocr_doc_comments_3b.mjs",                                                                "result": "PASS" },
+    "table_view_model_v1":         { "command": "node tmp/check_table_view_model_v1_fixtures_js.mjs",                                                       "result": "PASS 8/8" },
+    "clean_json_v1":               { "command": "node tmp/check_clean_json_v1_fixtures_js.mjs",                                                             "result": "PASS 9/9 (internal typecheck=PASS, build=PASS)" },
+    "markdown_v1":                 { "command": "python tmp/codex_markdown_contract_fixture_lock.py --check --phase post_TEMPLATE_EDITOR_UI_MOVE_20260522", "result": "PASS 6/6 (.venv python)" }
+  },
+  "typecheck_build": {
+    "npm run typecheck": "PASS (exit 0)",
+    "npm run build":     "PASS (exit 0, Next.js 15.5.4, 18/18 static pages)",
+    "route_sizes": {
+      "/ocr":      "2.73 kB / 113 kB (unchanged)",
+      "/template": "5.73 kB / 116 kB (unchanged)",
+      "/runocr":   "65.7 kB / 184 kB (unchanged)"
+    }
+  },
+  "known_stderr_noise": [
+    "Next build: '⨯ ESLint: nextVitals is not iterable' — exit 0 (non-blocking)",
+    "Markdown runner uses .venv python (system python lacks 'requests')."
+  ],
+  "logs": {
+    "stdout": "ocr-server/logs/codex_FRONTEND_STRUCTURE_4B_TEMPLATE_EDITOR_UI_MOVE.out.log",
+    "stderr": "ocr-server/logs/codex_FRONTEND_STRUCTURE_4B_TEMPLATE_EDITOR_UI_MOVE.err.log"
+  },
+  "remaining_issues": [
+    "OcrRightPanel -> TemplateRightPanel rename pending (separate micro-step)",
+    "OcrAnnotator identifier rename pending (separate optional step)",
+    "OcrCanvasPane is shared by RunOCR + Template — common/ui placement analysis pending",
+    "ocr/core/* (types/ops/table/export) classification + relocation pending",
+    "ocr-server/data/templates.json still dirty",
+    "4A verification script was relaxed to accept 4B legitimate move; future phases should follow the same OR-pattern to avoid stale strict checks"
+  ],
+  "next_suggestions": [
+    "OcrRightPanel -> TemplateRightPanel rename micro-step precheck (importer chain + verification-script sync)",
+    "OcrCanvasPane common/shared impact precheck",
+    "ocr/core/* utils relocation precheck (types -> common, ops/table/export -> template utils)",
+    "Template table column definition design precheck",
+    "TPL-95328E52 dirty impact precheck",
+    "TestWorkspace folder restructure pending user confirmation",
+    "(Optional) /ocr route rename/redirect policy decision and separate phase"
+  ],
+  "success_criteria_met": {
+    "OcrAnnotator_moved_to_template_ui": true,
+    "OcrRightPanel_moved_to_template_ui": true,
+    "no_rename": true,
+    "OcrCanvasPane_ocr_core_not_moved": true,
+    "UnstructuredBuilder_not_moved": true,
+    "runocr_files_not_modified": true,
+    "TestWorkspace_not_modified": true,
+    "route_policy_unchanged": true,
+    "import_paths_corrected": true,
+    "no_logic_jsx_state_handler_changes": true,
+    "typecheck_pass": true,
+    "build_pass": true,
+    "all_static_checks_and_runners_pass": true
+  }
+}

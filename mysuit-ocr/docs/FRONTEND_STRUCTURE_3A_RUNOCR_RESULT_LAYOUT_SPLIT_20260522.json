@@ -1,0 +1,121 @@
+{
+  "task": "FRONTEND-STRUCTURE-3A-RUNOCR-RESULT-LAYOUT-SPLIT",
+  "date": "2026-05-22",
+  "tool": "Claude Code (VSCode extension)",
+  "model": "claude-opus-4-7 (1M context)",
+  "purpose": [
+    "Extract only the OCR result branch layout wrapper (lines 1114-1226) of RunOcrWorkspace.tsx into a presentational, node-composition component at src/components/runocr/ui/RunOcrResultLayout.tsx",
+    "Do not move state/handlers/request/response-mapping/history/autofill",
+    "Do not create RunOcrControls (out of scope for 3A)"
+  ],
+  "backup": "backup/RunOcrWorkspace_20260522_before_FRONTEND_STRUCTURE_3A_RUNOCR_RESULT_LAYOUT_SPLIT.tsx",
+  "files_created": [
+    "mysuit-ocr/src/components/runocr/ui/RunOcrResultLayout.tsx",
+    "mysuit-ocr/tmp/check_runocr_result_layout_boundary_3a.mjs"
+  ],
+  "files_modified": [
+    "mysuit-ocr/src/components/runocr/RunOcrWorkspace.tsx"
+  ],
+  "RunOcrResultLayout_props": {
+    "viewer": "React.ReactNode (required) — viewer JSX (OcrCanvasPane | OcrDocViewer | placeholder span)",
+    "resultPanel": "React.ReactNode (required) — OcrResultPanel JSX with all props composed at call site",
+    "scanOverlay": "React.ReactNode (optional) — scan overlay JSX or null based on isOcrRunning",
+    "hiddenFileInput": "React.ReactNode (optional) — hidden <input type=file> JSX"
+  },
+  "node_composition_applied": {
+    "call_site": "if (ocrResult && selectedFile) { const resultViewerNode=...; const resultScanOverlayNode = isOcrRunning ? <div className=\"uw-scan-overlay\">...</div> : null; const resultPanelNode = <OcrResultPanel .../>; const resultHiddenFileInputNode = <input .../>; return <RunOcrResultLayout viewer={resultViewerNode} resultPanel={resultPanelNode} scanOverlay={resultScanOverlayNode} hiddenFileInput={resultHiddenFileInputNode} />; }",
+    "layout_internal": "<div className=\"uw-result-root\"> <div className=\"uw-result-doc\" style={{position:relative}}>{viewer}{scanOverlay}</div> <div className=\"uw-result-panel\">{resultPanel}</div> {hiddenFileInput} </div>",
+    "preserved": [
+      "DOM structure (uw-result-root / uw-result-doc / uw-result-panel)",
+      "All className values",
+      "Inline style position:relative",
+      "3-way viewer conditional (OcrCanvasPane | OcrDocViewer | <span>)",
+      "OcrResultPanel all 18 props including inline onRevalidate / onPartialOcr handlers",
+      "Hidden file input ref/accept/onChange",
+      "Scan overlay condition (isOcrRunning)"
+    ]
+  },
+  "scope_not_modified": [
+    "mysuit-ocr/src/components/runocr/ui/OcrResultPanel.tsx",
+    "mysuit-ocr/src/components/runocr/ui/OcrDocViewer.tsx",
+    "mysuit-ocr/src/components/runocr/ui/CornerAdjust.tsx",
+    "mysuit-ocr/src/components/runocr/utils/buildOcrFormData.ts",
+    "mysuit-ocr/src/components/runocr/utils/runOcrRequest.ts",
+    "mysuit-ocr/src/components/runocr/utils/mapOcrResponse.ts",
+    "mysuit-ocr/src/components/test/TestWorkspace.tsx",
+    "mysuit-ocr/src/lib/*",
+    "backend / parser / templates / fixtures",
+    "RunOcrControls.tsx (not created — out of scope for 3A)",
+    "RunOcrWorkspace.tsx main return (line 1228 onwards), state/hooks/handlers/runOcr()/autofill/history/restore flows (all unchanged)"
+  ],
+  "layout_boundary_static_check": {
+    "script": "tmp/check_runocr_result_layout_boundary_3a.mjs",
+    "checks": {
+      "layout_exists": true,
+      "controls_not_created": true,
+      "layout_props_present": true,
+      "layout_no_heavy_types": true,
+      "layout_heavy_types_found": [],
+      "layout_no_child_imports": true,
+      "layout_child_import_leaks": [],
+      "layout_no_forbidden_keywords": true,
+      "layout_forbidden_keywords_found": [],
+      "workspace_imports_layout": true,
+      "workspace_renders_layout": true,
+      "workspace_keeps_runocr_autofill_history": true,
+      "workspace_missing_resident_keywords": [],
+      "workspace_no_inline_result_root": true,
+      "ocrResultPanel_export_intact": true,
+      "ocrDocViewer_export_intact": true,
+      "cornerAdjust_export_intact": true
+    },
+    "result": "PASS",
+    "note": "First run produced a false-positive FAIL because the naive substring match flagged 'OcrResult' inside 'OcrResultPanel' and 'Corner' inside 'CornerAdjust' in comments. Static check regex was tightened to use word-boundary plus comment-stripping (tmp script only; no production change). Second run: PASS."
+  },
+  "other_runners": {
+    "formdata_2a":           { "command": "node tmp/check_runocr_formdata_keys_2a.mjs",          "result": "PASS" },
+    "request_boundary_2b":   { "command": "node tmp/check_runocr_request_boundary_2b.mjs",       "result": "PASS" },
+    "response_mapping_2c":   { "command": "node tmp/check_runocr_response_mapping_boundary_2c.mjs","result": "PASS" },
+    "table_view_model_v1":   { "command": "node tmp/check_table_view_model_v1_fixtures_js.mjs",  "result": "PASS 8/8" },
+    "clean_json_v1":         { "command": "node tmp/check_clean_json_v1_fixtures_js.mjs",        "result": "PASS 9/9 (internal typecheck=PASS, build=PASS)" },
+    "markdown_v1":           { "command": "python tmp/codex_markdown_contract_fixture_lock.py --check --phase post_RUNOCR_RESULT_LAYOUT_SPLIT_20260522", "result": "PASS 6/6 (.venv python). Note: 2C's trade_7_7pdf drift did not reproduce in this run despite templates.json still being dirty." }
+  },
+  "typecheck_build": {
+    "npm run typecheck": "PASS (exit 0)",
+    "npm run build":     "PASS (exit 0, Next.js 15.5.4, 18/18 static pages, /runocr 65.7 kB / 184 kB — unchanged from 2C)"
+  },
+  "known_stderr_noise": [
+    "Next build: '⨯ ESLint: nextVitals is not iterable' — exit 0 (non-blocking)",
+    "Markdown runner uses .venv python (system python lacks 'requests')."
+  ],
+  "logs": {
+    "stdout": "ocr-server/logs/codex_FRONTEND_STRUCTURE_3A_RUNOCR_RESULT_LAYOUT_SPLIT.out.log",
+    "stderr": "ocr-server/logs/codex_FRONTEND_STRUCTURE_3A_RUNOCR_RESULT_LAYOUT_SPLIT.err.log"
+  },
+  "remaining_issues": [
+    "RunOcrWorkspace.tsx runOcr() body still couples autofill/history/restore mapping (~500 lines)",
+    "Default (non-result) main return (line 1228+) untouched — RunOcrControls split needs separate precheck (HIGH risk, 26+ props)",
+    "ocr-server/data/templates.json remains dirty (separate session); markdown PASS today, but drift may resurface"
+  ],
+  "next_suggestions": [
+    "RunOcrControls split needs precheck — split into smaller control groups (template topbar, model card, run button bar)",
+    "Template folder ownership precheck",
+    "history / restore adapter precheck (highest state coupling — last)",
+    "common/utils relocation after feature folders stabilize",
+    "TPL-95328E52 dirty templates impact precheck (markdown drift prevention)",
+    "TestWorkspace folder restructure pending user confirmation"
+  ],
+  "success_criteria_met": {
+    "RunOcrResultLayout_created": true,
+    "workspace_result_branch_uses_node_composition": true,
+    "layout_only_layout": true,
+    "no_state_handler_request_mapping_history_autofill_moved": true,
+    "RunOcrControls_not_created": true,
+    "OcrResultPanel_OcrDocViewer_CornerAdjust_unchanged": true,
+    "TestWorkspace_unchanged": true,
+    "typecheck_pass": true,
+    "build_pass": true,
+    "all_static_boundary_checks_pass": true,
+    "all_fixture_runners_pass": true
+  }
+}

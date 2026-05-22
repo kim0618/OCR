@@ -1,12 +1,12 @@
 "use client";
 
 import AppShell from "../../components/layout/AppShell";
-import UploadWorkspace from "../../components/upload/UploadWorkspace";
+import RunOcrWorkspace from "../../components/runocr/RunOcrWorkspace";
 
 export default function Page() {
   return (
     <AppShell headerTitle={"RunOCR"} scrollMode="fixed">
-      <UploadWorkspace variant="runocr" />
+      <RunOcrWorkspace variant="runocr" />
     </AppShell>
   );
 }

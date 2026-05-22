@@ -1,0 +1,129 @@
+{
+  "task": "FRONTEND-CLEANUP-3D3 Apply buildStructuredTableViewModel to OcrResultPanel Preview structured table only",
+  "toolAndModel": { "tool": "Claude Code", "model": "claude-opus-4-7" },
+  "date": "2026-05-21",
+  "goal": "Apply 3D-2 helper to Preview structured table JSX only. Custom / Validation / legacy fallback / Clean JSON / Markdown / TestWorkspace untouched. UI output preserved for all 8 fixture cases.",
+  "backupFile": "mysuit-ocr/backup/OcrResultPanel_20260521_before_FRONTEND_CLEANUP_3D3_APPLY_STRUCTURED_TABLE_VIEW_MODEL_PREVIEW_ONLY.tsx",
+  "modifiedFiles": [
+    {
+      "path": "mysuit-ocr/src/components/upload/OcrResultPanel.tsx",
+      "linesBefore": 1649,
+      "linesAfter": 1648,
+      "delta": -1,
+      "changeSummary": [
+        "Added: import { buildStructuredTableViewModel } from '@/lib/structuredTableViewModel'",
+        "Added: previewStructuredTableViewModel useMemo (after docTableDisplayCols)",
+        "Replaced: Preview structured table JSX block to consume viewModel.columns/rows/cells",
+        "Preserved: colgroup/_invoiceColWidth/_invoiceDataAlign/_NUM_KEYS/_IDX_KEYS Preview-specific style policy (inline)",
+        "Preserved: legacy displayRows fallback (Fallback: raw displayRows block)",
+        "Preserved: Custom JSX (UI-CUSTOM-1)",
+        "Preserved: Validation JSX (UI-VALIDATION-1)",
+        "Preserved: Clean JSON path (cleanJson useMemo / toCleanJson)",
+        "Preserved: Markdown path (toMarkdown wrapper / buildMarkdownReport)"
+      ]
+    }
+  ],
+  "filesNotTouched": [
+    "src/lib/structuredTableViewModel.ts",
+    "src/lib/cleanJsonBuilder.ts",
+    "src/lib/markdownReportBuilder.ts",
+    "src/lib/ocrResultFormatters.ts",
+    "src/lib/invoiceTableDisplay.ts",
+    "src/components/test/TestWorkspace.tsx",
+    "src/components/history/DetailHistoryView.tsx",
+    "ocr-server/*",
+    "data/templates.json",
+    "tmp/fixtures/* (all fixtures preserved)"
+  ],
+  "appliedScope": {
+    "previewStructuredTable": true,
+    "previewLegacyFallback": false,
+    "customStructuredTable": false,
+    "customLegacyFallback": false,
+    "validationStructuredTable": false,
+    "validationLegacyFallback": false,
+    "cleanJsonGeneration": false,
+    "markdownGeneration": false,
+    "testWorkspace": false
+  },
+  "previewChangeNotes": {
+    "headerIteration": "finalDisplayCols.map((col)) -> viewModel.columns.map((column))",
+    "headerLabel": "col.labelKo -> column.label (helper applies labelKo || key fallback)",
+    "headerSecondaryShowCondition": "col.labelKo !== col.key -> column.label !== column.key",
+    "bodyRowIteration": "docTableRows.map((row, ri)) -> viewModel.rows.map((row, ri))",
+    "bodyCellIteration": "finalDisplayCols.map((col)) -> row.cells.map((cell))",
+    "cellText": "normalizeCell(row[col.key]) || '-' -> cell.displayValue",
+    "rowCount": "docTableRows.length -> viewModel.meta.rowCount (same value, unified source)",
+    "stylePolicyKept": [
+      "<colgroup> + _invoiceColWidth(col.key)",
+      "textAlign via _invoiceDataAlign(cell.key)",
+      "whiteSpace via _NUM_KEYS.has(cell.key) || _IDX_KEYS.has(cell.key)",
+      "missingExpectedWarning badge"
+    ]
+  },
+  "intentionalNormalizationDivergenceNote": {
+    "before": "normalizeTableCell from invoiceTableDisplay (strips zero-width chars + [–—−－―] dashes + trim)",
+    "after": "normalizeStructuredTableCell from structuredTableViewModel (strips [‐‑‒–—−] dashes + trim; no zero-width strip)",
+    "currentFixtureImpact": "0 (all 8 fixtures PASS byte-identical; no zero-width or fullwidth/horizontal-bar chars in current OCR data)",
+    "futureImpact": "If OCR ever produces zero-width chars or U+FF0D/U+2015 dashes, Preview display changes slightly. This is intentional unification (scenario 2 from 3C precheck)."
+  },
+  "rowIndexPolicyHeld": {
+    "rowIndexExcluded": ["거래_1", "거래_4", "거래_5", "거래_7"],
+    "rowIndexIncluded": ["거래_2", "거래_3", "거래_6"],
+    "mechanism": "helper passes displayCols through; policy decided by buildInvoicePreviewCols (unchanged)"
+  },
+  "trade3LockedHeld": {
+    "extraColumns": ["insuranceCode", "amount"],
+    "values": { "insuranceCode": "669700020", "amount": "301,320" },
+    "verifiedBy": "table view model runner trade3LockedBehaviorPass=true"
+  },
+  "tableViewModelRunner": {
+    "command": "node tmp/check_table_view_model_v1_fixtures_js.mjs",
+    "summary": { "overall": "PASS", "total": 8, "pass": 8, "fail": 0, "totalDiffs": 0, "totalForbiddenHits": 0 }
+  },
+  "cleanJsonRunner": {
+    "command": "node tmp/check_clean_json_v1_fixtures_js.mjs",
+    "summary": { "overall": "PASS", "total": 9, "pass": 9, "totalDiffs": 0 }
+  },
+  "markdownRunner": {
+    "command": "python tmp/codex_markdown_contract_fixture_lock.py --check --phase post_3D3_20260521",
+    "summary": { "overall": "PASS", "counts": { "PASS": 6 } }
+  },
+  "typecheck": { "command": "npm run typecheck", "status": "PASS", "exitCode": 0 },
+  "build": {
+    "command": "npm run build",
+    "status": "PASS",
+    "exitCode": 0,
+    "staticPages": "18/18",
+    "compileTime": "2.4s",
+    "runocrSize": { "before": "65.3 kB", "after": "65.6 kB", "delta": "+0.3 kB", "reason": "helper newly imported by Preview" },
+    "firstLoadJsShared": "102 kB (unchanged)"
+  },
+  "knownStderrNoise": [
+    {
+      "id": "ISSUE-FRONTEND-BUILD-LOG-1",
+      "message": "ESLint: nextVitals is not iterable",
+      "buildExitCode": 0,
+      "preExisting": true
+    }
+  ],
+  "remainingRisks": [
+    "Manual smoke test not yet performed — fixtures pass but visual regression in real browser unverified. Recommended before cycle close-out.",
+    "Custom/Validation still rendering same data via separate inline code paths — duplication remains.",
+    "Legacy parseTableField fallback unchanged (separate buildLegacyTableViewModel deferred).",
+    "ISSUE-FRONTEND-BUILD-LOG-1 stderr noise persists.",
+    "Normalization rule subtly different (zero-width chars no longer stripped in Preview); fixture-invisible but real if such chars appear in future OCR data."
+  ],
+  "nextSuggestedTasks": [
+    "Manual smoke test on /runocr: upload invoice, view Preview tab, confirm table renders identically.",
+    "OcrResultPanel cleanup cycle 1 close-out report (after smoke OK).",
+    "Custom / Validation view model migration (cycle 2 candidate, requires its own precheck for textarea editing wrapper + status UI integration).",
+    "Legacy parseTableField fallback view model (buildLegacyTableViewModel) — separate cycle.",
+    "TestWorkspace cleanup re-confirmation after cycle 1 close-out.",
+    "ISSUE-FRONTEND-BUILD-LOG-1 (eslint-config-next compatibility)."
+  ],
+  "logs": {
+    "out": "ocr-server/logs/codex_FRONTEND_CLEANUP_3D3_APPLY_STRUCTURED_TABLE_VIEW_MODEL_PREVIEW_ONLY.out.log",
+    "err": "ocr-server/logs/codex_FRONTEND_CLEANUP_3D3_APPLY_STRUCTURED_TABLE_VIEW_MODEL_PREVIEW_ONLY.err.log"
+  }
+}

@@ -1,0 +1,109 @@
+{
+  "task": "FRONTEND-STRUCTURE-2A-RUNOCR-BUILD-OCR-FORMDATA-EXTRACT",
+  "date": "2026-05-22",
+  "tool": "Claude Code (VSCode extension)",
+  "model": "claude-opus-4-7 (1M context)",
+  "purpose": [
+    "Extract the OCR /ocr/extract request FormData composition out of RunOcrWorkspace.tsx into a pure helper at src/components/runocr/utils/buildOcrFormData.ts",
+    "No behavior change: same key names, same append order, same conditional rules, same JSON.stringify policy",
+    "API fetch / response mapping / history / restore / autofill / UI split are explicitly out of scope (deferred to later phases)"
+  ],
+  "backup": "backup/RunOcrWorkspace_20260522_before_FRONTEND_STRUCTURE_2A_RUNOCR_BUILD_OCR_FORMDATA_EXTRACT.tsx",
+  "files_created": [
+    "mysuit-ocr/src/components/runocr/utils/buildOcrFormData.ts",
+    "mysuit-ocr/tmp/check_runocr_formdata_keys_2a.mjs"
+  ],
+  "files_modified": [
+    "mysuit-ocr/src/components/runocr/RunOcrWorkspace.tsx"
+  ],
+  "extraction_summary": {
+    "source_location_before": "RunOcrWorkspace.tsx lines ~835-847 inside runOcr()",
+    "replacement_after": "buildOcrFormData({...}) single call inside runOcr()",
+    "import_added": "import { buildOcrFormData } from \"./utils/buildOcrFormData\";"
+  },
+  "formdata_append_keys": [
+    { "order": 1, "key": "file",         "condition": "always",                                              "value": "selectedFile (File)" },
+    { "order": 2, "key": "template_id",  "condition": "activeTemplateId truthy",                              "value": "activeTemplateId (string)" },
+    { "order": 3, "key": "regions",      "condition": "useRegionTemplate && activeTemplate?.regions?.length", "value": "JSON.stringify(activeTemplate.regions)" },
+    { "order": 4, "key": "model_id",     "condition": "isRunOcr",                                             "value": "selectedModelId (string)" },
+    { "order": 5, "key": "documentType", "condition": "activeTemplate?.documentType truthy",                  "value": "activeTemplate.documentType (string)" }
+  ],
+  "preserved_intentionally": [
+    "Corner payload remains commented-out (`if (corners.length === 4) ...`) — same as before",
+    "Other FormData usages in RunOcrWorkspace.tsx (corner detect, preprocess info, revalidate, partial OCR) are different endpoints and remain inline"
+  ],
+  "buildOcrFormData_input_type": {
+    "name": "BuildOcrFormDataInput",
+    "fields": {
+      "file": "File",
+      "templateId": "string | null | undefined",
+      "useRegionTemplate": "boolean",
+      "regions": "Region[] | undefined (reuses ../../ocr/core/types Region)",
+      "isRunOcr": "boolean",
+      "modelId": "string",
+      "documentType": "string | null | undefined"
+    },
+    "purity": "no React imports, no side effects, returns a fresh FormData instance"
+  },
+  "scope_not_modified": [
+    "mysuit-ocr/src/components/runocr/ui/OcrResultPanel.tsx",
+    "mysuit-ocr/src/components/runocr/ui/OcrDocViewer.tsx",
+    "mysuit-ocr/src/components/runocr/ui/CornerAdjust.tsx",
+    "mysuit-ocr/src/components/test/TestWorkspace.tsx",
+    "mysuit-ocr/src/lib/* (invoiceTableDisplay, structuredTableViewModel, cleanJsonBuilder, markdownReportBuilder, ocrResultFormatters)",
+    "backend / parser / templates.json / manifest / GT / fixtures",
+    "RunOcrWorkspace.tsx remainder of runOcr() (validation, fetch, response mapping, autofill, history, restore)"
+  ],
+  "formdata_key_parity_check": {
+    "script": "tmp/check_runocr_formdata_keys_2a.mjs",
+    "beforeKeys": ["file", "template_id", "regions", "model_id", "documentType"],
+    "afterUtilKeys": ["file", "template_id", "regions", "model_id", "documentType"],
+    "sameOrder": true,
+    "sameSet": true,
+    "inlineRemoved": true,
+    "callsBuilder": true,
+    "result": "PASS"
+  },
+  "fixture_runners": {
+    "table_view_model_v1": { "command": "node tmp/check_table_view_model_v1_fixtures_js.mjs", "result": "PASS 8/8" },
+    "clean_json_v1":       { "command": "node tmp/check_clean_json_v1_fixtures_js.mjs",       "result": "PASS 9/9 (internal typecheck=PASS, build=PASS)" },
+    "markdown_v1":         { "command": "python tmp/codex_markdown_contract_fixture_lock.py --check --phase post_RUNOCR_FORMDATA_EXTRACT_20260522", "result": "PASS 6/6 (.venv python used)" }
+  },
+  "typecheck_build": {
+    "npm run typecheck": "PASS (exit 0)",
+    "npm run build":     "PASS (exit 0, Next.js 15.5.4, 18/18 static pages, /runocr 65.6 kB / 184 kB First Load JS — nearly identical, ~0.1 KB smaller)"
+  },
+  "known_stderr_noise": [
+    "Next build: '⨯ ESLint: nextVitals is not iterable' — appears in stderr but exit code 0 (non-blocking, recorded as expected)",
+    "Markdown runner needs .venv python (system python lacks 'requests'). Unrelated to extraction."
+  ],
+  "logs": {
+    "stdout": "ocr-server/logs/codex_FRONTEND_STRUCTURE_2A_RUNOCR_BUILD_OCR_FORMDATA_EXTRACT.out.log",
+    "stderr": "ocr-server/logs/codex_FRONTEND_STRUCTURE_2A_RUNOCR_BUILD_OCR_FORMDATA_EXTRACT.err.log"
+  },
+  "remaining_issues": [
+    "runOcr() function body is still ~600+ lines — autofill/history/restore mapping remain coupled, deferred to next phase",
+    "The other 4 FormData usages (corner / preprocess / revalidate / partial OCR) intentionally remain inline since they hit different endpoints"
+  ],
+  "next_suggestions": [
+    "RunOCR runOcrRequest.ts extraction precheck (separate fetch + endpoint resolution)",
+    "mapOcrResponse extraction is deferred due to history/restore coupling",
+    "RunOcrControls.tsx / RunOcrResultLayout.tsx UI split after request boundary stabilizes",
+    "Template folder ownership precheck",
+    "common/utils relocation after feature folders stabilize",
+    "TestWorkspace folder restructure pending user confirmation",
+    "Optional: unify revalidate/partial OCR FormData via a separate helper (different endpoint, Blob/File branch)"
+  ],
+  "success_criteria_met": {
+    "buildOcrFormData_created": true,
+    "inline_formdata_replaced_with_helper_call": true,
+    "formdata_key_policy_unchanged": true,
+    "api_fetch_response_mapping_history_unchanged": true,
+    "ui_files_unchanged": true,
+    "testworkspace_unchanged": true,
+    "typecheck_pass": true,
+    "build_pass": true,
+    "all_three_runners_pass": true,
+    "key_parity_check_pass": true
+  }
+}
