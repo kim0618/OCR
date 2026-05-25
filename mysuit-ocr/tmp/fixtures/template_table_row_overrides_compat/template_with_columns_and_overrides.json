@@ -1,0 +1,47 @@
+{
+  "_meta": {
+    "fixtureName": "template_with_columns_and_overrides",
+    "description": "table.columns (TPL-9B)와 rowOverrides (TPL-12C)가 함께 있는 상태. tableName/colGuides/stopKeywords/columns/rowOverrides 모두 save 시 보존되고 rows가 materialized되는지 검증."
+  },
+  "templateName": "컬럼+행조정_혼합",
+  "documentType": "invoice_statement",
+  "loaded": {
+    "src": "data:image/png;base64,iVBORw0KGgo=",
+    "fileName": "mixed.png",
+    "naturalWidth": 1200,
+    "naturalHeight": 1600
+  },
+  "regions": [
+    {
+      "id": "table_1",
+      "name": "품목표",
+      "fieldType": "table",
+      "x": 60,
+      "y": 480,
+      "width": 1080,
+      "height": 720,
+      "table": {
+        "mode": "repeat",
+        "rowTemplate": { "x": 60, "y": 480, "width": 1080, "height": 60 },
+        "rows": [
+          { "x": 60, "y": 480, "width": 1080, "height": 60 },
+          { "x": 60, "y": 540, "width": 1080, "height": 90 },
+          { "x": 60, "y": 630, "width": 1080, "height": 60 },
+          { "x": 60, "y": 690, "width": 1080, "height": 60 }
+        ],
+        "colGuides": [0.3, 0.6, 0.8],
+        "stopKeywords": ["전체 합계", "합계", "총액"],
+        "tableName": "품목표",
+        "columns": [
+          { "index": 0, "columnKey": "itemName",  "labelKo": "품목명", "canonicalColumn": "itemName" },
+          { "index": 1, "columnKey": "quantity",  "labelKo": "수량",   "canonicalColumn": "quantity" },
+          { "index": 2, "columnKey": "unitPrice", "labelKo": "단가",   "canonicalColumn": "unitPrice" },
+          { "index": 3, "columnKey": "amount",    "labelKo": "금액",   "canonicalColumn": "amount" }
+        ],
+        "rowOverrides": [
+          { "rowIndex": 1, "height": 90, "locked": true }
+        ]
+      }
+    }
+  ]
+}

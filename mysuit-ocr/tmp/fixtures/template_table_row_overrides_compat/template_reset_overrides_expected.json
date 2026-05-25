@@ -1,0 +1,41 @@
+{
+  "_meta": {
+    "fixtureName": "template_reset_overrides_expected",
+    "description": "rowOverrides가 있는 상태에서 TemplateRightPanel의 `모든 행 조정 초기화` 버튼 (clearRowOverrides)을 적용한 직후 기대 상태. policy: rowOverrides 키 자체를 제거 (TPL-12C 구현). rows / rowTemplate 그대로 유지. saved payload에도 rowOverrides 키 없음."
+  },
+  "policy": {
+    "clearRowOverridesAction": "delete the rowOverrides key from region.table",
+    "preservedFields": ["rowTemplate", "rows", "colGuides", "stopKeywords", "tableName", "columns"]
+  },
+  "templateName": "행조정_초기화",
+  "documentType": "invoice_statement",
+  "loaded": {
+    "src": "data:image/png;base64,iVBORw0KGgo=",
+    "fileName": "reset.png",
+    "naturalWidth": 1200,
+    "naturalHeight": 1600
+  },
+  "regions": [
+    {
+      "id": "table_1",
+      "name": "items",
+      "fieldType": "table",
+      "x": 60,
+      "y": 480,
+      "width": 1080,
+      "height": 600,
+      "table": {
+        "mode": "repeat",
+        "rowTemplate": { "x": 60, "y": 480, "width": 1080, "height": 60 },
+        "rows": [
+          { "x": 60, "y": 480, "width": 1080, "height": 60 },
+          { "x": 60, "y": 540, "width": 1080, "height": 80 },
+          { "x": 60, "y": 620, "width": 1080, "height": 60 }
+        ],
+        "rowOverrides": [
+          { "rowIndex": 1, "height": 80 }
+        ]
+      }
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
-import { TESTSETS, getTestset } from "@/lib/testsets";
+import { TESTSETS, getTestset } from "@/common/config/testsets";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);

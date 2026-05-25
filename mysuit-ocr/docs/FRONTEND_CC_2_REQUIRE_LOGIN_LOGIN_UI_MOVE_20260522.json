@@ -1,0 +1,160 @@
+{
+  "task": "FRONTEND-CC-2-REQUIRE-LOGIN-LOGIN-UI-MOVE",
+  "date": "2026-05-22",
+  "tool": "Claude Code (VSCode extension)",
+  "model": "Claude Opus 4.7 (1M context)",
+  "workdir": "mysuit-ocr/",
+  "purpose": "components/common 잔여 정리 CC-2: src/components/common/RequireLogin.tsx -> src/components/login/ui/RequireLogin.tsx (move only; body byte-identical; 2 route pages' import-path correction only). AppProviders (CC-1 artefact) and TestWorkspace not modified. components/common directory naturally removed (placeholder file not created).",
+  "backup_dir": "mysuit-ocr/backup/components_common_require_login_20260522_before_FRONTEND_CC_2_REQUIRE_LOGIN_LOGIN_UI_MOVE",
+  "backups": [
+    "RequireLogin.tsx",
+    "app_autorestore_page.tsx",
+    "app_history_page.tsx"
+  ],
+  "moved": [
+    {
+      "from": "src/components/common/RequireLogin.tsx",
+      "to": "src/components/login/ui/RequireLogin.tsx",
+      "method": "git mv",
+      "body_byte_identical": true,
+      "self_import_changes": "none"
+    }
+  ],
+  "modified_import_paths": [
+    { "file": "src/app/autorestore/page.tsx", "before": "@/components/common/RequireLogin", "after": "@/components/login/ui/RequireLogin" },
+    { "file": "src/app/history/page.tsx", "before": "@/components/common/RequireLogin", "after": "@/components/login/ui/RequireLogin" }
+  ],
+  "removed_directories": [
+    "src/components/common (empty after move; no placeholder file created)"
+  ],
+  "tmp_scripts": [
+    {
+      "path": "tmp/check_require_login_login_ui_move_cc2.mjs",
+      "action": "created",
+      "checks_total": 18,
+      "result": "PASS"
+    },
+    {
+      "path": "tmp/check_filedropzone_common_ui_move_5e.mjs",
+      "action": "auto_detect_RequireLogin_location",
+      "scope": "REQUIRE_LOGIN resolves to whichever of components/common/RequireLogin.tsx or components/login/ui/RequireLogin.tsx exists"
+    },
+    {
+      "path": "tmp/check_app_providers_layout_move_cc1.mjs",
+      "action": "auto_detect_RequireLogin_location",
+      "scope": "same fallback as 5E patch"
+    }
+  ],
+  "fully_untouched": [
+    "src/components/layout/AppProviders.tsx",
+    "src/components/layout/AppShell.tsx",
+    "src/components/layout/Header.tsx",
+    "src/components/layout/Sidebar.tsx",
+    "src/components/login/LoginWorkspace.tsx",
+    "src/components/test/TestWorkspace.tsx",
+    "src/components/test/core/*",
+    "src/components/runocr/**",
+    "src/components/template/**",
+    "src/components/history/**",
+    "src/components/autorestore/**",
+    "src/common/**",
+    "src/lib/**",
+    "backend/OCR/parser",
+    "templates.json",
+    "fixtures"
+  ],
+  "login_ui_ownership": {
+    "directory": "src/components/login/",
+    "contents_after_cc2": [
+      "LoginWorkspace.tsx (untouched)",
+      "ui/RequireLogin.tsx (CC-2, client auth guard)"
+    ]
+  },
+  "app_providers_untouched": {
+    "path": "src/components/layout/AppProviders.tsx",
+    "still_under_layout": true,
+    "absent_from_common": true,
+    "modified_in_cc2": false
+  },
+  "test_workspace_untouched": {
+    "TestWorkspace_modified": false,
+    "test_core_dir_modified": false,
+    "TestWorkspace_imported_RequireLogin_pre_or_post": false
+  },
+  "components_common_state_post_cc2": {
+    "directory_removed": true,
+    "remaining_files": null,
+    "rationale": "After CC-2 the directory contains no files; removed without placeholder per task instruction. CC-3 will verify absent state if needed."
+  },
+  "require_login_invariants": {
+    "default_export_preserved": true,
+    "hasStoredLogin_used": true,
+    "useRouter_used": true,
+    "redirects_to_login": true,
+    "logic_equivalent_to_backup": true
+  },
+  "static_check_cc2": {
+    "script": "tmp/check_require_login_login_ui_move_cc2.mjs",
+    "result": "PASS",
+    "checks_total": 18,
+    "checks_passed": 18,
+    "skipped_backup_checks": 0,
+    "residuals": 0
+  },
+  "runners": [
+    { "id": 1, "cmd": "npm run typecheck", "result": "PASS", "exit": 0 },
+    { "id": 2, "cmd": "npm run build", "result": "PASS", "exit": 0 },
+    { "id": 3, "cmd": "node tmp/check_table_view_model_v1_fixtures_js.mjs", "result": "PASS", "exit": 0, "score": "8/8" },
+    { "id": 4, "cmd": "node tmp/check_clean_json_v1_fixtures_js.mjs", "result": "PASS", "exit": 0, "score": "9/9" },
+    { "id": 5, "cmd": "python tmp/codex_markdown_contract_fixture_lock.py --check --phase post_REQUIRE_LOGIN_LOGIN_UI_MOVE_20260522", "result": "PASS", "exit": 0, "score": "6/6" },
+    { "id": 6, "cmd": "node tmp/check_runocr_formdata_keys_2a.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 7, "cmd": "node tmp/check_runocr_request_boundary_2b.mjs", "result": "PASS", "exit": 0 },
+    { "id": 8, "cmd": "node tmp/check_runocr_response_mapping_boundary_2c.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 9, "cmd": "node tmp/check_runocr_result_layout_boundary_3a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 10, "cmd": "node tmp/check_runocr_doc_comments_3b.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 11, "cmd": "node tmp/check_template_workspace_move_4a.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 12, "cmd": "node tmp/check_template_editor_ui_move_4b.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 13, "cmd": "node tmp/check_template_right_panel_rename_6a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 14, "cmd": "node tmp/check_template_annotator_rename_6b.mjs", "result": "PASS", "exit": 0 },
+    { "id": 15, "cmd": "node tmp/check_ocr_core_types_common_move_5a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 16, "cmd": "node tmp/check_ocr_core_ops_common_move_5b.mjs", "result": "PASS", "exit": 0 },
+    { "id": 17, "cmd": "node tmp/check_ocr_core_table_common_move_5c.mjs", "result": "PASS", "exit": 0 },
+    { "id": 18, "cmd": "node tmp/check_template_export_payload_move_5d.mjs", "result": "PASS", "exit": 0 },
+    { "id": 19, "cmd": "node tmp/check_filedropzone_common_ui_move_5e.mjs", "result": "PASS", "exit": 0, "notes": "CC-2 REQUIRE_LOGIN 자동 탐지 patch" },
+    { "id": 20, "cmd": "node tmp/check_ocr_canvas_pane_common_ui_move_5f.mjs", "result": "PASS", "exit": 0 },
+    { "id": 21, "cmd": "node tmp/check_lib_ocr_result_formatters_common_move_1a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 22, "cmd": "node tmp/check_lib_invoice_field_labels_common_move_1b.mjs", "result": "PASS", "exit": 0 },
+    { "id": 23, "cmd": "node tmp/check_lib_markdown_report_builder_common_move_1c.mjs", "result": "PASS", "exit": 0 },
+    { "id": 24, "cmd": "node tmp/check_lib_clean_json_builder_common_move_1d.mjs", "result": "PASS", "exit": 0 },
+    { "id": 25, "cmd": "node tmp/check_lib_invoice_table_display_common_move_1e.mjs", "result": "PASS", "exit": 0 },
+    { "id": 26, "cmd": "node tmp/check_lib_structured_table_view_model_common_move_1f.mjs", "result": "PASS", "exit": 0 },
+    { "id": 27, "cmd": "node tmp/check_app_providers_layout_move_cc1.mjs", "result": "PASS", "exit": 0, "notes": "CC-2 REQUIRE_LOGIN 자동 탐지 patch" },
+    { "id": 28, "cmd": "node tmp/check_require_login_login_ui_move_cc2.mjs", "result": "PASS", "exit": 0, "score": "18/18" },
+    { "id": 29, "cmd": "node tmp/check_validation_baseline_repair_1a.mjs", "result": "PASS", "exit": 0 }
+  ],
+  "typecheck_build": {
+    "typecheck": { "cmd": "npm run typecheck", "exit": 0, "result": "PASS" },
+    "build": { "cmd": "npm run build", "exit": 0, "result": "PASS" }
+  },
+  "logs": {
+    "stdout": "ocr-server/logs/codex_FRONTEND_CC_2_REQUIRE_LOGIN_LOGIN_UI_MOVE.out.log",
+    "stderr": "ocr-server/logs/codex_FRONTEND_CC_2_REQUIRE_LOGIN_LOGIN_UI_MOVE.err.log"
+  },
+  "known_stderr_noise": [
+    "ESLint: nextVitals is not iterable (build exit 0, non-blocking)"
+  ],
+  "remaining_issues": [
+    "Historical backup files for phases 2A/2B/3B/4A/4B remain absent; those checks continue to use the PASS_WITH_SKIPPED_BACKUP verdict and skip logic-equivalence comparison. Not caused by CC-2.",
+    "common/utils/ocrResultFormatters.ts still imports @/lib/autofillEngine (type-only) from 1A; follow-up LIB phase will resolve this remaining temp src/lib dependency.",
+    "src/components/common/ directory removed by CC-2. CC-3 can formally verify absent state if desired.",
+    "src/lib/profiles.ts contains a doc-comment substring 'core/types.ts' (not an import). Cosmetic cleanup deferred."
+  ],
+  "next_steps": [
+    "CC-3 components/common formal absent verification (optional)",
+    "bizNumber move pending TestWorkspace impact precheck",
+    "autofillEngine -> common/utils precheck (resolves remaining 1A type-only temp dep)",
+    "profiles / imageStore / historyStore / restoreProfileStore / groundTruthStore / testsets per-file precheck",
+    "history/restore structural cleanup precheck",
+    "TestWorkspace structural cleanup: defer until user confirms"
+  ]
+}

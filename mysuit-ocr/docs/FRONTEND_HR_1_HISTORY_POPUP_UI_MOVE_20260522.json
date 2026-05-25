@@ -1,0 +1,164 @@
+{
+  "task": "FRONTEND-HR-1-HISTORY-POPUP-UI-MOVE",
+  "date": "2026-05-22",
+  "tool": "Claude Code (VSCode extension)",
+  "model": "Claude Opus 4.7 (1M context)",
+  "workdir": "mysuit-ocr/",
+  "purpose": "history/restore 구조 정리 first micro-step: history/popup/CreateHistoryPopup.tsx and history/popup/EditHistoryPopup.tsx -> history/ui/ (move only; bodies byte-identical; HistoryWorkspace import-path correction only). DetailHistoryView, historyStore, imageStore, autorestore, TestWorkspace not modified.",
+  "backup_dir": "mysuit-ocr/backup/history_popup_ui_20260522_before_FRONTEND_HR_1_HISTORY_POPUP_UI_MOVE",
+  "backups": [
+    "CreateHistoryPopup.tsx",
+    "EditHistoryPopup.tsx",
+    "HistoryWorkspace.tsx"
+  ],
+  "moved": [
+    {
+      "from": "src/components/history/popup/CreateHistoryPopup.tsx",
+      "to": "src/components/history/ui/CreateHistoryPopup.tsx",
+      "method": "git mv",
+      "body_byte_identical": true,
+      "self_import_changes": "none"
+    },
+    {
+      "from": "src/components/history/popup/EditHistoryPopup.tsx",
+      "to": "src/components/history/ui/EditHistoryPopup.tsx",
+      "method": "git mv",
+      "body_byte_identical": true,
+      "self_import_changes": "none"
+    }
+  ],
+  "modified_import_paths": [
+    { "file": "src/components/history/HistoryWorkspace.tsx", "line": 6, "before": "./popup/CreateHistoryPopup", "after": "./ui/CreateHistoryPopup" },
+    { "file": "src/components/history/HistoryWorkspace.tsx", "line": 7, "before": "./popup/EditHistoryPopup", "after": "./ui/EditHistoryPopup" }
+  ],
+  "removed_directories": [
+    "src/components/history/popup (empty after move; no placeholder file created)"
+  ],
+  "tmp_scripts": [
+    {
+      "path": "tmp/check_history_popup_ui_move_hr1.mjs",
+      "action": "created",
+      "checks_total": 24,
+      "result": "PASS"
+    }
+  ],
+  "earlier_checks_no_patch_required": true,
+  "earlier_checks_note": "No existing static check references the history/popup or history/ui path; HR-1 did not regress any prior check.",
+  "fully_untouched": [
+    "src/components/history/DetailHistoryView.tsx",
+    "src/lib/historyStore.ts",
+    "src/lib/imageStore.ts",
+    "src/lib/restoreProfileStore.ts",
+    "src/lib/profiles.ts",
+    "src/lib/autofillEngine.ts",
+    "src/lib/bizNumber.ts",
+    "src/components/autorestore/**",
+    "src/components/restore/**",
+    "src/components/test/TestWorkspace.tsx",
+    "src/components/test/core/*",
+    "src/components/runocr/**",
+    "src/components/template/**",
+    "src/common/**",
+    "backend/OCR/parser",
+    "templates.json",
+    "fixtures"
+  ],
+  "history_ui_ownership": {
+    "directory": "src/components/history/",
+    "contents_after_hr1": [
+      "HistoryWorkspace.tsx (feature root)",
+      "DetailHistoryView.tsx (untouched; HR-2 candidate)",
+      "ui/CreateHistoryPopup.tsx (HR-1)",
+      "ui/EditHistoryPopup.tsx (HR-1)"
+    ]
+  },
+  "popup_invariants": {
+    "create_default_export_preserved": "CreateHistoryPopup",
+    "edit_default_export_preserved": "EditHistoryPopup",
+    "HistoryPopupForm_type_export_preserved": true,
+    "HistoryPopupRow_type_export_preserved": true,
+    "create_logic_equivalent_to_backup": true,
+    "edit_logic_equivalent_to_backup": true
+  },
+  "workspace_invariants": {
+    "import_path_only_edit": true,
+    "logic_equivalent_to_backup": true
+  },
+  "detail_history_untouched": {
+    "path": "src/components/history/DetailHistoryView.tsx",
+    "modified": false,
+    "default_export_preserved": true,
+    "future_phase": "HR-2 may move DetailHistoryView to history/ui after evaluating store/GT/restore coupling"
+  },
+  "stores_untouched": {
+    "historyStore_modified": false,
+    "imageStore_modified": false,
+    "rationale": "store layer has broad impact; deferred to separate HR-3/HR-4 phases"
+  },
+  "test_workspace_untouched": {
+    "TestWorkspace_modified": false,
+    "test_core_dir_modified": false,
+    "TestWorkspace_imported_popups_pre_or_post": false
+  },
+  "static_check_hr1": {
+    "script": "tmp/check_history_popup_ui_move_hr1.mjs",
+    "result": "PASS",
+    "checks_total": 24,
+    "checks_passed": 24,
+    "skipped_backup_checks": 0,
+    "residuals": 0
+  },
+  "runners": [
+    { "id": 1, "cmd": "npm run typecheck", "result": "PASS", "exit": 0 },
+    { "id": 2, "cmd": "npm run build", "result": "PASS", "exit": 0 },
+    { "id": 3, "cmd": "node tmp/check_table_view_model_v1_fixtures_js.mjs", "result": "PASS", "exit": 0, "score": "8/8" },
+    { "id": 4, "cmd": "node tmp/check_clean_json_v1_fixtures_js.mjs", "result": "PASS", "exit": 0, "score": "9/9" },
+    { "id": 5, "cmd": "python tmp/codex_markdown_contract_fixture_lock.py --check --phase post_HISTORY_POPUP_UI_MOVE_20260522", "result": "PASS", "exit": 0, "score": "6/6" },
+    { "id": 6, "cmd": "node tmp/check_app_providers_layout_move_cc1.mjs", "result": "PASS", "exit": 0 },
+    { "id": 7, "cmd": "node tmp/check_require_login_login_ui_move_cc2.mjs", "result": "PASS", "exit": 0 },
+    { "id": 8, "cmd": "node tmp/check_validation_baseline_repair_1a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 9, "cmd": "node tmp/check_lib_ocr_result_formatters_common_move_1a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 10, "cmd": "node tmp/check_lib_invoice_field_labels_common_move_1b.mjs", "result": "PASS", "exit": 0 },
+    { "id": 11, "cmd": "node tmp/check_lib_markdown_report_builder_common_move_1c.mjs", "result": "PASS", "exit": 0 },
+    { "id": 12, "cmd": "node tmp/check_lib_clean_json_builder_common_move_1d.mjs", "result": "PASS", "exit": 0 },
+    { "id": 13, "cmd": "node tmp/check_lib_invoice_table_display_common_move_1e.mjs", "result": "PASS", "exit": 0 },
+    { "id": 14, "cmd": "node tmp/check_lib_structured_table_view_model_common_move_1f.mjs", "result": "PASS", "exit": 0 },
+    { "id": 15, "cmd": "node tmp/check_ocr_core_types_common_move_5a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 16, "cmd": "node tmp/check_ocr_core_ops_common_move_5b.mjs", "result": "PASS", "exit": 0 },
+    { "id": 17, "cmd": "node tmp/check_ocr_core_table_common_move_5c.mjs", "result": "PASS", "exit": 0 },
+    { "id": 18, "cmd": "node tmp/check_template_export_payload_move_5d.mjs", "result": "PASS", "exit": 0 },
+    { "id": 19, "cmd": "node tmp/check_filedropzone_common_ui_move_5e.mjs", "result": "PASS", "exit": 0 },
+    { "id": 20, "cmd": "node tmp/check_ocr_canvas_pane_common_ui_move_5f.mjs", "result": "PASS", "exit": 0 },
+    { "id": 21, "cmd": "node tmp/check_template_right_panel_rename_6a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 22, "cmd": "node tmp/check_template_annotator_rename_6b.mjs", "result": "PASS", "exit": 0 },
+    { "id": 23, "cmd": "node tmp/check_runocr_request_boundary_2b.mjs", "result": "PASS", "exit": 0 },
+    { "id": 24, "cmd": "node tmp/check_runocr_result_layout_boundary_3a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 25, "cmd": "node tmp/check_history_popup_ui_move_hr1.mjs", "result": "PASS", "exit": 0, "score": "24/24" }
+  ],
+  "typecheck_build": {
+    "typecheck": { "cmd": "npm run typecheck", "exit": 0, "result": "PASS" },
+    "build": { "cmd": "npm run build", "exit": 0, "result": "PASS" }
+  },
+  "logs": {
+    "stdout": "ocr-server/logs/codex_FRONTEND_HR_1_HISTORY_POPUP_UI_MOVE.out.log",
+    "stderr": "ocr-server/logs/codex_FRONTEND_HR_1_HISTORY_POPUP_UI_MOVE.err.log"
+  },
+  "known_stderr_noise": [
+    "ESLint: nextVitals is not iterable (build exit 0, non-blocking)"
+  ],
+  "remaining_issues": [
+    "DetailHistoryView.tsx not moved in HR-1 due to store/GT/restore coupling; HR-2 will evaluate.",
+    "historyStore/imageStore not moved (broad impact, separate phases).",
+    "common/utils/ocrResultFormatters.ts still imports @/lib/autofillEngine (type-only) from 1A; follow-up LIB phase will resolve.",
+    "src/lib/profiles.ts contains a doc-comment substring 'core/types.ts' (not an import). Cosmetic cleanup deferred."
+  ],
+  "next_steps": [
+    "HR-2 DetailHistoryView -> history/ui move precheck (evaluate store/GT/restore coupling)",
+    "HR-3 historyStore separate precheck",
+    "HR-4 imageStore separate precheck",
+    "RS-1 autorestore -> restore folder cleanup precheck",
+    "autofillEngine separate precheck",
+    "TestWorkspace structural cleanup: defer until user confirms",
+    "After HR/RS phases conclude, proceed to Template table column definition feature precheck per user request"
+  ]
+}

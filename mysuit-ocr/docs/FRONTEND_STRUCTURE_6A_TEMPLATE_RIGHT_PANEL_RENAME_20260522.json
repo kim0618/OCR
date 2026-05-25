@@ -1,0 +1,193 @@
+{
+  "task": "FRONTEND-STRUCTURE-6A-TEMPLATE-RIGHT-PANEL-RENAME",
+  "date": "2026-05-22",
+  "tool": "Claude Code (VSCode extension)",
+  "model": "Claude Opus 4.7 (1M context)",
+  "workdir": "mysuit-ocr/",
+  "purpose": "Template editor 전용 right panel rename: src/components/template/ui/OcrRightPanel.tsx -> src/components/template/ui/TemplateRightPanel.tsx. Default component identifier renamed (OcrRightPanel -> TemplateRightPanel). OcrAnnotator import path + JSX tag corrected. props type/fields/JSX/state/handlers byte-identical. Template table column definition policy explicitly not implemented.",
+  "backup_dir": "mysuit-ocr/backup/template_right_panel_20260522_before_FRONTEND_STRUCTURE_6A_TEMPLATE_RIGHT_PANEL_RENAME",
+  "backups": [
+    "OcrRightPanel.tsx",
+    "OcrAnnotator.tsx"
+  ],
+  "renamed": [
+    {
+      "from": "src/components/template/ui/OcrRightPanel.tsx",
+      "to": "src/components/template/ui/TemplateRightPanel.tsx",
+      "method": "git mv",
+      "body_byte_identical_except_default_export_identifier": true,
+      "default_export_identifier_change": { "before": "OcrRightPanel", "after": "TemplateRightPanel" }
+    }
+  ],
+  "modified_files": [
+    {
+      "file": "src/components/template/ui/OcrAnnotator.tsx",
+      "changes": [
+        { "kind": "import_path_and_symbol", "before": "import OcrRightPanel from \"./OcrRightPanel\";", "after": "import TemplateRightPanel from \"./TemplateRightPanel\";" },
+        { "kind": "jsx_tag", "before": "<OcrRightPanel ...>", "after": "<TemplateRightPanel ...>" }
+      ]
+    }
+  ],
+  "tmp_scripts": [
+    {
+      "path": "tmp/check_template_right_panel_rename_6a.mjs",
+      "action": "created",
+      "checks_total": 26,
+      "result": "PASS"
+    },
+    {
+      "path": "tmp/check_template_workspace_move_4a.mjs",
+      "action": "accept_TemplateRightPanel_location",
+      "scope": "OcrRightPanel_untouched_path accepts ocr/, template/ui/OcrRightPanel.tsx, or template/ui/TemplateRightPanel.tsx"
+    },
+    {
+      "path": "tmp/check_template_editor_ui_move_4b.mjs",
+      "action": "auto_detect_right_panel_location_relax_rename_guard_accept_both_identifiers",
+      "scope": "NEW_RIGHT_PANEL resolves to either name; no_rename_TemplateRightPanel accepts post-6A; annotator_imports_right_panel_local + right_panel_export_name_preserved accept either OcrRightPanel or TemplateRightPanel"
+    },
+    {
+      "path": "tmp/check_ocr_core_types_common_move_5a.mjs",
+      "action": "auto_detect_right_panel_location",
+      "scope": "RIGHT_PANEL resolves to whichever of OcrRightPanel.tsx or TemplateRightPanel.tsx exists"
+    },
+    {
+      "path": "tmp/check_ocr_core_ops_common_move_5b.mjs",
+      "action": "auto_detect_right_panel_location_and_extend_normalizer",
+      "scope": "RIGHT_PANEL fallback + normalizer collapses OcrRightPanel <-> TemplateRightPanel identifier and strips dynamic import() paths"
+    },
+    {
+      "path": "tmp/check_ocr_core_table_common_move_5c.mjs",
+      "action": "auto_detect_right_panel_location_and_extend_normalizer",
+      "scope": "RIGHT_PANEL fallback + normalizer collapses rename + strips dynamic import() paths"
+    },
+    {
+      "path": "tmp/check_template_export_payload_move_5d.mjs",
+      "action": "auto_detect_right_panel_location_and_extend_normalizer",
+      "scope": "RIGHT_PANEL fallback + normalizer collapses rename + strips dynamic import() paths"
+    },
+    {
+      "path": "tmp/check_filedropzone_common_ui_move_5e.mjs",
+      "action": "auto_detect_right_panel_location",
+      "scope": "RIGHT_PANEL resolves to whichever name exists"
+    },
+    {
+      "path": "tmp/check_ocr_canvas_pane_common_ui_move_5f.mjs",
+      "action": "auto_detect_right_panel_location_and_extend_normalizer",
+      "scope": "RIGHT_PANEL fallback + normalizer collapses OcrRightPanel <-> TemplateRightPanel rename"
+    }
+  ],
+  "fully_untouched": [
+    "src/common/ui/OcrCanvasPane.tsx",
+    "src/common/ui/FileDropzone.tsx",
+    "src/common/types/ocr.ts",
+    "src/common/utils/ocrCanvasOps.ts",
+    "src/common/utils/ocrTableRegion.ts",
+    "src/components/template/TemplateWorkspace.tsx",
+    "src/components/template/UnstructuredBuilder.tsx",
+    "src/components/template/utils/buildTemplateExportPayload.ts",
+    "src/components/runocr/RunOcrWorkspace.tsx",
+    "src/components/runocr/ui/*",
+    "src/components/runocr/utils/*",
+    "src/components/test/TestWorkspace.tsx",
+    "src/components/test/core/*",
+    "src/components/common/AppProviders.tsx",
+    "src/components/common/RequireLogin.tsx",
+    "backend/OCR/parser",
+    "templates.json",
+    "fixtures"
+  ],
+  "rename_boundary": {
+    "new_panel_file": "src/components/template/ui/TemplateRightPanel.tsx",
+    "default_export_TemplateRightPanel_preserved": true,
+    "residual_OcrRightPanel_identifier_in_new_file": 0,
+    "logic_equivalent_to_backup_after_rename_collapse": true,
+    "props_preserved_count": 16,
+    "props_preserved": [
+      "imgRef",
+      "templateName",
+      "setTemplateName",
+      "documentType",
+      "setDocumentType",
+      "loaded",
+      "regions",
+      "setRegions",
+      "selectedId",
+      "setSelectedId",
+      "rowTemplateTargetId",
+      "setRowTemplateTargetId",
+      "colGuideTargetId",
+      "setColGuideTargetId",
+      "updateName",
+      "deleteRegion"
+    ],
+    "residual_OcrRightPanel_in_src_total": 0,
+    "annotator_import_corrected": true,
+    "annotator_jsx_tag_corrected": true,
+    "annotator_logic_equivalent_to_backup_after_rename_collapse": true
+  },
+  "template_table_column_definition_policy_guard": {
+    "templateMapper_introduced": false,
+    "TemplateTableColumnEditor_introduced": false,
+    "blocklisted_new_policy_identifiers_in_new_panel": [],
+    "blocklisted_identifiers_checked": [
+      "canonicalColumn",
+      "userConfirmed",
+      "columnMappingStatus",
+      "columnCandidates"
+    ]
+  },
+  "static_check_6a": {
+    "script": "tmp/check_template_right_panel_rename_6a.mjs",
+    "result": "PASS",
+    "checks_total": 26,
+    "checks_passed": 26,
+    "skipped_backup_checks": 0,
+    "residuals": 0
+  },
+  "runners": [
+    { "id": 1, "cmd": "npm run typecheck", "result": "PASS", "exit": 0 },
+    { "id": 2, "cmd": "npm run build", "result": "PASS", "exit": 0 },
+    { "id": 3, "cmd": "node tmp/check_table_view_model_v1_fixtures_js.mjs", "result": "PASS", "exit": 0, "score": "8/8" },
+    { "id": 4, "cmd": "node tmp/check_clean_json_v1_fixtures_js.mjs", "result": "PASS", "exit": 0, "score": "9/9" },
+    { "id": 5, "cmd": "python tmp/codex_markdown_contract_fixture_lock.py --check --phase post_TEMPLATE_RIGHT_PANEL_RENAME_20260522", "result": "PASS", "exit": 0, "score": "6/6" },
+    { "id": 6, "cmd": "node tmp/check_runocr_formdata_keys_2a.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 7, "cmd": "node tmp/check_runocr_request_boundary_2b.mjs", "result": "PASS", "exit": 0 },
+    { "id": 8, "cmd": "node tmp/check_runocr_response_mapping_boundary_2c.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 9, "cmd": "node tmp/check_runocr_result_layout_boundary_3a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 10, "cmd": "node tmp/check_runocr_doc_comments_3b.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 11, "cmd": "node tmp/check_template_workspace_move_4a.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0, "notes": "post-6A RIGHT_PANEL fallback 적용" },
+    { "id": 12, "cmd": "node tmp/check_template_editor_ui_move_4b.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0, "notes": "post-6A NEW_RIGHT_PANEL 자동 탐지 + no_rename_TemplateRightPanel 가드 완화 + 식별자 양쪽 허용" },
+    { "id": 13, "cmd": "node tmp/check_ocr_core_types_common_move_5a.mjs", "result": "PASS", "exit": 0, "notes": "post-6A RIGHT_PANEL 자동 탐지" },
+    { "id": 14, "cmd": "node tmp/check_ocr_core_ops_common_move_5b.mjs", "result": "PASS", "exit": 0, "notes": "post-6A RIGHT_PANEL 자동 탐지 + 식별자 collapse + dynamic import stripping" },
+    { "id": 15, "cmd": "node tmp/check_ocr_core_table_common_move_5c.mjs", "result": "PASS", "exit": 0, "notes": "post-6A RIGHT_PANEL 자동 탐지 + 식별자 collapse + dynamic import stripping" },
+    { "id": 16, "cmd": "node tmp/check_template_export_payload_move_5d.mjs", "result": "PASS", "exit": 0, "notes": "post-6A RIGHT_PANEL 자동 탐지 + 식별자 collapse + dynamic import stripping" },
+    { "id": 17, "cmd": "node tmp/check_filedropzone_common_ui_move_5e.mjs", "result": "PASS", "exit": 0, "notes": "post-6A RIGHT_PANEL 자동 탐지" },
+    { "id": 18, "cmd": "node tmp/check_ocr_canvas_pane_common_ui_move_5f.mjs", "result": "PASS", "exit": 0, "notes": "post-6A RIGHT_PANEL 자동 탐지 + 식별자 collapse" },
+    { "id": 19, "cmd": "node tmp/check_template_right_panel_rename_6a.mjs", "result": "PASS", "exit": 0, "score": "26/26" },
+    { "id": 20, "cmd": "node tmp/check_validation_baseline_repair_1a.mjs", "result": "PASS", "exit": 0 }
+  ],
+  "typecheck_build": {
+    "typecheck": { "cmd": "npm run typecheck", "exit": 0, "result": "PASS" },
+    "build": { "cmd": "npm run build", "exit": 0, "result": "PASS" }
+  },
+  "logs": {
+    "stdout": "ocr-server/logs/codex_FRONTEND_STRUCTURE_6A_TEMPLATE_RIGHT_PANEL_RENAME.out.log",
+    "stderr": "ocr-server/logs/codex_FRONTEND_STRUCTURE_6A_TEMPLATE_RIGHT_PANEL_RENAME.err.log"
+  },
+  "known_stderr_noise": [
+    "ESLint: nextVitals is not iterable (build exit 0, non-blocking)"
+  ],
+  "remaining_issues": [
+    "Historical backup files for phases 2A/2B/3B/4A/4B remain absent; those checks continue to use the PASS_WITH_SKIPPED_BACKUP verdict and skip logic-equivalence comparison. Not caused by 6A.",
+    "src/components/template/ui/OcrAnnotator.tsx still bears the Ocr- prefix though it now lives entirely within the Template domain; rename candidate.",
+    "src/lib/profiles.ts contains a doc-comment substring 'core/types.ts' (not an import). Cosmetic cleanup deferred."
+  ],
+  "next_steps": [
+    "Template table column definition design precheck (canonical column mapping, user-confirmation state, save payload transformation) — implement as a separate components/template/utils/ or store layer",
+    "TPL-95328E52 dirty impact precheck",
+    "src/lib/profiles.ts doc-comment cleanup",
+    "Template structure close-out report (cumulative summary of 4A->4B->6A Template-domain consolidation)",
+    "Consider OcrAnnotator -> TemplateAnnotator rename micro-step",
+    "TestWorkspace cleanup: defer until user confirms"
+  ]
+}

@@ -9,7 +9,7 @@ import {
   BIZ_AUTO_APPLY_CONFIDENCE,
   TEXT_SUGGEST_THRESHOLD,
 } from "./types";
-import { extractBizNumber, normalizeBizNumber } from "@/lib/bizNumber";
+import { extractBizNumber, normalizeBizNumber } from "@/common/utils/bizNumber";
 import { similarity, textSimilarity } from "./match";
 
 const COMPANY_FIELD = "회사명" as const;

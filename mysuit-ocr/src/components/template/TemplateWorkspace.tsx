@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { useUi } from "../common/AppProviders";
+import { useUi } from "../layout/AppProviders";
 
 type TemplateRow = {
   template_id: string;

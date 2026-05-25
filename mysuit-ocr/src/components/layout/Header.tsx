@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { clearLogin, getStoredLogin, type StoredLogin } from "@/lib/login";
-import { useTheme } from "@/lib/theme";
+import { clearLogin, getStoredLogin, type StoredLogin } from "@/common/storage/login";
+import { useTheme } from "./utils/theme";
 
 type HeaderProps = {
   title: React.ReactNode;

@@ -1,0 +1,196 @@
+{
+  "task": "FRONTEND-CS-1-IMAGE-STORE-COMMON-STORAGE-MOVE",
+  "date": "2026-05-22",
+  "tool": "Claude Code (VSCode extension)",
+  "model": "Claude Opus 4.7 (1M context)",
+  "workdir": "mysuit-ocr/",
+  "purpose": "common storage boundary 정리 first micro-step: src/lib/imageStore.ts -> src/common/storage/imageStore.ts (move only; body byte-identical; 4 importers import-path correction only including historyStore). IndexedDB / DB-name / store / version policy preserved. historyStore/autofillEngine/restoreProfileStore/profiles/groundTruthStore/testsets/bizNumber NOT moved. TestWorkspace not modified.",
+  "backup_dir": "mysuit-ocr/backup/image_store_common_storage_20260522_before_FRONTEND_CS_1_IMAGE_STORE_COMMON_STORAGE_MOVE",
+  "backups": [
+    "imageStore.ts",
+    "historyStore.ts",
+    "app_template_page.tsx",
+    "RunOcrWorkspace.tsx",
+    "TemplateAnnotator.tsx"
+  ],
+  "moved": [
+    {
+      "from": "src/lib/imageStore.ts",
+      "to": "src/common/storage/imageStore.ts",
+      "method": "git mv",
+      "body_byte_identical": true,
+      "self_import_changes": "none (leaf storage helper)"
+    }
+  ],
+  "modified_import_paths": [
+    { "file": "src/lib/historyStore.ts", "line": 5, "before": "./imageStore", "after": "@/common/storage/imageStore" },
+    { "file": "src/app/template/page.tsx", "line": 7, "before": "@/lib/imageStore", "after": "@/common/storage/imageStore" },
+    { "file": "src/components/runocr/RunOcrWorkspace.tsx", "line": 38, "before": "@/lib/imageStore", "after": "@/common/storage/imageStore" },
+    { "file": "src/components/template/ui/TemplateAnnotator.tsx", "line": 8, "before": "@/lib/imageStore", "after": "@/common/storage/imageStore" }
+  ],
+  "tmp_scripts": [
+    {
+      "path": "tmp/check_image_store_common_storage_move_cs1.mjs",
+      "action": "created",
+      "checks_total": 28,
+      "result": "PASS"
+    },
+    {
+      "path": "tmp/check_lib_ocr_result_formatters_common_move_1a.mjs",
+      "action": "drop_imageStore_from_sibling_guard",
+      "scope": "CS-1 legitimately moved the file"
+    },
+    {
+      "path": "tmp/check_lib_invoice_field_labels_common_move_1b.mjs",
+      "action": "drop_imageStore_from_sibling_guard",
+      "scope": "same pattern as 1A patch"
+    },
+    {
+      "path": "tmp/check_lib_markdown_report_builder_common_move_1c.mjs",
+      "action": "drop_imageStore_from_sibling_guard",
+      "scope": "same pattern as 1A patch"
+    },
+    {
+      "path": "tmp/check_lib_clean_json_builder_common_move_1d.mjs",
+      "action": "drop_imageStore_from_sibling_guard",
+      "scope": "same pattern as 1A patch"
+    },
+    {
+      "path": "tmp/check_lib_invoice_table_display_common_move_1e.mjs",
+      "action": "drop_imageStore_from_sibling_guard",
+      "scope": "same pattern as 1A patch"
+    },
+    {
+      "path": "tmp/check_lib_structured_table_view_model_common_move_1f.mjs",
+      "action": "drop_imageStore_from_sibling_guard",
+      "scope": "same pattern as 1A patch"
+    },
+    {
+      "path": "tmp/check_history_popup_ui_move_hr1.mjs",
+      "action": "auto_detect_imageStore_location",
+      "scope": "IMAGE_STORE resolves to whichever of src/lib/ or src/common/storage/imageStore.ts exists"
+    },
+    {
+      "path": "tmp/check_detail_history_view_ui_move_hr2.mjs",
+      "action": "auto_detect_imageStore_location",
+      "scope": "same fallback as HR-1 patch"
+    }
+  ],
+  "fully_untouched": [
+    "src/lib/autofillEngine.ts",
+    "src/lib/restoreProfileStore.ts",
+    "src/lib/profiles.ts",
+    "src/lib/groundTruthStore.ts",
+    "src/lib/testsets.ts",
+    "src/lib/bizNumber.ts",
+    "src/common/ui/**",
+    "src/common/utils/**",
+    "src/common/types/**",
+    "src/components/test/TestWorkspace.tsx",
+    "src/components/test/core/*",
+    "src/components/history/**",
+    "src/components/autorestore/**",
+    "src/components/restore/**",
+    "backend/OCR/parser",
+    "templates.json",
+    "fixtures"
+  ],
+  "common_storage_ownership": {
+    "directory": "src/common/storage/",
+    "contents_after_cs1": [
+      "imageStore.ts (CS-1, IndexedDB image persistence)"
+    ],
+    "common_subdirs_present": ["ui", "utils", "types", "storage"]
+  },
+  "image_store_invariants": {
+    "db_name_preserved": "mysuit_ocr_images",
+    "indexedDB_used": true,
+    "required_exports_preserved": [
+      "saveImage",
+      "getImage",
+      "deleteImagesFor",
+      "saveTemplateImage",
+      "getTemplateImage",
+      "deleteTemplateImage"
+    ],
+    "logic_equivalent_to_backup": true,
+    "imports_components_star": false,
+    "imports_react": false,
+    "imports_react_dom": false
+  },
+  "history_store_import_path_only_edit": {
+    "lines_modified": 1,
+    "change_kind": "single import path replacement",
+    "before": "./imageStore",
+    "after": "@/common/storage/imageStore",
+    "logic_equivalent_to_backup_after_import_path_strip": true
+  },
+  "test_workspace_untouched": {
+    "TestWorkspace_modified": false,
+    "test_core_dir_modified": false,
+    "TestWorkspace_imported_imageStore_pre_or_post": false
+  },
+  "static_check_cs1": {
+    "script": "tmp/check_image_store_common_storage_move_cs1.mjs",
+    "result": "PASS",
+    "checks_total": 28,
+    "checks_passed": 28,
+    "skipped_backup_checks": 0,
+    "residuals": 0
+  },
+  "runners": [
+    { "id": 1, "cmd": "npm run typecheck", "result": "PASS", "exit": 0 },
+    { "id": 2, "cmd": "npm run build", "result": "PASS", "exit": 0 },
+    { "id": 3, "cmd": "node tmp/check_table_view_model_v1_fixtures_js.mjs", "result": "PASS", "exit": 0, "score": "8/8" },
+    { "id": 4, "cmd": "node tmp/check_clean_json_v1_fixtures_js.mjs", "result": "PASS", "exit": 0, "score": "9/9" },
+    { "id": 5, "cmd": "python tmp/codex_markdown_contract_fixture_lock.py --check --phase post_IMAGE_STORE_COMMON_STORAGE_MOVE_20260522", "result": "PASS", "exit": 0, "score": "6/6" },
+    { "id": 6, "cmd": "node tmp/check_detail_history_view_ui_move_hr2.mjs", "result": "PASS", "exit": 0, "notes": "CS-1 IMAGE_STORE 자동 탐지 patch" },
+    { "id": 7, "cmd": "node tmp/check_history_popup_ui_move_hr1.mjs", "result": "PASS", "exit": 0, "notes": "CS-1 IMAGE_STORE 자동 탐지 patch" },
+    { "id": 8, "cmd": "node tmp/check_app_providers_layout_move_cc1.mjs", "result": "PASS", "exit": 0 },
+    { "id": 9, "cmd": "node tmp/check_require_login_login_ui_move_cc2.mjs", "result": "PASS", "exit": 0 },
+    { "id": 10, "cmd": "node tmp/check_validation_baseline_repair_1a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 11, "cmd": "node tmp/check_lib_ocr_result_formatters_common_move_1a.mjs", "result": "PASS", "exit": 0, "notes": "sibling imageStore drop" },
+    { "id": 12, "cmd": "node tmp/check_lib_invoice_field_labels_common_move_1b.mjs", "result": "PASS", "exit": 0, "notes": "sibling imageStore drop" },
+    { "id": 13, "cmd": "node tmp/check_lib_markdown_report_builder_common_move_1c.mjs", "result": "PASS", "exit": 0, "notes": "sibling imageStore drop" },
+    { "id": 14, "cmd": "node tmp/check_lib_clean_json_builder_common_move_1d.mjs", "result": "PASS", "exit": 0, "notes": "sibling imageStore drop" },
+    { "id": 15, "cmd": "node tmp/check_lib_invoice_table_display_common_move_1e.mjs", "result": "PASS", "exit": 0, "notes": "sibling imageStore drop" },
+    { "id": 16, "cmd": "node tmp/check_lib_structured_table_view_model_common_move_1f.mjs", "result": "PASS", "exit": 0, "notes": "sibling imageStore drop" },
+    { "id": 17, "cmd": "node tmp/check_ocr_core_types_common_move_5a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 18, "cmd": "node tmp/check_ocr_core_ops_common_move_5b.mjs", "result": "PASS", "exit": 0 },
+    { "id": 19, "cmd": "node tmp/check_ocr_core_table_common_move_5c.mjs", "result": "PASS", "exit": 0 },
+    { "id": 20, "cmd": "node tmp/check_template_export_payload_move_5d.mjs", "result": "PASS", "exit": 0 },
+    { "id": 21, "cmd": "node tmp/check_filedropzone_common_ui_move_5e.mjs", "result": "PASS", "exit": 0 },
+    { "id": 22, "cmd": "node tmp/check_ocr_canvas_pane_common_ui_move_5f.mjs", "result": "PASS", "exit": 0 },
+    { "id": 23, "cmd": "node tmp/check_template_right_panel_rename_6a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 24, "cmd": "node tmp/check_template_annotator_rename_6b.mjs", "result": "PASS", "exit": 0 },
+    { "id": 25, "cmd": "node tmp/check_runocr_request_boundary_2b.mjs", "result": "PASS", "exit": 0 },
+    { "id": 26, "cmd": "node tmp/check_runocr_result_layout_boundary_3a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 27, "cmd": "node tmp/check_image_store_common_storage_move_cs1.mjs", "result": "PASS", "exit": 0, "score": "28/28" }
+  ],
+  "typecheck_build": {
+    "typecheck": { "cmd": "npm run typecheck", "exit": 0, "result": "PASS" },
+    "build": { "cmd": "npm run build", "exit": 0, "result": "PASS" }
+  },
+  "logs": {
+    "stdout": "ocr-server/logs/codex_FRONTEND_CS_1_IMAGE_STORE_COMMON_STORAGE_MOVE.out.log",
+    "stderr": "ocr-server/logs/codex_FRONTEND_CS_1_IMAGE_STORE_COMMON_STORAGE_MOVE.err.log"
+  },
+  "known_stderr_noise": [
+    "ESLint: nextVitals is not iterable (build exit 0, non-blocking)"
+  ],
+  "remaining_issues": [
+    "historyStore.ts remains in src/lib (CS-2 candidate)",
+    "autofillEngine/restoreProfileStore/groundTruthStore/profiles/testsets/bizNumber remain in src/lib",
+    "common/utils/ocrResultFormatters.ts still imports @/lib/autofillEngine (type-only) from 1A; follow-up LIB phase will resolve",
+    "src/lib/profiles.ts contains a doc-comment substring 'core/types.ts' (not an import). Cosmetic cleanup deferred."
+  ],
+  "next_steps": [
+    "CS-2 historyStore -> common/storage move precheck (sibling import pattern with imageStore)",
+    "RS-1 autorestore -> restore folder cleanup precheck",
+    "restoreProfileStore separate precheck",
+    "autofillEngine separate precheck (resolves remaining 1A type-only temp dep)",
+    "bizNumber -> common/utils precheck (TestWorkspace impact confirm)",
+    "TestWorkspace structural cleanup: defer until user confirms",
+    "After HR/RS/CS phases conclude, proceed to Template table column definition feature precheck per user request"
+  ]
+}

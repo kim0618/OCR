@@ -1,0 +1,79 @@
+{
+  "generatedAt": "2026-05-22T10:30:00Z",
+  "task": "FRONTEND-VALIDATION-1A-BASELINE-REPAIR",
+  "tool": "Codex",
+  "model": "Codex",
+  "projectRoot": "C:\\OCR\\OCR\\mysuit-ocr",
+  "codeModified": false,
+  "productionSourceModifiedByThisTask": false,
+  "backendModifiedByThisTask": false,
+  "fixturesModified": false,
+  "backupCreatedOrRestored": false,
+  "logFiles": {
+    "stdout": "C:\\OCR\\OCR\\ocr-server\\logs\\codex_FRONTEND_VALIDATION_1A_BASELINE_REPAIR.out.log",
+    "stderr": "C:\\OCR\\OCR\\ocr-server\\logs\\codex_FRONTEND_VALIDATION_1A_BASELINE_REPAIR.err.log"
+  },
+  "modifiedFiles": [
+    "tmp/check_runocr_formdata_keys_2a.mjs",
+    "tmp/check_runocr_response_mapping_boundary_2c.mjs",
+    "tmp/check_runocr_doc_comments_3b.mjs",
+    "tmp/check_template_workspace_move_4a.mjs",
+    "tmp/check_template_editor_ui_move_4b.mjs",
+    "tmp/codex_markdown_contract_fixture_lock.py",
+    "tmp/check_validation_baseline_repair_1a.mjs"
+  ],
+  "reportsCreated": [
+    "docs/FRONTEND_VALIDATION_1A_BASELINE_REPAIR_20260522.md",
+    "docs/FRONTEND_VALIDATION_1A_BASELINE_REPAIR_20260522.json",
+    "docs/MARKDOWN_V1_FIXTURE_CHECK_post_VALIDATION_BASELINE_REPAIR_20260522_20260521.md",
+    "docs/MARKDOWN_V1_FIXTURE_CHECK_post_VALIDATION_BASELINE_REPAIR_20260522_20260521.json"
+  ],
+  "backupHandling": {
+    "policy": "Historical backup logic-equivalence checks remain strict when backup exists; if the historical backup is unavailable, only that backup comparison is marked SKIP_WITH_REASON and current structural checks remain strict.",
+    "backupRoot": "project-relative ROOT/backup",
+    "removedLegacyDependency": "Older sibling backup lookup ROOT/../backup no longer controls these repaired checks.",
+    "skipReasonText": "SKIP_WITH_REASON: historical backup not found",
+    "structuralChecksStillStrict": [
+      "target file existence",
+      "move/unmove boundary",
+      "route/import boundary",
+      "forbidden import/keyword leak",
+      "RunOCR/TestWorkspace presence policy",
+      "current OCR core/types boundary"
+    ]
+  },
+  "markdownEolNormalize": {
+    "file": "tmp/codex_markdown_contract_fixture_lock.py",
+    "policy": "Comparison normalizes CRLF, LF, and CR to LF after processing_time masking. Fixtures and backend output are not rewritten.",
+    "reportedField": "eolNormalizedForCompare",
+    "result": "Markdown fixture check recovered to PASS 6/6."
+  },
+  "validationResults": [
+    { "command": "node tmp/check_validation_baseline_repair_1a.mjs", "exitCode": 0, "status": "PASS" },
+    { "command": "node tmp/check_runocr_formdata_keys_2a.mjs", "exitCode": 0, "status": "PASS_WITH_SKIPPED_BACKUP" },
+    { "command": "node tmp/check_runocr_response_mapping_boundary_2c.mjs", "exitCode": 0, "status": "PASS_WITH_SKIPPED_BACKUP" },
+    { "command": "node tmp/check_runocr_doc_comments_3b.mjs", "exitCode": 0, "status": "PASS_WITH_SKIPPED_BACKUP" },
+    { "command": "node tmp/check_template_workspace_move_4a.mjs", "exitCode": 0, "status": "PASS_WITH_SKIPPED_BACKUP" },
+    { "command": "node tmp/check_template_editor_ui_move_4b.mjs", "exitCode": 0, "status": "PASS_WITH_SKIPPED_BACKUP" },
+    { "command": "python tmp/codex_markdown_contract_fixture_lock.py --check --phase post_VALIDATION_BASELINE_REPAIR_20260522", "exitCode": 0, "status": "PASS 6/6" },
+    { "command": "npm run typecheck", "exitCode": 0, "status": "PASS" },
+    { "command": "npm run build", "exitCode": 0, "status": "PASS" },
+    { "command": "node tmp/check_ocr_core_types_common_move_5a.mjs", "exitCode": 0, "status": "PASS" },
+    { "command": "node tmp/check_table_view_model_v1_fixtures_js.mjs", "exitCode": 0, "status": "PASS 8/8" },
+    { "command": "node tmp/check_clean_json_v1_fixtures_js.mjs", "exitCode": 0, "status": "PASS 9/9" }
+  ],
+  "remainingIssues": [
+    "Worktree still contains pre-existing 5A/source dirty state; this task did not revert it.",
+    "templates.json remains dirty and should stay a TPL-95328E52 impact precheck candidate.",
+    "Markdown runner calls backend OCR API; review_log.jsonl was already dirty and may receive runtime append entries during validation."
+  ],
+  "nextSteps": [
+    "FRONTEND-STRUCTURE-5B-OCR-CORE-OPS-COMMON-MOVE precheck or implementation",
+    "table.ts common/utils move precheck",
+    "export.ts template/utils move precheck",
+    "OcrCanvasPane common/ui move after core dependencies are settled",
+    "Template table column definition design precheck",
+    "TPL-95328E52 dirty impact precheck",
+    "TestWorkspace only after explicit user confirmation"
+  ]
+}

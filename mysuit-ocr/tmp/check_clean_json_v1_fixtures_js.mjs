@@ -87,12 +87,31 @@ function transpileTsToCjs(sourcePath, outPath, replacements = []) {
 async function loadBuilder() {
   fs.rmSync(BUILD_DIR, { recursive: true, force: true });
   fs.mkdirSync(BUILD_DIR, { recursive: true });
-  const invoiceSrc = path.join(ROOT, "src", "lib", "invoiceTableDisplay.ts");
-  const builderSrc = path.join(ROOT, "src", "lib", "cleanJsonBuilder.ts");
+  // 1E moved invoiceTableDisplay.ts from src/lib/ to src/common/utils/.
+  const invoiceSrc = path.join(ROOT, "src", "common", "utils", "invoiceTableDisplay.ts");
+  // 1D moved cleanJsonBuilder.ts from src/lib/ to src/common/utils/.
+  const builderSrc = path.join(ROOT, "src", "common", "utils", "cleanJsonBuilder.ts");
+  // TPL-13B: cleanJsonBuilder now also imports selectRepresentativeTable...
+  // from tableResultViewModel, which transitively imports structuredTableViewModel
+  // and invoiceTableDisplay. Chain-transpile the dependency closure.
+  const structuredSrc = path.join(ROOT, "src", "common", "utils", "structuredTableViewModel.ts");
+  const viewModelSrc = path.join(ROOT, "src", "common", "utils", "tableResultViewModel.ts");
   const invoiceOut = path.join(BUILD_DIR, "invoiceTableDisplay.cjs");
+  const structuredOut = path.join(BUILD_DIR, "structuredTableViewModel.cjs");
+  const viewModelOut = path.join(BUILD_DIR, "tableResultViewModel.cjs");
   const builderOut = path.join(BUILD_DIR, "cleanJsonBuilder.cjs");
   transpileTsToCjs(invoiceSrc, invoiceOut);
-  transpileTsToCjs(builderSrc, builderOut, [["@/lib/invoiceTableDisplay", "./invoiceTableDisplay.cjs"]]);
+  transpileTsToCjs(structuredSrc, structuredOut);
+  // tableResultViewModel.ts uses relative imports `./structuredTableViewModel`
+  // and `./invoiceTableDisplay`; replacing them with the transpiled cjs siblings.
+  transpileTsToCjs(viewModelSrc, viewModelOut, [
+    ["./structuredTableViewModel", "./structuredTableViewModel.cjs"],
+    ["./invoiceTableDisplay", "./invoiceTableDisplay.cjs"],
+  ]);
+  transpileTsToCjs(builderSrc, builderOut, [
+    ["@/common/utils/invoiceTableDisplay", "./invoiceTableDisplay.cjs"],
+    ["@/common/utils/tableResultViewModel", "./tableResultViewModel.cjs"],
+  ]);
   const mod = require(builderOut);
   if (typeof mod.buildCleanJsonResult !== "function") {
     throw new Error("buildCleanJsonResult export was not found");
@@ -102,6 +121,8 @@ async function loadBuilder() {
     importMode: "typescript.transpileModule to transient tmp/.clean_json_fixture_runner_build/*.cjs, then require()",
     generatedFiles: [
       path.relative(ROOT, invoiceOut),
+      path.relative(ROOT, structuredOut),
+      path.relative(ROOT, viewModelOut),
       path.relative(ROOT, builderOut),
     ],
   };
@@ -282,7 +303,8 @@ Known stderr noise:
 }
 
 function sourcePurityCheck(inputMutationFree) {
-  const source = fs.readFileSync(path.join(ROOT, "src", "lib", "cleanJsonBuilder.ts"), "utf8");
+  // 1D moved cleanJsonBuilder.ts from src/lib/ to src/common/utils/.
+  const source = fs.readFileSync(path.join(ROOT, "src", "common", "utils", "cleanJsonBuilder.ts"), "utf8");
   return {
     reactHookFree: !/from\s+["']react["']|useMemo|useState|useEffect|useRef/.test(source),
     noBrowserOrNetworkAccess: !/\bwindow\b|\bdocument\b|\blocalStorage\b|\bsessionStorage\b|\bfetch\s*\(|XMLHttpRequest/.test(source),

@@ -1,0 +1,42 @@
+{
+  "_meta": {
+    "fixtureName": "template_move_shift_policy",
+    "description": "region move를 시뮬레이션. 현재 OcrCanvasPane move handler는 rowTemplate / rows를 dx,dy만큼 shift하지만 rowOverrides는 건드리지 않는다. TPL-12C MVP에서는 rowOverrides 항목이 height-only이므로 cascade 기반 materialization으로 정확히 새 위치에 정렬된다. runner는 (a) shift된 rows의 y가 새 region에 부합하는지 (b) rowOverrides가 invariant인지 (c) export 시 다시 materialize해도 OK인지 검증."
+  },
+  "policy": {
+    "moveAction": "shift rowTemplate.y/x and each rows[i].y/x by region delta. rowOverrides remains unchanged (height-only TPL-12C UI emits no y).",
+    "noteForFutureY": "rowOverrides에 y가 추가되는 후속 phase에서는 move에서 y도 shift 필요. 현재 MVP는 height-only이므로 안전."
+  },
+  "templateName": "이동_정책",
+  "documentType": "invoice_statement",
+  "loaded": {
+    "src": "data:image/png;base64,iVBORw0KGgo=",
+    "fileName": "move.png",
+    "naturalWidth": 1200,
+    "naturalHeight": 1600
+  },
+  "moveDelta": { "dx": 20, "dy": 50 },
+  "regions": [
+    {
+      "id": "table_1",
+      "name": "items",
+      "fieldType": "table",
+      "x": 60,
+      "y": 480,
+      "width": 1080,
+      "height": 600,
+      "table": {
+        "mode": "repeat",
+        "rowTemplate": { "x": 60, "y": 480, "width": 1080, "height": 60 },
+        "rows": [
+          { "x": 60, "y": 480, "width": 1080, "height": 60 },
+          { "x": 60, "y": 540, "width": 1080, "height": 80 },
+          { "x": 60, "y": 620, "width": 1080, "height": 60 }
+        ],
+        "rowOverrides": [
+          { "rowIndex": 1, "height": 80 }
+        ]
+      }
+    }
+  ]
+}

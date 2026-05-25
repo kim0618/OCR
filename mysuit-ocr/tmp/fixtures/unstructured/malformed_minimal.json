@@ -1,0 +1,34 @@
+{
+  "_meta": {
+    "fixtureName": "malformed_minimal",
+    "description": "Adversarial payload: wrong types for several fields, missing labelKo on info entry, columns array with stray nulls, garbage documentType value type. Helper must normalize safely without throwing."
+  },
+  "template_id": "LOCAL-MALFORMED-1",
+  "template_name": "",
+  "template_json": {
+    "templateName": null,
+    "mode": "unstructured",
+    "documentType": 42,
+    "info": [
+      { "key": "a" },
+      { "labelKo": "이름만" },
+      "not-an-object"
+    ],
+    "tables": [
+      {
+        "tableKey": null,
+        "labelKo": 0,
+        "columns": [
+          { "columnKey": "ok", "labelKo": "정상" },
+          null,
+          { "columnKey": 99 }
+        ]
+      },
+      "string-table",
+      { "labelKo": "key 없는 테이블" }
+    ],
+    "fields": "should-be-array",
+    "regions": null
+  },
+  "updated_at": "2026-05-24T11:30:00.000Z"
+}

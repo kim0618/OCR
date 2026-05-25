@@ -1,0 +1,170 @@
+{
+  "task": "FRONTEND-LIB-1D-CLEAN-JSON-BUILDER-COMMON-MOVE",
+  "date": "2026-05-22",
+  "tool": "Claude Code (VSCode extension)",
+  "model": "Claude Opus 4.7 (1M context)",
+  "workdir": "mysuit-ocr/",
+  "purpose": "src/lib 해체 LIB-1 fourth micro-step: src/lib/cleanJsonBuilder.ts -> src/common/utils/cleanJsonBuilder.ts (move only; body byte-identical; OcrResultPanel import-path correction; Clean JSON v1 fixture runner hardcoded path updated to new location). Clean JSON fixtures untouched and not rebaked. Temporary @/lib/invoiceTableDisplay runtime dep retained pending a future LIB phase. Other src/lib files NOT moved.",
+  "backup_dir": "mysuit-ocr/backup/lib_clean_json_builder_20260522_before_FRONTEND_LIB_1D_CLEAN_JSON_BUILDER_COMMON_MOVE",
+  "backups": [
+    "cleanJsonBuilder.ts",
+    "OcrResultPanel.tsx",
+    "check_clean_json_v1_fixtures_js.mjs"
+  ],
+  "moved": [
+    {
+      "from": "src/lib/cleanJsonBuilder.ts",
+      "to": "src/common/utils/cleanJsonBuilder.ts",
+      "method": "git mv",
+      "body_byte_identical": true,
+      "self_import_changes": "none — only import @/lib/invoiceTableDisplay uses @/ absolute alias and stays valid after the move"
+    }
+  ],
+  "modified_import_paths": [
+    { "file": "src/components/runocr/ui/OcrResultPanel.tsx", "before": "@/lib/cleanJsonBuilder", "after": "@/common/utils/cleanJsonBuilder" },
+    { "file": "tmp/check_clean_json_v1_fixtures_js.mjs", "kind": "loadBuilder path", "before": "path.join(ROOT, \"src\", \"lib\", \"cleanJsonBuilder.ts\")", "after": "path.join(ROOT, \"src\", \"common\", \"utils\", \"cleanJsonBuilder.ts\")" },
+    { "file": "tmp/check_clean_json_v1_fixtures_js.mjs", "kind": "sourcePurityCheck path", "before": "path.join(ROOT, \"src\", \"lib\", \"cleanJsonBuilder.ts\")", "after": "path.join(ROOT, \"src\", \"common\", \"utils\", \"cleanJsonBuilder.ts\")" }
+  ],
+  "tmp_scripts": [
+    {
+      "path": "tmp/check_lib_clean_json_builder_common_move_1d.mjs",
+      "action": "created",
+      "checks_total": 28,
+      "result": "PASS"
+    },
+    {
+      "path": "tmp/check_lib_ocr_result_formatters_common_move_1a.mjs",
+      "action": "drop_cleanJsonBuilder_from_sibling_guard",
+      "scope": "lib_sibling_cleanJsonBuilder_ts_still_in_src_lib gate obsolete (1D legitimately moved it). List entry removed; logic unchanged."
+    },
+    {
+      "path": "tmp/check_lib_invoice_field_labels_common_move_1b.mjs",
+      "action": "drop_cleanJsonBuilder_from_sibling_guard",
+      "scope": "same pattern as 1A patch"
+    },
+    {
+      "path": "tmp/check_lib_markdown_report_builder_common_move_1c.mjs",
+      "action": "drop_cleanJsonBuilder_from_sibling_guard",
+      "scope": "same pattern as 1A patch"
+    }
+  ],
+  "fully_untouched": [
+    "src/lib/structuredTableViewModel.ts",
+    "src/lib/invoiceTableDisplay.ts",
+    "src/lib/bizNumber.ts",
+    "src/lib/autofillEngine.ts",
+    "src/lib/historyStore.ts",
+    "src/lib/imageStore.ts",
+    "src/lib/profiles.ts",
+    "src/lib/restoreProfileStore.ts",
+    "src/lib/groundTruthStore.ts",
+    "src/lib/testsets.ts",
+    "src/common/ui/OcrCanvasPane.tsx",
+    "src/common/ui/FileDropzone.tsx",
+    "src/common/types/ocr.ts",
+    "src/common/utils/ocrCanvasOps.ts",
+    "src/common/utils/ocrTableRegion.ts",
+    "src/common/utils/ocrResultFormatters.ts",
+    "src/common/utils/invoiceFieldLabels.ts",
+    "src/common/utils/markdownReportBuilder.ts",
+    "src/components/template/ui/TemplateAnnotator.tsx",
+    "src/components/template/ui/TemplateRightPanel.tsx",
+    "src/components/template/utils/buildTemplateExportPayload.ts",
+    "src/components/runocr/RunOcrWorkspace.tsx",
+    "src/components/runocr/utils/*",
+    "src/components/test/TestWorkspace.tsx",
+    "src/components/test/core/*",
+    "tmp/fixtures/clean_json_v1/*",
+    "tmp/fixtures/markdown_v1/*",
+    "backend/OCR/parser",
+    "templates.json"
+  ],
+  "common_utils_boundary": {
+    "file": "src/common/utils/cleanJsonBuilder.ts",
+    "imports_components_star": false,
+    "imports_react": false,
+    "imports_react_dom": false,
+    "uses_window_or_document_or_localStorage_or_sessionStorage_or_fetch_or_xhr": false,
+    "logic_equivalent_to_backup": true,
+    "required_export_preserved": "buildCleanJsonResult",
+    "residual_old_lib_imports_in_src_code": 0
+  },
+  "temporary_src_lib_dependency": {
+    "policy": "common/utils -> src/lib runtime import is permitted in this LIB-1D step (not a components/* dependency). Follow-up LIB phase will dissolve it via invoiceTableDisplay move.",
+    "deps": [
+      { "module": "@/lib/invoiceTableDisplay", "kind": "runtime (INVOICE_TABLE_COL_PRIORITY, hasMeaningfulTableValue, normalizeTableCell)", "follow_up": "Move invoiceTableDisplay to common/utils in a later LIB phase" }
+    ]
+  },
+  "clean_json_fixture_untouched": {
+    "fixture_dir": "tmp/fixtures/clean_json_v1",
+    "fixture_dir_modified_in_this_step": false,
+    "fixture_rebake_executed": false,
+    "runner_verdict": "PASS 9/9 (post-1D)"
+  },
+  "test_workspace_untouched": {
+    "TestWorkspace_modified": false,
+    "test_core_dir_modified": false,
+    "TestWorkspace_imported_cleanJsonBuilder_pre_or_post": false
+  },
+  "static_check_1d": {
+    "script": "tmp/check_lib_clean_json_builder_common_move_1d.mjs",
+    "result": "PASS",
+    "checks_total": 28,
+    "checks_passed": 28,
+    "skipped_backup_checks": 0,
+    "residuals": 0
+  },
+  "runners": [
+    { "id": 1, "cmd": "npm run typecheck", "result": "PASS", "exit": 0 },
+    { "id": 2, "cmd": "npm run build", "result": "PASS", "exit": 0 },
+    { "id": 3, "cmd": "node tmp/check_table_view_model_v1_fixtures_js.mjs", "result": "PASS", "exit": 0, "score": "8/8" },
+    { "id": 4, "cmd": "node tmp/check_clean_json_v1_fixtures_js.mjs", "result": "PASS", "exit": 0, "score": "9/9" },
+    { "id": 5, "cmd": "python tmp/codex_markdown_contract_fixture_lock.py --check --phase post_LIB_CLEAN_JSON_BUILDER_COMMON_MOVE_20260522", "result": "PASS", "exit": 0, "score": "6/6" },
+    { "id": 6, "cmd": "node tmp/check_runocr_formdata_keys_2a.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 7, "cmd": "node tmp/check_runocr_request_boundary_2b.mjs", "result": "PASS", "exit": 0 },
+    { "id": 8, "cmd": "node tmp/check_runocr_response_mapping_boundary_2c.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 9, "cmd": "node tmp/check_runocr_result_layout_boundary_3a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 10, "cmd": "node tmp/check_runocr_doc_comments_3b.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 11, "cmd": "node tmp/check_template_workspace_move_4a.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 12, "cmd": "node tmp/check_template_editor_ui_move_4b.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 13, "cmd": "node tmp/check_template_right_panel_rename_6a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 14, "cmd": "node tmp/check_template_annotator_rename_6b.mjs", "result": "PASS", "exit": 0 },
+    { "id": 15, "cmd": "node tmp/check_ocr_core_types_common_move_5a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 16, "cmd": "node tmp/check_ocr_core_ops_common_move_5b.mjs", "result": "PASS", "exit": 0 },
+    { "id": 17, "cmd": "node tmp/check_ocr_core_table_common_move_5c.mjs", "result": "PASS", "exit": 0 },
+    { "id": 18, "cmd": "node tmp/check_template_export_payload_move_5d.mjs", "result": "PASS", "exit": 0 },
+    { "id": 19, "cmd": "node tmp/check_filedropzone_common_ui_move_5e.mjs", "result": "PASS", "exit": 0 },
+    { "id": 20, "cmd": "node tmp/check_ocr_canvas_pane_common_ui_move_5f.mjs", "result": "PASS", "exit": 0 },
+    { "id": 21, "cmd": "node tmp/check_lib_ocr_result_formatters_common_move_1a.mjs", "result": "PASS", "exit": 0, "notes": "sibling 가드 cleanJsonBuilder 제거" },
+    { "id": 22, "cmd": "node tmp/check_lib_invoice_field_labels_common_move_1b.mjs", "result": "PASS", "exit": 0, "notes": "sibling 가드 cleanJsonBuilder 제거" },
+    { "id": 23, "cmd": "node tmp/check_lib_markdown_report_builder_common_move_1c.mjs", "result": "PASS", "exit": 0, "notes": "sibling 가드 cleanJsonBuilder 제거" },
+    { "id": 24, "cmd": "node tmp/check_lib_clean_json_builder_common_move_1d.mjs", "result": "PASS", "exit": 0, "score": "28/28" },
+    { "id": 25, "cmd": "node tmp/check_validation_baseline_repair_1a.mjs", "result": "PASS", "exit": 0 }
+  ],
+  "typecheck_build": {
+    "typecheck": { "cmd": "npm run typecheck", "exit": 0, "result": "PASS" },
+    "build": { "cmd": "npm run build", "exit": 0, "result": "PASS" }
+  },
+  "logs": {
+    "stdout": "ocr-server/logs/codex_FRONTEND_LIB_1D_CLEAN_JSON_BUILDER_COMMON_MOVE.out.log",
+    "stderr": "ocr-server/logs/codex_FRONTEND_LIB_1D_CLEAN_JSON_BUILDER_COMMON_MOVE.err.log"
+  },
+  "known_stderr_noise": [
+    "ESLint: nextVitals is not iterable (build exit 0, non-blocking)"
+  ],
+  "remaining_issues": [
+    "Historical backup files for phases 2A/2B/3B/4A/4B remain absent; those checks continue to use the PASS_WITH_SKIPPED_BACKUP verdict and skip logic-equivalence comparison. Not caused by 1D.",
+    "common/utils/cleanJsonBuilder.ts still imports @/lib/invoiceTableDisplay (runtime); follow-up LIB phase will resolve this via invoiceTableDisplay move.",
+    "common/utils/ocrResultFormatters.ts still imports @/lib/autofillEngine (type-only) from 1A; follow-up LIB phase will resolve this remaining temp src/lib dependency.",
+    "src/components/runocr/ui/OcrResultPanel.tsx has 2 doc-comment mentions of '@/lib/cleanJsonBuilder' (lines 10 / 780). Cosmetic, not imports.",
+    "src/lib/profiles.ts contains a doc-comment substring 'core/types.ts' (not an import). Cosmetic cleanup deferred."
+  ],
+  "next_steps": [
+    "invoiceTableDisplay -> common/utils precheck (resolves the 1D runtime temp dep)",
+    "structuredTableViewModel -> common/utils precheck",
+    "bizNumber move pending TestWorkspace impact precheck",
+    "autofillEngine -> common/utils precheck (resolves the remaining 1A type-only temp dep; broad runtime usage requires separate phase)",
+    "profiles / imageStore / historyStore / restoreProfileStore / groundTruthStore / testsets: per-file precheck before any move",
+    "TestWorkspace cleanup: defer until user confirms"
+  ]
+}

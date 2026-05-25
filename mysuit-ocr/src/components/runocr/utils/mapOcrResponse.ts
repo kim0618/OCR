@@ -20,14 +20,20 @@
  *   Markdown 표시 모두에 영향이 갈 수 있다.
  */
 import type { OcrResult, OcrFieldResult } from "../ui/OcrResultPanel";
+import { extractUnstructuredTableRows } from "./extractUnstructuredTableRows";
 
 /**
  * buildRunOcrResult 가 실제로 읽는 template 의 최소 구조 타입.
  * 프로젝트 전역 TemplateItem 과의 강결합을 피하고 RunOcrWorkspace 와의 순환
  * import 를 막기 위해 structural minimum 만 노출한다.
+ *
+ * TPL-7: 비정형(unstructured) 템플릿에 한해 documentType / info / tables 가
+ * optional 로 추가된다. 모두 optional 이며, 기존 legacy fields-only 템플릿은
+ * 이 필드 없이도 동일하게 동작한다.
  */
 export type BuildRunOcrResultTemplate = {
   mode?: string;
+  documentType?: string;
   regions?: Array<{
     koField?: string;
     enField?: string;
@@ -35,6 +41,29 @@ export type BuildRunOcrResultTemplate = {
     [key: string]: unknown;
   }>;
   fields?: Array<{ no?: number; enField?: string; koField?: string }>;
+  /** TPL-7: unstructuredDefinition.UnstructuredInfoField 의 structural subset. */
+  info?: Array<{
+    key?: string;
+    labelKo?: string;
+    labelEn?: string;
+    aliases?: string[];
+    no?: number;
+    order?: number;
+    [key: string]: unknown;
+  }>;
+  /** TPL-7: unstructuredDefinition.UnstructuredTableDef 의 structural subset. */
+  tables?: Array<{
+    tableKey?: string;
+    labelKo?: string;
+    labelEn?: string;
+    columns?: Array<{
+      columnKey?: string;
+      labelKo?: string;
+      labelEn?: string;
+      [key: string]: unknown;
+    }>;
+    [key: string]: unknown;
+  }>;
 };
 
 /**
@@ -91,7 +120,32 @@ export function buildRunOcrResult(raw: any, template?: BuildRunOcrResultTemplate
 
   const receiptFields = raw.receipt_fields ?? {};
   const financeFields = raw.finance_fields ?? {};
-  const templateFields = template?.fields ?? [];
+
+  // TPL-7: 신규 비정형 schema(info[])가 있으면 info를 우선 사용해 lookup용 pseudo
+  // fields를 만든다. info가 없으면 legacy template.fields[]를 그대로 사용해
+  // 기존 영수증/fields-only 경로 100% 호환을 유지한다.
+  const templateInfo = Array.isArray(template?.info) ? template!.info! : [];
+  const legacyFields = template?.fields ?? [];
+  const templateFields: Array<{ no?: number; enField?: string; koField?: string }> =
+    templateInfo.length > 0
+      ? templateInfo.map((entry, idx) => {
+          const rawEn = typeof entry?.labelEn === "string" ? entry.labelEn
+            : typeof entry?.key === "string" ? entry.key
+            : "";
+          const en = String(rawEn).trim();
+          const rawKo = typeof entry?.labelKo === "string" ? entry.labelKo
+            : typeof entry?.labelEn === "string" ? entry.labelEn
+            : typeof entry?.key === "string" ? entry.key
+            : "";
+          const ko = String(rawKo).trim();
+          const noVal = typeof entry?.no === "number" && Number.isFinite(entry.no)
+            ? entry.no
+            : typeof entry?.order === "number" && Number.isFinite(entry.order)
+              ? entry.order
+              : idx + 1;
+          return { no: noVal, enField: en, koField: ko };
+        })
+      : legacyFields;
   const resultFields: OcrFieldResult[] = [];
 
   // 한글 라벨 ↔ 백엔드 키(영문 short form) alias.
@@ -156,8 +210,48 @@ export function buildRunOcrResult(raw: any, template?: BuildRunOcrResultTemplate
     });
   }
 
-  return {
+  // TPL-7: 비정형 신규 schema metadata를 result에 안전하게 첨부한다.
+  // - documentType: 빈 문자열이면 첨부하지 않음 (helper omit policy와 일치).
+  // - tables: skeleton만 보존 (rows: [] — 실제 row extraction은 TPL-8 범위).
+  //
+  // result 객체는 spread(...raw)로 시작하므로 추가 키는 OcrResult 타입에 없어도
+  // raw: any 추론 경로를 통해 허용된다. UI는 아직 이 메타를 모르므로 변경 없음.
+  const result: OcrResult = {
     ...raw,
     fields: resultFields.length > 0 ? resultFields : (raw.fields ?? []),
   };
+  const docType = typeof template?.documentType === "string"
+    ? template.documentType.trim()
+    : "";
+  if (docType.length > 0) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (result as any).documentType = docType;
+  }
+  if (Array.isArray(template?.tables) && template!.tables!.length > 0) {
+    // TPL-8B: project backend canonical `document_fields.tableRows` onto the
+    // user's first table when documentType === "invoice_statement". Other
+    // tables and other documentTypes get the legacy `[]` skeleton.
+    const projectedRows = extractUnstructuredTableRows({
+      raw,
+      documentType: template?.documentType,
+      tables: template!.tables,
+    });
+    const tables = template!.tables!.map((t, idx) => {
+      const cols = Array.isArray(t?.columns) ? t!.columns! : [];
+      return {
+        tableKey: typeof t?.tableKey === "string" ? t.tableKey : "",
+        labelKo: typeof t?.labelKo === "string" ? t.labelKo : "",
+        ...(typeof t?.labelEn === "string" ? { labelEn: t.labelEn } : {}),
+        columns: cols.map((c) => ({
+          columnKey: typeof c?.columnKey === "string" ? c.columnKey : "",
+          labelKo: typeof c?.labelKo === "string" ? c.labelKo : "",
+          ...(typeof c?.labelEn === "string" ? { labelEn: c.labelEn } : {}),
+        })),
+        rows: (projectedRows[idx] ?? []) as Record<string, string>[],
+      };
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (result as any).unstructuredTables = tables;
+  }
+  return result;
 }

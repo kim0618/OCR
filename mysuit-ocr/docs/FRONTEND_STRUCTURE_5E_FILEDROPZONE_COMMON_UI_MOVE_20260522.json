@@ -1,0 +1,138 @@
+{
+  "task": "FRONTEND-STRUCTURE-5E-FILEDROPZONE-COMMON-UI-MOVE",
+  "date": "2026-05-22",
+  "tool": "Claude Code (VSCode extension)",
+  "model": "Claude Opus 4.7 (1M context)",
+  "workdir": "mysuit-ocr/",
+  "purpose": "OcrCanvasPane common/ui 이동 blocker 제거: src/components/common/FileDropzone.tsx -> src/common/ui/FileDropzone.tsx (move only; body byte-identical; OcrCanvasPane/RunOcrWorkspace import-path correction only; OcrCanvasPane itself is NOT moved in this step).",
+  "backup_dir": "mysuit-ocr/backup/filedropzone_20260522_before_FRONTEND_STRUCTURE_5E_FILEDROPZONE_COMMON_UI_MOVE",
+  "backups": [
+    "FileDropzone.tsx",
+    "OcrCanvasPane.tsx",
+    "RunOcrWorkspace.tsx"
+  ],
+  "moved": [
+    {
+      "from": "src/components/common/FileDropzone.tsx",
+      "to": "src/common/ui/FileDropzone.tsx",
+      "method": "git mv",
+      "body_byte_identical": true,
+      "self_import_changes": "none — FileDropzone only imports React"
+    }
+  ],
+  "modified_import_paths": [
+    { "file": "src/components/ocr/OcrCanvasPane.tsx", "before": "../common/FileDropzone", "after": "../../common/ui/FileDropzone" },
+    { "file": "src/components/runocr/RunOcrWorkspace.tsx", "before": "../common/FileDropzone", "after": "../../common/ui/FileDropzone" }
+  ],
+  "tmp_scripts": [
+    {
+      "path": "tmp/check_filedropzone_common_ui_move_5e.mjs",
+      "action": "created",
+      "checks_total": 26,
+      "result": "PASS"
+    }
+  ],
+  "earlier_checks_no_patch_required": true,
+  "earlier_checks_note": "5A/5B/5C/5D/4A/4B static checks do not reference FileDropzone, so the 5E move did not regress any of them.",
+  "not_moved_or_changed_beyond_import_path": [
+    "src/components/ocr/OcrCanvasPane.tsx",
+    "src/components/runocr/RunOcrWorkspace.tsx"
+  ],
+  "fully_untouched": [
+    "src/components/common/AppProviders.tsx",
+    "src/components/common/RequireLogin.tsx",
+    "src/components/template/ui/OcrAnnotator.tsx",
+    "src/components/template/ui/OcrRightPanel.tsx",
+    "src/components/template/TemplateWorkspace.tsx",
+    "src/components/template/UnstructuredBuilder.tsx",
+    "src/components/runocr/ui/*",
+    "src/components/runocr/utils/*",
+    "src/components/test/TestWorkspace.tsx",
+    "src/components/test/core/*",
+    "src/common/types/ocr.ts",
+    "src/common/utils/ocrCanvasOps.ts",
+    "src/common/utils/ocrTableRegion.ts",
+    "src/components/template/utils/buildTemplateExportPayload.ts",
+    "backend/OCR/parser",
+    "templates.json",
+    "fixtures"
+  ],
+  "common_ui_boundary": {
+    "file": "src/common/ui/FileDropzone.tsx",
+    "imports_components_star": false,
+    "imports_components_runocr": false,
+    "imports_components_template": false,
+    "imports_components_test": false,
+    "imports_react": true,
+    "uses_localStorage": false,
+    "logic_equivalent_to_backup_ignoring_import_paths": true,
+    "default_export_FileDropzone_preserved": true,
+    "props_preserved": [
+      "onPickFile",
+      "accept",
+      "hasFile",
+      "children",
+      "fileInputRef",
+      "className",
+      "style"
+    ],
+    "residual_old_filedropzone_imports_in_src": 0
+  },
+  "ocr_canvas_pane_blocker_status": {
+    "blocker_resolved": true,
+    "OcrCanvasPane_moved_to_common_ui_in_this_step": false,
+    "OcrCanvasPane_current_path": "src/components/ocr/OcrCanvasPane.tsx",
+    "next_phase_candidate": "Move OcrCanvasPane to src/common/ui/OcrCanvasPane.tsx (formerly blocked by FileDropzone being under components/common/)"
+  },
+  "static_check_5e": {
+    "script": "tmp/check_filedropzone_common_ui_move_5e.mjs",
+    "result": "PASS",
+    "checks_total": 26,
+    "checks_passed": 26,
+    "skipped_backup_checks": 0,
+    "residuals": 0
+  },
+  "runners": [
+    { "id": 1, "cmd": "npm run typecheck", "result": "PASS", "exit": 0 },
+    { "id": 2, "cmd": "npm run build", "result": "PASS", "exit": 0 },
+    { "id": 3, "cmd": "node tmp/check_table_view_model_v1_fixtures_js.mjs", "result": "PASS", "exit": 0, "score": "8/8" },
+    { "id": 4, "cmd": "node tmp/check_clean_json_v1_fixtures_js.mjs", "result": "PASS", "exit": 0, "score": "9/9" },
+    { "id": 5, "cmd": "python tmp/codex_markdown_contract_fixture_lock.py --check --phase post_FILEDROPZONE_COMMON_UI_MOVE_20260522", "result": "PASS", "exit": 0, "score": "6/6" },
+    { "id": 6, "cmd": "node tmp/check_runocr_formdata_keys_2a.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 7, "cmd": "node tmp/check_runocr_request_boundary_2b.mjs", "result": "PASS", "exit": 0 },
+    { "id": 8, "cmd": "node tmp/check_runocr_response_mapping_boundary_2c.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 9, "cmd": "node tmp/check_runocr_result_layout_boundary_3a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 10, "cmd": "node tmp/check_runocr_doc_comments_3b.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 11, "cmd": "node tmp/check_template_workspace_move_4a.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 12, "cmd": "node tmp/check_template_editor_ui_move_4b.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 13, "cmd": "node tmp/check_ocr_core_types_common_move_5a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 14, "cmd": "node tmp/check_ocr_core_ops_common_move_5b.mjs", "result": "PASS", "exit": 0 },
+    { "id": 15, "cmd": "node tmp/check_ocr_core_table_common_move_5c.mjs", "result": "PASS", "exit": 0 },
+    { "id": 16, "cmd": "node tmp/check_template_export_payload_move_5d.mjs", "result": "PASS", "exit": 0, "score": "31/31" },
+    { "id": 17, "cmd": "node tmp/check_filedropzone_common_ui_move_5e.mjs", "result": "PASS", "exit": 0, "score": "26/26" },
+    { "id": 18, "cmd": "node tmp/check_validation_baseline_repair_1a.mjs", "result": "PASS", "exit": 0 }
+  ],
+  "typecheck_build": {
+    "typecheck": { "cmd": "npm run typecheck", "exit": 0, "result": "PASS" },
+    "build": { "cmd": "npm run build", "exit": 0, "result": "PASS" }
+  },
+  "logs": {
+    "stdout": "ocr-server/logs/codex_FRONTEND_STRUCTURE_5E_FILEDROPZONE_COMMON_UI_MOVE.out.log",
+    "stderr": "ocr-server/logs/codex_FRONTEND_STRUCTURE_5E_FILEDROPZONE_COMMON_UI_MOVE.err.log"
+  },
+  "known_stderr_noise": [
+    "ESLint: nextVitals is not iterable (build exit 0, non-blocking)"
+  ],
+  "remaining_issues": [
+    "Historical backup files for phases 2A/2B/3B/4A/4B remain absent; those checks continue to use the PASS_WITH_SKIPPED_BACKUP verdict and skip logic-equivalence comparison. Not caused by 5E.",
+    "src/components/ocr/ still contains only OcrCanvasPane.tsx. The FileDropzone blocker has been removed; the next phase can move OcrCanvasPane to common/ui.",
+    "src/lib/profiles.ts contains a doc-comment substring 'core/types.ts' (not an import). Cosmetic cleanup deferred."
+  ],
+  "next_steps": [
+    "OcrCanvasPane -> common/ui precheck or move (5F candidate; the FileDropzone blocker is now resolved)",
+    "Template table column definition design precheck",
+    "TPL-95328E52 dirty impact precheck",
+    "src/lib/profiles.ts doc-comment cleanup",
+    "TestWorkspace cleanup: defer until user confirms"
+  ]
+}

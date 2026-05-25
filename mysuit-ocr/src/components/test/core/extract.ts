@@ -6,7 +6,7 @@
  */
 
 import { Entry, EMPTY_ENTRY } from "./types";
-import { normalizeBizNumber } from "@/lib/bizNumber";
+import { normalizeBizNumber } from "@/common/utils/bizNumber";
 
 // OCR 오인식 보정: O→0, l/I→1, S→5, B→8, .→, (천단위)
 export function cleanNumberString(s: string): string {

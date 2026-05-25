@@ -1,0 +1,59 @@
+{
+  "_meta": {
+    "fixtureName": "info_tables_invoice_statement",
+    "description": "Full 거래명세서 unstructured template: documentType + supplier/buyer/summary info fields + 품목표 with 6 columns + secondary 합계표 with 2 columns. Captures the most ambitious shape TPL-5 UI can produce."
+  },
+  "template_id": "LOCAL-INVOICE-FULL",
+  "template_name": "거래명세서_풀샘플",
+  "template_json": {
+    "templateName": "거래명세서_풀샘플",
+    "mode": "unstructured",
+    "documentType": "invoice_statement",
+    "info": [
+      { "key": "supplierCompany",        "labelKo": "공급자 상호",       "labelEn": "supplierCompany",        "no": 1, "order": 1 },
+      { "key": "supplierBizNumber",      "labelKo": "공급자 사업자번호", "labelEn": "supplierBizNumber",      "no": 2, "order": 2 },
+      { "key": "supplierRepresentative", "labelKo": "공급자 대표자",     "labelEn": "supplierRepresentative", "no": 3, "order": 3 },
+      { "key": "buyerCompany",           "labelKo": "공급받는자 상호",   "labelEn": "buyerCompany",           "no": 4, "order": 4 },
+      { "key": "buyerBizNumber",         "labelKo": "공급받는자 사업자번호", "labelEn": "buyerBizNumber",     "no": 5, "order": 5 },
+      { "key": "issueDate",              "labelKo": "발행일",            "labelEn": "issueDate",              "no": 6, "order": 6 },
+      { "key": "totalAmount",            "labelKo": "합계금액",          "labelEn": "totalAmount",            "no": 7, "order": 7 }
+    ],
+    "tables": [
+      {
+        "tableKey": "items",
+        "labelKo": "품목표",
+        "labelEn": "items",
+        "order": 1,
+        "columns": [
+          { "columnKey": "itemName",   "labelKo": "품목명",   "labelEn": "itemName",   "order": 1 },
+          { "columnKey": "spec",       "labelKo": "규격",     "labelEn": "spec",       "order": 2 },
+          { "columnKey": "quantity",   "labelKo": "수량",     "labelEn": "quantity",   "order": 3 },
+          { "columnKey": "unit",       "labelKo": "단위",     "labelEn": "unit",       "order": 4 },
+          { "columnKey": "unitPrice",  "labelKo": "단가",     "labelEn": "unitPrice",  "order": 5 },
+          { "columnKey": "amount",     "labelKo": "금액",     "labelEn": "amount",     "order": 6 }
+        ]
+      },
+      {
+        "tableKey": "summary",
+        "labelKo": "합계표",
+        "labelEn": "summary",
+        "order": 2,
+        "columns": [
+          { "columnKey": "label", "labelKo": "구분", "labelEn": "label", "order": 1 },
+          { "columnKey": "value", "labelKo": "금액", "labelEn": "value", "order": 2 }
+        ]
+      }
+    ],
+    "fields": [
+      { "no": 1, "enField": "supplierCompany",        "koField": "공급자 상호" },
+      { "no": 2, "enField": "supplierBizNumber",      "koField": "공급자 사업자번호" },
+      { "no": 3, "enField": "supplierRepresentative", "koField": "공급자 대표자" },
+      { "no": 4, "enField": "buyerCompany",           "koField": "공급받는자 상호" },
+      { "no": 5, "enField": "buyerBizNumber",         "koField": "공급받는자 사업자번호" },
+      { "no": 6, "enField": "issueDate",              "koField": "발행일" },
+      { "no": 7, "enField": "totalAmount",            "koField": "합계금액" }
+    ],
+    "regions": []
+  },
+  "updated_at": "2026-05-24T11:00:00.000Z"
+}

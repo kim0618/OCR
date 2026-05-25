@@ -1,0 +1,38 @@
+{
+  "_meta": {
+    "fixtureName": "colguides_mismatch_more_columns",
+    "description": "사용자가 columns를 5개 정의했다가 colGuides를 줄여서 colCount=3이 된 상황. getColumns 정책상 trailing 2개는 slice되어 UI에 표시되지 않지만, 저장 payload에는 사용자가 입력한 trailing 데이터가 그대로 보존되는지 확인 (buildTemplateExportPayload는 spread만 — slice/extend 안 함)."
+  },
+  "templateName": "mismatch_more",
+  "documentType": "invoice_statement",
+  "loaded": {
+    "src": "data:image/png;base64,iVBORw0KGgo=",
+    "fileName": "mismatch_more.png",
+    "naturalWidth": 1200,
+    "naturalHeight": 1600
+  },
+  "regions": [
+    {
+      "id": "table_1",
+      "name": "items",
+      "fieldType": "table",
+      "x": 60,
+      "y": 480,
+      "width": 1080,
+      "height": 600,
+      "table": {
+        "mode": "repeat",
+        "rowTemplate": { "x": 60, "y": 520, "width": 1080, "height": 36 },
+        "rows": [],
+        "colGuides": [0.5],
+        "columns": [
+          { "index": 0, "columnKey": "itemName", "labelKo": "품목명" },
+          { "index": 1, "columnKey": "quantity", "labelKo": "수량" },
+          { "index": 2, "columnKey": "trailing_a", "labelKo": "잘릴 컬럼 A" },
+          { "index": 3, "columnKey": "trailing_b", "labelKo": "잘릴 컬럼 B" },
+          { "index": 4, "columnKey": "trailing_c", "labelKo": "잘릴 컬럼 C" }
+        ]
+      }
+    }
+  ]
+}

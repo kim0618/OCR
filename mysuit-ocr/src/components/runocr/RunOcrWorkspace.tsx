@@ -25,18 +25,18 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { useUi } from "../common/AppProviders";
+import { useUi } from "../layout/AppProviders";
 import OcrResultPanel, { type FieldOverlayAdoption, type FieldSourceBox, type OcrResult, type OcrFieldResult } from "./ui/OcrResultPanel";
 import OcrDocViewer from "./ui/OcrDocViewer";
 import CornerAdjust, { type Corner } from "./ui/CornerAdjust";
 import RunOcrResultLayout from "./ui/RunOcrResultLayout";
 import { runOcrRequest } from "./utils/runOcrRequest";
 import { buildRunOcrResult } from "./utils/mapOcrResponse";
-import FileDropzone from "../common/FileDropzone";
-import type { Region, FieldType, LoadedImage } from "../ocr/core/types";
-import { appendHistoryRun, updateHistoryRun, syncHistoryIndexAndDetailOnCreate, type HistoryDetailDocumentFields, type HistoryOcrField, type HistoryOutputField } from "@/lib/historyStore";
-import { getTemplateImage } from "@/lib/imageStore";
-import { extractBizNumber } from "@/lib/bizNumber";
+import FileDropzone from "../../common/ui/FileDropzone";
+import type { Region, FieldType, LoadedImage } from "../../common/types/ocr";
+import { appendHistoryRun, updateHistoryRun, syncHistoryIndexAndDetailOnCreate, type HistoryDetailDocumentFields, type HistoryOcrField, type HistoryOutputField } from "@/common/storage/historyStore";
+import { getTemplateImage } from "@/common/storage/imageStore";
+import { extractBizNumber } from "@/common/utils/bizNumber";
 import {
   applyAutofillToOutputFields,
   buildAutofillSuggestionsFromCandidates,
@@ -48,9 +48,9 @@ import {
   suggestionsForHistoryField,
   type AutofillRunSummary,
   type AutofillSuggestion,
-} from "@/lib/autofillEngine";
+} from "@/common/utils/autofillEngine";
 
-const OcrCanvasPane = dynamic(() => import("../ocr/OcrCanvasPane"), { ssr: false });
+const OcrCanvasPane = dynamic(() => import("../../common/ui/OcrCanvasPane"), { ssr: false });
 
 type TemplateItem = {
   id: string;
@@ -1239,6 +1239,9 @@ export default function RunOcrWorkspace({ variant = "upload" }: RunOcrWorkspaceP
         selectedIndex={selectedFieldIndex}
         onSelectField={setSelectedFieldIndex}
         templateName={activeTemplateForPanel?.name ?? null}
+        // TPL-10: template.regions[].table.columns 기반 결과 projection을 위해
+        // 활성 템플릿 전체를 전달. 패널은 unknown으로 받아 helper가 안전하게 정규화.
+        activeTemplate={activeTemplateForPanel}
         fileName={selectedFile?.name ?? ""}
         onTabChange={setResultTab}
         drawMode={canvasDrawMode}

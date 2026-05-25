@@ -1,0 +1,171 @@
+{
+  "task": "FRONTEND-HR-2-DETAIL-HISTORY-VIEW-UI-MOVE",
+  "date": "2026-05-22",
+  "tool": "Claude Code (VSCode extension)",
+  "model": "Claude Opus 4.7 (1M context)",
+  "workdir": "mysuit-ocr/",
+  "purpose": "history/restore 구조 정리 second micro-step: history/DetailHistoryView.tsx -> history/ui/DetailHistoryView.tsx (move only; body byte-identical; HistoryWorkspace import-path correction + AppProviders depth-bump inside moved file). historyStore/imageStore/groundTruthStore/restoreProfileStore/autofillEngine NOT modified.",
+  "backup_dir": "mysuit-ocr/backup/detail_history_view_ui_20260522_before_FRONTEND_HR_2_DETAIL_HISTORY_VIEW_UI_MOVE",
+  "backups": [
+    "DetailHistoryView.tsx",
+    "HistoryWorkspace.tsx"
+  ],
+  "moved": [
+    {
+      "from": "src/components/history/DetailHistoryView.tsx",
+      "to": "src/components/history/ui/DetailHistoryView.tsx",
+      "method": "git mv",
+      "body_byte_identical_except_self_imports": true,
+      "self_import_changes": [
+        { "symbol": "useUi", "before": "../layout/AppProviders", "after": "../../layout/AppProviders" }
+      ]
+    }
+  ],
+  "modified_import_paths": [
+    { "file": "src/components/history/HistoryWorkspace.tsx", "line": 8, "before": "./DetailHistoryView", "after": "./ui/DetailHistoryView" },
+    { "file": "src/components/history/ui/DetailHistoryView.tsx", "line": 26, "before": "../layout/AppProviders", "after": "../../layout/AppProviders" }
+  ],
+  "tmp_scripts": [
+    {
+      "path": "tmp/check_detail_history_view_ui_move_hr2.mjs",
+      "action": "created",
+      "checks_total": 29,
+      "result": "PASS"
+    },
+    {
+      "path": "tmp/check_history_popup_ui_move_hr1.mjs",
+      "action": "auto_detect_DetailHistoryView_location",
+      "scope": "DETAIL_HISTORY resolves to whichever of history/ or history/ui/ DetailHistoryView.tsx exists"
+    },
+    {
+      "path": "tmp/check_app_providers_layout_move_cc1.mjs",
+      "action": "auto_detect_DetailHistoryView_location_and_depth_flex_AppProviders_regex",
+      "scope": "DETAIL_HISTORY fallback + detail_history importer's expectedImport regex accepts ../layout/AppProviders or ../../layout/AppProviders"
+    },
+    {
+      "path": "tmp/check_lib_invoice_field_labels_common_move_1b.mjs",
+      "action": "auto_detect_DetailHistoryView_location",
+      "scope": "same fallback as HR-1 patch"
+    },
+    {
+      "path": "tmp/check_lib_invoice_table_display_common_move_1e.mjs",
+      "action": "auto_detect_DetailHistoryView_location",
+      "scope": "same fallback as HR-1 patch"
+    }
+  ],
+  "fully_untouched": [
+    "src/components/history/ui/CreateHistoryPopup.tsx",
+    "src/components/history/ui/EditHistoryPopup.tsx",
+    "src/lib/historyStore.ts",
+    "src/lib/imageStore.ts",
+    "src/lib/groundTruthStore.ts",
+    "src/lib/restoreProfileStore.ts",
+    "src/lib/autofillEngine.ts",
+    "src/lib/profiles.ts",
+    "src/lib/bizNumber.ts",
+    "src/lib/testsets.ts",
+    "src/components/autorestore/**",
+    "src/components/restore/**",
+    "src/components/test/TestWorkspace.tsx",
+    "src/components/test/core/*",
+    "src/components/runocr/**",
+    "src/components/template/**",
+    "src/common/**",
+    "backend/OCR/parser",
+    "templates.json",
+    "fixtures"
+  ],
+  "history_ui_ownership": {
+    "directory": "src/components/history/",
+    "contents_after_hr2": [
+      "HistoryWorkspace.tsx (feature root)",
+      "ui/CreateHistoryPopup.tsx (HR-1)",
+      "ui/EditHistoryPopup.tsx (HR-1)",
+      "ui/DetailHistoryView.tsx (HR-2)"
+    ]
+  },
+  "detail_history_view_move_only_invariants": {
+    "default_export_preserved": "DetailHistoryView",
+    "AppProviders_import_depth_adjusted": true,
+    "historyStore_import_preserved": true,
+    "groundTruthStore_import_preserved": true,
+    "restoreProfileStore_import_preserved": true,
+    "autofillEngine_import_preserved": true,
+    "logic_equivalent_to_backup": true,
+    "GT_save_action_unchanged": true,
+    "restore_profile_action_unchanged": true,
+    "output_fields_tablerows_edit_action_unchanged": true
+  },
+  "stores_untouched": {
+    "historyStore_modified": false,
+    "imageStore_modified": false,
+    "groundTruthStore_modified": false,
+    "restoreProfileStore_modified": false,
+    "autofillEngine_modified": false
+  },
+  "test_workspace_untouched": {
+    "TestWorkspace_modified": false,
+    "test_core_dir_modified": false,
+    "TestWorkspace_imported_DetailHistoryView_pre_or_post": false
+  },
+  "static_check_hr2": {
+    "script": "tmp/check_detail_history_view_ui_move_hr2.mjs",
+    "result": "PASS",
+    "checks_total": 29,
+    "checks_passed": 29,
+    "skipped_backup_checks": 0,
+    "residuals": 0
+  },
+  "runners": [
+    { "id": 1, "cmd": "npm run typecheck", "result": "PASS", "exit": 0 },
+    { "id": 2, "cmd": "npm run build", "result": "PASS", "exit": 0 },
+    { "id": 3, "cmd": "node tmp/check_table_view_model_v1_fixtures_js.mjs", "result": "PASS", "exit": 0, "score": "8/8" },
+    { "id": 4, "cmd": "node tmp/check_clean_json_v1_fixtures_js.mjs", "result": "PASS", "exit": 0, "score": "9/9" },
+    { "id": 5, "cmd": "python tmp/codex_markdown_contract_fixture_lock.py --check --phase post_DETAIL_HISTORY_VIEW_UI_MOVE_20260522", "result": "PASS", "exit": 0, "score": "6/6" },
+    { "id": 6, "cmd": "node tmp/check_history_popup_ui_move_hr1.mjs", "result": "PASS", "exit": 0, "notes": "HR-2 DETAIL_HISTORY 자동 탐지 patch" },
+    { "id": 7, "cmd": "node tmp/check_app_providers_layout_move_cc1.mjs", "result": "PASS", "exit": 0, "notes": "HR-2 DETAIL_HISTORY 자동 탐지 + depth-flex regex" },
+    { "id": 8, "cmd": "node tmp/check_require_login_login_ui_move_cc2.mjs", "result": "PASS", "exit": 0 },
+    { "id": 9, "cmd": "node tmp/check_validation_baseline_repair_1a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 10, "cmd": "node tmp/check_lib_ocr_result_formatters_common_move_1a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 11, "cmd": "node tmp/check_lib_invoice_field_labels_common_move_1b.mjs", "result": "PASS", "exit": 0, "notes": "HR-2 DETAIL_HISTORY 자동 탐지 patch" },
+    { "id": 12, "cmd": "node tmp/check_lib_markdown_report_builder_common_move_1c.mjs", "result": "PASS", "exit": 0 },
+    { "id": 13, "cmd": "node tmp/check_lib_clean_json_builder_common_move_1d.mjs", "result": "PASS", "exit": 0 },
+    { "id": 14, "cmd": "node tmp/check_lib_invoice_table_display_common_move_1e.mjs", "result": "PASS", "exit": 0, "notes": "HR-2 DETAIL_HISTORY 자동 탐지 patch" },
+    { "id": 15, "cmd": "node tmp/check_lib_structured_table_view_model_common_move_1f.mjs", "result": "PASS", "exit": 0 },
+    { "id": 16, "cmd": "node tmp/check_ocr_core_types_common_move_5a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 17, "cmd": "node tmp/check_ocr_core_ops_common_move_5b.mjs", "result": "PASS", "exit": 0 },
+    { "id": 18, "cmd": "node tmp/check_ocr_core_table_common_move_5c.mjs", "result": "PASS", "exit": 0 },
+    { "id": 19, "cmd": "node tmp/check_template_export_payload_move_5d.mjs", "result": "PASS", "exit": 0 },
+    { "id": 20, "cmd": "node tmp/check_filedropzone_common_ui_move_5e.mjs", "result": "PASS", "exit": 0 },
+    { "id": 21, "cmd": "node tmp/check_ocr_canvas_pane_common_ui_move_5f.mjs", "result": "PASS", "exit": 0 },
+    { "id": 22, "cmd": "node tmp/check_template_right_panel_rename_6a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 23, "cmd": "node tmp/check_template_annotator_rename_6b.mjs", "result": "PASS", "exit": 0 },
+    { "id": 24, "cmd": "node tmp/check_runocr_request_boundary_2b.mjs", "result": "PASS", "exit": 0 },
+    { "id": 25, "cmd": "node tmp/check_runocr_result_layout_boundary_3a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 26, "cmd": "node tmp/check_detail_history_view_ui_move_hr2.mjs", "result": "PASS", "exit": 0, "score": "29/29" }
+  ],
+  "typecheck_build": {
+    "typecheck": { "cmd": "npm run typecheck", "exit": 0, "result": "PASS" },
+    "build": { "cmd": "npm run build", "exit": 0, "result": "PASS" }
+  },
+  "logs": {
+    "stdout": "ocr-server/logs/codex_FRONTEND_HR_2_DETAIL_HISTORY_VIEW_UI_MOVE.out.log",
+    "stderr": "ocr-server/logs/codex_FRONTEND_HR_2_DETAIL_HISTORY_VIEW_UI_MOVE.err.log"
+  },
+  "known_stderr_noise": [
+    "ESLint: nextVitals is not iterable (build exit 0, non-blocking)"
+  ],
+  "remaining_issues": [
+    "historyStore/imageStore/restoreProfileStore/groundTruthStore/autofillEngine store/util layer not moved; HR-3/HR-4 will evaluate.",
+    "common/utils/ocrResultFormatters.ts still imports @/lib/autofillEngine (type-only) from 1A; follow-up LIB phase will resolve.",
+    "src/lib/profiles.ts contains a doc-comment substring 'core/types.ts' (not an import). Cosmetic cleanup deferred."
+  ],
+  "next_steps": [
+    "HR-3 historyStore separate precheck",
+    "HR-4 imageStore separate precheck",
+    "RS-1 autorestore -> restore folder cleanup precheck",
+    "autofillEngine separate precheck",
+    "TestWorkspace structural cleanup: defer until user confirms",
+    "After HR/RS phases conclude, proceed to Template table column definition feature precheck per user request"
+  ]
+}

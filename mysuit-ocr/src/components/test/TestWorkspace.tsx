@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { extractBizNumber, normalizeBizNumber } from "@/lib/bizNumber";
-import { useUi } from "../common/AppProviders";
-import { INVOICE_COL_LABEL_MAP, shouldDisplayRowIndex } from "@/lib/invoiceTableDisplay";
+import { extractBizNumber, normalizeBizNumber } from "@/common/utils/bizNumber";
+import { useUi } from "../layout/AppProviders";
+import { INVOICE_COL_LABEL_MAP, shouldDisplayRowIndex } from "@/common/utils/invoiceTableDisplay";
 
 import {
   Entry,
@@ -32,9 +32,9 @@ import {
   computeStatusPerField,
   MatchStatus,
 } from "./core/finalize";
-import type { DatasetManifest, ManifestItem, InvoiceProfile, AmountProfile, PartyProfile, TableProfile } from "@/lib/testsets";
-import { resolveProfile, FINANCE_COLUMNS, FINANCE_TIER1_FIELDS, DOCUMENT_COLUMNS, DOCUMENT_PARTY_FIELDS, isNotApplicableField, getExpectedTableColumns, TABLE_COLUMN_META } from "@/lib/profiles";
-import type { TableColumnKey, TableRowsValidation, GridModeRecommendation } from "@/lib/profiles";
+import type { DatasetManifest, ManifestItem, InvoiceProfile, AmountProfile, PartyProfile, TableProfile } from "@/common/config/testsets";
+import { resolveProfile, FINANCE_COLUMNS, FINANCE_TIER1_FIELDS, DOCUMENT_COLUMNS, DOCUMENT_PARTY_FIELDS, isNotApplicableField, getExpectedTableColumns, TABLE_COLUMN_META } from "@/components/test/utils/profiles";
+import type { TableColumnKey, TableRowsValidation, GridModeRecommendation } from "@/components/test/utils/profiles";
 
 type ViewMode = "compare" | "ocr_only" | "autofill" | "gt_edit";
 

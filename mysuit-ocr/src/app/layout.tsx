@@ -1,6 +1,6 @@
 import "./globals.css";
 import type React from "react";
-import AppProviders from "../components/common/AppProviders";
+import AppProviders from "../components/layout/AppProviders";
 
 export const metadata = {
   title: "MySuit OCR",

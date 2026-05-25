@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
-import { DATASET_FOLDERS } from "@/lib/testsets";
+import { DATASET_FOLDERS } from "@/common/config/testsets";
 
 function cachePath(req: Request) {
   const { searchParams } = new URL(req.url);

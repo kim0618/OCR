@@ -1,0 +1,503 @@
+{
+  "generatedAt": "2026-05-22T09:32:59.390963+00:00",
+  "task": "CODEX_FRONTEND_OCR_CORE_OWNERSHIP_PRECHECK_NO_PROD_MODIFY",
+  "tool": "Codex",
+  "model": "Codex",
+  "projectRoot": "C:\\OCR\\OCR\\mysuit-ocr",
+  "requestedProjectRoot": "D:/Free_Vue/OCR/mysuit-ocr",
+  "codeModified": false,
+  "sourceCodeModified": false,
+  "fileMoved": false,
+  "importsModified": false,
+  "logFiles": {
+    "stdout": "C:\\OCR\\OCR\\ocr-server\\logs\\codex_CODEX_FRONTEND_OCR_CORE_OWNERSHIP_PRECHECK_NO_PROD_MODIFY.out.log",
+    "stderr": "C:\\OCR\\OCR\\ocr-server\\logs\\codex_CODEX_FRONTEND_OCR_CORE_OWNERSHIP_PRECHECK_NO_PROD_MODIFY.err.log"
+  },
+  "dirtyStatusBeforeReportGeneration": [
+    " M ocr-server/data/review_log.jsonl",
+    " M ocr-server/data/templates.json",
+    "?? mysuit-ocr/docs/FRONTEND_OCR_CANVAS_PANE_SHARED_MAP_20260522.csv",
+    "?? mysuit-ocr/docs/FRONTEND_OCR_CANVAS_PANE_SHARED_PRECHECK_20260522.json",
+    "?? mysuit-ocr/docs/FRONTEND_OCR_CANVAS_PANE_SHARED_PRECHECK_20260522.md",
+    "?? mysuit-ocr/tmp/codex_frontend_ocr_canvas_pane_shared_precheck.py"
+  ],
+  "dirtyStatus": [
+    " M ocr-server/data/review_log.jsonl",
+    " M ocr-server/data/templates.json",
+    "?? mysuit-ocr/docs/FRONTEND_OCR_CANVAS_PANE_SHARED_MAP_20260522.csv",
+    "?? mysuit-ocr/docs/FRONTEND_OCR_CANVAS_PANE_SHARED_PRECHECK_20260522.json",
+    "?? mysuit-ocr/docs/FRONTEND_OCR_CANVAS_PANE_SHARED_PRECHECK_20260522.md",
+    "?? mysuit-ocr/docs/FRONTEND_OCR_CORE_OWNERSHIP_MAP_20260522.csv",
+    "?? mysuit-ocr/docs/FRONTEND_OCR_CORE_OWNERSHIP_PRECHECK_20260522.json",
+    "?? mysuit-ocr/docs/FRONTEND_OCR_CORE_OWNERSHIP_PRECHECK_20260522.md",
+    "?? mysuit-ocr/tmp/codex_frontend_ocr_canvas_pane_shared_precheck.py",
+    "?? mysuit-ocr/tmp/codex_frontend_ocr_core_ownership_precheck.py"
+  ],
+  "coreFiles": [
+    {
+      "currentPath": "src/components/ocr/core/types.ts",
+      "lineCount": 110,
+      "role": "OCR canvas/template model type definitions.",
+      "primaryResponsibility": "FieldType, mapping metadata, Rect, TableMeta, Region, LoadedImage, DragKind.",
+      "imports": [],
+      "exports": [
+        "export type FieldType = \"field\" | \"multi\" | \"check\" | \"table\";",
+        "export type CheckMode = \"boxOnly\";",
+        "export type MappingStatus = \"auto\" | \"ambiguous\" | \"manual\" | \"unmapped\";",
+        "export type FieldMappingCandidate =",
+        "export type TableColumnDef =",
+        "export type Rect =",
+        "export type TableMeta =",
+        "export type Region =",
+        "export type LoadedImage =",
+        "export type DragKind ="
+      ],
+      "importedBy": [
+        {
+          "file": "src/components/ocr/OcrCanvasPane.tsx",
+          "feature": "shared",
+          "importLine": "import type { DragKind, FieldType, LoadedImage, Rect, Region } from \"./core/types\";",
+          "usagePurpose": "Canvas props, drag state, region and loaded-image model."
+        },
+        {
+          "file": "src/components/template/ui/OcrAnnotator.tsx",
+          "feature": "template",
+          "importLine": "import type { FieldType, LoadedImage, Region } from \"../../ocr/core/types\";",
+          "usagePurpose": "Template editor state types."
+        },
+        {
+          "file": "src/components/template/ui/OcrRightPanel.tsx",
+          "feature": "template",
+          "importLine": "import type { FieldType, LoadedImage, Region, TableColumnDef } from \"../../ocr/core/types\";",
+          "usagePurpose": "Region and table metadata editing types."
+        },
+        {
+          "file": "src/components/runocr/RunOcrWorkspace.tsx",
+          "feature": "runocr",
+          "importLine": "import type { Region, FieldType, LoadedImage } from \"../ocr/core/types\";",
+          "usagePurpose": "RunOCR custom canvas state types."
+        },
+        {
+          "file": "src/components/runocr/utils/buildOcrFormData.ts",
+          "feature": "runocr",
+          "importLine": "import type { Region } from \"../../ocr/core/types\";",
+          "usagePurpose": "RunOCR custom region form-data type."
+        },
+        {
+          "file": "src/components/ocr/core/export.ts",
+          "feature": "shared-internal",
+          "importLine": "import type { LoadedImage, Rect, Region } from \"./types\";",
+          "usagePurpose": "Template export payload composition dependency."
+        },
+        {
+          "file": "src/components/ocr/core/ops.ts",
+          "feature": "shared-internal",
+          "importLine": "import type { Rect, Region } from \"./types\";",
+          "usagePurpose": "Internal dependency."
+        },
+        {
+          "file": "src/components/ocr/core/table.ts",
+          "feature": "shared-internal",
+          "importLine": "import type { Rect } from \"./types\";",
+          "usagePurpose": "Table helpers use geometry clamp."
+        }
+      ],
+      "sideEffects": false,
+      "browserOrReactDependency": false,
+      "templateOnly": false,
+      "runocrShared": true,
+      "ocrCanvasDependency": true,
+      "ownership": "common/types",
+      "targetCandidates": [
+        "src/common/types/ocr.ts",
+        "src/common/types/ocrCanvas.ts"
+      ],
+      "recommendation": "Move first as a micro-step to common/types/ocr.ts or ocrCanvas.ts.",
+      "risk": "MEDIUM"
+    },
+    {
+      "currentPath": "src/components/ocr/core/ops.ts",
+      "lineCount": 99,
+      "role": "Pure-ish geometry and canvas operation helpers.",
+      "primaryResponsibility": "Clamp, normalizeRect, id parsing, ratio normalization, multi sub-regions, area clamping, label style.",
+      "imports": [
+        "import type { CSSProperties } from \"react\";",
+        "import type { Rect, Region } from \"./types\";"
+      ],
+      "exports": [
+        "export function clamp(n: number, min: number, max: number)",
+        "export function normalizeRect(x: number, y: number, w: number, h: number)",
+        "export function uid(prefix = \"r\")",
+        "export function parseIndex(name: string, prefix: string)",
+        "export function normalizeRatios(parts: 2 | 3, ratios?: number[])",
+        "export function boxLabelStyle(wPx: number, hPx: number): CSSProperties",
+        "export function calcMultiSubRegions(r: Region)",
+        "export function clampRectToArea(rect: Rect, area: Rect): Rect"
+      ],
+      "importedBy": [
+        {
+          "file": "src/components/ocr/OcrCanvasPane.tsx",
+          "feature": "shared",
+          "importLine": "import { boxLabelStyle, clamp, clampRectToArea, normalizeRatios, normalizeRect, parseIndex, uid } from \"./core/ops\";",
+          "usagePurpose": "Geometry, ratio, id parsing, label style and clamp helpers."
+        },
+        {
+          "file": "src/components/template/ui/OcrRightPanel.tsx",
+          "feature": "template",
+          "importLine": "import { normalizeRatios, calcMultiSubRegions } from \"../../ocr/core/ops\";",
+          "usagePurpose": "Multi-region preview geometry."
+        },
+        {
+          "file": "src/components/ocr/core/export.ts",
+          "feature": "shared-internal",
+          "importLine": "import { calcMultiSubRegions, normalizeRatios } from \"./ops\";",
+          "usagePurpose": "Template export payload composition dependency."
+        },
+        {
+          "file": "src/components/ocr/core/table.ts",
+          "feature": "shared-internal",
+          "importLine": "import { clampRectToArea } from \"./ops\";",
+          "usagePurpose": "Table helpers use geometry clamp."
+        }
+      ],
+      "sideEffects": false,
+      "browserOrReactDependency": "type-only React CSSProperties import",
+      "templateOnly": false,
+      "runocrShared": "Indirectly through OcrCanvasPane custom tab.",
+      "ocrCanvasDependency": true,
+      "ownership": "common/utils",
+      "targetCandidates": [
+        "src/common/utils/ocrCanvasOps.ts",
+        "src/common/utils/ocrGeometry.ts"
+      ],
+      "recommendation": "Move after types; consider removing React CSSProperties coupling or keep type-only import.",
+      "risk": "MEDIUM"
+    },
+    {
+      "currentPath": "src/components/ocr/core/table.ts",
+      "lineCount": 151,
+      "role": "OCR table region and guide helpers.",
+      "primaryResponsibility": "Column guide normalization, repeated row generation, stop keywords, OCR-box row band detection.",
+      "imports": [
+        "import type { Rect } from \"./types\";",
+        "import { clampRectToArea } from \"./ops\";"
+      ],
+      "exports": [
+        "export type OcrBox =",
+        "export function normalizeColGuides(guides?: number[]): number[]",
+        "export function buildTableRows(area: Rect, rowTemplate: Rect): Rect[]",
+        "export function normalizeStopKeywords(list?: string[]): string[]",
+        "export function autoDetectRowBands(params:",
+        "export function isStopRow(params: { rowText: string; stopKeywords: string[] })"
+      ],
+      "importedBy": [
+        {
+          "file": "src/components/ocr/OcrCanvasPane.tsx",
+          "feature": "shared",
+          "importLine": "import { buildTableRows, normalizeColGuides } from \"./core/table\";",
+          "usagePurpose": "Table row template and column-guide editing helpers."
+        },
+        {
+          "file": "src/components/template/ui/OcrRightPanel.tsx",
+          "feature": "template",
+          "importLine": "import { normalizeColGuides } from \"../../ocr/core/table\";",
+          "usagePurpose": "Column-guide normalization and table metadata controls."
+        },
+        {
+          "file": "src/components/ocr/core/export.ts",
+          "feature": "shared-internal",
+          "importLine": "import { normalizeColGuides } from \"./table\";",
+          "usagePurpose": "Template export payload composition dependency."
+        }
+      ],
+      "sideEffects": false,
+      "browserOrReactDependency": false,
+      "templateOnly": false,
+      "runocrShared": "Indirectly through OcrCanvasPane custom tab; table field edit path may use it.",
+      "ocrCanvasDependency": true,
+      "ownership": "common/utils with table-design caution",
+      "targetCandidates": [
+        "src/common/utils/ocrTableRegion.ts",
+        "src/components/template/utils/templateTableGuides.ts"
+      ],
+      "recommendation": "Prefer common/utils only for row/guide geometry; defer column-definition semantics until template table design.",
+      "risk": "MEDIUM_HIGH"
+    },
+    {
+      "currentPath": "src/components/ocr/core/export.ts",
+      "lineCount": 90,
+      "role": "Template export payload builder.",
+      "primaryResponsibility": "Build templateName/file/image/regions payload for template save, including subRegions and table metadata.",
+      "imports": [
+        "import type { LoadedImage, Rect, Region } from \"./types\";",
+        "import { calcMultiSubRegions, normalizeRatios } from \"./ops\";",
+        "import { normalizeColGuides } from \"./table\";"
+      ],
+      "exports": [
+        "export function buildExportPayload(params:"
+      ],
+      "importedBy": [
+        {
+          "file": "src/components/template/ui/OcrAnnotator.tsx",
+          "feature": "template",
+          "importLine": "import { buildExportPayload } from \"../../ocr/core/export\";",
+          "usagePurpose": "Template save/export payload construction."
+        }
+      ],
+      "sideEffects": false,
+      "browserOrReactDependency": false,
+      "templateOnly": true,
+      "runocrShared": false,
+      "ocrCanvasDependency": false,
+      "ownership": "components/template/utils",
+      "targetCandidates": [
+        "src/components/template/utils/buildTemplateExportPayload.ts",
+        "src/components/template/utils/templateMapper.ts"
+      ],
+      "recommendation": "Do not move to common. Move to template/utils after common types/ops/table path is settled.",
+      "risk": "LOW_MEDIUM"
+    }
+  ],
+  "dependencyGraph": {
+    "types.ts": {
+      "imports": [],
+      "importedBy": [
+        "src/components/ocr/OcrCanvasPane.tsx",
+        "src/components/template/ui/OcrAnnotator.tsx",
+        "src/components/template/ui/OcrRightPanel.tsx",
+        "src/components/runocr/RunOcrWorkspace.tsx",
+        "src/components/runocr/utils/buildOcrFormData.ts",
+        "src/components/ocr/core/export.ts",
+        "src/components/ocr/core/ops.ts",
+        "src/components/ocr/core/table.ts"
+      ]
+    },
+    "ops.ts": {
+      "imports": [
+        "types.ts",
+        "react type CSSProperties"
+      ],
+      "importedBy": [
+        "src/components/ocr/OcrCanvasPane.tsx",
+        "src/components/template/ui/OcrRightPanel.tsx",
+        "src/components/ocr/core/export.ts",
+        "src/components/ocr/core/table.ts"
+      ]
+    },
+    "table.ts": {
+      "imports": [
+        "types.ts",
+        "ops.ts"
+      ],
+      "importedBy": [
+        "src/components/ocr/OcrCanvasPane.tsx",
+        "src/components/template/ui/OcrRightPanel.tsx",
+        "src/components/ocr/core/export.ts"
+      ]
+    },
+    "export.ts": {
+      "imports": [
+        "types.ts",
+        "ops.ts",
+        "table.ts"
+      ],
+      "importedBy": [
+        "src/components/template/ui/OcrAnnotator.tsx"
+      ]
+    },
+    "OcrCanvasPane.tsx": {
+      "imports": [
+        "types.ts",
+        "ops.ts",
+        "table.ts"
+      ],
+      "targetImpact": "common/ui move becomes natural after these shared dependencies are common."
+    },
+    "OcrAnnotator.tsx": {
+      "imports": [
+        "types.ts",
+        "export.ts"
+      ],
+      "targetImpact": "export.ts should remain template-owned."
+    },
+    "OcrRightPanel.tsx": {
+      "imports": [
+        "types.ts",
+        "ops.ts",
+        "table.ts"
+      ],
+      "targetImpact": "template UI can import common types/utils."
+    },
+    "RunOcrWorkspace.tsx": {
+      "imports": [
+        "types.ts"
+      ],
+      "targetImpact": "RunOCR import changes if types move."
+    },
+    "buildOcrFormData.ts": {
+      "imports": [
+        "types.ts"
+      ],
+      "targetImpact": "RunOCR util import changes if types move."
+    }
+  },
+  "moveOptions": [
+    {
+      "option": "A",
+      "title": "types.ts만 common/types로 이동하는 micro-step",
+      "recommendation": "RECOMMENDED_FIRST",
+      "risk": "MEDIUM",
+      "pros": [
+        "Smallest useful common extraction.",
+        "Unblocks later common/utils and common/ui imports."
+      ],
+      "cons": [
+        "Touches Template, RunOCR and core internal imports.",
+        "Needs strict static check to avoid TestWorkspace confusion."
+      ],
+      "importScope": [
+        "OcrCanvasPane",
+        "OcrAnnotator",
+        "OcrRightPanel",
+        "RunOcrWorkspace",
+        "buildOcrFormData",
+        "ops/table/export"
+      ]
+    },
+    {
+      "option": "B",
+      "title": "types.ts + ops.ts + table.ts common 이동",
+      "recommendation": "GOOD_SECOND_PHASE",
+      "risk": "MEDIUM_HIGH",
+      "pros": [
+        "Makes OcrCanvasPane common/ui move structurally clean.",
+        "Keeps shared geometry outside feature folders."
+      ],
+      "cons": [
+        "Larger import churn.",
+        "table.ts has template table-definition design overlap."
+      ],
+      "importScope": [
+        "OcrCanvasPane",
+        "OcrRightPanel",
+        "export.ts",
+        "core internal dependencies"
+      ]
+    },
+    {
+      "option": "C",
+      "title": "export.ts만 template/utils로 이동",
+      "recommendation": "DO_AFTER_TYPES_OR_WITH_TEMPLATE_MAPPER",
+      "risk": "LOW_MEDIUM",
+      "pros": [
+        "Clearly template-owned.",
+        "Removes template payload builder from shared ocr/core."
+      ],
+      "cons": [
+        "Still imports shared ops/table/types; cleaner after shared targets are chosen."
+      ],
+      "importScope": [
+        "OcrAnnotator only plus export.ts internal imports"
+      ]
+    },
+    {
+      "option": "D",
+      "title": "core 전체 이동 보류 후 Template table column definition 설계 먼저",
+      "recommendation": "SAFE_BUT_SLOW",
+      "risk": "LOW",
+      "pros": [
+        "Avoids churn before table schema decision."
+      ],
+      "cons": [
+        "Keeps OcrCanvasPane common/ui blocked by components/ocr/core dependency."
+      ]
+    },
+    {
+      "option": "E",
+      "title": "OcrCanvasPane common/ui 이동과 함께 묶어서 진행",
+      "recommendation": "DO_NOT_DO_FIRST",
+      "risk": "HIGH",
+      "pros": [
+        "Completes shared UI migration in one change."
+      ],
+      "cons": [
+        "Too much Template + RunOCR surface in one phase.",
+        "Harder rollback and validation."
+      ]
+    },
+    {
+      "option": "F",
+      "title": "precheck만 하고 rename micro-step으로 이동",
+      "recommendation": "SECONDARY",
+      "risk": "LOW",
+      "pros": [
+        "Can do OcrRightPanel rename or mapper naming later."
+      ],
+      "cons": [
+        "Does not resolve OcrCanvasPane dependency shape."
+      ]
+    }
+  ],
+  "recommendation": {
+    "phaseChoice": "A first, then B/C, then OcrCanvasPane common/ui",
+    "summary": "Move types first as a micro-step; move ops/table to common/utils in the next phase; move export.ts to template/utils separately; only then move OcrCanvasPane to common/ui.",
+    "safeOrder": [
+      "1. Move types.ts to src/common/types/ocr.ts or ocrCanvas.ts.",
+      "2. Move ops.ts to src/common/utils/ocrCanvasOps.ts or ocrGeometry.ts.",
+      "3. Move table.ts geometry/guide helpers to src/common/utils/ocrTableRegion.ts; defer semantic table column mapper if needed.",
+      "4. Move export.ts to src/components/template/utils/buildTemplateExportPayload.ts or templateMapper.ts.",
+      "5. Move OcrCanvasPane to src/common/ui/OcrCanvasPane.tsx."
+    ],
+    "holdConditions": [
+      "If TestWorkspace becomes involved, stop and ask before editing.",
+      "If table column definition design changes Region/TableMeta shape, defer table.ts/export.ts movement.",
+      "Do not allow common/* to import src/components/*."
+    ]
+  },
+  "staticCheckPlan": {
+    "candidateScripts": [
+      "tmp/check_ocr_core_types_move.mjs",
+      "tmp/check_ocr_core_shared_utils_move.mjs",
+      "tmp/check_template_export_mapper_move.mjs"
+    ],
+    "checks": [
+      "target file exists",
+      "source file absence or explicit hold/shim policy matches phase",
+      "common files do not import components/*",
+      "template utils files import only common/types/common/utils or template-local modules",
+      "RunOCR imports resolve",
+      "Template imports resolve",
+      "TestWorkspace unchanged",
+      "npm run typecheck PASS",
+      "npm run build PASS",
+      "RunOCR boundary checks PASS",
+      "Template 4A/4B checks PASS"
+    ]
+  },
+  "validationPlan": [
+    "No production source edits in this precheck.",
+    "No file moves/import rewrites/renames.",
+    "Record dirty state without restoration.",
+    "Run npm run typecheck and npm run build with stdout/stderr under ocr-server/logs."
+  ],
+  "typecheck": {
+    "command": "npm run typecheck",
+    "exitCode": 0,
+    "status": "PASS",
+    "log": "C:\\OCR\\OCR\\ocr-server\\logs\\codex_CODEX_FRONTEND_OCR_CORE_OWNERSHIP_PRECHECK_NO_PROD_MODIFY.out.log"
+  },
+  "build": {
+    "command": "npm run build",
+    "exitCode": 0,
+    "status": "PASS",
+    "knownStderrNoise": "ESLint: nextVitals is not iterable",
+    "log": "C:\\OCR\\OCR\\ocr-server\\logs\\codex_CODEX_FRONTEND_OCR_CORE_OWNERSHIP_PRECHECK_NO_PROD_MODIFY.out.log"
+  },
+  "nextSteps": [
+    "Implement option A: types.ts common/types micro-step with static check.",
+    "Then precheck/implement ops.ts and table.ts common/utils split.",
+    "Move export.ts to template/utils when template mapper naming is chosen.",
+    "Proceed to OcrCanvasPane common/ui after common dependencies are stable.",
+    "Keep templates.json dirty state as TPL-95328E52 impact precheck candidate."
+  ]
+}

@@ -4,7 +4,7 @@
 - 사용 도구: Codex
 - 사용 모델: Codex
 - 작업명: `CODEX_FRONTEND_CLEANUP_1B_JS_CLEAN_JSON_FIXTURE_RUNNER`
-- 생성 시각: `2026-05-22T07:25:53.194Z`
+- 생성 시각: `2026-05-25T11:14:19.660Z`
 
 ## 2. 코드 수정 여부
 - 운영 기능 코드는 수정하지 않았다.
@@ -52,8 +52,8 @@
 ## 7. Typecheck / Build
 | command | status | exit | seconds |
 | --- | --- | --- | --- |
-| npm run typecheck | PASS | 0 | 1.869 |
-| npm run build | PASS | 0 | 16.114 |
+| npm run typecheck | PASS | 0 | 1.676 |
+| npm run build | PASS | 0 | 16.61 |
 
 Known stderr noise:
 - ISSUE-FRONTEND-BUILD-LOG-1: `ESLint: nextVitals is not iterable` can appear with build exit code 0.

@@ -1,0 +1,824 @@
+{
+  "generatedAt": "2026-05-23T03:48:07.178711+00:00",
+  "projectRoot": "OCR/mysuit-ocr",
+  "codeModified": false,
+  "dirtyStatus": [
+    " M docs/FRONTEND_CLEANUP_1B_JS_CLEAN_JSON_FIXTURE_RUNNER_20260521.json",
+    " M docs/FRONTEND_CLEANUP_1B_JS_CLEAN_JSON_FIXTURE_RUNNER_20260521.md",
+    " M docs/FRONTEND_CLEANUP_3D2_RUNNER_RESULT_20260521.json",
+    "R  src/components/ocr/core/types.ts -> src/common/types/ocr.ts",
+    "R  src/components/common/FileDropzone.tsx -> src/common/ui/FileDropzone.tsx",
+    "RM src/components/ocr/OcrCanvasPane.tsx -> src/common/ui/OcrCanvasPane.tsx",
+    "RM src/components/ocr/core/ops.ts -> src/common/utils/ocrCanvasOps.ts",
+    "RM src/components/ocr/core/table.ts -> src/common/utils/ocrTableRegion.ts",
+    " M src/components/runocr/RunOcrWorkspace.tsx",
+    " M src/components/runocr/utils/buildOcrFormData.ts",
+    " M src/components/template/ui/OcrAnnotator.tsx",
+    "RM src/components/template/ui/OcrRightPanel.tsx -> src/components/template/ui/TemplateRightPanel.tsx",
+    "RM src/components/ocr/core/export.ts -> src/components/template/utils/buildTemplateExportPayload.ts",
+    " M tmp/check_runocr_doc_comments_3b.mjs",
+    " M tmp/check_runocr_formdata_keys_2a.mjs",
+    " M tmp/check_runocr_response_mapping_boundary_2c.mjs",
+    " M tmp/check_template_editor_ui_move_4b.mjs",
+    " M tmp/check_template_workspace_move_4a.mjs",
+    " M tmp/codex_markdown_contract_fixture_lock.py",
+    " M ../ocr-server/data/review_log.jsonl",
+    " M ../ocr-server/data/templates.json",
+    "?? docs/FRONTEND_FILEDROPZONE_COMMON_UI_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_FILEDROPZONE_COMMON_UI_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_FILEDROPZONE_COMMON_UI_PRECHECK_MAP_20260522.csv",
+    "?? docs/FRONTEND_OCR_CANVAS_PANE_COMMON_MOVE_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_OCR_CANVAS_PANE_COMMON_MOVE_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_OCR_CANVAS_PANE_COMMON_MOVE_PRECHECK_MAP_20260522.csv",
+    "?? docs/FRONTEND_OCR_CANVAS_PANE_SHARED_MAP_20260522.csv",
+    "?? docs/FRONTEND_OCR_CANVAS_PANE_SHARED_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_OCR_CANVAS_PANE_SHARED_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_OCR_CORE_EXPORT_TEMPLATE_UTIL_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_OCR_CORE_EXPORT_TEMPLATE_UTIL_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_OCR_CORE_EXPORT_TEMPLATE_UTIL_PRECHECK_MAP_20260522.csv",
+    "?? docs/FRONTEND_OCR_CORE_OPS_COMMON_MOVE_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_OCR_CORE_OPS_COMMON_MOVE_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_OCR_CORE_OPS_COMMON_MOVE_PRECHECK_MAP_20260522.csv",
+    "?? docs/FRONTEND_OCR_CORE_OWNERSHIP_MAP_20260522.csv",
+    "?? docs/FRONTEND_OCR_CORE_OWNERSHIP_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_OCR_CORE_OWNERSHIP_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_OCR_CORE_TABLE_COMMON_MOVE_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_OCR_CORE_TABLE_COMMON_MOVE_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_OCR_CORE_TABLE_COMMON_MOVE_PRECHECK_MAP_20260522.csv",
+    "?? docs/FRONTEND_STRUCTURE_5A_OCR_CORE_TYPES_COMMON_MOVE_20260522.json",
+    "?? docs/FRONTEND_STRUCTURE_5A_OCR_CORE_TYPES_COMMON_MOVE_20260522.md",
+    "?? docs/FRONTEND_STRUCTURE_5B_OCR_CORE_OPS_COMMON_MOVE_20260522.json",
+    "?? docs/FRONTEND_STRUCTURE_5B_OCR_CORE_OPS_COMMON_MOVE_20260522.md",
+    "?? docs/FRONTEND_STRUCTURE_5C_OCR_CORE_TABLE_COMMON_MOVE_20260522.json",
+    "?? docs/FRONTEND_STRUCTURE_5C_OCR_CORE_TABLE_COMMON_MOVE_20260522.md",
+    "?? docs/FRONTEND_STRUCTURE_5D_TEMPLATE_EXPORT_PAYLOAD_MOVE_20260522.json",
+    "?? docs/FRONTEND_STRUCTURE_5D_TEMPLATE_EXPORT_PAYLOAD_MOVE_20260522.md",
+    "?? docs/FRONTEND_STRUCTURE_5E_FILEDROPZONE_COMMON_UI_MOVE_20260522.json",
+    "?? docs/FRONTEND_STRUCTURE_5E_FILEDROPZONE_COMMON_UI_MOVE_20260522.md",
+    "?? docs/FRONTEND_STRUCTURE_5F_OCR_CANVAS_PANE_COMMON_UI_MOVE_20260522.json",
+    "?? docs/FRONTEND_STRUCTURE_5F_OCR_CANVAS_PANE_COMMON_UI_MOVE_20260522.md",
+    "?? docs/FRONTEND_STRUCTURE_6A_TEMPLATE_RIGHT_PANEL_RENAME_20260522.json",
+    "?? docs/FRONTEND_STRUCTURE_6A_TEMPLATE_RIGHT_PANEL_RENAME_20260522.md",
+    "?? docs/FRONTEND_TEMPLATE_RIGHT_PANEL_RENAME_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_TEMPLATE_RIGHT_PANEL_RENAME_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_TEMPLATE_RIGHT_PANEL_RENAME_PRECHECK_MAP_20260522.csv",
+    "?? docs/FRONTEND_VALIDATION_1A_BASELINE_REPAIR_20260522.json",
+    "?? docs/FRONTEND_VALIDATION_1A_BASELINE_REPAIR_20260522.md",
+    "?? docs/FRONTEND_VALIDATION_BASELINE_REPAIR_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_VALIDATION_BASELINE_REPAIR_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_VALIDATION_BASELINE_REPAIR_PRECHECK_MAP_20260522.csv",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_FILEDROPZONE_COMMON_UI_MOVE_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_FILEDROPZONE_COMMON_UI_MOVE_20260522_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_OCR_CANVAS_PANE_COMMON_UI_MOVE_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_OCR_CANVAS_PANE_COMMON_UI_MOVE_20260522_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_OCR_CORE_OPS_COMMON_MOVE_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_OCR_CORE_OPS_COMMON_MOVE_20260522_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_OCR_CORE_TABLE_COMMON_MOVE_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_OCR_CORE_TABLE_COMMON_MOVE_20260522_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_OCR_CORE_TYPES_COMMON_MOVE_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_OCR_CORE_TYPES_COMMON_MOVE_20260522_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_TEMPLATE_EXPORT_PAYLOAD_MOVE_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_TEMPLATE_EXPORT_PAYLOAD_MOVE_20260522_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_TEMPLATE_RIGHT_PANEL_RENAME_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_TEMPLATE_RIGHT_PANEL_RENAME_20260522_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_VALIDATION_BASELINE_REPAIR_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_VALIDATION_BASELINE_REPAIR_20260522_20260521.md",
+    "?? tmp/check_filedropzone_common_ui_move_5e.mjs",
+    "?? tmp/check_ocr_canvas_pane_common_ui_move_5f.mjs",
+    "?? tmp/check_ocr_core_ops_common_move_5b.mjs",
+    "?? tmp/check_ocr_core_table_common_move_5c.mjs",
+    "?? tmp/check_ocr_core_types_common_move_5a.mjs",
+    "?? tmp/check_template_export_payload_move_5d.mjs",
+    "?? tmp/check_template_right_panel_rename_6a.mjs",
+    "?? tmp/check_validation_baseline_repair_1a.mjs",
+    "?? tmp/codex_frontend_filedropzone_common_ui_precheck.py",
+    "?? tmp/codex_frontend_ocr_canvas_pane_common_move_precheck.py",
+    "?? tmp/codex_frontend_ocr_canvas_pane_shared_precheck.py",
+    "?? tmp/codex_frontend_ocr_core_export_template_util_precheck.py",
+    "?? tmp/codex_frontend_ocr_core_ops_common_move_precheck.py",
+    "?? tmp/codex_frontend_ocr_core_ownership_precheck.py",
+    "?? tmp/codex_frontend_ocr_core_table_common_move_precheck.py",
+    "?? tmp/codex_frontend_template_annotator_rename_precheck.py",
+    "?? tmp/codex_frontend_template_right_panel_rename_precheck.py",
+    "?? tmp/codex_frontend_validation_baseline_repair_precheck.py"
+  ],
+  "analysisScope": [
+    "src/components/template/ui/OcrAnnotator.tsx",
+    "src/components/template/ui/TemplateRightPanel.tsx",
+    "src/common/ui/OcrCanvasPane.tsx",
+    "src/components/template/TemplateWorkspace.tsx",
+    "src/app/ocr/page.tsx",
+    "src/app/template/page.tsx",
+    "src/components/runocr/RunOcrWorkspace.tsx",
+    "src/components/test/TestWorkspace.tsx",
+    "src/components/template/utils/buildTemplateExportPayload.ts"
+  ],
+  "referenceReports": [
+    "docs/FRONTEND_STRUCTURE_4B_TEMPLATE_EDITOR_UI_MOVE_20260522.md",
+    "docs/FRONTEND_STRUCTURE_5F_OCR_CANVAS_PANE_COMMON_UI_MOVE_20260522.md",
+    "docs/FRONTEND_STRUCTURE_6A_TEMPLATE_RIGHT_PANEL_RENAME_20260522.md",
+    "docs/FRONTEND_TEMPLATE_EDITOR_UI_OWNERSHIP_PRECHECK_20260522.md"
+  ],
+  "stringHits": [
+    {
+      "file": "src/app/ocr/page.tsx",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "src/app/ocr/page.tsx",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "src/app/template/page.tsx",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "src/app/template/page.tsx",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "src/common/ui/OcrCanvasPane.tsx",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "src/components/template/ui/OcrAnnotator.tsx",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/architecture/ocr_current_data_flow_architecture_20260517.json",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/architecture/ocr_current_data_flow_architecture_20260517.md",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/db_migration_analysis_ocr_project_20260516.json",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/db_migration_analysis_ocr_project_20260516.json",
+      "pattern": "components/ocr/OcrAnnotator"
+    },
+    {
+      "file": "docs/db_migration_analysis_ocr_project_20260516.md",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_FILE_INVENTORY_USAGE_PRECHECK_20260521.json",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_FILE_INVENTORY_USAGE_PRECHECK_20260521.json",
+      "pattern": "components/ocr/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_FILE_INVENTORY_USAGE_PRECHECK_20260521.md",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_FILE_INVENTORY_USAGE_PRECHECK_20260521.md",
+      "pattern": "components/ocr/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_FILE_INVENTORY_USAGE_PRECHECK_TABLE_20260521.csv",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_FILE_INVENTORY_USAGE_PRECHECK_TABLE_20260521.csv",
+      "pattern": "components/ocr/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_FILEDROPZONE_COMMON_UI_PRECHECK_20260522.json",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_FILEDROPZONE_COMMON_UI_PRECHECK_20260522.json",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_FILEDROPZONE_COMMON_UI_PRECHECK_20260522.md",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_FILEDROPZONE_COMMON_UI_PRECHECK_20260522.md",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_OCR_CANVAS_PANE_COMMON_MOVE_PRECHECK_20260522.json",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_OCR_CANVAS_PANE_COMMON_MOVE_PRECHECK_20260522.json",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_OCR_CANVAS_PANE_COMMON_MOVE_PRECHECK_20260522.md",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_OCR_CANVAS_PANE_COMMON_MOVE_PRECHECK_20260522.md",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_OCR_CANVAS_PANE_COMMON_MOVE_PRECHECK_MAP_20260522.csv",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_OCR_CANVAS_PANE_COMMON_MOVE_PRECHECK_MAP_20260522.csv",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_OCR_CANVAS_PANE_SHARED_MAP_20260522.csv",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_OCR_CANVAS_PANE_SHARED_MAP_20260522.csv",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_OCR_CANVAS_PANE_SHARED_PRECHECK_20260522.json",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_OCR_CANVAS_PANE_SHARED_PRECHECK_20260522.json",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_OCR_CANVAS_PANE_SHARED_PRECHECK_20260522.md",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_OCR_CANVAS_PANE_SHARED_PRECHECK_20260522.md",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_OCR_CORE_EXPORT_TEMPLATE_UTIL_PRECHECK_20260522.json",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_OCR_CORE_EXPORT_TEMPLATE_UTIL_PRECHECK_20260522.json",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_OCR_CORE_EXPORT_TEMPLATE_UTIL_PRECHECK_20260522.md",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_OCR_CORE_EXPORT_TEMPLATE_UTIL_PRECHECK_20260522.md",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_OCR_CORE_EXPORT_TEMPLATE_UTIL_PRECHECK_MAP_20260522.csv",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_OCR_CORE_EXPORT_TEMPLATE_UTIL_PRECHECK_MAP_20260522.csv",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_OCR_CORE_OPS_COMMON_MOVE_PRECHECK_20260522.json",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_OCR_CORE_OPS_COMMON_MOVE_PRECHECK_20260522.json",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_OCR_CORE_OPS_COMMON_MOVE_PRECHECK_20260522.md",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_OCR_CORE_OPS_COMMON_MOVE_PRECHECK_20260522.md",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_OCR_CORE_OWNERSHIP_MAP_20260522.csv",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_OCR_CORE_OWNERSHIP_MAP_20260522.csv",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_OCR_CORE_OWNERSHIP_PRECHECK_20260522.json",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_OCR_CORE_OWNERSHIP_PRECHECK_20260522.json",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_OCR_CORE_OWNERSHIP_PRECHECK_20260522.md",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_OCR_CORE_OWNERSHIP_PRECHECK_20260522.md",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_OCR_CORE_TABLE_COMMON_MOVE_PRECHECK_20260522.json",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_OCR_CORE_TABLE_COMMON_MOVE_PRECHECK_20260522.json",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_OCR_CORE_TABLE_COMMON_MOVE_PRECHECK_20260522.md",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_OCR_CORE_TABLE_COMMON_MOVE_PRECHECK_20260522.md",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_4A_TEMPLATE_WORKSPACE_MOVE_20260522.json",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_4A_TEMPLATE_WORKSPACE_MOVE_20260522.json",
+      "pattern": "components/ocr/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_4A_TEMPLATE_WORKSPACE_MOVE_20260522.md",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_4A_TEMPLATE_WORKSPACE_MOVE_20260522.md",
+      "pattern": "components/ocr/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_4B_TEMPLATE_EDITOR_UI_MOVE_20260522.json",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_4B_TEMPLATE_EDITOR_UI_MOVE_20260522.json",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_4B_TEMPLATE_EDITOR_UI_MOVE_20260522.json",
+      "pattern": "components/ocr/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_4B_TEMPLATE_EDITOR_UI_MOVE_20260522.md",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_4B_TEMPLATE_EDITOR_UI_MOVE_20260522.md",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_4B_TEMPLATE_EDITOR_UI_MOVE_20260522.md",
+      "pattern": "components/ocr/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_5A_OCR_CORE_TYPES_COMMON_MOVE_20260522.json",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_5A_OCR_CORE_TYPES_COMMON_MOVE_20260522.json",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_5A_OCR_CORE_TYPES_COMMON_MOVE_20260522.md",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_5A_OCR_CORE_TYPES_COMMON_MOVE_20260522.md",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_5B_OCR_CORE_OPS_COMMON_MOVE_20260522.json",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_5B_OCR_CORE_OPS_COMMON_MOVE_20260522.json",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_5B_OCR_CORE_OPS_COMMON_MOVE_20260522.md",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_5B_OCR_CORE_OPS_COMMON_MOVE_20260522.md",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_5C_OCR_CORE_TABLE_COMMON_MOVE_20260522.json",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_5C_OCR_CORE_TABLE_COMMON_MOVE_20260522.json",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_5C_OCR_CORE_TABLE_COMMON_MOVE_20260522.md",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_5C_OCR_CORE_TABLE_COMMON_MOVE_20260522.md",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_5D_TEMPLATE_EXPORT_PAYLOAD_MOVE_20260522.json",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_5D_TEMPLATE_EXPORT_PAYLOAD_MOVE_20260522.json",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_5D_TEMPLATE_EXPORT_PAYLOAD_MOVE_20260522.md",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_5D_TEMPLATE_EXPORT_PAYLOAD_MOVE_20260522.md",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_5E_FILEDROPZONE_COMMON_UI_MOVE_20260522.json",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_5E_FILEDROPZONE_COMMON_UI_MOVE_20260522.json",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_5E_FILEDROPZONE_COMMON_UI_MOVE_20260522.md",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_5E_FILEDROPZONE_COMMON_UI_MOVE_20260522.md",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_5F_OCR_CANVAS_PANE_COMMON_UI_MOVE_20260522.json",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_5F_OCR_CANVAS_PANE_COMMON_UI_MOVE_20260522.json",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_5F_OCR_CANVAS_PANE_COMMON_UI_MOVE_20260522.md",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_5F_OCR_CANVAS_PANE_COMMON_UI_MOVE_20260522.md",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_6A_TEMPLATE_RIGHT_PANEL_RENAME_20260522.json",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_6A_TEMPLATE_RIGHT_PANEL_RENAME_20260522.json",
+      "pattern": "TemplateAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_6A_TEMPLATE_RIGHT_PANEL_RENAME_20260522.json",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_6A_TEMPLATE_RIGHT_PANEL_RENAME_20260522.md",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_6A_TEMPLATE_RIGHT_PANEL_RENAME_20260522.md",
+      "pattern": "TemplateAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_STRUCTURE_6A_TEMPLATE_RIGHT_PANEL_RENAME_20260522.md",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_TARGET_STRUCTURE_OWNERSHIP_MAP_20260522.csv",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_TARGET_STRUCTURE_OWNERSHIP_MAP_20260522.csv",
+      "pattern": "components/ocr/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_TARGET_STRUCTURE_OWNERSHIP_PRECHECK_20260522.json",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_TARGET_STRUCTURE_OWNERSHIP_PRECHECK_20260522.json",
+      "pattern": "components/ocr/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_TARGET_STRUCTURE_OWNERSHIP_PRECHECK_20260522.md",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_TARGET_STRUCTURE_OWNERSHIP_PRECHECK_20260522.md",
+      "pattern": "components/ocr/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_TEMPLATE_EDITOR_UI_OWNERSHIP_MAP_20260522.csv",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_TEMPLATE_EDITOR_UI_OWNERSHIP_MAP_20260522.csv",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_TEMPLATE_EDITOR_UI_OWNERSHIP_MAP_20260522.csv",
+      "pattern": "components/ocr/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_TEMPLATE_EDITOR_UI_OWNERSHIP_PRECHECK_20260522.json",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_TEMPLATE_EDITOR_UI_OWNERSHIP_PRECHECK_20260522.json",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_TEMPLATE_EDITOR_UI_OWNERSHIP_PRECHECK_20260522.json",
+      "pattern": "components/ocr/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_TEMPLATE_EDITOR_UI_OWNERSHIP_PRECHECK_20260522.md",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_TEMPLATE_EDITOR_UI_OWNERSHIP_PRECHECK_20260522.md",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_TEMPLATE_EDITOR_UI_OWNERSHIP_PRECHECK_20260522.md",
+      "pattern": "components/ocr/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_TEMPLATE_FOLDER_OWNERSHIP_MAP_20260522.csv",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_TEMPLATE_FOLDER_OWNERSHIP_MAP_20260522.csv",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_TEMPLATE_FOLDER_OWNERSHIP_MAP_20260522.csv",
+      "pattern": "components/ocr/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_TEMPLATE_FOLDER_OWNERSHIP_PRECHECK_20260522.json",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_TEMPLATE_FOLDER_OWNERSHIP_PRECHECK_20260522.json",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_TEMPLATE_FOLDER_OWNERSHIP_PRECHECK_20260522.json",
+      "pattern": "components/ocr/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_TEMPLATE_FOLDER_OWNERSHIP_PRECHECK_20260522.md",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_TEMPLATE_FOLDER_OWNERSHIP_PRECHECK_20260522.md",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_TEMPLATE_FOLDER_OWNERSHIP_PRECHECK_20260522.md",
+      "pattern": "components/ocr/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_TEMPLATE_RIGHT_PANEL_RENAME_PRECHECK_20260522.json",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_TEMPLATE_RIGHT_PANEL_RENAME_PRECHECK_20260522.json",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_TEMPLATE_RIGHT_PANEL_RENAME_PRECHECK_20260522.md",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_TEMPLATE_RIGHT_PANEL_RENAME_PRECHECK_20260522.md",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_TEMPLATE_RIGHT_PANEL_RENAME_PRECHECK_MAP_20260522.csv",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_TEMPLATE_RIGHT_PANEL_RENAME_PRECHECK_MAP_20260522.csv",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_VALIDATION_BASELINE_REPAIR_PRECHECK_20260522.json",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_VALIDATION_BASELINE_REPAIR_PRECHECK_20260522.json",
+      "pattern": "components/template/ui/OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_VALIDATION_BASELINE_REPAIR_PRECHECK_20260522.md",
+      "pattern": "OcrAnnotator"
+    },
+    {
+      "file": "docs/FRONTEND_VALIDATION_BASELINE_REPAIR_PRECHECK_20260522.md",
+      "pattern": "components/template/ui/OcrAnnotator"
+    }
+  ],
+  "annotator": {
+    "currentPath": "src/components/template/ui/OcrAnnotator.tsx",
+    "lineCount": 442,
+    "imports": [
+      "import React, { useEffect, useMemo, useRef, useState, useCallback } from \"react\";",
+      "import type { FieldType, LoadedImage, Region } from \"../../../common/types/ocr\";",
+      "import { buildExportPayload } from \"../utils/buildTemplateExportPayload\";",
+      "import OcrCanvasPane from \"../../../common/ui/OcrCanvasPane\";",
+      "import TemplateRightPanel from \"./TemplateRightPanel\";",
+      "import { saveTemplateImage, getTemplateImage, deleteTemplateImage } from \"@/lib/imageStore\";",
+      "import { useUi } from \"../../common/AppProviders\";"
+    ],
+    "exports": [
+      "export default function OcrAnnotator({"
+    ],
+    "props": {
+      "style": "inline destructured props type",
+      "interfaceOrTypeName": null,
+      "signature": "{ selectedTemplate = null, selectedTemplateId = null, }: { selectedTemplate?: any | null; selectedTemplateId?: string | null; }",
+      "props": [
+        "selectedTemplate?: any | null",
+        "selectedTemplateId?: string | null"
+      ]
+    },
+    "importedBy": [
+      {
+        "file": "src/app/ocr/page.tsx",
+        "importPath": "../../components/template/ui/OcrAnnotator",
+        "importKind": "dynamic",
+        "usagePurpose": "route-level client-only Template annotator entry",
+        "feature": "route",
+        "needsImportUpdateOnRename": true
+      },
+      {
+        "file": "src/app/template/page.tsx",
+        "importPath": "../../components/template/ui/OcrAnnotator",
+        "importKind": "dynamic",
+        "usagePurpose": "route-level client-only Template annotator entry",
+        "feature": "template",
+        "needsImportUpdateOnRename": true
+      }
+    ],
+    "routeImpact": [
+      {
+        "file": "src/app/ocr/page.tsx",
+        "dynamicImport": true,
+        "importPath": "../../components/template/ui/OcrAnnotator",
+        "usageCount": 1,
+        "policyImpact": "No route policy change needed; rename only changes the dynamic import path and optionally local symbol.",
+        "separateOcrRoutePolicy": true
+      },
+      {
+        "file": "src/app/template/page.tsx",
+        "dynamicImport": true,
+        "importPath": "../../components/template/ui/OcrAnnotator",
+        "usageCount": 1,
+        "policyImpact": "No route policy change needed; rename only changes the dynamic import path and optionally local symbol.",
+        "separateOcrRoutePolicy": false
+      }
+    ],
+    "role": {
+      "summary": "Template editor annotator that coordinates upload/PDF rendering, template metadata, region drawing state, right-panel editing, local/IndexedDB image persistence, and template save/export payload creation.",
+      "templateOnly": true,
+      "templateWorkspaceRelationship": "Used indirectly by /ocr when TemplateWorkspace switches from list mode to editor mode; TemplateWorkspace itself does not import OcrAnnotator.",
+      "appOcrRelationship": "Legacy /ocr route dynamically imports and renders it for new-template editor mode.",
+      "appTemplateRelationship": "/template route dynamically imports and renders it for template create/edit mode.",
+      "ocrCanvasPaneRelationship": "Parent of common OcrCanvasPane; passes image refs, loaded image, region state, selection, table guide targets, draw mode, and zoom.",
+      "templateRightPanelRelationship": "Parent of TemplateRightPanel; passes template metadata, document type, selected region state, table target setters, and update/delete callbacks.",
+      "buildTemplateExportPayloadRelationship": "Directly imports buildExportPayload and memoizes the save/export payload from templateName, loaded image, regions, and documentType.",
+      "runOcrDependency": "No direct RunOCR import of OcrAnnotator found; RunOCR shares OcrCanvasPane only.",
+      "testDependency": "No direct TestWorkspace import of OcrAnnotator found."
+    },
+    "renameReadiness": {
+      "verdict": "RENAME_READY_FILE_AND_SYMBOLS",
+      "reason": "Production import surface is limited to two route dynamic imports. The component is Template-domain UI, and retaining OcrAnnotator as the default function after a TemplateAnnotator file rename would leave an avoidable file/internal-symbol mismatch.",
+      "renameRisk": "LOW_MEDIUM"
+    },
+    "renameOptions": [
+      {
+        "option": "candidate1_file_only",
+        "description": "Rename file to TemplateAnnotator.tsx and update import paths only; keep OcrAnnotator function/local symbols.",
+        "pros": [
+          "Smallest diff",
+          "Only route dynamic import path strings need to change"
+        ],
+        "cons": [
+          "File name and default component name remain inconsistent",
+          "Searches for OcrAnnotator still point at the renamed file"
+        ],
+        "importUpdateScope": [
+          "src/app/ocr/page.tsx",
+          "src/app/template/page.tsx"
+        ],
+        "staticCheckDifficulty": "LOW",
+        "recommended": false
+      },
+      {
+        "option": "candidate2_file_and_symbols",
+        "description": "Rename file, default function, and route local dynamic symbols to TemplateAnnotator. No logic change.",
+        "pros": [
+          "Best matches Template domain ownership",
+          "Avoids lingering public component-name mismatch",
+          "Still has a very small production touch set"
+        ],
+        "cons": [
+          "Slightly larger textual rename than file-only"
+        ],
+        "importUpdateScope": [
+          "src/app/ocr/page.tsx",
+          "src/app/template/page.tsx"
+        ],
+        "staticCheckDifficulty": "LOW_MEDIUM",
+        "recommended": true
+      },
+      {
+        "option": "candidate3_defer",
+        "description": "Keep OcrAnnotator.tsx for now.",
+        "pros": [
+          "No immediate production change"
+        ],
+        "cons": [
+          "Leaves the last Template UI filename mismatch unresolved"
+        ],
+        "importUpdateScope": [],
+        "staticCheckDifficulty": "LOW",
+        "recommended": false
+      }
+    ],
+    "recommendation": {
+      "choice": "B",
+      "scope": "Rename file plus default function/local dynamic component symbols to TemplateAnnotator; keep prop shape and logic unchanged.",
+      "requiredImportUpdates": [
+        "src/app/ocr/page.tsx dynamic import path and local const/render symbol",
+        "src/app/template/page.tsx dynamic import path and local const/render symbol"
+      ],
+      "defer": [
+        "Do not change route policy for /ocr",
+        "Do not touch TestWorkspace",
+        "Do not modify templates.json or fixtures",
+        "Only rename inline props type if introduced as a named type in the same micro-step; no API shape change"
+      ],
+      "risk": "LOW_MEDIUM"
+    },
+    "risk": {
+      "mainRisks": [
+        "Next dynamic import path must be updated in both route files.",
+        "Existing dirty state includes OcrAnnotator.tsx, so actual rename should inspect the current diff before moving.",
+        "OcrCanvasPane contains comments naming OcrAnnotator as parent; these are comment-only and can be deferred or adjusted in a symbol rename step."
+      ]
+    }
+  },
+  "staticCheckPlan": [
+    "tmp/check_template_annotator_rename_6b.mjs",
+    "src/components/template/ui/TemplateAnnotator.tsx exists",
+    "src/components/template/ui/OcrAnnotator.tsx absent",
+    "src/app/ocr/page.tsx dynamic import points to ../../components/template/ui/TemplateAnnotator",
+    "src/app/template/page.tsx dynamic import points to ../../components/template/ui/TemplateAnnotator",
+    "No components/ocr/OcrAnnotator string remains in src",
+    "No components/template/ui/OcrAnnotator import path remains in src",
+    "RunOCR/TestWorkspace unchanged by actual rename step",
+    "common/ui/OcrCanvasPane unchanged unless comment-only rename is explicitly included",
+    "TemplateRightPanel unchanged",
+    "npm run typecheck PASS",
+    "npm run build PASS",
+    "Existing 4A/4B/5A/5B/5C/5D/5E/5F/6A checks remain PASS",
+    "validation baseline repair check remains PASS"
+  ],
+  "validationPlan": [
+    "Run the rename-specific static checker after the rename micro-step.",
+    "Run npm run typecheck and npm run build.",
+    "Run prior structure checks from 4A through 6A and validation baseline repair check."
+  ],
+  "typecheck": {
+    "errLog": "ocr-server/logs/codex_CODEX_FRONTEND_TEMPLATE_ANNOTATOR_RENAME_PRECHECK_NO_PROD_MODIFY.err.log",
+    "exitCode": 0,
+    "command": "npm run typecheck",
+    "status": "PASS",
+    "outLog": "ocr-server/logs/codex_CODEX_FRONTEND_TEMPLATE_ANNOTATOR_RENAME_PRECHECK_NO_PROD_MODIFY.out.log"
+  },
+  "build": {
+    "errLog": "ocr-server/logs/codex_CODEX_FRONTEND_TEMPLATE_ANNOTATOR_RENAME_PRECHECK_NO_PROD_MODIFY.err.log",
+    "exitCode": 0,
+    "command": "npm run build",
+    "status": "PASS",
+    "outLog": "ocr-server/logs/codex_CODEX_FRONTEND_TEMPLATE_ANNOTATOR_RENAME_PRECHECK_NO_PROD_MODIFY.out.log"
+  },
+  "nextSteps": [
+    "Proceed with option B as a dedicated rename-only micro-step.",
+    "Before renaming, inspect current dirty diff for src/components/template/ui/OcrAnnotator.tsx.",
+    "Keep /ocr route naming policy separate from this rename.",
+    "After rename, move to Template table column definition design only after checks pass."
+  ]
+}

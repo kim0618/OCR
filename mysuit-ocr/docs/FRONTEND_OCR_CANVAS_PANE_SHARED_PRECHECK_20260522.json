@@ -1,0 +1,402 @@
+{
+  "generatedAt": "2026-05-22T09:20:08.328247+00:00",
+  "task": "CODEX_FRONTEND_OCR_CANVAS_PANE_SHARED_PRECHECK_NO_PROD_MODIFY",
+  "tool": "Codex",
+  "model": "Codex",
+  "projectRoot": "C:\\OCR\\OCR\\mysuit-ocr",
+  "requestedProjectRoot": "D:/Free_Vue/OCR/mysuit-ocr",
+  "codeModified": false,
+  "sourceCodeModified": false,
+  "fileMoved": false,
+  "importsModified": false,
+  "logStatus": {
+    "requestedStdout": "D:/Free_Vue/OCR/ocr-server/logs/codex_CODEX_FRONTEND_OCR_CANVAS_PANE_SHARED_PRECHECK_NO_PROD_MODIFY.out.log",
+    "requestedStderr": "D:/Free_Vue/OCR/ocr-server/logs/codex_CODEX_FRONTEND_OCR_CANVAS_PANE_SHARED_PRECHECK_NO_PROD_MODIFY.err.log",
+    "requestedPathResult": "FAILED: D drive is unavailable in this execution environment.",
+    "fallbackStdout": "C:\\OCR\\OCR\\mysuit-ocr\\tmp\\codex_CODEX_FRONTEND_OCR_CANVAS_PANE_SHARED_PRECHECK_NO_PROD_MODIFY.out.log",
+    "fallbackStderr": "C:\\OCR\\OCR\\mysuit-ocr\\tmp\\codex_CODEX_FRONTEND_OCR_CANVAS_PANE_SHARED_PRECHECK_NO_PROD_MODIFY.err.log"
+  },
+  "dirtyStatus": [
+    " M ocr-server/data/review_log.jsonl",
+    " M ocr-server/data/templates.json",
+    "?? mysuit-ocr/docs/FRONTEND_OCR_CANVAS_PANE_SHARED_MAP_20260522.csv",
+    "?? mysuit-ocr/docs/FRONTEND_OCR_CANVAS_PANE_SHARED_PRECHECK_20260522.json",
+    "?? mysuit-ocr/docs/FRONTEND_OCR_CANVAS_PANE_SHARED_PRECHECK_20260522.md",
+    "?? mysuit-ocr/tmp/codex_frontend_ocr_canvas_pane_shared_precheck.py"
+  ],
+  "dirtyStatusBeforeReportGeneration": [
+    " M ocr-server/data/review_log.jsonl",
+    " M ocr-server/data/templates.json"
+  ],
+  "dirtyNotes": [
+    "Do not restore dirty files.",
+    "templates.json is dirty and should remain a separate TPL-95328E52 impact precheck candidate."
+  ],
+  "ocrCanvasPane": {
+    "currentPath": "src/components/ocr/OcrCanvasPane.tsx",
+    "lineCount": 1527,
+    "role": "Shared interactive OCR image canvas for region drawing, selection, drag/resize, multi split, table row template and column guide editing, zoom, drop/upload handoff, and visible-region filtering.",
+    "imports": [
+      "import React, { useEffect, useMemo, useRef, useState } from \"react\";",
+      "import type { DragKind, FieldType, LoadedImage, Rect, Region, } from \"./core/types\";",
+      "import { boxLabelStyle, clamp, clampRectToArea, normalizeRatios, normalizeRect, parseIndex, uid, } from \"./core/ops\";",
+      "import { buildTableRows, normalizeColGuides } from \"./core/table\";",
+      "import FileDropzone from \"../common/FileDropzone\";"
+    ],
+    "exports": [
+      "default function OcrCanvasPane(props: Props)"
+    ],
+    "props": [
+      "imgRef: React.RefObject<HTMLImageElement>",
+      "fileInputRef?: React.RefObject<HTMLInputElement | null>",
+      "onPickFile?: (file: File) => void",
+      "loaded: LoadedImage | null",
+      "regions: Region[]",
+      "setRegions: React.Dispatch<React.SetStateAction<Region[]>>",
+      "selectedId: string | null",
+      "setSelectedId: React.Dispatch<React.SetStateAction<string | null>>",
+      "rowTemplateTargetId: string | null",
+      "setRowTemplateTargetId: React.Dispatch<React.SetStateAction<string | null>>",
+      "colGuideTargetId: string | null",
+      "setColGuideTargetId: React.Dispatch<React.SetStateAction<string | null>>",
+      "drawMode: FieldType | null",
+      "setDrawMode: React.Dispatch<React.SetStateAction<FieldType | null>>",
+      "zoomPct: number",
+      "visibleRegionIds?: string[]",
+      "emptySelectionHint?: string",
+      "drawTargetRegionId?: string | null",
+      "drawTargetName?: string",
+      "drawTargetFieldType?: FieldType",
+      "onClearSelection?: () => void"
+    ],
+    "majorStateAndMemo": [
+      "containerW",
+      "drag",
+      "visibleRegionSet",
+      "visibleRegions",
+      "loadedRef",
+      "regionsRef",
+      "dragRef",
+      "rafRef",
+      "pendingPointRef",
+      "lastRectRef",
+      "scale",
+      "displaySize",
+      "selectedDisplayRect",
+      "actionBarPos"
+    ],
+    "majorEffects": [
+      "sync loadedRef with loaded",
+      "sync regionsRef with regions",
+      "cancel pending requestAnimationFrame on unmount",
+      "reset undo snapshot cache when loaded image changes",
+      "ResizeObserver container width tracking",
+      "Delete/Backspace selected region keyboard handler",
+      "window pointerup listener while dragging"
+    ],
+    "majorHandlers": [
+      "setDragBoth",
+      "snapshotRect",
+      "undoSelectedRect",
+      "getImagePoint",
+      "nextAutoName",
+      "nextAutoId",
+      "onPointerDown",
+      "applyDragFrame",
+      "onPointerMove",
+      "onPointerUp",
+      "deleteRegionLocal",
+      "deselect",
+      "deleteSelected",
+      "duplicateSelected",
+      "setMultiParts"
+    ],
+    "importedBy": [
+      {
+        "file": "src/components/template/ui/OcrAnnotator.tsx",
+        "importLine": "import OcrCanvasPane from \"../../ocr/OcrCanvasPane\";"
+      },
+      {
+        "file": "src/components/runocr/RunOcrWorkspace.tsx",
+        "importLine": "const OcrCanvasPane = dynamic(() => import(\"../ocr/OcrCanvasPane\"), { ssr: false });"
+      }
+    ]
+  },
+  "usageAnalysis": {
+    "template": {
+      "kind": "Template editor usage",
+      "file": "src/components/template/ui/OcrAnnotator.tsx",
+      "importPath": "../../ocr/OcrCanvasPane",
+      "props": [
+        "imgRef",
+        "onPickFile",
+        "loaded",
+        "regions",
+        "setRegions",
+        "selectedId",
+        "setSelectedId",
+        "rowTemplateTargetId",
+        "setRowTemplateTargetId",
+        "colGuideTargetId",
+        "setColGuideTargetId",
+        "drawMode",
+        "setDrawMode",
+        "zoomPct"
+      ],
+      "purpose": [
+        "Template image/PDF first-page display.",
+        "Manual region creation for field/multi/check/table.",
+        "Template region selection/editing tied to OcrRightPanel.",
+        "Table row template and column guide editing.",
+        "Export payload path via OcrAnnotator buildExportPayload."
+      ],
+      "rightPanelInteraction": "OcrRightPanel owns region metadata editing and table controls; CanvasPane performs geometry edits on the same regions state."
+    },
+    "runocr": {
+      "kind": "RunOCR custom tab usage",
+      "file": "src/components/runocr/RunOcrWorkspace.tsx",
+      "importPath": "../ocr/OcrCanvasPane via next/dynamic ssr:false",
+      "props": [
+        "imgRef",
+        "loaded",
+        "regions",
+        "setRegions",
+        "selectedId",
+        "setSelectedId",
+        "drawMode",
+        "setDrawMode",
+        "zoomPct",
+        "rowTemplateTargetId",
+        "setRowTemplateTargetId",
+        "colGuideTargetId",
+        "setColGuideTargetId",
+        "visibleRegionIds",
+        "emptySelectionHint",
+        "drawTargetRegionId",
+        "drawTargetName",
+        "drawTargetFieldType",
+        "onClearSelection"
+      ],
+      "purpose": [
+        "Interactive custom result tab, not the preview read-only viewer.",
+        "Allows selected OCR result field region creation/replacement.",
+        "Filters visible regions based on selected custom field/user region state.",
+        "Integrates with revalidate/partial OCR and result panel persistence flow."
+      ],
+      "docViewerOverlap": "OcrDocViewer is read-only preview/overlay display; OcrCanvasPane is the editable custom canvas."
+    },
+    "test": {
+      "file": "src/components/test/TestWorkspace.tsx",
+      "directOcrCanvasPaneImport": false,
+      "notes": "Read-only target for this precheck; no direct OcrCanvasPane import found."
+    }
+  },
+  "propsComparison": {
+    "commonProps": [
+      "imgRef",
+      "loaded",
+      "regions",
+      "setRegions",
+      "selectedId",
+      "setSelectedId",
+      "rowTemplateTargetId",
+      "setRowTemplateTargetId",
+      "colGuideTargetId",
+      "setColGuideTargetId",
+      "drawMode",
+      "setDrawMode",
+      "zoomPct"
+    ],
+    "templateOnlyProps": [
+      "onPickFile"
+    ],
+    "runocrOnlyProps": [
+      "visibleRegionIds",
+      "emptySelectionHint",
+      "drawTargetRegionId",
+      "drawTargetName",
+      "drawTargetFieldType",
+      "onClearSelection"
+    ],
+    "optionalProps": [
+      "fileInputRef",
+      "onPickFile",
+      "visibleRegionIds",
+      "emptySelectionHint",
+      "drawTargetRegionId",
+      "drawTargetName",
+      "drawTargetFieldType",
+      "onClearSelection"
+    ],
+    "judgment": "Props are already feature-neutral enough for a common UI candidate, but the component still exposes low-level shared state setters and imports ocr/core by current relative path."
+  },
+  "coreDependency": {
+    "ocrCanvasPaneImports": [
+      "./core/types",
+      "./core/ops",
+      "./core/table",
+      "../common/FileDropzone"
+    ],
+    "coreFiles": [
+      {
+        "path": "src/components/ocr/core/types.ts",
+        "lineCount": 110,
+        "role": "Region, FieldType, LoadedImage, Rect, DragKind and table metadata types.",
+        "usedBy": [
+          "OcrCanvasPane",
+          "OcrAnnotator",
+          "OcrRightPanel",
+          "RunOcrWorkspace",
+          "runocr/utils/buildOcrFormData",
+          "ocr/core/export",
+          "ocr/core/ops",
+          "ocr/core/table"
+        ],
+        "candidate": "common/types or common/utils shared OCR model candidate"
+      },
+      {
+        "path": "src/components/ocr/core/ops.ts",
+        "lineCount": 99,
+        "role": "Geometry, ratio, id parsing and label style helpers.",
+        "usedBy": [
+          "OcrCanvasPane",
+          "OcrRightPanel",
+          "ocr/core/export",
+          "ocr/core/table"
+        ],
+        "candidate": "common/utils geometry candidate"
+      },
+      {
+        "path": "src/components/ocr/core/table.ts",
+        "lineCount": 151,
+        "role": "Table row/column guide and row-band helpers.",
+        "usedBy": [
+          "OcrCanvasPane",
+          "OcrRightPanel",
+          "ocr/core/export"
+        ],
+        "candidate": "common/utils or template table utils candidate after table schema decision"
+      },
+      {
+        "path": "src/components/ocr/core/export.ts",
+        "lineCount": 90,
+        "role": "Template export payload builder.",
+        "usedBy": [
+          "OcrAnnotator"
+        ],
+        "candidate": "template utils candidate, not needed by RunOCR today"
+      }
+    ],
+    "moveImpact": "Moving only OcrCanvasPane to common/ui would require awkward imports back into components/ocr/core or a simultaneous core move. types/ops/table are shared by both Template and RunOCR paths."
+  },
+  "moveOptions": [
+    {
+      "target": "src/common/ui/OcrCanvasPane.tsx",
+      "recommendation": "POSSIBLE_AFTER_CORE_PRECHECK",
+      "risk": "MEDIUM_HIGH",
+      "pros": [
+        "Matches cross-feature ownership.",
+        "Avoids placing shared UI under template or runocr."
+      ],
+      "cons": [
+        "Requires imports in OcrAnnotator and RunOcrWorkspace.",
+        "Canvas would still depend on components/ocr/core unless core is moved or aliased.",
+        "Need static checks around TestWorkspace non-modification and RunOCR custom tab."
+      ]
+    },
+    {
+      "target": "src/components/ocr/OcrCanvasPane.tsx",
+      "recommendation": "KEEP_TEMPORARILY",
+      "risk": "LOW",
+      "pros": [
+        "No production code/import churn now.",
+        "Preserves RunOCR and Template behavior while feature folders settle.",
+        "Allows core utils/types ownership precheck first."
+      ],
+      "cons": [
+        "components/ocr remains a shared holding area temporarily."
+      ]
+    },
+    {
+      "target": "src/components/template/ui/OcrCanvasPane.tsx",
+      "recommendation": "DO_NOT_DO",
+      "risk": "HIGH",
+      "pros": [
+        "Would colocate with OcrAnnotator."
+      ],
+      "cons": [
+        "RunOCR uses the component directly; template ownership would be misleading."
+      ]
+    },
+    {
+      "target": "src/components/runocr/ui/OcrCanvasPane.tsx",
+      "recommendation": "DO_NOT_DO",
+      "risk": "HIGH",
+      "pros": [
+        "Would colocate with RunOCR custom tab."
+      ],
+      "cons": [
+        "Template editor uses the component directly; runocr ownership would be misleading."
+      ]
+    }
+  ],
+  "recommendation": {
+    "phaseChoice": "B",
+    "title": "Run ocr/core utils/types move precheck before moving OcrCanvasPane",
+    "decision": "Keep OcrCanvasPane at src/components/ocr/OcrCanvasPane.tsx for now.",
+    "reasons": [
+      "Actual importedBy is Template + RunOCR, so template/runocr-private placement is wrong.",
+      "The UI is a valid common/ui candidate, but it is tightly coupled to ocr/core/types, ops and table.",
+      "Moving the component first creates an awkward common/ui -> components/ocr/core dependency.",
+      "No TestWorkspace direct import was found, but it should remain a guarded invariant."
+    ],
+    "risk": "LOW if kept; MEDIUM_HIGH if moved before core ownership is settled.",
+    "verification": [
+      "npm run typecheck",
+      "npm run build",
+      "future static move check",
+      "RunOCR custom tab smoke",
+      "Template 4A/4B boundary checks"
+    ]
+  },
+  "staticCheckPlan": {
+    "candidateScript": "tmp/check_ocr_canvas_pane_common_move.mjs",
+    "checks": [
+      "common/ui/OcrCanvasPane.tsx exists after move",
+      "components/ocr/OcrCanvasPane.tsx absence or shim policy matches phase decision",
+      "OcrAnnotator import points to common/ui path",
+      "RunOcrWorkspace dynamic import points to common/ui path",
+      "TestWorkspace unchanged",
+      "ocr/core move policy matches chosen phase",
+      "npm run typecheck PASS",
+      "npm run build PASS",
+      "RunOCR boundary checks PASS",
+      "Template 4A/4B checks PASS"
+    ]
+  },
+  "validationPlan": [
+    "No src production edits in this precheck.",
+    "No file moves/import edits/renames.",
+    "Run typecheck/build on current checkout.",
+    "Record dirty state without restoring it."
+  ],
+  "typecheck": {
+    "command": "npm run typecheck",
+    "exitCode": 0,
+    "status": "PASS",
+    "log": "C:\\OCR\\OCR\\mysuit-ocr\\tmp\\codex_CODEX_FRONTEND_OCR_CANVAS_PANE_SHARED_PRECHECK_NO_PROD_MODIFY.out.log"
+  },
+  "build": {
+    "command": "npm run build",
+    "exitCode": 0,
+    "status": "PASS",
+    "knownStderrNoise": "ESLint: nextVitals is not iterable",
+    "log": "C:\\OCR\\OCR\\mysuit-ocr\\tmp\\codex_CODEX_FRONTEND_OCR_CANVAS_PANE_SHARED_PRECHECK_NO_PROD_MODIFY.out.log"
+  },
+  "nextSteps": [
+    "Run ocr/core shared utils/types ownership precheck.",
+    "Decide whether types/ops/table move to common before OcrCanvasPane.",
+    "Only after core policy is settled, perform OcrCanvasPane common/ui move with static check.",
+    "Keep templates.json dirty state as separate TPL-95328E52 impact precheck candidate."
+  ]
+}

@@ -18,8 +18,8 @@
 - `tmp/fixtures/markdown_v1/receipt/*.md`
 
 ## 4. Fixture 생성 방식
-- API URL: `http://127.0.0.1:9141/ocr/extract`
-- API source: `started_fallback_port`
+- API URL: `http://127.0.0.1:9099/ocr/extract`
+- API source: `existing`
 - 현재 `OcrResultPanel.tsx` `toMarkdown` 로직을 tmp 스크립트에서 mirror했다.
 - fixture line ending은 LF로 저장했다.
 
@@ -29,6 +29,7 @@
 | trade_1_1jpg | TPL-31D13CF3 | invoice_statement/trade_1_1jpg.md | 922 | 17 | PASS |
 | trade_2_2pdf | TPL-5A8C2374 | invoice_statement/trade_2_2pdf.md | 875 | 16 | PASS |
 | trade_3_3pdf | TPL-E4B15A22 | invoice_statement/trade_3_3pdf.md | 942 | 17 | PASS |
+| trade_7_7pdf | TPL-3AFD383E | invoice_statement/trade_7_7pdf.md | 1004 | 17 | PASS |
 | tpl_003_1jpg | TPL-003 | receipt/tpl_003_1jpg.md | 471 | 13 | PASS |
 | tpl_003_2jpg | TPL-003 | receipt/tpl_003_2jpg.md | 470 | 13 | PASS |
 
@@ -42,15 +43,15 @@
 ## 7. Typecheck / Build
 | command | status | exit | seconds |
 | --- | --- | --- | --- |
-| npm run typecheck | PASS | 0 | 2.388 |
-| npm run build | PASS | 0 | 18.48 |
+| npm run typecheck | PASS | 0 | 1.672 |
+| npm run build | PASS | 0 | 16.661 |
 
 Known stderr noise:
 - ISSUE-FRONTEND-BUILD-LOG-1: `ESLint: nextVitals is not iterable`
 
 ## 8. 최종 판정
 - overall: `PASS`
-- counts: `{'PASS': 5}`
+- counts: `{'PASS': 6}`
 
 ## 9. 다음 작업 제안
 1. FRONTEND-CLEANUP-2B에서 `fieldsToMarkdown` helper를 분리한다.

@@ -1,0 +1,50 @@
+{
+  "_meta": {
+    "fixtureName": "template_resize_policy",
+    "description": "region resize를 시뮬레이션. 현재 OcrCanvasPane resize handler는 rowTemplate clamp 후 rows = buildTableRows(area, rt)로 전체 재생성한다 → rows는 equal-height로 reset되지만 rowOverrides는 유지된다. canvas display는 매 render마다 materializeTableRowsWithOverrides로 다시 적용하므로 사용자 시각적으로는 override 유지. buildTemplateExportPayload는 export 시점에 다시 materialize하므로 saved output도 override 적용된 rows. → 안전. runner는 (a) resize 후 rows가 reset되어도 (b) rowOverrides가 살아있고 (c) export rows가 materialized인지 확인."
+  },
+  "policy": {
+    "resizeAction": "rowTemplate clamped to new area, rows rebuilt via buildTableRows(area, rt) → equal-height. rowOverrides untouched.",
+    "exportSafe": "buildTemplateExportPayload re-materializes rows from baseRows+rowOverrides at export time, so saved rows still reflect the overrides.",
+    "noteForFutureY": "현재 height-only overrides는 새 base에 그대로 적용 가능. 만약 절대 y override가 있다면 resize로 area가 줄면 y가 area 밖이 될 수 있어 helper가 trim/clamp 적용. risk 등급 LOW."
+  },
+  "templateName": "리사이즈_정책",
+  "documentType": "invoice_statement",
+  "loaded": {
+    "src": "data:image/png;base64,iVBORw0KGgo=",
+    "fileName": "resize.png",
+    "naturalWidth": 1200,
+    "naturalHeight": 1600
+  },
+  "resizeArea": { "x": 60, "y": 480, "width": 1080, "height": 360 },
+  "regions": [
+    {
+      "id": "table_1",
+      "name": "items",
+      "fieldType": "table",
+      "x": 60,
+      "y": 480,
+      "width": 1080,
+      "height": 600,
+      "table": {
+        "mode": "repeat",
+        "rowTemplate": { "x": 60, "y": 480, "width": 1080, "height": 60 },
+        "rows": [
+          { "x": 60, "y": 480, "width": 1080, "height": 60 },
+          { "x": 60, "y": 540, "width": 1080, "height": 80 },
+          { "x": 60, "y": 620, "width": 1080, "height": 60 },
+          { "x": 60, "y": 680, "width": 1080, "height": 60 },
+          { "x": 60, "y": 740, "width": 1080, "height": 60 },
+          { "x": 60, "y": 800, "width": 1080, "height": 60 },
+          { "x": 60, "y": 860, "width": 1080, "height": 60 },
+          { "x": 60, "y": 920, "width": 1080, "height": 60 },
+          { "x": 60, "y": 980, "width": 1080, "height": 60 },
+          { "x": 60, "y": 1040, "width": 1080, "height": 60 }
+        ],
+        "rowOverrides": [
+          { "rowIndex": 1, "height": 80 }
+        ]
+      }
+    }
+  ]
+}

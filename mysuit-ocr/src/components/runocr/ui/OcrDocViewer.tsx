@@ -16,7 +16,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import type { OcrFieldResult } from "./OcrResultPanel";
-import { resolveFieldLabel } from "@/lib/invoiceFieldLabels";
+import { resolveFieldLabel } from "@/common/utils/invoiceFieldLabels";
 
 type Props = {
   imageUrl: string;

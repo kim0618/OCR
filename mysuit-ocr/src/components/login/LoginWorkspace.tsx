@@ -2,9 +2,9 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import api, { ApiResponseError } from "@/lib/axios";
-import { useUi } from "../common/AppProviders";
-import { clearLogin, saveLogin } from "@/lib/login";
+import api, { ApiResponseError } from "@/common/api/axios";
+import { useUi } from "../layout/AppProviders";
+import { clearLogin, saveLogin } from "@/common/storage/login";
 
 export default function LoginWorkspace() {
   const router = useRouter();

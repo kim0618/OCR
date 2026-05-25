@@ -1,7 +1,7 @@
 "use client";
 
 import AppShell from "../../components/layout/AppShell";
-import RequireLogin from "@/components/common/RequireLogin";
+import RequireLogin from "@/components/login/ui/RequireLogin";
 import AutoRestoreWorkspace from "../../components/autorestore/AutoRestoreWorkspace";
 
 export default function Page() {

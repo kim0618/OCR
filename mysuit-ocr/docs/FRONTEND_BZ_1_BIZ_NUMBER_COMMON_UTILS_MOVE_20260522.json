@@ -1,0 +1,210 @@
+{
+  "task": "FRONTEND-BZ-1-BIZ-NUMBER-COMMON-UTILS-MOVE",
+  "date": "2026-05-22",
+  "tool": "Claude Code (VSCode extension)",
+  "model": "Claude Opus 4.7 (1M context)",
+  "workdir": "mysuit-ocr/",
+  "purpose": "Move src/lib/bizNumber.ts to src/common/utils/bizNumber.ts. bizNumber is a pure leaf utility (no imports, no React/DOM/storage/backend deps) for 사업자등록번호 normalize/checksum validate/OCR text extraction. 6 importer import-path-only corrections (autofillEngine, RunOcrWorkspace, DetailHistoryView, TestWorkspace, test/core/extract, test/core/autofill). TestWorkspace + test/core import path-only allowed. Other src/lib files not moved.",
+  "backup_dir": "mysuit-ocr/backup/biz_number_common_utils_20260522_before_FRONTEND_BZ_1_BIZ_NUMBER_COMMON_UTILS_MOVE",
+  "backups": [
+    "bizNumber.ts",
+    "autofillEngine.ts",
+    "RunOcrWorkspace.tsx",
+    "DetailHistoryView.tsx",
+    "TestWorkspace.tsx",
+    "test_core_extract.ts",
+    "test_core_autofill.ts",
+    "check_image_store_common_storage_move_cs1.mjs",
+    "check_history_store_common_storage_move_cs2.mjs",
+    "check_lib_ocr_result_formatters_common_move_1a.mjs",
+    "check_lib_invoice_field_labels_common_move_1b.mjs",
+    "check_lib_markdown_report_builder_common_move_1c.mjs",
+    "check_lib_clean_json_builder_common_move_1d.mjs",
+    "check_lib_invoice_table_display_common_move_1e.mjs",
+    "check_lib_structured_table_view_model_common_move_1f.mjs"
+  ],
+  "moved": [
+    {
+      "from": "src/lib/bizNumber.ts",
+      "to": "src/common/utils/bizNumber.ts",
+      "method": "git mv",
+      "body_byte_identical": true,
+      "self_import_changes": "none (leaf utility, 0 imports)"
+    }
+  ],
+  "modified_import_paths": [
+    { "file": "src/lib/autofillEngine.ts", "line": 1, "before": "./bizNumber", "after": "@/common/utils/bizNumber" },
+    { "file": "src/components/runocr/RunOcrWorkspace.tsx", "line": 39, "before": "@/lib/bizNumber", "after": "@/common/utils/bizNumber" },
+    { "file": "src/components/history/ui/DetailHistoryView.tsx", "line": 27, "before": "@/lib/bizNumber", "after": "@/common/utils/bizNumber" },
+    { "file": "src/components/test/TestWorkspace.tsx", "line": 4, "before": "@/lib/bizNumber", "after": "@/common/utils/bizNumber" },
+    { "file": "src/components/test/core/extract.ts", "line": 9, "before": "@/lib/bizNumber", "after": "@/common/utils/bizNumber" },
+    { "file": "src/components/test/core/autofill.ts", "line": 12, "before": "@/lib/bizNumber", "after": "@/common/utils/bizNumber" }
+  ],
+  "tmp_scripts": [
+    {
+      "path": "tmp/check_biz_number_common_utils_move_bz1.mjs",
+      "action": "created",
+      "checks_total": 28,
+      "result": "PASS"
+    },
+    {
+      "path": "tmp/check_image_store_common_storage_move_cs1.mjs",
+      "action": "drop_bizNumber_from_sibling_guard",
+      "scope": "BZ-1 legitimately moved bizNumber.ts"
+    },
+    {
+      "path": "tmp/check_history_store_common_storage_move_cs2.mjs",
+      "action": "drop_bizNumber_from_sibling_guard",
+      "scope": "same pattern as cs1 patch"
+    },
+    {
+      "path": "tmp/check_lib_ocr_result_formatters_common_move_1a.mjs",
+      "action": "drop_bizNumber_from_sibling_guard",
+      "scope": "same pattern as cs1 patch"
+    },
+    {
+      "path": "tmp/check_lib_invoice_field_labels_common_move_1b.mjs",
+      "action": "drop_bizNumber_from_sibling_guard",
+      "scope": "same pattern as cs1 patch"
+    },
+    {
+      "path": "tmp/check_lib_markdown_report_builder_common_move_1c.mjs",
+      "action": "drop_bizNumber_from_sibling_guard",
+      "scope": "same pattern as cs1 patch"
+    },
+    {
+      "path": "tmp/check_lib_clean_json_builder_common_move_1d.mjs",
+      "action": "drop_bizNumber_from_sibling_guard",
+      "scope": "same pattern as cs1 patch"
+    },
+    {
+      "path": "tmp/check_lib_invoice_table_display_common_move_1e.mjs",
+      "action": "drop_bizNumber_from_sibling_guard",
+      "scope": "same pattern as cs1 patch"
+    },
+    {
+      "path": "tmp/check_lib_structured_table_view_model_common_move_1f.mjs",
+      "action": "drop_bizNumber_from_sibling_guard",
+      "scope": "same pattern as cs1 patch"
+    }
+  ],
+  "fully_untouched": [
+    "src/lib/restoreProfileStore.ts",
+    "src/lib/profiles.ts",
+    "src/lib/groundTruthStore.ts",
+    "src/lib/testsets.ts",
+    "src/lib/axios.ts",
+    "src/lib/version.ts",
+    "src/common/storage/imageStore.ts",
+    "src/common/storage/historyStore.ts",
+    "src/common/utils/ocrResultFormatters.ts",
+    "src/common/utils/invoiceFieldLabels.ts",
+    "src/common/utils/markdownReportBuilder.ts",
+    "src/common/utils/cleanJsonBuilder.ts",
+    "src/common/utils/invoiceTableDisplay.ts",
+    "src/common/utils/structuredTableViewModel.ts",
+    "src/common/utils/ocrCanvasOps.ts",
+    "src/common/utils/ocrTableRegion.ts",
+    "src/common/ui/**",
+    "src/common/types/**",
+    "src/components/autorestore/**",
+    "src/components/restore/**",
+    "backend/OCR/parser",
+    "templates.json",
+    "fixtures"
+  ],
+  "common_utils_ownership": {
+    "directory": "src/common/utils/",
+    "contents_after_bz1": [
+      "ocrCanvasOps.ts (5B)",
+      "ocrTableRegion.ts (5C)",
+      "ocrResultFormatters.ts (1A)",
+      "invoiceFieldLabels.ts (1B)",
+      "markdownReportBuilder.ts (1C)",
+      "cleanJsonBuilder.ts (1D)",
+      "invoiceTableDisplay.ts (1E)",
+      "structuredTableViewModel.ts (1F)",
+      "bizNumber.ts (BZ-1)"
+    ],
+    "common_subdirs_present": ["ui", "utils", "types", "storage"]
+  },
+  "biz_number_invariants": {
+    "required_exports_preserved": ["normalizeBizNumber", "extractBizNumber"],
+    "internal_helpers_kept_private": ["validateChecksum", "applyCharFixes", "OCR_CHAR_FIXES"],
+    "logic_byte_identical_to_backup": true,
+    "imports_zero": true,
+    "imports_components_star": false,
+    "imports_react": false,
+    "imports_react_dom": false,
+    "uses_browser_apis": false,
+    "imports_storage_or_backend": false
+  },
+  "test_area_untouched_or_path_only": {
+    "TestWorkspace_modified_import_path_only": true,
+    "test_core_extract_modified_import_path_only": true,
+    "test_core_autofill_modified_import_path_only": true,
+    "logic_byte_equivalent_after_import_strip": true
+  },
+  "static_check_bz1": {
+    "script": "tmp/check_biz_number_common_utils_move_bz1.mjs",
+    "result": "PASS",
+    "checks_total": 28,
+    "checks_passed": 28,
+    "skipped_backup_checks": 0,
+    "residuals": 0
+  },
+  "runners": [
+    { "id": 1, "cmd": "npm run typecheck", "result": "PASS", "exit": 0 },
+    { "id": 2, "cmd": "npm run build", "result": "PASS", "exit": 0 },
+    { "id": 3, "cmd": "node tmp/check_biz_number_common_utils_move_bz1.mjs", "result": "PASS", "exit": 0, "score": "28/28" },
+    { "id": 4, "cmd": "node tmp/check_table_view_model_v1_fixtures_js.mjs", "result": "PASS", "exit": 0, "score": "8/8" },
+    { "id": 5, "cmd": "node tmp/check_clean_json_v1_fixtures_js.mjs", "result": "PASS", "exit": 0, "score": "9/9" },
+    { "id": 6, "cmd": "python tmp/codex_markdown_contract_fixture_lock.py --check --phase post_BIZ_NUMBER_COMMON_UTILS_MOVE_20260522", "result": "PASS", "exit": 0, "score": "6/6" },
+    { "id": 7, "cmd": "node tmp/check_history_store_common_storage_move_cs2.mjs", "result": "PASS", "exit": 0, "notes": "BZ-1 호환 patch (bizNumber sibling drop)" },
+    { "id": 8, "cmd": "node tmp/check_image_store_common_storage_move_cs1.mjs", "result": "PASS", "exit": 0, "notes": "BZ-1 호환 patch (bizNumber sibling drop)" },
+    { "id": 9, "cmd": "node tmp/check_detail_history_view_ui_move_hr2.mjs", "result": "PASS", "exit": 0 },
+    { "id": 10, "cmd": "node tmp/check_history_popup_ui_move_hr1.mjs", "result": "PASS", "exit": 0 },
+    { "id": 11, "cmd": "node tmp/check_app_providers_layout_move_cc1.mjs", "result": "PASS", "exit": 0 },
+    { "id": 12, "cmd": "node tmp/check_require_login_login_ui_move_cc2.mjs", "result": "PASS", "exit": 0 },
+    { "id": 13, "cmd": "node tmp/check_validation_baseline_repair_1a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 14, "cmd": "node tmp/check_lib_ocr_result_formatters_common_move_1a.mjs", "result": "PASS", "exit": 0, "notes": "bizNumber sibling drop" },
+    { "id": 15, "cmd": "node tmp/check_lib_invoice_field_labels_common_move_1b.mjs", "result": "PASS", "exit": 0, "notes": "bizNumber sibling drop" },
+    { "id": 16, "cmd": "node tmp/check_lib_markdown_report_builder_common_move_1c.mjs", "result": "PASS", "exit": 0, "notes": "bizNumber sibling drop" },
+    { "id": 17, "cmd": "node tmp/check_lib_clean_json_builder_common_move_1d.mjs", "result": "PASS", "exit": 0, "notes": "bizNumber sibling drop" },
+    { "id": 18, "cmd": "node tmp/check_lib_invoice_table_display_common_move_1e.mjs", "result": "PASS", "exit": 0, "notes": "bizNumber sibling drop" },
+    { "id": 19, "cmd": "node tmp/check_lib_structured_table_view_model_common_move_1f.mjs", "result": "PASS", "exit": 0, "notes": "bizNumber sibling drop" },
+    { "id": 20, "cmd": "node tmp/check_ocr_core_types_common_move_5a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 21, "cmd": "node tmp/check_ocr_core_ops_common_move_5b.mjs", "result": "PASS", "exit": 0 },
+    { "id": 22, "cmd": "node tmp/check_ocr_core_table_common_move_5c.mjs", "result": "PASS", "exit": 0 },
+    { "id": 23, "cmd": "node tmp/check_template_export_payload_move_5d.mjs", "result": "PASS", "exit": 0 },
+    { "id": 24, "cmd": "node tmp/check_filedropzone_common_ui_move_5e.mjs", "result": "PASS", "exit": 0 },
+    { "id": 25, "cmd": "node tmp/check_ocr_canvas_pane_common_ui_move_5f.mjs", "result": "PASS", "exit": 0 },
+    { "id": 26, "cmd": "node tmp/check_template_right_panel_rename_6a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 27, "cmd": "node tmp/check_template_annotator_rename_6b.mjs", "result": "PASS", "exit": 0 },
+    { "id": 28, "cmd": "node tmp/check_runocr_request_boundary_2b.mjs", "result": "PASS", "exit": 0 },
+    { "id": 29, "cmd": "node tmp/check_runocr_result_layout_boundary_3a.mjs", "result": "PASS", "exit": 0 }
+  ],
+  "typecheck_build": {
+    "typecheck": { "cmd": "npm run typecheck", "exit": 0, "result": "PASS" },
+    "build": { "cmd": "npm run build", "exit": 0, "result": "PASS" }
+  },
+  "logs": {
+    "stdout": "ocr-server/logs/codex_FRONTEND_BZ_1_BIZ_NUMBER_COMMON_UTILS_MOVE.out.log",
+    "stderr": "ocr-server/logs/codex_FRONTEND_BZ_1_BIZ_NUMBER_COMMON_UTILS_MOVE.err.log"
+  },
+  "known_stderr_noise": [
+    "ESLint: nextVitals is not iterable (build exit 0, non-blocking)"
+  ],
+  "remaining_issues": [
+    "src/lib에 잔존: autofillEngine.ts, restoreProfileStore.ts, profiles.ts, groundTruthStore.ts, testsets.ts, axios.ts, version.ts (별도 phase 대상)",
+    "common/utils/ocrResultFormatters.ts가 여전히 @/lib/autofillEngine type-only import (1A부터; autofillEngine 별도 phase에서 해소 예정)",
+    "src/lib/profiles.ts doc-comment 'core/types.ts' 문자열 잔존 (cosmetic)"
+  ],
+  "next_steps": [
+    "RS-1 autorestore -> restore 폴더 정리 precheck",
+    "restoreProfileStore 별도 precheck",
+    "autofillEngine 별도 precheck (1A 잔여 type-only 의존 해소)",
+    "TestWorkspace 구조 정리: 사용자 확인 후 진행",
+    "HR/RS/CS/BZ 단계 마무리 후 Template table column definition feature precheck로 이행"
+  ]
+}

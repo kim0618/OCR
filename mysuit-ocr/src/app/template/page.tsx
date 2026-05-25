@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import AppShell from "../../components/layout/AppShell";
 import UnstructuredBuilder from "../../components/template/UnstructuredBuilder";
-import { getTemplateImage } from "@/lib/imageStore";
+import { getTemplateImage } from "@/common/storage/imageStore";
 
-const OcrAnnotator = dynamic(
-  () => import("../../components/template/ui/OcrAnnotator"),
+const TemplateAnnotator = dynamic(
+  () => import("../../components/template/ui/TemplateAnnotator"),
   {
     ssr: false,
     loading: () => <div style={{ padding: 16, color: "var(--muted)" }}>로딩중...</div>,
@@ -237,7 +237,7 @@ export default function Page() {
         {/* 모드 콘텐츠 */}
         <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
           {mode === "template" ? (
-            <OcrAnnotator
+            <TemplateAnnotator
               key={selectedTemplate && selectedTemplate.mode !== "unstructured" ? `tpl-${selectedTemplate.id}` : `new-${resetKey}`}
               selectedTemplate={selectedTemplate?.mode === "unstructured" ? null : selectedTemplate?.templateJson}
               selectedTemplateId={selectedTemplate?.mode === "unstructured" ? null : selectedTemplate?.id ?? null}

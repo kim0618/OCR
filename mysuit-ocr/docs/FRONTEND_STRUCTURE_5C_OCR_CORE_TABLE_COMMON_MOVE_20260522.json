@@ -1,0 +1,156 @@
+{
+  "task": "FRONTEND-STRUCTURE-5C-OCR-CORE-TABLE-COMMON-MOVE",
+  "date": "2026-05-22",
+  "tool": "Claude Code (VSCode extension)",
+  "model": "Claude Opus 4.7 (1M context)",
+  "workdir": "mysuit-ocr/",
+  "purpose": "OCR core ownership 정리 third micro-step: src/components/ocr/core/table.ts -> src/common/utils/ocrTableRegion.ts (move only; body byte-identical except the two self-import paths; importers receive import-path correction only; Template table column definition policy explicitly not implemented).",
+  "backup_dir": "mysuit-ocr/backup/ocr_core_table_20260522_before_FRONTEND_STRUCTURE_5C_OCR_CORE_TABLE_COMMON_MOVE",
+  "backups": [
+    "table.ts",
+    "export.ts",
+    "OcrCanvasPane.tsx",
+    "OcrRightPanel.tsx"
+  ],
+  "moved": [
+    {
+      "from": "src/components/ocr/core/table.ts",
+      "to": "src/common/utils/ocrTableRegion.ts",
+      "method": "git mv",
+      "body_byte_identical_except_self_imports": true,
+      "self_import_changes": [
+        { "symbol": "Rect", "before": "../../../common/types/ocr", "after": "../types/ocr" },
+        { "symbol": "clampRectToArea", "before": "../../../common/utils/ocrCanvasOps", "after": "./ocrCanvasOps" }
+      ]
+    }
+  ],
+  "modified_import_paths": [
+    { "file": "src/components/ocr/core/export.ts", "before": "./table", "after": "../../../common/utils/ocrTableRegion" },
+    { "file": "src/components/ocr/OcrCanvasPane.tsx", "before": "./core/table", "after": "../../common/utils/ocrTableRegion" },
+    { "file": "src/components/template/ui/OcrRightPanel.tsx", "before": "../../ocr/core/table", "after": "../../../common/utils/ocrTableRegion" }
+  ],
+  "tmp_scripts": [
+    {
+      "path": "tmp/check_ocr_core_table_common_move_5c.mjs",
+      "action": "created",
+      "checks_total": 29,
+      "result": "PASS"
+    },
+    {
+      "path": "tmp/check_template_editor_ui_move_4b.mjs",
+      "action": "regex_accept_both_paths_for_table",
+      "scope": "right_panel_imports_core_via_ocr — accept ../../ocr/core/table or ../../../common/utils/ocrTableRegion"
+    },
+    {
+      "path": "tmp/check_ocr_core_types_common_move_5a.mjs",
+      "action": "auto_detect_table_location_and_accept_both_paths",
+      "scope": "TABLE resolved to whichever of src/components/ocr/core/table.ts or src/common/utils/ocrTableRegion.ts exists; table_imports_common_types accepts ../../../common/types/ocr or ../types/ocr"
+    },
+    {
+      "path": "tmp/check_ocr_core_ops_common_move_5b.mjs",
+      "action": "auto_detect_table_location_and_accept_both_paths",
+      "scope": "TABLE resolved to whichever of src/components/ocr/core/table.ts or src/common/utils/ocrTableRegion.ts exists; table_imports_common_utils accepts ../../../common/utils/ocrCanvasOps or ./ocrCanvasOps"
+    }
+  ],
+  "not_moved_or_changed_beyond_import_path": [
+    "src/components/ocr/core/export.ts",
+    "src/components/ocr/OcrCanvasPane.tsx",
+    "src/components/template/ui/OcrRightPanel.tsx"
+  ],
+  "fully_untouched": [
+    "src/components/template/ui/OcrAnnotator.tsx",
+    "src/components/template/TemplateWorkspace.tsx",
+    "src/components/template/UnstructuredBuilder.tsx",
+    "src/components/runocr/RunOcrWorkspace.tsx",
+    "src/components/runocr/ui/*",
+    "src/components/runocr/utils/*",
+    "src/components/test/TestWorkspace.tsx",
+    "src/components/test/core/*",
+    "src/common/types/ocr.ts",
+    "src/common/utils/ocrCanvasOps.ts",
+    "backend/OCR/parser",
+    "templates.json",
+    "fixtures"
+  ],
+  "common_utils_boundary": {
+    "file": "src/common/utils/ocrTableRegion.ts",
+    "imports_components_star": false,
+    "imports_react": false,
+    "imports_react_dom": false,
+    "uses_window_or_document_or_localStorage": false,
+    "imports_types_from_common_types": true,
+    "imports_ops_from_common_utils_sibling": true,
+    "logic_equivalent_to_backup_ignoring_import_paths": true,
+    "required_export_names_preserved": [
+      "normalizeColGuides",
+      "buildTableRows",
+      "normalizeStopKeywords",
+      "autoDetectRowBands",
+      "isStopRow",
+      "OcrBox"
+    ],
+    "residual_old_table_imports_in_src": 0
+  },
+  "template_table_column_definition_policy_guard": {
+    "template_utils_dir_introduced": false,
+    "TemplateTableColumnEditor_introduced": false,
+    "blocklisted_identifiers_in_new_table_file": [],
+    "blocklisted_identifiers_checked": [
+      "canonicalColumn",
+      "mappingStatus",
+      "userConfirmed",
+      "savePayload",
+      "buildExportPayload"
+    ]
+  },
+  "static_check_5c": {
+    "script": "tmp/check_ocr_core_table_common_move_5c.mjs",
+    "result": "PASS",
+    "checks_total": 29,
+    "checks_passed": 29,
+    "skipped_backup_checks": 0,
+    "residuals": 0
+  },
+  "runners": [
+    { "id": 1, "cmd": "npm run typecheck", "result": "PASS", "exit": 0 },
+    { "id": 2, "cmd": "npm run build", "result": "PASS", "exit": 0 },
+    { "id": 3, "cmd": "node tmp/check_table_view_model_v1_fixtures_js.mjs", "result": "PASS", "exit": 0, "score": "8/8" },
+    { "id": 4, "cmd": "node tmp/check_clean_json_v1_fixtures_js.mjs", "result": "PASS", "exit": 0, "score": "9/9" },
+    { "id": 5, "cmd": "python tmp/codex_markdown_contract_fixture_lock.py --check --phase post_OCR_CORE_TABLE_COMMON_MOVE_20260522", "result": "PASS", "exit": 0, "score": "6/6" },
+    { "id": 6, "cmd": "node tmp/check_runocr_formdata_keys_2a.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 7, "cmd": "node tmp/check_runocr_request_boundary_2b.mjs", "result": "PASS", "exit": 0 },
+    { "id": 8, "cmd": "node tmp/check_runocr_response_mapping_boundary_2c.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 9, "cmd": "node tmp/check_runocr_result_layout_boundary_3a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 10, "cmd": "node tmp/check_runocr_doc_comments_3b.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 11, "cmd": "node tmp/check_template_workspace_move_4a.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 12, "cmd": "node tmp/check_template_editor_ui_move_4b.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0, "notes": "5C table 경로 양쪽 허용 패치 적용" },
+    { "id": 13, "cmd": "node tmp/check_ocr_core_types_common_move_5a.mjs", "result": "PASS", "exit": 0, "notes": "post-5C TABLE 경로 fallback 패치 적용" },
+    { "id": 14, "cmd": "node tmp/check_ocr_core_ops_common_move_5b.mjs", "result": "PASS", "exit": 0, "notes": "post-5C TABLE 경로 fallback 패치 적용" },
+    { "id": 15, "cmd": "node tmp/check_ocr_core_table_common_move_5c.mjs", "result": "PASS", "exit": 0, "score": "29/29" },
+    { "id": 16, "cmd": "node tmp/check_validation_baseline_repair_1a.mjs", "result": "PASS", "exit": 0 }
+  ],
+  "typecheck_build": {
+    "typecheck": { "cmd": "npm run typecheck", "exit": 0, "result": "PASS" },
+    "build": { "cmd": "npm run build", "exit": 0, "result": "PASS" }
+  },
+  "logs": {
+    "stdout": "ocr-server/logs/codex_FRONTEND_STRUCTURE_5C_OCR_CORE_TABLE_COMMON_MOVE.out.log",
+    "stderr": "ocr-server/logs/codex_FRONTEND_STRUCTURE_5C_OCR_CORE_TABLE_COMMON_MOVE.err.log"
+  },
+  "known_stderr_noise": [
+    "ESLint: nextVitals is not iterable (build exit 0, non-blocking)"
+  ],
+  "remaining_issues": [
+    "Historical backup files for phases 2A/2B/3B/4A/4B remain absent; those checks continue to use the PASS_WITH_SKIPPED_BACKUP verdict and skip logic-equivalence comparison. Not caused by 5C.",
+    "src/components/ocr/core/ now contains only export.ts. A follow-up decision is needed on whether 5D moves it to template/utils or keeps it as a single-file core directory.",
+    "src/lib/profiles.ts contains a doc-comment substring 'core/types.ts' (not an import). Cosmetic cleanup deferred."
+  ],
+  "next_steps": [
+    "export.ts -> template/utils precheck or move (5D candidate; export is Template-save-payload specific per precheck)",
+    "OcrCanvasPane -> common/ui after export dependency is reorganized",
+    "Template table column definition design precheck — implement as a separate components/template/utils/ layer (consistent with the 5C policy of keeping canonical mapping out of common/utils)",
+    "TPL-95328E52 dirty impact precheck",
+    "src/lib/profiles.ts doc-comment cleanup",
+    "TestWorkspace cleanup: defer until user confirms"
+  ]
+}

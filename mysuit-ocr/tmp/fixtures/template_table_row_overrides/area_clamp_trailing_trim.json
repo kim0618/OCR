@@ -1,0 +1,38 @@
+{
+  "_meta": {
+    "fixtureName": "area_clamp_trailing_trim",
+    "description": "rowOverrides가 row[0]의 height를 area 전체에 가깝게 키워 후속 rows가 area bottom을 넘는 케이스. saved rows는 모두 area 안에 있어야 하고 trailing rows는 trim되거나 마지막 row height가 clamp됨."
+  },
+  "templateName": "영역초과_clamp",
+  "documentType": "invoice_statement",
+  "loaded": {
+    "src": "data:image/png;base64,iVBORw0KGgo=",
+    "fileName": "clamp.png",
+    "naturalWidth": 1200,
+    "naturalHeight": 1600
+  },
+  "regions": [
+    {
+      "id": "table_1",
+      "name": "items",
+      "fieldType": "table",
+      "x": 60,
+      "y": 100,
+      "width": 1080,
+      "height": 200,
+      "table": {
+        "mode": "repeat",
+        "rowTemplate": { "x": 60, "y": 100, "width": 1080, "height": 50 },
+        "rows": [
+          { "x": 60, "y": 100, "width": 1080, "height": 50 },
+          { "x": 60, "y": 150, "width": 1080, "height": 50 },
+          { "x": 60, "y": 200, "width": 1080, "height": 50 },
+          { "x": 60, "y": 250, "width": 1080, "height": 50 }
+        ],
+        "rowOverrides": [
+          { "rowIndex": 0, "height": 160 }
+        ]
+      }
+    }
+  ]
+}

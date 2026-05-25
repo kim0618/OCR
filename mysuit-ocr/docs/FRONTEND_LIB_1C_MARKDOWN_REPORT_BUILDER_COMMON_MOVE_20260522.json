@@ -1,0 +1,158 @@
+{
+  "task": "FRONTEND-LIB-1C-MARKDOWN-REPORT-BUILDER-COMMON-MOVE",
+  "date": "2026-05-22",
+  "tool": "Claude Code (VSCode extension)",
+  "model": "Claude Opus 4.7 (1M context)",
+  "workdir": "mysuit-ocr/",
+  "purpose": "src/lib 해체 LIB-1 third micro-step: src/lib/markdownReportBuilder.ts -> src/common/utils/markdownReportBuilder.ts (move only; body byte-identical; OcrResultPanel import-path correction only). No new temporary src/lib dependency introduced (only common/utils sibling import to ocrResultFormatters). Markdown v1 fixture set untouched; the markdown contract runner re-confirms output byte equivalence. Other src/lib files NOT moved.",
+  "backup_dir": "mysuit-ocr/backup/lib_markdown_report_builder_20260522_before_FRONTEND_LIB_1C_MARKDOWN_REPORT_BUILDER_COMMON_MOVE",
+  "backups": [
+    "markdownReportBuilder.ts",
+    "OcrResultPanel.tsx"
+  ],
+  "moved": [
+    {
+      "from": "src/lib/markdownReportBuilder.ts",
+      "to": "src/common/utils/markdownReportBuilder.ts",
+      "method": "git mv",
+      "body_byte_identical": true,
+      "self_import_changes": "none — only import @/common/utils/ocrResultFormatters uses @/ absolute alias and stays valid after the move"
+    }
+  ],
+  "modified_import_paths": [
+    { "file": "src/components/runocr/ui/OcrResultPanel.tsx", "before": "@/lib/markdownReportBuilder", "after": "@/common/utils/markdownReportBuilder" }
+  ],
+  "tmp_scripts": [
+    {
+      "path": "tmp/check_lib_markdown_report_builder_common_move_1c.mjs",
+      "action": "created",
+      "checks_total": 31,
+      "result": "PASS"
+    },
+    {
+      "path": "tmp/check_lib_ocr_result_formatters_common_move_1a.mjs",
+      "action": "auto_detect_markdownReportBuilder_and_drop_from_sibling_guard",
+      "scope": "MARKDOWN_BUILDER resolves to either src/lib/ or src/common/utils/; sibling guard list no longer expects markdownReportBuilder.ts in src/lib/"
+    },
+    {
+      "path": "tmp/check_lib_invoice_field_labels_common_move_1b.mjs",
+      "action": "auto_detect_markdownReportBuilder_and_drop_from_sibling_guard",
+      "scope": "same pattern as 1A patch"
+    }
+  ],
+  "fully_untouched": [
+    "src/lib/cleanJsonBuilder.ts",
+    "src/lib/structuredTableViewModel.ts",
+    "src/lib/invoiceTableDisplay.ts",
+    "src/lib/bizNumber.ts",
+    "src/lib/autofillEngine.ts",
+    "src/lib/historyStore.ts",
+    "src/lib/imageStore.ts",
+    "src/lib/profiles.ts",
+    "src/lib/restoreProfileStore.ts",
+    "src/lib/groundTruthStore.ts",
+    "src/lib/testsets.ts",
+    "src/common/ui/OcrCanvasPane.tsx",
+    "src/common/ui/FileDropzone.tsx",
+    "src/common/types/ocr.ts",
+    "src/common/utils/ocrCanvasOps.ts",
+    "src/common/utils/ocrTableRegion.ts",
+    "src/common/utils/ocrResultFormatters.ts",
+    "src/common/utils/invoiceFieldLabels.ts",
+    "src/components/template/ui/TemplateAnnotator.tsx",
+    "src/components/template/ui/TemplateRightPanel.tsx",
+    "src/components/template/utils/buildTemplateExportPayload.ts",
+    "src/components/runocr/RunOcrWorkspace.tsx",
+    "src/components/runocr/utils/*",
+    "src/components/test/TestWorkspace.tsx",
+    "src/components/test/core/*",
+    "tmp/fixtures/markdown_v1/*",
+    "backend/OCR/parser",
+    "templates.json"
+  ],
+  "common_utils_boundary": {
+    "file": "src/common/utils/markdownReportBuilder.ts",
+    "imports_components_star": false,
+    "imports_react": false,
+    "imports_react_dom": false,
+    "imports_any_at_lib_module": false,
+    "uses_window_or_document_or_localStorage": false,
+    "imports_common_utils_ocrResultFormatters_sibling": true,
+    "logic_equivalent_to_backup": true,
+    "required_exports_preserved": [
+      "buildMarkdownReport",
+      "MarkdownReportField",
+      "BuildMarkdownReportInput"
+    ],
+    "residual_old_lib_imports_in_src_code": 0
+  },
+  "markdown_fixture_untouched": {
+    "fixture_dir": "tmp/fixtures/markdown_v1",
+    "fixture_dir_modified_in_this_step": false,
+    "contract_runner_verdict": "PASS 6/6 (post_LIB_MARKDOWN_REPORT_BUILDER_COMMON_MOVE_20260522)"
+  },
+  "test_workspace_untouched": {
+    "TestWorkspace_modified": false,
+    "test_core_dir_modified": false,
+    "TestWorkspace_imported_markdownReportBuilder_pre_or_post": false
+  },
+  "static_check_1c": {
+    "script": "tmp/check_lib_markdown_report_builder_common_move_1c.mjs",
+    "result": "PASS",
+    "checks_total": 31,
+    "checks_passed": 31,
+    "skipped_backup_checks": 0,
+    "residuals": 0
+  },
+  "runners": [
+    { "id": 1, "cmd": "npm run typecheck", "result": "PASS", "exit": 0 },
+    { "id": 2, "cmd": "npm run build", "result": "PASS", "exit": 0 },
+    { "id": 3, "cmd": "node tmp/check_table_view_model_v1_fixtures_js.mjs", "result": "PASS", "exit": 0, "score": "8/8" },
+    { "id": 4, "cmd": "node tmp/check_clean_json_v1_fixtures_js.mjs", "result": "PASS", "exit": 0, "score": "9/9" },
+    { "id": 5, "cmd": "python tmp/codex_markdown_contract_fixture_lock.py --check --phase post_LIB_MARKDOWN_REPORT_BUILDER_COMMON_MOVE_20260522", "result": "PASS", "exit": 0, "score": "6/6" },
+    { "id": 6, "cmd": "node tmp/check_runocr_formdata_keys_2a.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 7, "cmd": "node tmp/check_runocr_request_boundary_2b.mjs", "result": "PASS", "exit": 0 },
+    { "id": 8, "cmd": "node tmp/check_runocr_response_mapping_boundary_2c.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 9, "cmd": "node tmp/check_runocr_result_layout_boundary_3a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 10, "cmd": "node tmp/check_runocr_doc_comments_3b.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 11, "cmd": "node tmp/check_template_workspace_move_4a.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 12, "cmd": "node tmp/check_template_editor_ui_move_4b.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 13, "cmd": "node tmp/check_template_right_panel_rename_6a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 14, "cmd": "node tmp/check_template_annotator_rename_6b.mjs", "result": "PASS", "exit": 0 },
+    { "id": 15, "cmd": "node tmp/check_ocr_core_types_common_move_5a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 16, "cmd": "node tmp/check_ocr_core_ops_common_move_5b.mjs", "result": "PASS", "exit": 0 },
+    { "id": 17, "cmd": "node tmp/check_ocr_core_table_common_move_5c.mjs", "result": "PASS", "exit": 0 },
+    { "id": 18, "cmd": "node tmp/check_template_export_payload_move_5d.mjs", "result": "PASS", "exit": 0 },
+    { "id": 19, "cmd": "node tmp/check_filedropzone_common_ui_move_5e.mjs", "result": "PASS", "exit": 0 },
+    { "id": 20, "cmd": "node tmp/check_ocr_canvas_pane_common_ui_move_5f.mjs", "result": "PASS", "exit": 0 },
+    { "id": 21, "cmd": "node tmp/check_lib_ocr_result_formatters_common_move_1a.mjs", "result": "PASS", "exit": 0, "notes": "MARKDOWN_BUILDER path fallback + sibling guard drop" },
+    { "id": 22, "cmd": "node tmp/check_lib_invoice_field_labels_common_move_1b.mjs", "result": "PASS", "exit": 0, "notes": "MARKDOWN_BUILDER path fallback + sibling guard drop" },
+    { "id": 23, "cmd": "node tmp/check_lib_markdown_report_builder_common_move_1c.mjs", "result": "PASS", "exit": 0, "score": "31/31" },
+    { "id": 24, "cmd": "node tmp/check_validation_baseline_repair_1a.mjs", "result": "PASS", "exit": 0 }
+  ],
+  "typecheck_build": {
+    "typecheck": { "cmd": "npm run typecheck", "exit": 0, "result": "PASS" },
+    "build": { "cmd": "npm run build", "exit": 0, "result": "PASS" }
+  },
+  "logs": {
+    "stdout": "ocr-server/logs/codex_FRONTEND_LIB_1C_MARKDOWN_REPORT_BUILDER_COMMON_MOVE.out.log",
+    "stderr": "ocr-server/logs/codex_FRONTEND_LIB_1C_MARKDOWN_REPORT_BUILDER_COMMON_MOVE.err.log"
+  },
+  "known_stderr_noise": [
+    "ESLint: nextVitals is not iterable (build exit 0, non-blocking)"
+  ],
+  "remaining_issues": [
+    "Historical backup files for phases 2A/2B/3B/4A/4B remain absent; those checks continue to use the PASS_WITH_SKIPPED_BACKUP verdict and skip logic-equivalence comparison. Not caused by 1C.",
+    "common/utils/ocrResultFormatters.ts still imports @/lib/autofillEngine (type-only) from 1A; follow-up LIB phase will resolve this remaining temp src/lib dependency.",
+    "src/components/runocr/ui/OcrResultPanel.tsx has 2 doc-comment mentions of '@/lib/markdownReportBuilder' (lines 11 / 687). Cosmetic, not imports.",
+    "src/lib/profiles.ts contains a doc-comment substring 'core/types.ts' (not an import). Cosmetic cleanup deferred."
+  ],
+  "next_steps": [
+    "cleanJsonBuilder -> common/utils precheck (natural pair after markdownReportBuilder)",
+    "structuredTableViewModel -> common/utils precheck",
+    "autofillEngine -> common/utils precheck (resolves remaining 1A type-only temp dep; broad runtime usage requires separate phase)",
+    "invoiceTableDisplay / bizNumber move pending TestWorkspace impact precheck",
+    "profiles / imageStore / historyStore / restoreProfileStore / groundTruthStore / testsets: per-file precheck before any move",
+    "TestWorkspace cleanup: defer until user confirms"
+  ]
+}

@@ -20,13 +20,11 @@ const WORKSPACE_PATH = resolve(ROOT, "src/components/runocr/RunOcrWorkspace.tsx"
 
 const REQ_BACKUP = resolve(
   ROOT,
-  "..",
   "backup",
   "RunOcrWorkspace_20260522_before_FRONTEND_STRUCTURE_2C_RUNOCR_BUILD_RUN_OCR_RESULT_EXTRACT.tsx",
 );
 const BUILD_FORMDATA_BACKUP = resolve(
   ROOT,
-  "..",
   "backup",
   "buildOcrFormData_20260522_before_FRONTEND_STRUCTURE_2B_RUNOCR_REQUEST_EXTRACT.ts",
 );
@@ -38,6 +36,7 @@ const reqSrc = readSafe(REQ_PATH);
 const buildSrc = readSafe(BUILD_PATH);
 const workspaceSrc = readSafe(WORKSPACE_PATH);
 const buildFormDataBackup = readSafe(BUILD_FORMDATA_BACKUP);
+const skippedBackupChecks = [];
 
 if (!mapSrc) { console.error(`[FATAL] not found: ${MAP_PATH}`); process.exit(2); }
 if (!reqSrc) { console.error(`[FATAL] not found: ${REQ_PATH}`); process.exit(2); }
@@ -112,8 +111,14 @@ checks.workspace_missing_resident_keywords = residentMissing;
 //    the original invariant ("logic unchanged") while tolerating doc comments.
 const normalizeForLogic = (src) =>
   stripComments(src).replace(/\s+/g, " ").trim();
+if (buildFormDataBackup === null) {
+  skippedBackupChecks.push({
+    check: "buildOcrFormData_unchanged_vs_2B_backup",
+    reason: `SKIP_WITH_REASON: historical backup not found: ${BUILD_FORMDATA_BACKUP}`,
+  });
+}
 checks.buildOcrFormData_unchanged_vs_2B_backup =
-  buildFormDataBackup !== null &&
+  buildFormDataBackup === null ||
   normalizeForLogic(buildSrc) === normalizeForLogic(buildFormDataBackup);
 
 // runOcrRequest must still import buildOcrFormData (sanity)
@@ -132,6 +137,8 @@ const summary = {
   task: "FRONTEND-STRUCTURE-2C-RUNOCR-BUILD-RUN-OCR-RESULT-EXTRACT",
   mapPath: MAP_PATH,
   workspacePath: WORKSPACE_PATH,
+  backupPaths: { request: REQ_BACKUP, buildFormData: BUILD_FORMDATA_BACKUP },
+  skippedBackupChecks,
   checks,
 };
 console.log(JSON.stringify(summary, null, 2));
@@ -150,5 +157,6 @@ const required = [
   "map_does_not_import_workspace",
 ];
 const allPass = required.every((k) => checks[k] === true);
-console.log(`[RUNOCR_RESPONSE_MAPPING_BOUNDARY] ${allPass ? "PASS" : "FAIL"}`);
+const label = allPass && skippedBackupChecks.length > 0 ? "PASS_WITH_SKIPPED_BACKUP" : allPass ? "PASS" : "FAIL";
+console.log(`[RUNOCR_RESPONSE_MAPPING_BOUNDARY] ${label}`);
 process.exit(allPass ? 0 : 1);

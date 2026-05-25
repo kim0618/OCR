@@ -1,0 +1,137 @@
+{
+  "task": "FRONTEND-STRUCTURE-5A-OCR-CORE-TYPES-COMMON-MOVE",
+  "date": "2026-05-22",
+  "tool": "Claude Code (VSCode extension)",
+  "model": "Claude Opus 4.7 (1M context)",
+  "workdir": "C:\\OCR\\OCR\\mysuit-ocr",
+  "purpose": "OCR core ownership 정리 first micro-step: src/components/ocr/core/types.ts -> src/common/types/ocr.ts (move only, no body change, importers' import-path correction only).",
+  "backup_dir": "mysuit-ocr/backup/ocr_core_types_20260522_before_FRONTEND_STRUCTURE_5A_OCR_CORE_TYPES_COMMON_MOVE",
+  "backups": [
+    "types.ts",
+    "ops.ts",
+    "table.ts",
+    "export.ts",
+    "OcrCanvasPane.tsx",
+    "OcrAnnotator.tsx",
+    "OcrRightPanel.tsx",
+    "RunOcrWorkspace.tsx",
+    "buildOcrFormData.ts"
+  ],
+  "moved": [
+    {
+      "from": "src/components/ocr/core/types.ts",
+      "to": "src/common/types/ocr.ts",
+      "method": "git mv",
+      "body_byte_identical": true
+    }
+  ],
+  "modified_import_paths": [
+    { "file": "src/components/ocr/core/ops.ts", "before": "./types", "after": "../../../common/types/ocr" },
+    { "file": "src/components/ocr/core/table.ts", "before": "./types", "after": "../../../common/types/ocr" },
+    { "file": "src/components/ocr/core/export.ts", "before": "./types", "after": "../../../common/types/ocr" },
+    { "file": "src/components/ocr/OcrCanvasPane.tsx", "before": "./core/types", "after": "../../common/types/ocr" },
+    { "file": "src/components/template/ui/OcrAnnotator.tsx", "before": "../../ocr/core/types", "after": "../../../common/types/ocr" },
+    { "file": "src/components/template/ui/OcrRightPanel.tsx", "before": "../../ocr/core/types", "after": "../../../common/types/ocr" },
+    { "file": "src/components/runocr/RunOcrWorkspace.tsx", "before": "../ocr/core/types", "after": "../../common/types/ocr" },
+    { "file": "src/components/runocr/utils/buildOcrFormData.ts", "before": "../../ocr/core/types", "after": "../../../common/types/ocr" }
+  ],
+  "tmp_scripts": [
+    {
+      "path": "tmp/check_ocr_core_types_common_move_5a.mjs",
+      "action": "created"
+    },
+    {
+      "path": "tmp/check_template_editor_ui_move_4b.mjs",
+      "action": "regex_accept_both_paths",
+      "scope": "annotator_imports_core_via_ocr / right_panel_imports_core_via_ocr — accept either pre-5A (../../ocr/core/types) or post-5A (../../../common/types/ocr) types path"
+    }
+  ],
+  "not_moved_or_changed_beyond_import_path": [
+    "src/components/ocr/core/ops.ts",
+    "src/components/ocr/core/table.ts",
+    "src/components/ocr/core/export.ts",
+    "src/components/ocr/OcrCanvasPane.tsx",
+    "src/components/template/ui/OcrAnnotator.tsx",
+    "src/components/template/ui/OcrRightPanel.tsx",
+    "src/components/runocr/RunOcrWorkspace.tsx",
+    "src/components/runocr/utils/buildOcrFormData.ts"
+  ],
+  "fully_untouched": [
+    "src/components/test/TestWorkspace.tsx",
+    "src/components/test/core/types.ts",
+    "src/components/test/core/autofill.ts",
+    "src/components/test/core/extract.ts",
+    "src/components/test/core/finalize.ts",
+    "src/components/test/core/match.ts",
+    "src/components/runocr/ui/*",
+    "src/components/runocr/utils/* (except buildOcrFormData.ts import line)",
+    "backend/OCR/parser",
+    "templates.json",
+    "fixtures"
+  ],
+  "common_types_boundary": {
+    "file": "src/common/types/ocr.ts",
+    "imports_react": false,
+    "imports_components": false,
+    "uses_window_or_document_or_localStorage": false,
+    "has_any_import_statement": false,
+    "logic_equivalent_to_backup": true,
+    "required_export_names_preserved": [
+      "FieldType",
+      "CheckMode",
+      "MappingStatus",
+      "FieldMappingCandidate",
+      "TableColumnDef",
+      "Rect",
+      "TableMeta",
+      "Region",
+      "LoadedImage",
+      "DragKind"
+    ]
+  },
+  "static_check_5a": {
+    "script": "tmp/check_ocr_core_types_common_move_5a.mjs",
+    "result": "PASS",
+    "checks_total": 29,
+    "checks_passed": 29
+  },
+  "runners": [
+    { "id": 3, "cmd": "node tmp/check_table_view_model_v1_fixtures_js.mjs", "result": "PASS", "exit": 0 },
+    { "id": 4, "cmd": "node tmp/check_clean_json_v1_fixtures_js.mjs", "result": "PASS", "exit": 0 },
+    { "id": 5, "cmd": "python tmp/codex_markdown_contract_fixture_lock.py --check --phase post_OCR_CORE_TYPES_COMMON_MOVE_20260522", "result": "FAIL", "exit": 1, "reason": "LF vs CRLF newline mismatch in backend OCR response vs fixture; pre-existing Windows-env diff, not introduced by 5A. Also re-ran with .venv python implicitly available." },
+    { "id": 6, "cmd": "node tmp/check_runocr_formdata_keys_2a.mjs", "result": "FATAL", "exit": 2, "reason": "backup file missing at C:/OCR/OCR/backup/RunOcrWorkspace_20260522_before_FRONTEND_STRUCTURE_2A_RUNOCR_BUILD_OCR_FORMDATA_EXTRACT.tsx; pre-existing" },
+    { "id": 7, "cmd": "node tmp/check_runocr_request_boundary_2b.mjs", "result": "PASS", "exit": 0 },
+    { "id": 8, "cmd": "node tmp/check_runocr_response_mapping_boundary_2c.mjs", "result": "FAIL", "exit": 0, "reason": "buildOcrFormData_unchanged_vs_2B_backup — backup file missing; pre-existing" },
+    { "id": 9, "cmd": "node tmp/check_runocr_result_layout_boundary_3a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 10, "cmd": "node tmp/check_runocr_doc_comments_3b.mjs", "result": "FAIL", "exit": 0, "reason": "8 logic-equivalence checks fail — all backup files missing in C:/OCR/OCR/backup/; pre-existing" },
+    { "id": 11, "cmd": "node tmp/check_template_workspace_move_4a.mjs", "result": "FAIL", "exit": 0, "reason": "template_workspace_logic_unchanged_vs_backup — backup file missing; pre-existing" },
+    { "id": 12, "cmd": "node tmp/check_template_editor_ui_move_4b.mjs", "result": "FAIL", "exit": 0, "reason": "Three pre-existing missing-backup checks fail. The two 5A-triggered import-path regex checks were updated to accept both pre-5A and post-5A types paths." },
+    { "id": 13, "cmd": "node tmp/check_ocr_core_types_common_move_5a.mjs", "result": "PASS", "exit": 0, "checks_total": 29 }
+  ],
+  "typecheck_build": {
+    "typecheck": { "cmd": "npm run typecheck", "exit": 0, "result": "PASS" },
+    "build": { "cmd": "npm run build", "exit": 0, "result": "PASS" }
+  },
+  "logs": {
+    "stdout": "ocr-server/logs/codex_FRONTEND_STRUCTURE_5A_OCR_CORE_TYPES_COMMON_MOVE.out.log",
+    "stderr": "ocr-server/logs/codex_FRONTEND_STRUCTURE_5A_OCR_CORE_TYPES_COMMON_MOVE.err.log"
+  },
+  "known_stderr_noise": [
+    "ESLint: nextVitals is not iterable (build exit 0, non-blocking)"
+  ],
+  "remaining_issues": [
+    "C:/OCR/OCR/backup/ directory does not exist; all phase 2A/2B/3B/4A/4B logic-equivalence checks therefore fail (pre-existing, unrelated to 5A).",
+    "Markdown contract fixtures expect CRLF but current backend OCR response is LF — pre-existing Windows-env mismatch.",
+    "src/lib/profiles.ts has a doc-comment string `core/types.ts` (not an import). Deferred — does not affect compilation."
+  ],
+  "next_steps": [
+    "ops.ts -> common/utils precheck or move",
+    "table.ts -> common/utils precheck (coordinate with Template table column definition design)",
+    "export.ts -> template/utils precheck (Template save payload only)",
+    "OcrCanvasPane -> common/ui after core dependencies are reorganized",
+    "Template table column definition design precheck",
+    "TPL-95328E52 dirty impact precheck",
+    "Restore C:/OCR/OCR/backup/ legacy snapshots or retire stale logic-equivalence checks",
+    "TestWorkspace cleanup: defer until user confirms"
+  ]
+}

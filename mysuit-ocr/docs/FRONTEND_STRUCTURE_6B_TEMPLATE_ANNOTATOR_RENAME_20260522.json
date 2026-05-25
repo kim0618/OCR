@@ -1,0 +1,213 @@
+{
+  "task": "FRONTEND-STRUCTURE-6B-TEMPLATE-ANNOTATOR-RENAME",
+  "date": "2026-05-22",
+  "tool": "Claude Code (VSCode extension)",
+  "model": "Claude Opus 4.7 (1M context)",
+  "workdir": "mysuit-ocr/",
+  "purpose": "Template editor 전용 annotator rename: src/components/template/ui/OcrAnnotator.tsx -> src/components/template/ui/TemplateAnnotator.tsx. Default component identifier renamed (OcrAnnotator -> TemplateAnnotator). /ocr/page.tsx and /template/page.tsx dynamic-import path + local symbol + JSX tag corrected. props type/fields/JSX/state/handlers byte-identical. Route policy unchanged. Template table column definition policy explicitly not implemented.",
+  "backup_dir": "mysuit-ocr/backup/template_annotator_20260522_before_FRONTEND_STRUCTURE_6B_TEMPLATE_ANNOTATOR_RENAME",
+  "backups": [
+    "OcrAnnotator.tsx",
+    "app_ocr_page.tsx",
+    "app_template_page.tsx"
+  ],
+  "renamed": [
+    {
+      "from": "src/components/template/ui/OcrAnnotator.tsx",
+      "to": "src/components/template/ui/TemplateAnnotator.tsx",
+      "method": "git mv",
+      "body_byte_identical_except_default_export_identifier": true,
+      "default_export_identifier_change": { "before": "OcrAnnotator", "after": "TemplateAnnotator" }
+    }
+  ],
+  "modified_files": [
+    {
+      "file": "src/app/ocr/page.tsx",
+      "changes": [
+        { "kind": "dynamic_import_const_and_path", "before": "const OcrAnnotator = dynamic(() => import(\"../../components/template/ui/OcrAnnotator\"), ...)", "after": "const TemplateAnnotator = dynamic(() => import(\"../../components/template/ui/TemplateAnnotator\"), ...)" },
+        { "kind": "jsx_tag", "before": "<OcrAnnotator />", "after": "<TemplateAnnotator />" }
+      ]
+    },
+    {
+      "file": "src/app/template/page.tsx",
+      "changes": [
+        { "kind": "dynamic_import_const_and_path", "before": "const OcrAnnotator = dynamic(() => import(\"../../components/template/ui/OcrAnnotator\"), ...)", "after": "const TemplateAnnotator = dynamic(() => import(\"../../components/template/ui/TemplateAnnotator\"), ...)" },
+        { "kind": "jsx_tag", "before": "<OcrAnnotator ...>", "after": "<TemplateAnnotator ...>" }
+      ]
+    }
+  ],
+  "tmp_scripts": [
+    {
+      "path": "tmp/check_template_annotator_rename_6b.mjs",
+      "action": "created",
+      "checks_total": 34,
+      "result": "PASS"
+    },
+    {
+      "path": "tmp/check_template_workspace_move_4a.mjs",
+      "action": "accept_TemplateAnnotator_location",
+      "scope": "OcrAnnotator_untouched_path accepts components/ocr/, template/ui/OcrAnnotator.tsx, or template/ui/TemplateAnnotator.tsx"
+    },
+    {
+      "path": "tmp/check_template_editor_ui_move_4b.mjs",
+      "action": "auto_detect_annotator_location_relax_route_regex_accept_both_identifiers",
+      "scope": "NEW_ANNOTATOR resolves to either name; route_imports_new accept either filename; route_policy_intact accepts either JSX tag; annotator_export_name_preserved accepts either"
+    },
+    {
+      "path": "tmp/check_ocr_core_types_common_move_5a.mjs",
+      "action": "auto_detect_annotator_location",
+      "scope": "ANNOTATOR resolves to whichever of OcrAnnotator.tsx or TemplateAnnotator.tsx exists"
+    },
+    {
+      "path": "tmp/check_ocr_core_ops_common_move_5b.mjs",
+      "action": "auto_detect_annotator_location",
+      "scope": "ANNOTATOR resolves to whichever exists"
+    },
+    {
+      "path": "tmp/check_ocr_core_table_common_move_5c.mjs",
+      "action": "auto_detect_annotator_location",
+      "scope": "ANNOTATOR resolves to whichever exists"
+    },
+    {
+      "path": "tmp/check_template_export_payload_move_5d.mjs",
+      "action": "auto_detect_annotator_location_and_extend_normalizer",
+      "scope": "ANNOTATOR fallback + normalizer collapses OcrAnnotator <-> TemplateAnnotator (in addition to existing right-panel collapse + dynamic-import path stripping)"
+    },
+    {
+      "path": "tmp/check_filedropzone_common_ui_move_5e.mjs",
+      "action": "auto_detect_annotator_location",
+      "scope": "ANNOTATOR resolves to whichever exists"
+    },
+    {
+      "path": "tmp/check_ocr_canvas_pane_common_ui_move_5f.mjs",
+      "action": "auto_detect_annotator_location_and_extend_normalizer",
+      "scope": "ANNOTATOR fallback + normalizer collapses OcrAnnotator <-> TemplateAnnotator"
+    },
+    {
+      "path": "tmp/check_template_right_panel_rename_6a.mjs",
+      "action": "auto_detect_annotator_location_and_extend_normalizer",
+      "scope": "ANNOTATOR fallback + normalizer (already collapsed right-panel rename) additionally collapses OcrAnnotator <-> TemplateAnnotator"
+    }
+  ],
+  "fully_untouched": [
+    "src/common/ui/OcrCanvasPane.tsx",
+    "src/common/ui/FileDropzone.tsx",
+    "src/common/types/ocr.ts",
+    "src/common/utils/ocrCanvasOps.ts",
+    "src/common/utils/ocrTableRegion.ts",
+    "src/components/template/ui/TemplateRightPanel.tsx",
+    "src/components/template/TemplateWorkspace.tsx",
+    "src/components/template/UnstructuredBuilder.tsx",
+    "src/components/template/utils/buildTemplateExportPayload.ts",
+    "src/components/runocr/RunOcrWorkspace.tsx",
+    "src/components/runocr/ui/*",
+    "src/components/runocr/utils/*",
+    "src/components/test/TestWorkspace.tsx",
+    "src/components/test/core/*",
+    "src/components/common/AppProviders.tsx",
+    "src/components/common/RequireLogin.tsx",
+    "backend/OCR/parser",
+    "templates.json",
+    "fixtures"
+  ],
+  "current_dirty_diff_review": {
+    "OcrAnnotator_pre_6B_diff": "+5/-5 lines, import-paths only (5A: types -> common/types; 5D: export -> ../utils/buildTemplateExportPayload; 5F: OcrCanvasPane -> ../../../common/ui/OcrCanvasPane; 6A: OcrRightPanel -> TemplateRightPanel). No logic/JSX/state/handler changes. Safely absorbed by 6B rename-only scope.",
+    "other_dirty_files_in_scope_of_6B": false,
+    "git_reset_or_checkout_used": false
+  },
+  "route_policy_preserved": {
+    "ocr_page": {
+      "mode_branching_editor_vs_list": true,
+      "AppShell_present": true,
+      "Suspense_wrapper_present": true,
+      "TemplateWorkspace_list_mode_present": true
+    },
+    "template_page": {
+      "Mode_type_template_vs_unstructured": true,
+      "UnstructuredBuilder_branch_present": true,
+      "savedTemplates_rendering_present": true,
+      "tooltip_rendering_present": true
+    }
+  },
+  "rename_boundary": {
+    "new_annotator_file": "src/components/template/ui/TemplateAnnotator.tsx",
+    "default_export_TemplateAnnotator_preserved": true,
+    "residual_OcrAnnotator_identifier_in_new_file": 0,
+    "logic_equivalent_to_backup_after_rename_collapse": true,
+    "residual_OcrAnnotator_in_src_code_excluding_comments": 0,
+    "residual_old_path_strings_in_src_code_excluding_comments": 0,
+    "ocr_page_import_corrected": true,
+    "ocr_page_jsx_tag_corrected": true,
+    "ocr_page_logic_equivalent_to_backup_after_rename_collapse": true,
+    "template_page_import_corrected": true,
+    "template_page_jsx_tag_corrected": true,
+    "template_page_logic_equivalent_to_backup_after_rename_collapse": true,
+    "comment_only_OcrAnnotator_mentions_remaining_in_OcrCanvasPane": 3
+  },
+  "template_table_column_definition_policy_guard": {
+    "templateMapper_introduced": false,
+    "TemplateTableColumnEditor_introduced": false,
+    "blocklisted_new_policy_identifiers_in_new_annotator": [],
+    "blocklisted_identifiers_checked": [
+      "canonicalColumn",
+      "userConfirmed",
+      "columnMappingStatus",
+      "columnCandidates"
+    ]
+  },
+  "static_check_6b": {
+    "script": "tmp/check_template_annotator_rename_6b.mjs",
+    "result": "PASS",
+    "checks_total": 34,
+    "checks_passed": 34,
+    "skipped_backup_checks": 0,
+    "residuals": 0
+  },
+  "runners": [
+    { "id": 1, "cmd": "npm run typecheck", "result": "PASS", "exit": 0 },
+    { "id": 2, "cmd": "npm run build", "result": "PASS", "exit": 0 },
+    { "id": 3, "cmd": "node tmp/check_table_view_model_v1_fixtures_js.mjs", "result": "PASS", "exit": 0, "score": "8/8" },
+    { "id": 4, "cmd": "node tmp/check_clean_json_v1_fixtures_js.mjs", "result": "PASS", "exit": 0, "score": "9/9" },
+    { "id": 5, "cmd": "python tmp/codex_markdown_contract_fixture_lock.py --check --phase post_TEMPLATE_ANNOTATOR_RENAME_20260522", "result": "PASS", "exit": 0, "score": "6/6" },
+    { "id": 6, "cmd": "node tmp/check_runocr_formdata_keys_2a.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 7, "cmd": "node tmp/check_runocr_request_boundary_2b.mjs", "result": "PASS", "exit": 0 },
+    { "id": 8, "cmd": "node tmp/check_runocr_response_mapping_boundary_2c.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 9, "cmd": "node tmp/check_runocr_result_layout_boundary_3a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 10, "cmd": "node tmp/check_runocr_doc_comments_3b.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 11, "cmd": "node tmp/check_template_workspace_move_4a.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0, "notes": "post-6B ANNOTATOR fallback 적용" },
+    { "id": 12, "cmd": "node tmp/check_template_editor_ui_move_4b.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0, "notes": "post-6B NEW_ANNOTATOR 자동 탐지 + route 식별자/경로 양쪽 허용" },
+    { "id": 13, "cmd": "node tmp/check_ocr_core_types_common_move_5a.mjs", "result": "PASS", "exit": 0, "notes": "post-6B ANNOTATOR 자동 탐지" },
+    { "id": 14, "cmd": "node tmp/check_ocr_core_ops_common_move_5b.mjs", "result": "PASS", "exit": 0, "notes": "post-6B ANNOTATOR 자동 탐지" },
+    { "id": 15, "cmd": "node tmp/check_ocr_core_table_common_move_5c.mjs", "result": "PASS", "exit": 0, "notes": "post-6B ANNOTATOR 자동 탐지" },
+    { "id": 16, "cmd": "node tmp/check_template_export_payload_move_5d.mjs", "result": "PASS", "exit": 0, "notes": "post-6B ANNOTATOR 자동 탐지 + 식별자 collapse normalizer" },
+    { "id": 17, "cmd": "node tmp/check_filedropzone_common_ui_move_5e.mjs", "result": "PASS", "exit": 0, "notes": "post-6B ANNOTATOR 자동 탐지" },
+    { "id": 18, "cmd": "node tmp/check_ocr_canvas_pane_common_ui_move_5f.mjs", "result": "PASS", "exit": 0, "notes": "post-6B ANNOTATOR 자동 탐지 + 식별자 collapse normalizer" },
+    { "id": 19, "cmd": "node tmp/check_template_right_panel_rename_6a.mjs", "result": "PASS", "exit": 0, "notes": "post-6B ANNOTATOR 자동 탐지 + 식별자 collapse normalizer" },
+    { "id": 20, "cmd": "node tmp/check_template_annotator_rename_6b.mjs", "result": "PASS", "exit": 0, "score": "34/34" },
+    { "id": 21, "cmd": "node tmp/check_validation_baseline_repair_1a.mjs", "result": "PASS", "exit": 0 }
+  ],
+  "typecheck_build": {
+    "typecheck": { "cmd": "npm run typecheck", "exit": 0, "result": "PASS" },
+    "build": { "cmd": "npm run build", "exit": 0, "result": "PASS" }
+  },
+  "logs": {
+    "stdout": "ocr-server/logs/codex_FRONTEND_STRUCTURE_6B_TEMPLATE_ANNOTATOR_RENAME.out.log",
+    "stderr": "ocr-server/logs/codex_FRONTEND_STRUCTURE_6B_TEMPLATE_ANNOTATOR_RENAME.err.log"
+  },
+  "known_stderr_noise": [
+    "ESLint: nextVitals is not iterable (build exit 0, non-blocking)"
+  ],
+  "remaining_issues": [
+    "Historical backup files for phases 2A/2B/3B/4A/4B remain absent; those checks continue to use the PASS_WITH_SKIPPED_BACKUP verdict and skip logic-equivalence comparison. Not caused by 6B.",
+    "src/common/ui/OcrCanvasPane.tsx has 3 doc-comment mentions of 'OcrAnnotator' (lines 46/229/859). Protected file per task instruction; 6B check excludes comments from residual scan. Future cosmetic cleanup candidate.",
+    "src/lib/profiles.ts contains a doc-comment substring 'core/types.ts' (not an import). Cosmetic cleanup deferred."
+  ],
+  "next_steps": [
+    "Template structure close-out report (cumulative summary of 4A->4B->5A->5B->5C->5D->5E->5F->6A->6B Template-domain consolidation, final directory snapshot)",
+    "Template table column definition design precheck (canonical column mapping, user-confirmation state, save payload transformation)",
+    "TPL-95328E52 dirty impact precheck",
+    "src/lib/profiles.ts doc-comment cleanup",
+    "src/common/ui/OcrCanvasPane.tsx doc-comment cleanup micro-step (rewrite 'OcrAnnotator' -> 'TemplateAnnotator' or domain-neutral phrasing)",
+    "TestWorkspace cleanup: defer until user confirms"
+  ]
+}

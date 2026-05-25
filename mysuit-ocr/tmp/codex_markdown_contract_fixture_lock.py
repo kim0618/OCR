@@ -436,7 +436,7 @@ def validate_markdown(markdown: str, case: dict[str, Any], meta: dict[str, Any])
 # Markdown fixtures.
 #
 # Comparison policy:
-#   - LF-strict (no CRLF normalization)
+#   - EOL-normalized comparison (CRLF/LF/CR are normalized to LF)
 #   - "Exact string equality modulo OCR processing_time":
 #     The "- 처리 시간: **NN.NNs**" line is non-deterministic across OCR runs
 #     (varies even for the same input). Both sides are normalized to "**X.XXs**"
@@ -450,8 +450,12 @@ import re as _re_check
 _PROCESSING_TIME_PATTERN = _re_check.compile(r"(- 처리 시간: \*\*)\d+\.\d+(s\*\*)")
 
 
+def _normalize_eol(text: str) -> str:
+    return text.replace("\r\n", "\n").replace("\r", "\n")
+
+
 def _normalize_for_compare(text: str) -> str:
-    return _PROCESSING_TIME_PATTERN.sub(r"\1X.XX\2", text)
+    return _normalize_eol(_PROCESSING_TIME_PATTERN.sub(r"\1X.XX\2", text))
 
 
 def compute_first_diff(actual: str, expected: str) -> dict[str, Any] | None:
@@ -538,6 +542,7 @@ def check_fixtures(api_url: str, templates: list[dict[str, Any]]) -> list[dict[s
                 "actualContainsCRLF": "\r\n" in actual_md,
                 "expectedContainsCRLF": "\r\n" in expected_md,
                 "processingTimeNormalizedForCompare": True,
+                "eolNormalizedForCompare": True,
                 "diff": diff,
                 "status": "PASS" if equal else "FAIL",
             })

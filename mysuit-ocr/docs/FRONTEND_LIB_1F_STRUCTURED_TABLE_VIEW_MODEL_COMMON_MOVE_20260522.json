@@ -1,0 +1,178 @@
+{
+  "task": "FRONTEND-LIB-1F-STRUCTURED-TABLE-VIEW-MODEL-COMMON-MOVE",
+  "date": "2026-05-22",
+  "tool": "Claude Code (VSCode extension)",
+  "model": "Claude Opus 4.7 (1M context)",
+  "workdir": "mysuit-ocr/",
+  "purpose": "src/lib 해체 LIB-1 sixth micro-step: src/lib/structuredTableViewModel.ts -> src/common/utils/structuredTableViewModel.ts (move only; body byte-identical; OcrResultPanel import-path correction + table_view_model v1 fixture runner HELPER_SRC update). No new src/lib temp dependency introduced. table_view_model v1 fixture untouched and not rebaked. Other src/lib files NOT moved.",
+  "backup_dir": "mysuit-ocr/backup/lib_structured_table_view_model_20260522_before_FRONTEND_LIB_1F_STRUCTURED_TABLE_VIEW_MODEL_COMMON_MOVE",
+  "backups": [
+    "structuredTableViewModel.ts",
+    "OcrResultPanel.tsx",
+    "check_table_view_model_v1_fixtures_js.mjs"
+  ],
+  "moved": [
+    {
+      "from": "src/lib/structuredTableViewModel.ts",
+      "to": "src/common/utils/structuredTableViewModel.ts",
+      "method": "git mv",
+      "body_byte_identical": true,
+      "self_import_changes": "none — no @/ imports in this file"
+    }
+  ],
+  "modified_import_paths": [
+    { "file": "src/components/runocr/ui/OcrResultPanel.tsx", "before": "@/lib/structuredTableViewModel", "after": "@/common/utils/structuredTableViewModel" },
+    { "file": "tmp/check_table_view_model_v1_fixtures_js.mjs", "kind": "HELPER_SRC path", "before": "path.join(ROOT, \"src\", \"lib\", \"structuredTableViewModel.ts\")", "after": "path.join(ROOT, \"src\", \"common\", \"utils\", \"structuredTableViewModel.ts\")" }
+  ],
+  "tmp_scripts": [
+    {
+      "path": "tmp/check_lib_structured_table_view_model_common_move_1f.mjs",
+      "action": "created",
+      "checks_total": 22,
+      "result": "PASS"
+    },
+    {
+      "path": "tmp/check_lib_ocr_result_formatters_common_move_1a.mjs",
+      "action": "drop_structuredTableViewModel_from_sibling_guard",
+      "scope": "1F legitimately moved the file; list entry removed."
+    },
+    {
+      "path": "tmp/check_lib_invoice_field_labels_common_move_1b.mjs",
+      "action": "drop_structuredTableViewModel_from_sibling_guard",
+      "scope": "same pattern as 1A patch"
+    },
+    {
+      "path": "tmp/check_lib_markdown_report_builder_common_move_1c.mjs",
+      "action": "drop_structuredTableViewModel_from_sibling_guard",
+      "scope": "same pattern as 1A patch"
+    },
+    {
+      "path": "tmp/check_lib_clean_json_builder_common_move_1d.mjs",
+      "action": "drop_structuredTableViewModel_from_sibling_guard",
+      "scope": "same pattern as 1A patch"
+    },
+    {
+      "path": "tmp/check_lib_invoice_table_display_common_move_1e.mjs",
+      "action": "drop_structuredTableViewModel_from_sibling_guard",
+      "scope": "same pattern as 1A patch"
+    }
+  ],
+  "fully_untouched": [
+    "src/lib/bizNumber.ts",
+    "src/lib/autofillEngine.ts",
+    "src/lib/historyStore.ts",
+    "src/lib/imageStore.ts",
+    "src/lib/profiles.ts",
+    "src/lib/restoreProfileStore.ts",
+    "src/lib/groundTruthStore.ts",
+    "src/lib/testsets.ts",
+    "src/common/ui/OcrCanvasPane.tsx",
+    "src/common/ui/FileDropzone.tsx",
+    "src/common/types/ocr.ts",
+    "src/common/utils/ocrCanvasOps.ts",
+    "src/common/utils/ocrTableRegion.ts",
+    "src/common/utils/ocrResultFormatters.ts",
+    "src/common/utils/invoiceFieldLabels.ts",
+    "src/common/utils/markdownReportBuilder.ts",
+    "src/common/utils/cleanJsonBuilder.ts",
+    "src/common/utils/invoiceTableDisplay.ts",
+    "src/components/template/ui/TemplateAnnotator.tsx",
+    "src/components/template/ui/TemplateRightPanel.tsx",
+    "src/components/template/utils/buildTemplateExportPayload.ts",
+    "src/components/runocr/RunOcrWorkspace.tsx",
+    "src/components/runocr/utils/*",
+    "src/components/test/TestWorkspace.tsx",
+    "src/components/test/core/*",
+    "src/components/history/DetailHistoryView.tsx",
+    "tmp/fixtures/table_view_model_v1/*",
+    "tmp/fixtures/clean_json_v1/*",
+    "tmp/fixtures/markdown_v1/*",
+    "backend/OCR/parser",
+    "templates.json"
+  ],
+  "common_utils_boundary": {
+    "file": "src/common/utils/structuredTableViewModel.ts",
+    "imports_components_star": false,
+    "imports_react": false,
+    "imports_react_dom": false,
+    "uses_window_or_document_or_localStorage": false,
+    "imports_any_at_lib_module": false,
+    "references_invoiceTableDisplay": false,
+    "logic_equivalent_to_backup": true,
+    "required_export_preserved": "buildStructuredTableViewModel",
+    "residual_old_lib_imports_in_src_code": 0
+  },
+  "table_view_model_fixture_untouched": {
+    "fixture_dir": "tmp/fixtures/table_view_model_v1",
+    "fixture_dir_modified_in_this_step": false,
+    "fixture_rebake_executed": false,
+    "runner_verdict": "PASS 8/8 (post-1F HELPER_SRC update)"
+  },
+  "test_workspace_untouched": {
+    "TestWorkspace_modified": false,
+    "test_core_dir_modified": false,
+    "TestWorkspace_imported_structuredTableViewModel_pre_or_post": false
+  },
+  "static_check_1f": {
+    "script": "tmp/check_lib_structured_table_view_model_common_move_1f.mjs",
+    "result": "PASS",
+    "checks_total": 22,
+    "checks_passed": 22,
+    "skipped_backup_checks": 0,
+    "residuals": 0
+  },
+  "runners": [
+    { "id": 1, "cmd": "npm run typecheck", "result": "PASS", "exit": 0 },
+    { "id": 2, "cmd": "npm run build", "result": "PASS", "exit": 0 },
+    { "id": 3, "cmd": "node tmp/check_table_view_model_v1_fixtures_js.mjs", "result": "PASS", "exit": 0, "score": "8/8" },
+    { "id": 4, "cmd": "node tmp/check_clean_json_v1_fixtures_js.mjs", "result": "PASS", "exit": 0, "score": "9/9" },
+    { "id": 5, "cmd": "python tmp/codex_markdown_contract_fixture_lock.py --check --phase post_LIB_STRUCTURED_TABLE_VIEW_MODEL_COMMON_MOVE_20260522", "result": "PASS", "exit": 0, "score": "6/6" },
+    { "id": 6, "cmd": "node tmp/check_runocr_formdata_keys_2a.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 7, "cmd": "node tmp/check_runocr_request_boundary_2b.mjs", "result": "PASS", "exit": 0 },
+    { "id": 8, "cmd": "node tmp/check_runocr_response_mapping_boundary_2c.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 9, "cmd": "node tmp/check_runocr_result_layout_boundary_3a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 10, "cmd": "node tmp/check_runocr_doc_comments_3b.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 11, "cmd": "node tmp/check_template_workspace_move_4a.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 12, "cmd": "node tmp/check_template_editor_ui_move_4b.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 13, "cmd": "node tmp/check_template_right_panel_rename_6a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 14, "cmd": "node tmp/check_template_annotator_rename_6b.mjs", "result": "PASS", "exit": 0 },
+    { "id": 15, "cmd": "node tmp/check_ocr_core_types_common_move_5a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 16, "cmd": "node tmp/check_ocr_core_ops_common_move_5b.mjs", "result": "PASS", "exit": 0 },
+    { "id": 17, "cmd": "node tmp/check_ocr_core_table_common_move_5c.mjs", "result": "PASS", "exit": 0 },
+    { "id": 18, "cmd": "node tmp/check_template_export_payload_move_5d.mjs", "result": "PASS", "exit": 0 },
+    { "id": 19, "cmd": "node tmp/check_filedropzone_common_ui_move_5e.mjs", "result": "PASS", "exit": 0 },
+    { "id": 20, "cmd": "node tmp/check_ocr_canvas_pane_common_ui_move_5f.mjs", "result": "PASS", "exit": 0 },
+    { "id": 21, "cmd": "node tmp/check_lib_ocr_result_formatters_common_move_1a.mjs", "result": "PASS", "exit": 0, "notes": "sibling 가드 structuredTableViewModel 제거" },
+    { "id": 22, "cmd": "node tmp/check_lib_invoice_field_labels_common_move_1b.mjs", "result": "PASS", "exit": 0, "notes": "sibling 가드 structuredTableViewModel 제거" },
+    { "id": 23, "cmd": "node tmp/check_lib_markdown_report_builder_common_move_1c.mjs", "result": "PASS", "exit": 0, "notes": "sibling 가드 structuredTableViewModel 제거" },
+    { "id": 24, "cmd": "node tmp/check_lib_clean_json_builder_common_move_1d.mjs", "result": "PASS", "exit": 0, "notes": "sibling 가드 structuredTableViewModel 제거" },
+    { "id": 25, "cmd": "node tmp/check_lib_invoice_table_display_common_move_1e.mjs", "result": "PASS", "exit": 0, "notes": "sibling 가드 structuredTableViewModel 제거" },
+    { "id": 26, "cmd": "node tmp/check_lib_structured_table_view_model_common_move_1f.mjs", "result": "PASS", "exit": 0, "score": "22/22" },
+    { "id": 27, "cmd": "node tmp/check_validation_baseline_repair_1a.mjs", "result": "PASS", "exit": 0 }
+  ],
+  "typecheck_build": {
+    "typecheck": { "cmd": "npm run typecheck", "exit": 0, "result": "PASS" },
+    "build": { "cmd": "npm run build", "exit": 0, "result": "PASS" }
+  },
+  "logs": {
+    "stdout": "ocr-server/logs/codex_FRONTEND_LIB_1F_STRUCTURED_TABLE_VIEW_MODEL_COMMON_MOVE.out.log",
+    "stderr": "ocr-server/logs/codex_FRONTEND_LIB_1F_STRUCTURED_TABLE_VIEW_MODEL_COMMON_MOVE.err.log"
+  },
+  "known_stderr_noise": [
+    "ESLint: nextVitals is not iterable (build exit 0, non-blocking)"
+  ],
+  "remaining_issues": [
+    "Historical backup files for phases 2A/2B/3B/4A/4B remain absent; those checks continue to use the PASS_WITH_SKIPPED_BACKUP verdict and skip logic-equivalence comparison. Not caused by 1F.",
+    "common/utils/ocrResultFormatters.ts still imports @/lib/autofillEngine (type-only) from 1A; follow-up LIB phase will resolve this remaining temp src/lib dependency.",
+    "src/components/runocr/ui/OcrResultPanel.tsx line 12 has a doc-comment mention of '@/lib/structuredTableViewModel'. Cosmetic, not an import.",
+    "src/lib/profiles.ts contains a doc-comment substring 'core/types.ts' (not an import). Cosmetic cleanup deferred."
+  ],
+  "next_steps": [
+    "bizNumber move pending TestWorkspace impact precheck",
+    "autofillEngine -> common/utils precheck (resolves the remaining 1A type-only temp dep; broad runtime usage requires separate phase)",
+    "profiles / imageStore / historyStore / restoreProfileStore / groundTruthStore / testsets: per-file precheck before any move",
+    "components/common residual cleanup precheck (AppProviders, RequireLogin)",
+    "history/restore structural cleanup precheck",
+    "TestWorkspace structural cleanup: defer until user confirms"
+  ]
+}

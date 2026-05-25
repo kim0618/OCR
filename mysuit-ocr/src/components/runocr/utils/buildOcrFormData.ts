@@ -18,7 +18,7 @@
  *   check (tmp/check_runocr_formdata_keys_2a.mjs) 와 backend 측 contract
  *   동시 검증 필요.
  */
-import type { Region } from "../../ocr/core/types";
+import type { Region } from "../../../common/types/ocr";
 
 /**
  * buildOcrFormData 의 입력. backend FormData append 조건을 그대로 표현한다.

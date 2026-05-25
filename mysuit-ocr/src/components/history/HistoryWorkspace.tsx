@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { useUi } from "../common/AppProviders";
-import api from "@/lib/axios";
-import CreateHistoryPopup, { type HistoryPopupForm } from "./popup/CreateHistoryPopup";
-import EditHistoryPopup, { type HistoryPopupRow } from "./popup/EditHistoryPopup";
-import DetailHistoryView from "./DetailHistoryView";
-import { readHistoryListWithFallback, readHistoryDetailWithFallback, deleteHistoryRun, clearHistoryRuns, hydrateHistoryRecordImages, type RunStatus, type HistoryRunRecord } from "@/lib/historyStore";
+import { useUi } from "../layout/AppProviders";
+import api from "@/common/api/axios";
+import CreateHistoryPopup, { type HistoryPopupForm } from "./ui/CreateHistoryPopup";
+import EditHistoryPopup, { type HistoryPopupRow } from "./ui/EditHistoryPopup";
+import DetailHistoryView from "./ui/DetailHistoryView";
+import { readHistoryListWithFallback, readHistoryDetailWithFallback, deleteHistoryRun, clearHistoryRuns, hydrateHistoryRecordImages, type RunStatus, type HistoryRunRecord } from "@/common/storage/historyStore";
 
 type HistoryRow = HistoryPopupRow & { status?: RunStatus };
 

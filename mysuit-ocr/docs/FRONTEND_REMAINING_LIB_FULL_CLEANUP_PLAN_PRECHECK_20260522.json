@@ -1,0 +1,1369 @@
+{
+  "generatedAt": "2026-05-23T11:32:15.243161+00:00",
+  "codeModified": false,
+  "remainingLibFiles": [
+    "src/lib/theme.ts",
+    "src/lib/login.ts",
+    "src/lib/axios.ts",
+    "src/lib/groundTruthStore.ts",
+    "src/lib/restoreProfileStore.ts",
+    "src/lib/testsets.ts",
+    "src/lib/profiles.ts",
+    "src/lib/autofillEngine.ts"
+  ],
+  "missingFromSpec": [
+    "src/lib/version.ts"
+  ],
+  "fileAnalyses": [
+    {
+      "currentPath": "src/lib/theme.ts",
+      "presentOnDisk": true,
+      "lineCount": 42,
+      "mainResponsibility": "useTheme() React hook: persists light/dark theme in localStorage and applies data-theme attribute on document.documentElement.",
+      "exportsKey": [
+        "useTheme"
+      ],
+      "importsSummary": [
+        "react"
+      ],
+      "pureUtil": false,
+      "storagePersistence": false,
+      "configConstants": false,
+      "apiClient": false,
+      "featureSpecific": "layout",
+      "reactDependency": true,
+      "browserApiDependency": true,
+      "localStorageDependency": true,
+      "backendDependency": false,
+      "componentsImport": false,
+      "commonImport": false,
+      "testWorkspaceImpact": "NO_TEST_IMPACT",
+      "testCoreImpact": false,
+      "targetCandidates": [
+        "src/components/layout/utils/theme.ts",
+        "src/common/ui/theme.ts"
+      ],
+      "recommendedTarget": "src/components/layout/utils/theme.ts",
+      "movePhase": "LIB-CLEAN-1-THEME-MOVE",
+      "risk": "LOW",
+      "prerequisites": [],
+      "notes": "Single consumer (components/layout/Header.tsx). React hook so it cannot live in src/common/utils (utils boundary forbids React); layout/utils is the cleanest owner.",
+      "staticCheckScript": "tmp/check_theme_layout_utils_move_th1.mjs",
+      "staticCheckKeyItems": [
+        "new file exists, old file absent",
+        "no @/lib/theme residual",
+        "Header.tsx import path corrected, logic byte-equivalent vs backup",
+        "useTheme export preserved"
+      ],
+      "importedByCount": 1,
+      "importedByFiles": [
+        {
+          "importer": "src/components/layout/Header.tsx",
+          "form": "alias",
+          "symbols": [
+            "useTheme"
+          ],
+          "typeOnly": false,
+          "feature": "layout",
+          "testWorkspace": false,
+          "testCore": false,
+          "importPathFixNeeded": true
+        }
+      ]
+    },
+    {
+      "currentPath": "src/lib/login.ts",
+      "presentOnDisk": true,
+      "lineCount": 59,
+      "mainResponsibility": "localStorage helpers for the login token blob (getStoredLogin, saveLogin, clearLogin, hasStoredLogin) plus the StoredLogin type. Shared between login feature, layout Header (logout), axios interceptor (auth header).",
+      "exportsKey": [
+        "StoredLogin (type)",
+        "getStoredLogin",
+        "saveLogin",
+        "clearLogin",
+        "hasStoredLogin"
+      ],
+      "importsSummary": [],
+      "pureUtil": false,
+      "storagePersistence": true,
+      "configConstants": false,
+      "apiClient": false,
+      "featureSpecific": "shared",
+      "reactDependency": false,
+      "browserApiDependency": true,
+      "localStorageDependency": true,
+      "backendDependency": false,
+      "componentsImport": false,
+      "commonImport": false,
+      "testWorkspaceImpact": "NO_TEST_IMPACT",
+      "testCoreImpact": false,
+      "targetCandidates": [
+        "src/common/storage/login.ts",
+        "src/components/login/utils/login.ts"
+      ],
+      "recommendedTarget": "src/common/storage/login.ts",
+      "movePhase": "LIB-CLEAN-2-LOGIN-STORAGE-MOVE",
+      "risk": "LOW",
+      "prerequisites": [],
+      "notes": "Shared persistence helper, not login-UI-local: axios + layout Header also consume it. Belongs in src/common/storage/ next to imageStore/historyStore (consistent persistence boundary).",
+      "staticCheckScript": "tmp/check_login_common_storage_move_lg1.mjs",
+      "staticCheckKeyItems": [
+        "new file exists, old file absent",
+        "5 importers updated (axios, RequireLogin, LoginWorkspace, layout/Header; axios is the sibling pre-move)",
+        "STORAGE_KEY 'mysuit_ocr_login' preserved",
+        "no @/lib/login residual",
+        "no components/* import inside login.ts"
+      ],
+      "importedByCount": 4,
+      "importedByFiles": [
+        {
+          "importer": "src/components/layout/Header.tsx",
+          "form": "alias",
+          "symbols": [
+            "clearLogin",
+            "getStoredLogin",
+            "StoredLogin"
+          ],
+          "typeOnly": false,
+          "feature": "layout",
+          "testWorkspace": false,
+          "testCore": false,
+          "importPathFixNeeded": true
+        },
+        {
+          "importer": "src/components/login/LoginWorkspace.tsx",
+          "form": "alias",
+          "symbols": [
+            "clearLogin",
+            "saveLogin"
+          ],
+          "typeOnly": false,
+          "feature": "login",
+          "testWorkspace": false,
+          "testCore": false,
+          "importPathFixNeeded": true
+        },
+        {
+          "importer": "src/components/login/ui/RequireLogin.tsx",
+          "form": "alias",
+          "symbols": [
+            "hasStoredLogin"
+          ],
+          "typeOnly": false,
+          "feature": "login",
+          "testWorkspace": false,
+          "testCore": false,
+          "importPathFixNeeded": true
+        },
+        {
+          "importer": "src/lib/axios.ts",
+          "form": "sibling",
+          "symbols": [
+            "clearLogin",
+            "getStoredLogin"
+          ],
+          "typeOnly": false,
+          "feature": "lib",
+          "testWorkspace": false,
+          "testCore": false,
+          "importPathFixNeeded": true
+        }
+      ]
+    },
+    {
+      "currentPath": "src/lib/axios.ts",
+      "presentOnDisk": true,
+      "lineCount": 137,
+      "mainResponsibility": "Singleton axios HTTP client with /api baseURL, Bearer auth interceptor sourced from login.ts, 401/loginCode=9999 redirect to /login, and an ApiResponseError class.",
+      "exportsKey": [
+        "default api",
+        "ApiResponseError"
+      ],
+      "importsSummary": [
+        "axios",
+        "./login"
+      ],
+      "pureUtil": false,
+      "storagePersistence": false,
+      "configConstants": false,
+      "apiClient": true,
+      "featureSpecific": "shared",
+      "reactDependency": false,
+      "browserApiDependency": true,
+      "localStorageDependency": false,
+      "backendDependency": true,
+      "componentsImport": false,
+      "commonImport": false,
+      "testWorkspaceImpact": "NO_TEST_IMPACT",
+      "testCoreImpact": false,
+      "targetCandidates": [
+        "src/common/api/axios.ts"
+      ],
+      "recommendedTarget": "src/common/api/axios.ts",
+      "movePhase": "LIB-CLEAN-3-AXIOS-API-MOVE",
+      "risk": "LOW",
+      "prerequisites": [
+        "LIB-CLEAN-2-LOGIN-STORAGE-MOVE (so axios imports @/common/storage/login)"
+      ],
+      "notes": "Introduces src/common/api/ as a new domain subdir. 2 direct importers (HistoryWorkspace, LoginWorkspace). The relative sibling ./login import gets rewritten to @/common/storage/login.",
+      "staticCheckScript": "tmp/check_axios_common_api_move_api1.mjs",
+      "staticCheckKeyItems": [
+        "new file exists, old file absent",
+        "default + ApiResponseError exports preserved",
+        "imports @/common/storage/login (sibling form ./login no longer valid)",
+        "HistoryWorkspace + LoginWorkspace import path corrected",
+        "no @/lib/axios residual"
+      ],
+      "importedByCount": 2,
+      "importedByFiles": [
+        {
+          "importer": "src/components/history/HistoryWorkspace.tsx",
+          "form": "alias",
+          "symbols": [
+            "default as api"
+          ],
+          "typeOnly": false,
+          "feature": "history",
+          "testWorkspace": false,
+          "testCore": false,
+          "importPathFixNeeded": true
+        },
+        {
+          "importer": "src/components/login/LoginWorkspace.tsx",
+          "form": "alias",
+          "symbols": [
+            "ApiResponseError",
+            "default as api"
+          ],
+          "typeOnly": false,
+          "feature": "login",
+          "testWorkspace": false,
+          "testCore": false,
+          "importPathFixNeeded": true
+        }
+      ]
+    },
+    {
+      "currentPath": "src/lib/groundTruthStore.ts",
+      "presentOnDisk": true,
+      "lineCount": 97,
+      "mainResponsibility": "localStorage store keyed by (template, file) holding 'corrected fields → ground-truth' map. Provides getGroundTruth, saveGroundTruth, clearGroundTruth, compareToGt, compositeKey, fieldKey.",
+      "exportsKey": [
+        "GroundTruthMap (type)",
+        "MatchStatus (type)",
+        "compositeKey",
+        "fieldKey",
+        "getGroundTruth",
+        "saveGroundTruth",
+        "clearGroundTruth",
+        "compareToGt"
+      ],
+      "importsSummary": [
+        "type HistoryOutputField from @/common/storage/historyStore"
+      ],
+      "pureUtil": false,
+      "storagePersistence": true,
+      "configConstants": false,
+      "apiClient": false,
+      "featureSpecific": "shared",
+      "reactDependency": false,
+      "browserApiDependency": true,
+      "localStorageDependency": true,
+      "backendDependency": false,
+      "componentsImport": false,
+      "commonImport": true,
+      "testWorkspaceImpact": "NO_TEST_IMPACT",
+      "testCoreImpact": false,
+      "targetCandidates": [
+        "src/common/storage/groundTruthStore.ts",
+        "src/components/test/utils/groundTruthStore.ts"
+      ],
+      "recommendedTarget": "src/common/storage/groundTruthStore.ts",
+      "movePhase": "LIB-CLEAN-4-GROUND-TRUTH-STORE-MOVE",
+      "risk": "LOW",
+      "prerequisites": [],
+      "notes": "Consumed by runocr (OcrResultPanel) and history (DetailHistoryView) — NOT by test feature directly. Pairs naturally with the existing historyStore.ts in common/storage.",
+      "staticCheckScript": "tmp/check_ground_truth_store_common_storage_move_gt1.mjs",
+      "staticCheckKeyItems": [
+        "new file exists, old file absent",
+        "STORAGE_KEY 'mysuit_ocr_groundtruth' preserved",
+        "8 exports preserved",
+        "2 importers updated (DetailHistoryView, OcrResultPanel)",
+        "no @/lib/groundTruthStore residual",
+        "no components/* import"
+      ],
+      "importedByCount": 2,
+      "importedByFiles": [
+        {
+          "importer": "src/components/history/ui/DetailHistoryView.tsx",
+          "form": "alias",
+          "symbols": [
+            "getGroundTruth",
+            "saveGroundTruth",
+            "fieldKey",
+            "compareToGt",
+            "GroundTruthMap",
+            "MatchStatus"
+          ],
+          "typeOnly": false,
+          "feature": "history",
+          "testWorkspace": false,
+          "testCore": false,
+          "importPathFixNeeded": true
+        },
+        {
+          "importer": "src/components/runocr/ui/OcrResultPanel.tsx",
+          "form": "alias",
+          "symbols": [
+            "getGroundTruth",
+            "compareToGt",
+            "fieldKey"
+          ],
+          "typeOnly": false,
+          "feature": "runocr",
+          "testWorkspace": false,
+          "testCore": false,
+          "importPathFixNeeded": true
+        }
+      ]
+    },
+    {
+      "currentPath": "src/lib/restoreProfileStore.ts",
+      "presentOnDisk": true,
+      "lineCount": 86,
+      "mainResponsibility": "localStorage CRUD for restore profiles (businessNo+partyType keyed). Provides RestoreProfile types, AUTOFILL_TO_PROFILE_KEY map, PROFILE_FIELD_LABELS, isMeaninglessValue and read/write/find/sort helpers.",
+      "exportsKey": [
+        "RESTORE_PROFILE_STORAGE_KEY",
+        "RestoreProfile (type)",
+        "RestoreProfileFields (type)",
+        "AUTOFILL_TO_PROFILE_KEY",
+        "PROFILE_FIELD_LABELS",
+        "isMeaninglessValue",
+        "readRestoreProfiles",
+        "writeRestoreProfiles",
+        "deleteRestoreProfile",
+        "findRestoreProfile",
+        "sortRestoreProfilesByUpdatedAt"
+      ],
+      "importsSummary": [],
+      "pureUtil": false,
+      "storagePersistence": true,
+      "configConstants": false,
+      "apiClient": false,
+      "featureSpecific": "shared",
+      "reactDependency": false,
+      "browserApiDependency": true,
+      "localStorageDependency": true,
+      "backendDependency": false,
+      "componentsImport": false,
+      "commonImport": false,
+      "testWorkspaceImpact": "NO_TEST_IMPACT",
+      "testCoreImpact": false,
+      "targetCandidates": [
+        "src/common/storage/restoreProfileStore.ts",
+        "src/components/autorestore/utils/restoreProfileStore.ts"
+      ],
+      "recommendedTarget": "src/common/storage/restoreProfileStore.ts",
+      "movePhase": "LIB-CLEAN-5-RESTORE-PROFILE-STORE-MOVE",
+      "risk": "LOW",
+      "prerequisites": [],
+      "notes": "Used by autorestore (AutoRestoreWorkspace), history (DetailHistoryView) and autofillEngine (sibling). Cross-feature persistence helper -> common/storage is the right home; autorestore/utils would force history+autofillEngine to import from autorestore feature.",
+      "staticCheckScript": "tmp/check_restore_profile_store_common_storage_move_rp1.mjs",
+      "staticCheckKeyItems": [
+        "new file exists, old file absent",
+        "RESTORE_PROFILE_STORAGE_KEY preserved",
+        "11 exports preserved",
+        "3 importers updated (autofillEngine [sibling], AutoRestoreWorkspace, DetailHistoryView)",
+        "no @/lib/restoreProfileStore residual"
+      ],
+      "importedByCount": 3,
+      "importedByFiles": [
+        {
+          "importer": "src/components/autorestore/AutoRestoreWorkspace.tsx",
+          "form": "alias",
+          "symbols": [
+            "RestoreProfile",
+            "RestoreProfileFields",
+            "PROFILE_FIELD_LABELS",
+            "readRestoreProfiles",
+            "deleteRestoreProfile",
+            "sortRestoreProfilesByUpdatedAt"
+          ],
+          "typeOnly": false,
+          "feature": "autorestore",
+          "testWorkspace": false,
+          "testCore": false,
+          "importPathFixNeeded": true
+        },
+        {
+          "importer": "src/components/history/ui/DetailHistoryView.tsx",
+          "form": "alias",
+          "symbols": [
+            "RestoreProfile",
+            "RestoreProfileFields",
+            "AUTOFILL_TO_PROFILE_KEY",
+            "PROFILE_FIELD_LABELS",
+            "isMeaninglessValue",
+            "readRestoreProfiles",
+            "writeRestoreProfiles"
+          ],
+          "typeOnly": false,
+          "feature": "history",
+          "testWorkspace": false,
+          "testCore": false,
+          "importPathFixNeeded": true
+        },
+        {
+          "importer": "src/lib/autofillEngine.ts",
+          "form": "sibling",
+          "symbols": [
+            "readRestoreProfiles",
+            "isMeaninglessValue"
+          ],
+          "typeOnly": false,
+          "feature": "lib",
+          "testWorkspace": false,
+          "testCore": false,
+          "importPathFixNeeded": true
+        }
+      ]
+    },
+    {
+      "currentPath": "src/lib/testsets.ts",
+      "presentOnDisk": true,
+      "lineCount": 217,
+      "mainResponsibility": "Static dataset registry (TESTSETS array, DATASET_FOLDERS map, getTestset) + manifest item / invoice profile type definitions.",
+      "exportsKey": [
+        "TESTSETS",
+        "DATASET_FOLDERS",
+        "getTestset",
+        "TestsetMeta",
+        "DocumentType",
+        "QualityTag",
+        "Difficulty",
+        "InvoiceSubType",
+        "AmountProfile",
+        "PartyProfile",
+        "TableProfile",
+        "InvoiceTableExpectedDisplayColumn",
+        "InvoiceProfile",
+        "DatasetRole",
+        "DatasetStatus",
+        "ExpectedStatus",
+        "ManifestItem",
+        "DatasetManifest"
+      ],
+      "importsSummary": [],
+      "pureUtil": true,
+      "storagePersistence": false,
+      "configConstants": true,
+      "apiClient": false,
+      "featureSpecific": "shared",
+      "reactDependency": false,
+      "browserApiDependency": false,
+      "localStorageDependency": false,
+      "backendDependency": false,
+      "componentsImport": false,
+      "commonImport": false,
+      "testWorkspaceImpact": "TEST_WORKSPACE_DIRECT_IMPORT_BUT_SAFE_IMPORT_PATH_ONLY",
+      "testCoreImpact": false,
+      "targetCandidates": [
+        "src/common/config/testsets.ts",
+        "src/components/test/data/testsets.ts"
+      ],
+      "recommendedTarget": "src/common/config/testsets.ts",
+      "movePhase": "LIB-CLEAN-6-TESTSETS-COMMON-CONFIG-MOVE",
+      "risk": "MEDIUM",
+      "prerequisites": [],
+      "notes": "6 importers across features and API routes (4 app/api/*, profiles sibling, TestWorkspace). Putting it in components/test/data would force 4 SSR API routes to import from a feature dir; src/common/config/ is the cleaner shared home. Introduces src/common/config/ as a new domain subdir.",
+      "staticCheckScript": "tmp/check_testsets_common_config_move_ts1.mjs",
+      "staticCheckKeyItems": [
+        "new file exists, old file absent",
+        "TESTSETS / DATASET_FOLDERS / getTestset preserved",
+        "all manifest type exports preserved",
+        "6 importers updated (api/ground-truth, api/test-images, api/autofill-cache, api/ocr-cache, TestWorkspace, profiles [sibling])",
+        "TestWorkspace logic byte-equivalent after import-strip",
+        "no @/lib/testsets residual",
+        "no components/* import inside testsets.ts"
+      ],
+      "importedByCount": 6,
+      "importedByFiles": [
+        {
+          "importer": "src/app/api/autofill-cache/route.ts",
+          "form": "alias",
+          "symbols": [
+            "DATASET_FOLDERS"
+          ],
+          "typeOnly": false,
+          "feature": "app",
+          "testWorkspace": false,
+          "testCore": false,
+          "importPathFixNeeded": true
+        },
+        {
+          "importer": "src/app/api/ground-truth/route.ts",
+          "form": "alias",
+          "symbols": [
+            "DATASET_FOLDERS"
+          ],
+          "typeOnly": false,
+          "feature": "app",
+          "testWorkspace": false,
+          "testCore": false,
+          "importPathFixNeeded": true
+        },
+        {
+          "importer": "src/app/api/ocr-cache/route.ts",
+          "form": "alias",
+          "symbols": [
+            "DATASET_FOLDERS"
+          ],
+          "typeOnly": false,
+          "feature": "app",
+          "testWorkspace": false,
+          "testCore": false,
+          "importPathFixNeeded": true
+        },
+        {
+          "importer": "src/app/api/test-images/route.ts",
+          "form": "alias",
+          "symbols": [
+            "TESTSETS",
+            "getTestset"
+          ],
+          "typeOnly": false,
+          "feature": "app",
+          "testWorkspace": false,
+          "testCore": false,
+          "importPathFixNeeded": true
+        },
+        {
+          "importer": "src/components/test/TestWorkspace.tsx",
+          "form": "alias",
+          "symbols": [
+            "DatasetManifest",
+            "ManifestItem",
+            "InvoiceProfile",
+            "AmountProfile",
+            "PartyProfile",
+            "TableProfile"
+          ],
+          "typeOnly": true,
+          "feature": "test",
+          "testWorkspace": true,
+          "testCore": false,
+          "importPathFixNeeded": true
+        },
+        {
+          "importer": "src/lib/profiles.ts",
+          "form": "sibling",
+          "symbols": [
+            "DocumentType"
+          ],
+          "typeOnly": true,
+          "feature": "lib",
+          "testWorkspace": false,
+          "testCore": false,
+          "importPathFixNeeded": true
+        }
+      ]
+    },
+    {
+      "currentPath": "src/lib/profiles.ts",
+      "presentOnDisk": true,
+      "lineCount": 484,
+      "mainResponsibility": "Test-tab profile policy: receipt/finance/document/none profile resolution, column definitions, table profile policies, KPI family resolution. Pure types + constants + helpers.",
+      "exportsKey": [
+        "Profile/Overlay/ProfileResolution",
+        "ReceiptFieldKey/FinanceFieldKey/DocumentFieldKey/CardOverlayFieldKey/MedicalOverlayFieldKey/AnyFieldKey",
+        "FINANCE_TIER1_FIELDS/FINANCE_TIER2_FIELDS/DOCUMENT_PARTY_FIELDS",
+        "RECEIPT_COLUMNS/FINANCE_COLUMNS/DOCUMENT_COLUMNS/CARD_OVERLAY_COLUMNS/MEDICAL_OVERLAY_COLUMNS",
+        "resolveProfile/getBaseColumns/getOverlayColumns/getVisibleColumns/isNotApplicableField",
+        "isFinanceTier1/isProfileMismatchSuspected",
+        "KpiFamily/resolveKpiFamily",
+        "TableColumnKey/GridModeRecommendation/TableColumnMeta/TABLE_COLUMN_META/TableProfilePolicyResult/getExpectedTableColumns/TableRowsValidation"
+      ],
+      "importsSummary": [
+        "type DocumentType from ./testsets"
+      ],
+      "pureUtil": true,
+      "storagePersistence": false,
+      "configConstants": true,
+      "apiClient": false,
+      "featureSpecific": "test",
+      "reactDependency": false,
+      "browserApiDependency": false,
+      "localStorageDependency": false,
+      "backendDependency": false,
+      "componentsImport": false,
+      "commonImport": false,
+      "testWorkspaceImpact": "TEST_WORKSPACE_DIRECT_IMPORT_BUT_SAFE_IMPORT_PATH_ONLY",
+      "testCoreImpact": false,
+      "targetCandidates": [
+        "src/components/test/utils/profiles.ts",
+        "src/common/config/profiles.ts"
+      ],
+      "recommendedTarget": "src/components/test/utils/profiles.ts",
+      "movePhase": "LIB-CLEAN-7-PROFILES-TEST-UTILS-MOVE",
+      "risk": "LOW",
+      "prerequisites": [
+        "LIB-CLEAN-6-TESTSETS-COMMON-CONFIG-MOVE (profiles type-imports DocumentType from testsets sibling)"
+      ],
+      "notes": "Single consumer: TestWorkspace (2 import lines). Test-feature-specific policy file. Its only dep is testsets (DocumentType type-only); after LIB-CLEAN-6 the sibling ./testsets becomes @/common/config/testsets.",
+      "staticCheckScript": "tmp/check_profiles_test_utils_move_pr1.mjs",
+      "staticCheckKeyItems": [
+        "new file exists, old file absent",
+        "all profile policy exports preserved",
+        "TestWorkspace 2 import lines corrected",
+        "TestWorkspace logic byte-equivalent after import-strip",
+        "imports @/common/config/testsets (no @/lib/testsets / no sibling)",
+        "no @/lib/profiles residual"
+      ],
+      "importedByCount": 1,
+      "importedByFiles": [
+        {
+          "importer": "src/components/test/TestWorkspace.tsx",
+          "form": "alias",
+          "symbols": [
+            "resolveProfile",
+            "FINANCE_COLUMNS",
+            "FINANCE_TIER1_FIELDS",
+            "DOCUMENT_COLUMNS",
+            "DOCUMENT_PARTY_FIELDS",
+            "isNotApplicableField",
+            "getExpectedTableColumns",
+            "TABLE_COLUMN_META",
+            "TableColumnKey",
+            "TableRowsValidation",
+            "GridModeRecommendation"
+          ],
+          "typeOnly": true,
+          "feature": "test",
+          "testWorkspace": true,
+          "testCore": false,
+          "importPathFixNeeded": true
+        }
+      ]
+    },
+    {
+      "currentPath": "src/lib/autofillEngine.ts",
+      "presentOnDisk": true,
+      "lineCount": 485,
+      "mainResponsibility": "Autofill business logic: candidate collection from history + restore profiles, suggestion building/sorting, apply-to-fields. Pure logic; no React/DOM/storage of its own — it composes the storage stores.",
+      "exportsKey": [
+        "AutofillSource/OutputValueSource/AutofillAction (types)",
+        "AutofillSuggestion/AutofillCandidateRecord/AutofillRunStatus/AutofillRunSummary/AutofillFieldMetadata/AutofillOutputFieldLike",
+        "AUTOFILLABLE_FIELDS",
+        "normalizeAutofillFieldKey/isAutofillableField/isEmptyOcrValue",
+        "canAutoApplySuggestion/sortAutofillSuggestions",
+        "collectInternalAutofillCandidates/buildAutofillSuggestionsFromCandidates",
+        "applyAutofillToOutputFields/suggestionsForHistoryField"
+      ],
+      "importsSummary": [
+        "@/common/utils/bizNumber",
+        "@/common/storage/historyStore",
+        "./restoreProfileStore"
+      ],
+      "pureUtil": true,
+      "storagePersistence": false,
+      "configConstants": false,
+      "apiClient": false,
+      "featureSpecific": "shared",
+      "reactDependency": false,
+      "browserApiDependency": false,
+      "localStorageDependency": false,
+      "backendDependency": false,
+      "componentsImport": false,
+      "commonImport": true,
+      "testWorkspaceImpact": "NO_TEST_IMPACT",
+      "testCoreImpact": false,
+      "targetCandidates": [
+        "src/common/utils/autofillEngine.ts"
+      ],
+      "recommendedTarget": "src/common/utils/autofillEngine.ts",
+      "movePhase": "LIB-CLEAN-9-AUTOFILL-ENGINE-MOVE",
+      "risk": "MEDIUM",
+      "prerequisites": [
+        "LIB-CLEAN-5-RESTORE-PROFILE-STORE-MOVE (sibling ./restoreProfileStore becomes @/common/storage/restoreProfileStore)",
+        "LIB-CLEAN-8-AUTOFILL-ENGINE-PRECHECK (impact assessment of 4 importers + cycle/storage check)"
+      ],
+      "notes": "Largest remaining file (485 lines). 4 importers: RunOcrWorkspace (runtime), DetailHistoryView (runtime), OcrResultPanel (type-only), common/utils/ocrResultFormatters (type-only — the lingering 1A dependency). Moving it dissolves the lingering @/lib/autofillEngine import in common/utils. Pure logic so common/utils is appropriate (no React/DOM).",
+      "staticCheckScript": "tmp/check_autofill_engine_common_utils_move_af1.mjs",
+      "staticCheckKeyItems": [
+        "new file exists, old file absent",
+        "all 18+ exports preserved",
+        "imports @/common/utils/bizNumber, @/common/storage/historyStore, @/common/storage/restoreProfileStore (sibling form gone)",
+        "4 importers updated (RunOcrWorkspace, DetailHistoryView, OcrResultPanel, common/utils/ocrResultFormatters)",
+        "no @/lib/autofillEngine residual ANYWHERE in src (including common/utils)",
+        "no components/* import",
+        "no React / DOM / localStorage / fetch import"
+      ],
+      "importedByCount": 4,
+      "importedByFiles": [
+        {
+          "importer": "src/common/utils/ocrResultFormatters.ts",
+          "form": "alias",
+          "symbols": [
+            "AutofillAction",
+            "OutputValueSource"
+          ],
+          "typeOnly": true,
+          "feature": "common",
+          "testWorkspace": false,
+          "testCore": false,
+          "importPathFixNeeded": true
+        },
+        {
+          "importer": "src/components/history/ui/DetailHistoryView.tsx",
+          "form": "alias",
+          "symbols": [
+            "normalizeAutofillFieldKey"
+          ],
+          "typeOnly": false,
+          "feature": "history",
+          "testWorkspace": false,
+          "testCore": false,
+          "importPathFixNeeded": true
+        },
+        {
+          "importer": "src/components/runocr/RunOcrWorkspace.tsx",
+          "form": "alias",
+          "symbols": [
+            "applyAutofillToOutputFields",
+            "buildAutofillSuggestionsFromCandidates",
+            "canAutoApplySuggestion",
+            "collectInternalAutofillCandidates",
+            "isAutofillableField",
+            "isEmptyOcrValue",
+            "normalizeAutofillFieldKey",
+            "suggestionsForHistoryField",
+            "AutofillRunSummary",
+            "AutofillSuggestion"
+          ],
+          "typeOnly": false,
+          "feature": "runocr",
+          "testWorkspace": false,
+          "testCore": false,
+          "importPathFixNeeded": true
+        },
+        {
+          "importer": "src/components/runocr/ui/OcrResultPanel.tsx",
+          "form": "alias",
+          "symbols": [
+            "AutofillAction",
+            "AutofillRunSummary",
+            "AutofillSuggestion",
+            "OutputValueSource"
+          ],
+          "typeOnly": true,
+          "feature": "runocr",
+          "testWorkspace": false,
+          "testCore": false,
+          "importPathFixNeeded": true
+        }
+      ]
+    },
+    {
+      "currentPath": "src/lib/version.ts",
+      "presentOnDisk": false,
+      "lineCount": 0,
+      "mainResponsibility": "Originally listed as a candidate but no longer present on disk.",
+      "exportsKey": [],
+      "importsSummary": [],
+      "pureUtil": false,
+      "storagePersistence": false,
+      "configConstants": false,
+      "apiClient": false,
+      "featureSpecific": "",
+      "reactDependency": false,
+      "browserApiDependency": false,
+      "localStorageDependency": false,
+      "backendDependency": false,
+      "componentsImport": false,
+      "commonImport": false,
+      "testWorkspaceImpact": "NO_TEST_IMPACT",
+      "testCoreImpact": false,
+      "targetCandidates": [],
+      "recommendedTarget": "N/A (file does not exist)",
+      "movePhase": "N/A",
+      "risk": "N/A",
+      "prerequisites": [],
+      "notes": "Listed by the precheck spec but src/lib/version.ts is absent on disk. Likely removed in a prior cleanup and re-listed by mistake. No phase needed; no impact on the LIB close-out plan.",
+      "staticCheckScript": "N/A",
+      "staticCheckKeyItems": [],
+      "importedByCount": 0,
+      "importedByFiles": []
+    }
+  ],
+  "targetRecommendations": [
+    {
+      "currentPath": "src/lib/theme.ts",
+      "recommendedTarget": "src/components/layout/utils/theme.ts",
+      "targetCandidates": [
+        "src/components/layout/utils/theme.ts",
+        "src/common/ui/theme.ts"
+      ],
+      "movePhase": "LIB-CLEAN-1-THEME-MOVE",
+      "risk": "LOW",
+      "prerequisites": []
+    },
+    {
+      "currentPath": "src/lib/login.ts",
+      "recommendedTarget": "src/common/storage/login.ts",
+      "targetCandidates": [
+        "src/common/storage/login.ts",
+        "src/components/login/utils/login.ts"
+      ],
+      "movePhase": "LIB-CLEAN-2-LOGIN-STORAGE-MOVE",
+      "risk": "LOW",
+      "prerequisites": []
+    },
+    {
+      "currentPath": "src/lib/axios.ts",
+      "recommendedTarget": "src/common/api/axios.ts",
+      "targetCandidates": [
+        "src/common/api/axios.ts"
+      ],
+      "movePhase": "LIB-CLEAN-3-AXIOS-API-MOVE",
+      "risk": "LOW",
+      "prerequisites": [
+        "LIB-CLEAN-2-LOGIN-STORAGE-MOVE (so axios imports @/common/storage/login)"
+      ]
+    },
+    {
+      "currentPath": "src/lib/groundTruthStore.ts",
+      "recommendedTarget": "src/common/storage/groundTruthStore.ts",
+      "targetCandidates": [
+        "src/common/storage/groundTruthStore.ts",
+        "src/components/test/utils/groundTruthStore.ts"
+      ],
+      "movePhase": "LIB-CLEAN-4-GROUND-TRUTH-STORE-MOVE",
+      "risk": "LOW",
+      "prerequisites": []
+    },
+    {
+      "currentPath": "src/lib/restoreProfileStore.ts",
+      "recommendedTarget": "src/common/storage/restoreProfileStore.ts",
+      "targetCandidates": [
+        "src/common/storage/restoreProfileStore.ts",
+        "src/components/autorestore/utils/restoreProfileStore.ts"
+      ],
+      "movePhase": "LIB-CLEAN-5-RESTORE-PROFILE-STORE-MOVE",
+      "risk": "LOW",
+      "prerequisites": []
+    },
+    {
+      "currentPath": "src/lib/testsets.ts",
+      "recommendedTarget": "src/common/config/testsets.ts",
+      "targetCandidates": [
+        "src/common/config/testsets.ts",
+        "src/components/test/data/testsets.ts"
+      ],
+      "movePhase": "LIB-CLEAN-6-TESTSETS-COMMON-CONFIG-MOVE",
+      "risk": "MEDIUM",
+      "prerequisites": []
+    },
+    {
+      "currentPath": "src/lib/profiles.ts",
+      "recommendedTarget": "src/components/test/utils/profiles.ts",
+      "targetCandidates": [
+        "src/components/test/utils/profiles.ts",
+        "src/common/config/profiles.ts"
+      ],
+      "movePhase": "LIB-CLEAN-7-PROFILES-TEST-UTILS-MOVE",
+      "risk": "LOW",
+      "prerequisites": [
+        "LIB-CLEAN-6-TESTSETS-COMMON-CONFIG-MOVE (profiles type-imports DocumentType from testsets sibling)"
+      ]
+    },
+    {
+      "currentPath": "src/lib/autofillEngine.ts",
+      "recommendedTarget": "src/common/utils/autofillEngine.ts",
+      "targetCandidates": [
+        "src/common/utils/autofillEngine.ts"
+      ],
+      "movePhase": "LIB-CLEAN-9-AUTOFILL-ENGINE-MOVE",
+      "risk": "MEDIUM",
+      "prerequisites": [
+        "LIB-CLEAN-5-RESTORE-PROFILE-STORE-MOVE (sibling ./restoreProfileStore becomes @/common/storage/restoreProfileStore)",
+        "LIB-CLEAN-8-AUTOFILL-ENGINE-PRECHECK (impact assessment of 4 importers + cycle/storage check)"
+      ]
+    }
+  ],
+  "movePhases": [
+    {
+      "phase": "LIB-CLEAN-1-THEME-MOVE",
+      "primaryFile": "theme.ts",
+      "notes": "Single-importer React hook leaf — fastest win."
+    },
+    {
+      "phase": "LIB-CLEAN-2-LOGIN-STORAGE-MOVE",
+      "primaryFile": "login.ts",
+      "notes": "Foundation for axios; pure localStorage leaf."
+    },
+    {
+      "phase": "LIB-CLEAN-3-AXIOS-API-MOVE",
+      "primaryFile": "axios.ts",
+      "notes": "After login.ts so the sibling ./login import becomes @/common/storage/login."
+    },
+    {
+      "phase": "LIB-CLEAN-4-GROUND-TRUTH-STORE-MOVE",
+      "primaryFile": "groundTruthStore.ts",
+      "notes": "Persistence leaf; only 2 importers."
+    },
+    {
+      "phase": "LIB-CLEAN-5-RESTORE-PROFILE-STORE-MOVE",
+      "primaryFile": "restoreProfileStore.ts",
+      "notes": "Persistence leaf; clears autofillEngine sibling dep."
+    },
+    {
+      "phase": "LIB-CLEAN-6-TESTSETS-COMMON-CONFIG-MOVE",
+      "primaryFile": "testsets.ts",
+      "notes": "Introduces src/common/config/; 6 importers (4 API routes + TestWorkspace + profiles sibling)."
+    },
+    {
+      "phase": "LIB-CLEAN-7-PROFILES-TEST-UTILS-MOVE",
+      "primaryFile": "profiles.ts",
+      "notes": "After testsets move so ./testsets sibling resolves to @/common/config/testsets."
+    },
+    {
+      "phase": "LIB-CLEAN-8-AUTOFILL-ENGINE-PRECHECK",
+      "primaryFile": "autofillEngine.ts",
+      "notes": "Read-only impact analysis on the largest remaining file."
+    },
+    {
+      "phase": "LIB-CLEAN-9-AUTOFILL-ENGINE-MOVE",
+      "primaryFile": "autofillEngine.ts",
+      "notes": "Actual move; also resolves the lingering @/lib/autofillEngine import in common/utils/ocrResultFormatters."
+    },
+    {
+      "phase": "LIB-CLEAN-10-SRC-LIB-ABSENT-CHECK",
+      "primaryFile": "(none)",
+      "notes": "Final guard: src/lib must be empty or removed; no @/lib/* import anywhere in src; typecheck/build PASS."
+    }
+  ],
+  "testWorkspaceImpact": [
+    {
+      "currentPath": "src/lib/theme.ts",
+      "testWorkspaceImpact": "NO_TEST_IMPACT",
+      "testCoreImpact": false
+    },
+    {
+      "currentPath": "src/lib/login.ts",
+      "testWorkspaceImpact": "NO_TEST_IMPACT",
+      "testCoreImpact": false
+    },
+    {
+      "currentPath": "src/lib/axios.ts",
+      "testWorkspaceImpact": "NO_TEST_IMPACT",
+      "testCoreImpact": false
+    },
+    {
+      "currentPath": "src/lib/groundTruthStore.ts",
+      "testWorkspaceImpact": "NO_TEST_IMPACT",
+      "testCoreImpact": false
+    },
+    {
+      "currentPath": "src/lib/restoreProfileStore.ts",
+      "testWorkspaceImpact": "NO_TEST_IMPACT",
+      "testCoreImpact": false
+    },
+    {
+      "currentPath": "src/lib/testsets.ts",
+      "testWorkspaceImpact": "TEST_WORKSPACE_DIRECT_IMPORT_BUT_SAFE_IMPORT_PATH_ONLY",
+      "testCoreImpact": false
+    },
+    {
+      "currentPath": "src/lib/profiles.ts",
+      "testWorkspaceImpact": "TEST_WORKSPACE_DIRECT_IMPORT_BUT_SAFE_IMPORT_PATH_ONLY",
+      "testCoreImpact": false
+    },
+    {
+      "currentPath": "src/lib/autofillEngine.ts",
+      "testWorkspaceImpact": "NO_TEST_IMPACT",
+      "testCoreImpact": false
+    }
+  ],
+  "staticCheckPlan": [
+    {
+      "phase": "LIB-CLEAN-1-THEME-MOVE",
+      "script": "tmp/check_theme_layout_utils_move_th1.mjs",
+      "keyItems": [
+        "new file exists, old file absent",
+        "no @/lib/theme residual",
+        "Header.tsx import path corrected, logic byte-equivalent vs backup",
+        "useTheme export preserved"
+      ]
+    },
+    {
+      "phase": "LIB-CLEAN-2-LOGIN-STORAGE-MOVE",
+      "script": "tmp/check_login_common_storage_move_lg1.mjs",
+      "keyItems": [
+        "new file exists, old file absent",
+        "5 importers updated (axios, RequireLogin, LoginWorkspace, layout/Header; axios is the sibling pre-move)",
+        "STORAGE_KEY 'mysuit_ocr_login' preserved",
+        "no @/lib/login residual",
+        "no components/* import inside login.ts"
+      ]
+    },
+    {
+      "phase": "LIB-CLEAN-3-AXIOS-API-MOVE",
+      "script": "tmp/check_axios_common_api_move_api1.mjs",
+      "keyItems": [
+        "new file exists, old file absent",
+        "default + ApiResponseError exports preserved",
+        "imports @/common/storage/login (sibling form ./login no longer valid)",
+        "HistoryWorkspace + LoginWorkspace import path corrected",
+        "no @/lib/axios residual"
+      ]
+    },
+    {
+      "phase": "LIB-CLEAN-4-GROUND-TRUTH-STORE-MOVE",
+      "script": "tmp/check_ground_truth_store_common_storage_move_gt1.mjs",
+      "keyItems": [
+        "new file exists, old file absent",
+        "STORAGE_KEY 'mysuit_ocr_groundtruth' preserved",
+        "8 exports preserved",
+        "2 importers updated (DetailHistoryView, OcrResultPanel)",
+        "no @/lib/groundTruthStore residual",
+        "no components/* import"
+      ]
+    },
+    {
+      "phase": "LIB-CLEAN-5-RESTORE-PROFILE-STORE-MOVE",
+      "script": "tmp/check_restore_profile_store_common_storage_move_rp1.mjs",
+      "keyItems": [
+        "new file exists, old file absent",
+        "RESTORE_PROFILE_STORAGE_KEY preserved",
+        "11 exports preserved",
+        "3 importers updated (autofillEngine [sibling], AutoRestoreWorkspace, DetailHistoryView)",
+        "no @/lib/restoreProfileStore residual"
+      ]
+    },
+    {
+      "phase": "LIB-CLEAN-6-TESTSETS-COMMON-CONFIG-MOVE",
+      "script": "tmp/check_testsets_common_config_move_ts1.mjs",
+      "keyItems": [
+        "new file exists, old file absent",
+        "TESTSETS / DATASET_FOLDERS / getTestset preserved",
+        "all manifest type exports preserved",
+        "6 importers updated (api/ground-truth, api/test-images, api/autofill-cache, api/ocr-cache, TestWorkspace, profiles [sibling])",
+        "TestWorkspace logic byte-equivalent after import-strip",
+        "no @/lib/testsets residual",
+        "no components/* import inside testsets.ts"
+      ]
+    },
+    {
+      "phase": "LIB-CLEAN-7-PROFILES-TEST-UTILS-MOVE",
+      "script": "tmp/check_profiles_test_utils_move_pr1.mjs",
+      "keyItems": [
+        "new file exists, old file absent",
+        "all profile policy exports preserved",
+        "TestWorkspace 2 import lines corrected",
+        "TestWorkspace logic byte-equivalent after import-strip",
+        "imports @/common/config/testsets (no @/lib/testsets / no sibling)",
+        "no @/lib/profiles residual"
+      ]
+    },
+    {
+      "phase": "LIB-CLEAN-9-AUTOFILL-ENGINE-MOVE",
+      "script": "tmp/check_autofill_engine_common_utils_move_af1.mjs",
+      "keyItems": [
+        "new file exists, old file absent",
+        "all 18+ exports preserved",
+        "imports @/common/utils/bizNumber, @/common/storage/historyStore, @/common/storage/restoreProfileStore (sibling form gone)",
+        "4 importers updated (RunOcrWorkspace, DetailHistoryView, OcrResultPanel, common/utils/ocrResultFormatters)",
+        "no @/lib/autofillEngine residual ANYWHERE in src (including common/utils)",
+        "no components/* import",
+        "no React / DOM / localStorage / fetch import"
+      ]
+    },
+    {
+      "phase": "LIB-CLEAN-10-SRC-LIB-ABSENT-CHECK",
+      "script": "tmp/check_src_lib_absent_final.mjs",
+      "keyItems": [
+        "src/lib directory empty or removed",
+        "no @/lib/* import anywhere in src",
+        "typecheck/build PASS"
+      ]
+    }
+  ],
+  "srcLibCloseDecision": "CAN_CLOSE_LIB_AFTER_PLANNED_MOVES",
+  "dirty": [
+    " M docs/FRONTEND_CLEANUP_1B_JS_CLEAN_JSON_FIXTURE_RUNNER_20260521.json",
+    " M docs/FRONTEND_CLEANUP_1B_JS_CLEAN_JSON_FIXTURE_RUNNER_20260521.md",
+    " M docs/FRONTEND_CLEANUP_3D2_RUNNER_RESULT_20260521.json",
+    " M src/app/autorestore/page.tsx",
+    " M src/app/history/page.tsx",
+    " M src/app/layout.tsx",
+    " M src/app/ocr/page.tsx",
+    " M src/app/template/page.tsx",
+    "R  src/lib/historyStore.ts -> src/common/storage/historyStore.ts",
+    "R  src/lib/imageStore.ts -> src/common/storage/imageStore.ts",
+    "R  src/components/ocr/core/types.ts -> src/common/types/ocr.ts",
+    "R  src/components/common/FileDropzone.tsx -> src/common/ui/FileDropzone.tsx",
+    "RM src/components/ocr/OcrCanvasPane.tsx -> src/common/ui/OcrCanvasPane.tsx",
+    "R  src/lib/bizNumber.ts -> src/common/utils/bizNumber.ts",
+    "RM src/lib/cleanJsonBuilder.ts -> src/common/utils/cleanJsonBuilder.ts",
+    "R  src/lib/invoiceFieldLabels.ts -> src/common/utils/invoiceFieldLabels.ts",
+    "R  src/lib/invoiceTableDisplay.ts -> src/common/utils/invoiceTableDisplay.ts",
+    "RM src/lib/markdownReportBuilder.ts -> src/common/utils/markdownReportBuilder.ts",
+    "RM src/components/ocr/core/ops.ts -> src/common/utils/ocrCanvasOps.ts",
+    "RM src/lib/ocrResultFormatters.ts -> src/common/utils/ocrResultFormatters.ts",
+    "RM src/components/ocr/core/table.ts -> src/common/utils/ocrTableRegion.ts",
+    "R  src/lib/structuredTableViewModel.ts -> src/common/utils/structuredTableViewModel.ts",
+    " M src/components/autorestore/AutoRestoreWorkspace.tsx",
+    " M src/components/history/HistoryWorkspace.tsx",
+    "R  src/components/history/popup/CreateHistoryPopup.tsx -> src/components/history/ui/CreateHistoryPopup.tsx",
+    "RM src/components/history/DetailHistoryView.tsx -> src/components/history/ui/DetailHistoryView.tsx",
+    "R  src/components/history/popup/EditHistoryPopup.tsx -> src/components/history/ui/EditHistoryPopup.tsx",
+    "R  src/components/common/AppProviders.tsx -> src/components/layout/AppProviders.tsx",
+    " M src/components/login/LoginWorkspace.tsx",
+    "R  src/components/common/RequireLogin.tsx -> src/components/login/ui/RequireLogin.tsx",
+    " M src/components/runocr/RunOcrWorkspace.tsx",
+    " M src/components/runocr/ui/OcrDocViewer.tsx",
+    " M src/components/runocr/ui/OcrResultPanel.tsx",
+    " M src/components/runocr/utils/buildOcrFormData.ts",
+    " M src/components/template/TemplateWorkspace.tsx",
+    " M src/components/template/UnstructuredBuilder.tsx",
+    "RM src/components/template/ui/OcrAnnotator.tsx -> src/components/template/ui/TemplateAnnotator.tsx",
+    "RM src/components/template/ui/OcrRightPanel.tsx -> src/components/template/ui/TemplateRightPanel.tsx",
+    "RM src/components/ocr/core/export.ts -> src/components/template/utils/buildTemplateExportPayload.ts",
+    " M src/components/test/TestWorkspace.tsx",
+    " M src/components/test/core/autofill.ts",
+    " M src/components/test/core/extract.ts",
+    " M src/lib/autofillEngine.ts",
+    " M src/lib/groundTruthStore.ts",
+    " M tmp/check_clean_json_v1_fixtures_js.mjs",
+    " M tmp/check_runocr_doc_comments_3b.mjs",
+    " M tmp/check_runocr_formdata_keys_2a.mjs",
+    " M tmp/check_runocr_response_mapping_boundary_2c.mjs",
+    " M tmp/check_table_view_model_v1_fixtures_js.mjs",
+    " M tmp/check_template_editor_ui_move_4b.mjs",
+    " M tmp/check_template_workspace_move_4a.mjs",
+    " M tmp/codex_markdown_contract_fixture_lock.py",
+    " M ../ocr-server/data/review_log.jsonl",
+    " M ../ocr-server/data/templates.json",
+    "?? docs/FRONTEND_AUTORESTORE_TO_RESTORE_MAP_20260522.csv",
+    "?? docs/FRONTEND_AUTORESTORE_TO_RESTORE_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_AUTORESTORE_TO_RESTORE_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_BIZ_NUMBER_COMMON_MOVE_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_BIZ_NUMBER_COMMON_MOVE_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_BIZ_NUMBER_COMMON_MOVE_PRECHECK_MAP_20260522.csv",
+    "?? docs/FRONTEND_BZ_1_BIZ_NUMBER_COMMON_UTILS_MOVE_20260522.json",
+    "?? docs/FRONTEND_BZ_1_BIZ_NUMBER_COMMON_UTILS_MOVE_20260522.md",
+    "?? docs/FRONTEND_CC_1_APP_PROVIDERS_LAYOUT_MOVE_20260522.json",
+    "?? docs/FRONTEND_CC_1_APP_PROVIDERS_LAYOUT_MOVE_20260522.md",
+    "?? docs/FRONTEND_CC_2_REQUIRE_LOGIN_LOGIN_UI_MOVE_20260522.json",
+    "?? docs/FRONTEND_CC_2_REQUIRE_LOGIN_LOGIN_UI_MOVE_20260522.md",
+    "?? docs/FRONTEND_COMMON_STORAGE_BOUNDARY_MAP_20260522.csv",
+    "?? docs/FRONTEND_COMMON_STORAGE_BOUNDARY_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_COMMON_STORAGE_BOUNDARY_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_COMPONENTS_COMMON_ABSENT_CHECK_20260522.json",
+    "?? docs/FRONTEND_COMPONENTS_COMMON_ABSENT_CHECK_20260522.md",
+    "?? docs/FRONTEND_COMPONENTS_COMMON_OWNERSHIP_MAP_20260522.csv",
+    "?? docs/FRONTEND_COMPONENTS_COMMON_OWNERSHIP_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_COMPONENTS_COMMON_OWNERSHIP_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_CS_1_IMAGE_STORE_COMMON_STORAGE_MOVE_20260522.json",
+    "?? docs/FRONTEND_CS_1_IMAGE_STORE_COMMON_STORAGE_MOVE_20260522.md",
+    "?? docs/FRONTEND_CS_2_HISTORY_STORE_COMMON_STORAGE_MOVE_20260522.json",
+    "?? docs/FRONTEND_CS_2_HISTORY_STORE_COMMON_STORAGE_MOVE_20260522.md",
+    "?? docs/FRONTEND_DETAIL_HISTORY_VIEW_UI_MOVE_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_DETAIL_HISTORY_VIEW_UI_MOVE_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_DETAIL_HISTORY_VIEW_UI_MOVE_PRECHECK_MAP_20260522.csv",
+    "?? docs/FRONTEND_FILEDROPZONE_COMMON_UI_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_FILEDROPZONE_COMMON_UI_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_FILEDROPZONE_COMMON_UI_PRECHECK_MAP_20260522.csv",
+    "?? docs/FRONTEND_HISTORY_RESTORE_STRUCTURE_MAP_20260522.csv",
+    "?? docs/FRONTEND_HISTORY_RESTORE_STRUCTURE_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_HISTORY_RESTORE_STRUCTURE_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_HISTORY_STORE_OWNERSHIP_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_HISTORY_STORE_OWNERSHIP_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_HISTORY_STORE_OWNERSHIP_PRECHECK_MAP_20260522.csv",
+    "?? docs/FRONTEND_HR_1_HISTORY_POPUP_UI_MOVE_20260522.json",
+    "?? docs/FRONTEND_HR_1_HISTORY_POPUP_UI_MOVE_20260522.md",
+    "?? docs/FRONTEND_HR_2_DETAIL_HISTORY_VIEW_UI_MOVE_20260522.json",
+    "?? docs/FRONTEND_HR_2_DETAIL_HISTORY_VIEW_UI_MOVE_20260522.md",
+    "?? docs/FRONTEND_IMAGE_STORE_COMMON_STORAGE_MOVE_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_IMAGE_STORE_COMMON_STORAGE_MOVE_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_IMAGE_STORE_COMMON_STORAGE_MOVE_PRECHECK_MAP_20260522.csv",
+    "?? docs/FRONTEND_LIB_1A_OCR_RESULT_FORMATTERS_COMMON_MOVE_20260522.json",
+    "?? docs/FRONTEND_LIB_1A_OCR_RESULT_FORMATTERS_COMMON_MOVE_20260522.md",
+    "?? docs/FRONTEND_LIB_1B_INVOICE_FIELD_LABELS_COMMON_MOVE_20260522.json",
+    "?? docs/FRONTEND_LIB_1B_INVOICE_FIELD_LABELS_COMMON_MOVE_20260522.md",
+    "?? docs/FRONTEND_LIB_1C_MARKDOWN_REPORT_BUILDER_COMMON_MOVE_20260522.json",
+    "?? docs/FRONTEND_LIB_1C_MARKDOWN_REPORT_BUILDER_COMMON_MOVE_20260522.md",
+    "?? docs/FRONTEND_LIB_1D_CLEAN_JSON_BUILDER_COMMON_MOVE_20260522.json",
+    "?? docs/FRONTEND_LIB_1D_CLEAN_JSON_BUILDER_COMMON_MOVE_20260522.md",
+    "?? docs/FRONTEND_LIB_1E_INVOICE_TABLE_DISPLAY_COMMON_MOVE_20260522.json",
+    "?? docs/FRONTEND_LIB_1E_INVOICE_TABLE_DISPLAY_COMMON_MOVE_20260522.md",
+    "?? docs/FRONTEND_LIB_1F_STRUCTURED_TABLE_VIEW_MODEL_COMMON_MOVE_20260522.json",
+    "?? docs/FRONTEND_LIB_1F_STRUCTURED_TABLE_VIEW_MODEL_COMMON_MOVE_20260522.md",
+    "?? docs/FRONTEND_LIB_CLEAN_JSON_BUILDER_COMMON_MOVE_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_LIB_CLEAN_JSON_BUILDER_COMMON_MOVE_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_LIB_CLEAN_JSON_BUILDER_COMMON_MOVE_PRECHECK_MAP_20260522.csv",
+    "?? docs/FRONTEND_LIB_INVOICE_FIELD_LABELS_COMMON_MOVE_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_LIB_INVOICE_FIELD_LABELS_COMMON_MOVE_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_LIB_INVOICE_FIELD_LABELS_COMMON_MOVE_PRECHECK_MAP_20260522.csv",
+    "?? docs/FRONTEND_LIB_INVOICE_TABLE_DISPLAY_COMMON_MOVE_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_LIB_INVOICE_TABLE_DISPLAY_COMMON_MOVE_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_LIB_INVOICE_TABLE_DISPLAY_COMMON_MOVE_PRECHECK_MAP_20260522.csv",
+    "?? docs/FRONTEND_LIB_MARKDOWN_REPORT_BUILDER_COMMON_MOVE_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_LIB_MARKDOWN_REPORT_BUILDER_COMMON_MOVE_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_LIB_MARKDOWN_REPORT_BUILDER_COMMON_MOVE_PRECHECK_MAP_20260522.csv",
+    "?? docs/FRONTEND_LIB_OCR_RESULT_FORMATTERS_COMMON_MOVE_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_LIB_OCR_RESULT_FORMATTERS_COMMON_MOVE_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_LIB_OCR_RESULT_FORMATTERS_COMMON_MOVE_PRECHECK_MAP_20260522.csv",
+    "?? docs/FRONTEND_LIB_OWNERSHIP_MAP_20260522.csv",
+    "?? docs/FRONTEND_LIB_OWNERSHIP_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_LIB_OWNERSHIP_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_LIB_STRUCTURED_TABLE_VIEW_MODEL_COMMON_MOVE_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_LIB_STRUCTURED_TABLE_VIEW_MODEL_COMMON_MOVE_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_LIB_STRUCTURED_TABLE_VIEW_MODEL_COMMON_MOVE_PRECHECK_MAP_20260522.csv",
+    "?? docs/FRONTEND_OCR_CANVAS_PANE_COMMON_MOVE_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_OCR_CANVAS_PANE_COMMON_MOVE_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_OCR_CANVAS_PANE_COMMON_MOVE_PRECHECK_MAP_20260522.csv",
+    "?? docs/FRONTEND_OCR_CANVAS_PANE_SHARED_MAP_20260522.csv",
+    "?? docs/FRONTEND_OCR_CANVAS_PANE_SHARED_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_OCR_CANVAS_PANE_SHARED_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_OCR_CORE_EXPORT_TEMPLATE_UTIL_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_OCR_CORE_EXPORT_TEMPLATE_UTIL_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_OCR_CORE_EXPORT_TEMPLATE_UTIL_PRECHECK_MAP_20260522.csv",
+    "?? docs/FRONTEND_OCR_CORE_OPS_COMMON_MOVE_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_OCR_CORE_OPS_COMMON_MOVE_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_OCR_CORE_OPS_COMMON_MOVE_PRECHECK_MAP_20260522.csv",
+    "?? docs/FRONTEND_OCR_CORE_OWNERSHIP_MAP_20260522.csv",
+    "?? docs/FRONTEND_OCR_CORE_OWNERSHIP_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_OCR_CORE_OWNERSHIP_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_OCR_CORE_TABLE_COMMON_MOVE_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_OCR_CORE_TABLE_COMMON_MOVE_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_OCR_CORE_TABLE_COMMON_MOVE_PRECHECK_MAP_20260522.csv",
+    "?? docs/FRONTEND_STRUCTURE_5A_OCR_CORE_TYPES_COMMON_MOVE_20260522.json",
+    "?? docs/FRONTEND_STRUCTURE_5A_OCR_CORE_TYPES_COMMON_MOVE_20260522.md",
+    "?? docs/FRONTEND_STRUCTURE_5B_OCR_CORE_OPS_COMMON_MOVE_20260522.json",
+    "?? docs/FRONTEND_STRUCTURE_5B_OCR_CORE_OPS_COMMON_MOVE_20260522.md",
+    "?? docs/FRONTEND_STRUCTURE_5C_OCR_CORE_TABLE_COMMON_MOVE_20260522.json",
+    "?? docs/FRONTEND_STRUCTURE_5C_OCR_CORE_TABLE_COMMON_MOVE_20260522.md",
+    "?? docs/FRONTEND_STRUCTURE_5D_TEMPLATE_EXPORT_PAYLOAD_MOVE_20260522.json",
+    "?? docs/FRONTEND_STRUCTURE_5D_TEMPLATE_EXPORT_PAYLOAD_MOVE_20260522.md",
+    "?? docs/FRONTEND_STRUCTURE_5E_FILEDROPZONE_COMMON_UI_MOVE_20260522.json",
+    "?? docs/FRONTEND_STRUCTURE_5E_FILEDROPZONE_COMMON_UI_MOVE_20260522.md",
+    "?? docs/FRONTEND_STRUCTURE_5F_OCR_CANVAS_PANE_COMMON_UI_MOVE_20260522.json",
+    "?? docs/FRONTEND_STRUCTURE_5F_OCR_CANVAS_PANE_COMMON_UI_MOVE_20260522.md",
+    "?? docs/FRONTEND_STRUCTURE_6A_TEMPLATE_RIGHT_PANEL_RENAME_20260522.json",
+    "?? docs/FRONTEND_STRUCTURE_6A_TEMPLATE_RIGHT_PANEL_RENAME_20260522.md",
+    "?? docs/FRONTEND_STRUCTURE_6B_TEMPLATE_ANNOTATOR_RENAME_20260522.json",
+    "?? docs/FRONTEND_STRUCTURE_6B_TEMPLATE_ANNOTATOR_RENAME_20260522.md",
+    "?? docs/FRONTEND_TEMPLATE_ANNOTATOR_RENAME_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_TEMPLATE_ANNOTATOR_RENAME_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_TEMPLATE_ANNOTATOR_RENAME_PRECHECK_MAP_20260522.csv",
+    "?? docs/FRONTEND_TEMPLATE_RIGHT_PANEL_RENAME_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_TEMPLATE_RIGHT_PANEL_RENAME_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_TEMPLATE_RIGHT_PANEL_RENAME_PRECHECK_MAP_20260522.csv",
+    "?? docs/FRONTEND_VALIDATION_1A_BASELINE_REPAIR_20260522.json",
+    "?? docs/FRONTEND_VALIDATION_1A_BASELINE_REPAIR_20260522.md",
+    "?? docs/FRONTEND_VALIDATION_BASELINE_REPAIR_PRECHECK_20260522.json",
+    "?? docs/FRONTEND_VALIDATION_BASELINE_REPAIR_PRECHECK_20260522.md",
+    "?? docs/FRONTEND_VALIDATION_BASELINE_REPAIR_PRECHECK_MAP_20260522.csv",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_APP_PROVIDERS_LAYOUT_MOVE_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_APP_PROVIDERS_LAYOUT_MOVE_20260522_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_BIZ_NUMBER_COMMON_UTILS_MOVE_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_BIZ_NUMBER_COMMON_UTILS_MOVE_20260522_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_DETAIL_HISTORY_VIEW_UI_MOVE_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_DETAIL_HISTORY_VIEW_UI_MOVE_20260522_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_FILEDROPZONE_COMMON_UI_MOVE_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_FILEDROPZONE_COMMON_UI_MOVE_20260522_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_HISTORY_POPUP_UI_MOVE_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_HISTORY_POPUP_UI_MOVE_20260522_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_HISTORY_STORE_COMMON_STORAGE_MOVE_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_HISTORY_STORE_COMMON_STORAGE_MOVE_20260522_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_IMAGE_STORE_COMMON_STORAGE_MOVE_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_IMAGE_STORE_COMMON_STORAGE_MOVE_20260522_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_LIB_CLEAN_JSON_BUILDER_COMMON_MOVE_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_LIB_CLEAN_JSON_BUILDER_COMMON_MOVE_20260522_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_LIB_INVOICE_FIELD_LABELS_COMMON_MOVE_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_LIB_INVOICE_FIELD_LABELS_COMMON_MOVE_20260522_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_LIB_INVOICE_TABLE_DISPLAY_COMMON_MOVE_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_LIB_INVOICE_TABLE_DISPLAY_COMMON_MOVE_20260522_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_LIB_MARKDOWN_REPORT_BUILDER_COMMON_MOVE_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_LIB_MARKDOWN_REPORT_BUILDER_COMMON_MOVE_20260522_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_LIB_OCR_RESULT_FORMATTERS_COMMON_MOVE_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_LIB_OCR_RESULT_FORMATTERS_COMMON_MOVE_20260522_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_LIB_STRUCTURED_TABLE_VIEW_MODEL_COMMON_MOVE_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_LIB_STRUCTURED_TABLE_VIEW_MODEL_COMMON_MOVE_20260522_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_OCR_CANVAS_PANE_COMMON_UI_MOVE_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_OCR_CANVAS_PANE_COMMON_UI_MOVE_20260522_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_OCR_CORE_OPS_COMMON_MOVE_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_OCR_CORE_OPS_COMMON_MOVE_20260522_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_OCR_CORE_TABLE_COMMON_MOVE_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_OCR_CORE_TABLE_COMMON_MOVE_20260522_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_OCR_CORE_TYPES_COMMON_MOVE_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_OCR_CORE_TYPES_COMMON_MOVE_20260522_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_REQUIRE_LOGIN_LOGIN_UI_MOVE_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_REQUIRE_LOGIN_LOGIN_UI_MOVE_20260522_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_TEMPLATE_ANNOTATOR_RENAME_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_TEMPLATE_ANNOTATOR_RENAME_20260522_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_TEMPLATE_EXPORT_PAYLOAD_MOVE_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_TEMPLATE_EXPORT_PAYLOAD_MOVE_20260522_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_TEMPLATE_RIGHT_PANEL_RENAME_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_TEMPLATE_RIGHT_PANEL_RENAME_20260522_20260521.md",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_VALIDATION_BASELINE_REPAIR_20260522_20260521.json",
+    "?? docs/MARKDOWN_V1_FIXTURE_CHECK_post_VALIDATION_BASELINE_REPAIR_20260522_20260521.md",
+    "?? tmp/check_app_providers_layout_move_cc1.mjs",
+    "?? tmp/check_biz_number_common_utils_move_bz1.mjs",
+    "?? tmp/check_detail_history_view_ui_move_hr2.mjs",
+    "?? tmp/check_filedropzone_common_ui_move_5e.mjs",
+    "?? tmp/check_history_popup_ui_move_hr1.mjs",
+    "?? tmp/check_history_store_common_storage_move_cs2.mjs",
+    "?? tmp/check_image_store_common_storage_move_cs1.mjs",
+    "?? tmp/check_lib_clean_json_builder_common_move_1d.mjs",
+    "?? tmp/check_lib_invoice_field_labels_common_move_1b.mjs",
+    "?? tmp/check_lib_invoice_table_display_common_move_1e.mjs",
+    "?? tmp/check_lib_markdown_report_builder_common_move_1c.mjs",
+    "?? tmp/check_lib_ocr_result_formatters_common_move_1a.mjs",
+    "?? tmp/check_lib_structured_table_view_model_common_move_1f.mjs",
+    "?? tmp/check_ocr_canvas_pane_common_ui_move_5f.mjs",
+    "?? tmp/check_ocr_core_ops_common_move_5b.mjs",
+    "?? tmp/check_ocr_core_table_common_move_5c.mjs",
+    "?? tmp/check_ocr_core_types_common_move_5a.mjs",
+    "?? tmp/check_require_login_login_ui_move_cc2.mjs",
+    "?? tmp/check_template_annotator_rename_6b.mjs",
+    "?? tmp/check_template_export_payload_move_5d.mjs",
+    "?? tmp/check_template_right_panel_rename_6a.mjs",
+    "?? tmp/check_validation_baseline_repair_1a.mjs",
+    "?? tmp/claude_frontend_remaining_lib_full_cleanup_plan_precheck.py",
+    "?? tmp/codex_frontend_autorestore_to_restore_precheck.py",
+    "?? tmp/codex_frontend_biz_number_common_move_precheck.py",
+    "?? tmp/codex_frontend_common_storage_boundary_precheck.py",
+    "?? tmp/codex_frontend_components_common_absent_check.py",
+    "?? tmp/codex_frontend_components_common_ownership_precheck.py",
+    "?? tmp/codex_frontend_detail_history_view_ui_move_precheck.py",
+    "?? tmp/codex_frontend_filedropzone_common_ui_precheck.py",
+    "?? tmp/codex_frontend_history_restore_structure_precheck.py",
+    "?? tmp/codex_frontend_history_store_ownership_precheck.py",
+    "?? tmp/codex_frontend_image_store_common_storage_move_precheck.py",
+    "?? tmp/codex_frontend_lib_clean_json_builder_common_move_precheck.py",
+    "?? tmp/codex_frontend_lib_invoice_field_labels_common_move_precheck.py",
+    "?? tmp/codex_frontend_lib_invoice_table_display_common_move_precheck.py",
+    "?? tmp/codex_frontend_lib_markdown_report_builder_common_move_precheck.py",
+    "?? tmp/codex_frontend_lib_ocr_result_formatters_common_move_precheck.py",
+    "?? tmp/codex_frontend_lib_ownership_precheck.py",
+    "?? tmp/codex_frontend_lib_structured_table_view_model_common_move_precheck.py",
+    "?? tmp/codex_frontend_ocr_canvas_pane_common_move_precheck.py",
+    "?? tmp/codex_frontend_ocr_canvas_pane_shared_precheck.py",
+    "?? tmp/codex_frontend_ocr_core_export_template_util_precheck.py",
+    "?? tmp/codex_frontend_ocr_core_ops_common_move_precheck.py",
+    "?? tmp/codex_frontend_ocr_core_ownership_precheck.py",
+    "?? tmp/codex_frontend_ocr_core_table_common_move_precheck.py",
+    "?? tmp/codex_frontend_template_annotator_rename_precheck.py",
+    "?? tmp/codex_frontend_template_right_panel_rename_precheck.py",
+    "?? tmp/codex_frontend_validation_baseline_repair_precheck.py"
+  ],
+  "templatesJsonDirty": true,
+  "nextSteps": [
+    "Run LIB-CLEAN-1-THEME-MOVE (single-importer hook, lowest risk).",
+    "Then proceed phase-by-phase per the movePhases order; each phase: backup -> git mv -> import path fix -> tmp static check -> typecheck/build -> reports.",
+    "After LIB-CLEAN-9 finishes, run LIB-CLEAN-10 to assert src/lib is empty/absent and zero @/lib/* residuals remain.",
+    "Only after LIB-CLEAN-10 PASS, begin Template table column definition feature precheck."
+  ]
+}

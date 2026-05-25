@@ -1,0 +1,172 @@
+{
+  "task": "FRONTEND-CC-1-APP-PROVIDERS-LAYOUT-MOVE",
+  "date": "2026-05-22",
+  "tool": "Claude Code (VSCode extension)",
+  "model": "Claude Opus 4.7 (1M context)",
+  "workdir": "mysuit-ocr/",
+  "purpose": "components/common 잔여 정리 CC-1: src/components/common/AppProviders.tsx -> src/components/layout/AppProviders.tsx (move only; body byte-identical; 11 importers' import-path correction only). TestWorkspace receives import-path-only edit (logic-equivalence vs backup verified). RequireLogin not moved (CC-2 will). components/common after CC-1 contains only RequireLogin.tsx.",
+  "backup_dir": "mysuit-ocr/backup/components_common_app_providers_20260522_before_FRONTEND_CC_1_APP_PROVIDERS_LAYOUT_MOVE",
+  "backups": [
+    "AppProviders.tsx",
+    "app_layout.tsx",
+    "AutoRestoreWorkspace.tsx",
+    "HistoryWorkspace.tsx",
+    "TemplateWorkspace.tsx",
+    "DetailHistoryView.tsx",
+    "TestWorkspace.tsx",
+    "UnstructuredBuilder.tsx",
+    "TemplateAnnotator.tsx",
+    "RunOcrWorkspace.tsx",
+    "LoginWorkspace.tsx",
+    "OcrResultPanel.tsx"
+  ],
+  "moved": [
+    {
+      "from": "src/components/common/AppProviders.tsx",
+      "to": "src/components/layout/AppProviders.tsx",
+      "method": "git mv",
+      "body_byte_identical": true,
+      "self_import_changes": "none"
+    }
+  ],
+  "modified_import_paths": [
+    { "file": "src/app/layout.tsx", "before": "../components/common/AppProviders", "after": "../components/layout/AppProviders" },
+    { "file": "src/components/autorestore/AutoRestoreWorkspace.tsx", "before": "../common/AppProviders", "after": "../layout/AppProviders" },
+    { "file": "src/components/history/HistoryWorkspace.tsx", "before": "../common/AppProviders", "after": "../layout/AppProviders" },
+    { "file": "src/components/template/TemplateWorkspace.tsx", "before": "../common/AppProviders", "after": "../layout/AppProviders" },
+    { "file": "src/components/history/DetailHistoryView.tsx", "before": "../common/AppProviders", "after": "../layout/AppProviders" },
+    { "file": "src/components/test/TestWorkspace.tsx", "before": "../common/AppProviders", "after": "../layout/AppProviders" },
+    { "file": "src/components/template/UnstructuredBuilder.tsx", "before": "../common/AppProviders", "after": "../layout/AppProviders" },
+    { "file": "src/components/template/ui/TemplateAnnotator.tsx", "before": "../../common/AppProviders", "after": "../../layout/AppProviders" },
+    { "file": "src/components/runocr/RunOcrWorkspace.tsx", "before": "../common/AppProviders", "after": "../layout/AppProviders" },
+    { "file": "src/components/login/LoginWorkspace.tsx", "before": "../common/AppProviders", "after": "../layout/AppProviders" },
+    { "file": "src/components/runocr/ui/OcrResultPanel.tsx", "before": "../../common/AppProviders", "after": "../../layout/AppProviders" }
+  ],
+  "tmp_scripts": [
+    {
+      "path": "tmp/check_app_providers_layout_move_cc1.mjs",
+      "action": "created",
+      "checks_total": 36,
+      "result": "PASS"
+    },
+    {
+      "path": "tmp/check_template_workspace_move_4a.mjs",
+      "action": "accept_layout_path_for_AppProviders",
+      "scope": "template_workspace_keeps_common_import accepts ../common/AppProviders or ../layout/AppProviders"
+    },
+    {
+      "path": "tmp/check_template_editor_ui_move_4b.mjs",
+      "action": "accept_layout_path_for_AppProviders",
+      "scope": "annotator_imports_common_via_two_levels accepts ../../common/AppProviders or ../../layout/AppProviders"
+    },
+    {
+      "path": "tmp/check_filedropzone_common_ui_move_5e.mjs",
+      "action": "auto_detect_AppProviders_location",
+      "scope": "APP_PROVIDERS resolves to whichever of components/common/AppProviders.tsx or components/layout/AppProviders.tsx exists"
+    }
+  ],
+  "fully_untouched": [
+    "src/components/common/RequireLogin.tsx",
+    "src/components/layout/AppShell.tsx",
+    "src/components/layout/Header.tsx",
+    "src/components/layout/Sidebar.tsx",
+    "src/components/test/core/*",
+    "src/components/login/*",
+    "src/common/**",
+    "src/lib/**",
+    "backend/OCR/parser",
+    "templates.json",
+    "fixtures"
+  ],
+  "layout_ownership": {
+    "directory": "src/components/layout/",
+    "contents_after_cc1": [
+      "AppProviders.tsx (CC-1, global UI context/provider)",
+      "AppShell.tsx",
+      "Header.tsx",
+      "Sidebar.tsx"
+    ]
+  },
+  "test_workspace_import_path_only_edit": {
+    "TestWorkspace_modified_lines": 1,
+    "change_kind": "single import path replacement",
+    "before": "../common/AppProviders",
+    "after": "../layout/AppProviders",
+    "logic_equivalent_to_backup_after_import_path_strip": true,
+    "test_core_dir_modified": false
+  },
+  "require_login_untouched": {
+    "path": "src/components/common/RequireLogin.tsx",
+    "modified": false,
+    "default_export_preserved": true,
+    "future_phase": "CC-2 will move RequireLogin"
+  },
+  "components_common_state_post_cc1": {
+    "remaining_files": ["RequireLogin.tsx"],
+    "directory_removed": false,
+    "rationale": "Only AppProviders moved in CC-1; RequireLogin stays for CC-2 handling."
+  },
+  "static_check_cc1": {
+    "script": "tmp/check_app_providers_layout_move_cc1.mjs",
+    "result": "PASS",
+    "checks_total": 36,
+    "checks_passed": 36,
+    "skipped_backup_checks": 0,
+    "residuals": 0
+  },
+  "runners": [
+    { "id": 1, "cmd": "npm run typecheck", "result": "PASS", "exit": 0 },
+    { "id": 2, "cmd": "npm run build", "result": "PASS", "exit": 0 },
+    { "id": 3, "cmd": "node tmp/check_table_view_model_v1_fixtures_js.mjs", "result": "PASS", "exit": 0, "score": "8/8" },
+    { "id": 4, "cmd": "node tmp/check_clean_json_v1_fixtures_js.mjs", "result": "PASS", "exit": 0, "score": "9/9" },
+    { "id": 5, "cmd": "python tmp/codex_markdown_contract_fixture_lock.py --check --phase post_APP_PROVIDERS_LAYOUT_MOVE_20260522", "result": "PASS", "exit": 0, "score": "6/6" },
+    { "id": 6, "cmd": "node tmp/check_runocr_formdata_keys_2a.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 7, "cmd": "node tmp/check_runocr_request_boundary_2b.mjs", "result": "PASS", "exit": 0 },
+    { "id": 8, "cmd": "node tmp/check_runocr_response_mapping_boundary_2c.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 9, "cmd": "node tmp/check_runocr_result_layout_boundary_3a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 10, "cmd": "node tmp/check_runocr_doc_comments_3b.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0 },
+    { "id": 11, "cmd": "node tmp/check_template_workspace_move_4a.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0, "notes": "CC-1 layout 경로 양쪽 허용 patch" },
+    { "id": 12, "cmd": "node tmp/check_template_editor_ui_move_4b.mjs", "result": "PASS_WITH_SKIPPED_BACKUP", "exit": 0, "notes": "CC-1 layout 경로 양쪽 허용 patch" },
+    { "id": 13, "cmd": "node tmp/check_template_right_panel_rename_6a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 14, "cmd": "node tmp/check_template_annotator_rename_6b.mjs", "result": "PASS", "exit": 0 },
+    { "id": 15, "cmd": "node tmp/check_ocr_core_types_common_move_5a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 16, "cmd": "node tmp/check_ocr_core_ops_common_move_5b.mjs", "result": "PASS", "exit": 0 },
+    { "id": 17, "cmd": "node tmp/check_ocr_core_table_common_move_5c.mjs", "result": "PASS", "exit": 0 },
+    { "id": 18, "cmd": "node tmp/check_template_export_payload_move_5d.mjs", "result": "PASS", "exit": 0 },
+    { "id": 19, "cmd": "node tmp/check_filedropzone_common_ui_move_5e.mjs", "result": "PASS", "exit": 0, "notes": "CC-1 APP_PROVIDERS 자동 탐지 patch" },
+    { "id": 20, "cmd": "node tmp/check_ocr_canvas_pane_common_ui_move_5f.mjs", "result": "PASS", "exit": 0 },
+    { "id": 21, "cmd": "node tmp/check_lib_ocr_result_formatters_common_move_1a.mjs", "result": "PASS", "exit": 0 },
+    { "id": 22, "cmd": "node tmp/check_lib_invoice_field_labels_common_move_1b.mjs", "result": "PASS", "exit": 0 },
+    { "id": 23, "cmd": "node tmp/check_lib_markdown_report_builder_common_move_1c.mjs", "result": "PASS", "exit": 0 },
+    { "id": 24, "cmd": "node tmp/check_lib_clean_json_builder_common_move_1d.mjs", "result": "PASS", "exit": 0 },
+    { "id": 25, "cmd": "node tmp/check_lib_invoice_table_display_common_move_1e.mjs", "result": "PASS", "exit": 0 },
+    { "id": 26, "cmd": "node tmp/check_lib_structured_table_view_model_common_move_1f.mjs", "result": "PASS", "exit": 0 },
+    { "id": 27, "cmd": "node tmp/check_app_providers_layout_move_cc1.mjs", "result": "PASS", "exit": 0, "score": "36/36" },
+    { "id": 28, "cmd": "node tmp/check_validation_baseline_repair_1a.mjs", "result": "PASS", "exit": 0 }
+  ],
+  "typecheck_build": {
+    "typecheck": { "cmd": "npm run typecheck", "exit": 0, "result": "PASS" },
+    "build": { "cmd": "npm run build", "exit": 0, "result": "PASS" }
+  },
+  "logs": {
+    "stdout": "ocr-server/logs/codex_FRONTEND_CC_1_APP_PROVIDERS_LAYOUT_MOVE.out.log",
+    "stderr": "ocr-server/logs/codex_FRONTEND_CC_1_APP_PROVIDERS_LAYOUT_MOVE.err.log"
+  },
+  "known_stderr_noise": [
+    "ESLint: nextVitals is not iterable (build exit 0, non-blocking)"
+  ],
+  "remaining_issues": [
+    "Historical backup files for phases 2A/2B/3B/4A/4B remain absent; those checks continue to use the PASS_WITH_SKIPPED_BACKUP verdict and skip logic-equivalence comparison. Not caused by CC-1.",
+    "common/utils/ocrResultFormatters.ts still imports @/lib/autofillEngine (type-only) from 1A; follow-up LIB phase will resolve this remaining temp src/lib dependency.",
+    "src/components/common/ now contains only RequireLogin.tsx. CC-2 will move it.",
+    "src/lib/profiles.ts contains a doc-comment substring 'core/types.ts' (not an import). Cosmetic cleanup deferred."
+  ],
+  "next_steps": [
+    "CC-2: RequireLogin -> components/login/ui move",
+    "CC-3: components/common empty/absent verification",
+    "bizNumber move pending TestWorkspace impact precheck",
+    "autofillEngine -> common/utils precheck (resolves remaining 1A type-only temp dep; broad runtime usage requires separate phase)",
+    "history/restore structural cleanup precheck",
+    "TestWorkspace structural cleanup: defer until user confirms"
+  ]
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useUi } from "../common/AppProviders";
+import { useUi } from "../layout/AppProviders";
 import {
   type RestoreProfile,
   type RestoreProfileFields,
@@ -9,7 +9,7 @@ import {
   readRestoreProfiles,
   deleteRestoreProfile,
   sortRestoreProfilesByUpdatedAt,
-} from "@/lib/restoreProfileStore";
+} from "@/common/storage/restoreProfileStore";
 
 const rootStyle: React.CSSProperties = {
   display: "flex",
