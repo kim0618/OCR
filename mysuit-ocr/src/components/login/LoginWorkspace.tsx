@@ -113,7 +113,6 @@ export default function LoginWorkspace() {
 
         <div className="login-visual-text">
           <h2 className="login-visual-title">MySuit OCR</h2>
-          <p className="login-visual-desc">문서를 업로드하면 데이터를 자동으로 추출합니다</p>
         </div>
       </div>
 
