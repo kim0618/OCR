@@ -489,6 +489,8 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
         const value = picked.value;
         resultFields.push({
           name: ko || en || `field_${index + 1}`,
+          ko,
+          en,
           field_type: "field",
           value: String(value ?? ""),
           confidence: value ? 1 : 0,
@@ -1233,6 +1235,8 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
               drawTargetRegionId={customDrawTargetRegionId}
               drawTargetName={customDrawTargetField?.name}
               drawTargetFieldType={(canvasDrawMode || customDrawTargetField?.field_type || "field") as FieldType}
+              bboxImageWidth={activeTemplateForPanel?.image?.width}
+              bboxImageHeight={activeTemplateForPanel?.image?.height}
               onClearSelection={() => {
                 setSelectedFieldIndex(null);
                 setCanvasSelectedId(null);

@@ -53,6 +53,11 @@ type Props = {
   drawTargetName?: string;
   drawTargetFieldType?: FieldType;
   onClearSelection?: () => void;
+  /** Region 좌표계의 원본 이미지 크기. 백엔드 bbox 좌표계와 표시 이미지
+   *  (processedImage 등) 자연 크기가 다를 때 스케일 보정을 위해 전달.
+   *  미지정 시 loaded.naturalWidth/Height 로 fallback (기존 동작). */
+  bboxImageWidth?: number;
+  bboxImageHeight?: number;
 };
 
 export default function OcrCanvasPane(props: Props) {
@@ -197,33 +202,43 @@ export default function OcrCanvasPane(props: Props) {
     return () => ro.disconnect();
   }, []);
 
+  // ===== bbox 좌표계 크기 =====
+  // region.x/y/width/height 는 백엔드 bbox 좌표계(보통 템플릿 원본 이미지 크기).
+  // 표시 이미지가 processedImage(200-DPI) 같이 다른 크기일 수 있어, region scale은
+  // 표시 이미지 naturalWidth 가 아니라 bbox 좌표계 크기로 계산해야 위치가 맞는다.
+  const bboxW = (props.bboxImageWidth && props.bboxImageWidth > 0)
+    ? props.bboxImageWidth
+    : (loaded?.naturalWidth ?? 1);
+  const bboxH = (props.bboxImageHeight && props.bboxImageHeight > 0)
+    ? props.bboxImageHeight
+    : (loaded?.naturalHeight ?? 1);
+
   // ===== 렌더 스케일(표시용) =====
   // OcrDocViewer 와 동일하게 컨테이너 폭에 맞춰 채움 (자연 크기보다 컨테이너가 크면 업스케일).
   // 탭 간 좌측 이미지 표시 크기를 통일하기 위해.
   const scale = useMemo(() => {
     if (!loaded) return 1;
-    const base = containerW / loaded.naturalWidth;
+    const base = containerW / bboxW;
     const zoom = clamp(zoomPct, 10, 200) / 100;
     return base * zoom;
-  }, [containerW, loaded, zoomPct]);
+  }, [containerW, loaded, zoomPct, bboxW]);
 
   const displaySize = useMemo(() => {
     if (!loaded) return { w: 900, h: 560 };
     return {
-      w: Math.round(loaded.naturalWidth * scale),
-      h: Math.round(loaded.naturalHeight * scale),
+      w: Math.round(bboxW * scale),
+      h: Math.round(bboxH * scale),
     };
-  }, [loaded, scale]);
+  }, [loaded, scale, bboxW, bboxH]);
 
-  // ===== 좌표 변환(화면 -> 원본 이미지) =====
+  // ===== 좌표 변환(화면 -> bbox 좌표계) =====
   function getImagePoint(clientX: number, clientY: number) {
     const el = imgRef.current;
-    const l = loadedRef.current;
-    if (!el || !l) return null;
+    if (!el || !loaded) return null;
     const r = el.getBoundingClientRect();
     const x = (clientX - r.left) / scale;
     const y = (clientY - r.top) / scale;
-    return { x: clamp(x, 0, l.naturalWidth), y: clamp(y, 0, l.naturalHeight) };
+    return { x: clamp(x, 0, bboxW), y: clamp(y, 0, bboxH) };
   }
 
   // 업로드/저장/복사 UI는 부모(OcrAnnotator)에서 처리한다.

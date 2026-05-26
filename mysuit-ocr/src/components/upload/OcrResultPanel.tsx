@@ -194,12 +194,14 @@ export type OcrResult = {
 type CleanJsonInfo = {
   key: string;
   label: string;
+  en?: string;
   value: string;
 };
 
 type CleanJsonTable = {
   key: string;
   label: string;
+  en?: string;
   rows: Record<string, string>[];
 };
 
@@ -434,20 +436,6 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
     }
     return "";
   };
-
-  const matchSummary = useMemo(() => {
-    if (!hasGt) return null;
-    const comparableRows = editedFields.filter((field) => getGtForField(field, gtMap).trim() !== "");
-    if (comparableRows.length === 0) return null;
-
-    const matched = comparableRows.filter((field) => {
-      const gt = getGtForField(field, gtMap);
-      return compareToGt(field.value, gt).status === "match";
-    }).length;
-    const total = comparableRows.length;
-    const pct = Math.round((matched / total) * 100);
-    return { matched, total, pct };
-  }, [editedFields, gtMap, hasGt]);
 
   const getAdoptionLabel = (field: OcrFieldResult): "OCR" | "복원" | "직접입력" | "-" => {
     if (field.autofillAction === "confirmed") return "OCR";
@@ -854,11 +842,15 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
   const cleanJson: CleanJsonResult = useMemo(() => {
     const info = editedFields
       .filter((f) => f.field_type === "field")
-      .map((f) => ({
-        key: f.name,
-        label: f.ko || f.label || f.name,
-        value: f.value ?? "",
-      }));
+      .map((f) => {
+        const en = String(f.en ?? "").trim();
+        const ko = String(f.ko ?? "").trim();
+        return {
+          key: en || f.name,
+          label: ko || f.label || f.name,
+          value: f.value ?? "",
+        } as CleanJsonInfo;
+      });
 
     const tables = editedFields
       .filter((f) => f.field_type === "table")
@@ -875,7 +867,13 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
             rows = cleanTableRowsFromCells(JSON.parse(f.value));
           } catch { /* ignore malformed legacy table value */ }
         }
-        return { key: f.name, label: f.ko || f.label || f.name, rows };
+        const en = String(f.en ?? "").trim();
+        const ko = String(f.ko ?? "").trim();
+        return {
+          key: en || f.name,
+          label: ko || f.label || f.name,
+          rows,
+        } as CleanJsonTable;
       });
 
     const result: CleanJsonResult = { templateName: templateName ?? "" };
@@ -1029,23 +1027,6 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
           </button>
         ))}
       </div>
-
-      {matchSummary && (
-        <div
-          style={{
-            margin: "10px 12px 0",
-            padding: "7px 10px",
-            border: "1px solid rgba(34,197,94,0.22)",
-            borderRadius: 6,
-            background: "rgba(34,197,94,0.08)",
-            color: "var(--text)",
-            fontSize: 12,
-            fontWeight: 800,
-          }}
-        >
-          저장된 정답 매칭 {matchSummary.matched}/{matchSummary.total} · {matchSummary.pct}%
-        </div>
-      )}
 
       {renderAutofillSummary(result.autofill_summary)}
 
