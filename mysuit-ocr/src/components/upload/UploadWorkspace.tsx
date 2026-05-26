@@ -855,7 +855,20 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
       });
       if (!res.ok) throw new Error("OCR 요청 실패");
       const json = await res.json();
-      const rawOcrFields: OcrFieldResult[] = Array.isArray(json?.fields) ? (json.fields as OcrFieldResult[]) : [];
+      // 거래명세서 등 일부 template 경로에서 백엔드가 ocr_lines(전체 OCR 라인)를 추가로 반환한다.
+      // template region 결과(json.fields)는 region 개수만큼만 있으므로 "전체 OCR 텍스트"
+      // 섹션에는 ocr_lines가 있으면 그걸 우선 사용해 모든 라인을 표시한다.
+      const ocrLinesFromBackend: Array<{ text: string; confidence: number }> =
+        Array.isArray((json as any)?.ocr_lines) ? (json as any).ocr_lines : [];
+      const rawOcrFields: OcrFieldResult[] = ocrLinesFromBackend.length > 0
+        ? ocrLinesFromBackend.map((line, idx) => ({
+            name: `field_${idx + 1}`,
+            field_type: "field",
+            value: line.text,
+            confidence: line.confidence,
+            bbox: [0, 0, 0, 0],
+          }))
+        : (Array.isArray(json?.fields) ? (json.fields as OcrFieldResult[]) : []);
       const runResult = isRunOcr ? buildRunOcrResult(json, activeTemplate) : json;
       runResult.raw_ocr_fields = rawOcrFields;
       const originalRunFields: OcrFieldResult[] = ((runResult.fields ?? []) as OcrFieldResult[]).map((field) => ({
@@ -871,7 +884,12 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
         filledCount: 0,
         message: "자동복원: 미실행",
       };
-      try {
+      // 자동복원은 비정형(unstructured) 모드 전용. region-based 템플릿은 스킵.
+      // 데이터 소스: restoreProfileStore (Restore 페이지에서 등록한 프로필).
+      const isUnstructuredAutofill = !!activeTemplate && activeTemplate.mode === "unstructured";
+      if (!isUnstructuredAutofill) {
+        runResult.fields = originalRunFields;
+      } else try {
         const businessText = [
           json?.full_text,
           runResult?.full_text,
@@ -959,7 +977,9 @@ export default function UploadWorkspace({ variant = "upload" }: UploadWorkspaceP
         };
       }
       runResult.fields = attachSourceBboxes((runResult.fields ?? []) as OcrFieldResult[], rawOcrFields);
-      runResult.autofill_summary = autofillSummary;
+      if (isUnstructuredAutofill) {
+        runResult.autofill_summary = autofillSummary;
+      }
       setOcrResult(runResult);
       if (runResult.processed_image) {
         setProcessedImageUrl(runResult.processed_image);
