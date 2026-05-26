@@ -1591,14 +1591,13 @@ export default function OcrCanvasPane(props: Props) {
                             style={{
                               position: "absolute",
                               left: (rr.x - r.x) * scale,
-                              top: (rr.y - r.y + rr.height) * scale - 6,
+                              top: (rr.y - r.y + rr.height) * scale - 4,
                               width: rr.width * scale,
-                              height: 12,
+                              height: 8,
                               cursor: "ns-resize",
                               zIndex: 36,
-                              background: "rgba(250,204,21,0.18)",
-                              borderTop: "1px dashed rgba(202,138,4,0.95)",
-                              borderBottom: "1px dashed rgba(202,138,4,0.55)",
+                              background: "transparent",
+                              borderTop: "1px dashed rgba(14,165,233,0.95)",
                             }}
                             title={`row ${idx + 1} 경계 드래그로 높이 조정`}
                           />
