@@ -223,26 +223,6 @@ export default function HistoryWorkspace() {
               <button type="button" className="hw-btn-primary" onClick={() => void boardList()}>
                 조회
               </button>
-              <button
-                type="button"
-                className="hw-btn-primary"
-                style={{ background: "#dc2626" }}
-                onClick={async () => {
-                  const ok = await ui.confirm({
-                    title: "전체 삭제",
-                    message: "모든 히스토리 기록을 삭제할까요? (되돌릴 수 없습니다)",
-                    okText: "삭제",
-                    cancelText: "취소",
-                  });
-                  if (!ok) return;
-                  const before = rows.length;
-                  clearHistoryRuns();
-                  await boardList();
-                  await ui.alert(`전체 히스토리가 삭제되었습니다. (${before}건 → 0건)`);
-                }}
-              >
-                전체 삭제
-              </button>
             </div>
           </div>
         </div>
