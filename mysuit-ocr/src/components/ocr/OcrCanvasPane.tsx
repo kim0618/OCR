@@ -1559,48 +1559,62 @@ export default function OcrCanvasPane(props: Props) {
                         ))}
 
                       {/* TPL-12C: 행 경계 핸들 — rowAdjust 모드에서만 표시.
-                          각 row의 bottom 경계에 ns-resize 핸들을 깔고, 드래그
-                          시 boundary i/i+1만 local 조정 (row i height + row i+1
-                          y/height 갱신, row i+2 이후 rows는 원래 위치 유지). */}
+                          세로 가이드(splitPositions)와 동일 패턴: 시각용 1px 선 +
+                          넓은 투명 클릭 영역(shadow) 분리. */}
                       {isRowAdjustActive && tableRows.length > 0 &&
                         tableRows.slice(0, 80).map((rr, idx) => (
-                          <div
-                            key={`row-boundary-${idx}`}
-                            data-role="row-boundary-handle"
-                            onPointerDown={(e) => {
-                              if (!loadedRef.current) return;
-                              e.stopPropagation();
-                              setSelectedId(r.id);
-                              setDragBoth(null);
-                              const p = getImagePoint(e.clientX, e.clientY);
-                              if (!p) return;
-                              const nextRow = tableRows[idx + 1];
-                              const hasNextRow = !!nextRow;
-                              const nextBottomY = hasNextRow
-                                ? nextRow.y + nextRow.height
-                                : r.y + r.height;
-                              setRowBoundaryDragBoth({
-                                tableId: r.id,
-                                rowIndex: idx,
-                                startY: p.y,
-                                rowTopY: rr.y,
-                                nextBottomY,
-                                hasNextRow,
-                              });
-                            }}
-                            style={{
-                              position: "absolute",
-                              left: (rr.x - r.x) * scale,
-                              top: (rr.y - r.y + rr.height) * scale - 4,
-                              width: rr.width * scale,
-                              height: 8,
-                              cursor: "ns-resize",
-                              zIndex: 36,
-                              background: "transparent",
-                              borderTop: "1px dashed rgba(14,165,233,0.95)",
-                            }}
-                            title={`row ${idx + 1} 경계 드래그로 높이 조정`}
-                          />
+                          <React.Fragment key={`row-boundary-${idx}`}>
+                            {/* 시각용 선 (0px 높이) */}
+                            <div
+                              style={{
+                                position: "absolute",
+                                left: (rr.x - r.x) * scale,
+                                top: (rr.y - r.y + rr.height) * scale,
+                                width: rr.width * scale,
+                                height: 0,
+                                borderTop: "1px dashed rgba(14,165,233,0.95)",
+                                pointerEvents: "none",
+                                zIndex: 36,
+                              }}
+                            />
+                            {/* 드래그 영역 (선 위/아래 shadow) */}
+                            <div
+                              data-role="row-boundary-handle"
+                              onPointerDown={(e) => {
+                                if (!loadedRef.current) return;
+                                e.stopPropagation();
+                                setSelectedId(r.id);
+                                setDragBoth(null);
+                                const p = getImagePoint(e.clientX, e.clientY);
+                                if (!p) return;
+                                const nextRow = tableRows[idx + 1];
+                                const hasNextRow = !!nextRow;
+                                const nextBottomY = hasNextRow
+                                  ? nextRow.y + nextRow.height
+                                  : r.y + r.height;
+                                setRowBoundaryDragBoth({
+                                  tableId: r.id,
+                                  rowIndex: idx,
+                                  startY: p.y,
+                                  rowTopY: rr.y,
+                                  nextBottomY,
+                                  hasNextRow,
+                                });
+                              }}
+                              style={{
+                                position: "absolute",
+                                left: (rr.x - r.x) * scale,
+                                top: (rr.y - r.y + rr.height) * scale,
+                                width: rr.width * scale,
+                                height: 14,
+                                transform: "translateY(-50%)",
+                                cursor: "ns-resize",
+                                zIndex: 35,
+                                background: "rgba(14,165,233,0.08)",
+                              }}
+                              title={`row ${idx + 1} 경계 드래그로 높이 조정`}
+                            />
+                          </React.Fragment>
                         ))}
 
                       {/* column guides */}
