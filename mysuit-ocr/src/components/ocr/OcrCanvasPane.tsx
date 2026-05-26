@@ -7,6 +7,7 @@ import type {
   LoadedImage,
   Rect,
   Region,
+  TableRowOverride,
 } from "./core/types";
 import {
   boxLabelStyle,
@@ -17,7 +18,12 @@ import {
   parseIndex,
   uid,
 } from "./core/ops";
-import { buildTableRows, normalizeColGuides } from "./core/table";
+import {
+  buildTableRows,
+  materializeTableRowsWithOverrides,
+  MIN_ROW_HEIGHT,
+  normalizeColGuides,
+} from "./core/table";
 import FileDropzone from "../common/FileDropzone";
 
 type Props = {
@@ -42,6 +48,14 @@ type Props = {
   /** table: 세로 가이드선(colGuides) 지정 모드(대상 table id) */
   colGuideTargetId: string | null;
   setColGuideTargetId: React.Dispatch<React.SetStateAction<string | null>>;
+
+  /**
+   * TPL-12C: "행 개별 조정" 모드 대상 table id. 활성 중에는 해당 table의 각
+   * row 사이에 boundary handle이 표시되고, 핸들 드래그로 table.rowOverrides가
+   * 갱신된다. drawRowTemplate / colGuide 모드와는 mutually exclusive.
+   */
+  rowAdjustTargetId?: string | null;
+  setRowAdjustTargetId?: React.Dispatch<React.SetStateAction<string | null>>;
 
   // ✅ 상단 툴바는 부모(OcrAnnotator)로 이동
   drawMode: FieldType | null;
@@ -75,6 +89,7 @@ export default function OcrCanvasPane(props: Props) {
     setRowTemplateTargetId,
     colGuideTargetId,
     setColGuideTargetId,
+    rowAdjustTargetId,
     drawMode,
     setDrawMode,
     zoomPct,
@@ -114,6 +129,31 @@ export default function OcrCanvasPane(props: Props) {
   function setDragBoth(d: DragKind) {
     dragRef.current = d;
     setDrag(d);
+  }
+
+  // ===== TPL-12C: 행 경계 드래그 상태 =====
+  // boundary i/i+1 드래그는 row i / row i+1 두 행만 갱신하고, row i+2 이후
+  // rows는 원래 y를 유지한다. drag-start 시 row i의 top y와 row i+1의 bottom y
+  // (또는 area bottom)를 캡처해 boundary 위치 계산의 anchor로 사용.
+  type RowBoundaryDrag = {
+    tableId: string;
+    /** 0-based index of the row whose BOTTOM boundary is being dragged. */
+    rowIndex: number;
+    startY: number;
+    /** row[i].y at drag start — upper anchor for boundary clamp. */
+    rowTopY: number;
+    /** row[i+1].y + row[i+1].height at drag start, or area bottom when row[i]
+     *  is the last row — lower anchor for boundary clamp. */
+    nextBottomY: number;
+    /** true iff a next row exists; when false, the drag only changes
+     *  row[i].height (no row[i+1] override is emitted). */
+    hasNextRow: boolean;
+  };
+  const [, setRowBoundaryDrag] = useState<RowBoundaryDrag | null>(null);
+  const rowBoundaryDragRef = useRef<RowBoundaryDrag | null>(null);
+  function setRowBoundaryDragBoth(d: RowBoundaryDrag | null) {
+    rowBoundaryDragRef.current = d;
+    setRowBoundaryDrag(d);
   }
 
   // ===== rAF throttle (포인터 move 성능 개선) =====
@@ -718,9 +758,92 @@ export default function OcrCanvasPane(props: Props) {
     }
   }
 
+  // TPL-12C: sparse rowOverrides 에 patch 적용. 같은 rowIndex 가 있으면 partial merge.
+  function upsertRowOverrideLocal(
+    overrides: ReadonlyArray<TableRowOverride>,
+    rowIndex: number,
+    patch: { y?: number; height?: number },
+  ): TableRowOverride[] {
+    let found = false;
+    const out: TableRowOverride[] = overrides.map((ov) => {
+      if (!ov || ov.rowIndex !== rowIndex) return { ...ov };
+      found = true;
+      const next: TableRowOverride = { ...ov };
+      if (patch.y !== undefined && Number.isFinite(patch.y)) next.y = patch.y;
+      if (patch.height !== undefined && Number.isFinite(patch.height) && patch.height >= MIN_ROW_HEIGHT)
+        next.height = patch.height;
+      return next;
+    });
+    if (!found) {
+      const created: TableRowOverride = { rowIndex };
+      if (patch.y !== undefined && Number.isFinite(patch.y)) created.y = patch.y;
+      if (patch.height !== undefined && Number.isFinite(patch.height) && patch.height >= MIN_ROW_HEIGHT)
+        created.height = patch.height;
+      out.push(created);
+    }
+    return out;
+  }
+
+  // TPL-12C: 행 경계 드래그 1프레임 처리.
+  // boundary 위치를 row[i] top / row[i+1] bottom 사이로 clamp 후, row[i].height
+  // 와 row[i+1].y/height 를 sparse override 로 갱신. 이후 행은 cascade 로 자동 유지.
+  function applyRowBoundaryDragFrame(pt: { x: number; y: number }) {
+    const d = rowBoundaryDragRef.current;
+    if (!d) return;
+    const t = regionsRef.current.find(
+      (r) => r.id === d.tableId && r.fieldType === "table",
+    );
+    if (!t || !t.table) return;
+    const area: Rect = { x: t.x, y: t.y, width: t.width, height: t.height };
+
+    const areaBottom = area.y + area.height;
+    const upperLimit = d.hasNextRow ? d.nextBottomY - MIN_ROW_HEIGHT : areaBottom;
+    const lowerLimit = d.rowTopY + MIN_ROW_HEIGHT;
+    const boundaryY = Math.max(lowerLimit, Math.min(upperLimit, pt.y));
+
+    const upperHeight = boundaryY - d.rowTopY;
+    const lowerHeight = d.hasNextRow ? d.nextBottomY - boundaryY : 0;
+
+    const existing = Array.isArray(t.table.rowOverrides)
+      ? (t.table.rowOverrides as TableRowOverride[])
+      : [];
+    let merged = upsertRowOverrideLocal(existing, d.rowIndex, {
+      height: upperHeight,
+    });
+    if (d.hasNextRow) {
+      merged = upsertRowOverrideLocal(merged, d.rowIndex + 1, {
+        y: boundaryY,
+        height: lowerHeight,
+      });
+    }
+
+    const baseRows: Rect[] = Array.isArray(t.table.rows) && t.table.rows.length > 0
+      ? t.table.rows.map((rr) => ({ ...rr }))
+      : t.table.rowTemplate
+        ? buildTableRows(area, t.table.rowTemplate)
+        : [];
+    if (baseRows.length === 0) return;
+
+    const materialized = materializeTableRowsWithOverrides(baseRows, merged, area);
+
+    setRegions((prev) =>
+      prev.map((r) => {
+        if (r.id !== d.tableId || r.fieldType !== "table") return r;
+        return {
+          ...r,
+          table: {
+            ...(r.table ?? {}),
+            rows: materialized,
+            rowOverrides: merged,
+          },
+        };
+      }),
+    );
+  }
+
   function onPointerMove(e: React.PointerEvent) {
     if (!loadedRef.current) return;
-    if (!dragRef.current) return;
+    if (!dragRef.current && !rowBoundaryDragRef.current) return;
 
     const p = getImagePoint(e.clientX, e.clientY);
     if (!p) return;
@@ -732,7 +855,11 @@ export default function OcrCanvasPane(props: Props) {
       rafRef.current = null;
       const pt = pendingPointRef.current;
       if (!pt) return;
-      applyDragFrame(pt);
+      if (rowBoundaryDragRef.current) {
+        applyRowBoundaryDragFrame(pt);
+      } else {
+        applyDragFrame(pt);
+      }
     });
   }
 
@@ -742,6 +869,11 @@ export default function OcrCanvasPane(props: Props) {
       rafRef.current = null;
     }
     pendingPointRef.current = null;
+
+    // TPL-12C: 행 경계 드래그 종료
+    if (rowBoundaryDragRef.current) {
+      setRowBoundaryDragBoth(null);
+    }
 
     const d = dragRef.current;
     if (!d) return;
@@ -1174,10 +1306,24 @@ export default function OcrCanvasPane(props: Props) {
 
               const tableRowTemplate =
                 r.fieldType === "table" ? r.table?.rowTemplate : undefined;
-              const tableRows =
+              const tableBaseRows: Rect[] =
                 r.fieldType === "table" && Array.isArray(r.table?.rows)
                   ? (r.table!.rows as Rect[])
                   : [];
+              const tableRowOverrides: TableRowOverride[] =
+                r.fieldType === "table" && Array.isArray(r.table?.rowOverrides)
+                  ? (r.table!.rowOverrides as TableRowOverride[])
+                  : [];
+              const tableRows: Rect[] =
+                r.fieldType === "table" && tableBaseRows.length > 0
+                  ? materializeTableRowsWithOverrides(
+                      tableBaseRows,
+                      tableRowOverrides.length > 0 ? tableRowOverrides : undefined,
+                      { x: r.x, y: r.y, width: r.width, height: r.height },
+                    )
+                  : tableBaseRows;
+              const isRowAdjustActive =
+                r.fieldType === "table" && rowAdjustTargetId === r.id;
 
               const tableColGuides =
                 r.fieldType === "table"
@@ -1409,6 +1555,52 @@ export default function OcrCanvasPane(props: Props) {
                               pointerEvents: "none",
                             }}
                             title={`row ${idx + 1}`}
+                          />
+                        ))}
+
+                      {/* TPL-12C: 행 경계 핸들 — rowAdjust 모드에서만 표시.
+                          각 row의 bottom 경계에 ns-resize 핸들을 깔고, 드래그
+                          시 boundary i/i+1만 local 조정 (row i height + row i+1
+                          y/height 갱신, row i+2 이후 rows는 원래 위치 유지). */}
+                      {isRowAdjustActive && tableRows.length > 0 &&
+                        tableRows.slice(0, 80).map((rr, idx) => (
+                          <div
+                            key={`row-boundary-${idx}`}
+                            data-role="row-boundary-handle"
+                            onPointerDown={(e) => {
+                              if (!loadedRef.current) return;
+                              e.stopPropagation();
+                              setSelectedId(r.id);
+                              setDragBoth(null);
+                              const p = getImagePoint(e.clientX, e.clientY);
+                              if (!p) return;
+                              const nextRow = tableRows[idx + 1];
+                              const hasNextRow = !!nextRow;
+                              const nextBottomY = hasNextRow
+                                ? nextRow.y + nextRow.height
+                                : r.y + r.height;
+                              setRowBoundaryDragBoth({
+                                tableId: r.id,
+                                rowIndex: idx,
+                                startY: p.y,
+                                rowTopY: rr.y,
+                                nextBottomY,
+                                hasNextRow,
+                              });
+                            }}
+                            style={{
+                              position: "absolute",
+                              left: (rr.x - r.x) * scale,
+                              top: (rr.y - r.y + rr.height) * scale - 6,
+                              width: rr.width * scale,
+                              height: 12,
+                              cursor: "ns-resize",
+                              zIndex: 36,
+                              background: "rgba(250,204,21,0.18)",
+                              borderTop: "1px dashed rgba(202,138,4,0.95)",
+                              borderBottom: "1px dashed rgba(202,138,4,0.55)",
+                            }}
+                            title={`row ${idx + 1} 경계 드래그로 높이 조정`}
                           />
                         ))}
 

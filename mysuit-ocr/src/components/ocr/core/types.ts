@@ -28,6 +28,19 @@ export type Rect = {
   height: number;
 };
 
+/**
+ * TPL-12A: 행 개별 조정용 sparse override.
+ * 각 행 인덱스에 대해 y(절대 위치) 또는 height(절대 높이)를 덮어쓴다.
+ * locked 은 향후 UI 잠금용 reserved 필드 (현재 materializer 는 무시).
+ * Backward compat: rowOverrides 가 없으면 기존 repeat-only 동작.
+ */
+export type TableRowOverride = {
+  rowIndex: number;
+  y?: number;
+  height?: number;
+  locked?: boolean;
+};
+
 export type TableMeta = {
   mode?: "repeat" | "auto";
   rowTemplate?: Rect;
@@ -36,6 +49,8 @@ export type TableMeta = {
   stopKeywords?: string[];
   tableName?: string;
   columns?: TableColumnDef[];
+  /** TPL-12A: sparse per-row override. Empty/absent = repeat-only behavior. */
+  rowOverrides?: TableRowOverride[];
 };
 
 export type Region = {

@@ -1,5 +1,95 @@
-import type { Rect } from "./types";
+import type { Rect, TableRowOverride } from "./types";
 import { clampRectToArea } from "./ops";
+
+/**
+ * TPL-12A: 행 개별 조정의 최소 row 높이 (px). OcrCanvasPane drag handler 의
+ * minSize 와 일치. 잘못된 override 로 인한 degenerate row 방지용.
+ */
+export const MIN_ROW_HEIGHT = 4;
+
+function isFiniteNumber(v: unknown): v is number {
+  return typeof v === "number" && Number.isFinite(v);
+}
+
+function cloneRect(r: Rect): Rect {
+  return { x: r.x, y: r.y, width: r.width, height: r.height };
+}
+
+/**
+ * TPL-12A: sparse per-row overrides 를 baseRows 에 적용하고, 이후 행들의 y 를
+ * 재캐스케이드한다. area 안으로 clamp 하고, 더 이상 안 들어가는 trailing row 는 trim.
+ *
+ * Pure: baseRows/rowOverrides/area 어느 것도 변형하지 않고, 항상 fresh 배열 반환.
+ *
+ * Policy:
+ *  - rowOverrides 없으면 baseRows clone.
+ *  - 각 override 는 rowIndex 키. 잘못된 항목은 무시:
+ *      * rowIndex 유한 정수 아님
+ *      * rowIndex < 0 OR >= baseRows.length
+ *      * height 가 MIN_ROW_HEIGHT 미만
+ *      * y 가 유한수 아님 (height-only override 는 여전히 적용 가능)
+ *  - override.y 유효시 그 위치에 배치 + 이후 행은 y + height 부터 cascade.
+ *  - override.height 만 있으면 base.y 유지, 이후 행은 새 height 기준 cascade.
+ *  - locked 는 materialize 시 무시 (UI 잠금용 reserved).
+ *  - 전체 결과는 area 안으로 clamp. area bottom 초과시 height clamp 또는 trim.
+ */
+export function materializeTableRowsWithOverrides(
+  baseRows: ReadonlyArray<Rect>,
+  rowOverrides: ReadonlyArray<TableRowOverride> | undefined,
+  area: Rect,
+): Rect[] {
+  if (!Array.isArray(baseRows) || baseRows.length === 0) return [];
+
+  const indexed = new Map<number, TableRowOverride>();
+  if (Array.isArray(rowOverrides)) {
+    for (const ov of rowOverrides) {
+      if (!ov || typeof ov !== "object") continue;
+      const ri = (ov as TableRowOverride).rowIndex;
+      if (!isFiniteNumber(ri) || !Number.isInteger(ri)) continue;
+      if (ri < 0 || ri >= baseRows.length) continue;
+      indexed.set(ri, ov as TableRowOverride);
+    }
+  }
+
+  const out: Rect[] = [];
+  let cursorY: number | null = null;
+  for (let i = 0; i < baseRows.length; i++) {
+    const base = baseRows[i];
+    if (!base) continue;
+    const ov = indexed.get(i);
+
+    let height = base.height;
+    if (ov && isFiniteNumber(ov.height) && ov.height >= MIN_ROW_HEIGHT) {
+      height = ov.height;
+    }
+
+    let y: number;
+    if (ov && isFiniteNumber(ov.y)) {
+      y = ov.y;
+    } else if (cursorY !== null) {
+      y = cursorY;
+    } else {
+      y = base.y;
+    }
+
+    out.push({ x: base.x, y, width: base.width, height });
+    cursorY = y + height;
+  }
+
+  const result: Rect[] = [];
+  const areaTop = area.y;
+  const areaBottom = area.y + area.height;
+  for (const r of out) {
+    const xyClamped = clampRectToArea(cloneRect(r), area);
+    if (r.y >= areaBottom) continue;
+    const y = Math.max(r.y, areaTop);
+    let height = r.height;
+    if (y + height > areaBottom) height = areaBottom - y;
+    if (height < MIN_ROW_HEIGHT) continue;
+    result.push({ x: xyClamped.x, y, width: xyClamped.width, height });
+  }
+  return result;
+}
 
 /** OCR 엔진에서 내려주는 텍스트 박스(표 영역 내) */
 export type OcrBox = {

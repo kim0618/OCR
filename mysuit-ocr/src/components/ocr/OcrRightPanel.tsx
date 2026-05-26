@@ -20,6 +20,8 @@ type Props = {
   setRowTemplateTargetId: React.Dispatch<React.SetStateAction<string | null>>;
   colGuideTargetId: string | null;
   setColGuideTargetId: React.Dispatch<React.SetStateAction<string | null>>;
+  rowAdjustTargetId?: string | null;
+  setRowAdjustTargetId?: React.Dispatch<React.SetStateAction<string | null>>;
   updateName: (id: string, name: string) => void;
   deleteRegion: (id: string) => void;
 };
@@ -40,6 +42,8 @@ export default function OcrRightPanel(props: Props) {
     setRowTemplateTargetId,
     colGuideTargetId,
     setColGuideTargetId,
+    rowAdjustTargetId,
+    setRowAdjustTargetId,
     deleteRegion,
   } = props;
 
@@ -415,10 +419,27 @@ export default function OcrRightPanel(props: Props) {
                     >
                       세로 가이드 찍기
                     </button>
+                    {(selected.table?.mode ?? "auto") === "repeat" && setRowAdjustTargetId && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setRowTemplateTargetId(null);
+                          setColGuideTargetId(null);
+                          setRowAdjustTargetId(
+                            rowAdjustTargetId === selected.id ? null : selected.id,
+                          );
+                        }}
+                        className={`ms-btn-sm${rowAdjustTargetId === selected.id ? " oc-mode-btn-active" : ""}`}
+                        disabled={!Array.isArray(selected.table?.rows) || (selected.table?.rows?.length ?? 0) === 0}
+                        title="각 행의 하단 경계를 드래그해서 행 높이 조정"
+                      >
+                        행 개별 조정
+                      </button>
+                    )}
                     {(selected.table?.mode ?? "auto") === "repeat" && (
                       <button
                         type="button"
-                        onClick={() => { setRowTemplateTargetId(null); setColGuideTargetId(null); clearTableMeta(selected.id); }}
+                        onClick={() => { setRowTemplateTargetId(null); setColGuideTargetId(null); setRowAdjustTargetId?.(null); clearTableMeta(selected.id); }}
                         className="ms-btn-sm"
                         disabled={!selected.table?.rowTemplate && !Array.isArray(selected.table?.rows)}
                       >
@@ -443,6 +464,11 @@ export default function OcrRightPanel(props: Props) {
                         찍기 취소
                       </button>
                     )}
+                    {rowAdjustTargetId === selected.id && setRowAdjustTargetId && (
+                      <button type="button" onClick={() => setRowAdjustTargetId(null)} className="ms-btn-sm" style={{ borderColor: "rgba(244,63,94,0.4)", color: "#be123c" }}>
+                        조정 종료
+                      </button>
+                    )}
                   </div>
 
                   {(selected.table?.mode ?? "auto") === "auto" && (
@@ -455,6 +481,9 @@ export default function OcrRightPanel(props: Props) {
                   )}
                   {colGuideTargetId === selected.id && (
                     <div className="oc-info-text">캔버스에서 <b>표 안</b>을 클릭하면 세로 가이드선이 추가됩니다.</div>
+                  )}
+                  {rowAdjustTargetId === selected.id && (
+                    <div className="oc-info-text">각 행의 <b>아래쪽 노란 핸들</b>을 위/아래로 드래그해서 행 높이를 조정하세요.</div>
                   )}
 
                   {/* 세로 가이드 목록 */}

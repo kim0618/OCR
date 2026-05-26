@@ -33,6 +33,7 @@ export default function OcrAnnotator({
   const [drawMode, setDrawMode] = useState<FieldType | null>(null);
   const [rowTemplateTargetId, setRowTemplateTargetId] = useState<string | null>(null);
   const [colGuideTargetId, setColGuideTargetId] = useState<string | null>(null);
+  const [rowAdjustTargetId, setRowAdjustTargetId] = useState<string | null>(null);
 
   // 수동 변경 추적 + 업로드 토큰 (stale 응답 방지)
   const docTypeManualRef = useRef(false);
@@ -391,6 +392,8 @@ export default function OcrAnnotator({
           setRowTemplateTargetId={setRowTemplateTargetId}
           colGuideTargetId={colGuideTargetId}
           setColGuideTargetId={setColGuideTargetId}
+          rowAdjustTargetId={rowAdjustTargetId}
+          setRowAdjustTargetId={setRowAdjustTargetId}
           drawMode={drawMode}
           setDrawMode={setDrawMode}
           zoomPct={zoomPct}
@@ -433,6 +436,8 @@ export default function OcrAnnotator({
           setRowTemplateTargetId={setRowTemplateTargetId}
           colGuideTargetId={colGuideTargetId}
           setColGuideTargetId={setColGuideTargetId}
+          rowAdjustTargetId={rowAdjustTargetId}
+          setRowAdjustTargetId={setRowAdjustTargetId}
           updateName={updateName}
           deleteRegion={deleteRegion}
         />
