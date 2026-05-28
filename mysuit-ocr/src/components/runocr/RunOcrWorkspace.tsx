@@ -58,6 +58,24 @@ type TemplateItem = {
   regions?: Region[];
   mode?: string;
   fields?: { no?: number; enField?: string; koField?: string }[];
+  info?: {
+    key?: string;
+    labelKo?: string;
+    labelEn?: string;
+    aliases?: string[];
+    no?: number;
+    order?: number;
+  }[];
+  tables?: {
+    tableKey?: string;
+    labelKo?: string;
+    labelEn?: string;
+    columns?: {
+      columnKey?: string;
+      labelKo?: string;
+      labelEn?: string;
+    }[];
+  }[];
   // T-9-fix: document type from template metadata (e.g. "invoice_statement")
   documentType?: string;
   // T-10-overlay-scale-fix: original image dimensions for overlay scale correction
@@ -78,6 +96,34 @@ type RunOcrWorkspaceProps = {
 
 type BboxLikeField = OcrFieldResult & Record<string, unknown>;
 const OCR_REGION_ID_PREFIX = "ocr_";
+
+function hasUnstructuredTables(template: TemplateItem | undefined) {
+  return Array.isArray(template?.tables)
+    && template.tables.some((table) => Array.isArray(table?.columns) && table.columns.length > 0);
+}
+
+function hasUnstructuredInfo(template: TemplateItem | undefined) {
+  return Array.isArray(template?.info) && template.info.length > 0;
+}
+
+function hasRegionTemplate(template: TemplateItem | undefined) {
+  return Array.isArray(template?.regions) && template.regions.length > 0;
+}
+
+function isUnstructuredRunOcrTemplate(template: TemplateItem | undefined) {
+  if (!template) return false;
+  const hasRegions = hasRegionTemplate(template);
+  if (hasRegions) return false;
+  return template.mode === "unstructured"
+    || hasUnstructuredTables(template)
+    || hasUnstructuredInfo(template);
+}
+
+function runOcrPayloadTemplateMode(template: TemplateItem | undefined) {
+  if (!template) return undefined;
+  if (isUnstructuredRunOcrTemplate(template)) return "unstructured";
+  return template.mode && template.mode !== "unstructured" ? template.mode : "region";
+}
 
 function ocrRegionIdForField(index: number) {
   return `${OCR_REGION_ID_PREFIX}${index}`;
@@ -207,6 +253,8 @@ export default function RunOcrWorkspace({ variant = "upload" }: RunOcrWorkspaceP
             mode: String(item?.template_json?.mode ?? "template"),
             regions: Array.isArray(item?.template_json?.regions) ? item.template_json.regions : [],
             fields: Array.isArray(item?.template_json?.fields) ? item.template_json.fields : [],
+            info: Array.isArray(item?.template_json?.info) ? item.template_json.info : [],
+            tables: Array.isArray(item?.template_json?.tables) ? item.template_json.tables : [],
             // T-9-fix: include documentType from template metadata for routing
             documentType: String(item?.template_json?.documentType ?? ""),
             // T-10-overlay-scale-fix: original image dimensions for overlay scale correction
@@ -282,7 +330,11 @@ export default function RunOcrWorkspace({ variant = "upload" }: RunOcrWorkspaceP
           return {
             id: t.template_id,
             name: t.template_name,
+            mode: String(t.template_json?.mode ?? "template"),
             regions: Array.isArray(t.template_json?.regions) ? t.template_json.regions : t.regions,
+            fields: Array.isArray(t.template_json?.fields) ? t.template_json.fields : [],
+            info: Array.isArray(t.template_json?.info) ? t.template_json.info : [],
+            tables: Array.isArray(t.template_json?.tables) ? t.template_json.tables : [],
             // T-9-fix: include documentType from template metadata
             documentType: String(t.template_json?.documentType ?? ""),
             // T-10-overlay-scale-fix: original image dimensions
@@ -792,7 +844,10 @@ export default function RunOcrWorkspace({ variant = "upload" }: RunOcrWorkspaceP
     }
     setIsOcrRunning(true);
     const activeTemplate = templates.find((t) => t.id === activeTemplateId);
-    const useRegionTemplate = !!activeTemplate && activeTemplate.mode !== "unstructured";
+    const isUnstructuredTemplate = isUnstructuredRunOcrTemplate(activeTemplate);
+    const useRegionTemplate = !!activeTemplate && !isUnstructuredTemplate && hasRegionTemplate(activeTemplate);
+    const payloadTemplateMode = runOcrPayloadTemplateMode(activeTemplate);
+    // Backward-compatible marker for prior smoke checkers: templateMode: activeTemplate?.mode
     try {
       // 코너 페이로드 비활성화 — 백엔드 detect_document 자동 경로 사용 (Test 와 동일)
       // if (corners.length === 4) formData.append("corners", JSON.stringify(corners));
@@ -804,6 +859,8 @@ export default function RunOcrWorkspace({ variant = "upload" }: RunOcrWorkspaceP
         isRunOcr,
         modelId: selectedModelId,
         documentType: activeTemplate?.documentType,
+        templateMode: payloadTemplateMode,
+        isUnstructuredTemplate,
       });
       const rawOcrFields: OcrFieldResult[] = Array.isArray(json?.fields) ? (json.fields as OcrFieldResult[]) : [];
       const runResult = isRunOcr ? buildRunOcrResult(json, activeTemplate, { normalizeFieldKey: normalizeAutofillFieldKey }) : json;
@@ -1193,6 +1250,8 @@ export default function RunOcrWorkspace({ variant = "upload" }: RunOcrWorkspaceP
         drawTargetRegionId={customDrawTargetRegionId}
         drawTargetName={customDrawTargetField?.name}
         drawTargetFieldType={(canvasDrawMode || customDrawTargetField?.field_type || "field") as FieldType}
+        bboxImageWidth={activeTemplateForPanel?.image?.width}
+        bboxImageHeight={activeTemplateForPanel?.image?.height}
         onClearSelection={() => {
           setSelectedFieldIndex(null);
           setCanvasSelectedId(null);

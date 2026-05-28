@@ -11,6 +11,8 @@
  * - "regions"       : useRegionTemplate && regions?.length 일 때 JSON.stringify
  * - "model_id"      : isRunOcr 일 때만
  * - "documentType"  : documentType 이 truthy 일 때만
+ * - "templateMode"  : RunOCR selected template mode marker
+ * - "isUnstructuredTemplate" : "Y"/"N" dispatch hardening marker
  *
  * 변경 주의:
  * - key 이름 / append 순서 / 조건 / 값 직렬화(JSON.stringify) 정책을 바꾸면
@@ -33,6 +35,8 @@ export type BuildOcrFormDataInput = {
   isRunOcr: boolean;
   modelId: string;
   documentType?: string | null;
+  templateMode?: string | null;
+  isUnstructuredTemplate?: boolean;
 };
 
 /**
@@ -50,5 +54,9 @@ export function buildOcrFormData(input: BuildOcrFormDataInput): FormData {
   if (input.documentType) {
     formData.append("documentType", input.documentType);
   }
+  if (input.templateMode) {
+    formData.append("templateMode", input.templateMode);
+  }
+  formData.append("isUnstructuredTemplate", input.isUnstructuredTemplate ? "Y" : "N");
   return formData;
 }

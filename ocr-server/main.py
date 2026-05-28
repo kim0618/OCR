@@ -59,6 +59,10 @@ from extractors.representative import (
     _fill_lone_representative_from_lines,
 )
 from extractors.invoice_statement import extract_invoice_statement_fields
+from extractors.invoice_statement_free import (
+    extract_invoice_statement_free,
+    _is_valid_invoice_statement_free_result,
+)
 from utils.regex_patterns import (
     _PHONE_RE,
     _ADDR_START_RE, _NEXT_LABEL_RE, _FIELD_NOISE_RE,
@@ -69,6 +73,8 @@ from utils.regex_patterns import (
     _LABEL_ONLY_RE, _ADDRESS_LABEL_RE, _ADDRESS_CONTINUATION_RE,
     _ADDRESS_BROAD_ONLY_RE, _ADDRESS_TRAILING_NOISE_RE,
 )
+
+USE_INVOICE_STATEMENT_FREE = os.getenv("USE_INVOICE_STATEMENT_FREE", "0") == "1"
 
 app = FastAPI(title="MySuit OCR Server")
 
@@ -1902,6 +1908,8 @@ async def ocr_extract(
     tableBounds: str = Form(""),           # T-6i: Template table bounds
     columnGuides: str = Form(""),          # T-6j: Template column guide x-positions (OCR space)
     documentType: str = Form(""),          # T-9-fix: explicit documentType override (e.g. "invoice_statement")
+    templateMode: str = Form(""),          # 3I: RunOCR unstructured template dispatch marker
+    isUnstructuredTemplate: str = Form(""),# 3I: optional compatibility marker
     debugPreprocessing: str = Form("false"),    # T-20d: debug compare_then_select (default=false, production unchanged)
     qualityTagsJson: str = Form(""),            # T-20d: qualityTags override for preprocessing debug
     autoApplyPreprocessing: str = Form("false"),# T-20i: limited auto-apply for receipt (default=false, invoice永久除外)
@@ -1941,6 +1949,11 @@ async def ocr_extract(
     ocr = get_ocr_engine()
     region_list = json.loads(regions) if regions else []
     _template_doc_type = ""  # T-9-fix: documentType from template_json metadata
+    _template_mode_marker = (templateMode or "").strip().lower()
+    _is_unstructured_template = (
+        _template_mode_marker == "unstructured"
+        or (isUnstructuredTemplate or "").strip().upper() == "Y"
+    )
     if not region_list and template_id:
         templates = _load_json(TEMPLATES_FILE, [])
         selected_template = next(
@@ -1948,6 +1961,9 @@ async def ocr_extract(
             None,
         )
         template_json = selected_template.get("template_json", {}) if selected_template else {}
+        if isinstance(template_json, dict) and not _is_unstructured_template:
+            _stored_template_mode = (template_json.get("mode", "") or "").strip().lower()
+            _is_unstructured_template = _stored_template_mode == "unstructured"
         region_list = template_json.get("regions", []) if isinstance(template_json, dict) else []
         # T-9-fix: read stored documentType from template metadata (priority over classify_document)
         _template_doc_type = (template_json.get("documentType", "") or "").strip() if isinstance(template_json, dict) else ""
@@ -2653,13 +2669,68 @@ async def ocr_extract(
                     }
 
             invoice_debug: dict = {}
-            document_fields = extract_invoice_statement_fields(
-                ocr_lines_raw,
-                debug=invoice_debug,
-                table_expected_columns=_tec,
-                table_bounds=_tbn,
-                column_guides=_tcg,
+            _free_debug: dict = {}
+            document_fields = None
+            _try_invoice_free = bool(
+                USE_INVOICE_STATEMENT_FREE
+                and not region_list
+                and (not template_id or _is_unstructured_template)
             )
+            if _try_invoice_free:
+                try:
+                    _free_fields = extract_invoice_statement_free(
+                        ocr_lines_raw=ocr_lines_raw,
+                        full_text="\n".join(full_lines),
+                        image_size=(ocr_w, ocr_h),
+                        doc_type=doc_type,
+                        context={
+                            "templateMode": False,
+                            "isUnstructuredTemplate": _is_unstructured_template,
+                            "template_id": "" if _is_unstructured_template else template_id,
+                            "selectedTemplateId": template_id,
+                            "tableExpectedColumns": _tec,
+                            "tableBounds": _tbn,
+                            "columnGuides": _tcg,
+                        },
+                    )
+                    _free_rows = _free_fields.get("tableRows") if isinstance(_free_fields, dict) else None
+                    _free_meta = _free_fields.get("tableMeta") if isinstance(_free_fields, dict) else None
+                    _free_ok = _is_valid_invoice_statement_free_result(_free_fields)
+                    _free_debug = {
+                        "attempted": True,
+                        "used": bool(_free_ok),
+                        "fallbackUsed": not _free_ok,
+                        "fallbackReason": "" if _free_ok else "invalid_or_empty_free_result",
+                        "rowCount": len(_free_rows) if isinstance(_free_rows, list) else None,
+                        "fallbackRequired": _free_meta.get("fallbackRequired") if isinstance(_free_meta, dict) else None,
+                    }
+                    if isinstance(_free_fields, dict):
+                        _free_inner_debug = ((_free_fields.get("extract_debug") or {}).get("invoice_statement_free") or {})
+                        if isinstance(_free_inner_debug, dict):
+                            _free_debug = {**_free_inner_debug, **_free_debug}
+                    if _free_ok:
+                        document_fields = _free_fields.get("document_fields") if isinstance(_free_fields, dict) else None
+                        if not isinstance(document_fields, dict):
+                            document_fields = _free_fields
+                except Exception as _free_e:
+                    _free_debug = {
+                        "attempted": True,
+                        "used": False,
+                        "fallbackUsed": True,
+                        "fallbackReason": "exception",
+                        "error": str(_free_e),
+                    }
+
+            if document_fields is None:
+                document_fields = extract_invoice_statement_fields(
+                    ocr_lines_raw,
+                    debug=invoice_debug,
+                    table_expected_columns=_tec,
+                    table_bounds=_tbn,
+                    column_guides=_tcg,
+                )
+            if _free_debug:
+                extract_debug["invoice_statement_free"] = _free_debug
             response["document_fields"] = document_fields
             extract_debug["invoice_statement"] = invoice_debug.get("invoice_statement", invoice_debug)
             _tec_used = (document_fields.get("tableMeta") or {}).get("expectedColumnsUsed", False)

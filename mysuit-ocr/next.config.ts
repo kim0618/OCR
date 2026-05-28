@@ -3,7 +3,9 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   devIndicators: false,
   async rewrites() {
-    const backendUrl = process.env.BACKEND_URL || "http://localhost:8000";
+    // 백엔드는 항상 9099 (uvicorn). BACKEND_URL이 비어 있어도 8000 같은
+    // 잘못된 포트로 떨어지지 않도록 fallback도 9099로 못박는다.
+    const backendUrl = process.env.BACKEND_URL || "http://127.0.0.1:9099";
 
     return [
       { source: "/api/:path*",        destination: `${backendUrl}/:path*` },

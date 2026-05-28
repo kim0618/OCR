@@ -23,6 +23,95 @@ import type { OcrResult, OcrFieldResult } from "../ui/OcrResultPanel";
 import { extractUnstructuredTableRows } from "./extractUnstructuredTableRows";
 
 /**
+ * INVOICE-PARITY-4B: canonical invoice scalar fields live in
+ * `raw.document_fields` (supplierCompany, supplierBizNumber, buyerCompany, …,
+ * totalAmount, cumulativeAmount). The unstructured field-resolution path
+ * historically read only receipt_fields/finance_fields and left these general
+ * fields empty (0.0%). This alias map connects user info-field labels (Korean
+ * or English) to the canonical `document_fields` scalar keys.
+ *
+ * Scope: used ONLY by the unstructured invoice_statement field resolution
+ * below. The region/template path and the table path are NOT touched.
+ * Keys are whitespace-stripped so "공급자 사업자 번호" === "공급자사업자번호".
+ */
+const INVOICE_DOCUMENT_FIELDS_ALIAS: Record<string, string> = {
+  // 공급자 (supplier)
+  "공급자등록번호": "supplierBizNumber",
+  "공급자사업자번호": "supplierBizNumber",
+  "공급자상호": "supplierCompany",
+  "공급자회사명": "supplierCompany",
+  "공급자주소": "supplierAddress",
+  "공급자성명": "supplierRepresentative",
+  "공급자대표자": "supplierRepresentative",
+  // 공급받는자 (buyer)
+  "공급받는자등록번호": "buyerBizNumber",
+  "공급받는자사업자번호": "buyerBizNumber",
+  "공급받는자상호": "buyerCompany",
+  "공급받는자회사명": "buyerCompany",
+  "공급받는자주소": "buyerAddress",
+  "공급받는자성명": "buyerRepresentative",
+  "공급받는자대표자": "buyerRepresentative",
+  // 금액 / 날짜 (amounts / dates)
+  "합계금액": "totalAmount",
+  "총합계금액": "totalAmount",
+  "총액": "totalAmount",
+  "합계": "totalAmount",
+  "누계": "cumulativeAmount",
+  "공급가액": "supplyAmount",
+  "공급금액": "supplyAmount",
+  "세액": "taxAmount",
+  "부가세": "taxAmount",
+  "발행일자": "issueDate",
+  "작성일자": "issueDate",
+  "거래일자": "issueDate",
+};
+
+/** INVOICE-PARITY-4B: strip whitespace for alias matching. */
+function normalizeInvoiceAliasLabel(label: string): string {
+  return String(label ?? "").replace(/\s+/g, "").trim();
+}
+
+/**
+ * INVOICE-PARITY-4B: extract ONLY scalar (string/number) values from
+ * `raw.document_fields`. `tableRows` (array) / `tableMeta` (object) and any
+ * other object/array are intentionally EXCLUDED so the table path is never used
+ * as a scalar field-value source.
+ */
+function extractDocumentFieldsScalar(documentFields: unknown): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (!documentFields || typeof documentFields !== "object" || Array.isArray(documentFields)) return out;
+  for (const [key, value] of Object.entries(documentFields as Record<string, unknown>)) {
+    if (typeof value === "string") out[key] = value;
+    else if (typeof value === "number" && Number.isFinite(value)) out[key] = String(value);
+    // boolean / object / array (tableRows, tableMeta, …) deliberately skipped
+  }
+  return out;
+}
+
+/**
+ * INVOICE-PARITY-4B: resolve a user info-field label (ko or en) to a
+ * `document_fields` scalar value via direct key match or the canonical alias
+ * map. Returns undefined when no meaningful (non-empty) value is found.
+ */
+function pickInvoiceDocumentField(
+  scalar: Record<string, string>,
+  ...labels: string[]
+): { key: string; value: string } | undefined {
+  for (const label of labels) {
+    if (!label) continue;
+    // direct document_fields key (e.g. enField="supplierCompany")
+    if (label in scalar && String(scalar[label]).trim().length > 0) {
+      return { key: label, value: scalar[label] };
+    }
+    const aliasKey = INVOICE_DOCUMENT_FIELDS_ALIAS[normalizeInvoiceAliasLabel(label)];
+    if (aliasKey && aliasKey in scalar && String(scalar[aliasKey]).trim().length > 0) {
+      return { key: aliasKey, value: scalar[aliasKey] };
+    }
+  }
+  return undefined;
+}
+
+/**
  * buildRunOcrResult 가 실제로 읽는 template 의 최소 구조 타입.
  * 프로젝트 전역 TemplateItem 과의 강결합을 피하고 RunOcrWorkspace 와의 순환
  * import 를 막기 위해 structural minimum 만 노출한다.
@@ -121,6 +210,18 @@ export function buildRunOcrResult(raw: any, template?: BuildRunOcrResultTemplate
   const receiptFields = raw.receipt_fields ?? {};
   const financeFields = raw.finance_fields ?? {};
 
+  // INVOICE-PARITY-4B: document_fields scalar source for the unstructured
+  // invoice field resolution. Only consulted when the document is an
+  // invoice_statement, so receipt/finance behavior for every other doc type is
+  // byte-identical. Scalar-only (tableRows/tableMeta excluded by the extractor).
+  const documentFieldsScalar = extractDocumentFieldsScalar(
+    (raw as { document_fields?: unknown })?.document_fields,
+  );
+  const isInvoiceStatement =
+    (typeof template?.documentType === "string" && template.documentType.trim() === "invoice_statement")
+    || (typeof (raw as { doc_type?: unknown })?.doc_type === "string"
+      && (raw as { doc_type?: string }).doc_type === "invoice_statement");
+
   // TPL-7: 신규 비정형 schema(info[])가 있으면 info를 우선 사용해 lookup용 pseudo
   // fields를 만든다. info가 없으면 legacy template.fields[]를 그대로 사용해
   // 기존 영수증/fields-only 경로 100% 호환을 유지한다.
@@ -172,7 +273,15 @@ export function buildRunOcrResult(raw: any, template?: BuildRunOcrResultTemplate
     templateFields.forEach((field, index) => {
       const ko = String(field.koField ?? "").trim();
       const en = String(field.enField ?? "").trim();
-      const picked = pickValue(receiptFields, ko)
+      // INVOICE-PARITY-4B: for invoice_statement, prefer the canonical
+      // document_fields scalar value (supplierCompany / buyerBizNumber / …).
+      // This fills the general fields that previously showed 0.0% empty. Other
+      // doc types fall straight through to the unchanged receipt/finance path.
+      const docFieldPick = isInvoiceStatement
+        ? pickInvoiceDocumentField(documentFieldsScalar, ko, en)
+        : undefined;
+      const picked = docFieldPick
+        ?? pickValue(receiptFields, ko)
         ?? pickValue(receiptFields, en)
         ?? pickValue(financeFields, ko)
         ?? pickValue(financeFields, en)
@@ -180,6 +289,8 @@ export function buildRunOcrResult(raw: any, template?: BuildRunOcrResultTemplate
       const value = picked.value;
       resultFields.push({
         name: ko || en || `field_${index + 1}`,
+        ko,
+        en,
         field_type: "field",
         value: String(value ?? ""),
         confidence: value ? 1 : 0,

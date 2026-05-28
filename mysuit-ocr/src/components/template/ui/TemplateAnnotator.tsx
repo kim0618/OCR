@@ -20,6 +20,9 @@ export default function TemplateAnnotator({
   const isEditMode = !!selectedTemplateId;
   const ui = useUi();
   const imgRef = useRef<HTMLImageElement | null>(null);
+  // 툴바의 "문서 변경" 버튼이 트리거하는 hidden file input. 캔버스를 비우지
+  // 않고 이미지만 교체한다 (regions/필드 정의는 그대로 유지).
+  const changeDocInputRef = useRef<HTMLInputElement | null>(null);
 
   const DEFAULT_ZOOM_PCT = 100;
 
@@ -31,6 +34,9 @@ export default function TemplateAnnotator({
 
   const [zoomPct, setZoomPct] = useState<number>(DEFAULT_ZOOM_PCT);
   const [drawMode, setDrawMode] = useState<FieldType | null>(null);
+  // 자동 문서 유형 감지 진행 상태 — 백엔드 OCR이 60~70초 걸릴 수 있어
+  // 사용자가 결과를 기다리는지 알 수 있도록 드롭다운 옆에 hint를 띄운다.
+  const [docTypeDetecting, setDocTypeDetecting] = useState<boolean>(false);
   const [rowTemplateTargetId, setRowTemplateTargetId] = useState<string | null>(null);
   const [colGuideTargetId, setColGuideTargetId] = useState<string | null>(null);
   // TPL-12C: "행 개별 조정" mode — when set to a table region id, OcrCanvasPane
@@ -50,9 +56,18 @@ export default function TemplateAnnotator({
   const docTypeManualRef = useRef(false);
   const uploadTokenRef = useRef(0);
 
+  // 자동 감지 화이트리스트.
+  // CLAUDE.md 표준 이름 + 백엔드(document_classifier)가 실제로 반환하는
+  // 이름(`receipt_card`/`receipt_pos`/`bank_slip`)을 모두 포함한다. 매핑은
+  // documentTypeGroup helper(getDocumentTypeGroup)가 UI 그룹(영수증/거래
+  // 명세서/세금계산서)으로 일관되게 처리한다.
   const VALID_AUTO_DOC_TYPES = [
-    "invoice_statement", "card_receipt", "pos_receipt",
-    "food_cafe_receipt", "finance_slip", "medical_receipt",
+    "invoice_statement",
+    // CLAUDE.md 표준 이름
+    "card_receipt", "pos_receipt", "food_cafe_receipt",
+    "finance_slip", "medical_receipt",
+    // 백엔드 실제 반환 이름
+    "receipt_card", "receipt_pos", "bank_slip",
   ];
 
   // 사용자 수동 선택 시 호출 — 이후 자동 감지 결과가 덮어쓰지 않음
@@ -106,7 +121,8 @@ export default function TemplateAnnotator({
     }
   }, [selectedTemplate, selectedTemplateId]);
 
-  async function onPickFile(file: File) {
+  async function onPickFile(file: File, options?: { preserveRegions?: boolean }) {
+    const preserveRegions = options?.preserveRegions === true;
     const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
 
     // 새 파일 업로드 시 수동 변경 플래그 초기화 + 토큰 갱신
@@ -114,25 +130,45 @@ export default function TemplateAnnotator({
     const token = ++uploadTokenRef.current;
 
     // 자동 documentType 감지 — fire-and-forget, UI 오류 없이 조용히 실패
+    setDocTypeDetecting(true);
     void (async () => {
       try {
         const fd = new FormData();
         fd.append("file", file);
         const res = await fetch("/api/ocr-extract", { method: "POST", body: fd });
-        if (!res.ok) return;
+        if (!res.ok) {
+          console.warn("[auto docType detect] backend response not ok:", res.status, res.statusText);
+          return;
+        }
         const json = await res.json() as Record<string, unknown>;
         const detected = String(json?.doc_type ?? json?.documentType ?? json?.detectedDocType ?? "");
-        if (
-          detected &&
+        // 사용자가 자동 감지가 안 되는 케이스를 진단할 수 있도록 한 줄 로깅.
+        // 매칭/만료 여부도 함께 출력해 원인을 콘솔에서 바로 파악 가능.
+        const accepted =
+          !!detected &&
           detected !== "unknown" &&
           VALID_AUTO_DOC_TYPES.includes(detected) &&
           !docTypeManualRef.current &&
-          uploadTokenRef.current === token
-        ) {
+          uploadTokenRef.current === token;
+        console.log(
+          "[auto docType detect]",
+          {
+            detected,
+            accepted,
+            manualOverride: docTypeManualRef.current,
+            stale: uploadTokenRef.current !== token,
+          },
+        );
+        if (accepted) {
           setDocumentType(detected);
         }
       } catch (err) {
         console.error("[auto docType detect error]", err);
+      } finally {
+        // 다른 업로드가 이미 시작됐다면(token mismatch) 그쪽이 detecting을 관리.
+        if (uploadTokenRef.current === token) {
+          setDocTypeDetecting(false);
+        }
       }
     })();
 
@@ -163,8 +199,8 @@ export default function TemplateAnnotator({
           naturalWidth: canvas.width,
           naturalHeight: canvas.height,
         });
-        // 편집 모드에서 이미지 재업로드 시 기존 영역 유지 (이미지 손실 복구용)
-        if (!isEditMode) {
+        // 편집 모드 또는 "문서 변경" 경로(preserveRegions)에서는 기존 영역 유지
+        if (!isEditMode && !preserveRegions) {
           setRegions([]);
           setSelectedId(null);
           setDrawMode(null);
@@ -193,8 +229,8 @@ export default function TemplateAnnotator({
           naturalWidth: img.naturalWidth,
           naturalHeight: img.naturalHeight,
         });
-        // 편집 모드에서 이미지 재업로드 시 기존 영역 유지 (이미지 손실 복구용)
-        if (!isEditMode) {
+        // 편집 모드 또는 "문서 변경" 경로(preserveRegions)에서는 기존 영역 유지
+        if (!isEditMode && !preserveRegions) {
           setRegions([]);
           setSelectedId(null);
           setDrawMode(null);
@@ -356,6 +392,28 @@ export default function TemplateAnnotator({
     >
       {/* Toolbar — full width */}
       <div className="oc-toolbar" style={{ gridColumn: "1 / -1", gridRow: 1, border: "1px solid var(--border)" }}>
+        {/* 문서 변경 — 이미 업로드한 이미지를 다른 파일로 교체. 현재 필드/영역 정의는 유지. */}
+        <input
+          ref={changeDocInputRef}
+          type="file"
+          accept="image/jpeg,image/jpg,image/png,image/tiff,application/pdf,.jpeg,.jpg,.png,.tif,.tiff,.pdf"
+          style={{ display: "none" }}
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) void onPickFile(f, { preserveRegions: true });
+            // 같은 파일을 다시 선택해도 onChange가 발화하도록 값 리셋
+            e.target.value = "";
+          }}
+        />
+        <button
+          type="button"
+          onClick={() => changeDocInputRef.current?.click()}
+          className="oc-mode-btn"
+          disabled={!loaded}
+          title="현재 필드/영역 정의는 유지하면서 이미지만 다른 파일로 교체합니다."
+        >
+          문서 변경
+        </button>
         {(["field", "multi", "check", "table"] as FieldType[]).map((m) => {
           const labels: Record<FieldType, string> = {
             field: "필드",
@@ -447,6 +505,7 @@ export default function TemplateAnnotator({
           setTemplateName={setTemplateName}
           documentType={documentType}
           setDocumentType={handleSetDocumentType}
+          docTypeDetecting={docTypeDetecting}
           loaded={loaded}
           regions={regions}
           setRegions={setRegions}

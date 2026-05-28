@@ -31,12 +31,14 @@ import {
 export type CleanJsonInfo = {
   key: string;
   label: string;
+  en?: string;
   value: string;
 };
 
 export type CleanJsonTable = {
   key: string;
   label: string;
+  en?: string;
   rows: Record<string, string>[];
   /**
    * TPL-13B: optional column metadata. Present only when this entry was
@@ -96,6 +98,7 @@ export type CleanJsonInputField = {
   field_type: string;
   value?: string | null;
   ko?: string;
+  en?: string;
   label?: string;
   tableRows?: Record<string, unknown>[];
   table_data?: unknown;
@@ -185,9 +188,11 @@ export function buildCleanJsonResult(input: BuildCleanJsonInput): CleanJsonResul
   const info: CleanJsonInfo[] = [];
   for (const field of fields) {
     if (field.field_type !== "field") continue;
+    const en = String(field.en ?? "").trim();
+    const ko = String(field.ko ?? "").trim();
     info.push({
-      key: field.name,
-      label: field.ko || field.label || field.name,
+      key: en || field.name,
+      label: ko || field.label || field.name,
       value: field.value ?? "",
     });
   }
@@ -209,9 +214,11 @@ export function buildCleanJsonResult(input: BuildCleanJsonInput): CleanJsonResul
         /* ignore malformed legacy table value */
       }
     }
+    const en = String(field.en ?? "").trim();
+    const ko = String(field.ko ?? "").trim();
     tables.push({
-      key: field.name,
-      label: field.ko || field.label || field.name,
+      key: en || field.name,
+      label: ko || field.label || field.name,
       rows,
     });
   }

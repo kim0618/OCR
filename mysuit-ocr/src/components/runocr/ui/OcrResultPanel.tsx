@@ -469,20 +469,6 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
     return "";
   };
 
-  const matchSummary = useMemo(() => {
-    if (!hasGt) return null;
-    const comparableRows = editedFields.filter((field) => getGtForField(field, gtMap).trim() !== "");
-    if (comparableRows.length === 0) return null;
-
-    const matched = comparableRows.filter((field) => {
-      const gt = getGtForField(field, gtMap);
-      return compareToGt(field.value, gt).status === "match";
-    }).length;
-    const total = comparableRows.length;
-    const pct = Math.round((matched / total) * 100);
-    return { matched, total, pct };
-  }, [editedFields, gtMap, hasGt]);
-
   const renderAdoption = (field: OcrFieldResult) => {
     const label = getAdoptionLabel(field);
     const color =
@@ -1016,23 +1002,6 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
           </button>
         ))}
       </div>
-
-      {matchSummary && (
-        <div
-          style={{
-            margin: "10px 12px 0",
-            padding: "7px 10px",
-            border: "1px solid rgba(34,197,94,0.22)",
-            borderRadius: 6,
-            background: "rgba(34,197,94,0.08)",
-            color: "var(--text)",
-            fontSize: 12,
-            fontWeight: 800,
-          }}
-        >
-          저장된 정답 매칭 {matchSummary.matched}/{matchSummary.total} · {matchSummary.pct}%
-        </div>
-      )}
 
       {renderAutofillSummary(result.autofill_summary)}
 

@@ -12,12 +12,25 @@ import {
   type UnstructuredTableDef,
   type UnstructuredTableColumn,
 } from "./utils/unstructuredDefinition";
+import {
+  CANONICAL_COLUMN_OPTIONS,
+  canonicalColumnLabel,
+  findCanonicalValueByKey,
+} from "./utils/canonicalColumnOptions";
 
 type Field = {
   no: number;
   enField: string;
   koField: string;
 };
+
+// TPL-14A — 출력 정의 영역(일반 영역 / 테이블 / 컬럼)을 하나의 선택 모델로
+// 통일하기 위한 단일 selection target.
+type SelectedUnstructuredTarget =
+  | { type: "info"; index: number }
+  | { type: "table"; tableIndex: number }
+  | { type: "column"; tableIndex: number; columnIndex: number }
+  | null;
 
 const LOCAL_TEMPLATES_KEY = "mysuit_ocr_templates";
 
@@ -44,13 +57,16 @@ export default function UnstructuredBuilder({
   const [documentType, setDocumentType] = useState("");
   const [fields, setFields] = useState<Field[]>([]);
   const [tables, setTables] = useState<UnstructuredTableDef[]>([]);
-  const [selectedNo, setSelectedNo] = useState<number | null>(null);
+  // TPL-14A — info/table/column 선택 통합 상태
+  const [selectedTarget, setSelectedTarget] = useState<SelectedUnstructuredTarget>(null);
 
   // ── 일반 영역 helpers ────────────────────────────────────────────────
   const addField = () => {
     const nextNo = fields.length > 0 ? Math.max(...fields.map((f) => f.no)) + 1 : 1;
     const def = createDefaultInfoField(nextNo);
+    const newIndex = fields.length;
     setFields([...fields, { no: nextNo, enField: def.labelEn ?? "", koField: def.labelKo }]);
+    setSelectedTarget({ type: "info", index: newIndex });
   };
 
   const updateField = (no: number, key: "enField" | "koField", v: string) => {
@@ -62,26 +78,32 @@ export default function UnstructuredBuilder({
     const order = tables.length + 1;
     const def = createDefaultTableDef(order);
     def.columns = [createDefaultTableColumn(1)];
+    const newIndex = tables.length;
     setTables([...tables, def]);
+    setSelectedTarget({ type: "table", tableIndex: newIndex });
   };
 
   const updateTable = (tableIdx: number, patch: Partial<UnstructuredTableDef>) => {
     setTables(tables.map((t, i) => (i === tableIdx ? { ...t, ...patch } : t)));
   };
 
-  const removeTable = (tableIdx: number) => {
-    setTables(tables.filter((_, i) => i !== tableIdx));
-  };
-
   const addColumn = (tableIdx: number) => {
+    const newColIdx = tables[tableIdx]?.columns?.length ?? 0;
     setTables(
       tables.map((t, i) => {
         if (i !== tableIdx) return t;
         const nextOrder = (t.columns?.length ?? 0) + 1;
-        const col = createDefaultTableColumn(nextOrder);
+        // helper가 column_N 같은 기본값을 채우지만, UI에서는 영문/한글
+        // 둘 다 비워서 사용자가 직접 입력하거나 표준 컬럼 select로 채우게 한다.
+        const col: UnstructuredTableColumn = {
+          ...createDefaultTableColumn(nextOrder),
+          columnKey: "",
+          labelKo: "",
+        };
         return { ...t, columns: [...(t.columns ?? []), col] };
       }),
     );
+    setSelectedTarget({ type: "column", tableIndex: tableIdx, columnIndex: newColIdx });
   };
 
   const updateColumn = (
@@ -100,14 +122,42 @@ export default function UnstructuredBuilder({
     );
   };
 
-  const removeColumn = (tableIdx: number, colIdx: number) => {
-    setTables(
-      tables.map((t, i) => {
-        if (i !== tableIdx) return t;
-        return { ...t, columns: t.columns.filter((_, j) => j !== colIdx) };
-      }),
-    );
+  // TPL-14A — 선택 대상에 따른 단일 삭제 진입점
+  const handleSelectedDelete = () => {
+    if (!selectedTarget) return;
+    if (selectedTarget.type === "info") {
+      // info 삭제 + no 재번호 부여
+      const idx = selectedTarget.index;
+      setFields((prev) =>
+        prev
+          .filter((_, i) => i !== idx)
+          .map((f, i) => ({ ...f, no: i + 1 })),
+      );
+    } else if (selectedTarget.type === "table") {
+      const idx = selectedTarget.tableIndex;
+      setTables((prev) => prev.filter((_, i) => i !== idx));
+    } else if (selectedTarget.type === "column") {
+      const { tableIndex, columnIndex } = selectedTarget;
+      setTables((prev) =>
+        prev.map((t, i) =>
+          i !== tableIndex
+            ? t
+            : { ...t, columns: (t.columns ?? []).filter((_, j) => j !== columnIndex) },
+        ),
+      );
+    }
+    setSelectedTarget(null);
   };
+
+  // TPL-14A — 선택 대상에 따른 라벨 정책
+  const selectedDeleteLabel = (() => {
+    if (!selectedTarget) return "삭제";
+    if (selectedTarget.type === "info") return "영역 삭제";
+    if (selectedTarget.type === "table") return "테이블 삭제";
+    if (selectedTarget.type === "column") return "컬럼 삭제";
+    return "삭제";
+  })();
+  const isSelectedDeleteDisabled = selectedTarget == null;
 
   useEffect(() => {
     if (!selectedTemplate) return;
@@ -118,7 +168,7 @@ export default function UnstructuredBuilder({
       normalized.fields.map(({ no, enField, koField }) => ({ no, enField, koField })),
     );
     setTables(normalized.tables);
-    setSelectedNo(null);
+    setSelectedTarget(null);
   }, [selectedTemplate]);
 
   const handleSave = async () => {
@@ -203,7 +253,7 @@ export default function UnstructuredBuilder({
       setDocumentType("");
       setFields([]);
       setTables([]);
-      setSelectedNo(null);
+      setSelectedTarget(null);
       await ui.alert("템플릿이 삭제되었습니다.");
     } else {
       // 새 비정형 작성 중 — 폼 초기화
@@ -218,7 +268,7 @@ export default function UnstructuredBuilder({
       setDocumentType("");
       setFields([]);
       setTables([]);
-      setSelectedNo(null);
+      setSelectedTarget(null);
     }
   };
 
@@ -286,7 +336,7 @@ export default function UnstructuredBuilder({
       {/* ── 우측: 편집 패널 ── */}
       <div style={{ width: 420, flexShrink: 0, display: "flex", flexDirection: "column", gap: 8, minHeight: 0 }}>
 
-        {/* 삭제 / 저장 */}
+        {/* 삭제 / 저장 — 템플릿 전체에 대한 삭제(편집 모드) 또는 작성 폼 초기화 */}
         <div style={{
           flexShrink: 0,
           background: "var(--panel)",
@@ -344,17 +394,22 @@ export default function UnstructuredBuilder({
             <div className="oc-section-header">
               <h3 className="oc-section-title" style={{ margin: 0 }}>출력 정의</h3>
               <div style={{ display: "flex", gap: 5 }}>
-                <button onClick={addField} className="ms-btn-sm">+ 영역 정의</button>
-                <button onClick={addTable} className="ms-btn-sm">+ 테이블 정의</button>
+                <button onClick={addField} className="ms-btn-sm">영역 정의</button>
+                <button onClick={addTable} className="ms-btn-sm">테이블 정의</button>
+                {/* TPL-14A — 선택 대상(영역/테이블/컬럼)에 따라 라벨이 바뀌는 단일 삭제 버튼 */}
                 <button
-                  onClick={() => {
-                    if (selectedNo == null) return;
-                    setFields(fields.filter((f) => f.no !== selectedNo));
-                    setSelectedNo(null);
-                  }}
+                  onClick={handleSelectedDelete}
+                  disabled={isSelectedDeleteDisabled}
                   className="ms-btn-sm"
-                  style={{ color: "#ef4444", borderColor: "rgba(239,68,68,0.4)" }}>
-                  삭제
+                  style={{
+                    color: isSelectedDeleteDisabled ? "var(--muted)" : "#ef4444",
+                    borderColor: isSelectedDeleteDisabled
+                      ? "var(--border)"
+                      : "rgba(239,68,68,0.4)",
+                    opacity: isSelectedDeleteDisabled ? 0.55 : 1,
+                    cursor: isSelectedDeleteDisabled ? "not-allowed" : "pointer",
+                  }}>
+                  {selectedDeleteLabel}
                 </button>
               </div>
             </div>
@@ -365,7 +420,8 @@ export default function UnstructuredBuilder({
                 일반 영역
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {/* 헤더 — No / 영문 필드명 / 한글 필드명 */}
+                {/* 헤더(No/영문/한글)는 fields가 1개 이상일 때만 표시 — 빈 상태에서 어색한 빈 그리드가 보이지 않도록 */}
+                {fields.length > 0 && (
                 <div style={{
                   display: "grid", gridTemplateColumns: "28px 1fr 1fr",
                   gap: 6, alignItems: "center",
@@ -378,16 +434,17 @@ export default function UnstructuredBuilder({
                   <span style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", textAlign: "center" }}>영문 필드명</span>
                   <span style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", textAlign: "center" }}>한글 필드명</span>
                 </div>
+                )}
 
                 {fields.length === 0 ? (
                   <div style={{ fontSize: 13, color: "var(--muted)", padding: "4px 0" }}>정의된 영역이 없습니다.</div>
                 ) : (
-                  fields.map((f) => {
-                    const isSel = selectedNo === f.no;
+                  fields.map((f, infoIdx) => {
+                    const isSel = selectedTarget?.type === "info" && selectedTarget.index === infoIdx;
                     return (
                       <div
                         key={f.no}
-                        onClick={() => setSelectedNo(isSel ? null : f.no)}
+                        onClick={() => setSelectedTarget({ type: "info", index: infoIdx })}
                         style={{
                           display: "grid", gridTemplateColumns: "28px 1fr 1fr",
                           gap: 6, alignItems: "center",
@@ -405,6 +462,7 @@ export default function UnstructuredBuilder({
                           value={f.enField}
                           onChange={(e) => updateField(f.no, "enField", e.target.value)}
                           onClick={(e) => e.stopPropagation()}
+                          onFocus={() => setSelectedTarget({ type: "info", index: infoIdx })}
                           placeholder="영문 필드명"
                           className="ms-input"
                           style={{ minWidth: 0, width: "100%", boxSizing: "border-box" }}
@@ -413,6 +471,7 @@ export default function UnstructuredBuilder({
                           value={f.koField}
                           onChange={(e) => updateField(f.no, "koField", e.target.value)}
                           onClick={(e) => e.stopPropagation()}
+                          onFocus={() => setSelectedTarget({ type: "info", index: infoIdx })}
                           placeholder="한글 필드명"
                           className="ms-input"
                           style={{ minWidth: 0, width: "100%", boxSizing: "border-box" }}
@@ -433,24 +492,39 @@ export default function UnstructuredBuilder({
                 <div style={{ fontSize: 13, color: "var(--muted)", padding: "4px 0" }}>정의된 테이블이 없습니다.</div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {tables.map((t, tableIdx) => (
+                  {tables.map((t, tableIdx) => {
+                    const isTableSel =
+                      selectedTarget?.type === "table" && selectedTarget.tableIndex === tableIdx;
+                    return (
                     <div
                       key={`table_${tableIdx}`}
+                      onClick={() => setSelectedTarget({ type: "table", tableIndex: tableIdx })}
                       style={{
-                        background: "var(--panel2)",
-                        border: "1px solid var(--border)",
+                        background: isTableSel ? "var(--accentBg)" : "var(--panel2)",
+                        border: isTableSel
+                          ? "1px solid var(--accent)"
+                          : "1px solid var(--border)",
+                        boxShadow: isTableSel
+                          ? "0 0 0 1px rgba(34,211,238,0.25)"
+                          : "none",
                         borderRadius: 10,
                         padding: 10,
                         display: "flex",
                         flexDirection: "column",
                         gap: 8,
+                        cursor: "pointer",
                       }}
                     >
-                      {/* 카드 헤더 — 테이블명 + [+ 컬럼] [표 삭제] */}
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto auto", gap: 6, alignItems: "center" }}>
+                      {/* 카드 헤더 — No / 테이블 key / 테이블명 / + 컬럼 (TPL-14A: 표 삭제 버튼 제거) */}
+                      <div style={{ display: "grid", gridTemplateColumns: "28px 1fr 1fr auto", gap: 6, alignItems: "center" }}>
+                        <span style={{ textAlign: "center", fontSize: 13, fontWeight: 700, color: isTableSel ? "var(--accent)" : "var(--text)" }}>
+                          {fields.length + tableIdx + 1}
+                        </span>
                         <input
                           value={t.tableKey ?? ""}
                           onChange={(e) => updateTable(tableIdx, { tableKey: e.target.value })}
+                          onClick={(e) => e.stopPropagation()}
+                          onFocus={() => setSelectedTarget({ type: "table", tableIndex: tableIdx })}
                           placeholder="영문 테이블 key"
                           className="ms-input"
                           style={{ minWidth: 0, width: "100%", boxSizing: "border-box" }}
@@ -458,31 +532,28 @@ export default function UnstructuredBuilder({
                         <input
                           value={t.labelKo ?? ""}
                           onChange={(e) => updateTable(tableIdx, { labelKo: e.target.value })}
+                          onClick={(e) => e.stopPropagation()}
+                          onFocus={() => setSelectedTarget({ type: "table", tableIndex: tableIdx })}
                           placeholder="테이블명"
                           className="ms-input"
                           style={{ minWidth: 0, width: "100%", boxSizing: "border-box" }}
                         />
                         <button
                           type="button"
-                          onClick={() => addColumn(tableIdx)}
+                          onClick={(e) => { e.stopPropagation(); addColumn(tableIdx); }}
                           className="ms-btn-sm"
                         >
                           + 컬럼
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => removeTable(tableIdx)}
-                          className="ms-btn-sm"
-                          style={{ color: "#ef4444", borderColor: "rgba(239,68,68,0.4)" }}
-                        >
-                          표 삭제
-                        </button>
                       </div>
 
-                      {/* 컬럼 grid */}
+                      {/* 컬럼 grid — TPL-14A: row X 삭제 버튼 제거, 선택 기반으로 통일
+                          정형 Template과 동일한 "표준 컬럼" select를 추가해 backend canonical
+                          key 매핑을 빠르게 채울 수 있게 한다. (가운데 두 input은 비어 있을
+                          때만 표준값/한글명으로 자동 채워지고, 이미 입력한 값은 보호.) */}
                       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                         <div style={{
-                          display: "grid", gridTemplateColumns: "28px 1fr 1fr 24px",
+                          display: "grid", gridTemplateColumns: "28px 1fr 1fr 1fr",
                           gap: 6, alignItems: "center",
                           padding: "6px 8px",
                           background: "rgba(255,255,255,0.04)",
@@ -492,55 +563,94 @@ export default function UnstructuredBuilder({
                           <span style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textAlign: "center" }}>No</span>
                           <span style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textAlign: "center" }}>영문 컬럼명</span>
                           <span style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textAlign: "center" }}>한글 컬럼명</span>
-                          <span />
+                          <span style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textAlign: "center" }}>표준 컬럼</span>
                         </div>
                         {(t.columns ?? []).length === 0 ? (
                           <div style={{ fontSize: 12, color: "var(--muted)", padding: "4px 0" }}>컬럼이 없습니다.</div>
                         ) : (
-                          (t.columns ?? []).map((c, colIdx) => (
+                          (t.columns ?? []).map((c, colIdx) => {
+                            const isColSel =
+                              selectedTarget?.type === "column" &&
+                              selectedTarget.tableIndex === tableIdx &&
+                              selectedTarget.columnIndex === colIdx;
+                            const columnKeyVal = c.columnKey ?? "";
+                            const labelKoVal = c.labelKo ?? "";
+                            // 별도 canonicalColumn 필드가 없는 비정형 schema에서는
+                            // columnKey가 표준 옵션 value와 일치할 때만 select에 표시.
+                            const canonicalVal = findCanonicalValueByKey(columnKeyVal);
+                            return (
                             <div
                               key={`col_${colIdx}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedTarget({ type: "column", tableIndex: tableIdx, columnIndex: colIdx });
+                              }}
                               style={{
-                                display: "grid", gridTemplateColumns: "28px 1fr 1fr 24px",
+                                display: "grid", gridTemplateColumns: "28px 1fr 1fr 1fr",
                                 gap: 6, alignItems: "center",
                                 padding: "6px 8px",
-                                background: "var(--panel)",
-                                border: "1px solid var(--border)",
+                                background: isColSel ? "var(--accentBg)" : "var(--panel)",
+                                border: isColSel
+                                  ? "1px solid var(--accent)"
+                                  : "1px solid var(--border)",
                                 borderRadius: 8,
+                                cursor: "pointer",
                               }}
                             >
-                              <span style={{ textAlign: "center", fontSize: 12, fontWeight: 700, color: "var(--text)" }}>
+                              <span style={{ textAlign: "center", fontSize: 12, fontWeight: 700, color: isColSel ? "var(--accent)" : "var(--text)" }}>
                                 {colIdx + 1}
                               </span>
                               <input
-                                value={c.columnKey ?? ""}
+                                value={columnKeyVal}
                                 onChange={(e) => updateColumn(tableIdx, colIdx, { columnKey: e.target.value })}
+                                onClick={(e) => e.stopPropagation()}
+                                onFocus={() => setSelectedTarget({ type: "column", tableIndex: tableIdx, columnIndex: colIdx })}
                                 placeholder="영문 컬럼명"
                                 className="ms-input"
                                 style={{ minWidth: 0, width: "100%", boxSizing: "border-box" }}
                               />
                               <input
-                                value={c.labelKo ?? ""}
+                                value={labelKoVal}
                                 onChange={(e) => updateColumn(tableIdx, colIdx, { labelKo: e.target.value })}
+                                onClick={(e) => e.stopPropagation()}
+                                onFocus={() => setSelectedTarget({ type: "column", tableIndex: tableIdx, columnIndex: colIdx })}
                                 placeholder="한글 컬럼명"
                                 className="ms-input"
                                 style={{ minWidth: 0, width: "100%", boxSizing: "border-box" }}
                               />
-                              <button
-                                type="button"
-                                onClick={() => removeColumn(tableIdx, colIdx)}
-                                className="ms-btn-sm"
-                                title="컬럼 삭제"
-                                style={{ color: "#ef4444", borderColor: "rgba(239,68,68,0.4)", padding: "2px 6px" }}
+                              <select
+                                value={canonicalVal}
+                                onChange={(e) => {
+                                  const next = e.target.value;
+                                  // "선택 안 함"이면 사용자 입력 유지, 아무것도 변경하지 않음
+                                  if (!next) return;
+                                  const opt = CANONICAL_COLUMN_OPTIONS.find((o) => o.value === next);
+                                  // 표준 컬럼이 source-of-truth: 영문 key + 한글 모두 무조건 덮어쓰기.
+                                  // 같은 옵션을 다시 골라도 일관되게 표시되도록.
+                                  updateColumn(tableIdx, colIdx, {
+                                    columnKey: next,
+                                    labelKo: opt?.labelKo ?? "",
+                                  });
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                                onFocus={() => setSelectedTarget({ type: "column", tableIndex: tableIdx, columnIndex: colIdx })}
+                                className="ms-input"
+                                style={{ minWidth: 0, width: "100%", boxSizing: "border-box" }}
                               >
-                                ✕
-                              </button>
+                                {CANONICAL_COLUMN_OPTIONS.map((opt) => (
+                                  <option key={opt.value || "__none"} value={opt.value}>
+                                    {canonicalColumnLabel(opt)}
+                                  </option>
+                                ))}
+                              </select>
                             </div>
-                          ))
+                            );
+                          })
                         )}
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

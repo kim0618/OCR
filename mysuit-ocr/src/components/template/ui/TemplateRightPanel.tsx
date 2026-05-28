@@ -4,25 +4,18 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import type { FieldType, LoadedImage, Region, TableColumnDef } from "../../../common/types/ocr";
 import { normalizeRatios, calcMultiSubRegions } from "../../../common/utils/ocrCanvasOps";
 import { normalizeColGuides } from "../../../common/utils/ocrTableRegion";
+import {
+  DOCUMENT_TYPE_GROUP_OPTIONS,
+  getDocumentTypeGroup,
+  applyDocumentTypeGroupChange,
+} from "../utils/documentTypeGroup";
+import {
+  CANONICAL_COLUMN_OPTIONS,
+  canonicalColumnLabel,
+} from "../utils/canonicalColumnOptions";
 
-// TPL-9B: canonical 컬럼 옵션 (MVP). Test 전용 profiles.ts에 의존하지 않기
-// 위해 여기에 인라인으로 둔다. 사용자는 자유롭게 columnKey/labelKo를 입력
-// 가능하며, 이 select는 backend canonical key와의 매핑 hint만 제공한다.
-const CANONICAL_COLUMN_OPTIONS: ReadonlyArray<{ value: string; labelKo: string }> = [
-  { value: "",             labelKo: "" },
-  { value: "itemName",     labelKo: "품목명" },
-  { value: "spec",         labelKo: "규격" },
-  { value: "quantity",     labelKo: "수량" },
-  { value: "unitPrice",    labelKo: "단가" },
-  { value: "supplyAmount", labelKo: "공급가액" },
-  { value: "taxAmount",    labelKo: "세액" },
-  { value: "amount",       labelKo: "금액" },
-  { value: "lotNo",        labelKo: "제조번호" },
-  { value: "expiryDate",   labelKo: "유효기간" },
-  { value: "itemCode",     labelKo: "품목코드" },
-  { value: "unit",         labelKo: "단위" },
-  { value: "remark",       labelKo: "비고" },
-];
+// TPL-9B: canonical 컬럼 옵션은 비정형 UnstructuredBuilder와 공용으로
+// utils/canonicalColumnOptions.ts에 분리. 기존 import alias 유지.
 
 type Props = {
   imgRef: React.RefObject<HTMLImageElement | null>;
@@ -30,6 +23,8 @@ type Props = {
   setTemplateName: React.Dispatch<React.SetStateAction<string>>;
   documentType: string;
   setDocumentType: (value: string) => void;
+  /** 자동 문서 유형 감지 진행 여부. true면 라벨 옆에 "감지 중..." hint 표시. */
+  docTypeDetecting?: boolean;
   loaded: LoadedImage | null;
   regions: Region[];
   setRegions: React.Dispatch<React.SetStateAction<Region[]>>;
@@ -59,6 +54,7 @@ export default function TemplateRightPanel(props: Props) {
     setTemplateName,
     documentType,
     setDocumentType,
+    docTypeDetecting = false,
     loaded,
     regions,
     setRegions,
@@ -294,21 +290,49 @@ export default function TemplateRightPanel(props: Props) {
           className="ms-input"
           style={{ width: "100%" }}
         />
-        <h2 className="oc-label" style={{ marginTop: 8 }}>문서 유형</h2>
+        <h2 className="oc-label" style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 8 }}>
+          <span>문서 유형</span>
+          {docTypeDetecting && (
+            <span style={{
+              fontSize: 11,
+              fontWeight: 500,
+              color: "var(--accent)",
+              letterSpacing: 0,
+              textTransform: "none",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+            }}>
+              <span style={{
+                display: "inline-block",
+                width: 8,
+                height: 8,
+                borderRadius: "50%",
+                background: "var(--accent)",
+                animation: "tpl-detect-pulse 1.2s ease-in-out infinite",
+              }} />
+              감지 중...
+              <style jsx>{`
+                @keyframes tpl-detect-pulse {
+                  0%, 100% { opacity: 0.35; }
+                  50%      { opacity: 1; }
+                }
+              `}</style>
+            </span>
+          )}
+        </h2>
+        {/* 그룹 드롭다운(영수증/거래명세서/세금계산서) — 자동 감지된 세부값은
+            저장값으로 그대로 보존되며, 같은 그룹을 다시 골라도 세부값이
+            바뀌지 않는다. UnstructuredBuilder와 동일한 옵션을 사용한다. */}
         <select
-          value={documentType}
-          onChange={(e) => setDocumentType(e.target.value)}
+          value={getDocumentTypeGroup(documentType)}
+          onChange={(e) => setDocumentType(applyDocumentTypeGroupChange(documentType, e.target.value))}
           className="ms-input"
           style={{ width: "100%" }}
         >
-          <option value="">-- 선택 --</option>
-          <option value="invoice_statement">invoice_statement (거래명세서)</option>
-          <option value="card_receipt">card_receipt (카드영수증)</option>
-          <option value="pos_receipt">pos_receipt (POS영수증)</option>
-          <option value="food_cafe_receipt">food_cafe_receipt (음식/카페)</option>
-          <option value="finance_slip">finance_slip (금융전표)</option>
-          <option value="medical_receipt">medical_receipt (의료영수증)</option>
-          <option value="unknown">unknown</option>
+          {DOCUMENT_TYPE_GROUP_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
         </select>
       </div>
 
@@ -616,7 +640,7 @@ export default function TemplateRightPanel(props: Props) {
                             ? "세로 가이드가 없으면 전체 영역을 1개 컬럼으로 봅니다."
                             : "열 가이드 기준으로 컬럼을 정의합니다."}
                         </div>
-                        {/* 헤더 — No / 한글 컬럼명 / 영문 key / 표준 컬럼 */}
+                        {/* 헤더 — No / 영문 컬럼명 / 한글 컬럼명 / 표준 컬럼 */}
                         <div style={{
                           display: "grid", gridTemplateColumns: "28px 1.2fr 1fr 1fr",
                           gap: 6, alignItems: "center",
@@ -626,8 +650,8 @@ export default function TemplateRightPanel(props: Props) {
                           borderRadius: 8,
                         }}>
                           <span style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textAlign: "center" }}>No</span>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textAlign: "center" }}>영문 컬럼명</span>
                           <span style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textAlign: "center" }}>한글 컬럼명</span>
-                          <span style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textAlign: "center" }}>영문 key</span>
                           <span style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textAlign: "center" }}>표준 컬럼</span>
                         </div>
                         {/* 컬럼 행 — getColumns(colGuides.length + 1)가 자동 entry 생성 */}
@@ -671,6 +695,18 @@ export default function TemplateRightPanel(props: Props) {
                                   {col.index + 1}
                                 </span>
                                 <input
+                                  value={columnKeyVal}
+                                  onChange={(e) => {
+                                    const v = e.target.value;
+                                    // columnKey가 source-of-truth. labelEn/enField는 mirror.
+                                    updateColumn(selected.id, col.index, { columnKey: v, labelEn: v, enField: v });
+                                  }}
+                                  onFocus={focusThisColumn}
+                                  placeholder="영문 컬럼명"
+                                  className="ms-input"
+                                  style={{ minWidth: 0, width: "100%", boxSizing: "border-box" }}
+                                />
+                                <input
                                   value={labelKoVal}
                                   onChange={(e) => {
                                     const v = e.target.value;
@@ -679,18 +715,6 @@ export default function TemplateRightPanel(props: Props) {
                                   }}
                                   onFocus={focusThisColumn}
                                   placeholder="한글 컬럼명"
-                                  className="ms-input"
-                                  style={{ minWidth: 0, width: "100%", boxSizing: "border-box" }}
-                                />
-                                <input
-                                  value={columnKeyVal}
-                                  onChange={(e) => {
-                                    const v = e.target.value;
-                                    // columnKey가 source-of-truth. labelEn/enField는 mirror.
-                                    updateColumn(selected.id, col.index, { columnKey: v, labelEn: v, enField: v });
-                                  }}
-                                  onFocus={focusThisColumn}
-                                  placeholder="영문 key"
                                   className="ms-input"
                                   style={{ minWidth: 0, width: "100%", boxSizing: "border-box" }}
                                 />
@@ -722,7 +746,7 @@ export default function TemplateRightPanel(props: Props) {
                                 >
                                   {CANONICAL_COLUMN_OPTIONS.map((opt) => (
                                     <option key={opt.value || "__none"} value={opt.value}>
-                                      {opt.value === "" ? "선택 안 함" : `${opt.value} (${opt.labelKo})`}
+                                      {canonicalColumnLabel(opt)}
                                     </option>
                                   ))}
                                 </select>
