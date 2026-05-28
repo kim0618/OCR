@@ -71,6 +71,35 @@ DOCUMENT_FIELD_KEYS = (
 )
 
 
+# BACKEND-INVOICE-FREE-4D: party/summary scalar keys reused from the existing
+# invoice_statement.py parser. The free parser fills these poorly on its own, so
+# on a free-parser success we backfill empties from extract_invoice_statement_fields.
+REFERENCE_SCALAR_MERGE_KEYS = (
+    "supplierBizNumber",
+    "supplierCompany",
+    "supplierAddress",
+    "supplierRepresentative",
+    "buyerBizNumber",
+    "buyerCompany",
+    "buyerAddress",
+    "buyerRepresentative",
+    "totalAmount",
+    "cumulativeAmount",
+    "supplyAmount",
+    "taxAmount",
+    "issueDate",
+)
+# Table contract is owned by the free parser; reference values for these keys must
+# never overwrite the free result (tableRows/tableMeta merge exclusion).
+REFERENCE_SCALAR_MERGE_EXCLUDED_KEYS = (
+    "tableRows",
+    "tableMeta",
+    "tableDetected",
+    "rowCount",
+    "firstRowPreview",
+)
+
+
 REQUIRED_TABLE_ROW_KEYS = ("itemName", "spec", "quantity", "unitPrice", "amount")
 FORBIDDEN_FREE_TOP_LEVEL_KEYS = (
     "freeInvoiceRows",
@@ -1070,6 +1099,93 @@ def _normalize_success_table_rows(table_rows: Any) -> list[dict[str, Any]]:
     return normalized_rows
 
 
+def _extract_reference_invoice_statement_fields(
+    ocr_lines_raw: Any,
+    context: dict[str, Any] | None = None,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Reuse the existing ``invoice_statement.py`` scalar extraction.
+
+    The free parser fills party/summary scalars poorly, so on a free success we
+    run the proven ``extract_invoice_statement_fields`` over the *same*
+    ``ocr_lines_raw`` and reuse its party/summary scalar output. The import is
+    lazy: ``invoice_statement.py`` never imports this module, so there is no
+    circular import, and a lazy import keeps the standalone scaffold loadable.
+    The call is purely in-memory (no extra OCR), and any failure degrades to an
+    empty result so the free parser never raises on the success path.
+    """
+
+    debug: dict[str, Any] = {"attempted": False, "ok": False}
+    if not isinstance(ocr_lines_raw, (list, tuple)) or not ocr_lines_raw:
+        debug["reason"] = "no_ocr_lines"
+        return {}, debug
+    try:
+        from extractors.invoice_statement import extract_invoice_statement_fields
+    except Exception as exc:  # pragma: no cover - import guard
+        debug["reason"] = f"import_failed: {exc}"
+        return {}, debug
+    ctx = dict(context or {})
+    debug["attempted"] = True
+    try:
+        reference = extract_invoice_statement_fields(
+            list(ocr_lines_raw),
+            table_expected_columns=ctx.get("tableExpectedColumns"),
+            table_bounds=ctx.get("tableBounds"),
+            column_guides=ctx.get("columnGuides"),
+        )
+    except Exception as exc:
+        debug["reason"] = f"extract_failed: {exc}"
+        return {}, debug
+    if not isinstance(reference, dict):
+        debug["reason"] = "non_dict_result"
+        return {}, debug
+    debug["ok"] = True
+    debug["referenceFilledScalarKeys"] = [
+        key for key in REFERENCE_SCALAR_MERGE_KEYS if _has_meaningful_value(reference.get(key))
+    ]
+    return reference, debug
+
+
+def _merge_invoice_statement_reference_scalars(
+    free_fields: dict[str, Any],
+    reference_fields: dict[str, Any],
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Backfill empty party/summary scalars in the free result from the reference.
+
+    Policy:
+    - Only the scalar keys in ``REFERENCE_SCALAR_MERGE_KEYS`` are considered.
+    - A meaningful free value is preserved (free wins; recorded as skipped).
+    - An empty free value is filled from a meaningful reference value.
+    - ``tableRows`` / ``tableMeta`` / ``tableDetected`` / ``rowCount`` /
+      ``firstRowPreview`` are never read from the reference (merge exclusion),
+      so the free parser's table output is preserved verbatim.
+    """
+
+    merged = dict(free_fields) if isinstance(free_fields, dict) else {}
+    ref = reference_fields if isinstance(reference_fields, dict) else {}
+    filled: list[str] = []
+    skipped: list[str] = []
+    for key in REFERENCE_SCALAR_MERGE_KEYS:
+        if key in REFERENCE_SCALAR_MERGE_EXCLUDED_KEYS:
+            continue
+        if _has_meaningful_value(merged.get(key)):
+            skipped.append(key)
+            continue
+        if _has_meaningful_value(ref.get(key)):
+            merged[key] = _normalize_text(ref.get(key))
+            filled.append(key)
+    scalar_merge_debug = {
+        "enabled": True,
+        "source": "invoice_statement",
+        "function": "extract_invoice_statement_fields",
+        "candidateKeys": list(REFERENCE_SCALAR_MERGE_KEYS),
+        "filledKeys": filled,
+        "skippedKeys": skipped,
+        "excludedKeys": list(REFERENCE_SCALAR_MERGE_EXCLUDED_KEYS),
+        "tablePreserved": True,
+    }
+    return merged, scalar_merge_debug
+
+
 def _build_success_invoice_statement_free_result(
     *,
     table_rows: list[dict[str, Any]] | None,
@@ -1314,6 +1430,13 @@ def extract_invoice_statement_free(
         "fallbackRequired": True,
     }
     if release_pass and doc_type == "invoice_statement" and not template_mode:
+        reference_fields, reference_debug = _extract_reference_invoice_statement_fields(
+            ocr_lines_raw, ctx
+        )
+        document_fields, scalar_merge_debug = _merge_invoice_statement_reference_scalars(
+            document_fields, reference_fields
+        )
+        scalar_merge_debug["reference"] = reference_debug
         free_debug_payload.update(
             {
                 "status": "success",
@@ -1321,6 +1444,7 @@ def extract_invoice_statement_free(
                 "fallbackUsed": False,
                 "fallbackReason": "",
                 "fallbackRequired": False,
+                "scalarMerge": scalar_merge_debug,
             }
         )
         return _build_success_invoice_statement_free_result(
@@ -1346,8 +1470,12 @@ def extract_invoice_statement_free_fields(**kwargs: Any) -> dict[str, Any]:
 
 __all__ = [
     "DOCUMENT_FIELD_KEYS",
+    "REFERENCE_SCALAR_MERGE_KEYS",
+    "REFERENCE_SCALAR_MERGE_EXCLUDED_KEYS",
     "TABLE_ROW_KEYS",
     "_build_table_candidate_diagnostics",
+    "_extract_reference_invoice_statement_fields",
+    "_merge_invoice_statement_reference_scalars",
     "_extract_line_texts",
     "_extract_ocr_line_items",
     "_extract_text_from_ocr_line",

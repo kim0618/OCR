@@ -74,8 +74,6 @@ from utils.regex_patterns import (
     _ADDRESS_BROAD_ONLY_RE, _ADDRESS_TRAILING_NOISE_RE,
 )
 
-USE_INVOICE_STATEMENT_FREE = os.getenv("USE_INVOICE_STATEMENT_FREE", "0") == "1"
-
 app = FastAPI(title="MySuit OCR Server")
 
 
@@ -1961,10 +1959,12 @@ async def ocr_extract(
             None,
         )
         template_json = selected_template.get("template_json", {}) if selected_template else {}
-        if isinstance(template_json, dict) and not _is_unstructured_template:
-            _stored_template_mode = (template_json.get("mode", "") or "").strip().lower()
-            _is_unstructured_template = _stored_template_mode == "unstructured"
-        region_list = template_json.get("regions", []) if isinstance(template_json, dict) else []
+        if isinstance(template_json, dict):
+            if not _is_unstructured_template:
+                _stored_template_mode = (template_json.get("mode", "") or "").strip().lower()
+                _is_unstructured_template = _stored_template_mode == "unstructured"
+            if not _is_unstructured_template:
+                region_list = template_json.get("regions", [])
         # T-9-fix: read stored documentType from template metadata (priority over classify_document)
         _template_doc_type = (template_json.get("documentType", "") or "").strip() if isinstance(template_json, dict) else ""
     elif region_list and template_id:
@@ -2672,9 +2672,8 @@ async def ocr_extract(
             _free_debug: dict = {}
             document_fields = None
             _try_invoice_free = bool(
-                USE_INVOICE_STATEMENT_FREE
-                and not region_list
-                and (not template_id or _is_unstructured_template)
+                not region_list
+                and _is_unstructured_template
             )
             if _try_invoice_free:
                 try:
@@ -2685,6 +2684,7 @@ async def ocr_extract(
                         doc_type=doc_type,
                         context={
                             "templateMode": False,
+                            "requestTemplateMode": _template_mode_marker,
                             "isUnstructuredTemplate": _is_unstructured_template,
                             "template_id": "" if _is_unstructured_template else template_id,
                             "selectedTemplateId": template_id,
