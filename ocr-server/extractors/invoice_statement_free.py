@@ -520,11 +520,12 @@ def _metadata_negative_reason(text: str) -> str:
             "사업자", "대표자", "공급자", "공급받", "상호", "성명", "주소", "전화",
         ),
         "summary_or_balance": (
-            "total", "balance", "vat", "tax", "합계", "총액", "부가세", "누계", "잔액", "계약잔액",
+            "total", "balance", "vat", "tax", "합계", "소계", "총액", "부가세", "누계", "잔액", "계약잔액",
         ),
         "document_or_footer": (
             "page", "no.", "document", "ossbook", "www.", ".co.kr",
-            "출력", "일자", "페이지", "문서", "세금계산서", "전자장부", "계약코드", "영업사원", "간납처",
+            "출력", "일자", "페이지", "문서", "세금계산서", "전자장부", "계약코드",
+            "영업사원", "영업소", "도매관리", "간납처",
         ),
     }
     for reason, words in markers.items():
@@ -543,6 +544,7 @@ def _is_summary_or_header_line(text: str) -> bool:
         return True
     summary_markers = (
         "합계",
+        "소계",
         "총액",
         "청구금액",
         "공급대가",

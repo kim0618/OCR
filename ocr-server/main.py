@@ -2348,8 +2348,15 @@ async def ocr_extract(
         _t_cls0 = time.time()
         full_text_joined = "\n".join(full_lines)
         doc_info = classify_document(full_text_joined)
-        doc_type = doc_info["type"]
-        print(f"[DOC] type={doc_type} scores={doc_info['scores']}")
+        _classified_doc_type = doc_info.get("type", "unknown")
+        # FULL_UNSTRUCTURED_INVOICE_DOCUMENTTYPE_OVERRIDE_PATCH_2B:
+        # explicit form documentType wins in full-OCR too; empty keeps classify_document fallback.
+        _explicit_doc_type = (documentType or "").strip()
+        doc_type = _explicit_doc_type or _classified_doc_type
+        print(
+            f"[DOC] type={doc_type} explicit={_explicit_doc_type!r} "
+            f"classified={_classified_doc_type} scores={doc_info['scores']}"
+        )
         timings["classify_document_ms"] = _ms(time.time() - _t_cls0)
 
         # === 사전 시험 추출 (full_ocr 만으로) — re-OCR 필요성 판단 ===

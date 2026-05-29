@@ -87,6 +87,72 @@ type TemplateItem = {
 const DEFAULT_TEMPLATES: TemplateItem[] = [];
 const LOCAL_TEMPLATES_KEY = "mysuit_ocr_templates";
 
+// FULL-UNSTRUCTURED-INVOICE-2D: client-side synthetic "no template / fully
+// unstructured (invoice_statement)" option. It is NOT a saved template — it is
+// never written to templates.json or localStorage. Selecting it makes the run
+// flow behave like an unstructured template (mode:"unstructured", documentType:
+// "invoice_statement", no regions) so the existing buildOcrFormData /
+// mapOcrResponse / OcrResultPanel paths are reused unchanged. The synthetic id
+// must NOT be sent to the backend as template_id (see runOcr payload below).
+const FULL_UNSTRUCTURED_INVOICE_TEMPLATE_ID = "__FULL_UNSTRUCTURED_INVOICE__";
+const DEFAULT_UNSTRUCTURED_INVOICE_TEMPLATE: TemplateItem = {
+  id: FULL_UNSTRUCTURED_INVOICE_TEMPLATE_ID,
+  name: "비정형",
+  mode: "unstructured",
+  documentType: "invoice_statement",
+  regions: [],
+  // Default invoice_statement scalar schema. labelEn is the canonical
+  // document_fields scalar key so mapOcrResponse.pickInvoiceDocumentField
+  // resolves the value by direct key match (alias map is a secondary path).
+  info: [
+    { key: "supplierBizNumber", labelKo: "공급자 등록번호", labelEn: "supplierBizNumber", no: 1 },
+    { key: "supplierCompany", labelKo: "공급자 상호", labelEn: "supplierCompany", no: 2 },
+    { key: "supplierAddress", labelKo: "공급자 주소", labelEn: "supplierAddress", no: 3 },
+    { key: "supplierRepresentative", labelKo: "공급자 성명", labelEn: "supplierRepresentative", no: 4 },
+    { key: "buyerBizNumber", labelKo: "공급받는자 등록번호", labelEn: "buyerBizNumber", no: 5 },
+    { key: "buyerCompany", labelKo: "공급받는자 상호", labelEn: "buyerCompany", no: 6 },
+    { key: "buyerAddress", labelKo: "공급받는자 주소", labelEn: "buyerAddress", no: 7 },
+    { key: "buyerRepresentative", labelKo: "공급받는자 성명", labelEn: "buyerRepresentative", no: 8 },
+    { key: "issueDate", labelKo: "작성일자", labelEn: "issueDate", no: 9 },
+    { key: "totalAmount", labelKo: "합계금액", labelEn: "totalAmount", no: 10 },
+    { key: "cumulativeAmount", labelKo: "누계", labelEn: "cumulativeAmount", no: 11 },
+    { key: "supplyAmount", labelKo: "공급가액", labelEn: "supplyAmount", no: 12 },
+    { key: "taxAmount", labelKo: "세액", labelEn: "taxAmount", no: 13 },
+  ],
+  // 품목표 column hints. Row DATA itself still comes from backend
+  // document_fields.tableRows (buildInvoicePreviewCols auto-derives columns);
+  // this definition only stabilizes the Preview/Custom 품목표 projection.
+  tables: [
+    {
+      tableKey: "table_1",
+      labelKo: "품목표",
+      columns: [
+        { columnKey: "itemName", labelKo: "품목명" },
+        { columnKey: "spec", labelKo: "규격" },
+        { columnKey: "lotNo", labelKo: "LOT" },
+        { columnKey: "expiryDate", labelKo: "유효기간" },
+        { columnKey: "quantity", labelKo: "수량" },
+        { columnKey: "unitPrice", labelKo: "단가" },
+        { columnKey: "amount", labelKo: "금액" },
+      ],
+    },
+  ],
+};
+
+function isFullUnstructuredInvoiceId(id: string | undefined | null): boolean {
+  return id === FULL_UNSTRUCTURED_INVOICE_TEMPLATE_ID;
+}
+
+// Resolve the active template by id, returning the synthetic invoice template
+// for the full-unstructured sentinel id and otherwise the saved template.
+function resolveActiveTemplate(
+  id: string,
+  templates: TemplateItem[],
+): TemplateItem | undefined {
+  if (isFullUnstructuredInvoiceId(id)) return DEFAULT_UNSTRUCTURED_INVOICE_TEMPLATE;
+  return templates.find((t) => t.id === id);
+}
+
 type RunOcrWorkspaceVariant = "upload" | "runocr";
 type RunOcrTemplateMode = "template" | "unstructured";
 
@@ -843,7 +909,7 @@ export default function RunOcrWorkspace({ variant = "upload" }: RunOcrWorkspaceP
       return;
     }
     setIsOcrRunning(true);
-    const activeTemplate = templates.find((t) => t.id === activeTemplateId);
+    const activeTemplate = resolveActiveTemplate(activeTemplateId, templates);
     const isUnstructuredTemplate = isUnstructuredRunOcrTemplate(activeTemplate);
     const useRegionTemplate = !!activeTemplate && !isUnstructuredTemplate && hasRegionTemplate(activeTemplate);
     const payloadTemplateMode = runOcrPayloadTemplateMode(activeTemplate);
@@ -853,7 +919,11 @@ export default function RunOcrWorkspace({ variant = "upload" }: RunOcrWorkspaceP
       // if (corners.length === 4) formData.append("corners", JSON.stringify(corners));
       const json = await runOcrRequest({
         file: selectedFile,
-        templateId: activeTemplateId,
+        // 2D: synthetic full-unstructured id must NOT reach the backend as a
+        // template_id (no such stored template). Send empty so buildOcrFormData
+        // omits template_id; documentType/templateMode/isUnstructuredTemplate
+        // below still drive the free path.
+        templateId: isFullUnstructuredInvoiceId(activeTemplateId) ? "" : activeTemplateId,
         useRegionTemplate,
         regions: activeTemplate?.regions,
         isRunOcr,
@@ -1131,7 +1201,7 @@ export default function RunOcrWorkspace({ variant = "upload" }: RunOcrWorkspaceP
 
   // OCR 결과 화면에서 사용할 URL (전처리 이미지 우선)
   const ocrDisplayUrl = processedImageUrl ?? displayUrl;
-  const activeTemplateForPanel = templates.find((t) => t.id === activeTemplateId);
+  const activeTemplateForPanel = resolveActiveTemplate(activeTemplateId, templates);
 
   useEffect(() => {
     if (!ocrResult) return;
@@ -1360,6 +1430,28 @@ export default function RunOcrWorkspace({ variant = "upload" }: RunOcrWorkspaceP
         {isRunOcr ? (
           <>
             <div className="uw-runocr-template-cards">
+              {/* FULL-UNSTRUCTURED-INVOICE-2D: synthetic "no template / fully
+                  unstructured (invoice_statement)" card. Always available,
+                  independent of saved templates. */}
+              <button
+                key={FULL_UNSTRUCTURED_INVOICE_TEMPLATE_ID}
+                type="button"
+                className={`uw-runocr-template-card ${activeTemplateId === FULL_UNSTRUCTURED_INVOICE_TEMPLATE_ID ? "uw-runocr-template-card-active" : ""}`}
+                onClick={() => {
+                  setRunOcrTemplateMode("unstructured");
+                  setActiveTemplateId(FULL_UNSTRUCTURED_INVOICE_TEMPLATE_ID);
+                }}
+                title="좌표 템플릿 없이 전체 OCR로 거래명세서 필드와 품목표를 추출합니다."
+              >
+                <span className="uw-runocr-template-card-preview">
+                  <img
+                    src="/images/no-template-invoice-preview.svg"
+                    alt=""
+                    className="uw-template-card-img"
+                  />
+                </span>
+                <span className="uw-runocr-template-card-name">비정형</span>
+              </button>
               {templates.length > 0 ? (
                 templates.map((template) => (
                   <button

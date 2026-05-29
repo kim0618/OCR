@@ -77,6 +77,47 @@ function _invoiceDataAlign(key: string): React.CSSProperties["textAlign"] {
 
 
 
+function _cleanTableLabel(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function _isInvoiceStatementTable(vm: TableResultViewModel): boolean {
+  return _cleanTableLabel(vm.meta.documentType) === "invoice_statement";
+}
+
+function _isGenericTableLabel(label: string): boolean {
+  return label === "문서 표" || /^테이블\s*\d+$/.test(label) || /^table[_\s-]*\d+$/i.test(label);
+}
+
+function _isPrimaryInvoiceTableKey(tableKey: string): boolean {
+  return tableKey === "table_1" || tableKey === "document_fields.tableRows";
+}
+
+function _tableNumberFallback(tableKey: string, fallbackIndex: number): string {
+  const match = tableKey.match(/(?:^|[_\s.-])(?:table|unstructured)[_\s.-]*(\d+)$/i);
+  return `테이블 ${match?.[1] ?? fallbackIndex + 1}`;
+}
+
+function resolveResultTableLabel(
+  vm: TableResultViewModel,
+  fallbackIndex: number,
+  fieldLabelText?: string,
+): string {
+  const labelKo = _cleanTableLabel(vm.labelKo);
+  const labelEn = _cleanTableLabel(vm.labelEn);
+  const fieldLabelClean = _cleanTableLabel(fieldLabelText);
+
+  if (labelKo && !(_isInvoiceStatementTable(vm) && _isPrimaryInvoiceTableKey(vm.tableKey) && _isGenericTableLabel(labelKo))) {
+    return labelKo;
+  }
+  if (labelEn && !(_isInvoiceStatementTable(vm) && _isPrimaryInvoiceTableKey(vm.tableKey) && _isGenericTableLabel(labelEn))) {
+    return labelEn;
+  }
+  if (_isInvoiceStatementTable(vm) && _isPrimaryInvoiceTableKey(vm.tableKey)) return "품목표";
+  if (fieldLabelClean && !_isGenericTableLabel(fieldLabelClean)) return fieldLabelClean;
+  return _tableNumberFallback(vm.tableKey, fallbackIndex);
+}
+
 // LOT계열 / 제조번호계열 / itemCode계열 key셋
 const _LOT_KEYS = new Set(["lotNo", "serialLot", "lot", "lotNumber"]);
 const _MFG_KEYS = new Set(["manufacturingNo", "manufactureNo", "mfgNo"]);
@@ -687,7 +728,7 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
   // @/lib/ocrResultFormatters and are reused by Preview/Custom/Validation JSX.
   //
   // Export-bound payload (Copy / Download): full markdown including the
-  // TPL-13B representative `## 템플릿 테이블` / `## 비정형 테이블` section.
+  // TPL-13B representative table section.
   const toMarkdown = () =>
     buildMarkdownReport({
       fields: editedFields,
@@ -701,12 +742,16 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
 
   // TPL-13C: Preview-only markdown that intentionally OMITS
   // `tableResultViewModels` so the helper does NOT append the extra
-  // `## 템플릿 테이블` / `## 비정형 테이블` section. Preview already renders
+  // representative table section. Preview already renders
   // the representative table via the JSX `previewTableFields.map` block
   // below; without this split the markdown layer would duplicate it.
+  // INVOICE-PARITY-4I: Preview-only markdown uses previewDisplayFields so the
+  // materialized 품목표 row appears in the field list for the unstructured
+  // 거래명세서 too. Export markdown (`toMarkdown`) still uses editedFields, so
+  // the saved/exported structure is unchanged.
   const toMarkdownForPreview = () =>
     buildMarkdownReport({
-      fields: editedFields,
+      fields: previewDisplayFields,
       processingTime: result.processing_time,
       docTableRows,
     });
@@ -762,7 +807,7 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
   );
   // TPL-13B: representative table dedup — pick a single representative source
   // (template > unstructured > backend) and render only that. Drops duplicate
-  // 비정형 테이블 / 템플릿 테이블 sections when the same physical table is
+  // source-specific table sections when the same physical table is
   // already shown in the field-row table block.
   const representativeTableResultViewModels: TableResultViewModel[] = useMemo(
     () => selectRepresentativeTableResultViewModels(tableResultViewModels),
@@ -787,21 +832,43 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
     [tableResultViewModels],
   );
 
+  // INVOICE-PARITY-4I: 거래명세서 품목표를 Preview/Custom 필드 리스트에 table
+  // field로 통합. 일반 템플릿은 raw.fields에 field_type==="table"이 들어오지만,
+  // 비정형은 info[] 기반이라 표 필드가 없어 standalone 섹션으로 빠졌다.
+  // result.fields(영속) / export(JSON·Markdown)는 바꾸지 않고, 표시용으로만
+  // representative 품목표 VM을 table field로 materialize한다.
+  const previewDisplayFields = useMemo<OcrFieldResult[]>(() => {
+    if (editedFields.some((f) => f.field_type === "table")) return editedFields;
+    const vm = representativeFirstVM;
+    if (!vm || vm.columns.length === 0 || vm.meta.rowCount === 0) return editedFields;
+    if (vm.meta.documentType !== "invoice_statement") return editedFields;
+    const synthetic: OcrFieldResult = {
+      name: vm.tableKey,
+      ko: resolveResultTableLabel(vm, editedFields.length),
+      en: vm.tableKey,
+      field_type: "table",
+      value: "[]",
+      confidence: 1,
+      bbox: [0, 0, 0, 0],
+    };
+    return [...editedFields, synthetic];
+  }, [editedFields, representativeFirstVM]);
+
   // Table field list for JSX rendering in Preview tab (separate from Markdown)
   // T-28-PERF-3: docTableRows가 있으면 nonEmpty가 비어도 table field를 포함 (defer 최적화 대응)
   const previewTableFields = useMemo(() =>
-    editedFields
+    previewDisplayFields
       .map((f, i) => ({ f, i }))
       .filter(({ f }) => f.field_type === "table")
       .map(({ f, i }) => ({ idx: i + 1, label: fieldLabelFull(f), ...parseTableField(f.value) }))
       .filter(({ nonEmpty }) => nonEmpty.length > 0 || (!!docTableRows && docTableRows.length > 0)),
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  [editedFields, docTableRows]);
+  [previewDisplayFields, docTableRows]);
 
   // TPL-13C: explicit flag for the standalone-section dedup guards below.
   // When Preview already has a JSX table field row, the representative table
-  // is rendered inside that row — the standalone "템플릿 테이블" / "비정형
-  // 테이블" JSX sections must hide, and the markdown layer must skip its
+  // is rendered inside that row — the standalone source-specific JSX
+  // sections must hide, and the markdown layer must skip its
   // own duplicate section (handled separately via toMarkdownForPreview).
   const hasPreviewTableFieldRow = previewTableFields.length > 0;
 
@@ -893,6 +960,102 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
     return `${h}:${m}`;
   };
   const headerCreatedAt = createdAt ?? "";
+
+  // INVOICE-PARITY-4I: Custom 탭 거래명세서 품목표 editable 표 공통 renderer.
+  // field_type==="table" 필드 경로(일반 템플릿)와 representative standalone
+  // 경로(비정형/free)가 동일한 textarea 편집 표를 사용하게 해 read-only 차이를
+  // 없앤다. tableRows/tableMeta/VM source는 그대로 소비만 한다(변경 없음).
+  const renderEditableTableVM = (
+    vm: TableResultViewModel,
+    fieldIndex: number,
+    adoptionField?: OcrFieldResult,
+  ) => {
+    const baseRows: Record<string, string>[] = vm.rows.map((row) => {
+      const obj: Record<string, string> = {};
+      for (const cell of row.cells) obj[cell.key] = cell.value;
+      return obj;
+    });
+    const editRows: Record<string, string>[] = customTableEdits ?? baseRows;
+    return (
+      <>
+        <div className="or-field-value-meta" style={{ alignItems: "center" }} onClick={(e) => e.stopPropagation()}>
+          <span style={{ fontWeight: 700, color: "var(--accent)" }}>
+            표 데이터 · {vm.meta.rowCount}행
+          </span>
+          {missingExpectedWarning && (
+            <span style={{
+              fontSize: 11, fontWeight: 600, color: "#d97706",
+              background: "rgba(251,191,36,0.12)",
+              border: "1px solid rgba(217,119,6,0.25)",
+              borderRadius: 4, padding: "1px 7px",
+            }}>
+              {missingExpectedWarning}
+            </span>
+          )}
+          {adoptionField && <span>채택: {getAdoptionLabel(adoptionField)}</span>}
+        </div>
+        <div className="or-table-wrap" style={{ overflowX: "auto", borderRadius: 0, marginTop: 6 }} onClick={(e) => e.stopPropagation()}>
+          <table className="or-table-result">
+            <colgroup>
+              {vm.columns.map((col) => (
+                <col key={col.columnKey} style={{ width: _invoiceColWidth(col.columnKey) }} />
+              ))}
+            </colgroup>
+            <tbody>
+              <tr>
+                {vm.columns.map((col) => (
+                  <td key={col.columnKey} className="or-table-cell" style={{ textAlign: "center", verticalAlign: "middle" }}>
+                    <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={col.columnKey}>
+                      {col.labelKo}
+                    </div>
+                    {col.labelKo !== col.columnKey && (
+                      <div title={col.columnKey} style={{
+                        fontSize: 10, opacity: 0.55, marginTop: 1,
+                        fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                        whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block",
+                      }}>
+                        ({col.columnKey})
+                      </div>
+                    )}
+                  </td>
+                ))}
+              </tr>
+              {editRows.map((row, ri) => (
+                <tr key={ri}>
+                  {vm.columns.map((col) => (
+                    <td key={col.columnKey} className="or-table-cell" style={{
+                      textAlign: _invoiceDataAlign(col.columnKey),
+                      whiteSpace: _NUM_KEYS.has(col.columnKey) || _IDX_KEYS.has(col.columnKey) ? "nowrap" : "normal",
+                      padding: 0,
+                    }}>
+                      <textarea
+                        className="or-table-cell-input"
+                        value={row[col.columnKey] ?? ""}
+                        rows={1}
+                        title={String(row[col.columnKey] ?? "")}
+                        style={{ textAlign: _invoiceDataAlign(col.columnKey) }}
+                        onChange={(e) => {
+                          e.target.style.height = "auto";
+                          e.target.style.height = e.target.scrollHeight + "px";
+                          const newVal = e.target.value;
+                          setCustomTableEdits((prev) => {
+                            const base = prev ?? baseRows;
+                            return base.map((r, idx) => idx === ri ? { ...r, [col.columnKey]: newVal } : r);
+                          });
+                        }}
+                        onFocus={() => { if (fieldIndex >= 0) onSelectField(fieldIndex); }}
+                        onBlur={flushSave}
+                      />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </>
+    );
+  };
 
   return (
     <div className="or-root">
@@ -1091,7 +1254,7 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                       return (
                         <div key={idx} style={{ marginTop: 12 }}>
                           <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6 }}>
-                            <span>{idx}. {label}</span>
+                            <span>{idx}. {resolveResultTableLabel(viewModel, tableIdx, label)}</span>
                             <span style={{ fontSize: 11, fontWeight: 400, color: "var(--muted)" }}>
                               {viewModel.meta.rowCount}행
                             </span>
@@ -1194,7 +1357,7 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                       {templateRegionTableResultViewModels.map((vm, vmIdx) => (
                         <div key={`tpl-${vm.tableKey}-${vmIdx}`} style={{ marginTop: 12 }}>
                           <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6 }}>
-                            <span>{vm.labelKo || vm.labelEn || vm.tableKey}</span>
+                            <span>{resolveResultTableLabel(vm, vmIdx)}</span>
                             <span style={{ fontSize: 11, fontWeight: 400, color: "var(--muted)" }}>
                               {vm.meta.rowCount}행
                             </span>
@@ -1245,20 +1408,17 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                       ))}
                     </div>
                   )}
-                  {/* TPL-8E + TPL-13B + TPL-13C: 비정형 테이블 standalone
+                  {/* TPL-8E + TPL-13B + TPL-13C: unstructured standalone
                       section은 (a) representative가 template이 아니고
                       (b) hasPreviewTableFieldRow === false 일 때만 표시. */}
                   {!hasPreviewTableFieldRow
                     && representativeFirstVM?.source !== "template_region_canonical"
                     && unstructuredTableResultViewModels.length > 0 && (
                     <div style={{ marginTop: 16 }}>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: "var(--muted)", marginBottom: 6 }}>
-                        비정형 테이블
-                      </div>
                       {unstructuredTableResultViewModels.map((vm, vmIdx) => (
                         <div key={`u-${vm.tableKey}-${vmIdx}`} style={{ marginTop: 12 }}>
                           <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6 }}>
-                            <span>{vm.labelKo || vm.labelEn || vm.tableKey}</span>
+                            <span>{resolveResultTableLabel(vm, vmIdx)}</span>
                             <span style={{ fontSize: 11, fontWeight: 400, color: "var(--muted)" }}>
                               {vm.meta.rowCount}행
                             </span>
@@ -1471,9 +1631,9 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                   <div className="or-field-header">
                     <span
                       style={{ flex: 1, minWidth: 0, fontSize: 11, fontWeight: 700, color: "var(--text)", lineHeight: 1.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
-                      title={`${fieldLabelFull(field)} (${field.name})`}
+                      title={`${field.field_type === "table" && representativeFirstVM ? resolveResultTableLabel(representativeFirstVM, 0, fieldLabelFull(field)) : fieldLabelFull(field)} (${field.name})`}
                     >
-                      {fieldLabel(field)}
+                      {field.field_type === "table" && representativeFirstVM ? resolveResultTableLabel(representativeFirstVM, 0, fieldLabel(field)) : fieldLabel(field)}
                       <span style={{ fontSize: 9, fontWeight: 400, color: "var(--muted)", marginLeft: 4 }}>
                         {field.en || field.name}
                       </span>
@@ -1529,92 +1689,8 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                     // leaves any prior edits inaccessible (no crash).
                     const customRepVM = representativeFirstVM ?? backendTableResultViewModel;
                     if (customRepVM && customRepVM.columns.length > 0) {
-                      const vm = customRepVM;
-                      const baseRows: Record<string, string>[] = vm.rows.map((row) => {
-                        const obj: Record<string, string> = {};
-                        for (const cell of row.cells) obj[cell.key] = cell.value;
-                        return obj;
-                      });
-                      const editRows: Record<string, string>[] = customTableEdits ?? baseRows;
-                      return (
-                        <>
-                          <div className="or-field-value-meta" style={{ alignItems: "center" }} onClick={(e) => e.stopPropagation()}>
-                            <span style={{ fontWeight: 700, color: "var(--accent)" }}>
-                              표 데이터 · {vm.meta.rowCount}행
-                            </span>
-                            {missingExpectedWarning && (
-                              <span style={{
-                                fontSize: 11, fontWeight: 600, color: "#d97706",
-                                background: "rgba(251,191,36,0.12)",
-                                border: "1px solid rgba(217,119,6,0.25)",
-                                borderRadius: 4, padding: "1px 7px",
-                              }}>
-                                {missingExpectedWarning}
-                              </span>
-                            )}
-                            <span>채택: {getAdoptionLabel(field)}</span>
-                          </div>
-                          <div className="or-table-wrap" style={{ overflowX: "auto", borderRadius: 0, marginTop: 6 }} onClick={(e) => e.stopPropagation()}>
-                            <table className="or-table-result">
-                              <colgroup>
-                                {vm.columns.map((col) => (
-                                  <col key={col.columnKey} style={{ width: _invoiceColWidth(col.columnKey) }} />
-                                ))}
-                              </colgroup>
-                              <tbody>
-                                <tr>
-                                  {vm.columns.map((col) => (
-                                    <td key={col.columnKey} className="or-table-cell" style={{ textAlign: "center", verticalAlign: "middle" }}>
-                                      <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={col.columnKey}>
-                                        {col.labelKo}
-                                      </div>
-                                      {col.labelKo !== col.columnKey && (
-                                        <div title={col.columnKey} style={{
-                                          fontSize: 10, opacity: 0.55, marginTop: 1,
-                                          fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-                                          whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block",
-                                        }}>
-                                          ({col.columnKey})
-                                        </div>
-                                      )}
-                                    </td>
-                                  ))}
-                                </tr>
-                                {editRows.map((row, ri) => (
-                                  <tr key={ri}>
-                                    {vm.columns.map((col) => (
-                                      <td key={col.columnKey} className="or-table-cell" style={{
-                                        textAlign: _invoiceDataAlign(col.columnKey),
-                                        whiteSpace: _NUM_KEYS.has(col.columnKey) || _IDX_KEYS.has(col.columnKey) ? "nowrap" : "normal",
-                                        padding: 0,
-                                      }}>
-                                        <textarea
-                                          className="or-table-cell-input"
-                                          value={row[col.columnKey] ?? ""}
-                                          rows={1}
-                                          title={String(row[col.columnKey] ?? "")}
-                                          style={{ textAlign: _invoiceDataAlign(col.columnKey) }}
-                                          onChange={(e) => {
-                                            e.target.style.height = "auto";
-                                            e.target.style.height = e.target.scrollHeight + "px";
-                                            const newVal = e.target.value;
-                                            setCustomTableEdits((prev) => {
-                                              const base = prev ?? baseRows;
-                                              return base.map((r, idx) => idx === ri ? { ...r, [col.columnKey]: newVal } : r);
-                                            });
-                                          }}
-                                          onFocus={() => onSelectField(i)}
-                                          onBlur={flushSave}
-                                        />
-                                      </td>
-                                    ))}
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        </>
-                      );
+                      // INVOICE-PARITY-4I: 공통 editable renderer 재사용.
+                      return renderEditableTableVM(customRepVM, i, field);
                     }
                     // fallback: raw parseTableField (docTableRows 없는 경우)
                     const { rows, displayRows, isSingleCol, rowLabel: rawRowLabel } = parseTableField(field.value);
@@ -1689,138 +1765,31 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
               {editedFields.length === 0 && (
                 <div className="or-empty">인식된 필드가 없습니다.</div>
               )}
-              {/* TPL-10 + TPL-13B: Custom 템플릿 테이블 standalone section.
-                  table-type field가 하나도 없을 때만 노출 — table field가
-                  있으면 위 row 블록에서 representative VM으로 이미 렌더됨. */}
+              {/* INVOICE-PARITY-4I: 표 필드가 없는 거래명세서(비정형/free)도
+                  representative 품목표를 일반 템플릿과 동일한 editable 표로
+                  렌더한다. 기존 read-only standalone(템플릿/비정형) 섹션을 대체.
+                  region 템플릿은 raw.fields에 table 필드가 있어 위 row 블록에서
+                  이미 editable로 렌더되므로 이 분기에 들어오지 않는다. */}
               {editedFields.every((f) => f.field_type !== "table")
-                && templateRegionTableResultViewModels.length > 0 && (
-                <div style={{ marginTop: 16 }}>
-                  <div style={{ fontWeight: 700, fontSize: 13, color: "var(--muted)", marginBottom: 6 }}>
-                    템플릿 테이블
+                && representativeFirstVM
+                && representativeFirstVM.columns.length > 0 && (
+                <div className="or-field-item" style={{ marginTop: 12 }}>
+                  <div className="or-field-header">
+                    <span
+                      style={{ flex: 1, minWidth: 0, fontSize: 11, fontWeight: 700, color: "var(--text)", lineHeight: 1.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                      title={`${resolveResultTableLabel(representativeFirstVM, editedFields.length)} (${representativeFirstVM.tableKey})`}
+                    >
+                      {editedFields.length + 1}. {resolveResultTableLabel(representativeFirstVM, editedFields.length)}
+                      <span style={{ fontSize: 9, fontWeight: 400, color: "var(--muted)", marginLeft: 4 }}>
+                        {representativeFirstVM.tableKey}
+                      </span>
+                    </span>
                   </div>
-                  {templateRegionTableResultViewModels.map((vm, vmIdx) => (
-                    <div key={`custom-tpl-${vm.tableKey}-${vmIdx}`} style={{ marginTop: 12 }}>
-                      <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6 }}>
-                        <span>{vm.labelKo || vm.labelEn || vm.tableKey}</span>
-                        <span style={{ fontSize: 11, fontWeight: 400, color: "var(--muted)" }}>
-                          {vm.meta.rowCount}행
-                        </span>
-                        <span style={{ fontSize: 10, fontWeight: 600, color: "var(--muted)", border: "1px solid var(--border)", borderRadius: 4, padding: "0 6px" }}>
-                          읽기 전용
-                        </span>
-                      </div>
-                      {vm.columns.length === 0 ? (
-                        <div className="or-empty" style={{ fontSize: 12 }}>정의된 컬럼이 없습니다.</div>
-                      ) : vm.rows.length === 0 ? (
-                        <div className="or-empty" style={{ fontSize: 12 }}>추출된 행이 없습니다.</div>
-                      ) : (
-                        <div className="or-table-wrap" style={{ overflowX: "auto", borderRadius: 0 }}>
-                          <table className="or-table-result">
-                            <tbody>
-                              <tr>
-                                {vm.columns.map((column) => (
-                                  <td key={column.columnKey} className="or-table-cell" style={{ textAlign: "center", verticalAlign: "middle" }}>
-                                    <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={column.labelKo}>
-                                      {column.labelKo || column.labelEn || column.columnKey}
-                                    </div>
-                                    {(column.labelKo || "") !== column.columnKey && (
-                                      <div title={column.columnKey} style={{
-                                        fontSize: 10, opacity: 0.55, marginTop: 1,
-                                        fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-                                        whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block",
-                                      }}>
-                                        ({column.columnKey})
-                                      </div>
-                                    )}
-                                  </td>
-                                ))}
-                              </tr>
-                              {vm.rows.map((row, ri) => (
-                                <tr key={ri}>
-                                  {row.cells.map((cell) => (
-                                    <td key={cell.key} className="or-table-cell" style={{
-                                      textAlign: _invoiceDataAlign(cell.key),
-                                      whiteSpace: _NUM_KEYS.has(cell.key) || _IDX_KEYS.has(cell.key) ? "nowrap" : "normal",
-                                    }}>
-                                      {cell.displayValue}
-                                    </td>
-                                  ))}
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-              {/* TPL-8E + TPL-13B: Custom 비정형 테이블 standalone section.
-                  (a) table-type field가 없고
-                  (b) representative가 template이 아닐 때만 노출 —
-                  template representative가 있으면 표준 위치에 이미 표시됨. */}
-              {editedFields.every((f) => f.field_type !== "table")
-                && representativeFirstVM?.source !== "template_region_canonical"
-                && unstructuredTableResultViewModels.length > 0 && (
-                <div style={{ marginTop: 16 }}>
-                  <div style={{ fontWeight: 700, fontSize: 13, color: "var(--muted)", marginBottom: 6 }}>
-                    비정형 테이블
-                  </div>
-                  {unstructuredTableResultViewModels.map((vm, vmIdx) => (
-                    <div key={`custom-u-${vm.tableKey}-${vmIdx}`} style={{ marginTop: 12 }}>
-                      <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6 }}>
-                        <span>{vm.labelKo || vm.labelEn || vm.tableKey}</span>
-                        <span style={{ fontSize: 11, fontWeight: 400, color: "var(--muted)" }}>
-                          {vm.meta.rowCount}행
-                        </span>
-                        <span style={{ fontSize: 10, fontWeight: 600, color: "var(--muted)", border: "1px solid var(--border)", borderRadius: 4, padding: "0 6px" }}>
-                          읽기 전용
-                        </span>
-                      </div>
-                      {vm.columns.length === 0 ? (
-                        <div className="or-empty" style={{ fontSize: 12 }}>정의된 컬럼이 없습니다.</div>
-                      ) : vm.rows.length === 0 ? (
-                        <div className="or-empty" style={{ fontSize: 12 }}>추출된 행이 없습니다.</div>
-                      ) : (
-                        <div className="or-table-wrap" style={{ overflowX: "auto", borderRadius: 0 }}>
-                          <table className="or-table-result">
-                            <tbody>
-                              <tr>
-                                {vm.columns.map((column) => (
-                                  <td key={column.columnKey} className="or-table-cell" style={{ textAlign: "center", verticalAlign: "middle" }}>
-                                    <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={column.labelKo}>
-                                      {column.labelKo || column.labelEn || column.columnKey}
-                                    </div>
-                                    {(column.labelKo || "") !== column.columnKey && (
-                                      <div title={column.columnKey} style={{
-                                        fontSize: 10, opacity: 0.55, marginTop: 1,
-                                        fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-                                        whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block",
-                                      }}>
-                                        ({column.columnKey})
-                                      </div>
-                                    )}
-                                  </td>
-                                ))}
-                              </tr>
-                              {vm.rows.map((row, ri) => (
-                                <tr key={ri}>
-                                  {row.cells.map((cell) => (
-                                    <td key={cell.key} className="or-table-cell" style={{
-                                      textAlign: _invoiceDataAlign(cell.key),
-                                      whiteSpace: _NUM_KEYS.has(cell.key) || _IDX_KEYS.has(cell.key) ? "nowrap" : "normal",
-                                    }}>
-                                      {cell.displayValue}
-                                    </td>
-                                  ))}
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                  {representativeFirstVM.rows.length === 0 ? (
+                    <div className="or-empty" style={{ fontSize: 12 }}>추출된 행이 없습니다.</div>
+                  ) : (
+                    renderEditableTableVM(representativeFirstVM, -1)
+                  )}
                 </div>
               )}
             </div>
