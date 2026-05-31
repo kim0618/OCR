@@ -117,6 +117,8 @@ FORBIDDEN_FREE_ROW_KEYS = (
     "invoiceFreeRow",
 )
 
+PRODUCT_CODE_TOKEN_RE = re.compile(r"^[A-Z]{2,}[\dA-Z]+$")
+
 
 def _empty_table_meta() -> dict[str, Any]:
     return {
@@ -142,6 +144,18 @@ def _normalize_text(value: Any) -> str:
     if isinstance(value, (int, float)):
         return str(value)
     return ""
+
+
+def _looks_like_product_code_token(value: Any) -> bool:
+    """Detect compact product-code tokens that should not be merged into itemName."""
+    text = _normalize_text(value).strip()
+    if len(text) < 4:
+        return False
+    if not PRODUCT_CODE_TOKEN_RE.fullmatch(text):
+        return False
+    if not any(ch.isdigit() for ch in text):
+        return False
+    return True
 
 
 def _bbox_metrics(bbox: Any) -> dict[str, float] | None:
@@ -609,13 +623,530 @@ def _parse_table_row_candidate(line: str, row_index: int) -> dict[str, str] | No
     }
 
 
-def _find_table_row_candidates(lines: list[str]) -> list[dict[str, str]]:
+def _parse_relaxed_table_row_candidate(line: str, row_index: int) -> dict[str, str] | None:
+    """Generalized single-line candidate for invoices whose item rows are
+    'item name ... amount' rather than the dense multi-numeric column layout.
+
+    Conservative on purpose: requires BOTH an item-name signal AND a parseable
+    money amount on the same line, and rejects summary/header/party-metadata
+    lines, so footers and totals are never revived. Used only as a fallback when
+    the strict column parser finds nothing (see ``_find_table_row_candidates``),
+    which keeps dense single-line layouts (e.g. the 1.jpg reference) untouched.
+    """
+    text = _normalize_text(line)
+    if _is_summary_or_header_line(text):
+        return None
+    if _metadata_negative_reason(text):
+        return None
+    money_tokens = _money_tokens_from_text(text)
+    if not money_tokens:
+        return None
+    item_name = _candidate_item_name_from_raw_text(text)
+    if not item_name:
+        return None
+    amount = _normalize_money(money_tokens[-1])
+    unit_price = _normalize_money(money_tokens[-2]) if len(money_tokens) >= 2 else ""
+    quantity = ""
+    for token in text.split():
+        cleaned = _clean_number_token(token)
+        if cleaned and cleaned not in money_tokens and _looks_like_quantity_token(cleaned):
+            quantity = _normalize_quantity(cleaned)
+            break
+    return {
+        "rowIndex": str(row_index),
+        "itemName": item_name,
+        "spec": "",
+        "lotNo": "",
+        "expiryDate": "",
+        "quantity": quantity,
+        "unitPrice": unit_price,
+        "amount": amount,
+        "_rawText": text,
+        "_confidence": "0.15",
+        "_source": "invoice_statement_free_relaxed_line_candidate",
+    }
+
+
+def _is_acceptable_relaxed_row(row: dict[str, Any]) -> bool:
+    """Strict keep-predicate for relaxed candidates inside the precision filter.
+
+    Lets a clean ``item name + amount`` row survive even with a low column score,
+    while still dropping forbidden-key rows, metadata/summary rows, and rows
+    without a real item-name signal or a parseable money amount.
+    """
+    normalized = _normalize_candidate_row(row)
+    if _has_forbidden_keys(row, FORBIDDEN_FREE_ROW_KEYS):
+        return False
+    if _metadata_negative_reason(" ".join(_normalize_text(normalized.get(key)) for key in REQUIRED_TABLE_ROW_KEYS)):
+        return False
+    if not _has_item_name_signal(normalized.get("itemName")):
+        return False
+    return _money_parse_value(normalized.get("amount")) is not None
+
+
+def _find_table_row_candidates(lines: list[str], *, allow_relaxed: bool = True) -> list[dict[str, str]]:
     rows: list[dict[str, str]] = []
     for line in lines:
         candidate = _parse_table_row_candidate(line, len(rows) + 1)
         if candidate is not None:
             rows.append(candidate)
-    return rows
+    if rows or not allow_relaxed:
+        return rows
+    relaxed: list[dict[str, str]] = []
+    for line in lines:
+        candidate = _parse_relaxed_table_row_candidate(line, len(relaxed) + 1)
+        if candidate is not None:
+            relaxed.append(candidate)
+    return relaxed
+
+
+# ---------- 3E: 2D columnar row reconstruction (transposed PDF layouts) ----------
+#
+# Some invoice PDFs are rendered with the line-item table ROTATED 90deg, so
+# cy-grouping produces one row per *field* (item names in one cy band, qty in
+# another, unit price in another, amount in another) instead of one row per
+# *item*. Index-zipping the rowTexts is unsafe (counts mismatch -> the wrong
+# name paired with the wrong amount). The fix is to operate on raw OCR items,
+# cluster by x to recover columns, and emit a row per name-column only when
+# alignment is high-confidence (otherwise defer to the existing fallback).
+#
+# Safety: this is gated on "vertical-label stacking" detection
+# (수량/단가/금액 found at similar x with distinctly different cy). A
+# normal row-per-line table like 1.jpg has these labels on the SAME cy band,
+# so the gate does not fire and the reference layout is untouched.
+
+_COLUMNAR_FIELD_LABELS = {
+    "수량": "quantity",
+    "단가": "unitPrice",
+    "금액": "amount",
+    "공급금액": "amount",
+    "공급가": "amount",
+    "공급단가": "unitPrice",
+}
+
+
+def _detect_vertical_field_labels(items: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], bool]:
+    """Return (labels, stacked).
+
+    Looks for 수량/단가/금액-class label tokens. ``stacked`` is True only when
+    >=2 labels sit at similar x (within ~60px) AND distinctly different cy
+    (gap >= ~100px) — i.e. the labels appear as a vertical column on the page,
+    which is the signature of a rotated/transposed invoice table.
+    """
+    found: list[dict[str, Any]] = []
+    for it in items:
+        text = _normalize_text(it.get("text", "")).strip()
+        if not text:
+            continue
+        kind = _COLUMNAR_FIELD_LABELS.get(text)
+        if kind is None:
+            continue
+        x = it.get("x")
+        cy = it.get("cy")
+        if not isinstance(x, (int, float)) or not isinstance(cy, (int, float)):
+            continue
+        found.append({
+            "label": text,
+            "kind": kind,
+            "x": float(x),
+            "cy": float(cy),
+            "w": float(it.get("w") or 0),
+            "h": float(it.get("h") or 0),
+        })
+    if len(found) < 2:
+        return found, False
+    # Cluster by x; within a cluster, check vertical spread.
+    found_sorted = sorted(found, key=lambda f: f["x"])
+    clusters: list[list[dict[str, Any]]] = [[found_sorted[0]]]
+    for f in found_sorted[1:]:
+        if abs(f["x"] - clusters[-1][-1]["x"]) <= 60:
+            clusters[-1].append(f)
+        else:
+            clusters.append([f])
+    for cl in clusters:
+        if len(cl) < 2:
+            continue
+        cys = sorted(f["cy"] for f in cl)
+        if cys[-1] - cys[0] >= 100:
+            # Keep one representative per kind (the topmost cy).
+            by_kind: dict[str, dict[str, Any]] = {}
+            for f in cl:
+                cur = by_kind.get(f["kind"])
+                if cur is None or f["cy"] < cur["cy"]:
+                    by_kind[f["kind"]] = f
+            return list(by_kind.values()), True
+    return found, False
+
+
+def _build_columnar_rows_from_ocr_items(
+    items: list[dict[str, Any]],
+    *,
+    doc_type: str = "invoice_statement",
+    full_text: str = "",
+) -> tuple[list[dict[str, str]], dict[str, Any]]:
+    """2D coordinate-based column-row reconstruction for transposed tables.
+
+    Returns ``(rows, diagnostics)``. ``rows`` is empty when the gate does not
+    fire OR when alignment confidence is below the emit threshold OR when a
+    contamination check trips (a value that equals the sum of the other values
+    in its field band is treated as a footer/total and rejects the whole
+    attempt). Diagnostics include the decision and reason.
+
+    3F: also attempts row-local quantity completion for emitted rows whose qty
+    cell is missing (search a wider cy band around the qty label, narrow x
+    window at the column, strict qty-token filter) and computes an amount-sum
+    reconciliation against money tokens found in ``full_text`` (e.g. a document
+    supplyAmount). Both are surfaced in diagnostics; neither relaxes the global
+    release gate — that decision belongs to ``_evaluate_release_threshold``.
+    """
+    diag: dict[str, Any] = {
+        "attempted": False,
+        "strategy": "raw_ocr_xy_column_row",
+        "confidence": 0.0,
+        "decision": "reject",
+        "reason": "",
+        "columnGroups": {"itemName": 0, "quantity": 0, "unitPrice": 0, "amount": 0},
+        "emittedRows": 0,
+        "rejectedRows": 0,
+        "alignmentIssues": [],
+        "quantityCompletion": {
+            "attempted": False,
+            "method": "none",
+            "beforeMissing": 0,
+            "afterMissing": 0,
+            "candidatesFound": 0,
+            "reasons": [],
+        },
+        "productCodeRouting": {
+            "detected": False,
+            "tokens": [],
+            "routedTo": "spec",
+            "excludedFromItemName": 0,
+        },
+        "amountSumActual": None,
+        "amountSumTarget": None,
+        "amountSumReconciles": False,
+    }
+    if not items:
+        diag["reason"] = "no_items"
+        return [], diag
+
+    labels, stacked = _detect_vertical_field_labels(items)
+    if not stacked:
+        diag["reason"] = "no_vertical_label_stacking"
+        return [], diag
+    diag["attempted"] = True
+
+    # For each label, gather candidate field values within cy +/- band AND
+    # strictly to the LEFT of the label (rotated layout convention observed on
+    # 5.pdf and 2.pdf). Reject metadata/summary tokens.
+    band_height = 50.0
+    field_bands: dict[str, list[dict[str, Any]]] = {}
+    for label in labels:
+        kind = label["kind"]
+        if kind in field_bands:
+            continue
+        cy0 = label["cy"]
+        x_label = label["x"]
+        vals: list[dict[str, Any]] = []
+        for it in items:
+            x = it.get("x")
+            cy = it.get("cy")
+            if not isinstance(x, (int, float)) or not isinstance(cy, (int, float)):
+                continue
+            x = float(x)
+            cy = float(cy)
+            if abs(cy - cy0) > band_height:
+                continue
+            if x >= x_label - 10:
+                continue
+            text = _normalize_text(it.get("text") or "")
+            if not text:
+                continue
+            if _is_summary_or_header_line(text) or _metadata_negative_reason(text):
+                continue
+            if kind == "quantity":
+                cleaned = _clean_number_token(text)
+                if _looks_like_quantity_token(cleaned):
+                    vals.append({"x": x, "cy": cy, "text": text, "value": _normalize_quantity(cleaned)})
+            else:
+                if _looks_like_money_token(text):
+                    money = _normalize_money(text)
+                    if money:
+                        vals.append({"x": x, "cy": cy, "text": text, "value": money})
+        field_bands[kind] = vals
+
+    field_xs: list[float] = []
+    for vs in field_bands.values():
+        field_xs.extend(v["x"] for v in vs)
+    if not field_xs:
+        diag["reason"] = "no_field_values_in_bands"
+        return [], diag
+    field_x_min = min(field_xs)
+    field_x_max = max(field_xs)
+
+    # Item-name column: hangul/letter-bearing tokens above the topmost label cy,
+    # within the x-range of the field values (with a small margin), with the
+    # metadata/summary guards.
+    min_label_cy = min(label["cy"] for label in labels)
+    name_band_cy_max = min_label_cy - 100.0
+    item_name_tokens: list[dict[str, Any]] = []
+    for it in items:
+        x = it.get("x")
+        cy = it.get("cy")
+        if not isinstance(x, (int, float)) or not isinstance(cy, (int, float)):
+            continue
+        x = float(x)
+        cy = float(cy)
+        if cy >= name_band_cy_max:
+            continue
+        if x < field_x_min - 50 or x > field_x_max + 50:
+            continue
+        text = _normalize_text(it.get("text") or "")
+        if not text:
+            continue
+        if _is_summary_or_header_line(text) or _metadata_negative_reason(text):
+            continue
+        if not _has_item_name_signal(text):
+            continue
+        item_name_tokens.append({"x": x, "cy": cy, "text": text})
+    if not item_name_tokens:
+        diag["reason"] = "no_item_name_tokens"
+        return [], diag
+
+    # Cluster item-name tokens by x with a strict tolerance so distinct
+    # name-columns are not merged. (5.pdf names are spaced ~50px apart; tol 35
+    # keeps them separate while still tolerating minor jitter.)
+    item_name_tokens.sort(key=lambda t: t["x"])
+    name_clusters: list[list[dict[str, Any]]] = [[item_name_tokens[0]]]
+    for tok in item_name_tokens[1:]:
+        if tok["x"] - name_clusters[-1][-1]["x"] <= 35:
+            name_clusters[-1].append(tok)
+        else:
+            name_clusters.append([tok])
+
+    align_tol = 35.0
+    rows: list[dict[str, str]] = []
+    rejected = 0
+    for cluster in name_clusters:
+        col_x = sum(t["x"] for t in cluster) / len(cluster)
+        cluster.sort(key=lambda t: t["cy"])
+        product_code_tokens = [
+            t["text"] for t in cluster if _looks_like_product_code_token(t.get("text"))
+        ]
+        name_parts = [
+            t["text"] for t in cluster if not _looks_like_product_code_token(t.get("text"))
+        ]
+        if product_code_tokens:
+            diag["productCodeRouting"]["detected"] = True
+            diag["productCodeRouting"]["excludedFromItemName"] += len(product_code_tokens)
+            for token in product_code_tokens:
+                if token not in diag["productCodeRouting"]["tokens"]:
+                    diag["productCodeRouting"]["tokens"].append(token)
+        if not name_parts:
+            rejected += 1
+            diag["alignmentIssues"].append("product_code_only_name_cluster")
+            continue
+        name_text = " ".join(name_parts)
+        spec_text = " ".join(product_code_tokens)
+        matched: dict[str, dict[str, Any]] = {}
+        for kind, vals in field_bands.items():
+            candidates = [v for v in vals if abs(v["x"] - col_x) <= align_tol]
+            if not candidates:
+                continue
+            candidates.sort(key=lambda v: abs(v["x"] - col_x))
+            matched[kind] = candidates[0]
+        # A real row needs at least amount OR unitPrice plus the name.
+        if "amount" not in matched and "unitPrice" not in matched:
+            rejected += 1
+            continue
+        rows.append({
+            "rowIndex": str(len(rows) + 1),
+            "itemName": name_text,
+            "spec": spec_text,
+            "lotNo": "",
+            "expiryDate": "",
+            "quantity": matched.get("quantity", {}).get("value", ""),
+            "unitPrice": matched.get("unitPrice", {}).get("value", ""),
+            "amount": matched.get("amount", {}).get("value", ""),
+            "_rawText": name_text,
+            "_confidence": "0.4",
+            "_source": "invoice_statement_free_columnar_2d_row",
+        })
+
+    if not rows:
+        diag["reason"] = "no_rows_after_alignment"
+        diag["rejectedRows"] = rejected
+        return [], diag
+
+    cnt_name = len(name_clusters)
+    cnt_amount = len(field_bands.get("amount", []))
+    cnt_qty = len(field_bands.get("quantity", []))
+    cnt_up = len(field_bands.get("unitPrice", []))
+    diag["columnGroups"] = {
+        "itemName": cnt_name,
+        "quantity": cnt_qty,
+        "unitPrice": cnt_up,
+        "amount": cnt_amount,
+    }
+
+    # Contamination guard: if any row's amount equals the sum of the other
+    # rows' amounts (within rounding), it is almost certainly a document total
+    # (e.g. 공급가액합계) that leaked into the amount band. Reject the whole
+    # attempt rather than emit a fake/mixed table.
+    amount_vals = [_money_parse_value(r.get("amount") or "") for r in rows]
+    amount_vals = [v for v in amount_vals if v is not None]
+    if amount_vals:
+        total = sum(amount_vals)
+        for v in amount_vals:
+            others = total - v
+            if others > 0 and abs(v - others) <= max(1.0, others * 0.005):
+                diag["reason"] = "amount_band_contaminated_by_total"
+                diag["alignmentIssues"].append("amount_equals_sum_of_others")
+                return [], diag
+
+    # 3F: row-local quantity completion. Some rotated tables have missing qty
+    # tokens for a subset of columns (5.pdf has qty for 4 of 6 columns). Try to
+    # recover the missing ones by widening the cy search around the qty label
+    # while keeping the strict x window of the column AND the strict qty-token
+    # filter (no money, no date-like, no lot-like, no metadata). If exactly one
+    # candidate is found and it is not already used by another row, fill it.
+    qty_label = next((label for label in labels if label["kind"] == "quantity"), None)
+    used_qty_token_keys: set[tuple[float, float]] = set()
+    for r in rows:
+        for v in field_bands.get("quantity") or []:
+            if v.get("value") and r.get("quantity") == v.get("value"):
+                used_qty_token_keys.add((v["x"], v["cy"]))
+    before_missing = sum(1 for r in rows if not _normalize_text(r.get("quantity")))
+    diag["quantityCompletion"]["beforeMissing"] = before_missing
+    found_total = 0
+    if qty_label and before_missing > 0:
+        diag["quantityCompletion"]["attempted"] = True
+        diag["quantityCompletion"]["method"] = "row_local_search"
+        wide_band = 100.0
+        for r in rows:
+            if _normalize_text(r.get("quantity")):
+                continue
+            # Recover the row's column x from its name token cluster: rows are
+            # built in name-cluster order, but we don't store col_x on the row.
+            # Re-derive by matching to the closest name cluster center.
+            row_name = r.get("itemName") or ""
+            row_x = None
+            for cluster in name_clusters:
+                cluster_name = " ".join(
+                    t["text"] for t in cluster if not _looks_like_product_code_token(t.get("text"))
+                )
+                if cluster_name == row_name:
+                    row_x = sum(t["x"] for t in cluster) / len(cluster)
+                    break
+            if row_x is None:
+                diag["quantityCompletion"]["reasons"].append(f"col_x_unresolved_for_{row_name[:20]}")
+                continue
+            candidates: list[dict[str, Any]] = []
+            for it in items:
+                x = it.get("x")
+                cy = it.get("cy")
+                if not isinstance(x, (int, float)) or not isinstance(cy, (int, float)):
+                    continue
+                x = float(x)
+                cy = float(cy)
+                if abs(cy - qty_label["cy"]) > wide_band:
+                    continue
+                if x >= qty_label["x"] - 10:
+                    continue
+                if abs(x - row_x) > align_tol:
+                    continue
+                if (x, cy) in used_qty_token_keys:
+                    continue
+                text = _normalize_text(it.get("text") or "")
+                if not text:
+                    continue
+                if _is_summary_or_header_line(text) or _metadata_negative_reason(text):
+                    continue
+                cleaned = _clean_number_token(text)
+                if not _looks_like_quantity_token(cleaned):
+                    continue
+                if _is_date_like_number(cleaned) or _is_lot_or_manufacturing_like_number(cleaned):
+                    continue
+                candidates.append({"x": x, "cy": cy, "value": _normalize_quantity(cleaned)})
+            if len(candidates) == 1:
+                r["quantity"] = candidates[0]["value"]
+                used_qty_token_keys.add((candidates[0]["x"], candidates[0]["cy"]))
+                found_total += 1
+            elif len(candidates) > 1:
+                diag["quantityCompletion"]["reasons"].append(f"ambiguous_{len(candidates)}_for_{row_name[:20]}")
+            else:
+                diag["quantityCompletion"]["reasons"].append(f"no_token_for_{row_name[:20]}")
+        diag["quantityCompletion"]["candidatesFound"] = found_total
+    after_missing = sum(1 for r in rows if not _normalize_text(r.get("quantity")))
+    diag["quantityCompletion"]["afterMissing"] = after_missing
+
+    # 3F: amount-sum reconciliation. Sum of emitted line amounts is compared to
+    # money tokens found in the document full_text. A near-exact match with an
+    # independently-extracted scalar (e.g. supplyAmount) is strong evidence that
+    # the columns are aligned correctly and the table is a real table.
+    #
+    # NOTE: we intentionally use ``_number_value`` instead of ``_money_parse_value``
+    # for this numeric comparison. ``_money_parse_value`` calls
+    # ``_is_date_like_number`` which has a long-standing false-positive on plain
+    # 6-digit numbers (e.g. "420000" matches ``\d{6}``), so legitimate comma-bearing
+    # amounts like "420,000" get parsed to None inside that helper. Fixing the
+    # global helper risks regressing the existing 1.jpg release path (which relies
+    # on the ≥2-numeric-fields rule via the same helper). For this reconciliation
+    # we only need a numeric value of an already-validated money token, so we
+    # bypass the date check with ``_number_value`` directly. ``_money_tokens_from_text``
+    # already filters no-comma date-like tokens upstream.
+    amount_vals_for_sum: list[float] = []
+    for r in rows:
+        v = _number_value(_normalize_text(r.get("amount")))
+        if v is not None and v > 0:
+            amount_vals_for_sum.append(v)
+    sum_amount = sum(amount_vals_for_sum)
+    diag["amountSumActual"] = sum_amount if amount_vals_for_sum else None
+    if sum_amount > 0 and full_text:
+        ft_money = _money_tokens_from_text(full_text)
+        for tok in ft_money:
+            tok_val = _number_value(tok)
+            if tok_val is None or tok_val <= 0:
+                continue
+            # Skip a match against an individual line amount itself.
+            if any(abs(tok_val - v) <= max(1.0, v * 0.005) for v in amount_vals_for_sum):
+                continue
+            if abs(tok_val - sum_amount) <= max(1.0, sum_amount * 0.005):
+                diag["amountSumTarget"] = tok
+                diag["amountSumReconciles"] = True
+                break
+
+    # Confidence aggregate. Components:
+    #  - consistency: how close per-field counts are to each other (1.0 perfect)
+    #  - field_density: average filled (qty/unit/amount) fields per emitted row
+    #  - emit_coverage: emitted rows / max field count
+    non_zero = [c for c in (cnt_name, cnt_amount, cnt_qty, cnt_up) if c > 0]
+    consistency = (min(non_zero) / max(non_zero)) if non_zero else 0.0
+    filled = sum(1 for r in rows for k in ("quantity", "unitPrice", "amount") if r.get(k))
+    field_density = filled / (3 * len(rows))
+    emit_coverage = len(rows) / max(1, max(cnt_amount, cnt_name))
+    confidence = round(0.5 * consistency + 0.3 * field_density + 0.2 * emit_coverage, 4)
+    diag["confidence"] = confidence
+    diag["emittedRows"] = len(rows)
+    diag["rejectedRows"] = rejected
+    if cnt_amount and cnt_name and abs(cnt_amount - cnt_name) >= 2:
+        diag["alignmentIssues"].append(f"name_count={cnt_name}_vs_amount_count={cnt_amount}")
+    if rejected:
+        diag["alignmentIssues"].append(f"rejected_columns_without_amount_or_unitPrice={rejected}")
+
+    HIGH = 0.65
+    MED = 0.5
+    if confidence >= HIGH:
+        diag["decision"] = "emit"
+        return rows, diag
+    if confidence >= MED:
+        diag["decision"] = "diagnostics_only"
+        diag["reason"] = f"confidence_medium({confidence})_no_emit"
+        return [], diag
+    diag["decision"] = "reject"
+    diag["reason"] = f"confidence_below_threshold({confidence})"
+    return [], diag
 
 
 def _score_invoice_item_row(row: dict[str, Any], row_text: str | None = None) -> dict[str, Any]:
@@ -829,6 +1360,8 @@ def _ratio(numerator: Any, denominator: Any) -> float:
 def _evaluate_release_threshold(
     table_rows: list[dict[str, Any]],
     field_quality: dict[str, Any] | None = None,
+    *,
+    columnar_context: dict[str, Any] | None = None,
 ) -> tuple[bool, list[str], dict[str, Any]]:
     rows = [_normalize_candidate_row(row) for row in table_rows]
     quality = deepcopy(field_quality) if isinstance(field_quality, dict) else _summarize_candidate_field_quality(rows)
@@ -851,28 +1384,50 @@ def _evaluate_release_threshold(
         "quantityParseableRatio": _ratio((numeric.get("quantity") or {}).get("parseable", 0), total),
         "amountParseableRatioDiagnostic": _ratio((numeric.get("amount") or {}).get("parseable", 0), total),
     }
+    # Generalized release floor. Large tables (>= largeTableMinRows) keep the
+    # original strict-but-generous gate calibrated on the dense reference layout
+    # (e.g. 1.jpg, 28 rows). Small tables (1..largeTableMinRows-1) are allowed to
+    # release, but only when their quality is near-perfect — so a small invoice
+    # with a few clean rows can pass while a single spurious/garbled row cannot.
+    # The strictness for small tables comes from completeness/parseability ratios
+    # and the metadata-negative guard, not from an absolute row-count floor.
     rules = {
-        "minFilteredRows": 20,
-        "minReleaseReadyRows": 20,
+        "largeTableMinRows": 20,
+        "minFilteredRows": 1,
+        "minReleaseReadyRows": 1,
         "minReleaseReadyRatio": 0.8,
         "minItemNamePresentRatio": 0.95,
         "minAmountPresentRatio": 0.95,
         "minUnitPriceParseableRatio": 0.8,
         "minQuantityParseableRatio": 0.7,
+        "smallTableMinReleaseReadyRatio": 0.99,
+        "smallTableMinItemNamePresentRatio": 0.99,
+        "smallTableMinAmountPresentRatio": 0.99,
         "maxForbiddenRowKeys": 0,
         "maxMetadataRows": 0,
         "requiredTableDetected": "Y",
     }
+    is_large_table = total >= rules["largeTableMinRows"]
+    table_size_class = "large" if is_large_table else "small"
+    min_release_ready_ratio = (
+        rules["minReleaseReadyRatio"] if is_large_table else rules["smallTableMinReleaseReadyRatio"]
+    )
+    min_item_name_ratio = (
+        rules["minItemNamePresentRatio"] if is_large_table else rules["smallTableMinItemNamePresentRatio"]
+    )
+    min_amount_ratio = (
+        rules["minAmountPresentRatio"] if is_large_table else rules["smallTableMinAmountPresentRatio"]
+    )
     fail_reasons: list[str] = []
     if total < rules["minFilteredRows"]:
         fail_reasons.append("filtered_rows_below_threshold")
     if release_ready < rules["minReleaseReadyRows"]:
         fail_reasons.append("release_ready_rows_below_threshold")
-    if release_ready_ratio < rules["minReleaseReadyRatio"]:
+    if release_ready_ratio < min_release_ready_ratio:
         fail_reasons.append("release_ready_ratio_below_threshold")
-    if ratios["itemNamePresentRatio"] < rules["minItemNamePresentRatio"]:
+    if ratios["itemNamePresentRatio"] < min_item_name_ratio:
         fail_reasons.append("itemName_present_ratio_below_threshold")
-    if ratios["amountPresentRatio"] < rules["minAmountPresentRatio"]:
+    if ratios["amountPresentRatio"] < min_amount_ratio:
         fail_reasons.append("amount_present_ratio_below_threshold")
     if ratios["unitPriceParseableRatio"] < rules["minUnitPriceParseableRatio"]:
         fail_reasons.append("unitPrice_parseable_ratio_below_threshold")
@@ -884,9 +1439,119 @@ def _evaluate_release_threshold(
         fail_reasons.append("metadata_or_summary_rows_present")
     if ("Y" if total else "N") != rules["requiredTableDetected"]:
         fail_reasons.append("table_not_detected")
+
+    # 3F: Safe quantity-optional release for columnar 2D rows. Hard-gated:
+    # ALL of the following must hold, OR no relaxation is applied.
+    #  - There is a non-empty ``columnar_context`` from ``_build_columnar_rows_from_ocr_items``
+    #  - columnar confidence >= 0.80 (above the emit threshold)
+    #  - Amount-sum reconciliation passed (sum of row amounts matches an
+    #    independently-extracted scalar in full_text, e.g. supplyAmount)
+    #  - Item-name present ratio is 1.0 AND amount present ratio is 1.0
+    #  - Unit-price parseable ratio >= 0.8 (the original strict threshold)
+    #  - No metadata-bearing rows AND no forbidden-key rows
+    #  - All current table_rows are columnar_2d_row source
+    #  - The quantity missing ratio is at most ``qtyOptionalMissingMaxRatio``
+    #    (currently 0.5 — half the rows can be qty-missing, no more)
+    #
+    # When the gate passes, drop only ``release_ready_ratio_below_threshold``
+    # and ``quantity_parseable_ratio_below_threshold`` from fail_reasons after
+    # confirming that, IF qty had been present, the rows would have been
+    # release-ready (i.e. their non-qty reasons must reduce to {missing_quantity}).
+    # The release_ready count is recomputed accordingly.
+    columnar_release_decision: dict[str, Any] = {
+        "applied": False,
+        "reason": "",
+        "qtyOptionalMissingMaxRatio": 0.5,
+        "minConfidence": 0.80,
+    }
+    if isinstance(columnar_context, dict) and table_rows:
+        all_columnar = all(
+            str(row.get("_source", "")).endswith("columnar_2d_row") for row in table_rows
+        )
+        confidence = float(columnar_context.get("confidence") or 0.0)
+        reconciles = bool(columnar_context.get("amountSumReconciles"))
+        qty_missing = sum(1 for r in rows if not _normalize_text(r.get("quantity")))
+        qty_missing_ratio = qty_missing / total if total else 0.0
+        gate_failures: list[str] = []
+        if not all_columnar:
+            gate_failures.append("not_all_columnar_2d_source")
+        if confidence < columnar_release_decision["minConfidence"]:
+            gate_failures.append(f"confidence_{confidence}_below_{columnar_release_decision['minConfidence']}")
+        if not reconciles:
+            gate_failures.append("amount_sum_not_reconciled")
+        if ratios["itemNamePresentRatio"] < 1.0:
+            gate_failures.append("itemName_present_ratio_lt_1.0")
+        if ratios["amountPresentRatio"] < 1.0:
+            gate_failures.append("amount_present_ratio_lt_1.0")
+        if ratios["unitPriceParseableRatio"] < rules["minUnitPriceParseableRatio"]:
+            gate_failures.append("unitPrice_parseable_ratio_below_strict")
+        if metadata_row_count != 0:
+            gate_failures.append("metadata_rows_present")
+        if forbidden_row_count != 0:
+            gate_failures.append("forbidden_rows_present")
+        if qty_missing_ratio > columnar_release_decision["qtyOptionalMissingMaxRatio"]:
+            gate_failures.append(f"qty_missing_ratio_{qty_missing_ratio}_above_cap")
+        if gate_failures:
+            columnar_release_decision["reason"] = ";".join(gate_failures)[:200]
+        else:
+            # Recompute release_ready treating qty-only-missing columnar rows as
+            # ready. We do NOT delegate to ``_is_release_ready_table_row`` here
+            # because that helper depends on ``_money_parse_value`` which has a
+            # long-standing false-positive on plain 6-digit numbers
+            # ("420000" matches ``\d{6}`` in ``_is_date_like_number``), so
+            # comma-bearing amounts like "420,000" get treated as None and
+            # trip ``insufficient_numeric_fields`` on qty-missing rows. We
+            # already gated on the strict upstream invariants (itemName=1.0,
+            # amount=1.0, unitPrice parseable >= 0.8, no metadata, no
+            # forbidden, confidence >= 0.80, amount-sum reconciles), so a row
+            # qualifies as relaxed-ready when:
+            #   - itemName text is present
+            #   - amount text is present
+            #   - no metadata-negative reason on the row
+            #   - if both unitPrice and amount are numerically parseable
+            #     (via _number_value to bypass the date-like false positive),
+            #     then amount >= unitPrice (sanity)
+            relaxed_ready = 0
+            for row in rows:
+                name_t = _normalize_text(row.get("itemName"))
+                amt_t = _normalize_text(row.get("amount"))
+                if not name_t or not amt_t:
+                    continue
+                joined = " ".join(_normalize_text(row.get(k)) for k in REQUIRED_TABLE_ROW_KEYS)
+                if _metadata_negative_reason(joined):
+                    continue
+                if _has_forbidden_keys(row, FORBIDDEN_FREE_ROW_KEYS):
+                    continue
+                up_val = _number_value(_normalize_text(row.get("unitPrice")))
+                amt_val = _number_value(amt_t)
+                if up_val is not None and amt_val is not None and amt_val < up_val:
+                    continue
+                relaxed_ready += 1
+            relaxed_ratio = (relaxed_ready / total) if total else 0.0
+            if relaxed_ratio >= min_release_ready_ratio and relaxed_ready >= rules["minReleaseReadyRows"]:
+                # Apply: drop the two qty-related fail reasons (others stand).
+                pre_apply = list(fail_reasons)
+                for r in (
+                    "release_ready_ratio_below_threshold",
+                    "release_ready_rows_below_threshold",
+                    "quantity_parseable_ratio_below_threshold",
+                ):
+                    if r in fail_reasons:
+                        fail_reasons.remove(r)
+                columnar_release_decision["applied"] = True
+                columnar_release_decision["relaxedReleaseReady"] = relaxed_ready
+                columnar_release_decision["relaxedReleaseReadyRatio"] = round(relaxed_ratio, 4)
+                columnar_release_decision["droppedFailReasons"] = [
+                    r for r in pre_apply if r not in fail_reasons
+                ]
+            else:
+                columnar_release_decision["reason"] = (
+                    f"relaxed_ready_{relaxed_ready}/{total}_ratio_{round(relaxed_ratio,4)}_still_below_floor"
+                )
+
     decision = {
         "enabled": True,
-        "thresholdVersion": "3f_guarded_real_sample_release",
+        "thresholdVersion": "3f_columnar_quantity_optional_release",
         "passes": not fail_reasons,
         "failReasons": fail_reasons,
         "rules": rules,
@@ -897,8 +1562,11 @@ def _evaluate_release_threshold(
             "forbiddenRowKeyCount": forbidden_row_count,
             "metadataHeaderFooterKeptCount": metadata_row_count,
             "tableDetected": "Y" if total else "N",
+            "tableSizeClass": table_size_class,
+            "appliedReleaseReadyRatioFloor": min_release_ready_ratio,
             **ratios,
         },
+        "columnarSafeRelease": columnar_release_decision,
         "diagnosticOnly": {
             "amountParseableRatio": ratios["amountParseableRatioDiagnostic"],
         },
@@ -910,16 +1578,32 @@ def _filter_table_row_candidates(rows: list[dict[str, str]]) -> tuple[list[dict[
     kept: list[dict[str, str]] = []
     dropped: list[dict[str, Any]] = []
     reason_counts: dict[str, int] = {}
+    relaxed_kept = 0
     for row in rows:
         score = _score_invoice_item_row(row, row.get("_rawText"))
         score_value = int(score.get("score") or 0)
-        drop_reason = _normalize_text(score.get("dropReason")) or (
-            "" if score_value >= 4 else "low_precision_score"
-        )
+        metadata_drop = _normalize_text(score.get("dropReason"))
+        source = str(row.get("_source", ""))
+        is_alternative = source.endswith(("relaxed_line_candidate", "columnar_2d_row"))
+        # Metadata/summary rows always drop. Strict rows keep at score>=4.
+        # Relaxed single-line candidates AND columnar (2D-reconstructed) rows
+        # keep when they pass the strict relaxed predicate (item-name signal +
+        # parseable amount, no metadata), so coordinate-aligned 'name + amount'
+        # rows are not lost to the column-score threshold.
+        if metadata_drop:
+            drop_reason = metadata_drop
+        elif score_value >= 4:
+            drop_reason = ""
+        elif is_alternative and _is_acceptable_relaxed_row(row):
+            drop_reason = ""
+        else:
+            drop_reason = "low_precision_score"
         if not drop_reason:
             kept_row = _normalize_candidate_row(row)
             kept_row["rowIndex"] = str(len(kept) + 1)
             kept.append(kept_row)
+            if is_alternative:
+                relaxed_kept += 1
             continue
         reason_counts[drop_reason] = reason_counts.get(drop_reason, 0) + 1
         if len(dropped) < 5:
@@ -929,6 +1613,7 @@ def _filter_table_row_candidates(rows: list[dict[str, str]]) -> tuple[list[dict[
         "parsedCandidateCount": len(rows),
         "filteredCandidateCount": len(kept),
         "droppedCount": len(rows) - len(kept),
+        "relaxedKeptCount": relaxed_kept,
         "dropReasons": reason_counts,
         "firstDroppedPreview": dropped,
         "firstKeptPreview": [_row_preview(row) for row in kept[:5]],
@@ -988,8 +1673,17 @@ def _build_table_candidate_diagnostics(
     precision = dict(precision_debug or {})
     field_quality = _summarize_candidate_field_quality(table_rows)
     split_diagnostics = _build_split_diagnostics(table_rows)
+    if any(str(row.get("_source", "")).endswith("columnar_2d_row") for row in parsed_rows):
+        candidate_strategy = "columnar_2d"
+    elif any(str(row.get("_source", "")).endswith("relaxed_line_candidate") for row in parsed_rows):
+        candidate_strategy = "relaxed_line"
+    elif parsed_rows:
+        candidate_strategy = "strict_column"
+    else:
+        candidate_strategy = "none"
     return {
         "strategy": "bbox_row_grouping_plus_precision_filter",
+        "candidateStrategy": candidate_strategy,
         "rawLineCount": raw_line_count,
         "groupedLineCount": grouped_line_count,
         "parsedCandidateCount": len(parsed_rows),
@@ -1339,9 +2033,40 @@ def extract_invoice_statement_free(
     joined_line_text = _join_lines(lines)
     source_text = "\n".join(text for text in (normalized_full_text, joined_line_text) if text)
     candidates = _build_candidate_debug(lines=lines, text=source_text)
-    parsed_table_rows = _find_table_row_candidates(grouped_lines)
+    # Strict column parsing first (grouped, then flat lines) so dense single-line
+    # layouts (1.jpg reference) are unaffected; only fall back to the relaxed
+    # 'item name + amount' candidate path when strict parsing finds nothing.
+    parsed_table_rows = _find_table_row_candidates(grouped_lines, allow_relaxed=False)
+    if not parsed_table_rows:
+        parsed_table_rows = _find_table_row_candidates(lines, allow_relaxed=False)
+    if not parsed_table_rows:
+        parsed_table_rows = _find_table_row_candidates(grouped_lines)
     if not parsed_table_rows:
         parsed_table_rows = _find_table_row_candidates(lines)
+    # 3E: when strict+relaxed produced few candidates AND the page has a
+    # rotated/transposed table signature (vertical-label stacking), attempt 2D
+    # coordinate-based column-row reconstruction. The helper is self-gated on
+    # the stacking signature so dense reference layouts (1.jpg with 28 strict
+    # rows) never enter this path. The helper returns rows ONLY when alignment
+    # confidence is high and a contamination check passes; otherwise it returns
+    # an empty list with diagnostics, leaving the existing fallback intact.
+    columnar_diag: dict[str, Any] = {
+        "attempted": False,
+        "strategy": "raw_ocr_xy_column_row",
+        "confidence": 0.0,
+        "decision": "skipped",
+        "reason": "strict_or_relaxed_sufficient" if len(parsed_table_rows) >= 5 else "",
+        "columnGroups": {"itemName": 0, "quantity": 0, "unitPrice": 0, "amount": 0},
+        "emittedRows": 0,
+        "rejectedRows": 0,
+        "alignmentIssues": [],
+    }
+    if len(parsed_table_rows) < 5:
+        columnar_rows, columnar_diag = _build_columnar_rows_from_ocr_items(
+            ocr_items, doc_type=doc_type, full_text=source_text
+        )
+        if columnar_rows:
+            parsed_table_rows = columnar_rows
     table_rows, precision_debug = _filter_table_row_candidates(parsed_table_rows)
     table_candidate_diagnostics = _build_table_candidate_diagnostics(
         raw_line_count=len(lines),
@@ -1351,9 +2076,20 @@ def extract_invoice_statement_free(
         grouping_debug=grouping_debug,
         precision_debug=precision_debug,
     )
+    # 3F: thread columnar context through release evaluation so the
+    # quantity-optional gate has access to confidence + amount-sum reconciliation.
+    columnar_context_for_release = None
+    if columnar_diag.get("decision") == "emit":
+        columnar_context_for_release = {
+            "confidence": columnar_diag.get("confidence"),
+            "amountSumReconciles": columnar_diag.get("amountSumReconciles"),
+            "amountSumActual": columnar_diag.get("amountSumActual"),
+            "amountSumTarget": columnar_diag.get("amountSumTarget"),
+        }
     release_pass, release_fail_reasons, release_decision = _evaluate_release_threshold(
         table_rows,
         table_candidate_diagnostics.get("fieldQuality"),
+        columnar_context=columnar_context_for_release,
     )
     table_candidate_diagnostics["releaseDecision"] = release_decision
     line_count = len(lines)
@@ -1427,6 +2163,7 @@ def extract_invoice_statement_free(
             "fieldQuality": table_candidate_diagnostics.get("fieldQuality"),
             "splitDiagnostics": table_candidate_diagnostics.get("splitDiagnostics"),
             "releaseDecision": release_decision,
+            "columnar": columnar_diag,
         },
         "rowCount": len(table_rows),
         "fallbackRequired": True,
