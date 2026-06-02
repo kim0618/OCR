@@ -50,6 +50,8 @@ import {
   selectRepresentativeTableResultViewModels,
   type TableResultViewModel,
 } from "@/common/utils/tableResultViewModel";
+import { buildCandidateFields } from "../utils/candidateFieldBuilder";
+import { buildDraftGtDocument } from "../utils/gtDraftBuilder";
 
 // UI-PREVIEW-10A-fix: fixed-layout + colgroup 방식 — key가 폭을 밀지 않음
 const _IDX_KEYS  = new Set(["rowIndex", "no", "rowNo", "lineNo", "seq"]);
@@ -122,6 +124,7 @@ function resolveResultTableLabel(
 const _LOT_KEYS = new Set(["lotNo", "serialLot", "lot", "lotNumber"]);
 const _MFG_KEYS = new Set(["manufacturingNo", "manufactureNo", "mfgNo"]);
 const _ITEMCODE_KEYS = new Set(["itemCode", "productCode"]);
+const _GT_DRAFT_EXPORT_BUTTON_LABEL = "GT Draft JSON 내보내기";
 
 // fix5: Preview majority rule — 95% 이상 비어있거나 중복이면 숨김
 const PREVIEW_COLUMN_HIDE_RATIO = 0.95;
@@ -170,6 +173,61 @@ function meaninglessOrDupRatio(
 // → lotNo는 인접 컬럼 OCR 노이즈일 가능성 높음 → Preview에서 숨김
 function isLotNoiseFromItemCodeTable(rows: Record<string, unknown>[]): boolean {
   return hasMeaningfulValue(rows, "itemCode") && !hasMeaningfulValue(rows, "manufacturingNo");
+}
+
+function _safeResultString(result: unknown, keys: string[]): string | undefined {
+  if (!result || typeof result !== "object") return undefined;
+  const record = result as Record<string, unknown>;
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === "string" && value.trim()) return value;
+  }
+  const df = record.document_fields;
+  if (df && typeof df === "object") {
+    const dfRecord = df as Record<string, unknown>;
+    for (const key of keys) {
+      const value = dfRecord[key];
+      if (typeof value === "string" && value.trim()) return value;
+    }
+  }
+  return undefined;
+}
+
+function _inferDraftGtResultMode(
+  result: unknown,
+  tableResultViewModels: ReadonlyArray<TableResultViewModel>,
+): "template" | "unstructured_template" | "full_unstructured" | "unknown" {
+  const templateMode = _safeResultString(result, ["templateMode", "template_mode"]);
+  const isUnstructured = _safeResultString(result, ["isUnstructuredTemplate", "is_unstructured_template"]);
+  if (templateMode === "unstructured" || isUnstructured === "Y") return "unstructured_template";
+  if (_safeResultString(result, ["template_id", "templateId"])) return "template";
+  if (tableResultViewModels.some((vm) => vm.source === "template_region_canonical")) return "template";
+  if (tableResultViewModels.some((vm) => vm.source === "unstructured_definition")) return "unstructured_template";
+  if (tableResultViewModels.some((vm) => vm.source === "backend_document_fields")) return "full_unstructured";
+  return "unknown";
+}
+
+function _sanitizeDraftGtFilename(value: string): string {
+  const cleaned = value
+    .replace(/[\\/:*?"<>|]+/g, "_")
+    .replace(/\s+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  return (cleaned || "invoice_statement").slice(0, 120);
+}
+
+function _downloadDraftGtJsonFile(data: unknown, filename: string) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], {
+    type: "application/json;charset=utf-8",
+  });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
 }
 
 // 렌더링 직전 post-filter: 내부키 · 빈컬럼 · itemCode majority · lot중복 majority · lot노이즈 · serial중복
@@ -942,6 +1000,69 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
     URL.revokeObjectURL(url);
   };
 
+  const handleExportDraftGt = async () => {
+    const documentType = _safeResultString(result, ["doc_type", "documentType", "document_type"]);
+    const resultMode = _inferDraftGtResultMode(result, tableResultViewModels);
+    const sourceFile = fileName ?? _safeResultString(result, ["fileName", "sourceFile", "filename"]);
+    const sampleId = jobId ?? _safeResultString(result, ["sampleId", "sample_id", "id"]);
+    const baseDraftInput = {
+      ocrResult: result,
+      editedFields,
+      customTableEdits,
+      tableResultViewModels,
+      resultMode,
+      documentType,
+      sourceFile,
+      sampleId: sampleId ?? undefined,
+      sourceMeta: {
+        templateName: templateName ?? undefined,
+        createdAt: createdAt ?? undefined,
+      },
+    };
+    const draftBase = buildDraftGtDocument(baseDraftInput);
+
+    if (draftBase.exportBlocked) {
+      await ui.alert([
+        "GT Draft를 내보낼 수 없습니다.",
+        ...draftBase.warnings.map((warning) => `- ${warning}`),
+      ].join("\n"));
+      return;
+    }
+    let candidatePayload;
+    try {
+      candidatePayload = buildCandidateFields({
+        result,
+        normalizedResult: draftBase.document.normalizedResult,
+      });
+    } catch (error) {
+      console.error("[GT Draft Candidate Export error]", error);
+      await ui.alert("GT Draft candidate field generation failed.");
+      return;
+    }
+
+    if (candidatePayload.warnings.length > 0) {
+      console.warn("[GT Draft Candidate warnings]", candidatePayload.warnings);
+    }
+
+    const draftFinal = buildDraftGtDocument({
+      ...baseDraftInput,
+      candidates: candidatePayload,
+    });
+
+    if (draftFinal.exportBlocked) {
+      await ui.alert([
+        "GT Draft瑜??대낫?????놁뒿?덈떎.",
+        ...draftFinal.warnings.map((warning) => `- ${warning}`),
+      ].join("\n"));
+      return;
+    }
+    if (draftFinal.warnings.length > 0) {
+      console.warn("[GT Draft Export warnings]", draftFinal.warnings);
+    }
+    const filenameBase = _sanitizeDraftGtFilename(sampleId ?? sourceFile ?? documentType ?? "invoice_statement");
+    _downloadDraftGtJsonFile(draftFinal.document, `${filenameBase}__draft_gt.json`);
+  };
+
   const updateFieldValue = (index: number, value: string) => {
     setEditedFields((prev) => {
       const next = [...prev];
@@ -1608,6 +1729,14 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                 }
               }}>
                 OCR 재실행
+              </button>
+              <button
+                type="button"
+                className="ms-btn-sm"
+                onClick={handleExportDraftGt}
+                title="Custom 탭 수정값을 Draft GT JSON으로 다운로드"
+              >
+                {_GT_DRAFT_EXPORT_BUTTON_LABEL}
               </button>
             </div>
             <div className="or-custom-type-help">

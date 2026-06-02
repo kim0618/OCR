@@ -211,6 +211,7 @@ def detect_orientation(
     scores: dict[int, float] = {}
     early_stopped = False
     bailout_reason = ""
+    zero_angle_evaluated_before_early_stop = False
 
     def _rotated(angle: int) -> np.ndarray:
         if angle not in rotations_imgs:
@@ -228,6 +229,12 @@ def detect_orientation(
         meta = _score_rotated(_rotated(angle))
         score_meta[angle] = meta
         scores[angle] = meta["score"]
+
+    if landscape_first and 0 not in scores:
+        meta = _score_rotated(_rotated(0))
+        score_meta[0] = meta
+        scores[0] = meta["score"]
+        zero_angle_evaluated_before_early_stop = True
 
     first_scores = [scores[angle] for angle in first_pass]
     dominant = max(first_scores)
@@ -334,6 +341,28 @@ def detect_orientation(
             scores[angle] = meta["score"]
 
     best_angle = max(scores, key=lambda angle: scores[angle])
+    native_landscape_zero_guard = False
+    if (
+        landscape_first
+        and best_angle in (90, 270)
+        and 0 in scores
+        and landscape_hint_confident
+        and not conflict_landscape_hint
+    ):
+        zero_meta = score_meta.get(0, {})
+        zero_signal = int(zero_meta.get("hangul_count", 0) or 0) + int(zero_meta.get("digit_count", 0) or 0)
+        best_score = float(scores.get(best_angle, 0.0) or 0.0)
+        zero_score = float(scores.get(0, 0.0) or 0.0)
+        if (
+            zero_score >= best_score * 0.9
+            and zero_score >= best_score - 18.0
+            and int(zero_meta.get("line_count", 0) or 0) >= 8
+            and zero_signal >= 22
+            and float(zero_meta.get("avg_conf", 0.0) or 0.0) >= 0.65
+        ):
+            best_angle = 0
+            native_landscape_zero_guard = True
+            bailout_reason = f"{bailout_reason}+native_landscape_zero_guard" if bailout_reason else "native_landscape_zero_guard"
 
     if best_angle == 0:
         rotated_full = image
@@ -360,6 +389,10 @@ def detect_orientation(
         "target_short": target_short,
         "pass_strategy": pass_strategy,
         "bailout_reason": bailout_reason,
+        "evaluated_angles": sorted(scores.keys()),
+        "zero_angle_evaluated_before_early_stop": zero_angle_evaluated_before_early_stop,
+        "native_landscape_zero_guard": native_landscape_zero_guard,
+        "score_meta": score_meta,
         "first_pass_dominant": round(dominant, 1),
         "first_pass_other": round(other, 1),
         "first_pass_diff": round(diff, 1),

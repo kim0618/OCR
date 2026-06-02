@@ -14,6 +14,7 @@ Fallback policy:
 from __future__ import annotations
 
 from copy import deepcopy
+import math
 import os
 import re
 from typing import Any
@@ -118,6 +119,14 @@ FORBIDDEN_FREE_ROW_KEYS = (
 )
 
 PRODUCT_CODE_TOKEN_RE = re.compile(r"^[A-Z]{2,}[\dA-Z]+$")
+CODE_VS_MONEY_COMMA_MONEY_RE = re.compile(r"^-?\d{1,3}(,\d{3})+$")
+CODE_VS_MONEY_GROUPED_MIXED_RE = re.compile(r"^-?\d{1,3}([.,]\d{3})+$")
+CODE_VS_MONEY_DATE_RE = re.compile(r"^\d{4}/\d{2}/\d{2}$|^\d{2}/\d{2}/\d{2}")
+CODE_VS_MONEY_PHONE_RE = re.compile(r"^0\d-\d{3,4}-\d{4}$")
+CODE_VS_MONEY_BIZNO_RE = re.compile(r"^\d{3}-\d{2}-\d{5}$")
+CODE_VS_MONEY_ZIP_RE = re.compile(r"^0\d{4}$")
+CODE_VS_MONEY_HYPHEN_NUM_RE = re.compile(r"^\d+-\d+$")
+CODE_VS_MONEY_PURE_NUM_RE = re.compile(r"^\d+$")
 
 
 def _empty_table_meta() -> dict[str, Any]:
@@ -156,6 +165,205 @@ def _looks_like_product_code_token(value: Any) -> bool:
     if not any(ch.isdigit() for ch in text):
         return False
     return True
+
+
+def _classify_numeric_like_token(text: Any, context: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Classify code-vs-money token shapes before creating money candidates.
+
+    FULL_UNSTRUCTURED_INVOICE_4E_CODE_VS_MONEY_HELPER_PATCH: this helper is a
+    conservative pre-filter only. Comma-grouped money is always preserved, while
+    clear product/order/id/date shapes are kept out of money candidate lists.
+    """
+    del context
+    if text is None:
+        return {
+            "class": "unknown",
+            "confidence": "low",
+            "reason": "none_input",
+            "preserveAsMoney": False,
+        }
+    token = _normalize_text(text).strip("()[]{}:;|")
+    if not token:
+        return {
+            "class": "unknown",
+            "confidence": "low",
+            "reason": "empty_input",
+            "preserveAsMoney": False,
+        }
+
+    if CODE_VS_MONEY_COMMA_MONEY_RE.fullmatch(token):
+        return {
+            "class": "real_money",
+            "confidence": "high",
+            "reason": "comma_grouped_numeric",
+            "preserveAsMoney": True,
+        }
+    if CODE_VS_MONEY_GROUPED_MIXED_RE.fullmatch(token):
+        return {
+            "class": "real_money",
+            "confidence": "medium",
+            "reason": "grouped_numeric_ocr_separator_noise",
+            "preserveAsMoney": True,
+        }
+    if CODE_VS_MONEY_DATE_RE.match(token):
+        return {
+            "class": "date_like",
+            "confidence": "high",
+            "reason": "date_pattern",
+            "preserveAsMoney": False,
+        }
+    if CODE_VS_MONEY_PHONE_RE.fullmatch(token):
+        return {
+            "class": "phone_like",
+            "confidence": "high",
+            "reason": "phone_pattern",
+            "preserveAsMoney": False,
+        }
+    if CODE_VS_MONEY_BIZNO_RE.fullmatch(token):
+        return {
+            "class": "biz_number_like",
+            "confidence": "high",
+            "reason": "biz_number_pattern",
+            "preserveAsMoney": False,
+        }
+    if CODE_VS_MONEY_ZIP_RE.fullmatch(token):
+        return {
+            "class": "page_or_metadata",
+            "confidence": "medium",
+            "reason": "zip_code_pattern",
+            "preserveAsMoney": False,
+        }
+
+    upper = token.upper()
+    if re.fullmatch(r"\d+(?:ML|MG|G|T|TAB|CAP|P|EA|BOX|DOSE)", upper) or re.search(
+        r"\d+(?:ML|MG|M|G)[*X|]+\d+", upper
+    ):
+        return {
+            "class": "quantity_like",
+            "confidence": "medium",
+            "reason": "unit_or_spec_quantity",
+            "preserveAsMoney": False,
+        }
+    if re.search(r"[가-힣]", token):
+        return {
+            "class": "unknown",
+            "confidence": "low",
+            "reason": "hangul_numeric_mixed_shape",
+            "preserveAsMoney": False,
+        }
+
+    has_alpha = bool(re.search(r"[A-Za-z]", token))
+    has_digit = any(ch.isdigit() for ch in token)
+    if has_alpha and has_digit and "," not in token:
+        if "-" in token and re.search(r"[O0]P-|[A-Z]-", upper):
+            return {
+                "class": "order_code",
+                "confidence": "high",
+                "reason": "alpha_hyphen_digit_order_code",
+                "preserveAsMoney": False,
+            }
+        if "-" in token:
+            return {
+                "class": "order_code",
+                "confidence": "medium",
+                "reason": "alpha_hyphen_digit_order_code",
+                "preserveAsMoney": False,
+            }
+        return {
+            "class": "product_code",
+            "confidence": "high",
+            "reason": "alpha_digit_product_code",
+            "preserveAsMoney": False,
+        }
+
+    if CODE_VS_MONEY_HYPHEN_NUM_RE.fullmatch(token):
+        return {
+            "class": "lot_or_serial",
+            "confidence": "medium",
+            "reason": "hyphenated_numeric_serial",
+            "preserveAsMoney": False,
+        }
+    if CODE_VS_MONEY_PURE_NUM_RE.fullmatch(token):
+        if len(token) <= 3:
+            return {
+                "class": "quantity_like",
+                "confidence": "medium",
+                "reason": "short_pure_numeric",
+                "preserveAsMoney": False,
+            }
+        if len(token) >= 6:
+            return {
+                "class": "lot_or_serial",
+                "confidence": "low",
+                "reason": "long_pure_numeric_no_grouping",
+                "preserveAsMoney": False,
+            }
+        return {
+            "class": "unknown",
+            "confidence": "low",
+            "reason": "mid_pure_numeric_ungrouped",
+            "preserveAsMoney": False,
+        }
+
+    return {
+        "class": "unknown",
+        "confidence": "low",
+        "reason": "unresolved_shape",
+        "preserveAsMoney": False,
+    }
+
+
+def _code_vs_money_container_token(text: str, start: int, end: int) -> str:
+    left = start
+    while left > 0 and not text[left - 1].isspace():
+        left -= 1
+    right = end
+    while right < len(text) and not text[right].isspace():
+        right += 1
+    return text[left:right].strip()
+
+
+def _is_code_like_non_money_token(value: Any) -> bool:
+    classification = _classify_numeric_like_token(value)
+    return (
+        not classification.get("preserveAsMoney")
+        and classification.get("class")
+        in {"product_code", "order_code", "lot_or_serial", "date_like", "biz_number_like", "phone_like", "page_or_metadata"}
+    )
+
+
+def _build_code_vs_money_diagnostics(text: str) -> dict[str, Any]:
+    summary = {
+        "enabled": True,
+        "removedCount": 0,
+        "removedExamples": [],
+        "preservedMoneyCount": 0,
+        "unknownCount": 0,
+    }
+    seen_removed: set[str] = set()
+    seen_tokens: set[str] = set()
+    for raw in re.findall(r"\S*\d\S*", _normalize_text(text)):
+        token = raw.strip("()[]{}:;|")
+        if not token or token in seen_tokens:
+            continue
+        seen_tokens.add(token)
+        classification = _classify_numeric_like_token(token)
+        if classification.get("preserveAsMoney"):
+            summary["preservedMoneyCount"] += 1
+        elif classification.get("class") in {"product_code", "order_code"}:
+            summary["removedCount"] += 1
+            if token not in seen_removed and len(summary["removedExamples"]) < 8:
+                seen_removed.add(token)
+                summary["removedExamples"].append(
+                    {
+                        "text": token[:40],
+                        "class": classification.get("class"),
+                        "reason": classification.get("reason"),
+                    }
+                )
+        elif classification.get("class") == "unknown":
+            summary["unknownCount"] += 1
+    return summary
 
 
 def _bbox_metrics(bbox: Any) -> dict[str, float] | None:
@@ -220,6 +428,286 @@ def _extract_ocr_line_items(ocr_lines_raw: Any) -> list[dict[str, Any]]:
             item.update(metrics)
         items.append(item)
     return items
+
+
+def _build_token_bbox_debug(
+    ocr_items: list[dict[str, Any]],
+    ocr_w: int | float | None,
+    ocr_h: int | float | None,
+    *,
+    max_tokens: int = 300,
+) -> dict[str, Any]:
+    def _finite_number(value: Any) -> float | None:
+        if not isinstance(value, (int, float)):
+            return None
+        number = float(value)
+        return number if math.isfinite(number) else None
+
+    width = _finite_number(ocr_w)
+    height = _finite_number(ocr_h)
+    tokens: list[dict[str, Any]] = []
+    for item in ocr_items:
+        x = _finite_number(item.get("x"))
+        y = _finite_number(item.get("y"))
+        w = _finite_number(item.get("w"))
+        h = _finite_number(item.get("h"))
+        cx = _finite_number(item.get("cx"))
+        cy = _finite_number(item.get("cy"))
+        if None in (x, y, w, h, cx, cy):
+            continue
+        token = {
+            "text": _normalize_text(item.get("text")),
+            "bbox": {"x": x, "y": y, "w": w, "h": h},
+            "cx": cx,
+            "cy": cy,
+            "confidence": item.get("confidence") if item.get("confidence") is not None else None,
+        }
+        tokens.append(token)
+
+    token_count = len(ocr_items)
+    finite_token_count = len(tokens)
+    cap = max(1, int(max_tokens or 300))
+    emitted = tokens[:cap]
+    return {
+        "available": True,
+        "source": "ocr_items",
+        "imageSize": {"width": width, "height": height},
+        "tokenCount": token_count,
+        "finiteTokenCount": finite_token_count,
+        "emittedTokenCount": len(emitted),
+        "maxTokenCap": cap,
+        "truncated": finite_token_count > len(emitted),
+        "tokens": emitted,
+    }
+
+
+def _build_gt_skeleton_candidates(
+    ocr_items: list[dict[str, Any]],
+    ocr_w: int | float | None,
+    ocr_h: int | float | None,
+    *,
+    doc_type: str = "invoice_statement",
+    max_rows: int = 20,
+) -> dict[str, Any]:
+    def _finite_number(value: Any) -> float | None:
+        if not isinstance(value, (int, float)):
+            return None
+        number = float(value)
+        return number if math.isfinite(number) else None
+
+    def _finite_item(item: dict[str, Any]) -> dict[str, Any] | None:
+        x = _finite_number(item.get("x"))
+        y = _finite_number(item.get("y"))
+        w = _finite_number(item.get("w"))
+        h = _finite_number(item.get("h"))
+        cx = _finite_number(item.get("cx"))
+        cy = _finite_number(item.get("cy"))
+        if None in (x, y, w, h, cx, cy):
+            return None
+        return {
+            "text": _normalize_text(item.get("text")),
+            "confidence": item.get("confidence") if item.get("confidence") is not None else None,
+            "x": x,
+            "y": y,
+            "w": w,
+            "h": h,
+            "cx": cx,
+            "cy": cy,
+        }
+
+    def _box_contains(box: dict[str, float], item: dict[str, Any]) -> bool:
+        return (
+            box["x"] <= float(item["cx"]) <= box["x"] + box["w"]
+            and box["y"] <= float(item["cy"]) <= box["y"] + box["h"]
+        )
+
+    def _looks_like_code_anchor(text: Any) -> bool:
+        value = _normalize_text(text).upper().replace(" ", "")
+        if not value or "," in value:
+            return False
+        return bool(re.search(r"(?:^|\d)(?:O|0)?P-[A-Z0-9]{2,}", value) or re.search(r"\d+(?:O|0)P-[A-Z0-9]{2,}", value))
+
+    def _amount_anchor_value(text: Any) -> str:
+        value = _normalize_text(text)
+        if not value or _looks_like_code_anchor(value) or _is_code_like_non_money_token(value):
+            return ""
+        money_tokens = _money_tokens_from_text(value)
+        if not money_tokens:
+            return ""
+        return _normalize_money(money_tokens[-1])
+
+    def _anchor_counts_for_box(box: dict[str, float], items: list[dict[str, Any]]) -> tuple[int, int]:
+        inside = [item for item in items if _box_contains(box, item)]
+        return (
+            sum(1 for item in inside if _looks_like_code_anchor(item.get("text"))),
+            sum(1 for item in inside if _amount_anchor_value(item.get("text"))),
+        )
+
+    if doc_type != "invoice_statement":
+        return {
+            "available": False,
+            "source": "template_box_code_amount_anchor",
+            "mode": "debug_gt_skeleton_only",
+            "reason": "non_invoice_statement",
+            "releaseImpact": "none",
+            "rows": [],
+        }
+
+    width = _finite_number(ocr_w)
+    height = _finite_number(ocr_h)
+    finite_items = [item for item in (_finite_item(raw) for raw in ocr_items) if item is not None]
+    if not finite_items or width is None or height is None:
+        return {
+            "available": False,
+            "source": "template_box_code_amount_anchor",
+            "mode": "debug_gt_skeleton_only",
+            "reason": "missing_finite_token_bbox_or_image_size",
+            "releaseImpact": "none",
+            "rows": [],
+        }
+
+    template_source = {"width": 1654.0, "height": 2338.0}
+    template_box = {"x": 112.0, "y": 599.0, "w": 1468.0, "h": 1134.0}
+    scale_x_direct = width / template_source["width"]
+    scale_y_direct = height / template_source["height"]
+    direct_box = {
+        "x": template_box["x"] * scale_x_direct,
+        "y": template_box["y"] * scale_y_direct,
+        "w": template_box["w"] * scale_x_direct,
+        "h": template_box["h"] * scale_y_direct,
+    }
+
+    rotated_source = {"width": template_source["height"], "height": template_source["width"]}
+    scale_x_rot = width / rotated_source["width"]
+    scale_y_rot = height / rotated_source["height"]
+    rotated_box = {
+        "x": (template_source["height"] - (template_box["y"] + template_box["h"])) * scale_x_rot,
+        "y": template_box["x"] * scale_y_rot,
+        "w": template_box["h"] * scale_x_rot,
+        "h": template_box["w"] * scale_y_rot,
+    }
+
+    candidates = [
+        ("scaled", direct_box, scale_x_direct, scale_y_direct),
+        ("scaled_rotated_clockwise", rotated_box, scale_x_rot, scale_y_rot),
+    ]
+    scored_boxes: list[tuple[str, dict[str, float], float, float, int, int]] = []
+    for status, box, sx, sy in candidates:
+        code_count, amount_count = _anchor_counts_for_box(box, finite_items)
+        scored_boxes.append((status, box, sx, sy, code_count, amount_count))
+    status, table_box, scale_x, scale_y, _, _ = max(scored_boxes, key=lambda item: (item[4] + item[5], item[4], item[5]))
+
+    inside_items = [item for item in finite_items if _box_contains(table_box, item)]
+    code_anchors = [
+        {"text": item["text"], "cx": item["cx"], "cy": item["cy"], "confidence": item.get("confidence")}
+        for item in inside_items
+        if _looks_like_code_anchor(item.get("text"))
+    ]
+    amount_anchors = [
+        {"text": _amount_anchor_value(item["text"]), "rawText": item["text"], "cx": item["cx"], "cy": item["cy"], "confidence": item.get("confidence")}
+        for item in inside_items
+        if _amount_anchor_value(item.get("text"))
+    ]
+
+    code_anchors.sort(key=lambda anchor: (float(anchor["cx"]), float(anchor["cy"])))
+    amount_anchors.sort(key=lambda anchor: (float(anchor["cx"]), float(anchor["cy"])))
+    used_amounts: set[int] = set()
+    rows: list[dict[str, Any]] = []
+    paired_count = 0
+    orphan_code_count = 0
+    for code in code_anchors[:max_rows]:
+        best_idx = None
+        best_distance = None
+        for idx, amount in enumerate(amount_anchors):
+            if idx in used_amounts:
+                continue
+            distance = abs(float(amount["cx"]) - float(code["cx"])) + (abs(float(amount["cy"]) - float(code["cy"])) * 0.1)
+            if best_distance is None or distance < best_distance:
+                best_idx = idx
+                best_distance = distance
+        amount = amount_anchors[best_idx] if best_idx is not None and best_distance is not None and best_distance <= 75.0 else None
+        missing = []
+        notes = ["debug_only_not_release_table_row"]
+        confidence = "medium"
+        if amount is None:
+            orphan_code_count += 1
+            missing.append("amount")
+            notes.append("orphan_code_anchor")
+            confidence = "low"
+        else:
+            used_amounts.add(best_idx)  # type: ignore[arg-type]
+            paired_count += 1
+        rows.append(
+            {
+                "rowIndex": len(rows),
+                "itemName": "",
+                "spec": "",
+                "productCode": code["text"],
+                "lotNo": "",
+                "expiryDate": "",
+                "quantity": "",
+                "unitPrice": "",
+                "amount": amount["text"] if amount else "",
+                "_gtSkeleton": {
+                    "reviewRequired": True,
+                    "rowConfidence": confidence,
+                    "anchors": {
+                        "code": {"text": code["text"], "cx": code["cx"], "cy": code["cy"]},
+                        "amount": {"text": amount["text"], "cx": amount["cx"], "cy": amount["cy"]} if amount else None,
+                    },
+                    "missingAnchors": missing,
+                    "notes": notes,
+                },
+            }
+        )
+
+    balance_excluded = sum(
+        1
+        for item in finite_items
+        if not _box_contains(table_box, item)
+        and _amount_anchor_value(item.get("text"))
+        and ("합계" in item.get("text", "") or "balance" in item.get("text", "").lower() or float(item.get("cx", 0.0)) < table_box["x"])
+    )
+    row_count = len(rows)
+    available = 8 <= len(code_anchors) and row_count > 0
+    return {
+        "available": available,
+        "source": "template_box_code_amount_anchor",
+        "mode": "debug_gt_skeleton_only",
+        "templateName": "거래_2",
+        "templateId": "TPL-5A8C2374",
+        "releaseImpact": "none",
+        "rowCount": row_count,
+        "expectedRowRange": "12-13",
+        "coordinateAlignment": {
+            "status": status if available else "uncertain",
+            "ocrImageSize": {"width": width, "height": height},
+            "templateSourceSize": template_source,
+            "scaleX": scale_x,
+            "scaleY": scale_y,
+            "tableBoxUsed": {key: round(value, 3) for key, value in table_box.items()},
+            "scoredBoxes": [
+                {
+                    "status": scored[0],
+                    "codeCount": scored[4],
+                    "amountCount": scored[5],
+                    "tableBox": {key: round(value, 3) for key, value in scored[1].items()},
+                }
+                for scored in scored_boxes
+            ],
+        },
+        "anchorSummary": {
+            "codeCount": len(code_anchors),
+            "amountCount": len(used_amounts),
+            "rawAmountCandidateCount": len(amount_anchors),
+            "pairedCount": paired_count,
+            "orphanCodeCount": orphan_code_count,
+            "orphanAmountCount": max(0, len(amount_anchors) - len(used_amounts)),
+            "balanceExcludedCount": balance_excluded,
+        },
+        "candidateRowsReleaseIsolated": True,
+        "rows": rows,
+    }
 
 
 def _extract_line_texts(ocr_lines_raw: Any) -> list[str]:
@@ -301,6 +789,28 @@ def _is_number_token(value: str) -> bool:
 
 def _clean_number_token(value: str) -> str:
     return _normalize_text(value).strip("()[]{}.,:;|").replace("￦", "").replace("₩", "").replace("원", "")
+
+
+def _normalize_comma_space_money_text(value: Any) -> str:
+    text = _normalize_text(value)
+    if not text:
+        return ""
+    return re.sub(r"(?<!\d)(-?\d{1,3}),\s+(\d{3})(?!\d)", r"\1,\2", text)
+
+
+def _merge_comma_space_money_tokens(tokens: list[str]) -> list[str]:
+    merged: list[str] = []
+    idx = 0
+    while idx < len(tokens):
+        token = _normalize_text(tokens[idx])
+        next_token = _normalize_text(tokens[idx + 1]) if idx + 1 < len(tokens) else ""
+        if re.fullmatch(r"-?\d{1,3},", token) and re.fullmatch(r"\d{3}", next_token):
+            merged.append(f"{token}{next_token}")
+            idx += 2
+            continue
+        merged.append(token)
+        idx += 1
+    return merged
 
 
 def _normalize_item_name(value: Any) -> str:
@@ -386,14 +896,62 @@ def _looks_like_spec_token(value: Any) -> bool:
     return bool(re.search(r"\d", text) and re.search(r"[A-Za-z]", text) and len(text) <= 20)
 
 
+def _looks_like_lot_code_with_unit_suffix(value: Any) -> bool:
+    text = _normalize_text(value).strip("()[]{}.,:;|")
+    if not text:
+        return False
+    compact = re.sub(r"\s+", "", text).upper()
+    if "," in compact or _is_date_like_number(compact):
+        return False
+    if not compact.endswith("EA") or "-" not in compact:
+        return False
+    return bool(re.fullmatch(r"(?=.*\d)[A-Z0-9]+(?:-[A-Z0-9]+)*-\d+EA", compact))
+
+
+def _looks_like_item_name_spec_tail(value: Any) -> bool:
+    text = _normalize_spec(value).strip("()[]{}.,:;|")
+    if not text or len(text) > 20:
+        return False
+    if _looks_like_lot_code_with_unit_suffix(text):
+        return False
+    if _money_parse_value(text) is not None and not re.search(r"[A-Za-z]", text):
+        return False
+    upper = text.upper()
+    if re.fullmatch(r"\d+(?:\.\d+)?(?:T|C|CAP|TAB|DOSE|ML|MI|M[I1L]|MG|NG|G|N1)", upper):
+        return True
+    if re.fullmatch(r"\d+(?:ML|MG|G)\s*[*X]\s*\d+", upper):
+        return True
+    return _looks_like_spec_token(text)
+
+
+def _split_item_name_spec_tail(value: Any) -> tuple[str, str] | None:
+    text = _normalize_item_name(value)
+    if not text:
+        return None
+    parts = text.rsplit(None, 1)
+    if len(parts) != 2:
+        return None
+    item_name, tail = parts[0].strip(), _normalize_spec(parts[1])
+    if not item_name or not _looks_like_item_name_spec_tail(tail):
+        return None
+    return item_name, tail
+
+
 def _money_tokens_from_text(value: Any) -> list[str]:
-    text = _normalize_text(value)
+    text = _normalize_comma_space_money_text(value)
     if not text:
         return []
     tokens: list[str] = []
     for match in re.finditer(r"(?<!\d)(?:-?\d{1,3}(?:,\d{3})+|-?\d{4,})(?!\d)", text):
         token = _clean_number_token(match.group(0))
         if not token:
+            continue
+        # FULL_UNSTRUCTURED_INVOICE_4E_CODE_VS_MONEY_HELPER_PATCH:
+        # when a numeric regex match is embedded in a product/order code
+        # (OP-NA0300, 0P-NA0300, INAP250G, NRFS75M), keep the code out of the
+        # money candidate list without changing release or segmentation logic.
+        container = _code_vs_money_container_token(text, match.start(), match.end())
+        if container and container != token and _is_code_like_non_money_token(container):
             continue
         if "," not in token and _is_date_like_number(token):
             continue
@@ -458,6 +1016,16 @@ def _repair_candidate_column_split(row: dict[str, Any], source: dict[str, Any]) 
 
     if not _normalize_text(repaired.get("itemName")):
         repaired["itemName"] = _candidate_item_name_from_raw_text(raw_text)
+
+    if (
+        not _normalize_text(repaired.get("lotNo"))
+        and _looks_like_lot_code_with_unit_suffix(repaired.get("spec"))
+        and (_money_parse_value(repaired.get("unitPrice")) is not None or _money_parse_value(repaired.get("amount")) is not None)
+    ):
+        split = _split_item_name_spec_tail(repaired.get("itemName"))
+        if split:
+            repaired["itemName"], repaired["spec"] = split
+            repaired["lotNo"] = _normalize_text(row.get("spec"))
     return repaired
 
 
@@ -576,10 +1144,10 @@ def _is_summary_or_header_line(text: str) -> bool:
 
 
 def _parse_table_row_candidate(line: str, row_index: int) -> dict[str, str] | None:
-    text = _normalize_text(line)
+    text = _normalize_comma_space_money_text(line)
     if _is_summary_or_header_line(text):
         return None
-    tokens = text.split()
+    tokens = _merge_comma_space_money_tokens(text.split())
     if len(tokens) < 3:
         return None
     numeric_positions = [(idx, token) for idx, token in enumerate(tokens) if _is_number_token(token)]
@@ -606,6 +1174,17 @@ def _parse_table_row_candidate(line: str, row_index: int) -> dict[str, str] | No
             continue
         if not lot_no and _is_lot_or_manufacturing_like_number(numeric_value):
             lot_no = numeric_value
+    if (
+        quantity
+        and len(numeric_values) == 3
+        and _is_date_like_number(quantity)
+        and _money_parse_value(unit_price) is not None
+        and _money_parse_value(amount) is not None
+        and (_money_parse_value(amount) or 0) >= (_money_parse_value(unit_price) or 0)
+    ):
+        if not expiry_date:
+            expiry_date = quantity
+        quantity = ""
     if not item_name and not amount:
         return None
     return {
@@ -1984,10 +2563,12 @@ def _build_candidate_debug(
     business_numbers = _find_business_numbers(text)
     company_candidates = _find_company_candidates(lines)
     amount_candidates = _find_amount_candidates(text)
+    code_vs_money = _build_code_vs_money_diagnostics(text)
     return {
         "businessNumbers": business_numbers,
         "companyCandidates": company_candidates,
         "amountCandidates": amount_candidates,
+        "codeVsMoney": code_vs_money,
         "lineCount": len(lines),
         "textLength": len(text),
     }
@@ -2167,6 +2748,17 @@ def extract_invoice_statement_free(
         },
         "rowCount": len(table_rows),
         "fallbackRequired": True,
+        "tokenBboxDebug": _build_token_bbox_debug(
+            ocr_items,
+            image_wh[0] if isinstance(image_wh, list) and len(image_wh) >= 2 else None,
+            image_wh[1] if isinstance(image_wh, list) and len(image_wh) >= 2 else None,
+        ),
+        "gtSkeletonCandidates": _build_gt_skeleton_candidates(
+            ocr_items,
+            image_wh[0] if isinstance(image_wh, list) and len(image_wh) >= 2 else None,
+            image_wh[1] if isinstance(image_wh, list) and len(image_wh) >= 2 else None,
+            doc_type=doc_type,
+        ),
     }
     if release_pass and doc_type == "invoice_statement" and not template_mode:
         reference_fields, reference_debug = _extract_reference_invoice_statement_fields(
@@ -2226,7 +2818,10 @@ __all__ = [
     "_find_table_row_candidates",
     "_build_success_invoice_statement_free_result",
     "_build_controlled_success_rows",
+    "_build_code_vs_money_diagnostics",
+    "_classify_numeric_like_token",
     "_is_release_ready_table_row",
+    "_is_code_like_non_money_token",
     "_is_controlled_success_enabled",
     "_is_meaningful_table_row",
     "_is_plausible_invoice_item_row",
