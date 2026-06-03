@@ -122,6 +122,10 @@ export type DraftGtBuilderInput = {
   ocrResult: unknown;
   editedFields?: unknown[] | null;
   customTableEdits?: Record<string, string>[] | null;
+  skeletonCandidateRows?: DraftGtSkeletonCandidateInputRow[] | null;
+  skeletonCandidateEdits?: Record<string, string>[] | null;
+  useSkeletonCandidateRows?: boolean;
+  skeletonCandidateSourceMeta?: Record<string, unknown> | null;
   tableResultViewModels?: unknown[] | null;
   resultMode?: DraftGtResultMode;
   documentType?: string;
@@ -130,6 +134,12 @@ export type DraftGtBuilderInput = {
   orientationGt?: Partial<DraftGtOrientation>;
   sourceMeta?: Partial<DraftGtSourceMeta>;
   candidates?: unknown;
+};
+
+export type DraftGtSkeletonCandidateInputRow = {
+  rowIndex?: number;
+  values: Record<string, string>;
+  sourceRowMeta?: Record<string, unknown> | null;
 };
 
 export type DraftGtBuilderOutput = {
@@ -326,6 +336,16 @@ function makeDraftTableRow(values: Record<string, string>, rowIndex: number): Dr
   return row;
 }
 
+function cloneDraftTableRow(row: DraftGtTableRow): DraftGtTableRow {
+  return {
+    ...row,
+    missingFields: [...row.missingFields],
+    fieldStatus: { ...row.fieldStatus },
+    sourceRowMeta: row.sourceRowMeta ? { ...row.sourceRowMeta } : undefined,
+    bboxRefs: row.bboxRefs ? { ...row.bboxRefs } : undefined,
+  };
+}
+
 function tableRowsFromViewModel(vm: TableResultViewModel | null): DraftGtTableRow[] {
   if (!vm) return [];
   return vm.rows.map((row, idx) => {
@@ -339,6 +359,49 @@ function tableRowsFromViewModel(vm: TableResultViewModel | null): DraftGtTableRo
       tableKey: vm.tableKey,
       source: vm.source,
       sourceRowIndex: row.index,
+    };
+    return draftRow;
+  });
+}
+
+function sanitizeSourceRowMeta(value: unknown): Record<string, unknown> | undefined {
+  if (!isRecord(value)) return undefined;
+  const meta: Record<string, unknown> = {};
+  for (const [key, rawValue] of Object.entries(value)) {
+    const lowerKey = key.toLowerCase();
+    if (
+      lowerKey.includes("token")
+      || lowerKey.includes("bbox")
+      || lowerKey.includes("debug")
+      || lowerKey.includes("ocr")
+      || lowerKey.includes("coordinate")
+      || lowerKey.includes("raw")
+    ) {
+      continue;
+    }
+    if (
+      rawValue === null
+      || typeof rawValue === "string"
+      || typeof rawValue === "number"
+      || typeof rawValue === "boolean"
+    ) {
+      meta[key] = rawValue;
+    }
+  }
+  return Object.keys(meta).length > 0 ? meta : undefined;
+}
+
+function tableRowsFromSkeletonCandidateRows(
+  rows: DraftGtSkeletonCandidateInputRow[] | null | undefined,
+): DraftGtTableRow[] {
+  if (!Array.isArray(rows)) return [];
+  return rows.map((row, idx) => {
+    const draftRow = makeDraftTableRow(row.values, idx + 1);
+    const sourceRowMeta = sanitizeSourceRowMeta(row.sourceRowMeta);
+    draftRow.sourceRowMeta = {
+      source: "gt_skeleton_candidate",
+      sourceRowIndex: typeof row.rowIndex === "number" ? row.rowIndex : idx,
+      ...(sourceRowMeta ?? {}),
     };
     return draftRow;
   });
@@ -375,6 +438,39 @@ function mergeCustomTableEdits(params: {
       const key = resolveColumnKey(rawKey);
       if (!key || (!knownColumns.has(rawKey) && !COLUMN_KEY_ALIASES[rawKey])) {
         params.warnings.push("unknown_column_key");
+        continue;
+      }
+      target[key] = asString(rawValue);
+      target.fieldStatus[key] = "present_corrected";
+    }
+  });
+  return { rows: merged, exportBlocked: false };
+}
+
+function mergeSkeletonCandidateEdits(params: {
+  rows: DraftGtTableRow[];
+  skeletonCandidateEdits: Record<string, string>[] | null | undefined;
+  warnings: string[];
+}): { rows: DraftGtTableRow[]; exportBlocked: boolean } {
+  const merged = params.rows.map(cloneDraftTableRow);
+  const edits = params.skeletonCandidateEdits;
+  if (!Array.isArray(edits) || edits.length === 0) {
+    return { rows: merged, exportBlocked: false };
+  }
+  if (edits.length !== merged.length) {
+    params.warnings.push("skeleton_candidate_row_count_mismatch");
+  }
+  edits.forEach((editRow, rowIdx) => {
+    if (!isRecord(editRow)) return;
+    const target = merged[rowIdx];
+    if (!target) {
+      params.warnings.push("skeleton_candidate_row_count_mismatch");
+      return;
+    }
+    for (const [rawKey, rawValue] of Object.entries(editRow)) {
+      const key = resolveColumnKey(rawKey);
+      if (!key) {
+        params.warnings.push("skeleton_candidate_unknown_column_key");
         continue;
       }
       target[key] = asString(rawValue);
@@ -435,19 +531,36 @@ export function buildDraftGtDocument(input: DraftGtBuilderInput): DraftGtBuilder
   }
 
   const fields = mergeEditedFields(extractBaseFields(input.ocrResult), input.editedFields);
-  const tableViewModels = normalizeTableResultViewModels(input.tableResultViewModels);
-  const representativeTables = selectRepresentativeTableResultViewModels(tableViewModels);
-  if (representativeTables.length > 1 && Array.isArray(input.customTableEdits) && input.customTableEdits.length > 0) {
-    warnings.push("multi_table_merge_ambiguous");
+  let tableRowsSource = "representative_table";
+  let mergedRows: { rows: DraftGtTableRow[]; exportBlocked: boolean };
+  const useSkeletonCandidateRows = input.useSkeletonCandidateRows === true;
+  if (useSkeletonCandidateRows) {
+    const baseRows = tableRowsFromSkeletonCandidateRows(input.skeletonCandidateRows);
+    if (baseRows.length === 0) {
+      warnings.push("no_skeleton_candidate_rows_for_export");
+      exportBlocked = true;
+    }
+    tableRowsSource = "gt_skeleton_candidate";
+    mergedRows = mergeSkeletonCandidateEdits({
+      rows: baseRows,
+      skeletonCandidateEdits: input.skeletonCandidateEdits,
+      warnings,
+    });
+  } else {
+    const tableViewModels = normalizeTableResultViewModels(input.tableResultViewModels);
+    const representativeTables = selectRepresentativeTableResultViewModels(tableViewModels);
+    if (representativeTables.length > 1 && Array.isArray(input.customTableEdits) && input.customTableEdits.length > 0) {
+      warnings.push("multi_table_merge_ambiguous");
+    }
+    const representativeTable = representativeTables[0] ?? null;
+    const baseRows = tableRowsFromViewModel(representativeTable);
+    mergedRows = mergeCustomTableEdits({
+      rows: baseRows,
+      customTableEdits: input.customTableEdits,
+      representativeTable,
+      warnings,
+    });
   }
-  const representativeTable = representativeTables[0] ?? null;
-  const baseRows = tableRowsFromViewModel(representativeTable);
-  const mergedRows = mergeCustomTableEdits({
-    rows: baseRows,
-    customTableEdits: input.customTableEdits,
-    representativeTable,
-    warnings,
-  });
   exportBlocked = exportBlocked || mergedRows.exportBlocked;
 
   const orientationGt: DraftGtOrientation = {
@@ -462,6 +575,14 @@ export function buildDraftGtDocument(input: DraftGtBuilderInput): DraftGtBuilder
     resultMode,
     generatedAt,
     builderVersion: BUILDER_VERSION,
+    tableRowsSource,
+    ...(useSkeletonCandidateRows
+      ? {
+          draftSource: "gt_skeleton_candidate",
+          releaseTableRowsPreserved: true,
+          skeletonCandidateSourceMeta: input.skeletonCandidateSourceMeta ?? undefined,
+        }
+      : {}),
   };
 
   const document: DraftGtDocument = {

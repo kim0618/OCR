@@ -951,6 +951,125 @@ def read_image(data: bytes, filename: str = "") -> np.ndarray:
     return img
 
 
+# ── FULL-UNSTRUCTURED-INVOICE-2Y: multi-page PDF OCR input (additive, gated) ──
+# 기존 read_image(단일 page0)는 그대로 유지한다. 아래는 multi-page PDF 의
+# 전체 page 를 OCR 입력 단계에서 다루기 위한 신규 helper 다. release/tableRows
+# 결과는 바꾸지 않으며, route 에서는 debug-only/gated 로만 사용한다.
+class PageImage:
+    """단일 OCR page image + page metadata (multi-page PDF 지원, additive)."""
+    __slots__ = ("pageNo", "pageIndex", "totalPages", "width", "height", "image", "source")
+
+    def __init__(self, pageNo, pageIndex, totalPages, width, height, image, source):
+        self.pageNo = pageNo          # 1-based (외부 표시용)
+        self.pageIndex = pageIndex    # 0-based (내부 추적용)
+        self.totalPages = totalPages
+        self.width = width
+        self.height = height
+        self.image = image            # BGR np.ndarray (기존 OCR engine 입력과 동일 타입)
+        self.source = source          # "image" | "pdf_page"
+
+
+def _render_pdf_page_to_bgr(page) -> tuple:
+    """PDF page 1장을 read_image 와 동일한 dpi/색상 정책으로 BGR 이미지화."""
+    pix = page.get_pixmap(dpi=200)
+    arr = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.h, pix.w, pix.n)
+    if arr.shape[2] == 4:  # RGBA -> BGR
+        arr = cv2.cvtColor(arr, cv2.COLOR_RGBA2BGR)
+    else:  # RGB -> BGR
+        arr = cv2.cvtColor(arr, cv2.COLOR_RGB2BGR)
+    return arr, int(pix.w), int(pix.h)
+
+
+def read_images_for_ocr(data: bytes, filename: str = "") -> list:
+    """이미지/PDF 를 page list(list[PageImage])로 반환.
+
+    - 이미지 파일: 기존 read_image 결과를 그대로 1개 PageImage 로 wrap (동치).
+    - 단일 페이지 PDF: page0 1개 (read_image 와 동일 page0 rasterize).
+    - multi-page PDF: 전체 page 를 page-local 로 rasterize 한 N개 PageImage.
+
+    기존 read_image contract 는 변경하지 않는다(이 함수는 별도 helper).
+    """
+    is_pdf = (filename or "").lower().endswith(".pdf") or (len(data) >= 5 and data[:5] == b"%PDF-")
+    if not is_pdf:
+        img = read_image(data, filename)  # 기존 image 경로 재사용(동치)
+        h, w = img.shape[:2]
+        return [PageImage(1, 0, 1, int(w), int(h), img, "image")]
+    doc = fitz.open(stream=data, filetype="pdf")
+    try:
+        total = doc.page_count
+        pages = []
+        for i in range(total):
+            bgr, w, h = _render_pdf_page_to_bgr(doc[i])
+            pages.append(PageImage(i + 1, i, total, w, h, bgr, "pdf_page"))
+        return pages
+    finally:
+        doc.close()
+
+
+def _build_multi_page_ocr_debug(data: bytes, filename: str, ocr_engine) -> dict:
+    """multi-page PDF 의 page2+ OCR 진입 여부를 compact debug 로만 확인.
+
+    - PDF 가 아니면 None.
+    - pageCount 는 항상 cheap 하게 기록(fitz, OCR 불요).
+    - 환경변수 INVOICE_MULTIPAGE_OCR_DEBUG 가 켜진 경우에만 page별 OCR probe 수행.
+    - release/tableRows 는 절대 바꾸지 않으며, full text/raw OCR/base64 는 저장하지 않는다.
+    """
+    import os
+    is_pdf = (filename or "").lower().endswith(".pdf") or (len(data) >= 5 and data[:5] == b"%PDF-")
+    if not is_pdf:
+        return None
+    gate = str(os.environ.get("INVOICE_MULTIPAGE_OCR_DEBUG", "")).strip().lower() in ("1", "true", "yes", "on")
+    doc = fitz.open(stream=data, filetype="pdf")
+    try:
+        page_count = doc.page_count
+    finally:
+        doc.close()
+    debug = {
+        "enabled": bool(gate),
+        "mode": "gated_debug" if gate else "debug_only_gate_off",
+        "pageCount": int(page_count),
+        "processedPageCount": 0,
+        "pages": [],
+        "hasPage2PlusEvidence": False,
+        "evidenceTermsFound": [],
+        "truncated": False,
+        "releaseImpact": "none",
+        "note": "debug-only; release/tableRows 불변. full text/raw OCR 미저장.",
+    }
+    if page_count <= 1 or not gate:
+        return debug
+    evidence_terms = ["462", "463", "464", "465", "466", "467", "468", "469", "470", "Lot No", "유효일자", "제품코드"]
+    page_cap = 30
+    found = set()
+    processed = 0
+    for pg in read_images_for_ocr(data, filename):
+        if processed >= page_cap:
+            debug["truncated"] = True
+            break
+        try:
+            res = ocr_engine.ocr(pg.image)
+            lines = _parse_ocr_lines(res)
+        except Exception:
+            lines = []
+        texts = [t for (_b, t, _c) in lines if t]
+        joined = " ".join(texts)
+        for term in evidence_terms:
+            if term in joined:
+                found.add(term)
+        debug["pages"].append({
+            "pageNo": pg.pageNo,
+            "width": pg.width,
+            "height": pg.height,
+            "lineCount": len(lines),
+            "textEvidence": joined[:60],  # compact snippet only (full text 저장 금지)
+        })
+        processed += 1
+    debug["processedPageCount"] = processed
+    debug["evidenceTermsFound"] = sorted(found)
+    debug["hasPage2PlusEvidence"] = any(p["pageNo"] >= 2 and p["lineCount"] > 0 for p in debug["pages"])
+    return debug
+
+
 def encode_image(img: np.ndarray, fmt: str = "PNG") -> bytes:
     pil_img = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
     buf = io.BytesIO()
@@ -1945,6 +2064,13 @@ async def ocr_extract(
         print(f"[original_image] encode error (ignored): {_orig_e}")
 
     ocr = get_ocr_engine()
+    # 2Y: multi-page PDF OCR input — debug-only/gated. release/tableRows 불변.
+    # PDF 면 pageCount 를 cheap 하게 기록(OCR 불요). 환경변수 게이트 ON 일 때만 page별 OCR probe.
+    _mp_ocr_debug = None
+    try:
+        _mp_ocr_debug = _build_multi_page_ocr_debug(data, file.filename or "", ocr)
+    except Exception as _mpe:
+        _mp_ocr_debug = {"enabled": False, "mode": "error", "error": str(_mpe)[:200], "releaseImpact": "none"}
     region_list = json.loads(regions) if regions else []
     _template_doc_type = ""  # T-9-fix: documentType from template_json metadata
     _template_mode_marker = (templateMode or "").strip().lower()
@@ -2955,6 +3081,17 @@ async def ocr_extract(
                 "productionApplied": False,
                 "error": str(_pde),
             }
+
+    # 2Y: compact multi-page OCR debug 첨부 (additive; release/tableRows/document_fields 불변).
+    if _mp_ocr_debug is not None:
+        try:
+            _ed = response.get("extract_debug")
+            if not isinstance(_ed, dict):
+                _ed = {}
+                response["extract_debug"] = _ed
+            _ed["multiPageOcr"] = _mp_ocr_debug
+        except Exception as _mpa:
+            print(f"[multiPageOcr] attach error (response unaffected): {_mpa}")
 
     return response
 

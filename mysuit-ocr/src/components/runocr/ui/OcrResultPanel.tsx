@@ -52,6 +52,10 @@ import {
 } from "@/common/utils/tableResultViewModel";
 import { buildCandidateFields } from "../utils/candidateFieldBuilder";
 import { buildDraftGtDocument } from "../utils/gtDraftBuilder";
+import {
+  buildGtSkeletonCandidateViewModel,
+  type GtSkeletonCandidateViewModel,
+} from "../utils/gtSkeletonCandidateViewModel";
 
 // UI-PREVIEW-10A-fix: fixed-layout + colgroup 방식 — key가 폭을 밀지 않음
 const _IDX_KEYS  = new Set(["rowIndex", "no", "rowNo", "lineNo", "seq"]);
@@ -375,6 +379,10 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
   const [autofillDetailOpen, setAutofillDetailOpen] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [customTableEdits, setCustomTableEdits] = useState<Record<string, string>[] | null>(null);
+  // 2H: GT 후보 입력표 전용 편집 state. release table edit(customTableEdits)과
+  // 완전히 분리된 별도 state — row index 기반. Clean JSON/Markdown/History/DB와
+  // 연결하지 않으며 gtSkeletonCandidates를 release tableRows로 취급하지 않는다.
+  const [gtSkeletonEdits, setGtSkeletonEdits] = useState<Record<string, string>[] | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const editedFieldsRef = useRef<OcrFieldResult[]>(editedFields);
   useEffect(() => { editedFieldsRef.current = editedFields; }, [editedFields]);
@@ -830,6 +838,16 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
     return tm && typeof tm === "object" ? (tm as Record<string, unknown>) : null;
   }, [result]);
 
+  // 2H: GT 후보 입력표 전용 view model. extract_debug.invoice_statement_free.
+  // gtSkeletonCandidates 를 별도 채널로만 읽는다(공유 tableResultViewModels와
+  // 무관 → Preview/Clean JSON/Markdown 누출 없음). 게이트 미충족 시 null.
+  const gtSkeletonVM: GtSkeletonCandidateViewModel | null = useMemo(
+    () => buildGtSkeletonCandidateViewModel(result),
+    [result],
+  );
+  // result(=새 OCR) 변경 시 GT 후보 편집 state 초기화 — release edit과 독립.
+  useEffect(() => { setGtSkeletonEdits(null); }, [result]);
+
   // fix8: tableMeta 우선 (TestWorkspace getDisplayTableColumns와 동일 로직)
   // tableMeta.expectedColumnKeys → tableMeta.columns → hasValue fallback + filter
   // fix8/PREVIEW-9A: 공통 helper buildInvoicePreviewCols 사용
@@ -1005,10 +1023,26 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
     const resultMode = _inferDraftGtResultMode(result, tableResultViewModels);
     const sourceFile = fileName ?? _safeResultString(result, ["fileName", "sourceFile", "filename"]);
     const sampleId = jobId ?? _safeResultString(result, ["sampleId", "sample_id", "id"]);
+    const skeletonCandidateRows = gtSkeletonVM?.rows.map((row) => ({
+      rowIndex: row.rowIndex,
+      values: row.values,
+      sourceRowMeta: row.sourceRowMeta,
+    }));
     const baseDraftInput = {
       ocrResult: result,
       editedFields,
       customTableEdits,
+      skeletonCandidateRows,
+      skeletonCandidateEdits: gtSkeletonEdits,
+      useSkeletonCandidateRows: !!gtSkeletonVM,
+      skeletonCandidateSourceMeta: gtSkeletonVM
+        ? {
+            source: gtSkeletonVM.source,
+            mode: gtSkeletonVM.mode,
+            rowCount: gtSkeletonVM.rowCount,
+            releaseImpact: gtSkeletonVM.releaseImpact,
+          }
+        : undefined,
       tableResultViewModels,
       resultMode,
       documentType,
@@ -1175,6 +1209,113 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
           </table>
         </div>
       </>
+    );
+  };
+
+  // 2H: GT 후보 입력표 전용 editable renderer. release table renderer
+  // (renderEditableTableVM) 와 분리되어 gtSkeletonEdits state 만 사용한다.
+  // 시각적으로 "자동 추출 결과 아님" 임을 강하게 표시한다.
+  const renderGtSkeletonCandidateTable = (vm: GtSkeletonCandidateViewModel) => {
+    const baseRows: Record<string, string>[] = vm.rows.map((row) => ({ ...row.values }));
+    const editRows: Record<string, string>[] = gtSkeletonEdits ?? baseRows;
+    return (
+      <div
+        className="or-field-item"
+        data-gt-skeleton-candidate="true"
+        style={{
+          marginTop: 16,
+          border: "1px solid rgba(217,119,6,0.45)",
+          background: "rgba(251,191,36,0.07)",
+          borderRadius: 6,
+          padding: 10,
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <span style={{ fontSize: 12, fontWeight: 800, color: "#b45309" }}>
+            {vm.title} · {vm.rowCount}행
+          </span>
+          <span style={{
+            fontSize: 11, fontWeight: 700, color: "#d97706",
+            background: "rgba(251,191,36,0.18)",
+            border: "1px solid rgba(217,119,6,0.35)",
+            borderRadius: 4, padding: "1px 7px",
+          }}>
+            {vm.warningLabel}
+          </span>
+          {vm.reviewRequired && (
+            <span style={{
+              fontSize: 11, fontWeight: 700, color: "#92400e",
+              background: "rgba(251,191,36,0.12)",
+              border: "1px solid rgba(217,119,6,0.25)",
+              borderRadius: 4, padding: "1px 7px",
+            }}>
+              검토 필요
+            </span>
+          )}
+        </div>
+        <ul style={{ margin: "6px 0 8px 0", paddingLeft: 16, color: "var(--muted)", fontSize: 11, lineHeight: 1.5 }}>
+          {vm.helperNotes.map((note, ni) => (
+            <li key={ni}>{note}</li>
+          ))}
+        </ul>
+        <div className="or-table-wrap" style={{ overflowX: "auto", borderRadius: 0 }}>
+          <table className="or-table-result">
+            <colgroup>
+              {vm.columns.map((col) => (
+                <col key={col.columnKey} style={{ width: _invoiceColWidth(col.columnKey) }} />
+              ))}
+            </colgroup>
+            <tbody>
+              <tr>
+                {vm.columns.map((col) => (
+                  <td key={col.columnKey} className="or-table-cell" style={{ textAlign: "center", verticalAlign: "middle" }}>
+                    <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={col.columnKey}>
+                      {col.labelKo}
+                    </div>
+                    <div title={col.columnKey} style={{
+                      fontSize: 10, opacity: 0.55, marginTop: 1,
+                      fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                      whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block",
+                    }}>
+                      ({col.columnKey})
+                    </div>
+                  </td>
+                ))}
+              </tr>
+              {editRows.map((row, ri) => (
+                <tr key={ri}>
+                  {vm.columns.map((col) => (
+                    <td key={col.columnKey} className="or-table-cell" style={{
+                      textAlign: _invoiceDataAlign(col.columnKey),
+                      whiteSpace: _NUM_KEYS.has(col.columnKey) || _IDX_KEYS.has(col.columnKey) ? "nowrap" : "normal",
+                      padding: 0,
+                    }}>
+                      <textarea
+                        className="or-table-cell-input"
+                        value={row[col.columnKey] ?? ""}
+                        rows={1}
+                        title={String(row[col.columnKey] ?? "")}
+                        style={{ textAlign: _invoiceDataAlign(col.columnKey) }}
+                        onChange={(e) => {
+                          e.target.style.height = "auto";
+                          e.target.style.height = e.target.scrollHeight + "px";
+                          const newVal = e.target.value;
+                          setGtSkeletonEdits((prev) => {
+                            const base = prev ?? baseRows;
+                            return base.map((r, idx) => idx === ri ? { ...r, [col.columnKey]: newVal } : r);
+                          });
+                        }}
+                        onBlur={flushSave}
+                      />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     );
   };
 
@@ -1922,6 +2063,11 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                 </div>
               )}
             </div>
+            {/* 2H: GT 후보 입력표 — release 품목표와 분리된 별도 편집 표.
+                gtSkeletonCandidates(debug 전용, releaseImpact=none)만 표시하며
+                release tableRows / Preview / Clean JSON / Markdown / History /
+                DB 와 연결하지 않는다. 게이트 미충족 시 렌더 자체가 없다. */}
+            {gtSkeletonVM && renderGtSkeletonCandidateTable(gtSkeletonVM)}
           </div>
         )}
 
