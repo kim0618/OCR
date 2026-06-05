@@ -2110,6 +2110,8 @@ async def ocr_extract(
     # Without this, the template (region_list) path raises UnboundLocalError on doc_type etc.
     doc_type: str = "unknown"
     extract_debug: dict = {}
+    # 3N: debug-only preprocess metadata(orientation/deskew). 정책 변경 아님(폐기되던 값 보존).
+    _preprocess_debug: dict = {}
     ocr_lines_raw: list = []
     ocr_w: int = orig_w
     ocr_h: int = orig_h
@@ -2372,15 +2374,124 @@ async def ocr_extract(
 
         # 1-1. 전체 이미지 회전 방향 감지 (0/90/180/270) - 세로로 찍힌 영수증 대응
         _t_orient0 = time.time()
+        _is_pdf_input = (file.filename or "").lower().endswith(".pdf") or data[:5] == b"%PDF-"
+        _doc_img_before_orientation = doc_img
+        _pre_orient_h, _pre_orient_w = _doc_img_before_orientation.shape[:2]
         doc_img, orient_meta = detect_orientation(doc_img, ocr, original_wh=(orig_w, orig_h))
         print(f"[OCR] {orient_meta['detail']}")
         dh, dw = doc_img.shape[:2]
+        _post_detect_h, _post_detect_w = dh, dw
+        _orient_angle_val = orient_meta.get("angle") if isinstance(orient_meta, dict) else None
+        _orientation_policy_applied = False
+        _orientation_policy_reason = "not_applied"
+        _orientation_final_applied = bool(_orient_angle_val) if _orient_angle_val is not None else None
+        _orig_portrait = orig_h > orig_w
+        _pre_orient_portrait = _pre_orient_h > _pre_orient_w
+        _post_detect_landscape = _post_detect_w > _post_detect_h
+        _orig_aspect = (orig_h / orig_w) if orig_w else 0.0
+        _rotated_aspect = (_post_detect_w / _post_detect_h) if _post_detect_h else 0.0
+        if (
+            _is_pdf_input
+            and _orient_angle_val in (90, 270)
+            and _orig_portrait
+            and _pre_orient_portrait
+            and _post_detect_landscape
+            and 1.15 <= _orig_aspect <= 1.8
+            and _rotated_aspect >= 1.15
+        ):
+            doc_img = _doc_img_before_orientation
+            dh, dw = doc_img.shape[:2]
+            _orientation_policy_applied = True
+            _orientation_policy_reason = "pdf_portrait_original_would_become_landscape"
+            _orientation_final_applied = False
+        elif not _is_pdf_input:
+            _orientation_policy_reason = "image_not_target"
+        elif _orient_angle_val not in (90, 270):
+            _orientation_policy_reason = "orientation_not_90_or_270"
+        elif not (_orig_portrait and _pre_orient_portrait):
+            _orientation_policy_reason = "original_not_portrait"
+        elif not _post_detect_landscape:
+            _orientation_policy_reason = "rotation_did_not_become_landscape"
+        else:
+            _orientation_policy_reason = "aspect_guard_not_met"
+        _orientation_policy_debug = {
+            "name": "PDF_PORTRAIT_ORIENTATION_90_OVERROTATION_SKIP",
+            "applied": _orientation_policy_applied,
+            "reason": _orientation_policy_reason,
+            "fileType": "pdf" if _is_pdf_input else "image",
+            "originalSize": {"width": orig_w, "height": orig_h},
+            "preOrientationSize": {"width": _pre_orient_w, "height": _pre_orient_h},
+            "detectedRotatedSize": {"width": _post_detect_w, "height": _post_detect_h},
+            "finalSize": {"width": dw, "height": dh},
+            "detectedAngle": _orient_angle_val,
+            "orientationAppliedBeforePolicy": bool(_orient_angle_val) if _orient_angle_val is not None else None,
+            "finalAppliedAfterPolicy": _orientation_final_applied,
+        }
         timings["detect_orientation_ms"] = _ms(time.time() - _t_orient0)
+        timings["doc_img_wh_after_orientation_before_policy"] = [_post_detect_w, _post_detect_h]
         timings["doc_img_wh_after_orientation"] = [dw, dh]
 
         # 2. 미리보기용: 기울기 보정 + 최대 2000px + 선명화
         _t_prev0 = time.time()
-        doc_deskewed, _ = deskew(doc_img)
+        # 3N: deskew metadata 를 폐기(`_`)하지 않고 보존 → extract_debug.preprocess(debug-only).
+        # deskew 함수 자체(알고리즘/threshold/회전)는 변경하지 않는다.
+        doc_deskewed, _deskew_meta = deskew(doc_img)
+        _deskew_abs_val = _deskew_meta.get("absAngle") if isinstance(_deskew_meta, dict) else None
+        _deskew_orig_applied = bool(_deskew_meta.get("applied")) if isinstance(_deskew_meta, dict) else None
+        # 3O: PDF_ORIENTATION0_SMALL_ANGLE_DESKEW_SKIP.
+        # PDF 입력 + orientation==0 + deskew 가 적용됐고 abs(normalizedAngle) <= 2.0 인 경우에만
+        # deskew 회전을 "사용하지 않음"(over-apply 방지). deskew 함수/threshold(0.5) 자체는 불변이며,
+        # 여기서 회전 전 이미지(doc_img)를 채택하는 방식으로 정책을 적용한다.
+        # image(1.jpg)·orientation!=0(2.pdf)·abs>2.0(4.pdf)는 정책 대상 아님(기존 동작 유지).
+        _SMALL_ANGLE_SKIP_THRESHOLD = 2.0
+        _policy_applied = False
+        if (_is_pdf_input and _orient_angle_val == 0 and _deskew_orig_applied
+                and _deskew_abs_val is not None and _deskew_abs_val <= _SMALL_ANGLE_SKIP_THRESHOLD):
+            doc_deskewed = doc_img  # 회전 전 이미지 채택 → over-apply 회전 제거
+            _policy_applied = True
+            _policy_reason = "pdf_orientation0_small_angle_skip"
+        elif not _is_pdf_input:
+            _policy_reason = "image_not_target"
+        elif _orient_angle_val != 0:
+            _policy_reason = "orientation_not_0"
+        elif not _deskew_orig_applied:
+            _policy_reason = "deskew_not_applied"
+        elif _deskew_abs_val is not None and _deskew_abs_val > _SMALL_ANGLE_SKIP_THRESHOLD:
+            _policy_reason = "angle_over_small_threshold"
+        else:
+            _policy_reason = "not_applied"
+        _final_applied = (
+            (_deskew_orig_applied and not _policy_applied)
+            if _deskew_orig_applied is not None else None
+        )
+        _preprocess_debug = {
+            "orientation": {
+                "angle": _orient_angle_val,
+                "applied": (bool(_orient_angle_val) if _orient_angle_val is not None else None),
+                "source": "detect_orientation",
+                "policy": _orientation_policy_debug,
+                "finalAppliedAfterPolicy": _orientation_final_applied,
+            },
+            "deskew": {
+                "rawAngle": _deskew_meta.get("rawAngle") if isinstance(_deskew_meta, dict) else None,
+                "normalizedAngle": _deskew_meta.get("normalizedAngle") if isinstance(_deskew_meta, dict) else None,
+                "absAngle": _deskew_abs_val,
+                "applied": _final_applied,  # 정책 적용 후 최종 회전 적용 여부
+                "threshold": _deskew_meta.get("threshold") if isinstance(_deskew_meta, dict) else None,
+                "message": _deskew_meta.get("detail") if isinstance(_deskew_meta, dict) else None,
+                "policy": {
+                    "name": "PDF_ORIENTATION0_SMALL_ANGLE_DESKEW_SKIP",
+                    "applied": _policy_applied,
+                    "reason": _policy_reason,
+                    "fileType": "pdf" if _is_pdf_input else "image",
+                    "orientationAngle": _orient_angle_val,
+                    "smallAngleThreshold": _SMALL_ANGLE_SKIP_THRESHOLD,
+                    "originalAppliedBeforePolicy": _deskew_orig_applied,
+                    "finalAppliedAfterPolicy": _final_applied,
+                },
+            },
+            "policyVersion": "3o_pdf_orientation0_small_angle_skip_policy",
+        }
         display_max_w = 2000
         ddh, ddw = doc_deskewed.shape[:2]
         if ddw > display_max_w:
@@ -2984,6 +3095,9 @@ async def ocr_extract(
         timings["paddle_device"] = "cpu"  # get_ocr_engine() 에서 device='cpu' 고정
         timings["cpu_threads"] = os.cpu_count() or 0
         timings["debug_mode"] = True  # 비-템플릿 경로는 항상 extract_debug 포함
+        # 3N: debug-only preprocess(orientation/deskew) metadata 보존. 정책/추출 결과 불변.
+        if _preprocess_debug:
+            extract_debug["preprocess"] = _preprocess_debug
         extract_debug["timings"] = timings
         response["extract_debug"] = extract_debug
         # 최상위에도 검토 필요 플래그 노출 (프론트가 extract_debug 파싱 안 해도 읽도록)

@@ -51,7 +51,7 @@ import {
   type TableResultViewModel,
 } from "@/common/utils/tableResultViewModel";
 import { buildCandidateFields } from "../utils/candidateFieldBuilder";
-import { buildDraftGtDocument } from "../utils/gtDraftBuilder";
+import { buildDraftGtDocument, type DraftGtTableExtraColumnDefinition } from "../utils/gtDraftBuilder";
 import {
   buildGtSkeletonCandidateViewModel,
   type GtSkeletonCandidateViewModel,
@@ -122,6 +122,478 @@ function resolveResultTableLabel(
   if (_isInvoiceStatementTable(vm) && _isPrimaryInvoiceTableKey(vm.tableKey)) return "품목표";
   if (fieldLabelClean && !_isGenericTableLabel(fieldLabelClean)) return fieldLabelClean;
   return _tableNumberFallback(vm.tableKey, fallbackIndex);
+}
+
+const QUANTITY_ONLY_SERIAL_DISPLAY_COLUMNS = [
+  { columnKey: "itemName", labelKo: "품명" },
+  { columnKey: "serialLotComposite", labelKo: "시리얼·로트No." },
+  { columnKey: "unit", labelKo: "단위" },
+  { columnKey: "quantity", labelKo: "수량" },
+] as const;
+
+const QUANTITY_ONLY_SERIAL_DRAFT_COLUMNS = [
+  { columnKey: "itemName", labelKo: "품명" },
+  { columnKey: "spec", labelKo: "규격" },
+  { columnKey: "productCode", labelKo: "품목코드" },
+  { columnKey: "lotNo", labelKo: "시리얼·로트No." },
+  { columnKey: "expiryDate", labelKo: "유효기간" },
+  { columnKey: "quantity", labelKo: "수량" },
+  { columnKey: "unitPrice", labelKo: "단가" },
+  { columnKey: "amount", labelKo: "금액" },
+] as const;
+
+const DRAFT_GT_STANDARD_TABLE_KEYS = [
+  "itemName",
+  "spec",
+  "productCode",
+  "lotNo",
+  "expiryDate",
+  "quantity",
+  "unitPrice",
+  "amount",
+] as const;
+
+type DraftGtStandardTableKey = (typeof DRAFT_GT_STANDARD_TABLE_KEYS)[number];
+
+const PHARMA_REVIEW_DISPLAY_COLUMNS = [
+  { columnKey: "productCode", labelKo: "보험코드" },
+  { columnKey: "itemName", labelKo: "품명" },
+  { columnKey: "spec", labelKo: "규격" },
+  { columnKey: "quantity", labelKo: "수량" },
+  { columnKey: "unitPrice", labelKo: "단가" },
+  { columnKey: "amount", labelKo: "금액" },
+  { columnKey: "manufacturer", labelKo: "제조회사" },
+  { columnKey: "lotNo", labelKo: "제조번호" },
+  { columnKey: "expiryDate", labelKo: "유효기간" },
+] as const;
+
+const DETAIL_REVIEW_DISPLAY_COLUMNS = [
+  { columnKey: "rowIndex", labelKo: "NO" },
+  { columnKey: "productCode", labelKo: "제품코드" },
+  { columnKey: "itemName", labelKo: "제품명" },
+  { columnKey: "quantity", labelKo: "수량" },
+  { columnKey: "lotNo", labelKo: "Lot No" },
+  { columnKey: "expiryDate", labelKo: "유효일자" },
+] as const;
+
+function _meaningfulValue(row: Record<string, unknown>, key: string): string {
+  const value = normalizeCell(row[key]);
+  return isMeaningless(value) ? "" : value;
+}
+
+function _firstMeaningfulValue(row: Record<string, unknown>, keys: readonly string[]): string {
+  for (const key of keys) {
+    const value = _meaningfulValue(row, key);
+    if (value) return value;
+  }
+  return "";
+}
+
+function _isQuantityOnlySerialInvoiceRows(rows: ReadonlyArray<Record<string, unknown>> | null | undefined): rows is Record<string, unknown>[] {
+  if (!rows || rows.length !== 1) return false;
+  const row = rows[0];
+  if (!_meaningfulValue(row, "itemName")) return false;
+  if (!_meaningfulValue(row, "quantity")) return false;
+  if (!_meaningfulValue(row, "unit")) return false;
+  if (!_firstMeaningfulValue(row, ["serialLotComposite", "serialNo", "lotNo"])) return false;
+  for (const key of ["unitPrice", "amount", "supplyAmount", "taxAmount", "totalAmount"]) {
+    if (_meaningfulValue(row, key)) return false;
+  }
+  return true;
+}
+
+function buildQuantityOnlySerialDisplayTableVM(
+  vm: TableResultViewModel | null,
+  rawRows: ReadonlyArray<Record<string, unknown>> | null | undefined,
+): TableResultViewModel | null {
+  if (!vm || vm.meta.documentType !== "invoice_statement") return vm;
+  if (!_isQuantityOnlySerialInvoiceRows(rawRows)) return vm;
+
+  const rows = rawRows.map((rawRow, index) => {
+    const serialLot = _firstMeaningfulValue(rawRow, ["serialLotComposite", "serialNo", "lotNo"]);
+    const values: Record<string, string> = {
+      itemName: _meaningfulValue(rawRow, "itemName"),
+      serialLotComposite: serialLot,
+      unit: _meaningfulValue(rawRow, "unit"),
+      quantity: _meaningfulValue(rawRow, "quantity"),
+    };
+    const cells = QUANTITY_ONLY_SERIAL_DISPLAY_COLUMNS.map((col) => {
+      const value = values[col.columnKey] ?? "";
+      return {
+        key: col.columnKey,
+        value,
+        displayValue: value || "-",
+        isEmpty: value === "",
+      };
+    });
+    return { index, values, cells };
+  });
+
+  return {
+    ...vm,
+    columns: QUANTITY_ONLY_SERIAL_DISPLAY_COLUMNS.map((col) => ({
+      columnKey: col.columnKey,
+      labelKo: col.labelKo,
+      source: "canonical" as const,
+    })),
+    rows,
+    meta: {
+      ...vm.meta,
+      rowCount: rows.length,
+      columnCount: QUANTITY_ONLY_SERIAL_DISPLAY_COLUMNS.length,
+      hasRows: rows.length > 0,
+      hasColumns: true,
+    },
+  };
+}
+
+function _quantityOnlySerialDraftValues(rawRow: Record<string, unknown>): Record<string, string> {
+  return {
+    itemName: _meaningfulValue(rawRow, "itemName"),
+    spec: _meaningfulValue(rawRow, "spec"),
+    productCode: _meaningfulValue(rawRow, "productCode"),
+    lotNo: _firstMeaningfulValue(rawRow, ["serialLotComposite", "serialNo", "lotNo"]),
+    expiryDate: "",
+    quantity: _meaningfulValue(rawRow, "quantity"),
+    unitPrice: _meaningfulValue(rawRow, "unitPrice"),
+    amount: _meaningfulValue(rawRow, "amount"),
+  };
+}
+
+function _standardDraftGtTableValues(
+  rawRow: Record<string, unknown> | null | undefined,
+): Record<DraftGtStandardTableKey, string> {
+  const row = rawRow ?? {};
+  const splitItemName = _splitLeadingProductCode(_meaningfulValue(row, "itemName"));
+  return {
+    itemName: splitItemName?.itemName ?? _meaningfulValue(row, "itemName"),
+    spec: _meaningfulValue(row, "spec"),
+    productCode: _firstMeaningfulValue(row, ["productCode", "itemCode", "code"]) || splitItemName?.productCode || "",
+    lotNo: _firstMeaningfulValue(row, ["lotNo", "serialLotComposite", "serialNo", "manufacturingNo"]),
+    expiryDate: _firstMeaningfulValue(row, ["expiryDate", "validUntil", "expirationDate"]),
+    quantity: _meaningfulValue(row, "quantity"),
+    unitPrice: _meaningfulValue(row, "unitPrice"),
+    amount: _meaningfulValue(row, "amount"),
+  };
+}
+
+function _mergeDraftGtStandardTableValues(
+  primary: Record<string, string>,
+  fallback: Record<DraftGtStandardTableKey, string>,
+): Record<string, string> {
+  const merged = { ...primary };
+  for (const key of DRAFT_GT_STANDARD_TABLE_KEYS) {
+    if (isMeaningless(normalizeCell(merged[key])) && fallback[key]) {
+      merged[key] = fallback[key];
+    }
+  }
+  return merged;
+}
+
+function _hasDraftGtTableExtraColumns(value: Record<string, string> | null | undefined): boolean {
+  return Object.values(value ?? {}).some((cell) => !isMeaningless(normalizeCell(cell)));
+}
+
+function _mergeGtSkeletonValuesForDraft(
+  primary: Record<string, string>,
+  fallback: Record<DraftGtStandardTableKey, string>,
+  hasExtraColumns: boolean,
+): Record<string, string> {
+  const merged = _mergeDraftGtStandardTableValues(primary, fallback);
+  if (!hasExtraColumns) return merged;
+  return {
+    ...merged,
+    lotNo: primary.lotNo ?? "",
+    expiryDate: primary.expiryDate ?? "",
+    quantity: primary.quantity ?? "",
+    unitPrice: primary.unitPrice ?? "",
+  };
+}
+
+function _gtSkeletonEditBaseRow(row: {
+  values: Record<string, string>;
+  tableExtraColumns?: Record<string, string>;
+}): Record<string, string> {
+  return {
+    ...row.values,
+    ...(row.tableExtraColumns ?? {}),
+  };
+}
+
+function _rowAt(
+  rows: ReadonlyArray<Record<string, unknown>> | null | undefined,
+  index: number | null | undefined,
+): Record<string, unknown> | null {
+  if (!rows || typeof index !== "number" || !Number.isFinite(index)) return null;
+  return rows[index] ?? null;
+}
+
+function _draftGtSkeletonFallbackRow(
+  rowIndex: number,
+  mapIndex: number,
+  docRows: ReadonlyArray<Record<string, unknown>> | null | undefined,
+  tableViewModels: ReadonlyArray<TableResultViewModel> | null | undefined,
+): Record<string, unknown> | null {
+  const directDocRow = _rowAt(docRows, rowIndex);
+  if (directDocRow) return directDocRow;
+  const mapDocRow = _rowAt(docRows, mapIndex);
+  if (mapDocRow) return mapDocRow;
+  const oneBasedDocRow = _rowAt(docRows, rowIndex - 1);
+  if (oneBasedDocRow) return oneBasedDocRow;
+
+  for (const vm of tableViewModels ?? []) {
+    const rows = vm.rows.map((row) => row.values as Record<string, unknown>);
+    const directVmRow = _rowAt(rows, rowIndex);
+    if (directVmRow) return directVmRow;
+    const mapVmRow = _rowAt(rows, mapIndex);
+    if (mapVmRow) return mapVmRow;
+    const oneBasedVmRow = _rowAt(rows, rowIndex - 1);
+    if (oneBasedVmRow) return oneBasedVmRow;
+  }
+  return null;
+}
+
+function _splitLeadingProductCode(itemName: string): { productCode: string; itemName: string } | null {
+  const match = itemName.match(/^\s*(\d{9})\s+(.+?)\s*$/);
+  if (!match) return null;
+  return { productCode: match[1], itemName: match[2] };
+}
+
+function _manufacturerDisplayValue(row: Record<string, unknown> | null | undefined): string {
+  return _firstMeaningfulValue(row ?? {}, [
+    "manufacturer",
+    "maker",
+    "manufacturerName",
+    "makerName",
+    "manufactureCompany",
+  ]);
+}
+
+function _isPharmaReviewDisplayRow(values: Record<string, string>): boolean {
+  return !!values.productCode
+    && !!values.quantity
+    && !!values.unitPrice
+    && !!values.amount
+    && (!!values.lotNo || !!values.expiryDate);
+}
+
+function _isDetailReviewDisplayRows(rows: ReadonlyArray<{ values: Record<string, string> }>): boolean {
+  if (rows.length < 4 || rows.length > 8) return false;
+  const meaningfulProductCodes = rows.filter((row) => !isMeaningless(normalizeCell(row.values.productCode))).length;
+  const meaningfulQuantities = rows.filter((row) => !isMeaningless(normalizeCell(row.values.quantity))).length;
+  const lotOrExpiryRows = rows.filter((row) =>
+    !isMeaningless(normalizeCell(row.values.lotNo)) || !isMeaningless(normalizeCell(row.values.expiryDate)),
+  ).length;
+  const pricedRows = rows.filter((row) =>
+    !isMeaningless(normalizeCell(row.values.unitPrice)) || !isMeaningless(normalizeCell(row.values.amount)),
+  ).length;
+  return meaningfulProductCodes >= Math.max(3, rows.length - 1)
+    && meaningfulQuantities >= Math.max(3, rows.length - 1)
+    && lotOrExpiryRows >= 1
+    && pricedRows <= 1;
+}
+
+function _productCodeAwareRows(
+  vm: TableResultViewModel,
+  sourceRows: ReadonlyArray<Record<string, unknown>> | null | undefined,
+): Array<{ index: number; values: Record<string, string>; cells: Array<{ key: string; value: string; displayValue: string; isEmpty: boolean }> }> | null {
+  const rows = vm.rows.map((row, index) => {
+    const fallbackRaw = _rowAt(sourceRows, index) ?? (row.values as Record<string, unknown>);
+    const fallbackValues = _standardDraftGtTableValues(fallbackRaw);
+    const values = _mergeDraftGtStandardTableValues(row.values, fallbackValues);
+    if (!values.productCode) {
+      const splitItemName = _splitLeadingProductCode(values.itemName ?? "");
+      if (splitItemName) {
+        values.productCode = splitItemName.productCode;
+        values.itemName = splitItemName.itemName;
+      }
+    }
+    values.manufacturer = values.manufacturer || _manufacturerDisplayValue(fallbackRaw);
+    values.rowIndex = values.rowIndex || _meaningfulValue(fallbackRaw, "rowIndex") || String(index + 1);
+    return { index: row.index, values };
+  });
+  if (!rows.some((row) => !isMeaningless(normalizeCell(row.values.productCode)))) return null;
+  return rows.map((row) => {
+    const cells = DRAFT_GT_STANDARD_TABLE_KEYS.map((key) => {
+      const value = row.values[key] ?? "";
+      return {
+        key,
+        value,
+        displayValue: value || "-",
+        isEmpty: value === "",
+      };
+    });
+    return { ...row, cells };
+  });
+}
+
+function buildProductCodePreviewTableVM(
+  vm: TableResultViewModel | null,
+  sourceRows: ReadonlyArray<Record<string, unknown>> | null | undefined,
+): TableResultViewModel | null {
+  if (!vm || vm.meta.documentType !== "invoice_statement") return vm;
+  if (_isQuantityOnlySerialInvoiceRows(sourceRows)) return vm;
+  const rows = _productCodeAwareRows(vm, sourceRows);
+  if (!rows) return vm;
+
+  const columnByKey = new Map(vm.columns.map((column) => [column.columnKey, column]));
+  const useDetailReviewOrder = _isDetailReviewDisplayRows(rows);
+  const usePharmaReviewOrder = rows.some((row) => _isPharmaReviewDisplayRow(row.values));
+  const hasProductCodeColumn = vm.columns.some((column) => column.columnKey === "productCode");
+  const hasProductCodeAliasColumn = vm.columns.some((column) => column.columnKey === "itemCode" || column.columnKey === "code");
+  const columns = useDetailReviewOrder
+    ? DETAIL_REVIEW_DISPLAY_COLUMNS.map((column) => ({
+        columnKey: column.columnKey,
+        labelKo: column.labelKo,
+        source: "canonical" as const,
+      }))
+    : usePharmaReviewOrder
+    ? PHARMA_REVIEW_DISPLAY_COLUMNS.map((column) => ({
+        columnKey: column.columnKey,
+        labelKo: column.labelKo,
+        source: "canonical" as const,
+      }))
+    : hasProductCodeColumn
+      ? vm.columns
+      : hasProductCodeAliasColumn
+        ? vm.columns.map((column) =>
+            column.columnKey === "itemCode" || column.columnKey === "code"
+              ? {
+                  ...column,
+                  columnKey: "productCode",
+                  labelKo: column.labelKo || "보험코드",
+                }
+              : column,
+          )
+        : [
+            {
+              columnKey: "productCode",
+              labelKo: "보험코드",
+              source: "canonical" as const,
+            },
+            ...vm.columns,
+          ];
+
+  return {
+    ...vm,
+    columns: columns.map((column) =>
+      column.columnKey === "productCode"
+        ? { ...column, labelKo: column.labelKo || columnByKey.get("itemCode")?.labelKo || "보험코드" }
+        : column.columnKey === "rowIndex" && useDetailReviewOrder
+          ? { ...column, labelKo: column.labelKo || "NO" }
+        : column.columnKey === "lotNo" && usePharmaReviewOrder
+          ? { ...column, labelKo: column.labelKo || "제조번호" }
+        : column.columnKey === "manufacturer" && usePharmaReviewOrder
+          ? { ...column, labelKo: column.labelKo || "제조회사" }
+        : column,
+    ),
+    rows: rows.map((row) => ({
+      index: row.index,
+      values: row.values,
+      cells: columns.map((column) => {
+        const value = row.values[column.columnKey] ?? "";
+        return {
+          key: column.columnKey,
+          value,
+          displayValue: value || "-",
+          isEmpty: value === "",
+        };
+      }),
+    })),
+    meta: {
+      ...vm.meta,
+      rowCount: rows.length,
+      columnCount: columns.length,
+      hasRows: rows.length > 0,
+      hasColumns: columns.length > 0,
+    },
+  };
+}
+
+function buildProductCodeDraftExportTableVM(
+  vm: TableResultViewModel | null,
+  sourceRows: ReadonlyArray<Record<string, unknown>> | null | undefined,
+): TableResultViewModel | null {
+  if (!vm || vm.meta.documentType !== "invoice_statement") return null;
+  if (_isQuantityOnlySerialInvoiceRows(sourceRows)) return null;
+  const rows = _productCodeAwareRows(vm, sourceRows);
+  if (!rows) return null;
+  return {
+    ...vm,
+    columns: DRAFT_GT_STANDARD_TABLE_KEYS.map((key) => ({
+      columnKey: key,
+      labelKo: key === "productCode" ? "보험코드" : _ALL_COL_LABEL_MAP[key] ?? key,
+      source: "canonical" as const,
+    })),
+    rows,
+    meta: {
+      ...vm.meta,
+      rowCount: rows.length,
+      columnCount: DRAFT_GT_STANDARD_TABLE_KEYS.length,
+      hasRows: rows.length > 0,
+      hasColumns: true,
+    },
+  };
+}
+
+function buildQuantityOnlySerialDraftExportTableVM(
+  vm: TableResultViewModel | null,
+  rawRows: ReadonlyArray<Record<string, unknown>> | null | undefined,
+): TableResultViewModel | null {
+  if (!vm || vm.meta.documentType !== "invoice_statement") return null;
+  if (!_isQuantityOnlySerialInvoiceRows(rawRows)) return null;
+
+  const rows = rawRows.map((rawRow, index) => {
+    const values = _quantityOnlySerialDraftValues(rawRow);
+    const cells = QUANTITY_ONLY_SERIAL_DRAFT_COLUMNS.map((col) => {
+      const value = values[col.columnKey] ?? "";
+      return {
+        key: col.columnKey,
+        value,
+        displayValue: value || "-",
+        isEmpty: value === "",
+      };
+    });
+    return { index, values, cells };
+  });
+
+  return {
+    ...vm,
+    columns: QUANTITY_ONLY_SERIAL_DRAFT_COLUMNS.map((col) => ({
+      columnKey: col.columnKey,
+      labelKo: col.labelKo,
+      source: "canonical" as const,
+    })),
+    rows,
+    meta: {
+      ...vm.meta,
+      rowCount: rows.length,
+      columnCount: QUANTITY_ONLY_SERIAL_DRAFT_COLUMNS.length,
+      hasRows: rows.length > 0,
+      hasColumns: true,
+    },
+  };
+}
+
+function normalizeQuantityOnlySerialDraftEdits(
+  editRows: Record<string, string>[] | null,
+  rawRows: ReadonlyArray<Record<string, unknown>> | null | undefined,
+): Record<string, string>[] | null {
+  if (!editRows || !_isQuantityOnlySerialInvoiceRows(rawRows)) return editRows;
+  return editRows.map((editRow, index) => {
+    const rawRow = rawRows[index] ?? {};
+    const base = _quantityOnlySerialDraftValues(rawRow);
+    return {
+      itemName: editRow.itemName ?? base.itemName,
+      spec: editRow.spec ?? base.spec,
+      productCode: editRow.productCode ?? base.productCode,
+      lotNo: editRow.serialLotComposite ?? editRow.serialNo ?? editRow.lotNo ?? base.lotNo,
+      expiryDate: "",
+      quantity: editRow.quantity ?? base.quantity,
+      unitPrice: editRow.unitPrice ?? base.unitPrice,
+      amount: editRow.amount ?? base.amount,
+    };
+  });
 }
 
 // LOT계열 / 제조번호계열 / itemCode계열 key셋
@@ -891,6 +1363,30 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
   );
   const representativeFirstVM: TableResultViewModel | null =
     representativeTableResultViewModels[0] ?? null;
+  const displayRepresentativeFirstVM: TableResultViewModel | null = useMemo(
+    () => buildProductCodePreviewTableVM(
+      buildQuantityOnlySerialDisplayTableVM(representativeFirstVM, docTableRows),
+      docTableRows,
+    ),
+    [representativeFirstVM, docTableRows],
+  );
+  const displayBackendTableResultViewModel: TableResultViewModel | null = useMemo(
+    () => buildProductCodePreviewTableVM(
+      buildQuantityOnlySerialDisplayTableVM(backendTableResultViewModel, docTableRows),
+      docTableRows,
+    ),
+    [backendTableResultViewModel, docTableRows],
+  );
+  const draftExportTableResultViewModels = useMemo(() => {
+    const draftVm =
+      buildQuantityOnlySerialDraftExportTableVM(representativeFirstVM, docTableRows)
+      ?? buildProductCodeDraftExportTableVM(representativeFirstVM, docTableRows);
+    return draftVm ? [draftVm] : tableResultViewModels;
+  }, [representativeFirstVM, docTableRows, tableResultViewModels]);
+  const draftExportCustomTableEdits = useMemo(
+    () => normalizeQuantityOnlySerialDraftEdits(customTableEdits, docTableRows),
+    [customTableEdits, docTableRows],
+  );
   const representativeIsNonBackend =
     representativeFirstVM !== null
     && representativeFirstVM.source !== "backend_document_fields";
@@ -915,7 +1411,7 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
   // representative 품목표 VM을 table field로 materialize한다.
   const previewDisplayFields = useMemo<OcrFieldResult[]>(() => {
     if (editedFields.some((f) => f.field_type === "table")) return editedFields;
-    const vm = representativeFirstVM;
+    const vm = displayRepresentativeFirstVM;
     if (!vm || vm.columns.length === 0 || vm.meta.rowCount === 0) return editedFields;
     if (vm.meta.documentType !== "invoice_statement") return editedFields;
     const synthetic: OcrFieldResult = {
@@ -928,7 +1424,7 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
       bbox: [0, 0, 0, 0],
     };
     return [...editedFields, synthetic];
-  }, [editedFields, representativeFirstVM]);
+  }, [editedFields, displayRepresentativeFirstVM]);
 
   // Table field list for JSX rendering in Preview tab (separate from Markdown)
   // T-28-PERF-3: docTableRows가 있으면 nonEmpty가 비어도 table field를 포함 (defer 최적화 대응)
@@ -1023,17 +1519,33 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
     const resultMode = _inferDraftGtResultMode(result, tableResultViewModels);
     const sourceFile = fileName ?? _safeResultString(result, ["fileName", "sourceFile", "filename"]);
     const sampleId = jobId ?? _safeResultString(result, ["sampleId", "sample_id", "id"]);
-    const skeletonCandidateRows = gtSkeletonVM?.rows.map((row) => ({
-      rowIndex: row.rowIndex,
-      values: row.values,
-      sourceRowMeta: row.sourceRowMeta,
-    }));
+    const skeletonCandidateRows = gtSkeletonVM?.rows.map((row, index) => {
+      const fallbackRow = _draftGtSkeletonFallbackRow(
+        row.rowIndex,
+        index,
+        docTableRows,
+        draftExportTableResultViewModels,
+      );
+      const fallbackValues = _standardDraftGtTableValues(fallbackRow);
+      const hasExtraColumns = _hasDraftGtTableExtraColumns(row.tableExtraColumns);
+      return {
+        rowIndex: row.rowIndex,
+        values: _mergeGtSkeletonValuesForDraft(row.values, fallbackValues, hasExtraColumns),
+        tableExtraColumns: row.tableExtraColumns,
+        sourceRowMeta: row.sourceRowMeta,
+      };
+    });
+    const tableExtraColumnDefinitions: DraftGtTableExtraColumnDefinition[] | undefined =
+      gtSkeletonVM?.extraColumnDefinitions.length
+        ? gtSkeletonVM.extraColumnDefinitions
+        : undefined;
     const baseDraftInput = {
       ocrResult: result,
       editedFields,
-      customTableEdits,
+      customTableEdits: draftExportCustomTableEdits,
       skeletonCandidateRows,
       skeletonCandidateEdits: gtSkeletonEdits,
+      tableExtraColumnDefinitions,
       useSkeletonCandidateRows: !!gtSkeletonVM,
       skeletonCandidateSourceMeta: gtSkeletonVM
         ? {
@@ -1043,7 +1555,7 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
             releaseImpact: gtSkeletonVM.releaseImpact,
           }
         : undefined,
-      tableResultViewModels,
+      tableResultViewModels: draftExportTableResultViewModels,
       resultMode,
       documentType,
       sourceFile,
@@ -1216,7 +1728,7 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
   // (renderEditableTableVM) 와 분리되어 gtSkeletonEdits state 만 사용한다.
   // 시각적으로 "자동 추출 결과 아님" 임을 강하게 표시한다.
   const renderGtSkeletonCandidateTable = (vm: GtSkeletonCandidateViewModel) => {
-    const baseRows: Record<string, string>[] = vm.rows.map((row) => ({ ...row.values }));
+    const baseRows: Record<string, string>[] = vm.rows.map(_gtSkeletonEditBaseRow);
     const editRows: Record<string, string>[] = gtSkeletonEdits ?? baseRows;
     return (
       <div
@@ -1505,7 +2017,7 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                     // TPL-13B: pick the representative VM (template > unstructured
                     // > backend) so the field-row table block shows the user-
                     // defined columns when present and falls back to backend.
-                    const previewRepVM = representativeFirstVM ?? backendTableResultViewModel;
+                    const previewRepVM = displayRepresentativeFirstVM ?? displayBackendTableResultViewModel;
                     if (tableIdx === 0 && previewRepVM) {
                       // TPL-8E + TPL-13B: Preview structured table consumes the
                       // representative TableResult ViewModel. When template /
@@ -1901,9 +2413,9 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                   <div className="or-field-header">
                     <span
                       style={{ flex: 1, minWidth: 0, fontSize: 11, fontWeight: 700, color: "var(--text)", lineHeight: 1.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
-                      title={`${field.field_type === "table" && representativeFirstVM ? resolveResultTableLabel(representativeFirstVM, 0, fieldLabelFull(field)) : fieldLabelFull(field)} (${field.name})`}
+                      title={`${field.field_type === "table" && displayRepresentativeFirstVM ? resolveResultTableLabel(displayRepresentativeFirstVM, 0, fieldLabelFull(field)) : fieldLabelFull(field)} (${field.name})`}
                     >
-                      {field.field_type === "table" && representativeFirstVM ? resolveResultTableLabel(representativeFirstVM, 0, fieldLabel(field)) : fieldLabel(field)}
+                      {field.field_type === "table" && displayRepresentativeFirstVM ? resolveResultTableLabel(displayRepresentativeFirstVM, 0, fieldLabel(field)) : fieldLabel(field)}
                       <span style={{ fontSize: 9, fontWeight: 400, color: "var(--muted)", marginLeft: 4 }}>
                         {field.en || field.name}
                       </span>
@@ -1957,7 +2469,7 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                     // present. customTableEdits per-cell state remains keyed
                     // by columnKey; switching representative columns just
                     // leaves any prior edits inaccessible (no crash).
-                    const customRepVM = representativeFirstVM ?? backendTableResultViewModel;
+                    const customRepVM = displayRepresentativeFirstVM ?? displayBackendTableResultViewModel;
                     if (customRepVM && customRepVM.columns.length > 0) {
                       // INVOICE-PARITY-4I: 공통 editable renderer 재사용.
                       return renderEditableTableVM(customRepVM, i, field);
@@ -2041,24 +2553,24 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                   region 템플릿은 raw.fields에 table 필드가 있어 위 row 블록에서
                   이미 editable로 렌더되므로 이 분기에 들어오지 않는다. */}
               {editedFields.every((f) => f.field_type !== "table")
-                && representativeFirstVM
-                && representativeFirstVM.columns.length > 0 && (
+                && displayRepresentativeFirstVM
+                && displayRepresentativeFirstVM.columns.length > 0 && (
                 <div className="or-field-item" style={{ marginTop: 12 }}>
                   <div className="or-field-header">
                     <span
                       style={{ flex: 1, minWidth: 0, fontSize: 11, fontWeight: 700, color: "var(--text)", lineHeight: 1.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
-                      title={`${resolveResultTableLabel(representativeFirstVM, editedFields.length)} (${representativeFirstVM.tableKey})`}
+                      title={`${resolveResultTableLabel(displayRepresentativeFirstVM, editedFields.length)} (${displayRepresentativeFirstVM.tableKey})`}
                     >
-                      {editedFields.length + 1}. {resolveResultTableLabel(representativeFirstVM, editedFields.length)}
+                      {editedFields.length + 1}. {resolveResultTableLabel(displayRepresentativeFirstVM, editedFields.length)}
                       <span style={{ fontSize: 9, fontWeight: 400, color: "var(--muted)", marginLeft: 4 }}>
-                        {representativeFirstVM.tableKey}
+                        {displayRepresentativeFirstVM.tableKey}
                       </span>
                     </span>
                   </div>
-                  {representativeFirstVM.rows.length === 0 ? (
+                  {displayRepresentativeFirstVM.rows.length === 0 ? (
                     <div className="or-empty" style={{ fontSize: 12 }}>추출된 행이 없습니다.</div>
                   ) : (
-                    renderEditableTableVM(representativeFirstVM, -1)
+                    renderEditableTableVM(displayRepresentativeFirstVM, -1)
                   )}
                 </div>
               )}

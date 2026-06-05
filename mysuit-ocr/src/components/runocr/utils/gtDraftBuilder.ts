@@ -57,6 +57,7 @@ export type DraftGtTableRow = {
   quantity: string;
   unitPrice: string;
   amount: string;
+  tableExtraColumns?: Record<string, string>;
   amountOnly: boolean;
   missingFields: string[];
   fieldStatus: Record<string, DraftGtFieldStatus>;
@@ -64,6 +65,14 @@ export type DraftGtTableRow = {
   excludeReason: string | null;
   sourceRowMeta?: Record<string, unknown>;
   bboxRefs?: Record<string, unknown[]>;
+};
+
+export type DraftGtTableExtraColumnDefinition = {
+  key: string;
+  labelKo: string;
+  labelEn: string;
+  source?: string;
+  reviewStatus?: DraftGtReviewStatus;
 };
 
 export type DraftGtExcludedRow = {
@@ -99,6 +108,7 @@ export type DraftGtDocument = {
   normalizedResult: {
     fields: DraftGtField[];
     tableRows: DraftGtTableRow[];
+    tableExtraColumnDefinitions?: DraftGtTableExtraColumnDefinition[];
   };
   candidates?: {
     fields?: unknown[];
@@ -124,6 +134,7 @@ export type DraftGtBuilderInput = {
   customTableEdits?: Record<string, string>[] | null;
   skeletonCandidateRows?: DraftGtSkeletonCandidateInputRow[] | null;
   skeletonCandidateEdits?: Record<string, string>[] | null;
+  tableExtraColumnDefinitions?: DraftGtTableExtraColumnDefinition[] | null;
   useSkeletonCandidateRows?: boolean;
   skeletonCandidateSourceMeta?: Record<string, unknown> | null;
   tableResultViewModels?: unknown[] | null;
@@ -139,6 +150,7 @@ export type DraftGtBuilderInput = {
 export type DraftGtSkeletonCandidateInputRow = {
   rowIndex?: number;
   values: Record<string, string>;
+  tableExtraColumns?: Record<string, string> | null;
   sourceRowMeta?: Record<string, unknown> | null;
 };
 
@@ -311,7 +323,44 @@ function rowFieldStatus(value: string): DraftGtFieldStatus {
   return value === "" ? "not_reviewed" : "present_extracted";
 }
 
-function makeDraftTableRow(values: Record<string, string>, rowIndex: number): DraftGtTableRow {
+function sanitizeTableExtraColumns(value: unknown): Record<string, string> | undefined {
+  if (!isRecord(value)) return undefined;
+  const extras: Record<string, string> = {};
+  for (const [key, rawValue] of Object.entries(value)) {
+    if (FIELD_KEYS.includes(key as (typeof FIELD_KEYS)[number])) continue;
+    const text = asString(rawValue);
+    extras[key] = text;
+  }
+  return Object.keys(extras).length > 0 ? extras : undefined;
+}
+
+function normalizeExtraColumnDefinitions(
+  value: DraftGtTableExtraColumnDefinition[] | null | undefined,
+): DraftGtTableExtraColumnDefinition[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const seen = new Set<string>();
+  const definitions: DraftGtTableExtraColumnDefinition[] = [];
+  for (const definition of value) {
+    if (!isRecord(definition)) continue;
+    const key = asString(definition.key).trim();
+    if (!key || FIELD_KEYS.includes(key as (typeof FIELD_KEYS)[number]) || seen.has(key)) continue;
+    seen.add(key);
+    definitions.push({
+      key,
+      labelKo: asString(definition.labelKo) || key,
+      labelEn: asString(definition.labelEn) || key,
+      source: asString(definition.source) || undefined,
+      reviewStatus: definition.reviewStatus ?? "draft",
+    });
+  }
+  return definitions.length > 0 ? definitions : undefined;
+}
+
+function makeDraftTableRow(
+  values: Record<string, string>,
+  rowIndex: number,
+  tableExtraColumns?: Record<string, string> | null,
+): DraftGtTableRow {
   const row: DraftGtTableRow = {
     rowIndex,
     rowType: "item",
@@ -329,8 +378,13 @@ function makeDraftTableRow(values: Record<string, string>, rowIndex: number): Dr
     reviewStatus: "draft",
     excludeReason: null,
   };
+  const extras = sanitizeTableExtraColumns(tableExtraColumns);
+  if (extras) row.tableExtraColumns = extras;
   for (const key of FIELD_KEYS) {
     const value = asString(row[key]);
+    row.fieldStatus[key] = rowFieldStatus(value);
+  }
+  for (const [key, value] of Object.entries(row.tableExtraColumns ?? {})) {
     row.fieldStatus[key] = rowFieldStatus(value);
   }
   return row;
@@ -341,6 +395,7 @@ function cloneDraftTableRow(row: DraftGtTableRow): DraftGtTableRow {
     ...row,
     missingFields: [...row.missingFields],
     fieldStatus: { ...row.fieldStatus },
+    tableExtraColumns: row.tableExtraColumns ? { ...row.tableExtraColumns } : undefined,
     sourceRowMeta: row.sourceRowMeta ? { ...row.sourceRowMeta } : undefined,
     bboxRefs: row.bboxRefs ? { ...row.bboxRefs } : undefined,
   };
@@ -396,7 +451,7 @@ function tableRowsFromSkeletonCandidateRows(
 ): DraftGtTableRow[] {
   if (!Array.isArray(rows)) return [];
   return rows.map((row, idx) => {
-    const draftRow = makeDraftTableRow(row.values, idx + 1);
+    const draftRow = makeDraftTableRow(row.values, idx + 1, row.tableExtraColumns);
     const sourceRowMeta = sanitizeSourceRowMeta(row.sourceRowMeta);
     draftRow.sourceRowMeta = {
       source: "gt_skeleton_candidate",
@@ -450,6 +505,7 @@ function mergeCustomTableEdits(params: {
 function mergeSkeletonCandidateEdits(params: {
   rows: DraftGtTableRow[];
   skeletonCandidateEdits: Record<string, string>[] | null | undefined;
+  tableExtraColumnDefinitions?: DraftGtTableExtraColumnDefinition[] | null;
   warnings: string[];
 }): { rows: DraftGtTableRow[]; exportBlocked: boolean } {
   const merged = params.rows.map(cloneDraftTableRow);
@@ -460,6 +516,7 @@ function mergeSkeletonCandidateEdits(params: {
   if (edits.length !== merged.length) {
     params.warnings.push("skeleton_candidate_row_count_mismatch");
   }
+  const definitionKeys = new Set((params.tableExtraColumnDefinitions ?? []).map((definition) => definition.key));
   edits.forEach((editRow, rowIdx) => {
     if (!isRecord(editRow)) return;
     const target = merged[rowIdx];
@@ -470,7 +527,18 @@ function mergeSkeletonCandidateEdits(params: {
     for (const [rawKey, rawValue] of Object.entries(editRow)) {
       const key = resolveColumnKey(rawKey);
       if (!key) {
-        params.warnings.push("skeleton_candidate_unknown_column_key");
+        const hasExtraKey =
+          definitionKeys.has(rawKey)
+          || Object.prototype.hasOwnProperty.call(target.tableExtraColumns ?? {}, rawKey);
+        if (!hasExtraKey) {
+          params.warnings.push("skeleton_candidate_unknown_column_key");
+          continue;
+        }
+        target.tableExtraColumns = {
+          ...(target.tableExtraColumns ?? {}),
+          [rawKey]: asString(rawValue),
+        };
+        target.fieldStatus[rawKey] = "present_corrected";
         continue;
       }
       target[key] = asString(rawValue);
@@ -544,6 +612,7 @@ export function buildDraftGtDocument(input: DraftGtBuilderInput): DraftGtBuilder
     mergedRows = mergeSkeletonCandidateEdits({
       rows: baseRows,
       skeletonCandidateEdits: input.skeletonCandidateEdits,
+      tableExtraColumnDefinitions: input.tableExtraColumnDefinitions,
       warnings,
     });
   } else {
@@ -608,6 +677,10 @@ export function buildDraftGtDocument(input: DraftGtBuilderInput): DraftGtBuilder
       exportBlocked,
     },
   };
+  const tableExtraColumnDefinitions = normalizeExtraColumnDefinitions(input.tableExtraColumnDefinitions);
+  if (tableExtraColumnDefinitions) {
+    document.normalizedResult.tableExtraColumnDefinitions = tableExtraColumnDefinitions;
+  }
   if (input.sampleId) document.sampleId = input.sampleId;
   if (input.sourceFile) document.sourceFile = input.sourceFile;
   const candidates = buildCandidates(input.candidates);

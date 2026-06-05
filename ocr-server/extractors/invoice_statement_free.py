@@ -599,35 +599,94 @@ def _build_gt_skeleton_candidates(
 
     inside_items = [item for item in finite_items if _box_contains(table_box, item)]
     code_anchors = [
-        {"text": item["text"], "cx": item["cx"], "cy": item["cy"], "confidence": item.get("confidence")}
+        {"text": item["text"], "cx": item["cx"], "cy": item["cy"], "h": item["h"], "confidence": item.get("confidence")}
         for item in inside_items
         if _looks_like_code_anchor(item.get("text"))
     ]
     amount_anchors = [
-        {"text": _amount_anchor_value(item["text"]), "rawText": item["text"], "cx": item["cx"], "cy": item["cy"], "confidence": item.get("confidence")}
+        {"text": _amount_anchor_value(item["text"]), "rawText": item["text"], "cx": item["cx"], "cy": item["cy"], "h": item["h"], "confidence": item.get("confidence")}
         for item in inside_items
         if _amount_anchor_value(item.get("text"))
     ]
 
-    code_anchors.sort(key=lambda anchor: (float(anchor["cx"]), float(anchor["cy"])))
-    amount_anchors.sort(key=lambda anchor: (float(anchor["cx"]), float(anchor["cy"])))
+    def _median(values: list[float], fallback: float) -> float:
+        finite = sorted(value for value in values if math.isfinite(value))
+        if not finite:
+            return fallback
+        mid = len(finite) // 2
+        if len(finite) % 2:
+            return finite[mid]
+        return (finite[mid - 1] + finite[mid]) / 2.0
+
+    row_band_tol = max(
+        10.0,
+        min(
+            60.0,
+            max(
+                table_box["h"] / 32.0,
+                _median([float(anchor.get("h") or 0.0) for anchor in code_anchors], 14.0) * 1.8,
+            ),
+        ),
+    )
+
+    def _sort_by_reading_row(
+        anchors: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        """Sort anchors by visual reading row, using x only inside one y-band."""
+        ordered = sorted(anchors, key=lambda anchor: (float(anchor["cy"]), float(anchor["cx"])))
+        bands: list[dict[str, Any]] = []
+        for anchor in ordered:
+            cy = float(anchor["cy"])
+            band = next(
+                (
+                    candidate
+                    for candidate in bands
+                    if abs(cy - float(candidate["cy"])) <= row_band_tol
+                ),
+                None,
+            )
+            if band is None:
+                bands.append({"cy": cy, "anchors": [anchor]})
+                continue
+            band["anchors"].append(anchor)
+            band["cy"] = sum(float(item["cy"]) for item in band["anchors"]) / len(band["anchors"])
+        sorted_anchors: list[dict[str, Any]] = []
+        for band in sorted(bands, key=lambda item: float(item["cy"])):
+            sorted_anchors.extend(sorted(band["anchors"], key=lambda anchor: float(anchor["cx"])))
+        return sorted_anchors
+
+    code_anchors = _sort_by_reading_row(code_anchors)
+    amount_anchors = _sort_by_reading_row(amount_anchors)
+
+    def _amount_for_code(
+        code: dict[str, Any],
+        used: set[int],
+    ) -> tuple[int | None, dict[str, Any] | None]:
+        same_row: list[tuple[int, dict[str, Any]]] = []
+        code_cy = float(code["cy"])
+        for idx, amount in enumerate(amount_anchors):
+            if idx in used:
+                continue
+            if abs(float(amount["cy"]) - code_cy) <= row_band_tol:
+                same_row.append((idx, amount))
+        if not same_row:
+            return None, None
+        # In this debug-only skeleton path, the supply amount is the rightmost
+        # money anchor in the same visual row. Do not synthesize missing values.
+        best_idx, best_amount = max(
+            same_row,
+            key=lambda pair: (float(pair[1]["cx"]), -abs(float(pair[1]["cy"]) - code_cy)),
+        )
+        return best_idx, best_amount
+
     used_amounts: set[int] = set()
     rows: list[dict[str, Any]] = []
     paired_count = 0
     orphan_code_count = 0
     for code in code_anchors[:max_rows]:
-        best_idx = None
-        best_distance = None
-        for idx, amount in enumerate(amount_anchors):
-            if idx in used_amounts:
-                continue
-            distance = abs(float(amount["cx"]) - float(code["cx"])) + (abs(float(amount["cy"]) - float(code["cy"])) * 0.1)
-            if best_distance is None or distance < best_distance:
-                best_idx = idx
-                best_distance = distance
-        amount = amount_anchors[best_idx] if best_idx is not None and best_distance is not None and best_distance <= 75.0 else None
+        best_idx, amount = _amount_for_code(code, used_amounts)
         missing = []
-        notes = ["debug_only_not_release_table_row"]
+        notes = ["debug_only_not_release_table_row", "row_band_cy_first_alignment"]
         confidence = "medium"
         if amount is None:
             orphan_code_count += 1
@@ -1143,7 +1202,134 @@ def _is_summary_or_header_line(text: str) -> bool:
     return sum(1 for marker in header_markers if marker in normalized) >= 3 and not re.search(r"\d", normalized)
 
 
-def _parse_table_row_candidate(line: str, row_index: int) -> dict[str, str] | None:
+def _numeric_value_from_row_item_text(value: Any) -> str:
+    text = _normalize_comma_space_money_text(value)
+    if not text:
+        return ""
+    tokens = _merge_comma_space_money_tokens(text.split())
+    if len(tokens) == 1 and _is_number_token(tokens[0]):
+        return _clean_number_token(tokens[0])
+    return ""
+
+
+def _row_numeric_arithmetic_matches(row: dict[str, Any]) -> bool:
+    quantity = _number_value(row.get("quantity"))
+    unit_price = _money_parse_value(row.get("unitPrice"))
+    amount = _money_parse_value(row.get("amount"))
+    if quantity is None or unit_price is None or amount is None:
+        return False
+    return quantity > 0 and abs((quantity * unit_price) - amount) < 0.01
+
+
+def _row_item_money_column_candidate(item: dict[str, Any]) -> bool:
+    value = _normalize_text(item.get("value"))
+    raw_text = _normalize_text(item.get("text"))
+    number = _money_parse_value(value)
+    if number is None:
+        return False
+    if "," not in value and "," not in raw_text and _is_lot_or_manufacturing_like_number(value):
+        return False
+    return "," in value or "," in raw_text or abs(number) >= 1000
+
+
+def _numeric_items_from_row_items(row_items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    positioned = [
+        item
+        for item in row_items
+        if isinstance(item.get("cx"), (int, float)) and _normalize_text(item.get("text"))
+    ]
+    positioned.sort(key=lambda item: float(item.get("cx") or 0.0))
+    numeric_items: list[dict[str, Any]] = []
+    idx = 0
+    while idx < len(positioned):
+        item = positioned[idx]
+        text = _normalize_text(item.get("text"))
+        next_item = positioned[idx + 1] if idx + 1 < len(positioned) else None
+        next_text = _normalize_text(next_item.get("text")) if next_item else ""
+        if (
+            next_item is not None
+            and re.fullmatch(r"-?\d{1,3},", text.strip())
+            and re.fullmatch(r"\d{3}", next_text.strip())
+            and isinstance(next_item.get("cx"), (int, float))
+        ):
+            value = f"{text.strip()}{next_text.strip()}"
+            numeric_items.append({
+                "value": _clean_number_token(value),
+                "cx": (float(item["cx"]) + float(next_item["cx"])) / 2.0,
+                "text": f"{text} {next_text}",
+            })
+            idx += 2
+            continue
+        value = _numeric_value_from_row_item_text(text)
+        if value:
+            numeric_items.append({"value": value, "cx": float(item["cx"]), "text": text})
+        idx += 1
+    return numeric_items
+
+
+def _repair_numeric_assignment_from_row_items(
+    row: dict[str, str],
+    row_items: list[dict[str, Any]] | None,
+) -> dict[str, str]:
+    if not row_items:
+        return row
+    numeric_items = _numeric_items_from_row_items(row_items)
+    if len(numeric_items) < 2:
+        return row
+
+    money_items = [
+        item
+        for item in numeric_items
+        if _row_item_money_column_candidate(item)
+    ]
+    if len(money_items) < 2:
+        return row
+    money_items.sort(key=lambda item: item["cx"])
+    amount_item = money_items[-1]
+    unit_price_candidates = [item for item in money_items[:-1] if item["cx"] < amount_item["cx"] - 8.0]
+    if not unit_price_candidates:
+        return row
+    unit_price_item = unit_price_candidates[-1]
+
+    quantity_candidates = [
+        item
+        for item in numeric_items
+        if item["cx"] < unit_price_item["cx"] - 8.0
+        and _looks_like_quantity_token(item["value"])
+        and not _is_date_like_number(item["value"])
+        and "," not in item["value"]
+    ]
+    quantity_item = quantity_candidates[-1] if quantity_candidates else None
+    quantity_is_expiry_like = bool(row.get("quantity") and _is_date_like_number(row.get("quantity")))
+    current_is_suspicious = not _row_numeric_arithmetic_matches(row) or quantity_is_expiry_like
+    if not current_is_suspicious:
+        return row
+
+    repaired = dict(row)
+    repaired["unitPrice"] = _normalize_money(unit_price_item["value"])
+    repaired["amount"] = _normalize_money(amount_item["value"])
+    if quantity_item is not None:
+        repaired["quantity"] = _normalize_quantity(quantity_item["value"])
+    elif quantity_is_expiry_like:
+        repaired["quantity"] = ""
+
+    if not repaired.get("expiryDate"):
+        expiry_candidates = [
+            item
+            for item in numeric_items
+            if item["cx"] < unit_price_item["cx"] and _is_date_like_number(item["value"])
+        ]
+        if expiry_candidates:
+            repaired["expiryDate"] = _clean_number_token(expiry_candidates[-1]["value"])
+    return repaired
+
+
+def _parse_table_row_candidate(
+    line: str,
+    row_index: int,
+    *,
+    row_items: list[dict[str, Any]] | None = None,
+) -> dict[str, str] | None:
     text = _normalize_comma_space_money_text(line)
     if _is_summary_or_header_line(text):
         return None
@@ -1187,7 +1373,7 @@ def _parse_table_row_candidate(line: str, row_index: int) -> dict[str, str] | No
         quantity = ""
     if not item_name and not amount:
         return None
-    return {
+    candidate = {
         "rowIndex": str(row_index),
         "itemName": item_name,
         "spec": spec,
@@ -1200,6 +1386,7 @@ def _parse_table_row_candidate(line: str, row_index: int) -> dict[str, str] | No
         "_confidence": "0.2",
         "_source": "invoice_statement_free_line_candidate",
     }
+    return _repair_numeric_assignment_from_row_items(candidate, row_items)
 
 
 def _parse_relaxed_table_row_candidate(line: str, row_index: int) -> dict[str, str] | None:
@@ -1263,10 +1450,18 @@ def _is_acceptable_relaxed_row(row: dict[str, Any]) -> bool:
     return _money_parse_value(normalized.get("amount")) is not None
 
 
-def _find_table_row_candidates(lines: list[str], *, allow_relaxed: bool = True) -> list[dict[str, str]]:
+def _find_table_row_candidates(
+    lines: list[str],
+    *,
+    allow_relaxed: bool = True,
+    row_entries: list[dict[str, Any]] | None = None,
+) -> list[dict[str, str]]:
     rows: list[dict[str, str]] = []
-    for line in lines:
-        candidate = _parse_table_row_candidate(line, len(rows) + 1)
+    entries = row_entries if row_entries is not None else [{"text": line, "items": []} for line in lines]
+    for entry in entries:
+        line = _normalize_text(entry.get("text")) if isinstance(entry, dict) else _normalize_text(entry)
+        row_items = entry.get("items") if isinstance(entry, dict) else None
+        candidate = _parse_table_row_candidate(line, len(rows) + 1, row_items=row_items)
         if candidate is not None:
             rows.append(candidate)
     if rows or not allow_relaxed:
@@ -2199,7 +2394,16 @@ def _filter_table_row_candidates(rows: list[dict[str, str]]) -> tuple[list[dict[
     }
 
 
-def _group_ocr_items_into_row_texts(items: list[dict[str, Any]]) -> tuple[list[str], dict[str, Any]]:
+def _compact_row_group_item(item: dict[str, Any]) -> dict[str, Any]:
+    compact: dict[str, Any] = {"text": _normalize_text(item.get("text"))}
+    for key in ("x", "y", "w", "h", "cx", "cy"):
+        value = item.get(key)
+        if isinstance(value, (int, float)):
+            compact[key] = float(value)
+    return compact
+
+
+def _group_ocr_items_into_row_entries(items: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     positioned = [
         item
         for item in items
@@ -2225,19 +2429,27 @@ def _group_ocr_items_into_row_texts(items: list[dict[str, Any]]) -> tuple[list[s
         count = len(target["items"])
         target["cy"] = ((float(target["cy"]) * (count - 1)) + cy) / count
 
-    row_texts: list[str] = []
+    row_entries: list[dict[str, Any]] = []
     for row in sorted(rows, key=lambda value: float(value["cy"])):
         row_items = sorted(row["items"], key=lambda value: float(value["x"]))
         text = _normalize_text(" ".join(_normalize_text(item.get("text")) for item in row_items))
         if text:
-            row_texts.append(text)
-    return row_texts, {
+            row_entries.append({
+                "text": text,
+                "items": [_compact_row_group_item(item) for item in row_items if _normalize_text(item.get("text"))],
+            })
+    return row_entries, {
         "status": "grouped",
         "positionedCount": len(positioned),
-        "rowTextCount": len(row_texts),
+        "rowTextCount": len(row_entries),
         "rowThreshold": round(row_threshold, 2),
         "medianHeight": round(median_height, 2),
     }
+
+
+def _group_ocr_items_into_row_texts(items: list[dict[str, Any]]) -> tuple[list[str], dict[str, Any]]:
+    row_entries, debug = _group_ocr_items_into_row_entries(items)
+    return [_normalize_text(entry.get("text")) for entry in row_entries], debug
 
 
 def _build_table_candidate_diagnostics(
@@ -2609,7 +2821,8 @@ def extract_invoice_statement_free(
     result = empty_invoice_statement_free_result()
     ocr_items = _extract_ocr_line_items(ocr_lines_raw)
     lines = [_normalize_text(item.get("text")) for item in ocr_items if _normalize_text(item.get("text"))]
-    grouped_lines, grouping_debug = _group_ocr_items_into_row_texts(ocr_items)
+    grouped_entries, grouping_debug = _group_ocr_items_into_row_entries(ocr_items)
+    grouped_lines = [_normalize_text(entry.get("text")) for entry in grouped_entries]
     normalized_full_text = _normalize_text(full_text)
     joined_line_text = _join_lines(lines)
     source_text = "\n".join(text for text in (normalized_full_text, joined_line_text) if text)
@@ -2617,7 +2830,11 @@ def extract_invoice_statement_free(
     # Strict column parsing first (grouped, then flat lines) so dense single-line
     # layouts (1.jpg reference) are unaffected; only fall back to the relaxed
     # 'item name + amount' candidate path when strict parsing finds nothing.
-    parsed_table_rows = _find_table_row_candidates(grouped_lines, allow_relaxed=False)
+    parsed_table_rows = _find_table_row_candidates(
+        grouped_lines,
+        allow_relaxed=False,
+        row_entries=grouped_entries,
+    )
     if not parsed_table_rows:
         parsed_table_rows = _find_table_row_candidates(lines, allow_relaxed=False)
     if not parsed_table_rows:

@@ -410,16 +410,27 @@ def deskew(image: np.ndarray) -> tuple[np.ndarray, dict]:
 
     coords = np.column_stack(np.where(thresh > 0))
     if len(coords) == 0:
-        return image, {"status": "보정 불필요", "detail": "텍스트 영역 없음"}
+        # 3N(debug-only): 숫자 metadata 추가. 알고리즘/threshold/회전 적용 정책 불변.
+        return image, {
+            "status": "보정 불필요", "detail": "텍스트 영역 없음",
+            "rawAngle": None, "normalizedAngle": None, "absAngle": None,
+            "applied": False, "threshold": 0.5,
+        }
 
-    angle = cv2.minAreaRect(coords)[-1]
+    raw_angle = float(cv2.minAreaRect(coords)[-1])
+    angle = raw_angle
     if angle < -45:
         angle = 90 + angle
     elif angle > 45:
         angle = angle - 90
 
     if abs(angle) < 0.5:
-        return image, {"status": "보정 불필요", "detail": f"기울기 {abs(angle):.2f}도 (기준 미만)"}
+        # 3N(debug-only): 숫자 metadata 추가. threshold 0.5 / 회전 미적용 동작 불변.
+        return image, {
+            "status": "보정 불필요", "detail": f"기울기 {abs(angle):.2f}도 (기준 미만)",
+            "rawAngle": round(raw_angle, 4), "normalizedAngle": round(angle, 4),
+            "absAngle": round(abs(angle), 4), "applied": False, "threshold": 0.5,
+        }
 
     (h, w) = image.shape[:2]
     center = (w // 2, h // 2)
@@ -429,7 +440,12 @@ def deskew(image: np.ndarray) -> tuple[np.ndarray, dict]:
         flags=cv2.INTER_CUBIC,
         borderMode=cv2.BORDER_REPLICATE,
     )
-    return rotated, {"status": "보정 완료", "detail": f"{abs(angle):.2f}도 회전 보정"}
+    # 3N(debug-only): 숫자 metadata 추가. warpAffine 회전 결과 자체는 불변.
+    return rotated, {
+        "status": "보정 완료", "detail": f"{abs(angle):.2f}도 회전 보정",
+        "rawAngle": round(raw_angle, 4), "normalizedAngle": round(angle, 4),
+        "absAngle": round(abs(angle), 4), "applied": True, "threshold": 0.5,
+    }
 
 
 def denoise(image: np.ndarray) -> tuple[np.ndarray, dict]:
