@@ -160,20 +160,36 @@ function buildExtraColumns(
   raw: Record<string, unknown>,
   fallback: Record<string, unknown> | null,
 ): Record<GtSkeletonExtraColumnKey, string> {
+  const rawExtra = isRecord(raw.tableExtraColumns) ? raw.tableExtraColumns : null;
   const source = fallback ?? raw;
   const supplyAmountText = firstString(source, ["supplyAmount", "supply_amount", "supplyAmountText"]);
   const parsedSupplyAmount = moneyTokens(supplyAmountText);
   const explicitSupplyUnitPrice = firstString(source, ["supplyUnitPrice", "supply_unit_price"]);
   const explicitAmount = firstString(source, ["amount", "totalAmount"]);
   const tableExtraColumns: Record<GtSkeletonExtraColumnKey, string> = {
-    consumerUnitPrice: firstString(source, ["consumerUnitPrice", "consumer_unit_price", "unitPrice"]),
-    supplyUnitPrice: explicitSupplyUnitPrice || (parsedSupplyAmount.length >= 2 ? parsedSupplyAmount[parsedSupplyAmount.length - 2] : ""),
-    insuranceNo: firstString(source, ["insuranceNo", "insuranceCode", "insuranceNumber", "insurance_no"]),
+    consumerUnitPrice:
+      firstString(rawExtra, ["consumerUnitPrice", "consumer_unit_price"])
+      || firstString(source, ["consumerUnitPrice", "consumer_unit_price", "unitPrice"]),
+    supplyUnitPrice:
+      firstString(rawExtra, ["supplyUnitPrice", "supply_unit_price"])
+      || explicitSupplyUnitPrice
+      || (parsedSupplyAmount.length >= 2 ? parsedSupplyAmount[parsedSupplyAmount.length - 2] : ""),
+    insuranceNo:
+      firstString(rawExtra, ["insuranceNo", "insuranceCode", "insuranceNumber", "insurance_no"])
+      || firstString(source, ["insuranceNo", "insuranceCode", "insuranceNumber", "insurance_no"]),
   };
   if (!explicitAmount && parsedSupplyAmount.length >= 1) {
     raw.amount = parsedSupplyAmount[parsedSupplyAmount.length - 1];
   }
   return tableExtraColumns;
+}
+
+function hasDraftGtSkeletonEvidence(rows: GtSkeletonCandidateRow[]): boolean {
+  return rows.some((row) => {
+    if (asString(row.values.productCode).trim()) return true;
+    if (asString(row.values.amount).trim()) return true;
+    return Object.values(row.tableExtraColumns).some((value) => asString(value).trim());
+  });
 }
 
 /**
@@ -187,8 +203,48 @@ function isInvoiceStatement(result: Record<string, unknown>): boolean {
     || asString(result.document_type).trim();
   if (direct === "invoice_statement") return true;
   const df = result.document_fields;
-  if (isRecord(df) && asString(df.doc_type).trim() === "invoice_statement") return true;
+  if (isRecord(df)) {
+    const nested =
+      asString(df.doc_type).trim()
+      || asString(df.documentType).trim()
+      || asString(df.document_type).trim();
+    if (nested === "invoice_statement") return true;
+  }
   return false;
+}
+
+function isDebugSkeletonMode(value: unknown): boolean {
+  const mode = asString(value).trim();
+  return mode === "" || mode === "debug_gt_skeleton_only" || mode === "gt_skeleton_candidate";
+}
+
+function isReleaseIsolatedSkeleton(skeleton: Record<string, unknown>): boolean {
+  if (skeleton.releaseImpact === "none") return true;
+  if (skeleton.candidateRowsReleaseIsolated === true) return true;
+  const sourceMeta = skeleton.sourceMeta;
+  return isRecord(sourceMeta) && sourceMeta.releaseImpact === "none";
+}
+
+function skeletonValue(raw: Record<string, unknown>, key: GtSkeletonColumnKey): string {
+  switch (key) {
+    case "itemName":
+      return firstString(raw, ["itemName", "item_name", "name", "item"]);
+    case "productCode":
+      return firstString(raw, ["productCode", "itemCode", "code", "product_code"]);
+    case "lotNo":
+      return firstString(raw, ["lotNo", "lot", "lot_no", "serialLotComposite", "serialNo"]);
+    case "expiryDate":
+      return firstString(raw, ["expiryDate", "expirationDate", "validUntil", "expiry"]);
+    case "quantity":
+      return firstString(raw, ["quantity", "qty"]);
+    case "unitPrice":
+      return firstString(raw, ["unitPrice", "price", "unit_price"]);
+    case "amount":
+      return firstString(raw, ["amount", "totalAmount", "supplyAmount"]);
+    case "spec":
+    default:
+      return firstString(raw, [key]);
+  }
 }
 
 /**
@@ -197,7 +253,7 @@ function isInvoiceStatement(result: Record<string, unknown>): boolean {
  *
  * 게이트(2G contract — 데이터 구동, 파일명 하드코딩 없음):
  *   1. doc_type / documentType 가 invoice_statement 계열
- *   2. fallbackRequired === true (release 가 fallback 상태)
+ *   2. release tableRows 와 격리된 debug skeleton source
  *   3. gtSkeletonCandidates.available === true
  *   4. mode === "debug_gt_skeleton_only"
  *   5. releaseImpact === "none" || candidateRowsReleaseIsolated === true
@@ -214,21 +270,15 @@ export function buildGtSkeletonCandidateViewModel(
   const free = extractDebug.invoice_statement_free;
   if (!isRecord(free)) return null;
 
-  // 게이트 2: release 가 fallback 상태일 때만 GT 후보 입력표를 노출.
-  if (free.fallbackRequired !== true) return null;
-
   const skeleton = free.gtSkeletonCandidates;
   if (!isRecord(skeleton)) return null;
 
   // 게이트 3·4·5: debug 전용 / release 격리 확인.
-  if (skeleton.available !== true) return null;
-  if (skeleton.mode !== "debug_gt_skeleton_only") return null;
-  const releaseIsolated =
-    skeleton.releaseImpact === "none" || skeleton.candidateRowsReleaseIsolated === true;
-  if (!releaseIsolated) return null;
-
   const rawRows = skeleton.rows;
   if (!Array.isArray(rawRows) || rawRows.length === 0) return null;
+  if (skeleton.available === false) return null;
+  if (!isDebugSkeletonMode(skeleton.mode)) return null;
+  if (!isReleaseIsolatedSkeleton(skeleton)) return null;
 
   const rows: GtSkeletonCandidateRow[] = [];
   const docRows = documentTableRows(result);
@@ -239,7 +289,7 @@ export function buildGtSkeletonCandidateViewModel(
     const tableExtraColumns = buildExtraColumns(raw, fallbackRow);
     const values = {} as Record<GtSkeletonColumnKey, string>;
     for (const key of GT_SKELETON_COLUMN_KEYS) {
-      values[key] = asString(raw[key]);
+      values[key] = skeletonValue(raw, key);
     }
     const meta = isRecord(raw._gtSkeleton) ? (raw._gtSkeleton as Record<string, unknown>) : null;
     const rowIndex =
@@ -256,6 +306,7 @@ export function buildGtSkeletonCandidateViewModel(
     });
   }
   if (rows.length === 0) return null;
+  if (!hasDraftGtSkeletonEvidence(rows)) return null;
 
   const columns: GtSkeletonCandidateColumn[] = GT_SKELETON_COLUMN_KEYS.map((key) => ({
     columnKey: key,

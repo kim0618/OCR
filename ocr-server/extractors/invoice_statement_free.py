@@ -119,6 +119,7 @@ FORBIDDEN_FREE_ROW_KEYS = (
 )
 
 PRODUCT_CODE_TOKEN_RE = re.compile(r"^[A-Z]{2,}[\dA-Z]+$")
+_HANGUL_RE = re.compile(r"[\uac00-\ud7a3]")
 CODE_VS_MONEY_COMMA_MONEY_RE = re.compile(r"^-?\d{1,3}(,\d{3})+$")
 CODE_VS_MONEY_GROUPED_MIXED_RE = re.compile(r"^-?\d{1,3}([.,]\d{3})+$")
 CODE_VS_MONEY_DATE_RE = re.compile(r"^\d{4}/\d{2}/\d{2}$|^\d{2}/\d{2}/\d{2}")
@@ -527,14 +528,78 @@ def _build_gt_skeleton_candidates(
             return False
         return bool(re.search(r"(?:^|\d)(?:O|0)?P-[A-Z0-9]{2,}", value) or re.search(r"\d+(?:O|0)P-[A-Z0-9]{2,}", value))
 
+    def _code_anchor_value(text: Any) -> str:
+        value = _normalize_text(text).upper().replace(" ", "")
+        match = re.search(r"(?:^|\d)((?:O|0)P-[A-Z0-9]{2,})", value)
+        if not match:
+            return ""
+        code = match.group(1)
+        return re.sub(r"^0P", "OP", code)
+
     def _amount_anchor_value(text: Any) -> str:
         value = _normalize_text(text)
         if not value or _looks_like_code_anchor(value) or _is_code_like_non_money_token(value):
             return ""
+        comma_money_tokens: list[str] = []
+        for match in re.finditer(r"(?<!\d)-?\d{1,3}(?:,\d{3})+(?!\d)", value):
+            token = _clean_number_token(match.group(0))
+            container = _code_vs_money_container_token(value, match.start(), match.end())
+            if container and container != token and _is_code_like_non_money_token(container):
+                continue
+            comma_money_tokens.append(_normalize_money(token))
+        if comma_money_tokens:
+            return comma_money_tokens[-1]
         money_tokens = _money_tokens_from_text(value)
         if not money_tokens:
             return ""
         return _normalize_money(money_tokens[-1])
+
+    def _quantity_anchor_value(text: Any) -> str:
+        value = _normalize_text(text)
+        if not value or _looks_like_code_anchor(value) or _amount_anchor_value(value):
+            return ""
+        compact = re.sub(r"\D", "", value)
+        if not compact or compact != value.strip():
+            return ""
+        try:
+            number = int(compact)
+        except ValueError:
+            return ""
+        return compact if 1 <= number <= 9999 else ""
+
+    def _item_name_anchor_value(text: Any) -> str:
+        value = _normalize_text(text)
+        if not value:
+            return ""
+        if (
+            _looks_like_code_anchor(value)
+            or _amount_anchor_value(value)
+            or _quantity_anchor_value(value)
+            or _is_summary_or_header_line(value)
+        ):
+            return ""
+        parts: list[str] = []
+        for raw_part in re.split(r"\s+", value):
+            part = raw_part.strip("()[]{}:;|,")
+            if not part:
+                continue
+            if _looks_like_code_anchor(part) or _amount_anchor_value(part) or _quantity_anchor_value(part):
+                continue
+            if re.fullmatch(r"[-./\\]+", part):
+                continue
+            if re.fullmatch(r"\d{4,}", part):
+                continue
+            parts.append(part)
+        cleaned = _normalize_text(" ".join(parts))
+        if not cleaned:
+            return ""
+        cleaned = re.sub(r"(?i)(\b\d{1,3}C)\d{3,}$", r"\1", cleaned).strip()
+        compact = re.sub(r"\s+", "", cleaned)
+        if len(compact) < 3:
+            return ""
+        if not (re.search(r"[A-Za-z]{2,}", cleaned) or _HANGUL_RE.search(cleaned)):
+            return ""
+        return cleaned[:80]
 
     def _anchor_counts_for_box(box: dict[str, float], items: list[dict[str, Any]]) -> tuple[int, int]:
         inside = [item for item in items if _box_contains(box, item)]
@@ -599,14 +664,24 @@ def _build_gt_skeleton_candidates(
 
     inside_items = [item for item in finite_items if _box_contains(table_box, item)]
     code_anchors = [
-        {"text": item["text"], "cx": item["cx"], "cy": item["cy"], "h": item["h"], "confidence": item.get("confidence")}
+        {"text": _code_anchor_value(item["text"]), "rawText": item["text"], "cx": item["cx"], "cy": item["cy"], "h": item["h"], "confidence": item.get("confidence")}
         for item in inside_items
-        if _looks_like_code_anchor(item.get("text"))
+        if _code_anchor_value(item.get("text"))
     ]
     amount_anchors = [
         {"text": _amount_anchor_value(item["text"]), "rawText": item["text"], "cx": item["cx"], "cy": item["cy"], "h": item["h"], "confidence": item.get("confidence")}
         for item in inside_items
         if _amount_anchor_value(item.get("text"))
+    ]
+    quantity_anchors = [
+        {"text": _quantity_anchor_value(item["text"]), "rawText": item["text"], "cx": item["cx"], "cy": item["cy"], "h": item["h"], "confidence": item.get("confidence")}
+        for item in inside_items
+        if _quantity_anchor_value(item.get("text"))
+    ]
+    item_name_anchors = [
+        {"text": _item_name_anchor_value(item["text"]), "rawText": item["text"], "cx": item["cx"], "cy": item["cy"], "h": item["h"], "confidence": item.get("confidence")}
+        for item in inside_items
+        if _item_name_anchor_value(item.get("text"))
     ]
 
     def _median(values: list[float], fallback: float) -> float:
@@ -628,6 +703,15 @@ def _build_gt_skeleton_candidates(
             ),
         ),
     )
+    code_cy_values = sorted(float(anchor["cy"]) for anchor in code_anchors)
+    code_h_median = _median([float(anchor.get("h") or 0.0) for anchor in code_anchors], 14.0)
+    significant_gaps = [
+        code_cy_values[idx + 1] - code_cy_values[idx]
+        for idx in range(len(code_cy_values) - 1)
+        if code_cy_values[idx + 1] - code_cy_values[idx] > max(2.0, code_h_median * 0.25)
+    ]
+    if significant_gaps:
+        row_band_tol = max(6.0, min(row_band_tol, _median(significant_gaps, row_band_tol) * 0.45))
 
     def _sort_by_reading_row(
         anchors: list[dict[str, Any]],
@@ -657,11 +741,45 @@ def _build_gt_skeleton_candidates(
 
     code_anchors = _sort_by_reading_row(code_anchors)
     amount_anchors = _sort_by_reading_row(amount_anchors)
+    quantity_anchors = _sort_by_reading_row(quantity_anchors)
+    item_name_anchors = _sort_by_reading_row(item_name_anchors)
 
-    def _amount_for_code(
+    code_x_values = sorted(float(anchor["cx"]) for anchor in code_anchors)
+    code_x_gaps = [
+        code_x_values[idx + 1] - code_x_values[idx]
+        for idx in range(len(code_x_values) - 1)
+        if code_x_values[idx + 1] - code_x_values[idx] > 1.0
+    ]
+    column_x_tol = max(
+        12.0,
+        min(
+            80.0,
+            (_median(code_x_gaps, table_box["w"] / max(len(code_x_values), 1)) * 0.62)
+            if code_x_values
+            else table_box["w"] / 20.0,
+        ),
+    )
+
+    def _same_column_candidates(
+        anchor: dict[str, Any],
+        candidates: list[dict[str, Any]],
+        *,
+        max_extra: float = 1.0,
+    ) -> list[dict[str, Any]]:
+        cx = float(anchor["cx"])
+        return sorted(
+            [
+                candidate
+                for candidate in candidates
+                if abs(float(candidate["cx"]) - cx) <= column_x_tol * max_extra
+            ],
+            key=lambda candidate: (abs(float(candidate["cx"]) - cx), float(candidate["cy"])),
+        )
+
+    def _money_values_for_code(
         code: dict[str, Any],
         used: set[int],
-    ) -> tuple[int | None, dict[str, Any] | None]:
+    ) -> list[tuple[int, dict[str, Any]]]:
         same_row: list[tuple[int, dict[str, Any]]] = []
         code_cy = float(code["cy"])
         for idx, amount in enumerate(amount_anchors):
@@ -669,24 +787,71 @@ def _build_gt_skeleton_candidates(
                 continue
             if abs(float(amount["cy"]) - code_cy) <= row_band_tol:
                 same_row.append((idx, amount))
-        if not same_row:
-            return None, None
-        # In this debug-only skeleton path, the supply amount is the rightmost
-        # money anchor in the same visual row. Do not synthesize missing values.
-        best_idx, best_amount = max(
-            same_row,
-            key=lambda pair: (float(pair[1]["cx"]), -abs(float(pair[1]["cy"]) - code_cy)),
+        return sorted(same_row, key=lambda pair: (float(pair[1]["cx"]), float(pair[1]["cy"])))
+
+    def _is_row_number_quantity_candidate(quantity: dict[str, Any], row_index: int) -> bool:
+        value = _quantity_anchor_value(quantity.get("text"))
+        if not value:
+            return False
+        try:
+            number = int(value)
+        except ValueError:
+            return False
+        if number != row_index + 1:
+            return False
+        return 1 <= number <= max(len(code_anchors), 1)
+
+    def _quantity_for_code(code: dict[str, Any], row_index: int) -> dict[str, Any] | None:
+        same_column = _same_column_candidates(code, quantity_anchors, max_extra=1.15)
+        filtered = [
+            quantity
+            for quantity in same_column
+            if not _is_row_number_quantity_candidate(quantity, row_index)
+        ]
+        if not filtered:
+            return None
+        return min(
+            filtered,
+            key=lambda quantity: (
+                abs(float(quantity["cx"]) - float(code["cx"])),
+                abs(float(quantity["cy"]) - float(code["cy"])),
+            ),
         )
-        return best_idx, best_amount
+
+    def _item_name_for_code(code: dict[str, Any]) -> dict[str, Any] | None:
+        same_column = _same_column_candidates(code, item_name_anchors, max_extra=1.15)
+        if not same_column:
+            return None
+        return min(
+            same_column,
+            key=lambda candidate: (
+                abs(float(candidate["cx"]) - float(code["cx"])),
+                -len(re.sub(r"\s+", "", str(candidate.get("text") or ""))),
+                -1 if re.search(r"[A-Za-z]{3,}", str(candidate.get("text") or "")) else 0,
+            ),
+        )
 
     used_amounts: set[int] = set()
     rows: list[dict[str, Any]] = []
     paired_count = 0
     orphan_code_count = 0
     for code in code_anchors[:max_rows]:
-        best_idx, amount = _amount_for_code(code, used_amounts)
+        row_index = len(rows)
+        row_money = _money_values_for_code(code, used_amounts)
+        amount = row_money[-1][1] if row_money else None
+        price_values = [money for _, money in row_money[:-1]]
+        consumer_unit_price = price_values[0]["text"] if len(price_values) >= 1 else ""
+        supply_unit_price = price_values[1]["text"] if len(price_values) >= 2 else consumer_unit_price
+        quantity = _quantity_for_code(code, row_index)
+        item_name = _item_name_for_code(code)
         missing = []
-        notes = ["debug_only_not_release_table_row", "row_band_cy_first_alignment"]
+        notes = [
+            "debug_only_not_release_table_row",
+            "row_band_cy_first_alignment",
+            "same_row_money_pairing",
+            "quantity_same_column_no_excluded",
+            "item_name_same_column_mapping",
+        ]
         confidence = "medium"
         if amount is None:
             orphan_code_count += 1
@@ -694,25 +859,33 @@ def _build_gt_skeleton_candidates(
             notes.append("orphan_code_anchor")
             confidence = "low"
         else:
-            used_amounts.add(best_idx)  # type: ignore[arg-type]
+            for money_idx, _money in row_money:
+                used_amounts.add(money_idx)
             paired_count += 1
         rows.append(
             {
                 "rowIndex": len(rows),
-                "itemName": "",
+                "itemName": item_name["text"] if item_name else "",
                 "spec": "",
                 "productCode": code["text"],
                 "lotNo": "",
                 "expiryDate": "",
-                "quantity": "",
+                "quantity": quantity["text"] if quantity else "",
                 "unitPrice": "",
                 "amount": amount["text"] if amount else "",
+                "consumerUnitPrice": consumer_unit_price,
+                "supplyUnitPrice": supply_unit_price,
+                "insuranceNo": "",
                 "_gtSkeleton": {
                     "reviewRequired": True,
                     "rowConfidence": confidence,
                     "anchors": {
-                        "code": {"text": code["text"], "cx": code["cx"], "cy": code["cy"]},
+                        "code": {"text": code["text"], "rawText": code.get("rawText"), "cx": code["cx"], "cy": code["cy"]},
                         "amount": {"text": amount["text"], "cx": amount["cx"], "cy": amount["cy"]} if amount else None,
+                        "consumerUnitPrice": {"text": consumer_unit_price} if consumer_unit_price else None,
+                        "supplyUnitPrice": {"text": supply_unit_price} if supply_unit_price else None,
+                        "quantity": {"text": quantity["text"], "cx": quantity["cx"], "cy": quantity["cy"]} if quantity else None,
+                        "itemName": {"text": item_name["text"], "cx": item_name["cx"], "cy": item_name["cy"]} if item_name else None,
                     },
                     "missingAnchors": missing,
                     "notes": notes,
@@ -759,6 +932,8 @@ def _build_gt_skeleton_candidates(
             "codeCount": len(code_anchors),
             "amountCount": len(used_amounts),
             "rawAmountCandidateCount": len(amount_anchors),
+            "rawQuantityCandidateCount": len(quantity_anchors),
+            "rawItemNameCandidateCount": len(item_name_anchors),
             "pairedCount": paired_count,
             "orphanCodeCount": orphan_code_count,
             "orphanAmountCount": max(0, len(amount_anchors) - len(used_amounts)),
