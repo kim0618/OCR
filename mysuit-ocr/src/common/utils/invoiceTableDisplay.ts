@@ -218,6 +218,21 @@ function _meaninglessOrDupRatio(
   return cnt / rows.length;
 }
 
+function _sameMeaningfulValueRatio(
+  rows: Record<string, unknown>[],
+  key1: string,
+  key2: string,
+): number {
+  if (rows.length === 0) return 0;
+  let cnt = 0;
+  for (const row of rows) {
+    const v1 = readDisplayTableCell(row, key1);
+    const v2 = readDisplayTableCell(row, key2);
+    if (!isMeaninglessTableValue(v1) && v1 === v2) cnt++;
+  }
+  return cnt / rows.length;
+}
+
 // ── 핵심 함수: tableMeta 기반 컬럼 결정 + dedup ──────────────────────────────
 
 /**
@@ -321,6 +336,19 @@ export function buildInvoicePreviewCols(
   // ── 후처리 dedup ──
 
   // itemCode 계열 majority rule: meaningful 비율 5% 이하면 숨김
+  // 3BL: in the unit+taxAmount supply-tax shape, `amount` already displays
+  // the supply amount. If `supplyAmount` carries the same row value, hide only
+  // that duplicate display column; keep doc-level fields and row extras intact.
+  if (
+    cols.some((c) => c.key === "unit")
+    && cols.some((c) => c.key === "taxAmount")
+    && cols.some((c) => c.key === "amount")
+    && cols.some((c) => c.key === "supplyAmount")
+    && _sameMeaningfulValueRatio(rows, "amount", "supplyAmount") >= 0.95
+  ) {
+    cols = cols.filter((c) => c.key !== "supplyAmount");
+  }
+
   cols = cols.filter((c) => {
     if (!_ITEMCODE_KEYS.has(c.key)) return true;
     return _meaningfulRatio(rows, c.key) > 0.05;

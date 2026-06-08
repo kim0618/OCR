@@ -1611,7 +1611,7 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
   // representative 품목표 VM을 table field로 materialize한다.
   const previewDisplayFields = useMemo<OcrFieldResult[]>(() => {
     if (editedFields.some((f) => f.field_type === "table")) return editedFields;
-    const vm = displayRepresentativeFirstVM;
+    const vm = customTableFieldViewModel;
     if (!vm || vm.columns.length === 0 || vm.meta.rowCount === 0) return editedFields;
     if (vm.meta.documentType !== "invoice_statement") return editedFields;
     const synthetic: OcrFieldResult = {
@@ -1624,7 +1624,7 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
       bbox: [0, 0, 0, 0],
     };
     return [...editedFields, synthetic];
-  }, [editedFields, displayRepresentativeFirstVM]);
+  }, [editedFields, customTableFieldViewModel]);
 
   // Table field list for JSX rendering in Preview tab (separate from Markdown)
   // T-28-PERF-3: docTableRows가 있으면 nonEmpty가 비어도 table field를 포함 (defer 최적화 대응)
@@ -2129,10 +2129,9 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                   {previewTableFields.map(({ idx, label, displayRows, rowLabel }, tableIdx) => {
                     // fix8: tableMeta 기반이면 백엔드가 이미 계산한 컬럼 사용 (TestWorkspace 동일 로직)
                     // fallback(hasValue 기반)일 때만 filterInvoicePreviewDisplayCols 추가 적용
-                    // TPL-13B: pick the representative VM (template > unstructured
-                    // > backend) so the field-row table block shows the user-
-                    // defined columns when present and falls back to backend.
-                    const previewRepVM = displayRepresentativeFirstVM ?? displayBackendTableResultViewModel;
+                    // 3BK: Preview uses the same backend-extra-aware selector as
+                    // Custom/Draft so 4.pdf shows the same table column model.
+                    const previewRepVM = customTableFieldViewModel;
                     if (tableIdx === 0 && previewRepVM) {
                       // TPL-8E + TPL-13B: Preview structured table consumes the
                       // representative TableResult ViewModel. When template /
