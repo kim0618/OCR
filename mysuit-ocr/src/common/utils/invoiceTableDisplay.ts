@@ -19,6 +19,7 @@ export type InvoiceDisplayCol = { key: string; labelKo: string };
  */
 export const INVOICE_TABLE_COL_PRIORITY: readonly InvoiceDisplayCol[] = [
   { key: "itemCode",          labelKo: "품목코드" },
+  { key: "productCode",       labelKo: "품목코드" },
   { key: "itemName",          labelKo: "품목명" },
   { key: "spec",              labelKo: "규격" },
   { key: "lotNo",             labelKo: "LOT/제조번호" },
@@ -30,9 +31,9 @@ export const INVOICE_TABLE_COL_PRIORITY: readonly InvoiceDisplayCol[] = [
   { key: "consumerUnitPrice", labelKo: "소비자단가" },
   { key: "supplyUnitPrice",   labelKo: "공급단가" },
   { key: "unitPrice",         labelKo: "단가" },
+  { key: "amount",            labelKo: "금액" },
   { key: "supplyAmount",      labelKo: "공급금액" },
   { key: "taxAmount",         labelKo: "세액" },
-  { key: "amount",            labelKo: "금액" },
   { key: "totalAmount",       labelKo: "합계금액" },
   { key: "manufacturer",      labelKo: "제조사" },
   { key: "insuranceCode",     labelKo: "보험No" },
@@ -106,7 +107,31 @@ export function hasMeaningfulTableValue(
   rows: Record<string, unknown>[],
   key: string,
 ): boolean {
-  return rows.some((row) => !isMeaninglessTableValue(normalizeTableCell(row[key])));
+  return rows.some((row) => !isMeaninglessTableValue(readDisplayTableCell(row, key)));
+}
+
+function readSafeNestedScalar(record: unknown, key: string): string {
+  if (!record || typeof record !== "object" || Array.isArray(record)) return "";
+  const value = (record as Record<string, unknown>)[key];
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    return normalizeTableCell(value);
+  }
+  return "";
+}
+
+export function readDisplayTableCell(row: Record<string, unknown>, key: string): string {
+  const direct = normalizeTableCell(row[key]);
+  if (!isMeaninglessTableValue(direct)) return direct;
+  const fromExtra = readSafeNestedScalar(row.tableExtraColumns, key);
+  if (!isMeaninglessTableValue(fromExtra)) return fromExtra;
+  const sourceRowMeta = row.sourceRowMeta;
+  if (sourceRowMeta && typeof sourceRowMeta === "object" && !Array.isArray(sourceRowMeta)) {
+    const fromMetaExtra = readSafeNestedScalar((sourceRowMeta as Record<string, unknown>).tableExtraColumns, key);
+    if (!isMeaninglessTableValue(fromMetaExtra)) return fromMetaExtra;
+  }
+  const fromMeta = readSafeNestedScalar(row.sourceRowMeta, key);
+  if (!isMeaninglessTableValue(fromMeta)) return fromMeta;
+  return direct;
 }
 
 // ── UI-PREVIEW-ROWINDEX-1: rowIndex 표시 정책 ────────────────────────────────
@@ -270,6 +295,13 @@ export function buildInvoicePreviewCols(
       .filter((k) => !_SUMMARY_KEYS.has(k));
   }
 
+  // Row-level extras (for example tableExtraColumns.unit/taxAmount) are not
+  // part of the standard table row shape, but they are valid display evidence.
+  for (const col of INVOICE_TABLE_COL_PRIORITY) {
+    if (_SUMMARY_KEYS.has(col.key) || candidateKeys.includes(col.key)) continue;
+    if (hasMeaningfulTableValue(rows, col.key)) candidateKeys.push(col.key);
+  }
+
   // T-PREVIEW-LABEL-1: tableMeta.columnLabels 우선 사용 (원본 헤더 라벨)
   // 우선순위: columnLabels[key] → INVOICE_COL_LABEL_MAP[key] → key 자체
   const colLabels = tableMeta?.columnLabels as Record<string, string> | undefined;
@@ -281,6 +313,10 @@ export function buildInvoicePreviewCols(
   let cols = candidateKeys
     .filter((k) => hasMeaningfulTableValue(rows, k))
     .map((k) => ({ key: k, labelKo: resolveLabel(k) }));
+
+  if (cols.some((c) => c.key === "taxAmount")) {
+    cols = cols.map((c) => c.key === "amount" ? { ...c, labelKo: "공급가액" } : c);
+  }
 
   // ── 후처리 dedup ──
 
@@ -318,6 +354,23 @@ export function buildInvoicePreviewCols(
     if (_meaninglessOrDupRatio(rows, "serialNo", "lotNo") >= 0.95) {
       cols = cols.filter((c) => c.key !== "serialNo");
     }
+  }
+
+  if (cols.some((c) => c.key === "unit") && cols.some((c) => c.key === "taxAmount")) {
+    const preferred = ["itemName", "lotNo", "unit", "quantity", "unitPrice", "amount", "taxAmount"];
+    const byKey = new Map(cols.map((c) => [c.key, c]));
+    const used = new Set<string>();
+    const ordered: InvoiceDisplayCol[] = [];
+    for (const key of preferred) {
+      const col = byKey.get(key);
+      if (!col) continue;
+      used.add(key);
+      ordered.push({
+        ...col,
+        labelKo: key === "lotNo" ? "LOT" : key === "amount" ? "공급가액" : col.labelKo,
+      });
+    }
+    cols = [...ordered, ...cols.filter((c) => !used.has(c.key))];
   }
 
   // UI-PREVIEW-ROWINDEX-1: rowIndex prepend 정책

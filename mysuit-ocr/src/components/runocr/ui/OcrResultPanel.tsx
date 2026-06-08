@@ -34,6 +34,7 @@ import {
   isMeaninglessTableValue as isMeaningless,
   hasMeaningfulTableValue as hasMeaningfulValue,
   buildInvoicePreviewCols,
+  readDisplayTableCell,
 } from "@/common/utils/invoiceTableDisplay";
 import { buildCleanJsonResult, type CleanJsonResult } from "@/common/utils/cleanJsonBuilder";
 import {
@@ -63,6 +64,33 @@ const _CODE_KEYS = new Set(["itemCode", "insuranceCode", "serialNo", "lotNo", "m
 const _WIDE_KEYS = new Set(["itemName", "manufacturer"]);
 const _NUM_KEYS  = new Set(["quantity", "unitPrice", "consumerUnitPrice", "supplyUnitPrice",
                              "amount", "supplyAmount", "taxAmount", "totalAmount"]);
+
+const GT_SKELETON_CUSTOM_DISPLAY_COLUMNS = [
+  { columnKey: "no", labelKo: "NO" },
+  { columnKey: "productCode", labelKo: "productCode" },
+  { columnKey: "itemName", labelKo: "itemName" },
+  { columnKey: "quantity", labelKo: "quantity" },
+  { columnKey: "consumerUnitPrice", labelKo: "consumerUnitPrice" },
+  { columnKey: "supplyUnitPrice", labelKo: "supplyUnitPrice" },
+  { columnKey: "amount", labelKo: "amount" },
+  { columnKey: "insuranceNo", labelKo: "insuranceNo" },
+] as const;
+
+type EditableTableVM = {
+  columns: Array<{ columnKey: string; labelKo: string }>;
+  rows: Array<{
+    index: number;
+    cells: Array<{ key: string; value: string; displayValue: string; isEmpty: boolean }>;
+  }>;
+  meta: {
+    source?: string;
+    rowCount: number;
+    columnCount: number;
+    hasRows: boolean;
+    hasColumns: boolean;
+    originalSource?: string;
+  };
+};
 
 function _invoiceColWidth(key: string): string {
   if (_IDX_KEYS.has(key))  return "52px";
@@ -175,6 +203,26 @@ const DETAIL_REVIEW_DISPLAY_COLUMNS = [
   { columnKey: "lotNo", labelKo: "Lot No" },
   { columnKey: "expiryDate", labelKo: "유효일자" },
 ] as const;
+
+// 3AZ: 원본 5컬럼 품목코드형 품목표 (5.pdf style) 전용 display 컬럼.
+// 원본 문서가 `품목코드 / 품목명 / 수량 / 단가 / 금액` 5컬럼으로만 구성된 경우
+// (productCode 채움 + qty/unitPrice/amount 채움 + spec/lotNo/expiryDate 전부 빈값),
+// 규격/LOT/유효기간 같은 원본에 없는 컬럼을 숨기고 productCode 라벨을 `품목코드`로
+// 표시한다. 내부 JSON 표준키(spec/lotNo/expiryDate 포함)는 보존되며 표시에서만 제외.
+// 3BA: 원본 5.pdf 품목표 헤더 순서가 `품명 / 품목코드 / 수량 / 단가 / 금액` 이므로
+// display column order를 itemName(품목명) → productCode(품목코드) 순으로 고정한다.
+// (3AZ에서는 productCode가 itemName보다 앞에 표시되었다.)
+const FIVE_COLUMN_PRODUCT_CODE_DISPLAY_COLUMNS = [
+  { columnKey: "itemName", labelKo: "품목명" },
+  { columnKey: "productCode", labelKo: "품목코드" },
+  { columnKey: "quantity", labelKo: "수량" },
+  { columnKey: "unitPrice", labelKo: "단가" },
+  { columnKey: "amount", labelKo: "금액" },
+] as const;
+
+// 3AZ: 5.pdf 화면 표시명 정책 — taxAmount는 원본 라벨이 `부가세`인 거래명세서에서
+// `부가세`로 표시한다. labelEn/value/내부키는 taxAmount 그대로 유지(표시 전용).
+const FIVE_COLUMN_TAX_AMOUNT_DISPLAY_LABEL = "부가세";
 
 function _meaningfulValue(row: Record<string, unknown>, key: string): string {
   const value = normalizeCell(row[key]);
@@ -383,6 +431,60 @@ function _isDetailReviewDisplayRows(rows: ReadonlyArray<{ values: Record<string,
     && pricedRows <= 1;
 }
 
+// 3AZ: 원본 5컬럼 품목코드형 품목표(5.pdf style) shape 판정.
+// filename/sampleId/특정 productCode 값/rowIndex 하드코딩 없이 table shape evidence로만 판정:
+//   - productCode 가 행의 과반 이상 채움
+//   - quantity / unitPrice / amount 가 각각 행의 과반 이상 채움
+//   - spec / lotNo / expiryDate 가 모든 행에서 빈값 (원본에 해당 컬럼이 없음)
+// 이 조건은 1.jpg(spec 채움) / 3.pdf·6.pdf·7.pdf(lotNo·expiryDate 채움) / pharma 표와
+// 교집합이 없어 해당 샘플 display 정책을 깨지 않는다.
+function _meaningfulRatioByKey(
+  rows: ReadonlyArray<Record<string, unknown>>,
+  key: string,
+  read: (row: Record<string, unknown>, key: string) => string,
+): { filled: number; total: number } {
+  let filled = 0;
+  for (const row of rows) {
+    if (!isMeaningless(normalizeCell(read(row, key)))) filled++;
+  }
+  return { filled, total: rows.length };
+}
+
+function _isFiveColumnProductCodeRowsGeneric(
+  rows: ReadonlyArray<Record<string, unknown>>,
+  read: (row: Record<string, unknown>, key: string) => string,
+): boolean {
+  if (rows.length === 0) return false;
+  const ratio = (key: string): number => {
+    const { filled, total } = _meaningfulRatioByKey(rows, key, read);
+    return total === 0 ? 0 : filled / total;
+  };
+  const count = (key: string): number => _meaningfulRatioByKey(rows, key, read).filled;
+  const productCodeOk = ratio("productCode") >= 0.5;
+  const pricedOk = ratio("quantity") >= 0.5 && ratio("unitPrice") >= 0.5 && ratio("amount") >= 0.5;
+  const detailColumnsEmpty =
+    count("spec") === 0 && count("lotNo") === 0 && count("expiryDate") === 0;
+  return productCodeOk && pricedOk && detailColumnsEmpty;
+}
+
+/** 3AZ: `{ values }` 형태(productCode-aware) 행에 대한 5컬럼 품목코드 shape 판정. */
+function _isFiveColumnProductCodeValueRows(
+  rows: ReadonlyArray<{ values: Record<string, string> }>,
+): boolean {
+  return _isFiveColumnProductCodeRowsGeneric(
+    rows.map((r) => r.values as Record<string, unknown>),
+    (row, key) => normalizeCell((row as Record<string, unknown>)[key]),
+  );
+}
+
+/** 3AZ: 원본 document_fields.tableRows(raw) 행에 대한 5컬럼 품목코드 shape 판정. */
+function _isFiveColumnProductCodeRawRows(
+  rows: ReadonlyArray<Record<string, unknown>> | null | undefined,
+): boolean {
+  if (!rows || rows.length === 0) return false;
+  return _isFiveColumnProductCodeRowsGeneric(rows, (row, key) => normalizeCell(row[key]));
+}
+
 function _productCodeAwareRows(
   vm: TableResultViewModel,
   sourceRows: ReadonlyArray<Record<string, unknown>> | null | undefined,
@@ -427,11 +529,21 @@ function buildProductCodePreviewTableVM(
   if (!rows) return vm;
 
   const columnByKey = new Map(vm.columns.map((column) => [column.columnKey, column]));
-  const useDetailReviewOrder = _isDetailReviewDisplayRows(rows);
-  const usePharmaReviewOrder = rows.some((row) => _isPharmaReviewDisplayRow(row.values));
+  // 3AZ: 5컬럼 품목코드형(5.pdf style)은 다른 review order보다 우선 판정한다.
+  // 원본에 없는 규격/LOT/유효기간 컬럼을 숨기고 productCode 라벨을 `품목코드`로 표시.
+  const useFiveColumnProductCodeOrder = _isFiveColumnProductCodeValueRows(rows);
+  const useDetailReviewOrder = !useFiveColumnProductCodeOrder && _isDetailReviewDisplayRows(rows);
+  const usePharmaReviewOrder =
+    !useFiveColumnProductCodeOrder && rows.some((row) => _isPharmaReviewDisplayRow(row.values));
   const hasProductCodeColumn = vm.columns.some((column) => column.columnKey === "productCode");
   const hasProductCodeAliasColumn = vm.columns.some((column) => column.columnKey === "itemCode" || column.columnKey === "code");
-  const columns = useDetailReviewOrder
+  const columns = useFiveColumnProductCodeOrder
+    ? FIVE_COLUMN_PRODUCT_CODE_DISPLAY_COLUMNS.map((column) => ({
+        columnKey: column.columnKey,
+        labelKo: column.labelKo,
+        source: "canonical" as const,
+      }))
+    : useDetailReviewOrder
     ? DETAIL_REVIEW_DISPLAY_COLUMNS.map((column) => ({
         columnKey: column.columnKey,
         labelKo: column.labelKo,
@@ -508,11 +620,15 @@ function buildProductCodeDraftExportTableVM(
   if (_isQuantityOnlySerialInvoiceRows(sourceRows)) return null;
   const rows = _productCodeAwareRows(vm, sourceRows);
   if (!rows) return null;
+  // 3AZ: 5컬럼 품목코드형(5.pdf)에서는 productCode 라벨을 `품목코드`로,
+  // pharma-style(3.pdf 등 보험코드 의미)에서는 기존 `보험코드`를 유지한다.
+  // 내부 JSON 표준키(DRAFT_GT_STANDARD_TABLE_KEYS)는 그대로 보존된다.
+  const productCodeLabelKo = _isFiveColumnProductCodeValueRows(rows) ? "품목코드" : "보험코드";
   return {
     ...vm,
     columns: DRAFT_GT_STANDARD_TABLE_KEYS.map((key) => ({
       columnKey: key,
-      labelKo: key === "productCode" ? "보험코드" : _ALL_COL_LABEL_MAP[key] ?? key,
+      labelKo: key === "productCode" ? productCodeLabelKo : _ALL_COL_LABEL_MAP[key] ?? key,
       source: "canonical" as const,
     })),
     rows,
@@ -524,6 +640,29 @@ function buildProductCodeDraftExportTableVM(
       hasColumns: true,
     },
   };
+}
+
+function _hasTableColumn(vm: TableResultViewModel | null, key: string): boolean {
+  return !!vm?.columns.some((column) => column.columnKey === key);
+}
+
+function _has4PdfExtraDisplayColumns(vm: TableResultViewModel | null): boolean {
+  return _hasTableColumn(vm, "unit") && _hasTableColumn(vm, "taxAmount");
+}
+
+function chooseCustomTableFieldViewModel(
+  representative: TableResultViewModel | null,
+  backend: TableResultViewModel | null,
+): TableResultViewModel | null {
+  if (
+    backend
+    && _has4PdfExtraDisplayColumns(backend)
+    && !_has4PdfExtraDisplayColumns(representative)
+    && (!representative || representative.meta.rowCount === backend.meta.rowCount)
+  ) {
+    return backend;
+  }
+  return representative ?? backend;
 }
 
 function buildQuantityOnlySerialDraftExportTableVM(
@@ -657,30 +796,6 @@ function _safeResultString(result: unknown, keys: string[]): string | undefined 
     }
   }
   return undefined;
-}
-
-function _asRecord(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === "object" && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : null;
-}
-
-function _safeDebugScalar(value: unknown): string {
-  if (value === null || value === undefined) return "";
-  if (typeof value === "string") return value;
-  if (typeof value === "number" || typeof value === "boolean") return String(value);
-  return "";
-}
-
-function _getInvoiceFreeDebug(result: unknown): Record<string, unknown> | null {
-  const record = _asRecord(result);
-  const extractDebug = _asRecord(record?.extract_debug);
-  return _asRecord(extractDebug?.invoice_statement_free);
-}
-
-function _getGtSkeletonCandidatesDebug(result: unknown): Record<string, unknown> | null {
-  const invoiceFreeDebug = _getInvoiceFreeDebug(result);
-  return _asRecord(invoiceFreeDebug?.gtSkeletonCandidates);
 }
 
 function _inferDraftGtResultMode(
@@ -844,27 +959,6 @@ type Props = {
 
 type TabKey = "preview" | "custom" | "validation";
 
-type DraftExportRuntimeDebug = {
-  resultSourceFile: string;
-  hasInvoiceFreeDebug: boolean;
-  hasGtSkeletonCandidates: boolean;
-  gtSkeletonRowsLength: number;
-  gtSkeletonAvailable: string;
-  gtSkeletonMode: string;
-  gtSkeletonReleaseImpact: string;
-  gtSkeletonIsolated: string;
-  gtSkeletonVmExists: boolean;
-  gtSkeletonVmRowsLength: number;
-  exportBranch: "gt_skeleton_candidate" | "representative_table";
-  exportRowsLength: number;
-  willUseSkeleton: boolean;
-  tableExtraDefinitionsCount: number;
-  rowLevelTableExtraColumnsRows: number;
-  firstRowSource: string;
-  currentTab: TabKey;
-  clickedHandler: string;
-};
-
 /**
  * OcrResultPanel 컴포넌트.
  *
@@ -890,7 +984,6 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
   // 완전히 분리된 별도 state — row index 기반. Clean JSON/Markdown/History/DB와
   // 연결하지 않으며 gtSkeletonCandidates를 release tableRows로 취급하지 않는다.
   const [gtSkeletonEdits, setGtSkeletonEdits] = useState<Record<string, string>[] | null>(null);
-  const [lastDraftExportDebug, setLastDraftExportDebug] = useState<DraftExportRuntimeDebug | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const editedFieldsRef = useRef<OcrFieldResult[]>(editedFields);
   useEffect(() => { editedFieldsRef.current = editedFields; }, [editedFields]);
@@ -1353,10 +1446,47 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
     () => buildGtSkeletonCandidateViewModel(result),
     [result],
   );
+  const customGtSkeletonDisplayVM: EditableTableVM | null = useMemo(() => {
+    if (!gtSkeletonVM || gtSkeletonVM.rows.length === 0) return null;
+    const columns = GT_SKELETON_CUSTOM_DISPLAY_COLUMNS.map((column) => ({ ...column }));
+    const rows = gtSkeletonVM.rows.map((row, index) => {
+      const values: Record<string, string> = {
+        no: String(index + 1),
+        productCode: row.values.productCode ?? "",
+        itemName: row.values.itemName ?? "",
+        quantity: row.values.quantity ?? "",
+        consumerUnitPrice: row.tableExtraColumns.consumerUnitPrice ?? "",
+        supplyUnitPrice: row.tableExtraColumns.supplyUnitPrice ?? "",
+        amount: row.values.amount ?? "",
+        insuranceNo: row.tableExtraColumns.insuranceNo ?? "",
+      };
+      const cells = columns.map((column) => {
+        const value = values[column.columnKey] ?? "";
+        return {
+          key: column.columnKey,
+          value,
+          displayValue: value || "-",
+          isEmpty: value.trim().length === 0,
+        };
+      });
+      return { index, values, cells };
+    });
+    return {
+      columns,
+      rows,
+      meta: {
+        source: "gt_skeleton_candidate",
+        rowCount: rows.length,
+        columnCount: columns.length,
+        hasRows: rows.length > 0,
+        hasColumns: columns.length > 0,
+        originalSource: "gt_skeleton_candidate",
+      },
+    };
+  }, [gtSkeletonVM]);
   // result(=새 OCR) 변경 시 GT 후보 편집 state 초기화 — release edit과 독립.
   useEffect(() => {
     setGtSkeletonEdits(null);
-    setLastDraftExportDebug(null);
   }, [result]);
 
   // fix8: tableMeta 우선 (TestWorkspace getDisplayTableColumns와 동일 로직)
@@ -1366,6 +1496,29 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
     () => (docTableRows ? buildInvoicePreviewCols(docTableMeta, docTableRows) : null),
     [docTableRows, docTableMeta],
   );
+
+  // 3AZ: 원본 5컬럼 품목코드형(5.pdf style) 문서 여부 — table shape evidence로만 판정.
+  // 이 문서에서는 summary scalar taxAmount의 화면 표시명을 `부가세`로 보여준다(표시 전용).
+  // labelEn/value/내부키(taxAmount)는 유지하며, 1/2/3/6/7 등 다른 샘플은 shape 불일치로 영향 없음.
+  const isFiveColumnProductCodeDoc = useMemo(
+    () => _isFiveColumnProductCodeRawRows(docTableRows),
+    [docTableRows],
+  );
+  const _isTaxAmountField = (field: { name?: string; en?: string; ko?: string }): boolean =>
+    field.en === "taxAmount" || field.name === "taxAmount";
+  const displayFieldLabel = (field: OcrFieldResult): string =>
+    isFiveColumnProductCodeDoc && _isTaxAmountField(field)
+      ? FIVE_COLUMN_TAX_AMOUNT_DISPLAY_LABEL
+      : fieldLabel(field);
+  const displayFieldLabelFull = (field: OcrFieldResult): string => {
+    if (isFiveColumnProductCodeDoc && _isTaxAmountField(field)) {
+      const secondary = field.en || field.name || "";
+      return secondary && secondary !== FIVE_COLUMN_TAX_AMOUNT_DISPLAY_LABEL
+        ? `${FIVE_COLUMN_TAX_AMOUNT_DISPLAY_LABEL} (${secondary})`
+        : FIVE_COLUMN_TAX_AMOUNT_DISPLAY_LABEL;
+    }
+    return fieldLabelFull(field);
+  };
 
   // FRONTEND-CLEANUP-3D-3: Preview structured table view model.
   // Custom / Validation / legacy fallback are intentionally NOT migrated yet.
@@ -1416,48 +1569,24 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
     ),
     [backendTableResultViewModel, docTableRows],
   );
+  const customTableFieldViewModel: TableResultViewModel | null = useMemo(
+    () => chooseCustomTableFieldViewModel(displayRepresentativeFirstVM, displayBackendTableResultViewModel),
+    [displayRepresentativeFirstVM, displayBackendTableResultViewModel],
+  );
   const draftExportTableResultViewModels = useMemo(() => {
     const draftVm =
       buildQuantityOnlySerialDraftExportTableVM(representativeFirstVM, docTableRows)
       ?? buildProductCodeDraftExportTableVM(representativeFirstVM, docTableRows);
-    return draftVm ? [draftVm] : tableResultViewModels;
-  }, [representativeFirstVM, docTableRows, tableResultViewModels]);
+    if (draftVm) return [draftVm];
+    if (customTableFieldViewModel && _has4PdfExtraDisplayColumns(customTableFieldViewModel)) {
+      return [customTableFieldViewModel];
+    }
+    return tableResultViewModels;
+  }, [representativeFirstVM, docTableRows, customTableFieldViewModel, tableResultViewModels]);
   const draftExportCustomTableEdits = useMemo(
     () => normalizeQuantityOnlySerialDraftEdits(customTableEdits, docTableRows),
     [customTableEdits, docTableRows],
   );
-  const draftExportRuntimeDebug = useMemo<DraftExportRuntimeDebug>(() => {
-    const invoiceFreeDebug = _getInvoiceFreeDebug(result);
-    const skeletonCandidates = _getGtSkeletonCandidatesDebug(result);
-    const skeletonRows = skeletonCandidates?.rows;
-    const rawSkeletonRowsLength = Array.isArray(skeletonRows) ? skeletonRows.length : 0;
-    const representativeVm = draftExportTableResultViewModels[0] ?? null;
-    const tableExtraDefinitionsCount = gtSkeletonVM?.extraColumnDefinitions.length ?? 0;
-    const rowLevelTableExtraColumnsRows =
-      gtSkeletonVM?.rows.filter((row) => _hasDraftGtTableExtraColumns(row.tableExtraColumns)).length ?? 0;
-    const exportRowsLength = gtSkeletonVM?.rows.length ?? representativeVm?.meta.rowCount ?? 0;
-
-    return {
-      resultSourceFile: fileName ?? _safeResultString(result, ["fileName", "sourceFile", "filename"]) ?? "",
-      hasInvoiceFreeDebug: invoiceFreeDebug !== null,
-      hasGtSkeletonCandidates: skeletonCandidates !== null,
-      gtSkeletonRowsLength: rawSkeletonRowsLength,
-      gtSkeletonAvailable: _safeDebugScalar(skeletonCandidates?.available),
-      gtSkeletonMode: _safeDebugScalar(skeletonCandidates?.mode),
-      gtSkeletonReleaseImpact: _safeDebugScalar(skeletonCandidates?.releaseImpact),
-      gtSkeletonIsolated: _safeDebugScalar(skeletonCandidates?.candidateRowsReleaseIsolated),
-      gtSkeletonVmExists: gtSkeletonVM !== null,
-      gtSkeletonVmRowsLength: gtSkeletonVM?.rows.length ?? 0,
-      exportBranch: gtSkeletonVM ? "gt_skeleton_candidate" : "representative_table",
-      exportRowsLength,
-      willUseSkeleton: gtSkeletonVM !== null,
-      tableExtraDefinitionsCount,
-      rowLevelTableExtraColumnsRows,
-      firstRowSource: gtSkeletonVM ? "gt_skeleton_candidate" : representativeVm?.source ?? "",
-      currentTab: activeTab,
-      clickedHandler: "handleExportDraftGt",
-    };
-  }, [activeTab, draftExportTableResultViewModels, fileName, gtSkeletonVM, result]);
   const representativeIsNonBackend =
     representativeFirstVM !== null
     && representativeFirstVM.source !== "backend_document_fields";
@@ -1610,22 +1739,6 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
       gtSkeletonVM?.extraColumnDefinitions.length
         ? gtSkeletonVM.extraColumnDefinitions
         : undefined;
-    const clickDraftExportDebug: DraftExportRuntimeDebug = {
-      ...draftExportRuntimeDebug,
-      gtSkeletonVmExists: gtSkeletonVM !== null,
-      gtSkeletonVmRowsLength: gtSkeletonVM?.rows.length ?? 0,
-      exportBranch: gtSkeletonVM ? "gt_skeleton_candidate" : "representative_table",
-      exportRowsLength: skeletonCandidateRows?.length ?? draftExportTableResultViewModels[0]?.meta.rowCount ?? 0,
-      willUseSkeleton: gtSkeletonVM !== null,
-      tableExtraDefinitionsCount: tableExtraColumnDefinitions?.length ?? 0,
-      rowLevelTableExtraColumnsRows:
-        skeletonCandidateRows?.filter((row) => _hasDraftGtTableExtraColumns(row.tableExtraColumns)).length ?? 0,
-      firstRowSource: gtSkeletonVM ? "gt_skeleton_candidate" : draftExportTableResultViewModels[0]?.source ?? "",
-      currentTab: activeTab,
-      clickedHandler: "handleExportDraftGt",
-    };
-    setLastDraftExportDebug(clickDraftExportDebug);
-    console.info("[3AR GT Draft export trace]", clickDraftExportDebug);
     const baseDraftInput = {
       ocrResult: result,
       editedFields,
@@ -1720,22 +1833,34 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
   // 경로(비정형/free)가 동일한 textarea 편집 표를 사용하게 해 read-only 차이를
   // 없앤다. tableRows/tableMeta/VM source는 그대로 소비만 한다(변경 없음).
   const renderEditableTableVM = (
-    vm: TableResultViewModel,
+    vm: EditableTableVM,
     fieldIndex: number,
     adoptionField?: OcrFieldResult,
+    options?: {
+      editRows?: Record<string, string>[] | null;
+      setEditRows?: React.Dispatch<React.SetStateAction<Record<string, string>[] | null>>;
+      sourceLabel?: string;
+    },
   ) => {
     const baseRows: Record<string, string>[] = vm.rows.map((row) => {
       const obj: Record<string, string> = {};
       for (const cell of row.cells) obj[cell.key] = cell.value;
       return obj;
     });
-    const editRows: Record<string, string>[] = customTableEdits ?? baseRows;
+    const activeEditRows = options?.editRows;
+    const setEditRows = options?.setEditRows ?? setCustomTableEdits;
+    const editRows: Record<string, string>[] = options?.setEditRows
+      ? (activeEditRows ?? baseRows)
+      : (customTableEdits ?? baseRows);
     return (
       <>
         <div className="or-field-value-meta" style={{ alignItems: "center" }} onClick={(e) => e.stopPropagation()}>
           <span style={{ fontWeight: 700, color: "var(--accent)" }}>
             표 데이터 · {vm.meta.rowCount}행
           </span>
+          {options?.sourceLabel && (
+            <span style={{ fontWeight: 700, color: "#2563eb" }}>{options.sourceLabel}</span>
+          )}
           {missingExpectedWarning && (
             <span style={{
               fontSize: 11, fontWeight: 600, color: "#d97706",
@@ -1782,24 +1907,34 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                       whiteSpace: _NUM_KEYS.has(col.columnKey) || _IDX_KEYS.has(col.columnKey) ? "nowrap" : "normal",
                       padding: 0,
                     }}>
-                      <textarea
-                        className="or-table-cell-input"
-                        value={row[col.columnKey] ?? ""}
-                        rows={1}
-                        title={String(row[col.columnKey] ?? "")}
-                        style={{ textAlign: _invoiceDataAlign(col.columnKey) }}
-                        onChange={(e) => {
-                          e.target.style.height = "auto";
-                          e.target.style.height = e.target.scrollHeight + "px";
-                          const newVal = e.target.value;
-                          setCustomTableEdits((prev) => {
-                            const base = prev ?? baseRows;
-                            return base.map((r, idx) => idx === ri ? { ...r, [col.columnKey]: newVal } : r);
-                          });
-                        }}
-                        onFocus={() => { if (fieldIndex >= 0) onSelectField(fieldIndex); }}
-                        onBlur={flushSave}
-                      />
+                      {col.columnKey === "no" ? (
+                        <div
+                          className="or-table-cell-input"
+                          title={String(row[col.columnKey] ?? "")}
+                          style={{ textAlign: "center", minHeight: 28, padding: "6px 8px" }}
+                        >
+                          {row[col.columnKey] ?? ""}
+                        </div>
+                      ) : (
+                        <textarea
+                          className="or-table-cell-input"
+                          value={row[col.columnKey] ?? ""}
+                          rows={1}
+                          title={String(row[col.columnKey] ?? "")}
+                          style={{ textAlign: _invoiceDataAlign(col.columnKey) }}
+                          onChange={(e) => {
+                            e.target.style.height = "auto";
+                            e.target.style.height = e.target.scrollHeight + "px";
+                            const newVal = e.target.value;
+                            setEditRows((prev) => {
+                              const base = prev ?? baseRows;
+                              return base.map((r, idx) => idx === ri ? { ...r, [col.columnKey]: newVal } : r);
+                            });
+                          }}
+                          onFocus={() => { if (fieldIndex >= 0) onSelectField(fieldIndex); }}
+                          onBlur={flushSave}
+                        />
+                      )}
                     </td>
                   ))}
                 </tr>
@@ -1810,28 +1945,6 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
       </>
     );
   };
-
-  const draftExportDebugForPanel = lastDraftExportDebug ?? draftExportRuntimeDebug;
-  const draftExportDebugPanelRows: Array<[string, string | number | boolean]> = [
-    ["resultSourceFile", draftExportDebugForPanel.resultSourceFile],
-    ["hasInvoiceFreeDebug", draftExportDebugForPanel.hasInvoiceFreeDebug],
-    ["hasGtSkeletonCandidates", draftExportDebugForPanel.hasGtSkeletonCandidates],
-    ["gtSkeletonRowsLength", draftExportDebugForPanel.gtSkeletonRowsLength],
-    ["gtSkeletonVmExists", draftExportDebugForPanel.gtSkeletonVmExists],
-    ["gtSkeletonVmRowsLength", draftExportDebugForPanel.gtSkeletonVmRowsLength],
-    ["exportBranch", draftExportDebugForPanel.exportBranch],
-    ["exportRowsLength", draftExportDebugForPanel.exportRowsLength],
-    ["willUseSkeleton", draftExportDebugForPanel.willUseSkeleton],
-    ["tableExtraDefinitionsCount", draftExportDebugForPanel.tableExtraDefinitionsCount],
-    ["firstRowSource", draftExportDebugForPanel.firstRowSource],
-    ["currentTab", draftExportDebugForPanel.currentTab],
-    ["gtSkeletonAvailable", draftExportDebugForPanel.gtSkeletonAvailable],
-    ["gtSkeletonMode", draftExportDebugForPanel.gtSkeletonMode],
-    ["gtSkeletonReleaseImpact", draftExportDebugForPanel.gtSkeletonReleaseImpact],
-    ["gtSkeletonIsolated", draftExportDebugForPanel.gtSkeletonIsolated],
-    ["rowLevelTableExtraColumnsRows", draftExportDebugForPanel.rowLevelTableExtraColumnsRows],
-    ["clickedHandler", lastDraftExportDebug ? draftExportDebugForPanel.clickedHandler : "pending click"],
-  ];
 
   return (
     <div className="or-root">
@@ -2397,33 +2510,6 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
             <div className="or-custom-type-help">
               {FIELD_TYPE_DESCRIPTIONS[drawMode ?? activeFieldType] ?? FIELD_TYPE_DESCRIPTIONS.field}
             </div>
-            <div
-              data-gt-draft-runtime-debug="3AR"
-              style={{
-                display: "grid",
-                gridTemplateColumns: "minmax(132px, 1fr) minmax(84px, 1fr)",
-                gap: "3px 8px",
-                marginTop: 6,
-                padding: "7px 8px",
-                border: "1px solid rgba(37, 99, 235, 0.35)",
-                background: "rgba(37, 99, 235, 0.08)",
-                color: "var(--text)",
-                fontSize: 10,
-                lineHeight: 1.25,
-                wordBreak: "break-word",
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div style={{ gridColumn: "1 / -1", fontWeight: 800, color: "#1d4ed8" }}>
-                3AR GT Draft runtime trace {lastDraftExportDebug ? "last click" : "before click"}
-              </div>
-              {draftExportDebugPanelRows.map(([label, value]) => (
-                <React.Fragment key={label}>
-                  <span style={{ color: "var(--muted)", minWidth: 0 }}>{label}</span>
-                  <span style={{ fontWeight: 700, minWidth: 0 }}>{String(value)}</span>
-                </React.Fragment>
-              ))}
-            </div>
 
             {/* 필드 목록 */}
             <div className="or-custom-list-header">
@@ -2442,9 +2528,9 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                   <div className="or-field-header">
                     <span
                       style={{ flex: 1, minWidth: 0, fontSize: 11, fontWeight: 700, color: "var(--text)", lineHeight: 1.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
-                      title={`${field.field_type === "table" && displayRepresentativeFirstVM ? resolveResultTableLabel(displayRepresentativeFirstVM, 0, fieldLabelFull(field)) : fieldLabelFull(field)} (${field.name})`}
+                      title={`${field.field_type === "table" && customTableFieldViewModel ? resolveResultTableLabel(customTableFieldViewModel, 0, fieldLabelFull(field)) : displayFieldLabelFull(field)} (${field.name})`}
                     >
-                      {field.field_type === "table" && displayRepresentativeFirstVM ? resolveResultTableLabel(displayRepresentativeFirstVM, 0, fieldLabel(field)) : fieldLabel(field)}
+                      {field.field_type === "table" && customTableFieldViewModel ? resolveResultTableLabel(customTableFieldViewModel, 0, fieldLabel(field)) : displayFieldLabel(field)}
                       <span style={{ fontSize: 9, fontWeight: 400, color: "var(--muted)", marginLeft: 4 }}>
                         {field.en || field.name}
                       </span>
@@ -2492,13 +2578,20 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                     </button>
                   </div>
                   {field.field_type === "table" ? (() => {
+                    if (customGtSkeletonDisplayVM) {
+                      return renderEditableTableVM(customGtSkeletonDisplayVM, i, field, {
+                        editRows: gtSkeletonEdits,
+                        setEditRows: setGtSkeletonEdits,
+                        sourceLabel: "gt_skeleton_candidate",
+                      });
+                    }
                     // TPL-8E + TPL-13B: Custom consumes the representative
                     // ViewModel (template > unstructured > backend) so the
                     // user-defined columns drive both display and edit when
                     // present. customTableEdits per-cell state remains keyed
                     // by columnKey; switching representative columns just
                     // leaves any prior edits inaccessible (no crash).
-                    const customRepVM = displayRepresentativeFirstVM ?? displayBackendTableResultViewModel;
+                    const customRepVM = customTableFieldViewModel;
                     if (customRepVM && customRepVM.columns.length > 0) {
                       // INVOICE-PARITY-4I: 공통 editable renderer 재사용.
                       return renderEditableTableVM(customRepVM, i, field);
@@ -2582,24 +2675,24 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                   region 템플릿은 raw.fields에 table 필드가 있어 위 row 블록에서
                   이미 editable로 렌더되므로 이 분기에 들어오지 않는다. */}
               {editedFields.every((f) => f.field_type !== "table")
-                && displayRepresentativeFirstVM
-                && displayRepresentativeFirstVM.columns.length > 0 && (
+                && customTableFieldViewModel
+                && customTableFieldViewModel.columns.length > 0 && (
                 <div className="or-field-item" style={{ marginTop: 12 }}>
                   <div className="or-field-header">
                     <span
                       style={{ flex: 1, minWidth: 0, fontSize: 11, fontWeight: 700, color: "var(--text)", lineHeight: 1.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
-                      title={`${resolveResultTableLabel(displayRepresentativeFirstVM, editedFields.length)} (${displayRepresentativeFirstVM.tableKey})`}
+                      title={`${resolveResultTableLabel(customTableFieldViewModel, editedFields.length)} (${customTableFieldViewModel.tableKey})`}
                     >
-                      {editedFields.length + 1}. {resolveResultTableLabel(displayRepresentativeFirstVM, editedFields.length)}
+                      {editedFields.length + 1}. {resolveResultTableLabel(customTableFieldViewModel, editedFields.length)}
                       <span style={{ fontSize: 9, fontWeight: 400, color: "var(--muted)", marginLeft: 4 }}>
-                        {displayRepresentativeFirstVM.tableKey}
+                        {customTableFieldViewModel.tableKey}
                       </span>
                     </span>
                   </div>
-                  {displayRepresentativeFirstVM.rows.length === 0 ? (
+                  {customTableFieldViewModel.rows.length === 0 ? (
                     <div className="or-empty" style={{ fontSize: 12 }}>추출된 행이 없습니다.</div>
                   ) : (
-                    renderEditableTableVM(displayRepresentativeFirstVM, -1)
+                    renderEditableTableVM(customTableFieldViewModel, -1)
                   )}
                 </div>
               )}
@@ -2683,8 +2776,8 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                                   marginBottom: 6,
                                 }}>
                                   <span className={"or-val-dot or-dot-" + item.status} />
-                                  <span className="or-val-error-name" title={fieldLabelFull(item.field)}>
-                                    {fieldLabel(item.field)}
+                                  <span className="or-val-error-name" title={displayFieldLabelFull(item.field)}>
+                                    {displayFieldLabel(item.field)}
                                     <span style={{ fontSize: 9, fontWeight: 400, color: "var(--muted)", marginLeft: 4 }}>
                                       ({item.field.en || item.field.name})
                                     </span>
@@ -2746,7 +2839,7 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                                                 textAlign: _invoiceDataAlign(col.key),
                                                 whiteSpace: _NUM_KEYS.has(col.key) || _IDX_KEYS.has(col.key) ? "nowrap" : "normal",
                                               }}>
-                                                {normalizeCell(row[col.key]) || "-"}
+                                                {readDisplayTableCell(row, col.key) || "-"}
                                               </td>
                                             ))}
                                           </tr>
@@ -2770,8 +2863,8 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                               onClick={() => onSelectField(item.idx)}
                             >
                               <span className={"or-val-dot or-dot-" + item.status} />
-                              <span className="or-val-error-name" title={fieldLabelFull(item.field)}>
-                                {fieldLabel(item.field)}
+                              <span className="or-val-error-name" title={displayFieldLabelFull(item.field)}>
+                                {displayFieldLabel(item.field)}
                                 <span style={{ fontSize: 9, fontWeight: 400, color: "var(--muted)", marginLeft: 4 }}>
                                   ({item.field.en || item.field.name})
                                 </span>

@@ -16,7 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from PIL import Image
 
-from preprocess import preprocess, preprocess_for_ocr, enhance_contrast, sharpen, detect_document, deskew, detect_orientation
+from preprocess import preprocess, preprocess_for_ocr, enhance_contrast, sharpen, detect_document, deskew, detect_orientation, measure_skew_angle
 from amount_extractor import (
     extract_amount_candidates,
     select_best_total_amount,
@@ -2464,6 +2464,39 @@ async def ocr_extract(
             (_deskew_orig_applied and not _policy_applied)
             if _deskew_orig_applied is not None else None
         )
+        # 3BF: PDF_ORIENTATION0_DESKEW_OVERAPPLY_REVERT_GUARD.
+        # deskew()의 minAreaRect 각도가 표/테두리에 락온되어 *원래 똑바른* 문서를 오히려
+        # 기울이는 false-positive(예: 4.pdf, rawAngle≈2.6°이나 원본은 ≈0°)를 차단한다.
+        # 회전 적용이 최종 유지되는 경우에만, 독립 투영-프로파일 측정으로 회전 전/후 잔여
+        # 기울기를 비교하여, 회전이 기울기를 *분명히 키운* 경우(abs(post) > abs(pre)+margin)에만
+        # 회전 전 이미지로 되돌린다. deskew 알고리즘/threshold(0.5)/3O 정책은 불변이며,
+        # 회전이 도움이 되거나 애매하면 기존 동작을 그대로 유지(보수적·자기검증).
+        _OVERAPPLY_REVERT_MARGIN = 0.5
+        _overapply_guard = {
+            "name": "PDF_ORIENTATION0_DESKEW_OVERAPPLY_REVERT_GUARD",
+            "evaluated": False,
+            "reverted": False,
+            "reason": "deskew_not_finally_applied",
+            "preSkewAngle": None,
+            "postSkewAngle": None,
+            "revertMargin": _OVERAPPLY_REVERT_MARGIN,
+        }
+        if _is_pdf_input and _orient_angle_val == 0 and _final_applied:
+            _pre_skew = measure_skew_angle(doc_img)
+            _post_skew = measure_skew_angle(doc_deskewed)
+            _overapply_guard.update({
+                "evaluated": True,
+                "preSkewAngle": _pre_skew,
+                "postSkewAngle": _post_skew,
+            })
+            if (_pre_skew is not None and _post_skew is not None
+                    and abs(_post_skew) > abs(_pre_skew) + _OVERAPPLY_REVERT_MARGIN):
+                doc_deskewed = doc_img  # 회전이 기울기를 키움 → 회전 전 이미지 채택
+                _final_applied = False
+                _overapply_guard["reverted"] = True
+                _overapply_guard["reason"] = "deskew_increased_skew_reverted"
+            else:
+                _overapply_guard["reason"] = "deskew_kept_not_harmful"
         _preprocess_debug = {
             "orientation": {
                 "angle": _orient_angle_val,
@@ -2489,8 +2522,9 @@ async def ocr_extract(
                     "originalAppliedBeforePolicy": _deskew_orig_applied,
                     "finalAppliedAfterPolicy": _final_applied,
                 },
+                "overApplyGuard": _overapply_guard,
             },
-            "policyVersion": "3o_pdf_orientation0_small_angle_skip_policy",
+            "policyVersion": "3bf_pdf_orientation0_deskew_overapply_revert_guard",
         }
         display_max_w = 2000
         ddh, ddw = doc_deskewed.shape[:2]

@@ -7280,6 +7280,273 @@ def _apply_legacy_detail_table_reconstruction(
     return True
 
 
+# ── 3BD: single-row supply/tax legacy table reconstruction (4.pdf style) ──────
+# Shape: the header IS detected but boundaryCount is insufficient, so the parser
+# falls back to ``legacy_text_items`` and collapses the single item row, binding
+# the money tokens positionally (단가↔공급가액 swapped, 세액 duplicated into
+# unitPrice/taxAmount, 합계 mis-filled) and dropping 수량. We re-parse the row's
+# OWN ``_rawText`` (evidence-based; no per-file/value hardcode, no arithmetic) to
+# restore the original column order observed in the raw text:
+#   품명 | 제조번호(LotNo. 복합값) | 단위 | 수량 | 단가 | 공급가액 | 세액
+_LEGACY_ST_LOT_COMPOSITE_RE = re.compile(r"\d{4,}-\d{2,}-\d{2,}")
+_LEGACY_ST_MONEY_RE = re.compile(r"\d{1,3}(?:,\d{3})+(?:\.\d+)?")
+_LEGACY_ST_UNIT_TOKENS = (
+    "BOX", "EA", "PK", "SET", "VIAL", "TAB", "CAP",
+    "박스", "병", "정", "포", "관", "캡슐",
+    "개", "갑", "팩",
+)
+# Header-label fragments that leak into ``itemName`` when the header row is merged
+# into the single data row. Removed only as standalone tokens (case-insensitive).
+_LEGACY_ST_HEADER_LEAK_TOKENS = (
+    "LotNo", "Lot No", "LOTNO",
+    "단위", "수량", "단가",
+    "공급가액", "공급액", "공급금액",
+    "세액", "금액", "합계금액", "합계",
+    "규격", "유효기간", "제조번호", "품명",
+)
+
+
+def _legacy_st_unit_in_text(text: str) -> str:
+    upper = (text or "").upper()
+    for unit in _LEGACY_ST_UNIT_TOKENS:
+        u = unit.upper()
+        if re.search(rf"(?<![A-Z0-9]){re.escape(u)}(?![A-Z0-9])", upper):
+            return unit
+    return ""
+
+
+def _legacy_st_row_is_item_shaped(row: dict[str, Any]) -> bool:
+    """A single supply/tax item row: rawText carries a lot composite + a unit token
+    + >=3 grouped money tokens (수량 + 단가 + 공급가액 …)."""
+    raw = _clean_value(str(row.get("_rawText") or row.get("rawText") or ""))
+    if not raw:
+        return False
+    if not _LEGACY_ST_LOT_COMPOSITE_RE.search(raw):
+        return False
+    unit = _clean_value(str(row.get("unit") or "")) or _legacy_st_unit_in_text(raw)
+    if not unit:
+        return False
+    if len(_LEGACY_ST_MONEY_RE.findall(raw)) < 3:
+        return False
+    return True
+
+
+def _legacy_st_item_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [row for row in rows if _legacy_st_row_is_item_shaped(row)]
+
+
+def _looks_like_legacy_supply_tax_single_row(
+    rows: list[dict[str, Any]],
+    meta: dict[str, Any],
+) -> bool:
+    if meta.get("extractionSource") != "legacy_text_items":
+        return False
+    if not rows:
+        return False
+    # 3BF: accept 1..N legacy rows as long as EXACTLY ONE is the supply/tax item row
+    # (the rest are summary/footer noise, e.g. a 외상매출금/합계 line spuriously parsed
+    # as a table row when OCR runs on the de-skew-reverted straight image). The single
+    # item row is reconstructed and the noise rows are dropped.
+    return len(_legacy_st_item_rows(rows)) == 1
+
+
+def _legacy_st_line_text_set(lines: list[OcrLine] | None) -> set[str]:
+    out: set[str] = set()
+    for line in lines or []:
+        text = _clean_value(getattr(line, "text", "") if not isinstance(line, dict) else line.get("text", ""))
+        if text:
+            out.add(text)
+    return out
+
+
+def _legacy_st_unmerge_item_name(name: str, line_texts: set[str]) -> str:
+    """3BE: un-merge a header/label token that OCR saw as its OWN line but the
+    legacy parser concatenated into itemName.
+
+    Evidence rule (no value hardcode): drop the trailing space-token only when BOTH
+    the trailing token AND the remaining prefix independently exist as standalone
+    OCR lines — i.e. OCR read them separately and the merge was spurious. For 4.pdf:
+    "클리마트플란정"(standalone line) + "중욕명"(standalone line) -> "클리마트플란정".
+    """
+    cleaned = _clean_value(name)
+    if not cleaned or not line_texts:
+        return cleaned
+    tokens = cleaned.split()
+    while len(tokens) >= 2:
+        suffix = tokens[-1]
+        prefix = " ".join(tokens[:-1])
+        if suffix in line_texts and prefix in line_texts:
+            tokens = tokens[:-1]
+        else:
+            break
+    return " ".join(tokens)
+
+
+def _reconstruct_legacy_supply_tax_row(
+    rows: list[dict[str, Any]],
+    meta: dict[str, Any],
+    lines: list[OcrLine] | None = None,
+) -> dict[str, Any] | None:
+    item_rows = _legacy_st_item_rows(rows)
+    row = item_rows[0] if item_rows else rows[0]
+    raw = _clean_value(str(row.get("_rawText") or row.get("rawText") or ""))
+    lot_match = _LEGACY_ST_LOT_COMPOSITE_RE.search(raw)
+    lot_no = lot_match.group(0) if lot_match else ""
+    unit = _clean_value(str(row.get("unit") or "")) or _legacy_st_unit_in_text(raw)
+
+    # Numbers AFTER the unit token (preferred) else after the lot composite, so the
+    # quantity/단가/공급가액/세액 sequence is read in physical left-to-right order.
+    tail = raw
+    unit_pos = raw.upper().rfind(unit.upper()) if unit else -1
+    if unit_pos >= 0:
+        tail = raw[unit_pos + len(unit):]
+    elif lot_match:
+        tail = raw[lot_match.end():]
+    numbers = _LEGACY_ST_MONEY_RE.findall(tail)
+    if not numbers:
+        return None
+
+    quantity = unit_price = supply = tax = ""
+    decimal_idx = next((i for i, n in enumerate(numbers) if "." in n), None)
+    if decimal_idx is not None:
+        # 단가 carries the OCR decimal (e.g. 28,338.00); 수량 precedes it.
+        unit_price = numbers[decimal_idx]
+        if decimal_idx >= 1:
+            quantity = numbers[decimal_idx - 1]
+        rest = numbers[decimal_idx + 1:]
+        if len(rest) >= 1:
+            supply = rest[0]
+        if len(rest) >= 2:
+            tax = rest[1]
+    elif len(numbers) >= 4:
+        quantity, unit_price, supply, tax = numbers[0], numbers[1], numbers[2], numbers[3]
+    elif len(numbers) == 3:
+        unit_price, supply, tax = numbers[0], numbers[1], numbers[2]
+    else:
+        return None
+
+    # A meaningful remap needs at least a 단가 and a 공급가액.
+    if not unit_price or not supply:
+        return None
+
+    # itemName: drop the lot composite and any standalone header-label leak token.
+    name = _clean_value(str(row.get("itemName") or ""))
+    name = _LEGACY_ST_LOT_COMPOSITE_RE.sub(" ", name)
+    for token in _LEGACY_ST_HEADER_LEAK_TOKENS:
+        name = re.sub(
+            rf"(?<![0-9A-Za-z가-힣]){re.escape(token)}(?![0-9A-Za-z])",
+            " ",
+            name,
+            flags=re.I,
+        )
+    name = re.sub(r"\s+", " ", name).strip()
+    # 3BE: un-merge a leaked label token using OCR-line evidence (candidate-based,
+    # not a literal value hardcode). e.g. "클리마트플란정 중욕명" -> "클리마트플란정".
+    name = _legacy_st_unmerge_item_name(name, _legacy_st_line_text_set(lines))
+
+    # KRW invoice amounts are integers; drop any OCR decimal tail (e.g. 28,338.00)
+    # BEFORE re-grouping so the fractional digits are not folded into the integer.
+    def _money_int(value: str) -> str:
+        return _format_legacy_money((value or "").split(".", 1)[0])
+
+    new_row = _empty_table_row(1, str(row.get("_rawText") or ""))
+    new_row.update({
+        "itemName": name,
+        "spec": "",
+        "itemCode": "",
+        "lotNo": lot_no,
+        "serialNo": lot_no,
+        "expiryDate": "",  # no independent 유효기간 column; keep lot composite intact.
+        "quantity": _money_int(quantity) if quantity else "",
+        "unit": unit,
+        "unitPrice": _money_int(unit_price),
+        "supplyAmount": _money_int(supply),
+        "taxAmount": _money_int(tax),
+        # Standard 8-key ``amount`` mirrors 공급가액 (row line amount); the document
+        # 합계금액 stays a document scalar (no per-row total token in OCR evidence).
+        "amount": _money_int(supply),
+        "totalAmount": "",
+        "_source": "legacy_text_items_supply_tax_reconstructed",
+    })
+    # 3BE: preserve non-standard-8-key evidence (단위/세액) so it is not lost when
+    # the Draft GT export keeps only the 8 standard keys. tableExtraColumns mirrors
+    # the established 2.pdf extra-column shape; sourceRowMeta keeps a raw-evidence copy.
+    tax_value = _money_int(tax)
+    extra_columns: dict[str, str] = {}
+    if unit:
+        extra_columns["unit"] = unit
+    if tax_value:
+        extra_columns["taxAmount"] = tax_value
+    if extra_columns:
+        new_row["tableExtraColumns"] = extra_columns
+        new_row["sourceRowMeta"] = dict(extra_columns)
+    return new_row
+
+
+def _apply_legacy_single_supply_tax_reconstruction(
+    canonical: dict[str, Any],
+    lines: list[OcrLine] | None = None,
+) -> bool:
+    rows = canonical.get("tableRows") or []
+    meta = canonical.get("tableMeta") or {}
+    if not _looks_like_legacy_supply_tax_single_row(rows, meta):
+        return False
+    new_row = _reconstruct_legacy_supply_tax_row(rows, meta, lines)
+    if not new_row:
+        return False
+
+    canonical["tableRows"] = [new_row]
+    meta["rowCount"] = 1
+    meta["columns"] = [
+        "rowIndex", "itemName", "spec", "lotNo", "expiryDate",
+        "quantity", "unit", "unitPrice", "supplyAmount", "taxAmount", "amount",
+    ]
+    labels = meta.setdefault("columnLabels", {})
+    labels.update({
+        "rowIndex": "NO",
+        "itemName": "품명",
+        "spec": "규격",
+        "lotNo": "LotNo.",
+        "expiryDate": "유효기간",
+        "quantity": "수량",
+        "unit": "단위",
+        "unitPrice": "단가",
+        "supplyAmount": "공급가액",
+        "taxAmount": "세액",
+        "amount": "금액",
+    })
+    meta["extractionSource"] = "legacy_text_items_supply_tax_reconstructed"
+    meta["legacySupplyTaxReconstructionApplied"] = True
+    meta["legacySupplyTaxUnitPreserved"] = new_row.get("unit") or ""
+    # 3BE: surface the extra-column definitions for the units/tax preserved on the row.
+    extra_cols = new_row.get("tableExtraColumns") or {}
+    if extra_cols:
+        defs = []
+        if "unit" in extra_cols:
+            defs.append({"key": "unit", "labelKo": "단위", "labelEn": "Unit",
+                         "source": "legacy_supply_tax_row_extra"})
+        if "taxAmount" in extra_cols:
+            defs.append({"key": "taxAmount", "labelKo": "세액", "labelEn": "Tax amount",
+                         "source": "legacy_supply_tax_row_extra"})
+        meta["extraColumnDefinitions"] = defs
+    warnings = meta.setdefault("valueMappingWarnings", [])
+    for warning in (
+        "legacy_supply_tax_row:quantity_recovered_from_raw_text",
+        "legacy_supply_tax_row:unit_price_supply_amount_unswapped",
+        "legacy_supply_tax_row:tax_amount_separated",
+        "legacy_supply_tax_row:lot_composite_preserved_expiry_not_split",
+        "legacy_supply_tax_row:item_name_header_leak_unmerged_from_ocr_lines",
+        "legacy_supply_tax_row:unit_tax_preserved_in_table_extra_columns",
+    ):
+        if warning not in warnings:
+            warnings.append(warning)
+    canonical["tableMeta"] = meta
+    if canonical.get("tableRowsDebug"):
+        canonical["tableRowsDebug"]["generatedRowCount"] = 1
+        canonical["tableRowsDebug"]["source"] = "legacy_text_items_supply_tax_reconstructed"
+    return True
+
+
 def _apply_invoice_column_postsplit(
     rows: list[dict],
     meta: dict,
@@ -7590,6 +7857,12 @@ def extract_invoice_statement_fields(
             full_text,
         )
 
+    # 3BD: 4.pdf-style single-row supply/tax fallback remap (runs only when the
+    # detail/pharma reconstructors did not fire and the shape gate matches).
+    # 3BE: pass OCR lines so itemName header-leak can be un-merged via line evidence.
+    if not _legacy_detail_reconstructed and not _legacy_pharma_reconstructed:
+        _apply_legacy_single_supply_tax_reconstruction(canonical, lines)
+
     # T-26a: apply company name spacing normalization to actual output fields
     fields.update(
         {
@@ -7609,6 +7882,18 @@ def extract_invoice_statement_fields(
             "tableMeta": canonical["tableMeta"],
         }
     )
+    # 3BG: backfill document-level 공급가액/세액 from the reconstructed supply/tax row
+    # when the doc-level scalar extraction came up empty. Values are OCR evidence read
+    # from the row's own rawText (no arithmetic, no fabrication); only fires when the
+    # supply_tax reconstructor produced the row (4.pdf-style single item table).
+    if (canonical.get("tableMeta") or {}).get("legacySupplyTaxReconstructionApplied"):
+        _st_rows = canonical.get("tableRows") or []
+        if _st_rows:
+            _st_row0 = _st_rows[0]
+            for _st_key in ("supplyAmount", "taxAmount"):
+                if (not _clean_value(str(fields.get(_st_key) or ""))
+                        and _clean_value(str(_st_row0.get(_st_key) or ""))):
+                    fields[_st_key] = _clean_value(str(_st_row0.get(_st_key)))
     if _legacy_pharma_reconstructed and _LEGACY_MONEY_COMPANY_RE.search(str(fields.get("buyerCompany") or "")):
         fields["buyerCompany"] = ""
         canonical["tableMeta"]["scalarContaminationGuardApplied"] = True

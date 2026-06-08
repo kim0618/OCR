@@ -28,6 +28,7 @@
 import { buildStructuredTableViewModel } from "./structuredTableViewModel";
 import {
   buildInvoicePreviewCols,
+  readDisplayTableCell,
   type InvoiceDisplayCol,
 } from "./invoiceTableDisplay";
 
@@ -62,6 +63,14 @@ export type TableResultRow = {
   values: Record<string, string>;
   /** Ordered by `columns`. Same length as `columns`. */
   cells: TableResultCell[];
+  /**
+   * 3BG: non-standard extra columns carried verbatim from the backend row
+   * (e.g. supply/tax invoice unit=BOX, taxAmount). Display/export helpers use
+   * these as nested extras so the values survive the standard-8-key export.
+   */
+  tableExtraColumns?: Record<string, string>;
+  /** 3BG: backend row source metadata (e.g. unit/taxAmount evidence copy). */
+  sourceRowMeta?: Record<string, unknown>;
 };
 
 export type TableResultMeta = {
@@ -134,14 +143,17 @@ function wrapStructuredViewModel(params: {
     return out;
   });
   const rows: TableResultRow[] = structured.rows.map((r, idx) => {
+    const rawRow = params.rows[idx] ?? {};
     const values: Record<string, string> = {};
     const cells: TableResultCell[] = r.cells.map((cell) => {
-      values[cell.key] = cell.value;
+      const nestedValue = readDisplayTableCell(rawRow as Record<string, unknown>, cell.key);
+      const value = nestedValue || cell.value;
+      values[cell.key] = value;
       return {
         key: cell.key,
-        value: cell.value,
-        displayValue: cell.displayValue,
-        isEmpty: cell.isEmpty,
+        value,
+        displayValue: value || cell.displayValue,
+        isEmpty: value.length === 0,
       };
     });
     return { index: idx, values, cells };
@@ -167,6 +179,70 @@ function wrapStructuredViewModel(params: {
   return out;
 }
 
+function sanitizeTableExtraColumns(value: unknown): Record<string, string> | undefined {
+  if (!isPlainRecord(value)) return undefined;
+  const out: Record<string, string> = {};
+  for (const [key, raw] of Object.entries(value)) {
+    if (typeof raw !== "string" && typeof raw !== "number" && typeof raw !== "boolean") continue;
+    const value = String(raw).trim();
+    if (value) out[key] = value;
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
+}
+
+function sanitizeSourceRowMeta(value: unknown): Record<string, unknown> | undefined {
+  if (!isPlainRecord(value)) return undefined;
+  const out: Record<string, unknown> = {};
+  for (const [key, raw] of Object.entries(value)) {
+    const lower = key.toLowerCase();
+    if (
+      lower.includes("token")
+      || lower.includes("bbox")
+      || lower.includes("debug")
+      || lower.includes("ocr")
+      || lower.includes("coordinate")
+      || lower.includes("raw")
+      || lower.includes("base64")
+      || lower.includes("image")
+      || lower.includes("full_text")
+    ) {
+      continue;
+    }
+    if (raw === null || typeof raw === "string" || typeof raw === "number" || typeof raw === "boolean") {
+      out[key] = raw;
+    }
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
+}
+
+function attachRowExtraColumns(vm: TableResultViewModel, rows: ReadonlyArray<Record<string, unknown>>): void {
+  for (const vmRow of vm.rows) {
+    const raw = rows[vmRow.index];
+    if (!isPlainRecord(raw)) continue;
+    const meta = isPlainRecord(raw.sourceRowMeta) ? raw.sourceRowMeta : null;
+    const metaExtra = meta ? sanitizeTableExtraColumns(meta.tableExtraColumns) : undefined;
+    const directMetaExtra: Record<string, string> = {};
+    if (meta) {
+      for (const key of ["unit", "taxAmount"]) {
+        const value = meta[key];
+        if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+          const normalized = String(value).trim();
+          if (normalized) directMetaExtra[key] = normalized;
+        }
+      }
+    }
+    const extra = {
+      ...(metaExtra ?? {}),
+      ...directMetaExtra,
+      ...(sanitizeTableExtraColumns(raw.tableExtraColumns) ?? {}),
+    };
+    const hasExtra = Object.keys(extra).length > 0;
+    if (hasExtra) vmRow.tableExtraColumns = extra;
+    const sourceRowMeta = sanitizeSourceRowMeta(raw.sourceRowMeta);
+    if (sourceRowMeta) vmRow.sourceRowMeta = sourceRowMeta;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Source: backend_document_fields
 // ---------------------------------------------------------------------------
@@ -187,7 +263,7 @@ function buildBackendDocumentFieldsViewModel(
   const tableMeta = isPlainRecord(df.tableMeta) ? df.tableMeta : null;
   const displayCols = buildInvoicePreviewCols(tableMeta, rows);
   if (displayCols.length === 0) return null;
-  return wrapStructuredViewModel({
+  const vm = wrapStructuredViewModel({
     source: "backend_document_fields",
     tableKey: "document_fields.tableRows",
     labelKo: "문서 표",
@@ -197,6 +273,8 @@ function buildBackendDocumentFieldsViewModel(
     rows,
     columnSource: "canonical",
   });
+  attachRowExtraColumns(vm, rows);
+  return vm;
 }
 
 // ---------------------------------------------------------------------------
@@ -257,6 +335,7 @@ function buildUnstructuredViewModels(
           : c,
       );
     }
+    attachRowExtraColumns(vm, rows);
     out.push(vm);
   }
   return out;
@@ -385,6 +464,7 @@ function buildTemplateRegionCanonicalViewModels(
           : c,
       );
     }
+    attachRowExtraColumns(vm, backendRows);
     out.push(vm);
   }
   return out;

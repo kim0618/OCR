@@ -102,6 +102,14 @@ REFERENCE_SCALAR_MERGE_EXCLUDED_KEYS = (
 
 
 REQUIRED_TABLE_ROW_KEYS = ("itemName", "spec", "quantity", "unitPrice", "amount")
+FIVE_COLUMN_PRODUCT_CODE_TABLE_KEYS = ("itemName", "productCode", "quantity", "unitPrice", "amount")
+FIVE_COLUMN_PRODUCT_CODE_TABLE_LABELS = {
+    "itemName": "품명",
+    "productCode": "품목코드",
+    "quantity": "수량",
+    "unitPrice": "단가",
+    "amount": "금액",
+}
 FORBIDDEN_FREE_TOP_LEVEL_KEYS = (
     "freeInvoiceRows",
     "freeInvoiceFields",
@@ -166,6 +174,26 @@ def _looks_like_product_code_token(value: Any) -> bool:
     if not any(ch.isdigit() for ch in text):
         return False
     return True
+
+
+def _normalize_product_code_token(value: Any) -> str:
+    text = _normalize_text(value).strip("()[]{}.,:;|").upper()
+    if not _looks_like_product_code_token(text):
+        return ""
+    text = re.sub(r"^0P", "OP", text)
+    # OCR can confuse zero as O in compact tablet-count suffixes (e.g.
+    # NPRT1OT -> NPRT10T). Keep the rule narrow so codes such as DPNL3OM stay
+    # unchanged.
+    text = re.sub(r"(?<=\d)O(?=T$)", "0", text)
+    return text
+
+
+def _first_product_code_from_text(value: Any) -> str:
+    for token in re.split(r"\s+", _normalize_text(value)):
+        code = _normalize_product_code_token(token)
+        if code:
+            return code
+    return ""
 
 
 def _classify_numeric_like_token(text: Any, context: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -534,7 +562,12 @@ def _build_gt_skeleton_candidates(
         if not match:
             return ""
         code = match.group(1)
-        return re.sub(r"^0P", "OP", code)
+        code = re.sub(r"^0P", "OP", code)
+        # 3AV: evidence-backed OP-code O/0 normalization in the debug skeleton
+        # path only. Restrict to the pharma-like OP-LL[0/O]NNN shape so ordinary
+        # item text is never rewritten.
+        code = re.sub(r"^(OP-[A-Z]{2})O(?=\d{3,}$)", r"\g<1>0", code)
+        return code
 
     def _amount_anchor_value(text: Any) -> str:
         value = _normalize_text(text)
@@ -663,6 +696,10 @@ def _build_gt_skeleton_candidates(
     status, table_box, scale_x, scale_y, _, _ = max(scored_boxes, key=lambda item: (item[4] + item[5], item[4], item[5]))
 
     inside_items = [item for item in finite_items if _box_contains(table_box, item)]
+    try:
+        row_entries, _row_entry_debug = _group_ocr_items_into_row_entries(finite_items)
+    except Exception:
+        row_entries = []
     code_anchors = [
         {"text": _code_anchor_value(item["text"]), "rawText": item["text"], "cx": item["cx"], "cy": item["cy"], "h": item["h"], "confidence": item.get("confidence")}
         for item in inside_items
@@ -776,6 +813,22 @@ def _build_gt_skeleton_candidates(
             key=lambda candidate: (abs(float(candidate["cx"]) - cx), float(candidate["cy"])),
         )
 
+    def _same_row_candidates(
+        anchor: dict[str, Any],
+        candidates: list[dict[str, Any]],
+        *,
+        max_extra: float = 1.0,
+    ) -> list[dict[str, Any]]:
+        cy = float(anchor["cy"])
+        return sorted(
+            [
+                candidate
+                for candidate in candidates
+                if abs(float(candidate["cy"]) - cy) <= row_band_tol * max_extra
+            ],
+            key=lambda candidate: (float(candidate["cx"]), abs(float(candidate["cy"]) - cy)),
+        )
+
     def _money_values_for_code(
         code: dict[str, Any],
         used: set[int],
@@ -801,33 +854,266 @@ def _build_gt_skeleton_candidates(
             return False
         return 1 <= number <= max(len(code_anchors), 1)
 
-    def _quantity_for_code(code: dict[str, Any], row_index: int) -> dict[str, Any] | None:
-        same_column = _same_column_candidates(code, quantity_anchors, max_extra=1.15)
-        filtered = [
-            quantity
-            for quantity in same_column
-            if not _is_row_number_quantity_candidate(quantity, row_index)
+    def _first_money_cx(row_money: list[tuple[int, dict[str, Any]]]) -> float | None:
+        money_cxs = [
+            float(money["cx"])
+            for _, money in row_money
+            if isinstance(money.get("cx"), (int, float))
         ]
-        if not filtered:
+        return min(money_cxs) if money_cxs else None
+
+    def _normalize_skeleton_item_name(text: str) -> str:
+        value = _normalize_text(text)
+        value = re.sub(r"\s+", " ", value)
+        # Keep OCR-backed text, but repair only very narrow visual confusions in
+        # known product suffix shapes.
+        value = re.sub(r"(?i)\b50OT\b", "500T", value)
+        value = re.sub(r"(?i)\[ABLET\b", "TABLET", value)
+        value = re.sub(r"((?:[A-Za-z가-힣\[]+\s+)*[A-Za-z가-힣\[]+\s+\d{2,4}[A-Za-z])\d{2,5}$", r"\1", value)
+        return value.strip()
+
+    def _tail_after_code(text: str) -> str:
+        value = _normalize_text(text)
+        match = re.search(r"(?:^|\d)((?:O|0)P-[A-Z0-9]{2,})", value.upper().replace(" ", ""))
+        if not match:
+            return ""
+        compact = value.upper().replace(" ", "")
+        code = match.group(1)
+        code_pos = compact.find(code)
+        if code_pos < 0:
+            return ""
+        seen = 0
+        end_idx = 0
+        for idx, ch in enumerate(value):
+            if ch.isspace():
+                continue
+            seen += 1
+            if seen >= code_pos + len(code):
+                end_idx = idx + 1
+                break
+        return _normalize_text(value[end_idx:])
+
+    def _trim_row_value_tail(text: str) -> str:
+        value = re.split(r"\s+-?\d{1,3}(?:,\d{3})+(?!\d)", _normalize_text(text), maxsplit=1)[0]
+        parts = value.split()
+        while parts:
+            last = parts[-1]
+            if re.fullmatch(r"\d{2,4}[A-Za-z]{1,2}\]?", last):
+                break
+            if re.search(r"\d", last) and not re.search(r"[가-힣]", last):
+                parts.pop()
+                continue
+            if re.fullmatch(r"\d+", last):
+                parts.pop()
+                continue
+            break
+        return _normalize_text(" ".join(parts))
+
+    def _quantity_from_code_row_text(text: str, row_index: int) -> dict[str, Any] | None:
+        tail = _tail_after_code(text)
+        if not tail:
             return None
+        value_part = re.split(r"\s+-?\d{1,3}(?:,\d{3})+(?!\d)", tail, maxsplit=1)[0]
+        numbers = []
+        for token in value_part.split():
+            if not re.fullmatch(r"\d{1,4}", token):
+                continue
+            try:
+                number = int(token)
+            except ValueError:
+                continue
+            if number == row_index + 1 or number <= 0 or number > 9999:
+                continue
+            numbers.append(token)
+        multi_digit = [token for token in numbers if len(token) >= 2]
+        if not multi_digit:
+            return None
+        return {"text": multi_digit[-1], "rawText": text, "cx": 0.0, "cy": 0.0, "source": "row_local_code_text_quantity_tail"}
+
+    def _row_item_name_text_candidate(item: dict[str, Any]) -> str:
+        text = _normalize_text(item.get("text"))
+        if not text:
+            return ""
+        if _is_summary_or_header_line(text):
+            return ""
+        if _looks_like_code_anchor(text):
+            text = _trim_row_value_tail(_tail_after_code(text))
+            if not text:
+                return ""
+        if not re.search(r"[A-Za-z가-힣\[]", text):
+            return ""
+        if not re.search(r"[가-힣]", text) and not re.search(r"[A-Za-z]{2,}", text) and not re.search(r"\d{2,4}[A-Za-z]{1,2}\]?$", text):
+            return ""
+        if _amount_anchor_value(text) and not re.search(r"[A-Za-z가-힣\[]", text):
+            return ""
+        if _quantity_anchor_value(text) and not re.search(r"[A-Za-z가-힣\[]", text):
+            return ""
+        return text
+
+    def _row_item_name_candidates(
+        code: dict[str, Any],
+        *,
+        left_bound: float,
+        right_bound: float,
+    ) -> list[dict[str, Any]]:
+        code_cy = float(code["cy"])
+        candidates: list[dict[str, Any]] = []
+        for item in finite_items:
+            if not isinstance(item.get("cx"), (int, float)) or not isinstance(item.get("cy"), (int, float)):
+                continue
+            if abs(float(item["cy"]) - code_cy) > row_band_tol * 1.65:
+                continue
+            cx = float(item["cx"])
+            if not (left_bound <= cx <= right_bound):
+                continue
+            text = _row_item_name_text_candidate(item)
+            if not text:
+                continue
+            candidates.append({
+                "text": text,
+                "rawText": item.get("text"),
+                "cx": item["cx"],
+                "cy": item["cy"],
+                "h": item.get("h"),
+                "confidence": item.get("confidence"),
+            })
+        return sorted(candidates, key=lambda candidate: (float(candidate["cx"]), float(candidate["cy"])))
+
+    def _synthetic_anchor(
+        text: str,
+        anchors: list[dict[str, Any]],
+        *,
+        source: str,
+    ) -> dict[str, Any] | None:
+        text = _normalize_text(text)
+        if not text or not anchors:
+            return None
+        cx_values = [float(anchor["cx"]) for anchor in anchors if isinstance(anchor.get("cx"), (int, float))]
+        cy_values = [float(anchor["cy"]) for anchor in anchors if isinstance(anchor.get("cy"), (int, float))]
+        return {
+            "text": text,
+            "rawText": " ".join(str(anchor.get("rawText") or anchor.get("text") or "") for anchor in anchors).strip(),
+            "cx": sum(cx_values) / len(cx_values) if cx_values else float(anchors[0].get("cx") or 0.0),
+            "cy": sum(cy_values) / len(cy_values) if cy_values else float(anchors[0].get("cy") or 0.0),
+            "source": source,
+        }
+
+    def _item_name_for_code(
+        code: dict[str, Any],
+        row_money: list[tuple[int, dict[str, Any]]],
+    ) -> dict[str, Any] | None:
+        code_cx = float(code["cx"])
+        first_money_cx = _first_money_cx(row_money)
+        amount_cx = float(row_money[-1][1]["cx"]) if row_money and isinstance(row_money[-1][1].get("cx"), (int, float)) else None
+        left_bound = code_cx + max(column_x_tol * 1.25, 24.0)
+        right_bound = (
+            amount_cx - max(column_x_tol * 0.35, 8.0)
+            if amount_cx is not None
+            else first_money_cx - max(column_x_tol * 0.35, 8.0)
+            if first_money_cx is not None
+            else table_box["x"] + table_box["w"]
+        )
+        filtered = _row_item_name_candidates(code, left_bound=left_bound, right_bound=right_bound)
+        if not filtered:
+            same_row = _same_row_candidates(code, item_name_anchors, max_extra=1.65)
+            filtered = [
+                candidate
+                for candidate in same_row
+                if left_bound <= float(candidate["cx"]) <= right_bound
+            ]
+        if not filtered:
+            for entry in row_entries:
+                if not isinstance(entry, dict):
+                    continue
+                text = _normalize_text(entry.get("text"))
+                if not text or _code_anchor_value(text) != code.get("text"):
+                    continue
+                candidate_text = _normalize_skeleton_item_name(_trim_row_value_tail(_tail_after_code(text)))
+                if not candidate_text:
+                    continue
+                return {
+                    "text": candidate_text,
+                    "rawText": text,
+                    "cx": code_cx + max(column_x_tol * 2.0, 40.0),
+                    "cy": code.get("cy", 0.0),
+                    "source": "row_grouped_code_text_item_name",
+                }
+            return None
+        filtered = sorted(filtered, key=lambda candidate: float(candidate["cx"]))
+        text = _normalize_skeleton_item_name(" ".join(str(candidate.get("text") or "") for candidate in filtered))
+        return _synthetic_anchor(text, filtered, source="row_local_item_name_x_band")
+
+    def _quantity_for_code(
+        code: dict[str, Any],
+        row_index: int,
+        row_money: list[tuple[int, dict[str, Any]]],
+        item_name: dict[str, Any] | None,
+    ) -> dict[str, Any] | None:
+        code_cx = float(code["cx"])
+        first_money_cx = _first_money_cx(row_money)
+        if first_money_cx is None:
+            return None
+        item_name_cx = float(item_name["cx"]) if isinstance(item_name, dict) and isinstance(item_name.get("cx"), (int, float)) else None
+        left_bound = (
+            item_name_cx + max(column_x_tol * 0.45, 8.0)
+            if item_name_cx is not None
+            else code_cx + max(column_x_tol * 1.25, 24.0)
+        )
+        right_bound = first_money_cx - max(column_x_tol * 0.2, 6.0)
+        same_row = _same_row_candidates(code, quantity_anchors, max_extra=1.05)
+        filtered = []
+        for quantity in same_row:
+            value = _quantity_anchor_value(quantity.get("text"))
+            if not value:
+                continue
+            if _is_row_number_quantity_candidate(quantity, row_index):
+                continue
+            cx = float(quantity["cx"])
+            if not (left_bound <= cx <= right_bound):
+                continue
+            try:
+                number = int(value)
+            except ValueError:
+                continue
+            if number <= 0 or number > 9999:
+                continue
+            filtered.append(quantity)
+        if not filtered:
+            for entry in row_entries:
+                if not isinstance(entry, dict):
+                    continue
+                text = _normalize_text(entry.get("text"))
+                if not text or _code_anchor_value(text) != code.get("text"):
+                    continue
+                fallback = _quantity_from_code_row_text(text, row_index)
+                if fallback:
+                    fallback["cx"] = code_cx + max(column_x_tol * 3.0, 60.0)
+                    fallback["cy"] = code.get("cy", 0.0)
+                    return fallback
+            code_cy = float(code["cy"])
+            for item in finite_items:
+                if not isinstance(item.get("cy"), (int, float)):
+                    continue
+                if abs(float(item["cy"]) - code_cy) > row_band_tol * 1.65:
+                    continue
+                text = _normalize_text(item.get("text"))
+                if not text or not _looks_like_code_anchor(text):
+                    continue
+                fallback = _quantity_from_code_row_text(text, row_index)
+                if fallback:
+                    fallback["cx"] = item.get("cx", code.get("cx", 0.0))
+                    fallback["cy"] = item.get("cy", code.get("cy", 0.0))
+                    return fallback
+            return None
+        multi_digit = [quantity for quantity in filtered if len(str(quantity.get("text") or "")) >= 2]
+        if not multi_digit and len(filtered) == 1:
+            return None
+        filtered = multi_digit or filtered
         return min(
             filtered,
             key=lambda quantity: (
-                abs(float(quantity["cx"]) - float(code["cx"])),
+                abs(float(quantity["cx"]) - right_bound),
                 abs(float(quantity["cy"]) - float(code["cy"])),
-            ),
-        )
-
-    def _item_name_for_code(code: dict[str, Any]) -> dict[str, Any] | None:
-        same_column = _same_column_candidates(code, item_name_anchors, max_extra=1.15)
-        if not same_column:
-            return None
-        return min(
-            same_column,
-            key=lambda candidate: (
-                abs(float(candidate["cx"]) - float(code["cx"])),
-                -len(re.sub(r"\s+", "", str(candidate.get("text") or ""))),
-                -1 if re.search(r"[A-Za-z]{3,}", str(candidate.get("text") or "")) else 0,
             ),
         )
 
@@ -842,15 +1128,16 @@ def _build_gt_skeleton_candidates(
         price_values = [money for _, money in row_money[:-1]]
         consumer_unit_price = price_values[0]["text"] if len(price_values) >= 1 else ""
         supply_unit_price = price_values[1]["text"] if len(price_values) >= 2 else consumer_unit_price
-        quantity = _quantity_for_code(code, row_index)
-        item_name = _item_name_for_code(code)
+        item_name = _item_name_for_code(code, row_money)
+        quantity = _quantity_for_code(code, row_index, row_money, item_name)
         missing = []
         notes = [
             "debug_only_not_release_table_row",
             "row_band_cy_first_alignment",
             "same_row_money_pairing",
-            "quantity_same_column_no_excluded",
-            "item_name_same_column_mapping",
+            "quantity_row_local_x_band_mapping",
+            "item_name_row_local_x_band_mapping",
+            "debug_skeleton_product_code_o0_normalization",
         ]
         confidence = "medium"
         if amount is None:
@@ -876,6 +1163,11 @@ def _build_gt_skeleton_candidates(
                 "consumerUnitPrice": consumer_unit_price,
                 "supplyUnitPrice": supply_unit_price,
                 "insuranceNo": "",
+                "tableExtraColumns": {
+                    "consumerUnitPrice": consumer_unit_price,
+                    "supplyUnitPrice": supply_unit_price,
+                    "insuranceNo": "",
+                },
                 "_gtSkeleton": {
                     "reviewRequired": True,
                     "rowConfidence": confidence,
@@ -940,6 +1232,26 @@ def _build_gt_skeleton_candidates(
             "balanceExcludedCount": balance_excluded,
         },
         "candidateRowsReleaseIsolated": True,
+        "tableExtraColumnDefinitions": [
+            {
+                "key": "consumerUnitPrice",
+                "labelKo": "소비자가",
+                "labelEn": "Consumer unit price",
+                "source": "gt_skeleton_candidate_compact",
+            },
+            {
+                "key": "supplyUnitPrice",
+                "labelKo": "공급단가",
+                "labelEn": "Supply unit price",
+                "source": "gt_skeleton_candidate_compact",
+            },
+            {
+                "key": "insuranceNo",
+                "labelKo": "보험코드",
+                "labelEn": "Insurance number",
+                "source": "gt_skeleton_candidate_compact",
+            },
+        ],
         "rows": rows,
     }
 
@@ -1769,7 +2081,7 @@ def _build_columnar_rows_from_ocr_items(
         "productCodeRouting": {
             "detected": False,
             "tokens": [],
-            "routedTo": "spec",
+            "routedTo": "productCode",
             "excludedFromItemName": 0,
         },
         "amountSumActual": None,
@@ -1881,7 +2193,7 @@ def _build_columnar_rows_from_ocr_items(
         col_x = sum(t["x"] for t in cluster) / len(cluster)
         cluster.sort(key=lambda t: t["cy"])
         product_code_tokens = [
-            t["text"] for t in cluster if _looks_like_product_code_token(t.get("text"))
+            _normalize_product_code_token(t["text"]) for t in cluster if _normalize_product_code_token(t.get("text"))
         ]
         name_parts = [
             t["text"] for t in cluster if not _looks_like_product_code_token(t.get("text"))
@@ -1897,7 +2209,7 @@ def _build_columnar_rows_from_ocr_items(
             diag["alignmentIssues"].append("product_code_only_name_cluster")
             continue
         name_text = " ".join(name_parts)
-        spec_text = " ".join(product_code_tokens)
+        product_code_text = " ".join(product_code_tokens)
         matched: dict[str, dict[str, Any]] = {}
         for kind, vals in field_bands.items():
             candidates = [v for v in vals if abs(v["x"] - col_x) <= align_tol]
@@ -1912,7 +2224,8 @@ def _build_columnar_rows_from_ocr_items(
         rows.append({
             "rowIndex": str(len(rows) + 1),
             "itemName": name_text,
-            "spec": spec_text,
+            "spec": "",
+            "productCode": product_code_text,
             "lotNo": "",
             "expiryDate": "",
             "quantity": matched.get("quantity", {}).get("value", ""),
@@ -2753,12 +3066,135 @@ def _normalize_success_table_rows(table_rows: Any) -> list[dict[str, Any]]:
         if not isinstance(row, dict):
             continue
         normalized = deepcopy(row)
-        for key in REQUIRED_TABLE_ROW_KEYS:
+        for key in (*REQUIRED_TABLE_ROW_KEYS, "productCode", "lotNo", "expiryDate"):
             normalized[key] = _normalize_text(normalized.get(key))
+        if (
+            not normalized.get("productCode")
+            and _looks_like_product_code_token(normalized.get("spec"))
+        ):
+            normalized["productCode"] = _normalize_product_code_token(normalized["spec"]) or normalized["spec"]
+            normalized["spec"] = ""
+        if not normalized.get("productCode"):
+            normalized["productCode"] = _first_product_code_from_text(normalized.get("_rawText"))
+        if (
+            normalized.get("productCode")
+            and normalized.get("spec") == normalized.get("productCode")
+        ):
+            normalized["spec"] = ""
         if "rowIndex" not in normalized:
             normalized["rowIndex"] = str(index)
         normalized_rows.append(normalized)
     return normalized_rows
+
+
+def _maybe_move_cumulative_vat_to_tax(fields: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Repair summary scalar confusion when VAT was mapped as cumulative amount.
+
+    The guard is arithmetic, not file-specific: move cumulativeAmount to
+    taxAmount only when tax is empty and supplyAmount + cumulativeAmount equals
+    totalAmount. Genuine balance/cumulative fields do not satisfy this invoice
+    summary equation and are left untouched.
+    """
+
+    repaired = dict(fields) if isinstance(fields, dict) else {}
+    debug: dict[str, Any] = {
+        "enabled": True,
+        "applied": False,
+        "reason": "",
+        "from": "cumulativeAmount",
+        "to": "taxAmount",
+    }
+    if _has_meaningful_value(repaired.get("taxAmount")):
+        debug["reason"] = "taxAmount_already_present"
+        return repaired, debug
+    supply = _money_parse_value(repaired.get("supplyAmount"))
+    total = _money_parse_value(repaired.get("totalAmount"))
+    cumulative = _normalize_text(repaired.get("cumulativeAmount"))
+    if cumulative:
+        tax_candidate = _money_parse_value(cumulative)
+        if supply is not None and tax_candidate is not None and total is not None:
+            if abs((supply + tax_candidate) - total) <= 2.0:
+                repaired["taxAmount"] = cumulative
+                repaired["cumulativeAmount"] = ""
+                debug.update(
+                    {
+                        "applied": True,
+                        "reason": "supply_plus_cumulative_equals_total",
+                        "value": cumulative,
+                    }
+                )
+                return repaired, debug
+            debug["cumulativeEquation"] = {
+                "supplyAmount": repaired.get("supplyAmount"),
+                "cumulativeAmount": cumulative,
+                "totalAmount": repaired.get("totalAmount"),
+            }
+    debug["reason"] = "no_cumulative_vat_equation_match"
+    return repaired, debug
+
+
+def _extract_labeled_summary_scalars_from_ocr_items(ocr_items: list[dict[str, Any]]) -> tuple[dict[str, str], dict[str, Any]]:
+    """Extract footer supply/VAT scalars from label-value geometry.
+
+    This keeps footer summary values out of tableRows while preserving explicitly
+    labeled scalars. The rule is geometric and label-based, not filename-based:
+    find a Korean footer label, then choose the nearest money token below the
+    same x band.
+    """
+
+    debug: dict[str, Any] = {
+        "enabled": True,
+        "source": "ocr_items_label_value_geometry",
+        "matched": {},
+    }
+    fields: dict[str, str] = {}
+    finite_items: list[dict[str, Any]] = []
+    for item in ocr_items:
+        text = _normalize_text(item.get("text"))
+        x = item.get("x")
+        y = item.get("y")
+        cx = item.get("cx")
+        cy = item.get("cy")
+        if not text or not isinstance(x, (int, float)) or not isinstance(y, (int, float)):
+            continue
+        if not isinstance(cx, (int, float)) or not isinstance(cy, (int, float)):
+            continue
+        finite_items.append({"text": text, "x": float(x), "y": float(y), "cx": float(cx), "cy": float(cy)})
+
+    label_specs = [
+        ("supplyAmount", ("공급가", "공급액")),
+        ("taxAmount", ("부가", "세액", "VAT", "vat")),
+    ]
+    for key, markers in label_specs:
+        label_candidates = [
+            item for item in finite_items
+            if any(marker in item["text"] for marker in markers)
+        ]
+        label_candidates.sort(key=lambda item: (item["y"], item["x"]))
+        for label in label_candidates:
+            money_candidates: list[dict[str, Any]] = []
+            for item in finite_items:
+                money = _normalize_money(item["text"])
+                if not money:
+                    continue
+                if item["cy"] <= label["cy"]:
+                    continue
+                if item["cy"] - label["cy"] > 70:
+                    continue
+                if abs(item["cx"] - label["cx"]) > 95:
+                    continue
+                money_candidates.append({**item, "value": money})
+            if not money_candidates:
+                continue
+            money_candidates.sort(key=lambda item: (item["cy"] - label["cy"], abs(item["cx"] - label["cx"])))
+            selected = money_candidates[0]
+            fields[key] = selected["value"]
+            debug["matched"][key] = {
+                "label": label["text"],
+                "value": selected["value"],
+            }
+            break
+    return fields, debug
 
 
 def _extract_reference_invoice_statement_fields(
@@ -2835,6 +3271,7 @@ def _merge_invoice_statement_reference_scalars(
         if _has_meaningful_value(ref.get(key)):
             merged[key] = _normalize_text(ref.get(key))
             filled.append(key)
+    merged, vat_repair_debug = _maybe_move_cumulative_vat_to_tax(merged)
     scalar_merge_debug = {
         "enabled": True,
         "source": "invoice_statement",
@@ -2843,6 +3280,7 @@ def _merge_invoice_statement_reference_scalars(
         "filledKeys": filled,
         "skippedKeys": skipped,
         "excludedKeys": list(REFERENCE_SCALAR_MERGE_EXCLUDED_KEYS),
+        "vatCumulativeRepair": vat_repair_debug,
         "tablePreserved": True,
     }
     return merged, scalar_merge_debug
@@ -2893,8 +3331,9 @@ def _build_success_invoice_statement_free_result(
         "mode": "unstructured",
         "fallbackRequired": False,
         "rowCount": len(rows),
-        "columns": ["itemName", "spec", "lotNo", "expiryDate", "quantity", "unitPrice", "amount"],
-        "expectedColumnKeys": ["itemName", "spec", "lotNo", "expiryDate", "quantity", "unitPrice", "amount"],
+        "columns": list(FIVE_COLUMN_PRODUCT_CODE_TABLE_KEYS),
+        "expectedColumnKeys": list(FIVE_COLUMN_PRODUCT_CODE_TABLE_KEYS),
+        "columnLabels": deepcopy(FIVE_COLUMN_PRODUCT_CODE_TABLE_LABELS),
         "extractionSource": "invoice_statement_free_success_shape",
     }
     fields["tableDetected"] = "Y"
@@ -3103,15 +3542,9 @@ def extract_invoice_statement_free(
         "source": "invoice_statement_free",
         "mode": "unstructured",
         "rowCount": len(table_rows),
-        "columns": ["itemName", "spec", "lotNo", "expiryDate", "quantity", "unitPrice", "amount"] if table_rows else [],
-        "expectedColumnKeys": ["itemName", "spec", "lotNo", "expiryDate", "quantity", "unitPrice", "amount"] if table_rows else [],
-        "columnLabels": {
-            "itemName": "품목명",
-            "spec": "규격",
-            "quantity": "수량",
-            "unitPrice": "단가",
-            "amount": "금액",
-        } if table_rows else {},
+        "columns": list(FIVE_COLUMN_PRODUCT_CODE_TABLE_KEYS) if table_rows else [],
+        "expectedColumnKeys": list(FIVE_COLUMN_PRODUCT_CODE_TABLE_KEYS) if table_rows else [],
+        "columnLabels": deepcopy(FIVE_COLUMN_PRODUCT_CODE_TABLE_LABELS) if table_rows else {},
     }
     result["tableRows"] = table_rows
     result["tableDetected"] = "Y" if table_rows else "N"
@@ -3159,7 +3592,18 @@ def extract_invoice_statement_free(
         document_fields, scalar_merge_debug = _merge_invoice_statement_reference_scalars(
             document_fields, reference_fields
         )
+        labeled_summary_fields, labeled_summary_debug = _extract_labeled_summary_scalars_from_ocr_items(ocr_items)
+        for key in ("supplyAmount", "taxAmount"):
+            if _has_meaningful_value(labeled_summary_fields.get(key)):
+                document_fields[key] = labeled_summary_fields[key]
+        if _has_meaningful_value(document_fields.get("taxAmount")) and document_fields.get("taxAmount") == document_fields.get("cumulativeAmount"):
+            document_fields["cumulativeAmount"] = ""
+        supply_value = _money_parse_value(document_fields.get("supplyAmount"))
+        tax_value = _money_parse_value(document_fields.get("taxAmount"))
+        if supply_value is not None and tax_value is not None:
+            document_fields["totalAmount"] = f"{int(round(supply_value + tax_value)):,}"
         scalar_merge_debug["reference"] = reference_debug
+        scalar_merge_debug["labeledSummaryScalars"] = labeled_summary_debug
         free_debug_payload.update(
             {
                 "status": "success",

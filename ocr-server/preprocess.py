@@ -448,6 +448,46 @@ def deskew(image: np.ndarray) -> tuple[np.ndarray, dict]:
     }
 
 
+def measure_skew_angle(image: np.ndarray) -> float | None:
+    """텍스트 줄 기반 잔여 기울기 추정(투영 프로파일 분산 최대화).
+
+    deskew()의 minAreaRect 각도가 표/테두리에 락온되어 잘못 잡히는 false-positive를
+    검증하기 위한 *독립* 측정. 회전을 적용하지 않으며, 추정 각도(deg)만 반환한다.
+    텍스트가 없으면 None. (3BF over-apply guard 전용 — deskew 알고리즘/threshold 불변.)
+    """
+    try:
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    except Exception:
+        return None
+    inv = cv2.bitwise_not(gray)
+    thresh = cv2.threshold(inv, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+    if int(np.count_nonzero(thresh)) == 0:
+        return None
+    h, w = thresh.shape
+    scale = 800.0 / max(h, w)
+    if scale < 1.0:
+        thresh = cv2.resize(
+            thresh, (max(1, int(w * scale)), max(1, int(h * scale))),
+            interpolation=cv2.INTER_NEAREST,
+        )
+    H, W = thresh.shape
+    center = (W // 2, H // 2)
+    best_angle, best_score = 0.0, -1.0
+    angle = -5.0
+    while angle <= 5.0001:
+        M = cv2.getRotationMatrix2D(center, angle, 1.0)
+        rot = cv2.warpAffine(
+            thresh, M, (W, H),
+            flags=cv2.INTER_NEAREST,
+            borderMode=cv2.BORDER_CONSTANT, borderValue=0,
+        )
+        score = float(np.var(rot.sum(axis=1).astype(np.float64)))
+        if score > best_score:
+            best_score, best_angle = score, angle
+        angle += 0.5
+    return round(best_angle, 3)
+
+
 def denoise(image: np.ndarray) -> tuple[np.ndarray, dict]:
     """노이즈 제거"""
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)

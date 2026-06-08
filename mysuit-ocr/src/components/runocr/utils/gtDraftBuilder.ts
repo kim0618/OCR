@@ -409,11 +409,15 @@ function tableRowsFromViewModel(vm: TableResultViewModel | null): DraftGtTableRo
       const key = resolveColumnKey(cell.key);
       if (key) values[key] = cell.value;
     }
-    const draftRow = makeDraftTableRow(values, idx + 1);
+    // 3BG: carry the backend row's non-standard extra columns (e.g. unit=BOX,
+    // taxAmount) into the Draft GT so they survive the standard-8-key export.
+    const draftRow = makeDraftTableRow(values, idx + 1, row.tableExtraColumns ?? null);
+    const extraMeta = sanitizeSourceRowMeta(row.sourceRowMeta);
     draftRow.sourceRowMeta = {
       tableKey: vm.tableKey,
       source: vm.source,
       sourceRowIndex: row.index,
+      ...(extraMeta ?? {}),
     };
     return draftRow;
   });
@@ -492,6 +496,14 @@ function mergeCustomTableEdits(params: {
     for (const [rawKey, rawValue] of Object.entries(editRow)) {
       const key = resolveColumnKey(rawKey);
       if (!key || (!knownColumns.has(rawKey) && !COLUMN_KEY_ALIASES[rawKey])) {
+        if (Object.prototype.hasOwnProperty.call(target.tableExtraColumns ?? {}, rawKey)) {
+          target.tableExtraColumns = {
+            ...(target.tableExtraColumns ?? {}),
+            [rawKey]: asString(rawValue),
+          };
+          target.fieldStatus[rawKey] = "present_corrected";
+          continue;
+        }
         params.warnings.push("unknown_column_key");
         continue;
       }
