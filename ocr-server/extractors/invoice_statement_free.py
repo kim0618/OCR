@@ -1,12 +1,15 @@
-"""Scaffold for unstructured invoice statement extraction.
+"""Unstructured invoice statement extraction.
 
-This module is intentionally not wired into ``main.py`` yet.
+This module IS wired into ``main.py`` (see the unstructured-template branch
+around main.py:2958, which calls ``extract_invoice_statement_free`` and
+validates the result with ``_is_valid_invoice_statement_free_result``).
 
-Fallback policy:
-- The future dispatcher must catch exceptions from this module.
-- If this scaffold returns an empty or low-confidence result, the dispatcher
-  should fall back to ``extract_invoice_statement_fields`` from the existing
-  ``invoice_statement.py`` path until parity is proven.
+Fallback policy (active):
+- The dispatcher catches exceptions from this module.
+- If this module returns an empty or low-confidence result, the dispatcher
+  falls back to ``extract_invoice_statement_fields`` from the existing
+  ``invoice_statement.py`` path (main.py:3003). The chosen path is recorded in
+  ``document_fields.tableMeta.extractionSource``.
 - This module must not access FastAPI request/response objects, the OCR
   singleton, template storage, review logs, frontend files, or datasets.
 """
