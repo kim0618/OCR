@@ -86,7 +86,7 @@ def main() -> int:
         problems.append("report.md not written")
     else:
         txt = open(report_path, encoding="utf-8").read()
-        if len(txt) < 200 or "HYPOTHESIS" not in txt:
+        if len(txt) < 200 or "가설" not in txt:
             problems.append("report.md missing hypothesis banner / too short")
 
     # time series row present

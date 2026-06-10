@@ -21,13 +21,13 @@ class GTLoadError(ValueError):
 
 def _flatten_fields(
     fields: list[dict[str, Any]], src: str
-) -> tuple[dict[str, str], str, bool, dict[str, dict[str, Any]]]:
-    """fields[] -> ({labelEn: value}, perSampleLabel, isRich, fieldMeta).
+) -> tuple[dict[str, str], list[str], bool, dict[str, dict[str, Any]]]:
+    """fields[] -> ({labelEn: value}, presentPerSample[], richSignal, fieldMeta).
 
-    Scores nothing here; just normalizes. Raises on duplicate labelEn collision
-    or a missing per-sample field (exactly one of totalAmount/totalQuantity).
-    fieldMeta carries rich-only signal (edited/fieldStatus/confidence) per label;
-    empty for thin GT.
+    Scores nothing here; just normalizes. Raises only on a duplicate labelEn
+    collision. The per-sample exactly-one invariant is NOT enforced here — it is
+    rich-gated by load_gt (➋). fieldMeta carries rich-only signal
+    (edited/fieldStatus/confidence) per label; empty for thin GT.
     """
     flat: dict[str, str] = {}
     meta: dict[str, dict[str, Any]] = {}
@@ -46,28 +46,33 @@ def _flatten_fields(
             is_rich = True
 
     present_per_sample = [l for l in C.PER_SAMPLE if l in flat]
-    if len(present_per_sample) != 1:
-        raise GTLoadError(
-            f"{src}: per-sample field must be exactly one of {list(C.PER_SAMPLE)}, "
-            f"found {present_per_sample}"
-        )
-    return flat, present_per_sample[0], is_rich, meta
+    return flat, present_per_sample, is_rich, meta
 
 
 def _value_rows(rows: list[dict[str, Any]], src: str) -> list[dict[str, Any]]:
-    """Keep only contract value keys per row; drop review-meta. Preserve order."""
+    """Keep the GT-provided value keys per row; drop review-meta. Preserve order.
+
+    rowIndex is OPTIONAL (⓫): rich GT carries it (kept for the oracle alignment),
+    thin GT has none (content-aligned in step 4). Value keys = whatever the GT
+    provides minus review-meta (⓰), so thin war columns like manufacturingNo are
+    not dropped while rich keeps exactly its 9 value keys.
+    """
     out: list[dict[str, Any]] = []
     for i, r in enumerate(rows):
         if not isinstance(r, dict):
             raise GTLoadError(f"{src}: tableRows[{i}] not an object")
-        if C.ROW_ALIGN_KEY not in r:
-            raise GTLoadError(f"{src}: tableRows[{i}] missing '{C.ROW_ALIGN_KEY}'")
-        out.append({k: r[k] for k in C.ROW_VALUE_KEYS if k in r})
+        out.append({k: v for k, v in r.items() if k not in C.ROW_META_KEYS})
     return out
 
 
-def load_gt(path: str) -> dict[str, Any]:
-    """Load + normalize one GT file. Raises GTLoadError on contract breach."""
+def load_gt(path: str, profile: str | None = None) -> dict[str, Any]:
+    """Load + normalize one GT file. Raises GTLoadError on contract breach.
+
+    `profile` ("rich"|"thin") is INJECTED by the caller from the testset profile
+    (⓳'); content-inference is retired. When omitted (legacy call), the profile
+    is inferred from rich-key presence and the checker flags the inconsistency.
+    The bbox-derived rich signal is always exposed for that consistency check.
+    """
     try:
         with open(path, encoding="utf-8") as fh:
             d = json.load(fh)
@@ -90,11 +95,26 @@ def load_gt(path: str) -> dict[str, Any]:
     fields = nr.get("fields")
     if not isinstance(fields, list):
         raise GTLoadError(f"{path}: normalizedResult.fields missing / not a list")
-    document_fields, per_sample_label, is_rich, field_meta = _flatten_fields(fields, source_file)
+    document_fields, present_per_sample, rich_signal, field_meta = _flatten_fields(fields, source_file)
 
-    missing_common = [k for k in C.COMMON_12 if k not in document_fields]
+    # Profile is injected from the testset (⓳'); fall back to the content signal
+    # only for legacy calls. The two are cross-checked by the checker.
+    resolved_profile = profile if profile in ("rich", "thin") else ("rich" if rich_signal else "thin")
+
+    # COMMON_12 is hard-required for rich; thin opts out (A — scores gt.keys()).
+    required = C.required_scalar_fields(resolved_profile)
+    missing_common = [k for k in required if k not in document_fields]
     if missing_common:
-        raise GTLoadError(f"{source_file}: missing common-12 fields: {missing_common}")
+        raise GTLoadError(f"{source_file}: missing required fields ({resolved_profile}): {missing_common}")
+
+    # Per-sample exactly-one (➋) is rich-gated. thin may have 0 (e.g. totalQuantity
+    # is rich-only) or 1; it is never an error there.
+    if C.enforce_per_sample(resolved_profile) and len(present_per_sample) != 1:
+        raise GTLoadError(
+            f"{source_file}: per-sample field must be exactly one of "
+            f"{list(C.PER_SAMPLE)}, found {present_per_sample}"
+        )
+    per_sample_label = present_per_sample[0] if present_per_sample else None
 
     rows_raw = nr.get("tableRows")
     if not isinstance(rows_raw, list):
@@ -109,7 +129,7 @@ def load_gt(path: str) -> dict[str, Any]:
         "sourceFile": source_file,
         "sampleId": d.get("sampleId"),
         "schemaVersion": d.get("schemaVersion"),
-        "profile": "rich" if is_rich else "thin",
+        "profile": resolved_profile,             # INJECTED (⓳'), not inferred
         "documentFields": document_fields,      # {labelEn: value}, 13 entries
         "fieldMeta": field_meta,                 # {labelEn: {edited, fieldStatus, confidence}}
         "perSampleField": per_sample_label,      # "totalAmount" | "totalQuantity"
@@ -120,6 +140,8 @@ def load_gt(path: str) -> dict[str, Any]:
             "rowCount": len(table_rows),
             "excludedRowCount": len(excluded),
             "gtPath": path,
+            "richSignal": rich_signal,           # bbox/edited present? → checker cross-checks vs injected profile
+            "profileInjected": profile in ("rich", "thin"),
         },
     }
 

@@ -60,10 +60,11 @@ def run_check(name: str, argv: list[str]) -> tuple[bool, str]:
     return p.returncode == 0, last
 
 
-def manifest_run_crosscheck(run_dir: str) -> list[str]:
+def manifest_run_crosscheck(run_dir: str, testset: str = C.DEFAULT_TESTSET) -> list[str]:
     problems: list[str] = []
     from build_manifest import build_manifest
-    actives = {s["sourceFile"] for s in build_manifest()["samples"] if s["status"] == "active"}
+    actives = {s["sourceFile"] for s in build_manifest(testset)["samples"]
+               if s["status"] in ("active", "canned")}
     samples_dir = os.path.join(run_dir, "samples")
     have = {os.path.basename(p)[:-5] for p in glob.glob(os.path.join(samples_dir, "*.json"))}
     missing = actives - have
@@ -86,14 +87,62 @@ def manifest_run_crosscheck(run_dir: str) -> list[str]:
     return problems
 
 
+def thin_self_consistency(run_dir: str, testset: str) -> list[str]:
+    """Generic gate for a non-rich testset: metrics cross-foot + report, with no
+    rich-specific constants. Used by the one-command thin path (run_all)."""
+    from metrics import compute_metrics
+    from report import render_report
+    p: list[str] = []
+    m = compute_metrics(run_dir)
+    rp = render_report(run_dir)
+    of = m["overall"]["field"]
+    pf_scored = sum(v["scored"] for v in m["perField"].values())
+    pf_match = sum(v["match"] for v in m["perField"].values())
+    if (pf_scored, pf_match) != (of["scored"], of["match"]):
+        p.append(f"perField sum {pf_scored}/{pf_match} != overall {of['scored']}/{of['match']}")
+    bp_scored = sum(v["field"]["scored"] for v in m["byPath"].values())
+    if bp_scored != of["scored"]:
+        p.append(f"byPath scored {bp_scored} != overall {of['scored']}")
+    ds_scored = sum(v["scored"] for v in m["difficultySplit"].values())
+    if ds_scored != of["scored"]:
+        p.append(f"difficultySplit scored {ds_scored} != overall {of['scored']}")
+    cov = m["coverage"]
+    if cov["gtPresent"] != of["scored"] or cov["matched"] != of["match"]:
+        p.append(f"coverage {cov['gtPresent']}/{cov['matched']} != overall {of['scored']}/{of['match']}")
+    if cov["gtPresent"] != cov["matched"] + cov["extAttemptedMiss"] + cov["extNotAttempted"] + of["mismatch"]:
+        p.append("coverage denominators do not partition gtPresent")
+    if not os.path.isfile(rp) or "가설" not in open(rp, encoding="utf-8").read():
+        p.append("report.md missing / no hypothesis banner")
+    return p
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--ts", default=None)
+    ap.add_argument("--testset", default=C.DEFAULT_TESTSET)
     args = ap.parse_args()
-    run_dir = (os.path.join(C.RUNS_DIR, args.ts) if args.ts
-               else (sorted(p for p in glob.glob(os.path.join(C.RUNS_DIR, "*")) if os.path.isdir(p)) or [None])[-1])
+    # testset-aware: never let a rich checker grab a thin run (or vice versa).
+    run_dir = os.path.join(C.RUNS_DIR, args.ts) if args.ts else C.latest_run(args.testset)
 
     results: list[tuple[str, bool, str]] = []
+
+    # --- non-rich testset: generic self-consistency gate (no rich constants) ---
+    if args.testset != C.DEFAULT_TESTSET:
+        if not run_dir or not os.path.isdir(run_dir):
+            results.append(("run-dir", False, f"no run dir ({run_dir})"))
+        else:
+            xc = manifest_run_crosscheck(run_dir, args.testset)
+            results.append(("manifest<->run", not xc, xc[0] if xc else "all canned samples present, parse ok"))
+            sc = thin_self_consistency(run_dir, args.testset)
+            results.append(("metrics-self-consistency", not sc, sc[0] if sc else "cross-foot + coverage + report OK"))
+        print(f"checker over {args.testset} run: {os.path.basename(run_dir) if run_dir else '(none)'}\n")
+        width = max(len(r[0]) for r in results)
+        all_ok = all(ok for _, ok, _ in results)
+        for name, ok, last in results:
+            print(f"  {'PASS' if ok else 'FAIL'}  {name:<{width}}  {last}")
+        print()
+        print("CHECKER PASS" if all_ok else "CHECKER FAIL", f"({args.testset})")
+        return 0 if all_ok else 1
 
     gp = golden_regression()
     results.append(("normalization-golden", not gp, gp[0] if gp else "all golden cases hold"))
@@ -105,14 +154,18 @@ def main() -> int:
     if not run_dir or not os.path.isdir(run_dir):
         results.append(("run-dir", False, f"no run dir ({run_dir})"))
     else:
-        ts_argv = ["--ts", os.path.basename(run_dir)]
+        # pass the path RELATIVE to runs/ (not just the basename) so nested batch
+        # runs (runs/<batch>/study) resolve correctly in the phase sub-checks.
+        rel_ts = os.path.relpath(run_dir, C.RUNS_DIR).replace(os.sep, "/")
+        ts_argv = ["--ts", rel_ts]
         for name in ("phase2_check.py", "phase3_check.py", "phase4_check.py"):
             ok, last = run_check(name, ts_argv)
             results.append((name, ok, last))
         xc = manifest_run_crosscheck(run_dir)
         results.append(("manifest<->run", not xc, xc[0] if xc else "all active samples present, parse 6/6"))
 
-    print(f"checker over run: {os.path.basename(run_dir) if run_dir else '(none)'}\n")
+    _disp = os.path.relpath(run_dir, C.RUNS_DIR).replace(os.sep, "/") if run_dir else "(none)"
+    print(f"checker over run: {_disp}\n")
     width = max(len(r[0]) for r in results)
     all_ok = True
     for name, ok, last in results:

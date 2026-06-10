@@ -22,6 +22,10 @@ FIELD_TYPE = {
     "supplyAmount": "amount", "taxAmount": "amount",
     "totalAmount": "amount", "cumulativeAmount": "amount",
     "totalQuantity": "qty",
+    # --- thin/war new-3 fields (§6.6) ---
+    "discountAmount": "amount",     # a money sum
+    "documentNumber": "code",       # an identifier, not a sum (alnum-collapsed)
+    "taxType": "text",              # 과세/영세/면세 etc.
 }
 ROW_KEY_TYPE = {
     "rowIndex": "index",
@@ -29,7 +33,30 @@ ROW_KEY_TYPE = {
     "productCode": "code", "lotNo": "code",
     "expiryDate": "date",
     "quantity": "qty", "unitPrice": "amount", "amount": "amount",
+    # --- thin/war new row column ---
+    "manufacturingNo": "code", "serialNo": "code",
 }
+
+
+def _infer_type(key: str) -> str:
+    """Name-heuristic fallback (➍) for keys absent from the explicit maps.
+
+    Lets future ETL/war columns normalize correctly without a code change. Never
+    fires for the rich/thin contract keys (all are mapped explicitly above), so
+    it cannot shift existing behavior — it is purely additive for unknown keys.
+        *Amount / *Price -> amount
+        *Date            -> date
+        *Num / *Code / *No -> code   (incl. manufacturingNo / serialNo)
+        else             -> text
+    """
+    low = key.lower()
+    if low.endswith(("amount", "price")):
+        return "amount"
+    if low.endswith("date"):
+        return "date"
+    if low.endswith(("num", "code", "no")):
+        return "code"
+    return "text"
 
 _DIGITS = re.compile(r"\D+")
 _NON_ALNUM = re.compile(r"[^0-9A-Za-z가-힣]+")
@@ -81,11 +108,11 @@ _NORMALIZERS = {
 
 
 def normalize_field(label: str, value) -> str:
-    return _NORMALIZERS[FIELD_TYPE.get(label, "text")](value)
+    return _NORMALIZERS[FIELD_TYPE.get(label) or _infer_type(label)](value)
 
 
 def normalize_cell(row_key: str, value) -> str:
-    return _NORMALIZERS[ROW_KEY_TYPE.get(row_key, "text")](value)
+    return _NORMALIZERS[ROW_KEY_TYPE.get(row_key) or _infer_type(row_key)](value)
 
 
 def is_empty(value) -> bool:

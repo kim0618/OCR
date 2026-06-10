@@ -28,21 +28,23 @@ def _latest_run() -> str | None:
     return sorted(runs)[-1] if runs else None
 
 
-def compare_run(ts: str | None = None) -> dict[str, Any]:
-    run_dir = os.path.join(C.RUNS_DIR, ts) if ts else _latest_run()
+def compare_run(ts: str | None = None, testset: str = C.DEFAULT_TESTSET) -> dict[str, Any]:
+    run_dir = os.path.join(C.RUNS_DIR, ts) if ts else C.latest_run(testset)
     if not run_dir or not os.path.isdir(run_dir):
         raise FileNotFoundError(f"run dir not found: {run_dir}")
     samples_dir = os.path.join(run_dir, "samples")
     compare_dir = os.path.join(run_dir, "compare")
     os.makedirs(compare_dir, exist_ok=True)
 
-    manifest = build_manifest()
-    actives = [s for s in manifest["samples"] if s["status"] == "active"]
+    manifest = build_manifest(testset)
+    kind = manifest["kind"]
+    # active (live) and canned (recorded) samples are both compared.
+    runnable = [s for s in manifest["samples"] if s["status"] in ("active", "canned")]
 
     rows_summary: list[dict[str, Any]] = []
-    for s in actives:
+    for s in runnable:
         src = s["sourceFile"]
-        gt = load_gt(os.path.normpath(os.path.join(C.HERE, s["gt"])))
+        gt = load_gt(os.path.normpath(os.path.join(C.HERE, s["gt"])), profile=kind)
         res_path = os.path.join(samples_dir, src + ".json")
         result = json.load(open(res_path, encoding="utf-8"))
         ext_df = result.get("documentFields") or {}
@@ -53,6 +55,7 @@ def compare_run(ts: str | None = None) -> dict[str, Any]:
 
         out = {
             "sourceFile": src,
+            "profile": gt["profile"],
             "extractionPath": result.get("extractionPath"),
             "pageCount": result.get("pageCount"),
             "multiPage": result.get("multiPage"),
@@ -82,6 +85,8 @@ def compare_run(ts: str | None = None) -> dict[str, Any]:
     summary = {
         "schemaVersion": "eval-compare.v1",
         "runTs": os.path.basename(run_dir),
+        "testset": testset,
+        "kind": kind,
         "samples": rows_summary,
     }
     with open(os.path.join(run_dir, "compare_summary.json"), "w", encoding="utf-8") as fh:
@@ -108,5 +113,6 @@ def compare_run(ts: str | None = None) -> dict[str, Any]:
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--ts", default=None)
+    ap.add_argument("--testset", default=C.DEFAULT_TESTSET)
     args = ap.parse_args()
-    compare_run(args.ts)
+    compare_run(args.ts, args.testset)

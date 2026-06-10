@@ -1,11 +1,14 @@
-"""build_manifest — auto-pair images with GT files into eval/manifest.json.
+"""build_manifest — auto-pair images/recorded-results with GT into a manifest.
 
 Pairing key = GT's top-level `sourceFile`. Status per sample:
-  active      image present AND GT present (loads under contract)
+  active      image present AND GT present (live OCR run)
+  canned      GT present, NO image, recorded rec envelope present (⓲) — runnable
+              from the recorded result, so a DB/thin testset runs with no image
   pending_gt  image present, no GT yet
-  gt_orphan   GT present, image missing
-  excluded    deliberately dropped (contract.EXCLUDED_SOURCES, e.g. 2.pdf)
+  gt_orphan   GT present, no image and no recorded rec
+  excluded    deliberately dropped (testset.excluded, e.g. 2.pdf)
 
+Per-testset (⓬): pass a testset name; defaults to invoice_study (rich, live).
 Measurement-only: reads the testset, writes ONLY eval/manifest.json.
 """
 
@@ -20,10 +23,10 @@ import contract as C
 from gt_loader import GTLoadError, load_gt
 
 
-def _gt_index() -> dict[str, str]:
+def _gt_index(gt_dir: str) -> dict[str, str]:
     """Map sourceFile -> GT file path, by reading each GT's sourceFile."""
     index: dict[str, str] = {}
-    for path in sorted(glob.glob(os.path.join(C.GT_DIR, "*.json"))):
+    for path in sorted(glob.glob(os.path.join(gt_dir, "*.json"))):
         try:
             with open(path, encoding="utf-8") as fh:
                 src = json.load(fh).get("sourceFile")
@@ -34,50 +37,71 @@ def _gt_index() -> dict[str, str]:
     return index
 
 
-def _images() -> dict[str, str]:
-    """Map sourceFile (basename) -> image path for files in IMG_DIR."""
+def _images(img_dir: str) -> dict[str, str]:
+    """Map sourceFile (basename) -> image path for files in the testset dir."""
     out: dict[str, str] = {}
-    for name in sorted(os.listdir(C.IMG_DIR)):
-        full = os.path.join(C.IMG_DIR, name)
+    if not os.path.isdir(img_dir):
+        return out
+    for name in sorted(os.listdir(img_dir)):
+        full = os.path.join(img_dir, name)
         if os.path.isfile(full) and name.lower().endswith(C.IMAGE_EXTS):
             out[name] = full
     return out
 
 
-def build_manifest() -> dict[str, Any]:
-    gt_by_src = _gt_index()
-    img_by_src = _images()
+def _rec_index(rec_dir: str) -> dict[str, str]:
+    """Map sourceFile -> recorded rec-envelope path (canned run, ⓲)."""
+    out: dict[str, str] = {}
+    if not os.path.isdir(rec_dir):
+        return out
+    for path in sorted(glob.glob(os.path.join(rec_dir, "*.json"))):
+        out[os.path.basename(path)[:-5]] = path  # "<src>.json" -> "<src>"
+    return out
+
+
+def build_manifest(testset: str = C.DEFAULT_TESTSET) -> dict[str, Any]:
+    ts = C.get_testset(testset)
+    kind = ts["kind"]
+    gt_by_src = _gt_index(ts["gtDir"])
+    img_by_src = _images(ts["dir"])
+    rec_by_src = _rec_index(ts["recDir"])
+    excluded = ts["excluded"]
+    expected = ts["expected"]
     samples: list[dict[str, Any]] = []
 
-    all_sources = set(gt_by_src) | set(img_by_src) | set(C.EXCLUDED_SOURCES)
+    all_sources = set(gt_by_src) | set(img_by_src) | set(rec_by_src) | set(excluded)
     for src in sorted(all_sources):
         has_img = src in img_by_src
         has_gt = src in gt_by_src
+        has_rec = src in rec_by_src
         entry: dict[str, Any] = {
             "sourceFile": src,
             "image": os.path.relpath(img_by_src[src], C.HERE) if has_img else None,
             "gt": os.path.relpath(gt_by_src[src], C.HERE) if has_gt else None,
+            "rec": os.path.relpath(rec_by_src[src], C.HERE) if has_rec else None,
         }
 
-        if src in C.EXCLUDED_SOURCES:
+        if src in excluded:
             entry["status"] = "excluded"
-            entry["reason"] = C.EXCLUDED_SOURCES[src]
+            entry["reason"] = excluded[src]
         elif has_img and has_gt:
             entry["status"] = "active"
+        elif has_gt and has_rec:
+            entry["status"] = "canned"        # ⓲ runnable from recorded result, no image
         elif has_img:
             entry["status"] = "pending_gt"
         else:
             entry["status"] = "gt_orphan"
 
-        # Enrich active samples from the loaded GT (and surface load failures).
-        if entry["status"] == "active":
+        # Enrich runnable samples (active|canned) from the loaded GT.
+        if entry["status"] in ("active", "canned"):
             try:
-                g = load_gt(gt_by_src[src])
+                g = load_gt(gt_by_src[src], profile=kind)
                 entry["profile"] = g["profile"]
                 entry["perSampleField"] = g["perSampleField"]
                 entry["rowCount"] = g["_meta"]["rowCount"]
                 entry["excludedRowCount"] = g["_meta"]["excludedRowCount"]
-                exp = C.EXPECTED_ROWS.get(src)
+                exp = expected.get(src)
                 if exp is not None and g["_meta"]["rowCount"] != exp:
                     entry["rowCountWarning"] = f"expected {exp}"
             except GTLoadError as exc:
@@ -92,15 +116,19 @@ def build_manifest() -> dict[str, Any]:
 
     return {
         "schemaVersion": "eval-manifest.v1",
-        "generatedFrom": os.path.basename(C.TESTSET_DIR),
-        "testsetDir": os.path.relpath(C.TESTSET_DIR, C.HERE),
+        "testset": testset,
+        "kind": kind,
+        "runMode": ts["runMode"],
+        "generatedFrom": os.path.basename(ts["dir"]),
+        "testsetDir": os.path.relpath(ts["dir"], C.HERE),
         "counts": counts,
         "samples": samples,
     }
 
 
-def write_manifest(manifest: dict[str, Any] | None = None) -> str:
-    manifest = manifest or build_manifest()
+def write_manifest(manifest: dict[str, Any] | None = None,
+                   testset: str = C.DEFAULT_TESTSET) -> str:
+    manifest = manifest or build_manifest(testset)
     with open(C.MANIFEST_PATH, "w", encoding="utf-8") as fh:
         json.dump(manifest, fh, ensure_ascii=False, indent=2)
         fh.write("\n")
@@ -108,13 +136,17 @@ def write_manifest(manifest: dict[str, Any] | None = None) -> str:
 
 
 if __name__ == "__main__":
-    m = build_manifest()
-    path = write_manifest(m)
-    print(f"wrote {path}")
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--testset", default=C.DEFAULT_TESTSET)
+    args = ap.parse_args()
+    m = build_manifest(args.testset)
+    path = write_manifest(m, args.testset)
+    print(f"wrote {path}  (testset={m['testset']}, kind={m['kind']})")
     print(f"counts: {m['counts']}")
     for s in m["samples"]:
         line = f"  {s['status']:<11} {s['sourceFile']:<8}"
-        if s["status"] == "active":
+        if s["status"] in ("active", "canned"):
             line += f" rows={s.get('rowCount')} perSample={s.get('perSampleField')} ({s.get('profile')})"
         elif s["status"] == "excluded":
             line += f" — {s.get('reason')}"

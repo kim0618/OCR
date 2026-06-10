@@ -59,6 +59,8 @@ from extractors.representative import (
     _fill_lone_representative_from_lines,
 )
 from extractors.invoice_statement import extract_invoice_statement_fields
+from field_confidence import build_field_confidence
+from review_flags import build_review_flags
 from extractors.invoice_statement_free import (
     extract_invoice_statement_free,
     _is_valid_invoice_statement_free_result,
@@ -3010,6 +3012,16 @@ async def ocr_extract(
             if _free_debug:
                 extract_debug["invoice_statement_free"] = _free_debug
             response["document_fields"] = document_fields
+            # REVIEW-SIGNAL Phase A: per-field confidence (additive, posthoc)
+            try:
+                response["fieldConfidence"] = build_field_confidence(document_fields, ocr_lines_raw)
+            except Exception as _fc_e:
+                print(f"[field_confidence] failed (response unaffected): {_fc_e}")
+            # REVIEW-SIGNAL Phase B: arithmetic consistency flags (additive)
+            try:
+                response["reviewFlags"] = build_review_flags(document_fields)
+            except Exception as _rf_e:
+                print(f"[review_flags] failed (response unaffected): {_rf_e}")
             extract_debug["invoice_statement"] = invoice_debug.get("invoice_statement", invoice_debug)
             _tec_used = (document_fields.get("tableMeta") or {}).get("expectedColumnsUsed", False)
             _src = (document_fields.get("tableMeta") or {}).get("extractionSource", "")

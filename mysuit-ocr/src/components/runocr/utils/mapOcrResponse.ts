@@ -217,6 +217,22 @@ export function buildRunOcrResult(raw: any, template?: BuildRunOcrResultTemplate
   const documentFieldsScalar = extractDocumentFieldsScalar(
     (raw as { document_fields?: unknown })?.document_fields,
   );
+
+  // REVIEW-SIGNAL Phase C: backend posthoc per-field confidence + arithmetic
+  // review flags. Both additive backend keys — absent on old responses, in
+  // which case the legacy `value ? 1 : 0` heuristic below stays in effect.
+  const backendFieldConfidence: Record<string, number | null> =
+    (raw?.fieldConfidence && typeof raw.fieldConfidence === "object"
+      && raw.fieldConfidence.fields && typeof raw.fieldConfidence.fields === "object")
+      ? raw.fieldConfidence.fields
+      : {};
+  const backendReviewFlags: Array<{ scope?: string; fields?: string[]; reason?: string }> =
+    Array.isArray(raw?.reviewFlags?.flags) ? raw.reviewFlags.flags : [];
+  const documentFlagReasons = (docFieldKey: string): string[] =>
+    backendReviewFlags
+      .filter((f) => f?.scope === "document" && Array.isArray(f.fields) && f.fields.includes(docFieldKey))
+      .map((f) => String(f.reason ?? ""))
+      .filter(Boolean);
   const isInvoiceStatement =
     (typeof template?.documentType === "string" && template.documentType.trim() === "invoice_statement")
     || (typeof (raw as { doc_type?: unknown })?.doc_type === "string"
@@ -287,14 +303,20 @@ export function buildRunOcrResult(raw: any, template?: BuildRunOcrResultTemplate
         ?? pickValue(financeFields, en)
         ?? { key: "", value: "" };
       const value = picked.value;
+      // REVIEW-SIGNAL Phase C: real backend confidence when the value came
+      // from document_fields (docFieldPick). null = derived/untraceable —
+      // no signal, fall back to the legacy presence heuristic.
+      const realConf = docFieldPick ? backendFieldConfidence[picked.key] : undefined;
+      const flagReasons = docFieldPick ? documentFlagReasons(picked.key) : [];
       resultFields.push({
         name: ko || en || `field_${index + 1}`,
         ko,
         en,
         field_type: "field",
         value: String(value ?? ""),
-        confidence: value ? 1 : 0,
+        confidence: typeof realConf === "number" ? realConf : (value ? 1 : 0),
         bbox: [0, 0, 0, 0],
+        ...(flagReasons.length > 0 ? { reviewFlags: flagReasons } : {}),
       });
     });
   } else if (Object.keys(receiptFields).length > 0) {

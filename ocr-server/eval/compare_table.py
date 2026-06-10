@@ -1,56 +1,126 @@
 """compare_table — per-row / per-cell table comparison (Phase 3).
 
-Aligns GT rows to extracted rows by normalized rowIndex, compares only contract
-value cells (ROW_VALUE_KEYS minus the rowIndex alignment key), applies frozen
-normalization, skips GT-empty cells. excludedRows are already separated by the
-loader, so they can never be counted as misses.
+Aligns GT rows to extracted rows, then compares the value cells the GT row
+provides (⓰), under frozen normalization, skipping GT-empty cells. excludedRows
+are separated by the loader, so they can never be counted as misses.
 
-Extracted rows carry internal keys (_rawText/_confidence/_source) which are
-dropped to the value-key projection before compare.
+Alignment (step 4):
+  rowindex  rich GT carries a 1-based rowIndex → positional truth (unchanged).
+  content   thin GT has NO rowIndex → align by itemName/amount/quantity
+            similarity (B). This is also the algorithm the rich rowIndex set
+            validates as a numeric oracle (➏, in p0_thin_check).
+  auto      rowindex when every GT row has a usable rowIndex, else content.
 
-compare_table(gt_rows, ext_rows) -> dict
+compare_table(gt_rows, ext_rows, align="auto") -> dict
 """
 
 from __future__ import annotations
 
+from difflib import SequenceMatcher
 from typing import Any
 
 import contract as C
 import normalize as N
 
-CELL_KEYS = [k for k in C.ROW_VALUE_KEYS if k != C.ROW_ALIGN_KEY]
+
+def _value_keys(gt_row: dict[str, Any]) -> list[str]:
+    """⓰ The cells we compare = the value keys the GT row provides (minus the
+    alignment key and any review-meta). rich → its 8 value keys; thin → its war
+    columns (itemName/quantity/unitPrice/amount/expiryDate/manufacturingNo)."""
+    return [k for k in gt_row if k not in C.ROW_META_KEYS and k != C.ROW_ALIGN_KEY]
 
 
-def _project(rows: list[dict[str, Any]]) -> "dict[str, dict[str, Any]]":
-    """Index rows by normalized rowIndex, keep only value keys."""
+def _has_rowindex(row: dict[str, Any]) -> bool:
+    return N.norm_index(row.get(C.ROW_ALIGN_KEY)) != ""
+
+
+def _index(rows: list[dict[str, Any]]) -> "dict[str, dict[str, Any]]":
+    """Index raw rows by normalized rowIndex; rows without one are skipped."""
     out: dict[str, dict[str, Any]] = {}
     for r in rows or []:
         idx = N.norm_index(r.get(C.ROW_ALIGN_KEY))
         if idx == "":
             continue
-        out[idx] = {k: r.get(k) for k in C.ROW_VALUE_KEYS if k in r}
+        out[idx] = r
     return out
 
 
-def compare_table(gt_rows: list[dict[str, Any]], ext_rows: list[dict[str, Any]]) -> dict[str, Any]:
-    gt_by_idx = _project(gt_rows)
-    ext_by_idx = _project(ext_rows)
+def _align_by_rowindex(gt_rows, ext_rows):
+    """Positional alignment by rowIndex (rich oracle / unchanged behavior)."""
+    gt_by = _index(gt_rows)
+    ext_by = _index(ext_rows)
+    gk, ek = set(gt_by), set(ext_by)
+    matched = sorted(gk & ek, key=lambda s: int(s))
+    pairs = [(idx, gt_by[idx], ext_by[idx]) for idx in matched]
+    gt_only = sorted(gk - ek, key=lambda s: int(s))
+    ext_only = sorted(ek - gk, key=lambda s: int(s))
+    return pairs, gt_only, ext_only, len(gt_by), len(ext_by)
 
-    gt_keys = set(gt_by_idx)
-    ext_keys = set(ext_by_idx)
-    matched_idx = sorted(gt_keys & ext_keys, key=lambda s: int(s))
-    gt_only = sorted(gt_keys - ext_keys, key=lambda s: int(s))   # rows extractor missed
-    ext_only = sorted(ext_keys - gt_keys, key=lambda s: int(s))  # spurious extra rows
+
+def _row_similarity(g: dict[str, Any], e: dict[str, Any]) -> float:
+    """Content similarity for B: itemName text + amount/quantity exact signals."""
+    name_sim = SequenceMatcher(
+        None, N.norm_text(g.get("itemName", "")), N.norm_text(e.get("itemName", ""))
+    ).ratio()
+    amt_g, amt_e = N.norm_amount(g.get("amount", "")), N.norm_amount(e.get("amount", ""))
+    qty_g, qty_e = N.norm_qty(g.get("quantity", "")), N.norm_qty(e.get("quantity", ""))
+    amt_match = 1.0 if amt_g and amt_g == amt_e else 0.0
+    qty_match = 1.0 if qty_g and qty_g == qty_e else 0.0
+    return 0.5 * name_sim + 0.35 * amt_match + 0.15 * qty_match
+
+
+def _align_by_content(gt_rows, ext_rows, threshold: float = 0.30):
+    """Greedy best-first content alignment (B). Each GT/ext row used at most once."""
+    gt_rows = gt_rows or []
+    ext_rows = ext_rows or []
+    cands = []
+    for gi, g in enumerate(gt_rows):
+        for ei, e in enumerate(ext_rows):
+            cands.append((_row_similarity(g, e), gi, ei))
+    cands.sort(key=lambda t: (-t[0], t[1], t[2]))  # best score first, stable
+    used_g: set[int] = set()
+    used_e: set[int] = set()
+    pairs_idx: list[tuple[int, int]] = []
+    for score, gi, ei in cands:
+        if score < threshold:
+            break
+        if gi in used_g or ei in used_e:
+            continue
+        used_g.add(gi)
+        used_e.add(ei)
+        pairs_idx.append((gi, ei))
+    pairs_idx.sort()  # report in GT order
+    pairs = []
+    for gi, ei in pairs_idx:
+        key = N.norm_index(ext_rows[ei].get(C.ROW_ALIGN_KEY)) or str(gi + 1)
+        pairs.append((key, gt_rows[gi], ext_rows[ei]))
+    gt_only = [str(gi + 1) for gi in range(len(gt_rows)) if gi not in used_g]
+    ext_only = [N.norm_index(ext_rows[ei].get(C.ROW_ALIGN_KEY)) or str(ei + 1)
+                for ei in range(len(ext_rows)) if ei not in used_e]
+    return pairs, gt_only, ext_only, len(gt_rows), len(ext_rows)
+
+
+def compare_table(gt_rows: list[dict[str, Any]], ext_rows: list[dict[str, Any]],
+                  align: str = "auto") -> dict[str, Any]:
+    if align == "auto":
+        use_rowindex = bool(gt_rows) and all(_has_rowindex(r) for r in gt_rows)
+    else:
+        use_rowindex = align == "rowindex"
+
+    if use_rowindex:
+        pairs, gt_only, ext_only, n_gt, n_ext = _align_by_rowindex(gt_rows, ext_rows)
+        align_mode = "rowIndex"
+    else:
+        pairs, gt_only, ext_only, n_gt, n_ext = _align_by_content(gt_rows, ext_rows)
+        align_mode = "content"
 
     cell_counts = {"scored": 0, "match": 0, "mismatch": 0, "ext_missing": 0, "gt_empty": 0}
     row_results: list[dict[str, Any]] = []
 
-    for idx in matched_idx:
-        g = gt_by_idx[idx]
-        e = ext_by_idx[idx]
+    for row_key, g, e in pairs:
         cells: dict[str, dict[str, Any]] = {}
         row_match = True
-        for key in CELL_KEYS:
+        for key in _value_keys(g):
             gv = g.get(key, "")
             ev = e.get(key, "")
             gn = N.normalize_cell(key, gv)
@@ -69,15 +139,16 @@ def compare_table(gt_rows: list[dict[str, Any]], ext_rows: list[dict[str, Any]])
             cell_counts[status] = cell_counts.get(status, 0) + 1
             if status in ("mismatch", "ext_missing"):
                 row_match = False
-        row_results.append({"rowIndex": idx, "rowMatch": row_match, "cells": cells})
+        row_results.append({"rowIndex": row_key, "rowMatch": row_match, "cells": cells})
 
     scored = cell_counts["scored"]
     cell_accuracy = (cell_counts["match"] / scored) if scored else None
     return {
-        "rowCountGt": len(gt_by_idx),
-        "rowCountExt": len(ext_by_idx),
-        "rowCountMatch": len(gt_by_idx) == len(ext_by_idx),
-        "matchedRowIdx": matched_idx,
+        "alignMode": align_mode,
+        "rowCountGt": n_gt,
+        "rowCountExt": n_ext,
+        "rowCountMatch": n_gt == n_ext,
+        "matchedRowIdx": [k for k, _, _ in pairs],
         "gtOnlyRowIdx": gt_only,     # extractor missed these rows (structural)
         "extOnlyRowIdx": ext_only,   # extractor invented these rows (structural)
         "rows": row_results,

@@ -66,8 +66,10 @@ def main() -> int:
         scored = fc["scored"]
         if scored != fc["match"] + fc["mismatch"] + fc["ext_missing"]:
             problems.append(f"{src}: field scored {scored} != m+mm+miss")
-        if scored + fc["gt_empty"] != 13:
-            problems.append(f"{src}: scored+gt_empty {scored + fc['gt_empty']} != 13")
+        # ➑➓ no hardcoded 13: scored + gt_empty == number of GT fields scored.
+        n_fields = len(d["fields"]["perField"])
+        if scored + fc["gt_empty"] != n_fields:
+            problems.append(f"{src}: scored+gt_empty {scored + fc['gt_empty']} != fields {n_fields}")
         fa = d["fields"]["fieldAccuracy"]
         exp_fa = (fc["match"] / scored) if scored else None
         if fa is not None and exp_fa is not None and abs(fa - exp_fa) > 1e-9:

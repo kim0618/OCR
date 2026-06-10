@@ -69,8 +69,23 @@ bak.war DB 통째 긁으면 마스터 테이블도 딸려옴. 거래테이블에
 - → master로 채운 필드는 **`source:master` 태그** 부착(검증 추적용). 메트릭은 사람검증분과 분리 집계. 소수 어긋남만 스팟체크.
 - 적용 대상 = 회사명·주소(거래테이블에 깨끗이 없는 것)만. 품목명(description)·금액·수량·날짜·사업자번호는 거래테이블 직접 사용(JOIN 불요). 대표자·요약필드는 마스터에도 없음 → invoice_study(rich)가 담당.
 
-### 6.6 Phase 7 사전 재설계 (P0, GT-driven, thin-ready) — LOCK 2026-06-09
-**상태: 설계 LOCK + war 컬럼계약 검증 완료. 빌드 PENDING (새 채팅방서 step 0부터). 이건 정확도가 아니라 측정·수용 인프라 작업.**
+### 6.6 Phase 7 사전 재설계 (P0, GT-driven, thin-ready) — LOCK 2026-06-09 / **BUILT 2026-06-10**
+**상태: 설계 LOCK + war 컬럼계약 검증 완료 + 빌드 COMPLETE (step 0~6, TDD red→green, 매 단계 게이트, 6장 rich green 유지). 이건 정확도가 아니라 측정·수용 인프라 작업.**
+
+**빌드 결과 (2026-06-10):** 전 파이프라인 GT-driven化 완료. 게이트 `python eval/p0_thin_check.py` = 11/11 PASS, `python eval/checker.py`(6장 rich) = 7/7 PASS 동시 green.
+- step0 `contract.py` SSOT: THIN_SCALAR_FIELDS(10)/THIN_ROW_KEYS(6)/NEW_3_FIELDS/RICH_ONLY_FIELDS(7), `TESTSETS` 프로파일 레지스트리{dir,gtDir,recDir,kind,runMode,expected,excluded}, `required_scalar_fields`/`enforce_per_sample`. load_gt(path, **profile**) 주입(⓳'), build_manifest **canned** 상태(⓲).
+- step1 `gen_thin_fixture.py`: 6 rich GT를 SSOT컬럼으로 다운프로젝션(추측값 0, rich-only/bbox/edited/rowIndex/meta drop) → `eval/fixtures/invoice_thin/GT` + 녹화 rec봉투(`/rec`, run복사). RED 확인(loader rich-strict).
+- step2 `gt_loader`(rowIndex optional·per-sample rich-gate·non-meta값키), `compare_fields`(scored=gt.keys()), `compare_table`(⓰ GT제공키) → 6장 rich byte-stable, thin 6/6 load+score.
+- step3 `normalize`: discountAmount→amount/documentNumber→code/taxType→text + manufacturingNo/serialNo→code + 이름휴리스틱 폴백(➍, rich엔 미발화).
+- step4 `compare_table` 내용기반 행정렬(B, itemName/amount/qty 유사도) + rich rowIndex oracle = **43/43 100% 재현**(ORACLE_MIN_AGREEMENT=1.0, 측정 앵커).
+- step5 testset-aware pipeline(run_batch canned·compare_run·metrics·report) + difficultySplit(➐ rich=edited/thin=저신뢰 supplierCompany·taxType) + coverage 2분모(➌E gradedAccuracy·attemptRate; extNotAttempted=신규3 정직miss 경로, 현 fixture=0=가시화).
+- step6 `checker.py --testset`(thin 제네릭 self-consistency) + ➑➓ literal 13 제거(per-profile) + profile-consistency(⓳' richSignal⇔profile) + **양방향 oracle**(rich다운프로젝션 thin vs rich-path 공유필드/셀 verdict 일치) + rich-6-green.
+- 1커맨드: `python eval/run_all.py --reuse <rich_ts>` (rich MVP GO) / `python eval/run_all.py --testset invoice_thin` (thin canned MVP GO, 서버·이미지 불요).
+- **회귀 비교(루프의 "재측정→회귀감지") = `python eval/trend.py [--testset ...]`**: timeseries를 run-over-run 델타(▲/▼pp + 버킷 defect 증가 `*`)로 표시. run_all 끝에도 직전 대비 1줄 델타 자동 출력. 사람용 리포트(`report.md`·`TREND.md`/`TREND.html`)는 **한글화**(상태=일치/불일치/추출누락, 버킷=인식/구조/컬럼/전처리, 갱신날짜 우상단). `TREND.html`=자체완결 스타일 리포트(브라우저).
+- **퇴근-전 1커맨드 = `python eval/run_all.py --all`**: 등록된 모든 testset을 한 방에(실패 격리), 결과를 **batch 폴더 하나로 묶음** → `runs/<batch>/{study,thin}/`(각 full run+report.md) + 루트에 `SUMMARY.md`+`TREND.{md,html}`. 다음날 그 폴더 하나만 열면 둘 다 확인. live testset=fresh OCR, canned=재생.
+- **검증 중 발견·수정한 버그 4건:** ① timeseries testset 컬럼 없음→복합PK(testset,runTs) ② `_latest_run` testset 무시→`contract.latest_run(testset)` (run_meta.testset 필터, 중첩 depth1+2 mtime) ③ metrics runTs=basename이라 중첩 `batch/study`가 `study`로 충돌→relpath ④ checker가 중첩 run에 `--ts basename` 넘겨 phase체크가 `runs/study`서 못 찾음→relpath 전달. 모두 수정 후 두 게이트 green 재확인.
+- 백업: `ocr-server/backup/*_20260610_p0step*_before_thin_ready.py`.
+- Deferred 4(아래) = 코드에 가시화만, 실데이터 대기(추측 안 함).
 
 **왜:** Phase 0~5 MVP는 rich invoice_study 6장에 하드코딩됨(`gt_loader` COMMON_12+rowIndex 강제, `compare_fields:31` 14필드 고정, `compare_table:21` CELL_KEYS 고정, `phase1/3_check` 필드수13, `contract.TESTSET_DIR` 단일, profile 콘텐츠추론). → DB thin GT 넣으면 **로드부터 실패.** "thin 통과"가 문서원칙일 뿐 미구현. P0=전 파이프라인 GT-driven化.
 

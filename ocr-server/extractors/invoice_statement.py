@@ -3305,6 +3305,13 @@ def _is_address_candidate_line(text: str) -> bool:
     compact = re.sub(r"\s+", "", value)
     if len(compact) < 5:
         return False
+    # R001: a value that is itself a representative-name pattern (e.g. "김동연,정유석")
+    # is the 대표자, not an address. The 동/구 inside a personal name is a false
+    # _ADDRESS_TOKEN_RE hit. Real addresses always carry a digit or 로/길/번지, so
+    # they never satisfy _is_representative_candidate — this guard is pattern-based
+    # (not value-specific) and leaves every genuine address untouched.
+    if _is_representative_candidate(value):
+        return False
     if _BIZ_RE.search(_canonical_digits(value)) or _PHONE_RE.search(value):
         return False
     if _COMPANY_HINT_RE.search(value) or _REP_ANCHOR_RE.search(value):

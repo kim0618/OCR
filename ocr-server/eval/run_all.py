@@ -1,12 +1,16 @@
-"""run_all — one command: manifest -> run_batch -> compare -> metrics -> report -> checker.
+"""run_all - one command: manifest -> run_batch -> compare -> metrics -> report -> checker.
 
-This is the reproducibility entry point (plan Phase 5 gate).
+Reproducibility entry point (plan Phase 5 gate).
 
-    python eval/run_all.py                      # fresh: re-OCR all 6 (needs live :9099, ~10min)
-    python eval/run_all.py --reuse <run_ts>     # reuse an existing run's OCR results (fast)
-    python eval/run_all.py --server ... --workers N
+    python eval/run_all.py                       # one testset (default invoice_study), fresh OCR
+    python eval/run_all.py --reuse <run_ts>      # reuse an existing run's OCR (fast)
+    python eval/run_all.py --testset invoice_thin
+    python eval/run_all.py --all                 # ALL testsets in one shot (fire-and-forget,
+                                                 #   e.g. start at 퇴근, read TREND next morning)
 
-Prints MVP GO/FAIL based on the consolidated checker.
+--all runs every registered testset, isolates failures (one bad testset does not
+abort the rest), refreshes TREND.md/.html once, and prints a combined summary.
+Live testsets re-OCR (need :9099); canned testsets replay recorded results.
 """
 
 from __future__ import annotations
@@ -15,48 +19,306 @@ import argparse
 import os
 import subprocess
 import sys
+from typing import Any
 
 import contract as C
 from build_manifest import write_manifest
 from compare_run import compare_run
 from metrics import compute_metrics
-from report import render_report
+from report import render_report, render_report_html
 from run_batch import run_batch
 
 
-def run_all(reuse: str | None, server: str, workers: int) -> int:
-    print("== [1/6] manifest ==")
-    write_manifest()
+def _measure(reuse: str | None, server: str, workers: int, testset: str,
+             verbose: bool = True, run_id: str | None = None) -> dict[str, Any]:
+    """Run steps 1–6 for one testset. Returns a result dict; never raises.
 
-    if reuse:
-        ts = reuse
-        run_dir = os.path.join(C.RUNS_DIR, ts)
-        if not os.path.isdir(os.path.join(run_dir, "samples")):
-            print(f"!! reuse run not found: {run_dir}")
-            return 1
-        print(f"== [2/6] run_batch SKIPPED (reuse {ts}) ==")
-    else:
-        print("== [2/6] run_batch (live OCR) ==")
-        out = run_batch(server=server, workers=workers)
-        ts = out["ts"]
+    run_id (e.g. "<batch>/study") forces the run dir, used by --all to nest both
+    testsets under one batch folder.
+    """
+    def log(msg: str) -> None:
+        if verbose:
+            print(msg)
 
-    print("== [3/6] compare ==")
-    compare_run(ts)
-    print("== [4/6] metrics ==")
-    m = compute_metrics(os.path.join(C.RUNS_DIR, ts))
-    print(f"   field acc {m['overall']['field']['accuracy']}  cell acc {m['overall']['cell']['accuracy']}")
-    print("== [5/6] report ==")
-    rp = render_report(os.path.join(C.RUNS_DIR, ts))
-    print(f"   {rp}")
+    res: dict[str, Any] = {"testset": testset, "ts": None, "ok": False,
+                           "fieldAcc": None, "cellAcc": None, "error": None}
+    try:
+        write_manifest(testset=testset)
+        canned = C.get_testset(testset)["runMode"] == "canned"
+        if reuse:
+            ts = reuse
+            if not os.path.isdir(os.path.join(C.RUNS_DIR, ts, "samples")):
+                res["error"] = f"reuse run not found: {ts}"
+                return res
+            log(f"== [2/6] run_batch SKIPPED (reuse {ts}) ==")
+        else:
+            log(f"== [2/6] run_batch (testset={testset}) ==")
+            # run_id (--all batch) forces the dir; else canned → stable dir,
+            # live → fresh timestamp so history accumulates.
+            forced = run_id or (testset if canned else None)
+            out = run_batch(server=server, workers=workers, testset=testset, resume_ts=forced)
+            ts = out["ts"]
+        res["ts"] = ts
 
-    print("== [6/6] checker ==")
-    p = subprocess.run([sys.executable, os.path.join(C.HERE, "checker.py"), "--ts", ts])
+        log("== [3/6] compare ==")
+        compare_run(ts, testset=testset)
+        log("== [4/6] metrics ==")
+        m = compute_metrics(os.path.join(C.RUNS_DIR, ts))
+        res["fieldAcc"] = m["overall"]["field"]["accuracy"]
+        res["cellAcc"] = m["overall"]["cell"]["accuracy"]
+        res["sampleCount"] = m.get("sampleCount")
+        res["kind"] = C.get_testset(testset)["kind"]
+        log(f"   field acc {res['fieldAcc']}  cell acc {res['cellAcc']}")
+        log("== [5/6] report ==")
+        rd = os.path.join(C.RUNS_DIR, ts)
+        rp = render_report(rd)
+        try:
+            render_report_html(rd)
+        except Exception as exc:
+            log(f"   (report.html unavailable: {exc})")
+        try:
+            from report_compare import render_compare_html
+            cmp = render_compare_html(rd)
+            if cmp:
+                log(f"   compare.html -> {cmp}")
+            else:
+                log("   (compare.html skipped - 직전 run 없음)")
+        except Exception as exc:
+            log(f"   (compare.html unavailable: {exc})")
+        log(f"   {rp}")
+
+        log("== [6/6] checker ==")
+        p = subprocess.run(
+            [sys.executable, os.path.join(C.HERE, "checker.py"), "--ts", ts, "--testset", testset],
+            capture_output=not verbose, text=True, encoding="utf-8",
+        )
+        res["ok"] = p.returncode == 0
+        if not res["ok"] and not verbose:
+            out = (p.stdout or "") + (p.stderr or "")
+            res["error"] = next((ln for ln in reversed(out.strip().splitlines()) if ln.strip()), "checker FAIL")
+    except Exception as exc:  # isolation: a broken testset must not sink the others
+        res["error"] = f"{type(exc).__name__}: {exc}"
+    return res
+
+
+def _refresh_trend(testset_for_line: str | None = None) -> None:
+    try:
+        from trend import latest_delta_line, render_md, render_html
+        md, html = render_md(), render_html()
+        if testset_for_line:
+            line = latest_delta_line(testset_for_line)
+            if line:
+                print("== trend ==")
+                print(" ", line)
+        print(f"  TREND.md   -> {md}")
+        print(f"  TREND.html -> {html}")
+    except Exception as exc:
+        print(f"  (trend unavailable: {exc})")
+
+
+def run_all(reuse: str | None, server: str, workers: int,
+            testset: str = C.DEFAULT_TESTSET) -> int:
+    """Single testset, verbose (the classic entry point)."""
+    print(f"== [1/6] manifest (testset={testset}) ==")
+    r = _measure(reuse, server, workers, testset, verbose=True)
     print()
-    if p.returncode == 0:
-        print(f"MVP GO - one-command pipeline reproduced run {ts}, checker PASS")
+    _refresh_trend(testset)
+    print()
+    if r["ok"]:
+        print(f"MVP GO - pipeline ran {r['ts']} (testset={testset}), checker PASS")
         return 0
-    print(f"MVP FAIL - checker failed for run {ts}")
+    print(f"MVP FAIL - testset={testset}: {r.get('error') or 'checker failed'}")
     return 1
+
+
+def _short(testset: str) -> str:
+    """invoice_study -> study, invoice_thin -> thin (batch subfolder name)."""
+    return testset.replace("invoice_", "") or testset
+
+
+import re as _re
+
+_BATCH_RE = _re.compile(r"^(?:(\d{3})_)?\d{8}_\d{6}$")  # 001_YYYYMMDD_HHMMSS 또는 옛 YYYYMMDD_HHMMSS
+
+
+def _next_seq() -> int:
+    """기존 배치 폴더 개수 +1 = 다음 회차 번호. 폴더 앞 NNN_ 프리픽스용."""
+    if not os.path.isdir(C.RUNS_DIR):
+        return 1
+    n = sum(1 for d in os.listdir(C.RUNS_DIR)
+            if os.path.isdir(os.path.join(C.RUNS_DIR, d)) and _BATCH_RE.match(d))
+    return n + 1
+
+
+def _role_label(testset: str, kind: str, html: bool = False) -> str:
+    """종류 컬럼: rich=기준점(골든), thin=학습데이터. thin이 아직 녹화본(canned)이면
+    '현재 모형'을 덧붙여 '실제 수천장'으로 오해하지 않게 - 실데이터(live)면 자동 제거."""
+    if kind == "rich":
+        return "회귀 기준점"
+    canned = C.get_testset(testset)["runMode"] == "canned"
+    if not canned:
+        return "학습데이터"
+    tag = " <span class='muted'>(실데이터 대기)</span>" if html else " (실데이터 대기)"
+    return "학습데이터" + tag
+
+
+def _write_batch_summary(batch_dir: str, batch: str, results: list[dict[str, Any]]) -> str:
+    import datetime as _dt
+    gen = _dt.datetime.now().strftime("%Y-%m-%d %H:%M")
+    L = [f"# 학습 종합보고서 - {batch}", "", f"_생성 {gen}_", "",
+         "> - **필드 정확도** = 공급자 상호·사업자번호·대표자·주소, 공급받는자 상호·사업자번호·대표자·주소, "
+         "작성일자, 공급가액, 세액, 합계금액, 누계, 총수량 (thin 추가: 할인액·문서번호·과세유형)",
+         "> - **셀 정확도** = 품명, 규격, 품목코드, LOT번호, 유효기간, 수량, 단가, 금액 (thin 추가: 제조번호)",
+         "> - **검증(게이트)** = 하니스 자기점검(PASS여야 수치 신뢰)", "",
+         "| 데이터셋 | 종류 | 건수 | 필드 정확도 | 셀 정확도 | 검증(게이트) | 상세 |",
+         "|---|---|--:|--:|--:|---|---|"]
+    n_ok = 0
+    for r in results:
+        n_ok += 1 if r["ok"] else 0
+        sub = _short(r["testset"])
+        fa = "n/a" if r["fieldAcc"] is None else f"{r['fieldAcc'] * 100:.1f}%"
+        ca = "n/a" if r["cellAcc"] is None else f"{r['cellAcc'] * 100:.1f}%"
+        chk = "✅ PASS" if r["ok"] else f"❌ FAIL ({r.get('error') or '?'})"
+        role = _role_label(r["testset"], r.get("kind", ""), html=False)
+        n = r.get("sampleCount", "-")
+        L.append(f"| {r['testset']} `{sub}/` | {role} | {n}건 | {fa} | {ca} | {chk} "
+                 f"| [리포트 보기]({sub}/report.html) |")
+    all_ok = n_ok == len(results)
+    L += ["", f"**{'전체 GO' if all_ok else '일부 FAIL'}** ({n_ok}/{len(results)} checker PASS)", "",
+          "- 추세(직전 대비 ▲/▼): [TREND.html](TREND.html) · [TREND.md](TREND.md)",
+          "- study = 기준점(사람검수 골든 6장, 회귀 안전망) · "
+          "thin = 학습데이터 자리(현재는 모형, 실 DB 데이터 오면 교체)"]
+    out = os.path.join(batch_dir, "SUMMARY.md")
+    with open(out, "w", encoding="utf-8") as fh:
+        fh.write("\n".join(L) + "\n")
+    return out
+
+
+def render_summary_html(batch_dir: str, batch: str, results: list[dict[str, Any]]) -> str:
+    """SUMMARY.html - styled batch summary (same look as TREND.html, in a browser)."""
+    import datetime as _dt
+    from trend import _CSS, _esc, trend_sections_html
+    gen = _dt.datetime.now().strftime("%Y-%m-%d %H:%M")
+    n_ok = sum(1 for r in results if r["ok"])
+    all_ok = n_ok == len(results)
+    H = ["<!doctype html><html lang='ko'><head><meta charset='utf-8'>",
+         "<meta name='viewport' content='width=device-width,initial-scale=1'>",
+         f"<title>학습 종합보고서 - {_esc(batch)}</title><style>{_CSS}</style></head><body>",
+         "<div class='head'><h1>학습 종합보고서</h1>"
+         f"<div class='gen'>실행 {_esc(batch)} · 생성 {gen}</div></div>",
+         "<div class='note'>"
+         "<div class='row'><b>필드 정확도</b> = 공급자 상호·사업자번호·대표자·주소, "
+         "공급받는자 상호·사업자번호·대표자·주소, 작성일자, 공급가액, 세액, 합계금액, 누계, 총수량"
+         " <span class='muted'>(thin 추가: 할인액·문서번호·과세유형)</span></div>"
+         "<div class='row'><b>셀 정확도</b> = 품명, 규격, 품목코드, LOT번호, 유효기간, 수량, 단가, 금액"
+         " <span class='muted'>(thin 추가: 제조번호)</span></div>"
+         "<div class='row'><b>검증(게이트)</b> = 하니스 자기점검(PASS여야 수치 신뢰)</div>"
+         "</div>",
+         "<section><table class='sumtable'><thead><tr>"
+         "<th>데이터셋</th><th>종류</th><th>건수</th><th>필드 정확도</th><th>셀 정확도</th>"
+         "<th>검증(게이트)</th><th>상세 리포트</th><th>비교 리포트</th></tr></thead><tbody>"]
+    for r in results:
+        sub = _short(r["testset"])
+        fa = "n/a" if r["fieldAcc"] is None else f"{r['fieldAcc'] * 100:.1f}%"
+        ca = "n/a" if r["cellAcc"] is None else f"{r['cellAcc'] * 100:.1f}%"
+        chk = ("<span class='up'>✅ PASS</span>" if r["ok"]
+               else f"<span class='down'>❌ FAIL</span>")
+        role = _role_label(r["testset"], r.get("kind", ""), html=True)
+        n = r.get("sampleCount", "-")
+        # compare.html 존재 여부 확인
+        cmp_path = os.path.join(batch_dir, sub, "compare.html")
+        cmp_btn = (f"<a class='btn' style='background:var(--warn);border-color:var(--warn)' "
+                   f"href='{sub}/compare.html'>비교 보기</a>"
+                   if os.path.isfile(cmp_path)
+                   else "<span class='muted' style='font-size:12px'>직전 없음</span>")
+        H.append(f"<tr><td>{_esc(r['testset'])} <code>{sub}/</code></td><td>{role}</td>"
+                 f"<td>{n}건</td><td>{fa}</td><td>{ca}</td><td>{chk}</td>"
+                 f"<td><a class='btn' href='{sub}/report.html'>리포트 보기</a></td>"
+                 f"<td>{cmp_btn}</td></tr>")
+    H.append("</tbody></table>")
+    cls, badge = ("ok", "🟢") if all_ok else ("bad", "🔴")
+    H.append(f"<div class='latest {cls}'>{badge} <b>{'전체 GO' if all_ok else '일부 FAIL'}</b> "
+             f"({n_ok}/{len(results)} checker PASS)</div>")
+    H.append("<div class='legend'>study=기준점(사람검수 골든 6장)  ·  "
+             "thin=학습데이터 자리(현재는 모형, 실 DB 오면 교체)  ·  "
+             "전체 룰 수정 이력: <a href='../CHANGES.html'>CHANGES.html</a></div>")
+    H.append("</section>")
+    # 추세(TREND) 내용 임베드 - 클릭 없이 오늘 결과 + 이력 한 페이지에
+    H.append("<div class='head' style='margin-top:24px'><h1 style='font-size:17px'>"
+             "이전 학습 비교</h1><div class='gen'>직전 대비 ▲ 좋아짐 / ▼ 나빠짐 · "
+             "단독 보기: <a href='TREND.html'>TREND.html</a></div></div>")
+    H.append(trend_sections_html())
+    H.append("</body></html>")
+    out = os.path.join(batch_dir, "SUMMARY.html")
+    with open(out, "w", encoding="utf-8") as fh:
+        fh.write("\n".join(H))
+    return out
+
+
+def run_all_multi(server: str, workers: int, testsets: list[str] | None = None) -> int:
+    """Every testset in one shot, grouped under ONE batch folder. Failures isolated.
+
+    runs/<batch>/{study,thin}/  + SUMMARY.md + TREND.{md,html} at the batch root,
+    so next morning you open one folder and see everything.
+    """
+    import datetime as _dt
+    import shutil
+    testsets = testsets or list(C.TESTSETS.keys())
+    # 폴더 앞에 회차 번호(NNN_) → 보고서 회차(#1, #2)와 일치, 시간순 정렬도 유지
+    batch = f"{_next_seq():03d}_{_dt.datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    batch_dir = os.path.join(C.RUNS_DIR, batch)
+    os.makedirs(batch_dir, exist_ok=True)
+    print(f"== run --all : {testsets}  →  runs/{batch}/ ==\n")
+
+    results: list[dict[str, Any]] = []
+    for i, ts in enumerate(testsets, 1):
+        print(f"---- [{i}/{len(testsets)}] {ts}  →  {batch}/{_short(ts)} ----")
+        results.append(_measure(None, server, workers, ts, verbose=True,
+                                run_id=f"{batch}/{_short(ts)}"))
+        print()
+
+    # one combined TREND, then copy it into the batch folder for self-containment
+    try:
+        from trend import render_md, render_html
+        md, html = render_md(), render_html()
+        shutil.copyfile(md, os.path.join(batch_dir, "TREND.md"))
+        shutil.copyfile(html, os.path.join(batch_dir, "TREND.html"))
+    except Exception as exc:
+        print(f"  (trend unavailable: {exc})")
+    # 전역 룰 수정 장부 갱신 (효과 = 이 배치 run으로 자동 채워짐)
+    try:
+        from changes import render_html as render_changes
+        render_changes()
+    except Exception as exc:
+        print(f"  (CHANGES.html unavailable: {exc})")
+    summary = _write_batch_summary(batch_dir, batch, results)
+    try:
+        render_summary_html(batch_dir, batch, results)
+    except Exception as exc:
+        print(f"  (SUMMARY.html unavailable: {exc})")
+
+    print("\n" + "=" * 60)
+    print(f"run --all 요약  →  runs/{batch}/")
+    print("=" * 60)
+    hdr = f"{'testset':<16} {'필드':>7} {'셀':>7}  checker"
+    print(hdr)
+    print("-" * len(hdr))
+    n_ok = 0
+    for r in results:
+        n_ok += 1 if r["ok"] else 0
+        fa = "n/a" if r["fieldAcc"] is None else f"{r['fieldAcc'] * 100:5.1f}%"
+        ca = "n/a" if r["cellAcc"] is None else f"{r['cellAcc'] * 100:5.1f}%"
+        status = "PASS" if r["ok"] else f"FAIL ({r.get('error') or '?'})"
+        print(f"{r['testset']:<16} {fa:>7} {ca:>7}  {status}")
+    all_ok = n_ok == len(results)
+    print()
+    print(f"{'전체 GO' if all_ok else '일부 FAIL'}  ({n_ok}/{len(results)} checker PASS)")
+    print(f"다음날 이 폴더 하나만 열면 됨:  runs/{batch}/")
+    print(f"  ├ SUMMARY.html (요약, 브라우저)  ·  SUMMARY.md")
+    print(f"  ├ TREND.html   (추세, 브라우저)")
+    print(f"  ├ study/report.md")
+    print(f"  └ thin/report.md")
+    return 0 if all_ok else 1
 
 
 if __name__ == "__main__":
@@ -64,5 +326,9 @@ if __name__ == "__main__":
     ap.add_argument("--reuse", default=None, help="reuse an existing run_ts (skip live OCR)")
     ap.add_argument("--server", default="http://127.0.0.1:9099")
     ap.add_argument("--workers", type=int, default=3)
+    ap.add_argument("--testset", default=C.DEFAULT_TESTSET)
+    ap.add_argument("--all", action="store_true", help="run every registered testset in one shot")
     args = ap.parse_args()
-    sys.exit(run_all(args.reuse, args.server, args.workers))
+    if args.all:
+        sys.exit(run_all_multi(args.server, args.workers))
+    sys.exit(run_all(args.reuse, args.server, args.workers, args.testset))

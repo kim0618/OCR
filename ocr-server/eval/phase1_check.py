@@ -52,8 +52,10 @@ def main() -> int:
             continue
 
         fc = g["_meta"]["fieldCount"]
-        if fc != 13:
-            problems.append(f"{s['sourceFile']}: fieldCount {fc} != 13")
+        # ➑➓ no hardcoded 13: rich = COMMON_12 + exactly one per-sample field.
+        expected_fc = len(C.COMMON_12) + 1
+        if g["profile"] == "rich" and fc != expected_fc:
+            problems.append(f"{s['sourceFile']}: fieldCount {fc} != {expected_fc}")
         if g["perSampleField"] not in C.PER_SAMPLE:
             problems.append(f"{s['sourceFile']}: bad perSampleField {g['perSampleField']}")
         exp = C.EXPECTED_ROWS.get(s["sourceFile"])

@@ -917,6 +917,8 @@ export type OcrFieldResult = {
   label?: string;
   tableRows?: Record<string, unknown>[];
   table_data?: unknown;
+  /** REVIEW-SIGNAL Phase C: backend arithmetic flag reasons (e.g. checksum_supply_tax_total). */
+  reviewFlags?: string[];
 };
 
 export type OcrResult = {
@@ -1103,8 +1105,22 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
     { key: "validation", label: "Validation" },
   ];
 
+  // REVIEW-SIGNAL Phase C: 검산 플래그 reason → 한국어 배지 라벨.
+  const reviewFlagLabel = (reason: string): string => {
+    const labels: Record<string, string> = {
+      checksum_supply_tax_total: "검산 불일치 (공급가+세액≠합계)",
+      row_qty_times_unit_price: "검산 불일치 (수량×단가≠공급가)",
+      row_vat_ten_percent: "검산 불일치 (세액≠공급가×10%)",
+      column_sum_supply: "검산 불일치 (행 합계≠공급가액)",
+    };
+    return labels[reason] ?? "검산 불일치";
+  };
+
   const getValidationStatus = (field: OcrFieldResult) => {
     if (!field.value || field.value.trim() === "") return "error";
+    // REVIEW-SIGNAL Phase C: arithmetic inconsistency (검산 실패) — the value
+    // exists but conflicts with related fields, so it needs human review.
+    if (field.reviewFlags && field.reviewFlags.length > 0) return "warning";
     if (field.confidence < 0.7) return "warning";
     return "success";
   };
@@ -2868,7 +2884,22 @@ export default function OcrResultPanel({ result, onRerun, onRevalidate, selected
                                   ({item.field.en || item.field.name})
                                 </span>
                               </span>
-                              <span className="or-val-error-value">{item.field.value || "-"}</span>
+                              <span style={{ display: "flex", alignItems: "center", gap: 6, overflow: "hidden" }}>
+                                <span className="or-val-error-value">{item.field.value || "-"}</span>
+                                {item.field.reviewFlags && item.field.reviewFlags.length > 0 && (
+                                  <span
+                                    title={item.field.reviewFlags.join(", ")}
+                                    style={{
+                                      fontSize: 10, fontWeight: 600, color: "#d97706",
+                                      background: "rgba(251,191,36,0.12)",
+                                      border: "1px solid rgba(217,119,6,0.25)",
+                                      borderRadius: 4, padding: "1px 6px", whiteSpace: "nowrap",
+                                    }}
+                                  >
+                                    {reviewFlagLabel(item.field.reviewFlags[0])}
+                                  </span>
+                                )}
+                              </span>
                               <span className={"or-val-adoption or-val-adoption-" + getAdoptionLabel(item.field)}>{getAdoptionLabel(item.field)}</span>
                               <span className="or-val-error-conf">{formatConfidence(item.field.confidence)}</span>
                             </div>

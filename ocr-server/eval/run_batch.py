@@ -123,15 +123,37 @@ def run_one(sample: dict[str, Any], server: str, timeout: float) -> dict[str, An
     return rec
 
 
+def run_one_canned(sample: dict[str, Any]) -> dict[str, Any]:
+    """Canned sample (⓲): the result is the recorded rec envelope — no server.
+
+    Lets a thin/DB testset run with no image and no live OCR. The rec was written
+    verbatim from a real run, so it already has documentFields/extractionPath/
+    pageCount/multiPage/status.
+    """
+    src = sample["sourceFile"]
+    rec_path = os.path.normpath(os.path.join(C.HERE, sample["rec"]))
+    try:
+        rec = json.load(open(rec_path, encoding="utf-8"))
+    except Exception as exc:
+        return {"sourceFile": src, "status": "error", "httpStatus": None,
+                "extractionPath": "unknown", "pageCount": None, "documentFields": None,
+                "error": f"canned rec unreadable: {exc}"}
+    rec["sourceFile"] = src
+    rec["canned"] = True
+    rec.setdefault("status", "ok")
+    return rec
+
+
 def run_batch(
     server: str = DEFAULT_SERVER,
     workers: int = 4,
     only: list[str] | None = None,
     resume_ts: str | None = None,
     timeout: float = 300.0,
+    testset: str = C.DEFAULT_TESTSET,
 ) -> dict[str, Any]:
-    manifest = build_manifest()
-    actives = [s for s in manifest["samples"] if s["status"] == "active"]
+    manifest = build_manifest(testset)
+    actives = [s for s in manifest["samples"] if s["status"] in ("active", "canned")]
     if only:
         actives = [s for s in actives if s["sourceFile"] in set(only)]
 
@@ -153,10 +175,14 @@ def run_batch(
                 pass
         todo.append(s)
 
-    print(f"run {ts}: {len(todo)} to run, {len(skipped)} resumed-skip, server={server}")
+    def dispatch(s: dict[str, Any]) -> dict[str, Any]:
+        return run_one_canned(s) if s["status"] == "canned" else run_one(s, server, timeout)
+
+    print(f"run {ts}: {len(todo)} to run, {len(skipped)} resumed-skip, "
+          f"testset={testset}, mode={manifest['runMode']}, server={server}")
     results: list[dict[str, Any]] = []
     with ThreadPoolExecutor(max_workers=max(1, workers)) as ex:
-        futs = {ex.submit(run_one, s, server, timeout): s for s in todo}
+        futs = {ex.submit(dispatch, s): s for s in todo}
         for fut in as_completed(futs):
             rec = fut.result()
             out = os.path.join(samples_dir, rec["sourceFile"] + ".json")
@@ -189,6 +215,9 @@ def run_batch(
     run_meta = {
         "schemaVersion": "eval-run.v1",
         "timestamp": ts,
+        "testset": testset,
+        "kind": manifest["kind"],
+        "runMode": manifest["runMode"],
         "serverUrl": server,
         "extractPath": EXTRACT_PATH,
         "request": {"documentType": "invoice_statement", "templateMode": "unstructured"},
@@ -213,10 +242,11 @@ def main() -> int:
     ap.add_argument("--only", nargs="*", default=None)
     ap.add_argument("--resume", dest="resume_ts", default=None)
     ap.add_argument("--timeout", type=float, default=300.0)
+    ap.add_argument("--testset", default=C.DEFAULT_TESTSET)
     args = ap.parse_args()
     out = run_batch(
         server=args.server, workers=args.workers, only=args.only,
-        resume_ts=args.resume_ts, timeout=args.timeout,
+        resume_ts=args.resume_ts, timeout=args.timeout, testset=args.testset,
     )
     return 0 if out["meta"]["summary"]["error"] == 0 else 1
 
