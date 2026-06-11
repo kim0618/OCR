@@ -54,8 +54,9 @@ def main() -> int:
     out = compare_run(args.ts)
     samples = out["summary"]["samples"]
     seen = {s["sourceFile"] for s in samples}
-    if seen != C.EXPECTED_ACTIVE_SOURCES:
-        problems.append(f"compared {sorted(seen)} != {sorted(C.EXPECTED_ACTIVE_SOURCES)}")
+    expected_active = C.expected_active_sources()  # base docs + on-disk variants
+    if seen != expected_active:
+        problems.append(f"compared {sorted(seen)} != {sorted(expected_active)}")
 
     # re-open per-sample compare files for deep consistency
     import glob, json, os
@@ -98,7 +99,8 @@ def main() -> int:
         for p in problems:
             print(f"  - {p}")
         return 1
-    print("GATE PASS - 6/6 compared, counts self-consistent, buckets valid, freeze anchors hold")
+    print(f"GATE PASS - {len(seen)}/{len(expected_active)} compared, counts self-consistent, "
+          "buckets valid, freeze anchors hold")
     return 0
 
 

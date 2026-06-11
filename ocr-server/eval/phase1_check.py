@@ -29,9 +29,10 @@ def main() -> int:
         by_status.setdefault(s["status"], []).append(s["sourceFile"])
 
     active = sorted(by_status.get("active", []))
-    if set(active) != C.EXPECTED_ACTIVE_SOURCES:
+    expected_active = C.expected_active_sources()  # base docs + on-disk variants
+    if set(active) != expected_active:
         problems.append(
-            f"active sources {active} != expected {sorted(C.EXPECTED_ACTIVE_SOURCES)}"
+            f"active sources {active} != expected {sorted(expected_active)}"
         )
     for bad in ("pending_gt", "gt_orphan", "gt_invalid"):
         if by_status.get(bad):
@@ -58,7 +59,7 @@ def main() -> int:
             problems.append(f"{s['sourceFile']}: fieldCount {fc} != {expected_fc}")
         if g["perSampleField"] not in C.PER_SAMPLE:
             problems.append(f"{s['sourceFile']}: bad perSampleField {g['perSampleField']}")
-        exp = C.EXPECTED_ROWS.get(s["sourceFile"])
+        exp = C.EXPECTED_ROWS.get(C.base_source(s["sourceFile"]))
         if exp is not None and g["_meta"]["rowCount"] != exp:
             problems.append(f"{s['sourceFile']}: rowCount {g['_meta']['rowCount']} != {exp}")
         # no review-meta leaked into value rows
@@ -71,19 +72,20 @@ def main() -> int:
         loaded_ok += 1
 
     # --- report ---
+    n_expected = len(expected_active)
     print(f"manifest counts: {manifest['counts']}")
     print(f"active: {active}")
-    print(f"loader: {loaded_ok}/{len(C.EXPECTED_ACTIVE_SOURCES)} loaded\n")
+    print(f"loader: {loaded_ok}/{n_expected} loaded\n")
 
     if problems:
         print("GATE FAIL")
         for p in problems:
             print(f"  - {p}")
         return 1
-    if loaded_ok != 6:
-        print(f"GATE FAIL - loaded {loaded_ok}/6")
+    if loaded_ok != n_expected:
+        print(f"GATE FAIL - loaded {loaded_ok}/{n_expected}")
         return 1
-    print("GATE PASS - manifest 6 active + 2.pdf excluded, loader 6/6")
+    print(f"GATE PASS - manifest {n_expected} active + 2.pdf excluded, loader {loaded_ok}/{n_expected}")
     return 0
 
 

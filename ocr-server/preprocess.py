@@ -73,15 +73,20 @@ def detect_document(image: np.ndarray) -> tuple[np.ndarray, dict]:
             best_area = fallback_area
 
     if best_contour is None:
-        return image, {"status": "감지 안됨", "detail": "사각형 문서를 찾지 못함"}
+        return image, {
+            "status": "감지 안됨", "detail": "사각형 문서를 찾지 못함",
+            "skipped": True, "areaPct": None, "borders": None,
+        }
 
     bx, by, bw, bh = cv2.boundingRect(best_contour)
     margin = int(min(h, w) * 0.02)
     borders = sum([bx <= margin, by <= margin, bx + bw >= w - margin, by + bh >= h - margin])
+    _area_pct = round(best_area / (h * w) * 100, 1)
     if best_area > h * w * 0.85 or borders >= 3:
         return image, {
             "status": "감지 스킵",
-            "detail": f"배경 포함 의심({round(best_area/(h*w)*100, 1)}%, 가장자리 {borders}면), 원본 유지",
+            "detail": f"배경 포함 의심({_area_pct}%, 가장자리 {borders}면), 원본 유지",
+            "skipped": True, "areaPct": _area_pct, "borders": int(borders),
         }
 
     ordered = _find_4corners(best_contour)
@@ -95,7 +100,10 @@ def detect_document(image: np.ndarray) -> tuple[np.ndarray, dict]:
     out_h = int(max(height_left, height_right))
 
     if out_w < 100 or out_h < 100:
-        return image, {"status": "감지 안됨", "detail": "감지된 영역이 너무 작음"}
+        return image, {
+            "status": "감지 안됨", "detail": "감지된 영역이 너무 작음",
+            "skipped": True, "areaPct": _area_pct, "borders": int(borders),
+        }
 
     dst = np.array([
         [0, 0],
@@ -112,6 +120,7 @@ def detect_document(image: np.ndarray) -> tuple[np.ndarray, dict]:
     return warped, {
         "status": "감지 완료",
         "detail": f"문서 영역 {area_pct}% ({out_w}x{out_h}으로 보정)",
+        "skipped": False, "areaPct": area_pct, "borders": int(borders),
     }
 
 

@@ -19,7 +19,16 @@ import argparse
 import os
 import subprocess
 import sys
+import time
 from typing import Any
+
+
+def _fmt_dur(sec: float | None) -> str:
+    """Seconds -> human duration: '14분 32초' / '47초' / '-' when unknown."""
+    if sec is None:
+        return "-"
+    s = int(round(sec))
+    return f"{s // 60}분 {s % 60}초" if s >= 60 else f"{s}초"
 
 import contract as C
 from build_manifest import write_manifest
@@ -41,7 +50,9 @@ def _measure(reuse: str | None, server: str, workers: int, testset: str,
             print(msg)
 
     res: dict[str, Any] = {"testset": testset, "ts": None, "ok": False,
-                           "fieldAcc": None, "cellAcc": None, "error": None}
+                           "fieldAcc": None, "cellAcc": None, "error": None,
+                           "elapsedSec": None}
+    t0 = time.perf_counter()
     try:
         write_manifest(testset=testset)
         canned = C.get_testset(testset)["runMode"] == "canned"
@@ -49,6 +60,7 @@ def _measure(reuse: str | None, server: str, workers: int, testset: str,
             ts = reuse
             if not os.path.isdir(os.path.join(C.RUNS_DIR, ts, "samples")):
                 res["error"] = f"reuse run not found: {ts}"
+                res["elapsedSec"] = round(time.perf_counter() - t0, 1)
                 return res
             log(f"== [2/6] run_batch SKIPPED (reuse {ts}) ==")
         else:
@@ -98,6 +110,7 @@ def _measure(reuse: str | None, server: str, workers: int, testset: str,
             res["error"] = next((ln for ln in reversed(out.strip().splitlines()) if ln.strip()), "checker FAIL")
     except Exception as exc:  # isolation: a broken testset must not sink the others
         res["error"] = f"{type(exc).__name__}: {exc}"
+    res["elapsedSec"] = round(time.perf_counter() - t0, 1)
     return res
 
 
@@ -162,16 +175,18 @@ def _role_label(testset: str, kind: str, html: bool = False) -> str:
     return "학습데이터" + tag
 
 
-def _write_batch_summary(batch_dir: str, batch: str, results: list[dict[str, Any]]) -> str:
+def _write_batch_summary(batch_dir: str, batch: str, results: list[dict[str, Any]],
+                         elapsed: float | None = None) -> str:
     import datetime as _dt
     gen = _dt.datetime.now().strftime("%Y-%m-%d %H:%M")
-    L = [f"# 학습 종합보고서 - {batch}", "", f"_생성 {gen}_", "",
+    gen_line = f"_생성 {gen} · 소요 {_fmt_dur(elapsed)}_" if elapsed is not None else f"_생성 {gen}_"
+    L = [f"# 학습 종합보고서 - {batch}", "", gen_line, "",
          "> - **필드 정확도** = 공급자 상호·사업자번호·대표자·주소, 공급받는자 상호·사업자번호·대표자·주소, "
          "작성일자, 공급가액, 세액, 합계금액, 누계, 총수량 (thin 추가: 할인액·문서번호·과세유형)",
          "> - **셀 정확도** = 품명, 규격, 품목코드, LOT번호, 유효기간, 수량, 단가, 금액 (thin 추가: 제조번호)",
          "> - **검증(게이트)** = 하니스 자기점검(PASS여야 수치 신뢰)", "",
-         "| 데이터셋 | 종류 | 건수 | 필드 정확도 | 셀 정확도 | 검증(게이트) | 상세 |",
-         "|---|---|--:|--:|--:|---|---|"]
+         "| 데이터셋 | 종류 | 건수 | 필드 정확도 | 셀 정확도 | 소요 시간 | 검증(게이트) | 상세 |",
+         "|---|---|--:|--:|--:|--:|---|---|"]
     n_ok = 0
     for r in results:
         n_ok += 1 if r["ok"] else 0
@@ -181,7 +196,8 @@ def _write_batch_summary(batch_dir: str, batch: str, results: list[dict[str, Any
         chk = "✅ PASS" if r["ok"] else f"❌ FAIL ({r.get('error') or '?'})"
         role = _role_label(r["testset"], r.get("kind", ""), html=False)
         n = r.get("sampleCount", "-")
-        L.append(f"| {r['testset']} `{sub}/` | {role} | {n}건 | {fa} | {ca} | {chk} "
+        dur = _fmt_dur(r.get("elapsedSec"))
+        L.append(f"| {r['testset']} `{sub}/` | {role} | {n}건 | {fa} | {ca} | {dur} | {chk} "
                  f"| [리포트 보기]({sub}/report.html) |")
     all_ok = n_ok == len(results)
     L += ["", f"**{'전체 GO' if all_ok else '일부 FAIL'}** ({n_ok}/{len(results)} checker PASS)", "",
@@ -194,18 +210,20 @@ def _write_batch_summary(batch_dir: str, batch: str, results: list[dict[str, Any
     return out
 
 
-def render_summary_html(batch_dir: str, batch: str, results: list[dict[str, Any]]) -> str:
+def render_summary_html(batch_dir: str, batch: str, results: list[dict[str, Any]],
+                        elapsed: float | None = None) -> str:
     """SUMMARY.html - styled batch summary (same look as TREND.html, in a browser)."""
     import datetime as _dt
     from trend import _CSS, _esc, trend_sections_html
     gen = _dt.datetime.now().strftime("%Y-%m-%d %H:%M")
+    dur_txt = f" · 소요 {_fmt_dur(elapsed)}" if elapsed is not None else ""
     n_ok = sum(1 for r in results if r["ok"])
     all_ok = n_ok == len(results)
     H = ["<!doctype html><html lang='ko'><head><meta charset='utf-8'>",
          "<meta name='viewport' content='width=device-width,initial-scale=1'>",
          f"<title>학습 종합보고서 - {_esc(batch)}</title><style>{_CSS}</style></head><body>",
          "<div class='head'><h1>학습 종합보고서</h1>"
-         f"<div class='gen'>실행 {_esc(batch)} · 생성 {gen}</div></div>",
+         f"<div class='gen'>실행 {_esc(batch)} · 생성 {gen}{dur_txt}</div></div>",
          "<div class='note'>"
          "<div class='row'><b>필드 정확도</b> = 공급자 상호·사업자번호·대표자·주소, "
          "공급받는자 상호·사업자번호·대표자·주소, 작성일자, 공급가액, 세액, 합계금액, 누계, 총수량"
@@ -216,7 +234,8 @@ def render_summary_html(batch_dir: str, batch: str, results: list[dict[str, Any]
          "</div>",
          "<section><table class='sumtable'><thead><tr>"
          "<th>데이터셋</th><th>종류</th><th>건수</th><th>필드 정확도</th><th>셀 정확도</th>"
-         "<th>검증(게이트)</th><th>상세 리포트</th><th>비교 리포트</th></tr></thead><tbody>"]
+         "<th>소요 시간</th><th>검증(게이트)</th><th>상세 리포트</th><th>비교 리포트</th>"
+         "</tr></thead><tbody>"]
     for r in results:
         sub = _short(r["testset"])
         fa = "n/a" if r["fieldAcc"] is None else f"{r['fieldAcc'] * 100:.1f}%"
@@ -231,8 +250,9 @@ def render_summary_html(batch_dir: str, batch: str, results: list[dict[str, Any]
                    f"href='{sub}/compare.html'>비교 보기</a>"
                    if os.path.isfile(cmp_path)
                    else "<span class='muted' style='font-size:12px'>직전 없음</span>")
+        dur = _fmt_dur(r.get("elapsedSec"))
         H.append(f"<tr><td>{_esc(r['testset'])} <code>{sub}/</code></td><td>{role}</td>"
-                 f"<td>{n}건</td><td>{fa}</td><td>{ca}</td><td>{chk}</td>"
+                 f"<td>{n}건</td><td>{fa}</td><td>{ca}</td><td>{dur}</td><td>{chk}</td>"
                  f"<td><a class='btn' href='{sub}/report.html'>리포트 보기</a></td>"
                  f"<td>{cmp_btn}</td></tr>")
     H.append("</tbody></table>")
@@ -270,12 +290,14 @@ def run_all_multi(server: str, workers: int, testsets: list[str] | None = None) 
     os.makedirs(batch_dir, exist_ok=True)
     print(f"== run --all : {testsets}  →  runs/{batch}/ ==\n")
 
+    batch_t0 = time.perf_counter()
     results: list[dict[str, Any]] = []
     for i, ts in enumerate(testsets, 1):
         print(f"---- [{i}/{len(testsets)}] {ts}  →  {batch}/{_short(ts)} ----")
         results.append(_measure(None, server, workers, ts, verbose=True,
                                 run_id=f"{batch}/{_short(ts)}"))
         print()
+    batch_elapsed = time.perf_counter() - batch_t0
 
     # one combined TREND, then copy it into the batch folder for self-containment
     try:
@@ -291,9 +313,9 @@ def run_all_multi(server: str, workers: int, testsets: list[str] | None = None) 
         render_changes()
     except Exception as exc:
         print(f"  (CHANGES.html unavailable: {exc})")
-    summary = _write_batch_summary(batch_dir, batch, results)
+    summary = _write_batch_summary(batch_dir, batch, results, batch_elapsed)
     try:
-        render_summary_html(batch_dir, batch, results)
+        render_summary_html(batch_dir, batch, results, batch_elapsed)
     except Exception as exc:
         print(f"  (SUMMARY.html unavailable: {exc})")
 
@@ -313,6 +335,7 @@ def run_all_multi(server: str, workers: int, testsets: list[str] | None = None) 
     all_ok = n_ok == len(results)
     print()
     print(f"{'전체 GO' if all_ok else '일부 FAIL'}  ({n_ok}/{len(results)} checker PASS)")
+    print(f"총 소요 시간: {_fmt_dur(batch_elapsed)}")
     print(f"다음날 이 폴더 하나만 열면 됨:  runs/{batch}/")
     print(f"  ├ SUMMARY.html (요약, 브라우저)  ·  SUMMARY.md")
     print(f"  ├ TREND.html   (추세, 브라우저)")

@@ -47,8 +47,9 @@ def main() -> int:
 
     active_count = meta.get("activeCount")
     summ = meta.get("summary", {})
-    if active_count != len(C.EXPECTED_ACTIVE_SOURCES):
-        problems.append(f"activeCount {active_count} != {len(C.EXPECTED_ACTIVE_SOURCES)}")
+    expected_active = C.expected_active_sources()  # base docs + on-disk variants
+    if active_count != len(expected_active):
+        problems.append(f"activeCount {active_count} != {len(expected_active)}")
     if summ.get("ok") != active_count:
         problems.append(f"summary.ok {summ.get('ok')} != activeCount {active_count}")
     if summ.get("error") != 0:
@@ -59,7 +60,7 @@ def main() -> int:
         )
 
     samples_dir = os.path.join(run_dir, "samples")
-    for src in sorted(C.EXPECTED_ACTIVE_SOURCES):
+    for src in sorted(expected_active):
         p = os.path.join(samples_dir, src + ".json")
         if not os.path.isfile(p):
             problems.append(f"{src}: result file missing")

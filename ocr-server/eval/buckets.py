@@ -45,7 +45,38 @@ def _value_index(field_cmp: dict[str, Any], table_cmp: dict[str, Any], side: str
     return idx
 
 
-def tag_sample(field_cmp: dict[str, Any], table_cmp: dict[str, Any]) -> dict[str, Any]:
+def _preprocess_signals(preprocess: dict[str, Any] | None) -> dict[str, Any]:
+    """extract_debug.preprocess 에서 전처리 결함 신호를 뽑는다(설명가능·캘리브레이션용).
+
+    가장 깨끗한 신호(run 008 실측): **이미지 입력인데 detect_document 가 원근보정을 스킵**
+    = 각도 사진의 사다리꼴이 안 펴진 채 OCR 됨. orientation 저margin = 방향 오판 의심.
+    임계는 24장(GT보유)에서 캘리브레이션. 신호 자체는 GT 불요(실데이터에도 그대로 적용 가능).
+    """
+    doc = (preprocess or {}).get("document") or {}
+    orient = (preprocess or {}).get("orientation") or {}
+    file_type = doc.get("fileType")
+    doc_skipped = doc.get("skipped")
+    # 이미지인데 원근보정 스킵 = 1순위 전처리 의심 신호
+    doc_skipped_on_image = bool(doc_skipped is True and file_type == "image")
+    return {
+        "fileType": file_type,
+        "docStatus": doc.get("status"),
+        "docSkipped": doc_skipped,
+        "docAreaPct": doc.get("areaPct"),
+        "docBorders": doc.get("borders"),
+        "docSkippedOnImage": doc_skipped_on_image,
+        "orientAngle": orient.get("angle"),
+        "orientFirstPassDiff": orient.get("firstPassDiff"),
+        "orientFirstPassRatio": orient.get("firstPassRatio"),
+        "hasSignal": bool(preprocess),
+    }
+
+
+def tag_sample(
+    field_cmp: dict[str, Any],
+    table_cmp: dict[str, Any],
+    preprocess: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     gt_idx = _value_index(field_cmp, table_cmp, "gt")
     ext_idx = _value_index(field_cmp, table_cmp, "ext")
     defects: list[dict[str, Any]] = []
@@ -111,11 +142,27 @@ def tag_sample(field_cmp: dict[str, Any], table_cmp: dict[str, Any]) -> dict[str
                 add(loc, st, gtn, extn, RECOGNITION, "cell differs, low similarity")
 
     # --- sample-wide preprocessing suspicion ---
+    # (preprocessing 은 per-defect 가 아니라 sample-level advisory 로 유지 → phase3_check 불변식.)
     fc = field_cmp["counts"]
     scored = fc["scored"]
     miss_rate = (fc["ext_missing"] / scored) if scored else 0.0
-    preprocessing_suspect = bool(scored >= 6 and miss_rate >= 0.7)
+    cell_acc = table_cmp.get("cellAccuracy")
+    # 표본이 심하게 깨졌나(GT기반 프록시): 필드 대량 공백 또는 셀정확도 바닥
+    sample_failed = bool((scored >= 6 and miss_rate >= 0.7)
+                         or (cell_acc is not None and cell_acc <= 0.3))
+
+    sig = _preprocess_signals(preprocess)
+    # 신호기반: 표본이 깨졌고 전처리 신호가 비정상이면 = 전처리 결함으로 귀속
+    signal_flag = bool(sig["docSkippedOnImage"])
+    # 기존 miss_rate 규칙 OR 신호기반 규칙(둘 다 sample-level)
+    preprocessing_suspect = bool((scored >= 6 and miss_rate >= 0.7)
+                                 or (sample_failed and signal_flag))
+    suspect_reason = None
     if preprocessing_suspect:
+        if sample_failed and signal_flag:
+            suspect_reason = "image_perspective_skipped + sample_failed"
+        else:
+            suspect_reason = f"field_miss_rate>={0.7} ({round(miss_rate,2)})"
         # re-tag the dominant failure as preprocessing at the sample level (advisory)
         tally[PREPROCESSING] += 1
 
@@ -123,5 +170,7 @@ def tag_sample(field_cmp: dict[str, Any], table_cmp: dict[str, Any]) -> dict[str
         "defects": defects,
         "bucketTally": tally,
         "preprocessingSuspect": preprocessing_suspect,
+        "preprocessingReason": suspect_reason,
+        "preprocessingSignals": sig,
         "fieldMissRate": round(miss_rate, 3),
     }

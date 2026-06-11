@@ -2357,6 +2357,7 @@ async def ocr_extract(
         # 1. 문서 영역 감지 + 원근 보정
         _t_dd0 = time.time()
         corner_list = json.loads(corners) if corners else []
+        _doc_detect_info: dict = {}
         if corner_list and len(corner_list) == 4:
             # 프론트에서 코너 좌표를 직접 전달받은 경우
             ih, iw = img.shape[:2]
@@ -2369,8 +2370,9 @@ async def ocr_extract(
             M = cv2.getPerspectiveTransform(ordered, dst)
             doc_img = cv2.warpPerspective(img, M, (wt, ht))
             timings["detect_document_source"] = "corners_provided"
+            _doc_detect_info = {"status": "코너 직접 지정", "skipped": False}
         else:
-            doc_img, _ = detect_document(img)
+            doc_img, _doc_detect_info = detect_document(img)
             timings["detect_document_source"] = "auto"
         timings["detect_document_ms"] = _ms(time.time() - _t_dd0)
 
@@ -2500,12 +2502,27 @@ async def ocr_extract(
             else:
                 _overapply_guard["reason"] = "deskew_kept_not_harmful"
         _preprocess_debug = {
+            # 전처리-인지 계측: detect_document(원근보정) 결과를 신호로 노출
+            # (eval buckets 가 전처리 결함 자동분류에 사용). additive·debug-only.
+            "document": {
+                "status": _doc_detect_info.get("status") if isinstance(_doc_detect_info, dict) else None,
+                "detail": _doc_detect_info.get("detail") if isinstance(_doc_detect_info, dict) else None,
+                "skipped": _doc_detect_info.get("skipped") if isinstance(_doc_detect_info, dict) else None,
+                "areaPct": _doc_detect_info.get("areaPct") if isinstance(_doc_detect_info, dict) else None,
+                "borders": _doc_detect_info.get("borders") if isinstance(_doc_detect_info, dict) else None,
+                "source": timings.get("detect_document_source"),
+                "fileType": "pdf" if _is_pdf_input else "image",
+            },
             "orientation": {
                 "angle": _orient_angle_val,
                 "applied": (bool(_orient_angle_val) if _orient_angle_val is not None else None),
                 "source": "detect_orientation",
                 "policy": _orientation_policy_debug,
                 "finalAppliedAfterPolicy": _orientation_final_applied,
+                # 방향 판정 신뢰 신호(저margin = orientation 오판 의심)
+                "firstPassDiff": orient_meta.get("first_pass_diff") if isinstance(orient_meta, dict) else None,
+                "firstPassRatio": orient_meta.get("first_pass_ratio") if isinstance(orient_meta, dict) else None,
+                "bailoutReason": orient_meta.get("bailout_reason") if isinstance(orient_meta, dict) else None,
             },
             "deskew": {
                 "rawAngle": _deskew_meta.get("rawAngle") if isinstance(_deskew_meta, dict) else None,
@@ -2992,6 +3009,58 @@ async def ocr_extract(
                         document_fields = _free_fields.get("document_fields") if isinstance(_free_fields, dict) else None
                         if not isinstance(document_fields, dict):
                             document_fields = _free_fields
+                        # R002: 표 영역만 풀해상으로 재OCR해 품명 글자 인식 개선 (실험·기본 OFF).
+                        # free 1차는 950px라 작은 글자 뭉개짐(실측: 헥사메딘→헥사메던).
+                        # 표 bbox를 doc_deskewed(풀해상)에서 크롭→재OCR→표재구성, tableRows만 교체.
+                        # 6장 probe 결과: 품명 +4/-3, 셀 -0.7pp(고해상 재구성이 인접컬럼 번짐) +
+                        # OCR 2패스 지연 → net-negative라 **기본 OFF**. 수천장 단계에서 재튜닝 후 ON 검토.
+                        # 켜려면 환경변수 FREE_HIRES_TABLE_REOCR=1. (invoice-free 분기 전용·additive)
+                        if (isinstance(document_fields, dict)
+                                and os.environ.get("FREE_HIRES_TABLE_REOCR", "0") == "1"):
+                            try:
+                                from extractors.table_region import derive_table_bbox
+                                _p1_rows = document_fields.get("tableRows") or []
+                                _bb = derive_table_bbox(ocr_lines_raw, image_size=(ocr_w, ocr_h)) if _p1_rows else None
+                                if _bb:
+                                    _sx = ddw / float(ocr_w)
+                                    _sy = ddh / float(ocr_h)
+                                    _fx1 = max(0, int(_bb["x"] * _sx))
+                                    _fy1 = max(0, int(_bb["y"] * _sy))
+                                    _fx2 = min(ddw, int((_bb["x"] + _bb["width"]) * _sx))
+                                    _fy2 = min(ddh, int((_bb["y"] + _bb["height"]) * _sy))
+                                    _tcrop = doc_deskewed[_fy1:_fy2, _fx1:_fx2]
+                                    if _tcrop.size and (_fx2 - _fx1) > 40 and (_fy2 - _fy1) > 40:
+                                        _hi_lines = _parse_ocr_lines(ocr.ocr(_tcrop))
+                                        _p2 = extract_invoice_statement_free(
+                                            ocr_lines_raw=_hi_lines,
+                                            full_text="\n".join(t for _, t, _ in _hi_lines),
+                                            image_size=(_tcrop.shape[1], _tcrop.shape[0]),
+                                            doc_type=doc_type,
+                                            context={"templateMode": False,
+                                                     "isUnstructuredTemplate": True,
+                                                     "hiResTableReocr": True},
+                                        )
+                                        _p2_rows = _p2.get("tableRows") if isinstance(_p2, dict) else None
+                                        # 안전 가드: 행 수가 1차의 80%+ 일 때만 교체(잘린 표 회귀 방지)
+                                        if (isinstance(_p2_rows, list) and _p2_rows
+                                                and len(_p2_rows) >= max(1, int(len(_p1_rows) * 0.8))):
+                                            document_fields["tableRows"] = _p2_rows
+                                            if isinstance(_p2.get("tableMeta"), dict):
+                                                document_fields["tableMeta"] = _p2["tableMeta"]
+                                            _free_debug["hiResTableReocr"] = {
+                                                "applied": True, "bbox": _bb,
+                                                "p1Rows": len(_p1_rows), "p2Rows": len(_p2_rows)}
+                                        else:
+                                            _free_debug["hiResTableReocr"] = {
+                                                "applied": False, "reason": "row_count_guard",
+                                                "p1Rows": len(_p1_rows),
+                                                "p2Rows": len(_p2_rows) if isinstance(_p2_rows, list) else None}
+                                    else:
+                                        _free_debug["hiResTableReocr"] = {"applied": False, "reason": "empty_crop"}
+                                else:
+                                    _free_debug["hiResTableReocr"] = {"applied": False, "reason": "no_table_bbox"}
+                            except Exception as _hi_e:
+                                _free_debug["hiResTableReocr"] = {"applied": False, "error": str(_hi_e)}
                 except Exception as _free_e:
                     _free_debug = {
                         "attempted": True,

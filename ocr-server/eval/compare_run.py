@@ -51,7 +51,7 @@ def compare_run(ts: str | None = None, testset: str = C.DEFAULT_TESTSET) -> dict
 
         fcmp = compare_fields(gt, ext_df)
         tcmp = compare_table(gt["tableRows"], ext_df.get("tableRows") or [])
-        tags = tag_sample(fcmp, tcmp)
+        tags = tag_sample(fcmp, tcmp, preprocess=result.get("preprocess"))
 
         out = {
             "sourceFile": src,

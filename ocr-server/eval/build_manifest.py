@@ -22,6 +22,11 @@ from typing import Any
 import contract as C
 from gt_loader import GTLoadError, load_gt
 
+# Angle/condition variants ("<base>-<N>.<ext>", e.g. 1-1.jpg = reshot 1.jpg)
+# inherit the base document's GT (same document => same answers). The pattern
+# is owned by contract (C._VARIANT_RE), shared with the checkers. qualityTags
+# are NOT inferred here — they stay empty until the real condition is provided.
+
 
 def _gt_index(gt_dir: str) -> dict[str, str]:
     """Map sourceFile -> GT file path, by reading each GT's sourceFile."""
@@ -59,12 +64,34 @@ def _rec_index(rec_dir: str) -> dict[str, str]:
     return out
 
 
+def _variant_base_map(img_by_src: dict[str, str],
+                      gt_by_src: dict[str, str]) -> dict[str, str]:
+    """Map variant sourceFile -> base sourceFile (whose GT it inherits).
+
+    "1-1.jpg" -> "1.jpg", "3-2.jpg" -> "3.pdf": match the part before "-<N>"
+    against the stem (extension-stripped) of a GT-backed base document. Only
+    images that are NOT themselves a GT base become variants.
+    """
+    gt_stem = {os.path.splitext(src)[0]: src for src in gt_by_src}
+    out: dict[str, str] = {}
+    for name in img_by_src:
+        if name in gt_by_src:
+            continue
+        m = C._VARIANT_RE.match(os.path.splitext(name)[0])
+        if m:
+            base_src = gt_stem.get(m.group("base"))
+            if base_src:
+                out[name] = base_src
+    return out
+
+
 def build_manifest(testset: str = C.DEFAULT_TESTSET) -> dict[str, Any]:
     ts = C.get_testset(testset)
     kind = ts["kind"]
     gt_by_src = _gt_index(ts["gtDir"])
     img_by_src = _images(ts["dir"])
     rec_by_src = _rec_index(ts["recDir"])
+    variant_base = _variant_base_map(img_by_src, gt_by_src)
     excluded = ts["excluded"]
     expected = ts["expected"]
     samples: list[dict[str, Any]] = []
@@ -72,14 +99,20 @@ def build_manifest(testset: str = C.DEFAULT_TESTSET) -> dict[str, Any]:
     all_sources = set(gt_by_src) | set(img_by_src) | set(rec_by_src) | set(excluded)
     for src in sorted(all_sources):
         has_img = src in img_by_src
-        has_gt = src in gt_by_src
+        is_variant = src in variant_base
+        base_src = variant_base.get(src)
+        # A variant inherits its base document's GT (same document, same answers).
+        gt_path = gt_by_src.get(base_src) if is_variant else gt_by_src.get(src)
+        has_gt = gt_path is not None
         has_rec = src in rec_by_src
         entry: dict[str, Any] = {
             "sourceFile": src,
             "image": os.path.relpath(img_by_src[src], C.HERE) if has_img else None,
-            "gt": os.path.relpath(gt_by_src[src], C.HERE) if has_gt else None,
+            "gt": os.path.relpath(gt_path, C.HERE) if has_gt else None,
             "rec": os.path.relpath(rec_by_src[src], C.HERE) if has_rec else None,
         }
+        if is_variant:
+            entry["variantOf"] = base_src
 
         if src in excluded:
             entry["status"] = "excluded"
@@ -96,12 +129,12 @@ def build_manifest(testset: str = C.DEFAULT_TESTSET) -> dict[str, Any]:
         # Enrich runnable samples (active|canned) from the loaded GT.
         if entry["status"] in ("active", "canned"):
             try:
-                g = load_gt(gt_by_src[src], profile=kind)
+                g = load_gt(gt_path, profile=kind)
                 entry["profile"] = g["profile"]
                 entry["perSampleField"] = g["perSampleField"]
                 entry["rowCount"] = g["_meta"]["rowCount"]
                 entry["excludedRowCount"] = g["_meta"]["excludedRowCount"]
-                exp = expected.get(src)
+                exp = expected.get(base_src if is_variant else src)
                 if exp is not None and g["_meta"]["rowCount"] != exp:
                     entry["rowCountWarning"] = f"expected {exp}"
             except GTLoadError as exc:

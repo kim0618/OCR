@@ -16,6 +16,7 @@ from __future__ import annotations
 import glob
 import json
 import os
+import re
 import sys
 
 # Windows consoles default to cp949; force UTF-8 so report text never crashes.
@@ -176,4 +177,41 @@ IMG_DIR = _DEFAULT["dir"]
 GT_DIR = _DEFAULT["gtDir"]
 EXPECTED_ROWS = _DEFAULT["expected"]            # verified per-sample row counts
 EXCLUDED_SOURCES = _DEFAULT["excluded"]         # deliberately dropped (no image, no GT)
-EXPECTED_ACTIVE_SOURCES = set(EXPECTED_ROWS)    # the active samples of the default testset
+EXPECTED_ACTIVE_SOURCES = set(EXPECTED_ROWS)    # the verified BASE documents (regression anchor)
+
+# --- angle/condition variants ------------------------------------------------
+# A base document reshot at angles produces "<base>-<N>.<ext>" images (1-1.jpg,
+# 3-2.jpg). Same document => same answers, so a variant inherits its base GT.
+# SSOT for the variant pattern (build_manifest + checkers share this).
+_VARIANT_RE = re.compile(r"^(?P<base>.+)-\d+$")
+
+
+def base_source(source_file: str, testset: str = DEFAULT_TESTSET) -> str:
+    """Resolve a variant image ('1-1.jpg', '3-2.jpg') to its base document
+    ('1.jpg', '3.pdf'). Non-variants, and variants of an unknown base, return
+    unchanged. Matches by stem so the variant ext may differ from the base."""
+    stem_to_base = {os.path.splitext(s)[0]: s for s in get_testset(testset)["expected"]}
+    m = _VARIANT_RE.match(os.path.splitext(source_file)[0])
+    if m:
+        base = stem_to_base.get(m.group("base"))
+        if base:
+            return base
+    return source_file
+
+
+def expected_active_sources(testset: str = DEFAULT_TESTSET) -> set[str]:
+    """The full active set the harness should run: the verified base documents
+    PLUS their on-disk variants. Bases are the fixed regression anchor; variants
+    are discovered from the testset image dir so reshooting samples at new angles
+    does not trip the gate. A missing base still fails (bases are always in the
+    set); a stray image with no base GT is never added (=> caught as pending_gt)."""
+    ts = get_testset(testset)
+    bases = set(ts["expected"])
+    out = set(bases)
+    img_dir = ts["dir"]
+    if os.path.isdir(img_dir):
+        for name in os.listdir(img_dir):
+            if (name.lower().endswith(IMAGE_EXTS) and name not in bases
+                    and base_source(name, testset) in bases):
+                out.add(name)
+    return out
