@@ -83,6 +83,12 @@ def compute_metrics(run_dir: str) -> dict[str, Any]:
     for s in build_manifest(testset)["samples"]:
         qtags[s["sourceFile"]] = s.get("qualityTags") or []
 
+    # #5 macro: 샘플평균(샘플당 정확도의 평균). overall.field/cell 은 항목가중(micro)이라
+    # 큰 표(28행)가 작은 표(1행)들을 지배 → 핵심 샘플 다수가 깨져도 micro 는 좋아 보일 수 있음.
+    # macro 를 나란히 둬서 "샘플당으로 보면 어떤가"를 함께 본다(채점칸 없는 샘플은 제외).
+    macro_field: list[float] = []
+    macro_cell: list[float] = []
+
     def slice_add(slice_name: str, group: str, fcounts: dict[str, int]) -> None:
         g = slices[slice_name].setdefault(group, _new_counts())
         _add(g, fcounts)
@@ -95,6 +101,12 @@ def compute_metrics(run_dir: str) -> dict[str, Any]:
         cc = d["table"]["cellCounts"]
         _add(overall_field, fc)
         _add(overall_cell, cc)
+        _fa = d["fields"].get("fieldAccuracy")
+        _ca = d["table"].get("cellAccuracy")
+        if _fa is not None:
+            macro_field.append(_fa)
+        if _ca is not None:
+            macro_cell.append(_ca)
 
         # coverage two denominators (➌E)
         for k in coverage:
@@ -143,6 +155,9 @@ def compute_metrics(run_dir: str) -> dict[str, Any]:
     def finalize(counts: dict[str, int]) -> dict[str, Any]:
         return {**counts, "accuracy": _acc(counts["scored"], counts["match"])}
 
+    def _macro(vals: list[float]) -> dict[str, Any]:
+        return {"accuracy": (sum(vals) / len(vals)) if vals else None, "samples": len(vals)}
+
     cov_graded = coverage["gtPresent"]
     # runTs = path relative to runs/ so a nested batch run (batch/study) is unique
     # in the time-series instead of colliding on the basename "study"/"thin".
@@ -153,8 +168,10 @@ def compute_metrics(run_dir: str) -> dict[str, Any]:
         "testset": testset,
         "sampleCount": len(compares),
         "overall": {
-            "field": finalize(overall_field),
-            "cell": finalize(overall_cell),
+            "field": finalize(overall_field),       # micro(항목가중)
+            "cell": finalize(overall_cell),          # micro(항목가중)
+            "fieldMacro": _macro(macro_field),       # macro(샘플평균)
+            "cellMacro": _macro(macro_cell),         # macro(샘플평균)
         },
         "perField": {k: finalize(v) for k, v in sorted(per_field.items())},
         "buckets": buckets_total,

@@ -3072,6 +3072,15 @@ def _biz_candidates(lines: list[OcrLine], limit_y: float) -> list[tuple[float, f
         if line.cy > limit_y:
             continue
         value = _format_biz(line.text)
+        if not value:
+            # P1: 구분자 없는 raw 10자리 사업자번호(예: "1138504425")도 후보로 인정.
+            # _BIZ_RE는 그룹 사이 [-\s.]를 필수로 요구해 대시 없는 번호를 놓침 → buyer
+            # 사업자번호가 안 잡히면 party 분기(len(bizs)>=2)가 안 돌아 buyer 블록 통째 미지정.
+            # 상단 영역(line.cy>limit_y는 이미 제외)으로 한정되고 phone/12+자리 문서번호는
+            # 경계·_PHONE_RE로 배제 → 표 lot번호 오인 위험 낮음. 전역 _BIZ_RE는 불변(국소 보강).
+            raw = re.search(r"(?<!\d)(\d{3})(\d{2})(\d{5})(?!\d)", _canonical_digits(line.text))
+            if raw and not _PHONE_RE.search(line.text):
+                value = f"{raw.group(1)}-{raw.group(2)}-{raw.group(3)}"
         if not value or value in seen:
             continue
         seen.add(value)
@@ -3478,6 +3487,18 @@ def _strip_overlapping_party_address(address: str, other_address: str) -> str:
     if value.startswith(other) and len(value) > len(other) + 3:
         rest = _clean_value(value[len(other) :])
         return rest if _is_address_candidate_line(rest) else value
+    # P3-a: 부분 cross-party 오염 — 상대 주소의 앞머리 지역토큰만 prepend되고 그 뒤에
+    # 자기 주소(새 city-prefix)가 오는 경우(예: buyer="경기도부천시원미구 서울특별시 구로구...").
+    # value 안 0이 아닌 위치의 city-prefix를 찾아, 그 앞부분이 상대 주소에 포함되면 그 city부터 채택.
+    # head 길이 가드(>=4)와 "상대 주소 포함" 조건으로 확인된 교차오염만 절단(false-strip 방지).
+    city_starts = [m.start() for m in _CITY_TOKEN_RE.finditer(value)]
+    if len(city_starts) >= 2:
+        cut = city_starts[1]
+        head = value[:cut]
+        if cut > 0 and len(_party_norm(head)) >= 4 and _party_norm(head) in _party_norm(other):
+            rest = _clean_value(value[cut:])
+            if _is_address_candidate_line(rest):
+                return rest
     return address
 
 
@@ -6705,6 +6726,8 @@ _CITY_PREFIX_RE = re.compile(
     r"세종특별자치시|세종|강원도|강원|충청북도|충북|충청남도|충남|"
     r"전라북도|전북|전라남도|전남|경상북도|경북|경상남도|경남|제주특별자치도|제주)"
 )
+# P3-a: 비앵커 city 매처(주소 안 임의 위치의 시/도 시작 탐지) — cross-party 부분오염 절단용.
+_CITY_TOKEN_RE = re.compile(_CITY_PREFIX_RE.pattern[1:])  # 선두 ^ 제거
 
 
 def _classify_address_partial_status(normalized: str) -> dict[str, Any]:

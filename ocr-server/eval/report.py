@@ -22,6 +22,33 @@ def _pct(a: float | None) -> str:
     return "n/a" if a is None else f"{a * 100:.1f}%"
 
 
+def _base_variant_split(compares: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """compares 를 base(정상문서)/변주(각도·회전 사진)로 갈라 셀 정확도를 가중 집계.
+
+    전체 평균은 둘을 섞어 전처리 작업의 효과·회귀를 가린다(변주가 base를 끌어내림).
+    변주가 하나도 없으면(예: thin) None → 블록 생략. 변주 식별 SSOT=contract._VARIANT_RE.
+    """
+    groups = {"base": {"n": 0, "match": 0, "scored": 0},
+              "변주": {"n": 0, "match": 0, "scored": 0}}
+    for d in compares:
+        stem = os.path.splitext(d["sourceFile"])[0]
+        g = "변주" if C._VARIANT_RE.match(stem) else "base"
+        groups[g]["n"] += 1
+        for row in d.get("table", {}).get("rows", []):
+            for cell in row.get("cells", {}).values():
+                st = cell.get("status")
+                if st == "match":
+                    groups[g]["match"] += 1
+                    groups[g]["scored"] += 1
+                elif st in ("mismatch", "ext_missing"):
+                    groups[g]["scored"] += 1
+    if groups["변주"]["n"] == 0:
+        return None
+    for v in groups.values():
+        v["accuracy"] = (v["match"] / v["scored"]) if v["scored"] else None
+    return groups
+
+
 # 한글 표기 매핑 - 사람이 읽는 리포트용. 데이터 식별자(필드키 등)는 영문 유지.
 _STATUS_KO = {"match": "일치", "mismatch": "불일치", "ext_missing": "추출누락", "gt_empty": "정답비움"}
 _BUCKET_KO = {"recognition": "인식오류", "structure": "구조오류",
@@ -122,14 +149,30 @@ def render_report(run_dir: str, examples: int = 12) -> str:
     L.append("")
 
     of, oc = m["overall"]["field"], m["overall"]["cell"]
+    ofm, ocm = m["overall"].get("fieldMacro") or {}, m["overall"].get("cellMacro") or {}
     L.append("## 전체 정확도 (Overall)")
     L.append("")
-    L.append("| 항목 | 채점수 | 일치 | 정확도 |")
-    L.append("|---|---:|---:|---:|")
-    L.append(f"| 필드(스칼라 상단값) | {of['scored']} | {of['match']} | {_pct(of['accuracy'])} |")
-    L.append(f"| 셀(표 안 값) | {oc['scored']} | {oc['match']} | {_pct(oc['accuracy'])} |")
-    L.append("> 채점수 = 정답이 비어있지 않아 실제로 채점된 칸 수. 정확도 = 일치 ÷ 채점수.")
+    L.append("| 항목 | 채점수 | 일치 | micro(항목가중) | macro(샘플평균) |")
+    L.append("|---|---:|---:|---:|---:|")
+    L.append(f"| 필드(스칼라 상단값) | {of['scored']} | {of['match']} | {_pct(of['accuracy'])} | {_pct(ofm.get('accuracy'))} |")
+    L.append(f"| 셀(표 안 값) | {oc['scored']} | {oc['match']} | {_pct(oc['accuracy'])} | {_pct(ocm.get('accuracy'))} |")
+    L.append("> 채점수 = 정답이 비어있지 않아 실제로 채점된 칸 수. **micro** = 일치÷채점수(전체 칸 가중,"
+             " 큰 표가 지배). **macro** = 샘플당 정확도의 평균(샘플 동등 가중). 둘이 벌어지면"
+             " 큰 표가 평균을 끌어올리는/내리는 것 → 수천장에선 macro 가 '핵심 샘플 다수 깨짐'을 더 정직히 드러냄.")
     L.append("")
+
+    bv = _base_variant_split(compares)
+    if bv:
+        L.append("## base(정상문서) vs 변주(각도사진) 셀 정확도")
+        L.append("")
+        L.append("| 그룹 | 장수 | 셀 채점 | 일치 | 셀 정확도 |")
+        L.append("|---|---:|---:|---:|---:|")
+        for g in ("base", "변주"):
+            v = bv[g]
+            L.append(f"| {g} | {v['n']} | {v['scored']} | {v['match']} | {_pct(v['accuracy'])} |")
+        L.append("> base = 정상 촬영(회귀 안전망) · 변주 = 각도/회전 사진. 전체 평균은 둘을 섞어"
+                 " 전처리 작업의 효과·회귀를 가리므로 분리해서 본다.")
+        L.append("")
 
     L.append("## 추출경로별 (free=우리 비정형룰 / fallback=보조 추출기)")
     L.append("")
@@ -369,12 +412,33 @@ def render_report_html(run_dir: str, examples: int = 40) -> str:
                  "_EXPECTED_COLUMN_ALIASES</code> (리포트가 직접 읽어 표시 — 규칙 바뀌면 자동 반영)</div>"
                  "</details>")
 
-    # 전체
+    # 전체 — micro(항목가중) / macro(샘플평균) 병기 (#5)
+    ofm, ocm = m["overall"].get("fieldMacro") or {}, m["overall"].get("cellMacro") or {}
     H.append("<section><h2>전체 정확도</h2><table><thead><tr><th>항목</th><th>채점수</th>"
-             "<th>일치</th><th>정확도</th></tr></thead><tbody>")
-    H.append(f"<tr><td>필드(스칼라 상단값)</td><td>{of['scored']}</td><td>{of['match']}</td><td>{_pct(of['accuracy'])}</td></tr>")
-    H.append(f"<tr><td>셀(표 안 값)</td><td>{oc['scored']}</td><td>{oc['match']}</td><td>{_pct(oc['accuracy'])}</td></tr>")
-    H.append("</tbody></table></section>")
+             "<th>일치</th><th>micro<br><span class='muted' style='font-weight:400'>항목가중</span></th>"
+             "<th>macro<br><span class='muted' style='font-weight:400'>샘플평균</span></th></tr></thead><tbody>")
+    H.append(f"<tr><td>필드(스칼라 상단값)</td><td>{of['scored']}</td><td>{of['match']}</td>"
+             f"<td>{_pct(of['accuracy'])}</td><td>{_pct(ofm.get('accuracy'))}</td></tr>")
+    H.append(f"<tr><td>셀(표 안 값)</td><td>{oc['scored']}</td><td>{oc['match']}</td>"
+             f"<td>{_pct(oc['accuracy'])}</td><td>{_pct(ocm.get('accuracy'))}</td></tr>")
+    H.append("</tbody></table>"
+             "<div class='legend'><b>micro</b>=일치÷채점수(전체 칸 가중, 큰 표가 지배) · "
+             "<b>macro</b>=샘플당 정확도의 평균(샘플 동등 가중). 둘이 벌어지면 큰 표가 평균을 좌우하는 것 — "
+             "수천장에선 macro 가 '핵심 샘플 다수 깨짐'을 더 정직히 드러냄.</div></section>")
+
+    # base vs 변주 분리 — 전체 평균이 가리는 전처리 효과/회귀를 드러냄
+    bv = _base_variant_split(compares)
+    if bv:
+        H.append("<section><h2>base(정상문서) vs 변주(각도사진) 셀 정확도</h2>"
+                 "<table><thead><tr><th>그룹</th><th>장수</th><th>셀 채점</th>"
+                 "<th>일치</th><th>셀 정확도</th></tr></thead><tbody>")
+        for g in ("base", "변주"):
+            v = bv[g]
+            H.append(f"<tr><td>{g}</td><td>{v['n']}</td><td>{v['scored']}</td>"
+                     f"<td>{v['match']}</td><td>{_pct(v['accuracy'])}</td></tr>")
+        H.append("</tbody></table>"
+                 "<div class='legend'>base = 정상 촬영(회귀 안전망) · 변주 = 각도/회전 사진. "
+                 "전체 평균은 둘을 섞어 전처리 작업의 효과·회귀를 가리므로 분리해서 본다.</div></section>")
 
     # 이미지별 점수판 (정렬) - 핵심
     H.append(f"<section><h2>이미지별 결과 <span class='muted'>({len(compares)}장 · 컬럼 클릭=정렬)</span></h2>")

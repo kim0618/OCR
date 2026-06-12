@@ -50,7 +50,8 @@ def _measure(reuse: str | None, server: str, workers: int, testset: str,
             print(msg)
 
     res: dict[str, Any] = {"testset": testset, "ts": None, "ok": False,
-                           "fieldAcc": None, "cellAcc": None, "error": None,
+                           "fieldAcc": None, "cellAcc": None,
+                           "fieldMacro": None, "cellMacro": None, "error": None,
                            "elapsedSec": None}
     t0 = time.perf_counter()
     try:
@@ -78,6 +79,8 @@ def _measure(reuse: str | None, server: str, workers: int, testset: str,
         m = compute_metrics(os.path.join(C.RUNS_DIR, ts))
         res["fieldAcc"] = m["overall"]["field"]["accuracy"]
         res["cellAcc"] = m["overall"]["cell"]["accuracy"]
+        res["fieldMacro"] = (m["overall"].get("fieldMacro") or {}).get("accuracy")
+        res["cellMacro"] = (m["overall"].get("cellMacro") or {}).get("accuracy")
         res["sampleCount"] = m.get("sampleCount")
         res["kind"] = C.get_testset(testset)["kind"]
         log(f"   field acc {res['fieldAcc']}  cell acc {res['cellAcc']}")
@@ -184,15 +187,24 @@ def _write_batch_summary(batch_dir: str, batch: str, results: list[dict[str, Any
          "> - **필드 정확도** = 공급자 상호·사업자번호·대표자·주소, 공급받는자 상호·사업자번호·대표자·주소, "
          "작성일자, 공급가액, 세액, 합계금액, 누계, 총수량 (thin 추가: 할인액·문서번호·과세유형)",
          "> - **셀 정확도** = 품명, 규격, 품목코드, LOT번호, 유효기간, 수량, 단가, 금액 (thin 추가: 제조번호)",
-         "> - **검증(게이트)** = 하니스 자기점검(PASS여야 수치 신뢰)", "",
-         "| 데이터셋 | 종류 | 건수 | 필드 정확도 | 셀 정확도 | 소요 시간 | 검증(게이트) | 상세 |",
+         "> - **검증(게이트)** = 하니스 자기점검(PASS여야 수치 신뢰)",
+         "> - **정확도 표기 = micro / macro.** micro=일치÷전체 채점칸(큰 표가 지배) · "
+         "macro=샘플당 정확도의 평균(샘플 동등 가중). 둘이 벌어지면 큰 표가 평균을 좌우하는 것 — "
+         "수천장에선 macro 가 '핵심 샘플 다수가 깨져도 전체는 좋아 보임'을 정직하게 드러냄.", "",
+         "| 데이터셋 | 종류 | 건수 | 필드 (micro/macro) | 셀 (micro/macro) | 소요 시간 | 검증(게이트) | 상세 |",
          "|---|---|--:|--:|--:|--:|---|---|"]
     n_ok = 0
+
+    def _mm(micro, macro):
+        mi = "n/a" if micro is None else f"{micro * 100:.1f}%"
+        ma = "n/a" if macro is None else f"{macro * 100:.1f}%"
+        return f"{mi} / {ma}"
+
     for r in results:
         n_ok += 1 if r["ok"] else 0
         sub = _short(r["testset"])
-        fa = "n/a" if r["fieldAcc"] is None else f"{r['fieldAcc'] * 100:.1f}%"
-        ca = "n/a" if r["cellAcc"] is None else f"{r['cellAcc'] * 100:.1f}%"
+        fa = _mm(r["fieldAcc"], r.get("fieldMacro"))
+        ca = _mm(r["cellAcc"], r.get("cellMacro"))
         chk = "✅ PASS" if r["ok"] else f"❌ FAIL ({r.get('error') or '?'})"
         role = _role_label(r["testset"], r.get("kind", ""), html=False)
         n = r.get("sampleCount", "-")
@@ -230,16 +242,28 @@ def render_summary_html(batch_dir: str, batch: str, results: list[dict[str, Any]
          " <span class='muted'>(thin 추가: 할인액·문서번호·과세유형)</span></div>"
          "<div class='row'><b>셀 정확도</b> = 품명, 규격, 품목코드, LOT번호, 유효기간, 수량, 단가, 금액"
          " <span class='muted'>(thin 추가: 제조번호)</span></div>"
+         "<div class='row'><b>정확도 = micro / macro</b> · "
+         "<b>micro</b>=일치÷전체 채점칸(큰 표가 지배) · <b>macro</b>=샘플당 정확도의 평균(샘플 동등 가중). "
+         "<span class='muted'>둘이 벌어지면 큰 표가 평균을 좌우하는 것 — 수천장에선 macro 가 "
+         "'핵심 샘플 다수가 깨져도 전체는 좋아 보임'을 정직하게 드러냄.</span></div>"
          "<div class='row'><b>검증(게이트)</b> = 하니스 자기점검(PASS여야 수치 신뢰)</div>"
          "</div>",
          "<section><table class='sumtable'><thead><tr>"
-         "<th>데이터셋</th><th>종류</th><th>건수</th><th>필드 정확도</th><th>셀 정확도</th>"
+         "<th>데이터셋</th><th>종류</th><th>건수</th>"
+         "<th>필드 정확도<br><span class='muted' style='font-weight:400'>micro / macro</span></th>"
+         "<th>셀 정확도<br><span class='muted' style='font-weight:400'>micro / macro</span></th>"
          "<th>소요 시간</th><th>검증(게이트)</th><th>상세 리포트</th><th>비교 리포트</th>"
          "</tr></thead><tbody>"]
+
+    def _mm(micro, macro):
+        mi = "n/a" if micro is None else f"{micro * 100:.1f}%"
+        ma = "n/a" if macro is None else f"{macro * 100:.1f}%"
+        return f"{mi} <span class='muted'>/ {ma}</span>"
+
     for r in results:
         sub = _short(r["testset"])
-        fa = "n/a" if r["fieldAcc"] is None else f"{r['fieldAcc'] * 100:.1f}%"
-        ca = "n/a" if r["cellAcc"] is None else f"{r['cellAcc'] * 100:.1f}%"
+        fa = _mm(r["fieldAcc"], r.get("fieldMacro"))
+        ca = _mm(r["cellAcc"], r.get("cellMacro"))
         chk = ("<span class='up'>✅ PASS</span>" if r["ok"]
                else f"<span class='down'>❌ FAIL</span>")
         role = _role_label(r["testset"], r.get("kind", ""), html=True)
@@ -322,16 +346,22 @@ def run_all_multi(server: str, workers: int, testsets: list[str] | None = None) 
     print("\n" + "=" * 60)
     print(f"run --all 요약  →  runs/{batch}/")
     print("=" * 60)
-    hdr = f"{'testset':<16} {'필드':>7} {'셀':>7}  checker"
+    hdr = f"{'testset':<16} {'필드 mi/ma':>14} {'셀 mi/ma':>14}  checker"
     print(hdr)
     print("-" * len(hdr))
+
+    def _mm(micro, macro):
+        mi = "n/a" if micro is None else f"{micro * 100:.1f}"
+        ma = "n/a" if macro is None else f"{macro * 100:.1f}"
+        return f"{mi}/{ma}"
+
     n_ok = 0
     for r in results:
         n_ok += 1 if r["ok"] else 0
-        fa = "n/a" if r["fieldAcc"] is None else f"{r['fieldAcc'] * 100:5.1f}%"
-        ca = "n/a" if r["cellAcc"] is None else f"{r['cellAcc'] * 100:5.1f}%"
+        fa = _mm(r["fieldAcc"], r.get("fieldMacro"))
+        ca = _mm(r["cellAcc"], r.get("cellMacro"))
         status = "PASS" if r["ok"] else f"FAIL ({r.get('error') or '?'})"
-        print(f"{r['testset']:<16} {fa:>7} {ca:>7}  {status}")
+        print(f"{r['testset']:<16} {fa:>14} {ca:>14}  {status}")
     all_ok = n_ok == len(results)
     print()
     print(f"{'전체 GO' if all_ok else '일부 FAIL'}  ({n_ok}/{len(results)} checker PASS)")

@@ -2358,6 +2358,9 @@ async def ocr_extract(
         _t_dd0 = time.time()
         corner_list = json.loads(corners) if corners else []
         _doc_detect_info: dict = {}
+        # P3: image(비PDF) 입력에 한해 detect_document 원근보정 스킵 가드를 강제 워프로 우회.
+        # PDF 렌더는 깔끔한 풀프레임이라 워프 시 회귀(run 008 실측) → PDF 는 기존 스킵 유지.
+        _is_pdf_input = (file.filename or "").lower().endswith(".pdf") or data[:5] == b"%PDF-"
         if corner_list and len(corner_list) == 4:
             # 프론트에서 코너 좌표를 직접 전달받은 경우
             ih, iw = img.shape[:2]
@@ -2372,16 +2375,36 @@ async def ocr_extract(
             timings["detect_document_source"] = "corners_provided"
             _doc_detect_info = {"status": "코너 직접 지정", "skipped": False}
         else:
-            doc_img, _doc_detect_info = detect_document(img)
+            doc_img, _doc_detect_info = detect_document(img, force_warp_on_skip=(not _is_pdf_input))
             timings["detect_document_source"] = "auto"
         timings["detect_document_ms"] = _ms(time.time() - _t_dd0)
 
         # 1-1. 전체 이미지 회전 방향 감지 (0/90/180/270) - 세로로 찍힌 영수증 대응
         _t_orient0 = time.time()
-        _is_pdf_input = (file.filename or "").lower().endswith(".pdf") or data[:5] == b"%PDF-"
         _doc_img_before_orientation = doc_img
         _pre_orient_h, _pre_orient_w = _doc_img_before_orientation.shape[:2]
-        doc_img, orient_meta = detect_orientation(doc_img, ocr, original_wh=(orig_w, orig_h))
+        # O0: invoice_statement 한정 — early-stop/bailout 끄고 4방향 전부 채점(force_full_eval).
+        # 각도사진이 second_pass(90/270)를 안 보고 0° 오판하는 문제를 함수 내부 채점으로 해소.
+        # target_short 은 기본 224 유지(512는 run014에서 4-pass×큰thumb로 28행 무거운 장이
+        # 300s 타임아웃 → 비용 과다 확인). 224에서 4방향이 정답을 가리키는지부터 측정(O0).
+        # O0/O1 확정: invoice 한정 force_full_eval(early-stop 끄고 4방향 채점)로 각도변주 방향교정.
+        # 단 force_full_eval은 무거운 28행 장(1-x)을 4-pass OCR로 300s 타임아웃시킴(run017).
+        # 무거운 장은 default 만으로 방향을 맞추므로(run012 증명) force 불필요 → default 먼저 돌려
+        # 읽은 줄수가 적은(=가벼운 단일행 변주, 깨질 후보)일 때만 force_full_eval 재채점.
+        # 무거운 장: default 1회(빠름) / 가벼운 변주: default+force(둘다 가벼워 쌈). 타임아웃 회피.
+        _orient_is_invoice = (documentType or "").strip() == "invoice_statement"
+        _orient_escalated_512 = False
+        if _orient_is_invoice:
+            doc_img, orient_meta = detect_orientation(doc_img, ocr, original_wh=(orig_w, orig_h))
+            _dom_lines = (orient_meta.get("first_pass_line_count") or 0) if isinstance(orient_meta, dict) else 0
+            _HEAVY_DOC_LINE_GUARD = 20  # 줄수 >= 20 = 무거운 다행문서(default 신뢰), 미만 = force 재채점
+            if _dom_lines < _HEAVY_DOC_LINE_GUARD:
+                doc_img, orient_meta = detect_orientation(
+                    _doc_img_before_orientation, ocr, original_wh=(orig_w, orig_h),
+                    force_full_eval=True,
+                )
+        else:
+            doc_img, orient_meta = detect_orientation(doc_img, ocr, original_wh=(orig_w, orig_h))
         print(f"[OCR] {orient_meta['detail']}")
         dh, dw = doc_img.shape[:2]
         _post_detect_h, _post_detect_w = dh, dw
@@ -2510,6 +2533,7 @@ async def ocr_extract(
                 "skipped": _doc_detect_info.get("skipped") if isinstance(_doc_detect_info, dict) else None,
                 "areaPct": _doc_detect_info.get("areaPct") if isinstance(_doc_detect_info, dict) else None,
                 "borders": _doc_detect_info.get("borders") if isinstance(_doc_detect_info, dict) else None,
+                "forcedWarpOnSkip": _doc_detect_info.get("forcedWarpOnSkip") if isinstance(_doc_detect_info, dict) else None,
                 "source": timings.get("detect_document_source"),
                 "fileType": "pdf" if _is_pdf_input else "image",
             },
@@ -2523,6 +2547,15 @@ async def ocr_extract(
                 "firstPassDiff": orient_meta.get("first_pass_diff") if isinstance(orient_meta, dict) else None,
                 "firstPassRatio": orient_meta.get("first_pass_ratio") if isinstance(orient_meta, dict) else None,
                 "bailoutReason": orient_meta.get("bailout_reason") if isinstance(orient_meta, dict) else None,
+                # O0: invoice force_full_eval 채점 증거 — 방향별 score + 채택 각도
+                "forceFullEval": _orient_is_invoice,
+                "escalated512": _orient_escalated_512,
+                "evaluatedAngles": orient_meta.get("evaluated_angles") if isinstance(orient_meta, dict) else None,
+                "allScores": (
+                    {str(a): (m.get("score") if isinstance(m, dict) else None)
+                     for a, m in (orient_meta.get("score_meta") or {}).items()}
+                    if isinstance(orient_meta, dict) else None
+                ),
             },
             "deskew": {
                 "rawAngle": _deskew_meta.get("rawAngle") if isinstance(_deskew_meta, dict) else None,

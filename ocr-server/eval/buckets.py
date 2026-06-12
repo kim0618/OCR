@@ -56,15 +56,22 @@ def _preprocess_signals(preprocess: dict[str, Any] | None) -> dict[str, Any]:
     orient = (preprocess or {}).get("orientation") or {}
     file_type = doc.get("fileType")
     doc_skipped = doc.get("skipped")
-    # 이미지인데 원근보정 스킵 = 1순위 전처리 의심 신호
+    forced_warp = bool(doc.get("forcedWarpOnSkip"))
+    # 이미지인데 원근보정 스킵 = 1순위 전처리 의심 신호(P3 전)
     doc_skipped_on_image = bool(doc_skipped is True and file_type == "image")
+    # P3 적용 후엔 image skip이 강제워프로 바뀌어 skip=False가 됨 → skip 신호가 무력.
+    # "원근 의심 대상이었던 풀프레임 이미지"를 P3 전/후 일관되게 잡는 통합 신호:
+    # 스킵됐거나(P3 전) 강제워프됐거나(P3 후) 둘 중 하나면 후보.
+    perspective_candidate = bool(file_type == "image" and (doc_skipped is True or forced_warp))
     return {
         "fileType": file_type,
         "docStatus": doc.get("status"),
         "docSkipped": doc_skipped,
         "docAreaPct": doc.get("areaPct"),
         "docBorders": doc.get("borders"),
+        "forcedWarpOnSkip": forced_warp,
         "docSkippedOnImage": doc_skipped_on_image,
+        "perspectiveCandidate": perspective_candidate,
         "orientAngle": orient.get("angle"),
         "orientFirstPassDiff": orient.get("firstPassDiff"),
         "orientFirstPassRatio": orient.get("firstPassRatio"),
@@ -152,15 +159,18 @@ def tag_sample(
                          or (cell_acc is not None and cell_acc <= 0.3))
 
     sig = _preprocess_signals(preprocess)
-    # 신호기반: 표본이 깨졌고 전처리 신호가 비정상이면 = 전처리 결함으로 귀속
-    signal_flag = bool(sig["docSkippedOnImage"])
+    # 신호기반: 표본이 깨졌고 전처리 신호가 비정상이면 = 전처리 결함으로 귀속.
+    # perspectiveCandidate = 풀프레임 이미지(스킵됐거나 강제워프됨) → P3 전/후 일관.
+    signal_flag = bool(sig["perspectiveCandidate"])
     # 기존 miss_rate 규칙 OR 신호기반 규칙(둘 다 sample-level)
     preprocessing_suspect = bool((scored >= 6 and miss_rate >= 0.7)
                                  or (sample_failed and signal_flag))
     suspect_reason = None
     if preprocessing_suspect:
         if sample_failed and signal_flag:
-            suspect_reason = "image_perspective_skipped + sample_failed"
+            suspect_reason = ("image_perspective_warped_but_failed + sample_failed"
+                              if sig["forcedWarpOnSkip"]
+                              else "image_perspective_skipped + sample_failed")
         else:
             suspect_reason = f"field_miss_rate>={0.7} ({round(miss_rate,2)})"
         # re-tag the dominant failure as preprocessing at the sample level (advisory)

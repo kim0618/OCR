@@ -75,6 +75,15 @@ def _delta_pp(cur, prev) -> str:
     return f"{'▲' if d > 0 else '▼'}{abs(d):4.1f}"
 
 
+def _changed_population(cur, prev) -> bool:
+    """직전 run과 표본 수(sampleCount)가 다르면 True.
+
+    표본이 바뀌면(예: 6장 base-only → 24장 base+변주) 직전 대비 pp/버킷 델타는
+    품질 변화가 아니라 모집단 변화이므로 비교가 무의미 → 표시에서 보류한다.
+    """
+    return bool(prev and cur.get("sampleCount") != prev.get("sampleCount"))
+
+
 _BUCKET_KO = {"bRecognition": "인식", "bStructure": "구조", "bLayout": "컬럼", "bPreprocessing": "전처리"}
 
 
@@ -88,21 +97,33 @@ def latest_delta_line(testset: str) -> str | None:
         return (f"[{testset}] 첫 run {_fmt_date(cur['runTs'])}: 필드 {_pct(cur['fieldAcc'])} "
                 f"셀 {_pct(cur['cellAcc'])} (비교할 직전 run 없음)")
     prev = rows[-2]
-    fd = (cur["fieldAcc"] - prev["fieldAcc"]) * 100 if cur["fieldAcc"] and prev["fieldAcc"] else 0
-    cd = (cur["cellAcc"] - prev["cellAcc"]) * 100 if cur["cellAcc"] and prev["cellAcc"] else 0
+    # 표본이 바뀌면 직전 대비 비교 자체가 무의미 → 보류(가짜 회귀 신호 방지).
+    # (문구 안에는 '→' 를 쓰지 않는다: verdict 추출이 마지막 '→' 기준이므로.)
+    if _changed_population(cur, prev):
+        return (f"[{testset}] {_fmt_date(prev['runTs'])} → {_fmt_date(cur['runTs'])}: "
+                f"필드 {_pct(cur['fieldAcc'])}  셀 {_pct(cur['cellAcc'])}  →  "
+                f"표본 변경 ({prev['sampleCount']}건에서 {cur['sampleCount']}건), 직전 대비 비교 보류")
+    # #10 가드: 정확도가 *정확히 0.0* 이어도 비교 가능해야 함(`and` 는 0.0 을 falsy 로
+    # 떨어뜨려 delta=0 → 0%↔X 회귀를 놓침). None(채점 불가)일 때만 비교 보류.
+    fd = ((cur["fieldAcc"] - prev["fieldAcc"]) * 100
+          if cur["fieldAcc"] is not None and prev["fieldAcc"] is not None else None)
+    cd = ((cur["cellAcc"] - prev["cellAcc"]) * 100
+          if cur["cellAcc"] is not None and prev["cellAcc"] is not None else None)
+    # 회귀(🔴) 판정은 *정확도*만으로 한다. 버킷 결함 수는 코드/계측 변경에 민감해
+    # (정확도가 올라도 늘 수 있음) 회귀 신호로 쓰지 않고 '참고'로만 표기한다.
     flags = []
-    if fd < -0.05:
+    if fd is not None and fd < -0.05:
         flags.append(f"필드 회귀 {fd:.1f}pp")
-    if cd < -0.05:
+    if cd is not None and cd < -0.05:
         flags.append(f"셀 회귀 {cd:.1f}pp")
-    # 결함이 직전보다 늘어난 버킷
-    for b in ("bRecognition", "bStructure", "bLayout", "bPreprocessing"):
-        if cur[b] > prev[b]:
-            flags.append(f"{_BUCKET_KO[b]}결함 +{cur[b] - prev[b]}")
     verdict = "  ".join(flags) if flags else "회귀 없음"
+    bucket_notes = [f"{_BUCKET_KO[b]}{'+' if cur[b] > prev[b] else ''}{cur[b] - prev[b]}"
+                    for b in ("bRecognition", "bStructure", "bLayout", "bPreprocessing")
+                    if cur[b] != prev[b]]
+    note = f"  (참고 버킷변화: {', '.join(bucket_notes)})" if bucket_notes else ""
     return (f"[{testset}] {_fmt_date(prev['runTs'])} → {_fmt_date(cur['runTs'])}: "
             f"필드 {_pct(cur['fieldAcc'])} ({_delta_pp(cur['fieldAcc'], prev['fieldAcc'])}pp)  "
-            f"셀 {_pct(cur['cellAcc'])} ({_delta_pp(cur['cellAcc'], prev['cellAcc'])}pp)  →  {verdict}")
+            f"셀 {_pct(cur['cellAcc'])} ({_delta_pp(cur['cellAcc'], prev['cellAcc'])}pp)  →  {verdict}{note}")
 
 
 def _testsets_in_db() -> list[str]:
@@ -156,19 +177,32 @@ def render_md(path: str | None = None) -> str:
         L.append("|--:|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|")
         for i, r in enumerate(rows):
             prev = rows[i - 1] if i > 0 else None
-            fdp = _delta_pp(r["fieldAcc"], prev["fieldAcc"]).strip() if prev else "·"
-            cdp = _delta_pp(r["cellAcc"], prev["cellAcc"]).strip() if prev else "·"
+            changed = _changed_population(r, prev)
+            # 표본 변경 행은 pp/버킷 델타 보류(↕). 같은 모집단일 때만 직전 대비 표시.
+            bprev = None if changed else prev
+            if not prev:
+                fdp = cdp = "·"
+            elif changed:
+                fdp = cdp = "↕표본"
+            else:
+                fdp = _delta_pp(r["fieldAcc"], prev["fieldAcc"]).strip()
+                cdp = _delta_pp(r["cellAcc"], prev["cellAcc"]).strip()
             L.append(
                 f"| #{i + 1} | {_fmt_date(r['runTs'])} | {r['sampleCount']} | {_pct(r['fieldAcc']).strip()} | {fdp} "
                 f"| {_pct(r['cellAcc']).strip()} | {cdp} "
-                f"| {_bucket_cell(r, prev, 'bRecognition')} | {_bucket_cell(r, prev, 'bStructure')} "
-                f"| {_bucket_cell(r, prev, 'bLayout')} | {_bucket_cell(r, prev, 'bPreprocessing')} |"
+                f"| {_bucket_cell(r, bprev, 'bRecognition')} | {_bucket_cell(r, bprev, 'bStructure')} "
+                f"| {_bucket_cell(r, bprev, 'bLayout')} | {_bucket_cell(r, bprev, 'bPreprocessing')} |"
             )
         L.append("")
         line = latest_delta_line(ts)
         if line:
             verdict = line.split("→")[-1].strip()
-            mark = "🟢" if verdict == "회귀 없음" else ("🟡" if "첫 run" in line else "🔴")
+            if "첫 run" in line or "표본 변경" in line:
+                mark = "🟡"
+            elif verdict.startswith("회귀 없음"):
+                mark = "🟢"
+            else:
+                mark = "🔴"
             L.append(f"**최신:** {mark} {line}")
         L.append("")
 
@@ -296,20 +330,35 @@ def trend_sections_html(testsets: list[str] | None = None) -> str:
                  "<th>인식오류</th><th>구조오류</th><th>컬럼밀림</th><th>전처리</th></tr></thead><tbody>")
         for i, r in enumerate(rows):
             prev = rows[i - 1] if i > 0 else None
+            changed = _changed_population(r, prev)
+            bprev = None if changed else prev
+            mut = "<span class=muted>·</span>"
+            chg = "<span class=muted>↕표본</span>"
+            if not prev:
+                fdh = cdh = mut
+            elif changed:
+                fdh = cdh = chg
+            else:
+                fdh = _delta_html(r["fieldAcc"], prev["fieldAcc"])
+                cdh = _delta_html(r["cellAcc"], prev["cellAcc"])
             H.append(
                 f"<tr><td>#{i + 1}</td><td title='{_esc(r['runTs'])}'>{_esc(_fmt_date(r['runTs']))}</td>"
                 f"<td>{r['sampleCount']}</td>"
-                f"<td>{_pct(r['fieldAcc']).strip()}</td><td>{_delta_html(r['fieldAcc'], prev['fieldAcc']) if prev else '<span class=muted>·</span>'}</td>"
-                f"<td>{_pct(r['cellAcc']).strip()}</td><td>{_delta_html(r['cellAcc'], prev['cellAcc']) if prev else '<span class=muted>·</span>'}</td>"
-                f"<td>{_bucket_html(r, prev, 'bRecognition')}</td><td>{_bucket_html(r, prev, 'bStructure')}</td>"
-                f"<td>{_bucket_html(r, prev, 'bLayout')}</td><td>{_bucket_html(r, prev, 'bPreprocessing')}</td></tr>"
+                f"<td>{_pct(r['fieldAcc']).strip()}</td><td>{fdh}</td>"
+                f"<td>{_pct(r['cellAcc']).strip()}</td><td>{cdh}</td>"
+                f"<td>{_bucket_html(r, bprev, 'bRecognition')}</td><td>{_bucket_html(r, bprev, 'bStructure')}</td>"
+                f"<td>{_bucket_html(r, bprev, 'bLayout')}</td><td>{_bucket_html(r, bprev, 'bPreprocessing')}</td></tr>"
             )
         H.append("</tbody></table>")
         line = latest_delta_line(ts)
         if line:
             verdict = line.split("→")[-1].strip()
-            cls = "ok" if verdict == "회귀 없음" else ("warn" if "첫 run" in line else "bad")
-            badge = "🟢" if cls == "ok" else ("🟡" if cls == "warn" else "🔴")
+            if "첫 run" in line or "표본 변경" in line:
+                cls, badge = "warn", "🟡"
+            elif verdict.startswith("회귀 없음"):
+                cls, badge = "ok", "🟢"
+            else:
+                cls, badge = "bad", "🔴"
             H.append(f"<div class='latest {cls}'><b>최신:</b> {badge} {_esc(line)}</div>")
         H.append("</section>")
     return "\n".join(H)
@@ -352,11 +401,17 @@ def print_table(testset: str, last: int | None = None) -> None:
     for i, r in enumerate(shown):
         gi = rows.index(r)
         prev = rows[gi - 1] if gi > 0 else None
-        fdp = _delta_pp(r["fieldAcc"], prev["fieldAcc"]) if prev else "    ·"
-        cdp = _delta_pp(r["cellAcc"], prev["cellAcc"]) if prev else "    ·"
-        # mark bucket increases (more defects) with *
+        changed = _changed_population(r, prev)
+        if not prev:
+            fdp = cdp = "    ·"
+        elif changed:
+            fdp = cdp = " ↕표본"
+        else:
+            fdp = _delta_pp(r["fieldAcc"], prev["fieldAcc"])
+            cdp = _delta_pp(r["cellAcc"], prev["cellAcc"])
+        # mark bucket increases (more defects) with * — 표본 변경 시엔 비교 보류
         def bmark(key):
-            if prev and r[key] > prev[key]:
+            if prev and not changed and r[key] > prev[key]:
                 return f"{r[key]}*"
             return str(r[key])
         print(f"{_fmt_date(r['runTs']):<18} {_pct(r['fieldAcc']):>7} {fdp:>6} {_pct(r['cellAcc']):>7} {cdp:>6}  "

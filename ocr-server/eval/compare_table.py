@@ -35,11 +35,16 @@ def _has_rowindex(row: dict[str, Any]) -> bool:
 
 
 def _index(rows: list[dict[str, Any]]) -> "dict[str, dict[str, Any]]":
-    """Index raw rows by normalized rowIndex; rows without one are skipped."""
+    """Index raw rows by normalized rowIndex; rows without one are skipped.
+
+    #3 가드: 중복 rowIndex 가 오면 *첫 행을 유지*한다(기존엔 뒤 행이 앞 행을 조용히
+    덮어써 행 하나가 비교에서 통째로 사라졌음 — 행 누락이 숨음). rich GT 는 rowIndex 가
+    unique 라 동작 변화 없음. 파서가 중복 rowIndex 를 뱉는 경우에만 결정론적으로 첫 행 유지.
+    """
     out: dict[str, dict[str, Any]] = {}
     for r in rows or []:
         idx = N.norm_index(r.get(C.ROW_ALIGN_KEY))
-        if idx == "":
+        if idx == "" or idx in out:
             continue
         out[idx] = r
     return out

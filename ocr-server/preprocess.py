@@ -39,10 +39,18 @@ def _get_best_quad(contours, min_area_ratio: float, h: int, w: int):
     return best_contour, best_area
 
 
-def detect_document(image: np.ndarray) -> tuple[np.ndarray, dict]:
+def detect_document(
+    image: np.ndarray,
+    force_warp_on_skip: bool = False,
+) -> tuple[np.ndarray, dict]:
     """
     사진 속 문서 영역을 자동 감지하고 원근 보정(perspective correction).
     문서를 찾지 못하면 원본 그대로 반환.
+
+    force_warp_on_skip: True 면 "배경 포함 의심" 스킵 가드를 무시하고 검출 사각형으로
+        강제 워프(P3, image 입력 전용 — 각도 사진의 사다리꼴 보정). 기본 False = 기존
+        동작 동치(무회귀). PDF 렌더는 깔끔한 풀프레임이라 워프 시 키스톤 손상 → False 유지
+        (run 008 실측: 무조건 워프는 base PDF 회귀, 판별자=PDF/image).
     """
     h, w = image.shape[:2]
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -76,17 +84,20 @@ def detect_document(image: np.ndarray) -> tuple[np.ndarray, dict]:
         return image, {
             "status": "감지 안됨", "detail": "사각형 문서를 찾지 못함",
             "skipped": True, "areaPct": None, "borders": None,
+            "forcedWarpOnSkip": False,
         }
 
     bx, by, bw, bh = cv2.boundingRect(best_contour)
     margin = int(min(h, w) * 0.02)
     borders = sum([bx <= margin, by <= margin, bx + bw >= w - margin, by + bh >= h - margin])
     _area_pct = round(best_area / (h * w) * 100, 1)
-    if best_area > h * w * 0.85 or borders >= 3:
+    _skip = best_area > h * w * 0.85 or borders >= 3
+    if _skip and not force_warp_on_skip:
         return image, {
             "status": "감지 스킵",
             "detail": f"배경 포함 의심({_area_pct}%, 가장자리 {borders}면), 원본 유지",
             "skipped": True, "areaPct": _area_pct, "borders": int(borders),
+            "forcedWarpOnSkip": False,
         }
 
     ordered = _find_4corners(best_contour)
@@ -103,6 +114,7 @@ def detect_document(image: np.ndarray) -> tuple[np.ndarray, dict]:
         return image, {
             "status": "감지 안됨", "detail": "감지된 영역이 너무 작음",
             "skipped": True, "areaPct": _area_pct, "borders": int(borders),
+            "forcedWarpOnSkip": False,
         }
 
     dst = np.array([
@@ -117,10 +129,13 @@ def detect_document(image: np.ndarray) -> tuple[np.ndarray, dict]:
 
     area_pct = round(cv2.contourArea(best_contour) / (h * w) * 100, 1)
 
+    _forced = bool(_skip and force_warp_on_skip)
     return warped, {
         "status": "감지 완료",
-        "detail": f"문서 영역 {area_pct}% ({out_w}x{out_h}으로 보정)",
+        "detail": f"문서 영역 {area_pct}% ({out_w}x{out_h}으로 보정)"
+                  + (" [FORCE_WARP_ON_SKIP]" if _forced else ""),
         "skipped": False, "areaPct": area_pct, "borders": int(borders),
+        "forcedWarpOnSkip": _forced,
     }
 
 
@@ -143,12 +158,17 @@ def detect_orientation(
     original_wh: tuple[int, int] | None = None,
     target_short: int = 224,
     skip_second_pass: bool = False,
+    force_full_eval: bool = False,
 ) -> tuple[np.ndarray, dict]:
     """Detect the best reading orientation among 0/90/180/270 degrees.
 
     target_short: thumbnail short-side in pixels (default 224; use 512 for invoice_statement).
     skip_second_pass: if True, skip second-pass angles after first-pass scoring.
                       Use for invoice_statement template to restrict to 0/180 only.
+    force_full_eval: if True, disable all early-stop/bailout and always score every
+                     0/90/270/180 orientation, then pick the max score. Additive and
+                     opt-in (default False = unchanged behavior). Use for invoice angled
+                     photos where the correct orientation lives in the skipped second pass.
     """
     h, w = image.shape[:2]
 
@@ -340,6 +360,13 @@ def detect_orientation(
         can_early_stop = True
         if not bailout_reason:
             bailout_reason = "skip_second_pass"
+
+    # force_full_eval: opt-in override (invoice angled photos). Disable every early-stop
+    # so the skipped second-pass orientations (where the correct reading direction often
+    # lives) are always scored. Takes precedence over skip_second_pass/can_early_stop.
+    if force_full_eval:
+        can_early_stop = False
+        bailout_reason = f"{bailout_reason}+force_full_eval" if bailout_reason else "force_full_eval"
 
     if can_early_stop:
         early_stopped = True
