@@ -3,7 +3,9 @@ from dataclasses import dataclass
 from typing import Any
 
 
-_BIZ_RE = re.compile(r"(?<!\d)([0-9OIlSB]{3})[-\s.]([0-9OIlSB]{2})[-\s.]([0-9OIlSB]{5})(?!\d)")
+# 구분자 [-=~\s.]: OCR이 사업자번호 대시(-)를 =,~로 흔히 오인(예: 3.pdf "113=85-04425").
+# 대시류 오인을 구분자로 받아들여 정상 사업자번호를 놓치지 않음(읽힘≠floor=파서 보강).
+_BIZ_RE = re.compile(r"(?<!\d)([0-9OIlSB]{3})[-=~\s.]([0-9OIlSB]{2})[-=~\s.]([0-9OIlSB]{5})(?!\d)")
 _AMOUNT_RE = re.compile(r"(?<!\d)([0-9OIlSB]{1,3}(?:[,.][0-9OIlSB]{3})+|[0-9OIlSB]{4,})(?!\d)")
 _PHONE_RE = re.compile(r"(?:TEL|Tel|tel|\uc804\ud654)?[:\s(]*(?<!\d)(?:0\d{1,2})[-)\s]?\d{3,4}[-\s]?\d{4}(?!\d)")
 
@@ -3265,6 +3267,26 @@ def _clean_representative_candidate(text: str) -> str:
     return value if _is_representative_candidate(value) else ""
 
 
+def _split_representative_from_company(party: dict[str, str]) -> str:
+    """상호 라인에 '법인명 대표 성명'이 한 줄로 붙어온 경우(예: '주식회사엘비아브노바대표남이레')
+    성명을 떼어 대표자 후보로 돌려주고 company는 법인명만 남긴다. 세금계산서 표준 레이아웃이라
+    벤더 일반적. 분리 불가/검증 실패 시 빈 문자열(부작용 없음)."""
+    company = party.get("company", "") or ""
+    match = re.search(
+        r"^(?P<base>.+?)\s*(?:대표이사|대표자|대표|성\s*명)\s*[:：]?\s*"
+        r"(?P<name>[가-힣]{2,4}(?:[,/][가-힣]{2,4})?|[A-Z][A-Za-z.\s]{2,30})\s*$",
+        company,
+    )
+    if not match:
+        return ""
+    base = _clean_value(match.group("base"))
+    name = _clean_value(match.group("name"))
+    if not _candidate_ok(base, "company") or not _is_representative_candidate(name):
+        return ""
+    party["company"] = base
+    return name
+
+
 def _representative_from_scope(lines: list[OcrLine]) -> str:
     ordered = sorted(lines, key=lambda item: (item.y, item.x))
     for idx, line in enumerate(ordered):
@@ -3827,6 +3849,14 @@ def _apply_address_continuation_post(
                     if opp_biz_val and opp_biz_val.replace("-", "") in re.sub(r"\D", "", extracted):
                         decision["rejected"].append({"type": "prefix", "offset": -offset, "line": prv_text[:40], "reason": "extracted_has_opposite_biz"})
                         continue
+                    # P3-a: prepend 후보가 상대 party 주소의 일부면 cross-party 오염 → 거부.
+                    # (예: 5.pdf에서 buyer 주소 앞에 공급자 '경기도부천시원미구'를 붙이는 것 차단.)
+                    # 기존 가드는 상대 *사업자번호* 포함만 봐서 지역줄 오염을 못 거름.
+                    opp_addr_norm = _party_norm(opposite.get("address", ""))
+                    ext_norm = _party_norm(extracted)
+                    if opp_addr_norm and len(ext_norm) >= 4 and ext_norm in opp_addr_norm:
+                        decision["rejected"].append({"type": "prefix", "offset": -offset, "line": prv_text[:40], "reason": "extracted_is_opposite_address"})
+                        continue
                     compact_ext = re.sub(r"\s+", "", extracted)
                     if compact_ext[:6] not in compact_addr:
                         # Use simple strip to preserve leading ( in postal codes
@@ -4130,6 +4160,11 @@ def _extract_party_fields(
     block_debug = _apply_party_block_refinements(supplier, buyer, all_lines, bizs, page_h, page_w)
     if pre_refine_debug["applied"]:
         block_debug.setdefault("preRefine", pre_refine_debug)
+    for _party in (supplier, buyer):
+        _split_name = _split_representative_from_company(_party)
+        if _split_name:
+            _party["representative"] = _split_name
+            block_debug.setdefault("applied", []).append("company_split.representative")
     _dedupe_cross_party_representative(supplier, buyer, block_debug)
     _remove_cross_party_address_fragments(supplier, buyer, block_debug)
     continuation_debug = _apply_address_continuation_post(supplier, buyer, all_lines, bizs, page_w, page_h)
@@ -7963,5 +7998,15 @@ def extract_invoice_statement_fields(
             "table": table,
             "tableRowsDebug": canonical["tableRowsDebug"],
         }
+
+    # document 최종(모든 amount 소스: 요약 _extract_amount_fields + reconstructor 후): total 빈값인데
+    # supply·tax 둘 다 있으면 total=supply+tax 산술복원. 4.pdf류 fallback은 supply·tax는 채워도
+    # total을 라벨선택 실패로 빈값으로 둠(OCR엔 28,336,000 존재). 콤마 무시 합산(8자리 date오인 회피),
+    # 기존 total은 안 덮음. free 경로(invoice_statement_free.py total 재계산)와 동일 의미·경로무관.
+    if not str(fields.get("totalAmount") or ""):
+        _sd = re.sub(r"\D", "", str(fields.get("supplyAmount") or ""))
+        _td = re.sub(r"\D", "", str(fields.get("taxAmount") or ""))
+        if _sd and _td:
+            fields["totalAmount"] = f"{int(_sd) + int(_td):,}"
 
     return fields

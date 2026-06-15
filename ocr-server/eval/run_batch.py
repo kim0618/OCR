@@ -149,7 +149,8 @@ def run_batch(
     workers: int = 4,
     only: list[str] | None = None,
     resume_ts: str | None = None,
-    timeout: float = 300.0,
+    timeout: float = 600.0,  # 300→600: 로컬 CPU에서 28행 무거운 장(1-2 등)이 변동성으로 300s
+    # 초과해 드롭→run 회귀 노이즈. GPU에선 무관. 측정 안정성용(정확도 게이트 아님).
     testset: str = C.DEFAULT_TESTSET,
 ) -> dict[str, Any]:
     manifest = build_manifest(testset)
@@ -241,7 +242,7 @@ def main() -> int:
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--only", nargs="*", default=None)
     ap.add_argument("--resume", dest="resume_ts", default=None)
-    ap.add_argument("--timeout", type=float, default=300.0)
+    ap.add_argument("--timeout", type=float, default=600.0)
     ap.add_argument("--testset", default=C.DEFAULT_TESTSET)
     args = ap.parse_args()
     out = run_batch(

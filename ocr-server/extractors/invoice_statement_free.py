@@ -1416,6 +1416,17 @@ def _money_parse_value(value: Any) -> float | None:
     return _number_value(_normalize_money(value))
 
 
+def _money_for_sum(value: Any) -> float | None:
+    """total 재계산(supply+tax)용 콤마-aware 금액 파싱.
+    `_money_parse_value`는 콤마를 먼저 지우고 6자리 날짜검사라 304,663(콤마 천단위 금액)을
+    날짜로 오인→None→합계 재계산 스킵→잘못된 total 잔존. 콤마가 있으면 금액이므로 받아들이고,
+    콤마 없는 6/8자리만 날짜로 거부(코드베이스 1505행과 동일 패턴). 전역 함수는 불변(부작용 회피)."""
+    raw = _normalize_text(value)
+    if "," not in raw and _is_date_like_number(value):
+        return None
+    return _number_value(_normalize_money(value))
+
+
 def _looks_like_money_token(value: Any) -> bool:
     text = _clean_number_token(_normalize_text(value))
     number = _number_value(text)
@@ -3601,8 +3612,8 @@ def extract_invoice_statement_free(
                 document_fields[key] = labeled_summary_fields[key]
         if _has_meaningful_value(document_fields.get("taxAmount")) and document_fields.get("taxAmount") == document_fields.get("cumulativeAmount"):
             document_fields["cumulativeAmount"] = ""
-        supply_value = _money_parse_value(document_fields.get("supplyAmount"))
-        tax_value = _money_parse_value(document_fields.get("taxAmount"))
+        supply_value = _money_for_sum(document_fields.get("supplyAmount"))
+        tax_value = _money_for_sum(document_fields.get("taxAmount"))
         if supply_value is not None and tax_value is not None:
             document_fields["totalAmount"] = f"{int(round(supply_value + tax_value)):,}"
         scalar_merge_debug["reference"] = reference_debug

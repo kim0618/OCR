@@ -158,12 +158,18 @@ _BATCH_RE = _re.compile(r"^(?:(\d{3})_)?\d{8}_\d{6}$")  # 001_YYYYMMDD_HHMMSS �
 
 
 def _next_seq() -> int:
-    """기존 배치 폴더 개수 +1 = 다음 회차 번호. 폴더 앞 NNN_ 프리픽스용."""
+    """기존 배치 폴더 NNN 프리픽스의 최댓값 +1 = 다음 회차. 폴더 앞 NNN_ 프리픽스용.
+    (개수 기반은 폴더 삭제 시 빈 번호를 재사용해 기존 폴더와 충돌하므로 max 기반 = 삭제 안전.)"""
     if not os.path.isdir(C.RUNS_DIR):
         return 1
-    n = sum(1 for d in os.listdir(C.RUNS_DIR)
-            if os.path.isdir(os.path.join(C.RUNS_DIR, d)) and _BATCH_RE.match(d))
-    return n + 1
+    nums = []
+    for d in os.listdir(C.RUNS_DIR):
+        if not os.path.isdir(os.path.join(C.RUNS_DIR, d)):
+            continue
+        m = _BATCH_RE.match(d)
+        if m and m.group(1):
+            nums.append(int(m.group(1)))
+    return (max(nums) + 1) if nums else 1
 
 
 def _role_label(testset: str, kind: str, html: bool = False) -> str:

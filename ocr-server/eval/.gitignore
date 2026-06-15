@@ -1,10 +1,5 @@
-# LEARN-LOOP-INFRA eval harness — ignore generated run outputs.
-# Only code + contract + checker fixtures are tracked; results are reproducible.
-runs/
+# LEARN-LOOP-INFRA eval harness.
+# Everything under eval/ is tracked (work locally -> push -> run on AWS -> pull back -> analyze).
+# Only Python bytecode caches are excluded (machine-specific, regenerated, cause cross-machine noise).
 __pycache__/
 *.pyc
-# local time-series history (regenerable; binary)
-metrics_timeseries.sqlite
-# rolling trend report (regenerated from the time-series each run)
-TREND.md
-TREND.html

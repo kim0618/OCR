@@ -2383,28 +2383,23 @@ async def ocr_extract(
         _t_orient0 = time.time()
         _doc_img_before_orientation = doc_img
         _pre_orient_h, _pre_orient_w = _doc_img_before_orientation.shape[:2]
-        # O0: invoice_statement 한정 — early-stop/bailout 끄고 4방향 전부 채점(force_full_eval).
-        # 각도사진이 second_pass(90/270)를 안 보고 0° 오판하는 문제를 함수 내부 채점으로 해소.
-        # target_short 은 기본 224 유지(512는 run014에서 4-pass×큰thumb로 28행 무거운 장이
-        # 300s 타임아웃 → 비용 과다 확인). 224에서 4방향이 정답을 가리키는지부터 측정(O0).
-        # O0/O1 확정: invoice 한정 force_full_eval(early-stop 끄고 4방향 채점)로 각도변주 방향교정.
-        # 단 force_full_eval은 무거운 28행 장(1-x)을 4-pass OCR로 300s 타임아웃시킴(run017).
-        # 무거운 장은 default 만으로 방향을 맞추므로(run012 증명) force 불필요 → default 먼저 돌려
-        # 읽은 줄수가 적은(=가벼운 단일행 변주, 깨질 후보)일 때만 force_full_eval 재채점.
-        # 무거운 장: default 1회(빠름) / 가벼운 변주: default+force(둘다 가벼워 쌈). 타임아웃 회피.
+        # 조건부 4방향(정석): default 먼저 → invoice가 첫 패스로 방향을 *못 가린* 경우만 재채점.
+        # bailout_reason='low_signal*' = 0/180만 보고 확신 못 함(90/270 미확인) → force_full_eval
+        # 로 4방향 재채점. 확신(strong_*)·명확하면 그대로(무거운 28행 장은 strong이라 재채점 안 함
+        # → 타임아웃 0). 약신호 장은 대부분 가벼운 단일행 변주라 4방향이 쌈.
+        # 한계: '확신하며 틀리는'(6-2/3-2: 0°를 strong 확신하나 실제 90°) 케이스는 못 잡음 →
+        # 그건 무조건 4방향이라 CPU 타임아웃 = GPU(싼 4방향 + server rec 모델) 몫.
         _orient_is_invoice = (documentType or "").strip() == "invoice_statement"
         _orient_escalated_512 = False
-        if _orient_is_invoice:
-            doc_img, orient_meta = detect_orientation(doc_img, ocr, original_wh=(orig_w, orig_h))
-            _dom_lines = (orient_meta.get("first_pass_line_count") or 0) if isinstance(orient_meta, dict) else 0
-            _HEAVY_DOC_LINE_GUARD = 20  # 줄수 >= 20 = 무거운 다행문서(default 신뢰), 미만 = force 재채점
-            if _dom_lines < _HEAVY_DOC_LINE_GUARD:
-                doc_img, orient_meta = detect_orientation(
-                    _doc_img_before_orientation, ocr, original_wh=(orig_w, orig_h),
-                    force_full_eval=True,
-                )
-        else:
-            doc_img, orient_meta = detect_orientation(doc_img, ocr, original_wh=(orig_w, orig_h))
+        _orient_forced = False
+        doc_img, orient_meta = detect_orientation(doc_img, ocr, original_wh=(orig_w, orig_h))
+        _orient_bail = (orient_meta.get("bailout_reason") or "") if isinstance(orient_meta, dict) else ""
+        if _orient_is_invoice and _orient_bail.startswith("low_signal"):
+            doc_img, orient_meta = detect_orientation(
+                _doc_img_before_orientation, ocr, original_wh=(orig_w, orig_h),
+                force_full_eval=True,
+            )
+            _orient_forced = True
         print(f"[OCR] {orient_meta['detail']}")
         dh, dw = doc_img.shape[:2]
         _post_detect_h, _post_detect_w = dh, dw
@@ -2548,7 +2543,7 @@ async def ocr_extract(
                 "firstPassRatio": orient_meta.get("first_pass_ratio") if isinstance(orient_meta, dict) else None,
                 "bailoutReason": orient_meta.get("bailout_reason") if isinstance(orient_meta, dict) else None,
                 # O0: invoice force_full_eval 채점 증거 — 방향별 score + 채택 각도
-                "forceFullEval": _orient_is_invoice,
+                "forceFullEval": _orient_forced,
                 "escalated512": _orient_escalated_512,
                 "evaluatedAngles": orient_meta.get("evaluated_angles") if isinstance(orient_meta, dict) else None,
                 "allScores": (
