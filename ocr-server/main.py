@@ -2554,6 +2554,31 @@ async def ocr_extract(
                 _overapply_guard["reason"] = "deskew_increased_skew_reverted"
             else:
                 _overapply_guard["reason"] = "deskew_kept_not_harmful"
+        # 3BG(P3): IMAGE 텍스트투영 deskew — 각도사진(변주)에서 deskew()의 minAreaRect 가 표
+        # 테두리에 락온→0°오판→스킵하는 케이스를, measure_skew_angle(텍스트 투영, 테두리 면역)로
+        # 진짜 기울기를 재서 보정한다. IMAGE+invoice 전용·deskew 미적용 케이스 한정·중간각(1~15°)만
+        # (큰 각=perspective 별도 워프). 측정→회전 후 *실제로 줄었을 때만* 채택(자기검증). deskew 코어 불변.
+        _img_deskew = {"name": "IMAGE_TEXT_PROJECTION_DESKEW", "applied": False,
+                       "angle": None, "postAngle": None, "reason": "not_image_invoice_or_already_deskewed"}
+        if (not _is_pdf_input) and _orient_is_invoice and not _final_applied:
+            _txt_skew = measure_skew_angle(doc_img, max_angle=15.0)
+            _img_deskew["measuredAngle"] = _txt_skew
+            if _txt_skew is not None and 1.0 <= abs(_txt_skew) <= 15.0:
+                (_idh, _idw) = doc_img.shape[:2]
+                _idM = cv2.getRotationMatrix2D((_idw // 2, _idh // 2), _txt_skew, 1.0)
+                _idcand = cv2.warpAffine(doc_img, _idM, (_idw, _idh),
+                                         flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
+                _idpost = measure_skew_angle(_idcand, max_angle=15.0)
+                if _idpost is not None and abs(_idpost) < abs(_txt_skew) - 0.3:
+                    doc_deskewed = _idcand  # 텍스트 기울기 실제 감소 → 채택
+                    _final_applied = True
+                    _img_deskew.update({"applied": True, "angle": round(_txt_skew, 3),
+                                        "postAngle": _idpost, "reason": "text_projection_deskew_applied"})
+                else:
+                    _img_deskew["reason"] = "no_skew_reduction_skipped"
+                    _img_deskew["postAngle"] = _idpost
+            else:
+                _img_deskew["reason"] = "below_threshold_or_too_large"
         _preprocess_debug = {
             # 전처리-인지 계측: detect_document(원근보정) 결과를 신호로 노출
             # (eval buckets 가 전처리 결함 자동분류에 사용). additive·debug-only.
@@ -2605,8 +2630,9 @@ async def ocr_extract(
                     "finalAppliedAfterPolicy": _final_applied,
                 },
                 "overApplyGuard": _overapply_guard,
+                "imageTextDeskew": _img_deskew,
             },
-            "policyVersion": "3bf_pdf_orientation0_deskew_overapply_revert_guard",
+            "policyVersion": "3bg_image_text_projection_deskew",
         }
         display_max_w = 2000
         ddh, ddw = doc_deskewed.shape[:2]

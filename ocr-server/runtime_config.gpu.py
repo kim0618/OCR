@@ -13,6 +13,8 @@ DEVICE = "gpu"
 DET_MODEL = "PP-OCRv5_mobile_det"
 INVOICE_OCR_MAX_W = 950
 DET_LIMIT_SIDE_LEN = 960
-# P1: invoice 무조건 4방향 orientation + 512 썸네일. '확신하며 틀린 방향'(6-2/3-2 0°→실제90°)
-# 교정. CPU 베이스라인은 False(28행 4방향 300s 타임아웃이라 막힘) — GPU 전용 레버.
-ORIENT_FULL_4WAY_512 = True
+# P1(039 net-negative, 롤백): 무조건 4방향+512는 6-2/6-3(작은표) 살리나 1.jpg/1-2(큰표)를
+# 오회전(0°→90°)해 셀 73→45%·base 85→22% 폭락. early-stop이 맞던 방향을 512 스코어러가 재채점해
+# 틀린 방향이 이김. '확신하며 맞음'vs'확신하며 틀림'을 confidence로 구분 불가 → 무조건 4방향은 틀린 도구.
+# 6-2/3-2 오리엔트 미스파이어는 별도 targeted 방법으로(스코어러 개선) 후순위.
+ORIENT_FULL_4WAY_512 = False

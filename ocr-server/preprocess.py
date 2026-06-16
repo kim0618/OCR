@@ -484,12 +484,15 @@ def deskew(image: np.ndarray) -> tuple[np.ndarray, dict]:
     }
 
 
-def measure_skew_angle(image: np.ndarray) -> float | None:
+def measure_skew_angle(image: np.ndarray, max_angle: float = 5.0) -> float | None:
     """텍스트 줄 기반 잔여 기울기 추정(투영 프로파일 분산 최대화).
 
     deskew()의 minAreaRect 각도가 표/테두리에 락온되어 잘못 잡히는 false-positive를
     검증하기 위한 *독립* 측정. 회전을 적용하지 않으며, 추정 각도(deg)만 반환한다.
     텍스트가 없으면 None. (3BF over-apply guard 전용 — deskew 알고리즘/threshold 불변.)
+
+    max_angle: 스캔 범위 ±max_angle (deg, step 0.5°). 기본 5.0 = 기존 3BF 가드 동작 불변.
+        P3 이미지 텍스트투영 deskew 는 ±15° 로 호출(테두리 락온된 각도사진의 진짜 기울기 포착).
     """
     try:
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -509,8 +512,8 @@ def measure_skew_angle(image: np.ndarray) -> float | None:
     H, W = thresh.shape
     center = (W // 2, H // 2)
     best_angle, best_score = 0.0, -1.0
-    angle = -5.0
-    while angle <= 5.0001:
+    angle = -float(max_angle)
+    while angle <= float(max_angle) + 1e-4:
         M = cv2.getRotationMatrix2D(center, angle, 1.0)
         rot = cv2.warpAffine(
             thresh, M, (W, H),
