@@ -1143,6 +1143,44 @@ def get_ocr_engine():
     return _ocr_engine
 
 
+def _korean_char_count(ocr_lines, min_conf: float = 0.5) -> tuple[int, int]:
+    """OCR 텍스트의 (한글자수, 전체비공백자수). 방향이 맞아야 한글이 인식됨 —
+    거꾸로/옆으로면 한글≈0(라틴·숫자 fragment). orientation 정오 판정의 신뢰 신호."""
+    kr = tot = 0
+    for ln in (ocr_lines or []):
+        try:
+            text, conf = ln[1], ln[2]
+        except Exception:
+            continue
+        if not text or float(conf) < min_conf:
+            continue
+        for c in str(text):
+            if c.strip():
+                tot += 1
+            if "가" <= c <= "힣":
+                kr += 1
+    return kr, tot
+
+
+def _prep_and_ocr_lines(src_img, ocr, ocr_max_w: int, ocr_min_w: int):
+    """메인 OCR prep(resize→CLAHE→sharpen)과 동일하게 한 뒤 ocr → (lines, prepped_img).
+    orientation 재검증·재OCR 후보 평가용(메인 경로와 동일 파이프라인 보장)."""
+    h, w = src_img.shape[:2]
+    if w > ocr_max_w:
+        img = cv2.resize(src_img, (ocr_max_w, int(h * ocr_max_w / w)), interpolation=cv2.INTER_AREA)
+    elif w < ocr_min_w:
+        img = cv2.resize(src_img, (ocr_max_w, int(h * ocr_max_w / w)), interpolation=cv2.INTER_CUBIC)
+    else:
+        img = src_img.copy()
+    lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
+    l, a, b = cv2.split(lab)
+    l = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8)).apply(l)
+    img = cv2.cvtColor(cv2.merge((l, a, b)), cv2.COLOR_LAB2BGR)
+    blur = cv2.GaussianBlur(img, (0, 0), 1.5)
+    img = cv2.addWeighted(img, 1.5, blur, -0.5, 0)
+    return _parse_ocr_lines(ocr.ocr(img)), img
+
+
 def _median_textline_angle(ocr_lines, min_conf: float = 0.5):
     """OCR 텍스트라인 bbox 상단엣지 각도의 중앙값(deg, [-45,45]).
 
@@ -2738,6 +2776,45 @@ async def ocr_extract(
 
         _t_parse0 = time.time()
         ocr_lines_raw = _parse_ocr_lines(result)
+        # P1(orientation 재검증, Korean-ness 게이트): orientation 점수(confidence)는 '확신하며
+        # 틀림'(6-2: 0°를 강하게 택했으나 텍스트 거꾸로)을 못 거름. 신뢰 신호 = 출력 한글다움 —
+        # 방향 맞아야 한글 인식됨. 인식 한글이 거의 0(garbage)일 때만 4방향 재OCR해 한글 최다 채택.
+        # 깨끗한 장(1.jpg KR0.22, 6-1 0.41)은 트리거 안 됨 → 039 같은 회귀 없음. invoice+flag 전용.
+        _orient_reverify = {"name": "ORIENT_KOREAN_REVERIFY", "applied": False,
+                            "reason": "off_or_not_garbage", "krBefore": None, "krAfter": None, "pickedRot": 0}
+        if (getattr(RT, "ORIENT_KOREAN_REVERIFY", False) and _orient_is_invoice):
+            _kr0, _tot0 = _korean_char_count(ocr_lines_raw)
+            _ratio0 = (_kr0 / _tot0) if _tot0 else 0.0
+            _orient_reverify["krBefore"] = round(_ratio0, 3)
+            if _tot0 >= 8 and _ratio0 < 0.10:  # garbage = 방향 오판 강력 의심
+                _best_kr, _best_rot, _best_lines, _best_img = _kr0, 0, ocr_lines_raw, None
+                for _rot, _cvrot in ((90, cv2.ROTATE_90_CLOCKWISE), (180, cv2.ROTATE_180),
+                                     (270, cv2.ROTATE_90_COUNTERCLOCKWISE)):
+                    _cand_img = cv2.rotate(doc_deskewed, _cvrot)
+                    _cand_lines, _cand_prepped = _prep_and_ocr_lines(_cand_img, ocr, ocr_max_w, ocr_min_w)
+                    _ckr, _ = _korean_char_count(_cand_lines)
+                    if _ckr > _best_kr:
+                        _best_kr, _best_rot, _best_lines, _best_img = _ckr, _rot, _cand_lines, _cand_prepped
+                # 채택: 회전본이 한글을 *현저히* 더 많이 읽을 때만(2배+ & 최소 20자)
+                if _best_rot != 0 and _best_kr >= max(20, _kr0 * 2):
+                    doc_deskewed = cv2.rotate(doc_deskewed,
+                                              {90: cv2.ROTATE_90_CLOCKWISE, 180: cv2.ROTATE_180,
+                                               270: cv2.ROTATE_90_COUNTERCLOCKWISE}[_best_rot])
+                    ocr_lines_raw = _best_lines
+                    ocr_img = _best_img
+                    ocr_h, ocr_w = _best_img.shape[:2]
+                    _, _oenc = cv2.imencode('.jpg', _best_img, [cv2.IMWRITE_JPEG_QUALITY, 85])
+                    processed_b64 = base64.b64encode(_oenc.tobytes()).decode('utf-8')
+                    timings["ocr_image_wh"] = [ocr_w, ocr_h]
+                    _bkr2, _btot2 = _korean_char_count(ocr_lines_raw)
+                    _orient_reverify.update({"applied": True, "pickedRot": _best_rot,
+                                             "krAfter": round((_bkr2 / _btot2) if _btot2 else 0.0, 3),
+                                             "reason": "reoriented_by_korean_signal"})
+                else:
+                    _orient_reverify["reason"] = "no_better_orientation"
+        timings["orient_reverify"] = _orient_reverify
+        if isinstance(_preprocess_debug, dict) and isinstance(_preprocess_debug.get("orientation"), dict):
+            _preprocess_debug["orientation"]["koreanReverify"] = _orient_reverify
         # 3BH(P3'): bbox 기반 deskew + 재OCR. 1차 OCR 텍스트라인 bbox 중앙각(테두리/행주기 면역,
         # P0 신뢰소스)이 진짜 기울기. 기울면 doc_deskewed 회전→재OCR. dense표는 0°라 안 건드리고
         # 진짜 기운 sparse(4-1 ~7°)만 보정. IMAGE+invoice 전용·flag 게이트. 잔여각 줄고 라인 안

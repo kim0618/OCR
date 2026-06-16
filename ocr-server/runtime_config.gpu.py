@@ -25,3 +25,7 @@ IMAGE_TEXT_DESKEW_PROJECTION = False
 # P3'(bbox 기반): 1차 OCR 텍스트라인 bbox 중앙각으로 진짜 기울기 판정→회전 후 재OCR.
 # dense표=0°라 스킵(1-1 안 건드림), 진짜 기운 sparse(4-1)만 보정. 재OCR 2-pass(기운 장만).
 IMAGE_BBOX_DESKEW_REOCR = True
+# P1(orientation 재검증): 출력 한글다움이 garbage(<0.10)면 4방향 재OCR해 한글 최다 채택.
+# confidence 못 거르는 '확신하며 틀림'(6-2 거꾸로) 교정. 깨끗한 장은 트리거 안 됨(039 회귀 회피).
+# 6-series 필드 회복용(셀은 파서 바운드라 별개). invoice+image 전용.
+ORIENT_KOREAN_REVERIFY = True
