@@ -2417,9 +2417,19 @@ async def ocr_extract(
         _orient_is_invoice = (documentType or "").strip() == "invoice_statement"
         _orient_escalated_512 = False
         _orient_forced = False
-        doc_img, orient_meta = detect_orientation(doc_img, ocr, original_wh=(orig_w, orig_h))
+        if _orient_is_invoice and getattr(RT, "ORIENT_FULL_4WAY_512", False):
+            # P1(GPU): invoice 무조건 4방향 + 512 썸네일. '확신하며 틀린 방향'(6-2/3-2 0°→실제90°)
+            # 까지 첫 패스에서 교정. CPU 는 28행 4방향 타임아웃이라 플래그 OFF(아래 조건부 경로 유지).
+            doc_img, orient_meta = detect_orientation(
+                doc_img, ocr, original_wh=(orig_w, orig_h),
+                target_short=512, force_full_eval=True,
+            )
+            _orient_forced = True
+            _orient_escalated_512 = True
+        else:
+            doc_img, orient_meta = detect_orientation(doc_img, ocr, original_wh=(orig_w, orig_h))
         _orient_bail = (orient_meta.get("bailout_reason") or "") if isinstance(orient_meta, dict) else ""
-        if _orient_is_invoice and _orient_bail.startswith("low_signal"):
+        if (not _orient_forced) and _orient_is_invoice and _orient_bail.startswith("low_signal"):
             doc_img, orient_meta = detect_orientation(
                 _doc_img_before_orientation, ocr, original_wh=(orig_w, orig_h),
                 force_full_eval=True,

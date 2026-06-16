@@ -13,3 +13,6 @@ DEVICE = "gpu"
 DET_MODEL = "PP-OCRv5_mobile_det"
 INVOICE_OCR_MAX_W = 950
 DET_LIMIT_SIDE_LEN = 960
+# P1: invoice 무조건 4방향 orientation + 512 썸네일. '확신하며 틀린 방향'(6-2/3-2 0°→실제90°)
+# 교정. CPU 베이스라인은 False(28행 4방향 300s 타임아웃이라 막힘) — GPU 전용 레버.
+ORIENT_FULL_4WAY_512 = True
