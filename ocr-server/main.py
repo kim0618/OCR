@@ -1143,6 +1143,40 @@ def get_ocr_engine():
     return _ocr_engine
 
 
+def _median_textline_angle(ocr_lines, min_conf: float = 0.5):
+    """OCR 텍스트라인 bbox 상단엣지 각도의 중앙값(deg, [-45,45]).
+
+    실제 글자줄 방향이라 dense 표에서도 신뢰(테두리/행주기에 락온되는 minAreaRect·투영
+    프로파일과 다름 — P0 probe 가 쓴 신뢰 소스). 유효 라인<8 이면 None(신뢰 부족)."""
+    import math
+    angs = []
+    for ln in (ocr_lines or []):
+        try:
+            bbox, text, conf = ln[0], ln[1], ln[2]
+        except Exception:
+            continue
+        if not text or float(conf) < min_conf:
+            continue
+        try:
+            (x0, y0), (x1, y1) = bbox[0], bbox[1]
+        except Exception:
+            continue
+        dx, dy = (x1 - x0), (y1 - y0)
+        if abs(dx) < 1e-6 and abs(dy) < 1e-6:
+            continue
+        a = math.degrees(math.atan2(dy, dx))
+        while a > 45:
+            a -= 90
+        while a < -45:
+            a += 90
+        angs.append(a)
+    if len(angs) < 8:
+        return None
+    angs.sort()
+    n = len(angs)
+    return round(angs[n // 2] if n % 2 else (angs[n // 2 - 1] + angs[n // 2]) / 2.0, 3)
+
+
 def _ocr_crop_region(img, ocr, x, y, w, h):
     """이미지에서 특정 영역을 크롭하여 OCR 실행. 모든 텍스트를 합쳐 반환."""
     img_h, img_w = img.shape[:2]
@@ -2560,7 +2594,8 @@ async def ocr_extract(
         # (큰 각=perspective 별도 워프). 측정→회전 후 *실제로 줄었을 때만* 채택(자기검증). deskew 코어 불변.
         _img_deskew = {"name": "IMAGE_TEXT_PROJECTION_DESKEW", "applied": False,
                        "angle": None, "postAngle": None, "reason": "not_image_invoice_or_already_deskewed"}
-        if (not _is_pdf_input) and _orient_is_invoice and not _final_applied:
+        if (getattr(RT, "IMAGE_TEXT_DESKEW_PROJECTION", False)
+                and (not _is_pdf_input) and _orient_is_invoice and not _final_applied):
             _txt_skew = measure_skew_angle(doc_img, max_angle=15.0)
             _img_deskew["measuredAngle"] = _txt_skew
             if _txt_skew is not None and 1.0 <= abs(_txt_skew) <= 15.0:
@@ -2703,6 +2738,52 @@ async def ocr_extract(
 
         _t_parse0 = time.time()
         ocr_lines_raw = _parse_ocr_lines(result)
+        # 3BH(P3'): bbox 기반 deskew + 재OCR. 1차 OCR 텍스트라인 bbox 중앙각(테두리/행주기 면역,
+        # P0 신뢰소스)이 진짜 기울기. 기울면 doc_deskewed 회전→재OCR. dense표는 0°라 안 건드리고
+        # 진짜 기운 sparse(4-1 ~7°)만 보정. IMAGE+invoice 전용·flag 게이트. 잔여각 줄고 라인 안
+        # 무너질 때만 채택(자기검증). 투영기반 P3(040 회귀)를 신뢰 각도소스로 대체.
+        _bbox_deskew = {"name": "BBOX_REOCR_DESKEW", "applied": False, "angle": None,
+                        "measuredAngle": None, "postAngle": None, "reason": "off_or_not_target"}
+        if (getattr(RT, "IMAGE_BBOX_DESKEW_REOCR", False)
+                and (not _is_pdf_input) and _orient_is_invoice):
+            _bba = _median_textline_angle(ocr_lines_raw)
+            _bbox_deskew["measuredAngle"] = _bba
+            if _bba is not None and 1.5 <= abs(_bba) <= 15.0:
+                (_bdh, _bdw) = doc_deskewed.shape[:2]
+                _bdM = cv2.getRotationMatrix2D((_bdw // 2, _bdh // 2), _bba, 1.0)
+                _bdrot = cv2.warpAffine(doc_deskewed, _bdM, (_bdw, _bdh),
+                                        flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
+                _rdh, _rdw = _bdrot.shape[:2]
+                if _rdw > ocr_max_w:
+                    _rimg = cv2.resize(_bdrot, (ocr_max_w, int(_rdh * (ocr_max_w / _rdw))), interpolation=cv2.INTER_AREA)
+                elif _rdw < ocr_min_w:
+                    _rimg = cv2.resize(_bdrot, (ocr_max_w, int(_rdh * (ocr_max_w / _rdw))), interpolation=cv2.INTER_CUBIC)
+                else:
+                    _rimg = _bdrot.copy()
+                _rlab = cv2.cvtColor(_rimg, cv2.COLOR_BGR2LAB)
+                _rl, _ra, _rb = cv2.split(_rlab)
+                _rl = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8)).apply(_rl)
+                _rimg = cv2.cvtColor(cv2.merge((_rl, _ra, _rb)), cv2.COLOR_LAB2BGR)
+                _rblur = cv2.GaussianBlur(_rimg, (0, 0), 1.5)
+                _rimg = cv2.addWeighted(_rimg, 1.5, _rblur, -0.5, 0)
+                _rlines = _parse_ocr_lines(ocr.ocr(_rimg))
+                _rpost = _median_textline_angle(_rlines)
+                if (len(_rlines) >= max(8, int(len(ocr_lines_raw) * 0.8))
+                        and _rpost is not None and abs(_rpost) < abs(_bba) - 0.5):
+                    doc_deskewed = _bdrot
+                    ocr_img = _rimg
+                    ocr_lines_raw = _rlines
+                    ocr_h, ocr_w = _rimg.shape[:2]
+                    _, _renc = cv2.imencode('.jpg', _rimg, [cv2.IMWRITE_JPEG_QUALITY, 85])
+                    processed_b64 = base64.b64encode(_renc.tobytes()).decode('utf-8')
+                    timings["ocr_image_wh"] = [ocr_w, ocr_h]
+                    _bbox_deskew.update({"applied": True, "angle": round(_bba, 3),
+                                         "postAngle": _rpost, "reason": "bbox_reocr_deskew_applied"})
+                else:
+                    _bbox_deskew.update({"postAngle": _rpost, "reason": "reocr_not_better_or_collapsed"})
+            else:
+                _bbox_deskew["reason"] = "below_threshold_or_too_large"
+        timings["bbox_deskew"] = _bbox_deskew
         field_idx = 0
         for bbox_points, text, confidence in ocr_lines_raw:
             if not text or len(text) < 1:
