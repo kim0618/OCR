@@ -16,7 +16,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from PIL import Image
 
-import runtime_config as RT  # cpu/gpu deploy switch — single-source; only runtime_config diverges
 from preprocess import preprocess, preprocess_for_ocr, enhance_contrast, sharpen, detect_document, deskew, detect_orientation, measure_skew_angle
 from amount_extractor import (
     extract_amount_candidates,
@@ -1123,9 +1122,9 @@ def get_ocr_engine():
         from paddleocr import PaddleOCR
         _ocr_engine = PaddleOCR(
             lang="korean",
-            text_detection_model_name=RT.DET_MODEL,
+            text_detection_model_name="PP-OCRv5_mobile_det",
             text_recognition_model_name="korean_PP-OCRv5_mobile_rec",
-            device=RT.DEVICE,
+            device="cpu",
             use_textline_orientation=False,
             use_doc_orientation_classify=False,  # 자체 detect_orientation 사용, 중복 제거
             use_doc_unwarping=False,             # UVDoc 비활성화 (영수증에 불필요, 속도 주범)
@@ -1135,10 +1134,6 @@ def get_ocr_engine():
             enable_mkldnn=False,
             cpu_threads=os.cpu_count() or 4,
             text_recognition_batch_size=30,
-            # det 입력 캡: 안 두면 엔진 기본(~960)이 고해상 invoice(ocr_max_w)를 재축소.
-            # limit_type="max" = long-side 가 side_len 초과할 때만 축소 → cpu(960)는 현행 유지.
-            text_det_limit_type="max",
-            text_det_limit_side_len=RT.DET_LIMIT_SIDE_LEN,
         )
     return _ocr_engine
 
@@ -2616,15 +2611,8 @@ async def ocr_extract(
         #    850px는 일반 영수증의 작은 숫자/구분자 인식에서 회귀가 커서 완충 복원.
         #    orientation 최적화로 확보한 이득은 유지하면서 full OCR 정확도를 회복한다.
         _t_ocrp0 = time.time()
-        # invoice_statement dense 표는 고해상 OCR 필요: 950px가 약품표 작은 글자 뭉갬
-        # (실측 헥사메딘→헥사메던) + server_det 행병합 유발. RT.INVOICE_OCR_MAX_W =
-        # 로컬 cpu 950(속도) / AWS gpu 2000(정확도). 타 문서타입은 950 유지(영수증 가드).
-        if (documentType or "").strip() == "invoice_statement":
-            ocr_max_w = RT.INVOICE_OCR_MAX_W
-            ocr_min_w = 760
-        else:
-            ocr_max_w = 950
-            ocr_min_w = 760
+        ocr_max_w = 950
+        ocr_min_w = 760
         if ddw > ocr_max_w:
             os_ = ocr_max_w / ddw
             ocr_img = cv2.resize(doc_deskewed, (ocr_max_w, int(ddh * os_)), interpolation=cv2.INTER_AREA)
@@ -3288,7 +3276,7 @@ async def ocr_extract(
     if not region_list:
         # 계측 메타 주입: 구간 시간/차원/디바이스
         timings["total_ms"] = _ms(elapsed)
-        timings["paddle_device"] = RT.DEVICE  # runtime_config (cpu/gpu deploy switch)
+        timings["paddle_device"] = "cpu"  # get_ocr_engine() 에서 device='cpu' 고정
         timings["cpu_threads"] = os.cpu_count() or 0
         timings["debug_mode"] = True  # 비-템플릿 경로는 항상 extract_debug 포함
         # 3N: debug-only preprocess(orientation/deskew) metadata 보존. 정책/추출 결과 불변.
