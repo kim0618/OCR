@@ -2784,6 +2784,10 @@ async def ocr_extract(
             else:
                 _bbox_deskew["reason"] = "below_threshold_or_too_large"
         timings["bbox_deskew"] = _bbox_deskew
+        # P-A: eval 샘플은 timings 를 저장 안 하므로 preprocess 디버그(저장됨)에도 노출 →
+        # 장별 deskew 발동/각도를 run 분석에서 직접 볼 수 있게(셀 델타 추정 불필요).
+        if isinstance(_preprocess_debug, dict) and isinstance(_preprocess_debug.get("deskew"), dict):
+            _preprocess_debug["deskew"]["bboxReocr"] = _bbox_deskew
         field_idx = 0
         for bbox_points, text, confidence in ocr_lines_raw:
             if not text or len(text) < 1:
