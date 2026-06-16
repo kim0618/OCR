@@ -93,6 +93,51 @@ REFERENCE_SCALAR_MERGE_KEYS = (
     "taxAmount",
     "issueDate",
 )
+# Money scalars must hold a parseable number. A reference label like "합" (the
+# bare 합계 header cell) must never backfill a money field — guard at merge time.
+REFERENCE_MONEY_SCALAR_KEYS = (
+    "totalAmount",
+    "cumulativeAmount",
+    "supplyAmount",
+    "taxAmount",
+)
+
+# Document-structure labels that are never a person's name. A party-representative
+# field that ends up holding one of these (e.g. fallback OCR putting the "총수량"
+# summary label into buyerRepresentative) is a spurious capture — blank it.
+_PARTY_NAME_REJECT_LABELS = frozenset({
+    "총수량", "합계", "소계", "누계", "부가세", "공급가액", "공급가",
+    "세액", "금액", "단가", "수량", "상호", "상호명", "대표", "대표자",
+    "성명", "비고", "합", "계", "공급자", "공급받는자",
+})
+PARTY_NAME_FIELD_KEYS = ("supplierRepresentative", "buyerRepresentative")
+# Money scalars that must hold a parseable number; a non-numeric value (e.g. the
+# label "합") is garbage regardless of which extractor produced it.
+MONEY_SCALAR_FIELD_KEYS = (
+    "supplyAmount", "taxAmount", "totalAmount", "cumulativeAmount", "subtotal",
+    "previousBalance", "transactionAmount", "cumulativeBalance",
+)
+
+
+def sanitize_document_scalar_fields(document_fields: dict[str, Any]) -> dict[str, Any]:
+    """Path-agnostic output guard (run after free/fallback converge), so it guards
+    both extractors regardless of which one produced a field:
+      - party-representative holding a known document label (e.g. "총수량") → blank
+      - money scalar holding a non-numeric value (e.g. the label "합")        → blank
+    Valid values are never touched: real names ("김승관") aren't in the reject set,
+    and any parseable amount ("18,098,750") clears the money check.
+    """
+    if not isinstance(document_fields, dict):
+        return document_fields
+    for key in PARTY_NAME_FIELD_KEYS:
+        val = document_fields.get(key)
+        if isinstance(val, str) and val.strip() in _PARTY_NAME_REJECT_LABELS:
+            document_fields[key] = ""
+    for key in MONEY_SCALAR_FIELD_KEYS:
+        val = document_fields.get(key)
+        if isinstance(val, str) and val.strip() and _money_for_sum(val) is None:
+            document_fields[key] = ""
+    return document_fields
 # Table contract is owned by the free parser; reference values for these keys must
 # never overwrite the free result (tableRows/tableMeta merge exclusion).
 REFERENCE_SCALAR_MERGE_EXCLUDED_KEYS = (
@@ -1379,6 +1424,19 @@ def _is_date_like_number(value: Any) -> bool:
     return bool(re.fullmatch(r"(?:19|20)?\d{6}", text) or re.fullmatch(r"\d{8}", text))
 
 
+# Stricter than ``_is_date_like_number``: requires a valid month (01-12) and day
+# (01-31) so a genuine 6-digit quantity (e.g. "100000", month "00") is not mistaken
+# for an expiry date when deciding to reassign a date-shaped quantity column.
+_STRICT_EXPIRY_DATE_RE = re.compile(
+    r"(?:(?:19|20)\d{2}|\d{2})(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])"
+)
+
+
+def _is_strict_expiry_date_number(value: Any) -> bool:
+    text = _clean_number_token(_normalize_text(value)).replace(",", "")
+    return bool(_STRICT_EXPIRY_DATE_RE.fullmatch(text))
+
+
 def _is_lot_or_manufacturing_like_number(value: Any) -> bool:
     text = _clean_number_token(_normalize_text(value)).replace(",", "")
     return bool(re.fullmatch(r"\d{5,}", text)) and not _is_date_like_number(text)
@@ -1861,16 +1919,25 @@ def _parse_table_row_candidate(
             continue
         if not lot_no and _is_lot_or_manufacturing_like_number(numeric_value):
             lot_no = numeric_value
+    # A date-shaped value sitting in the quantity column while expiryDate is empty
+    # is a column misassignment (the real quantity token was lost/merged in OCR).
+    # Move it to expiryDate regardless of how many numeric tokens the line had —
+    # the previous ``len(numeric_values) == 3`` guard missed rows where a lot/
+    # manufacturing number bumped the numeric count to 4+. Guarded by a strict
+    # YYMMDD/ YYYYMMDD check so a genuine 6-digit quantity is left in place.
+    # Use comma-aware ``_money_for_sum`` (not ``_money_parse_value``, which mistakes a
+    # comma-thousands amount like "110,450" for a 6-digit date and returns None).
+    unit_price_value = _money_for_sum(unit_price)
+    amount_value = _money_for_sum(amount)
     if (
         quantity
-        and len(numeric_values) == 3
-        and _is_date_like_number(quantity)
-        and _money_parse_value(unit_price) is not None
-        and _money_parse_value(amount) is not None
-        and (_money_parse_value(amount) or 0) >= (_money_parse_value(unit_price) or 0)
+        and not expiry_date
+        and _is_strict_expiry_date_number(quantity)
+        and unit_price_value is not None
+        and amount_value is not None
+        and amount_value >= unit_price_value
     ):
-        if not expiry_date:
-            expiry_date = quantity
+        expiry_date = quantity
         quantity = ""
     if not item_name and not amount:
         return None
@@ -3283,6 +3350,10 @@ def _merge_invoice_statement_reference_scalars(
             skipped.append(key)
             continue
         if _has_meaningful_value(ref.get(key)):
+            if key in REFERENCE_MONEY_SCALAR_KEYS and _money_for_sum(ref.get(key)) is None:
+                # Non-numeric garbage (e.g. the label "합") never fills a money field.
+                skipped.append(key)
+                continue
             merged[key] = _normalize_text(ref.get(key))
             filled.append(key)
     merged, vat_repair_debug = _maybe_move_cumulative_vat_to_tax(merged)

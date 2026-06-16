@@ -119,7 +119,9 @@ def compare_table(gt_rows: list[dict[str, Any]], ext_rows: list[dict[str, Any]],
         pairs, gt_only, ext_only, n_gt, n_ext = _align_by_content(gt_rows, ext_rows)
         align_mode = "content"
 
-    cell_counts = {"scored": 0, "match": 0, "mismatch": 0, "ext_missing": 0, "gt_empty": 0}
+    # `spurious` mirrors compare_fields: GT-empty cell the extractor filled anyway.
+    # status stays "gt_empty" (cell recall unchanged); only a parallel tally is added.
+    cell_counts = {"scored": 0, "match": 0, "mismatch": 0, "ext_missing": 0, "gt_empty": 0, "spurious": 0}
     row_results: list[dict[str, Any]] = []
 
     for row_key, g, e in pairs:
@@ -138,10 +140,13 @@ def compare_table(gt_rows: list[dict[str, Any]], ext_rows: list[dict[str, Any]],
                 status = "match"
             else:
                 status = "mismatch"
-            cells[key] = {"gt": gv, "ext": ev, "gtNorm": gn, "extNorm": en, "status": status}
+            spurious = N.is_empty(gv) and not N.is_empty(ev)
+            cells[key] = {"gt": gv, "ext": ev, "gtNorm": gn, "extNorm": en, "status": status, "spurious": spurious}
             if status != "gt_empty":
                 cell_counts["scored"] += 1
             cell_counts[status] = cell_counts.get(status, 0) + 1
+            if spurious:
+                cell_counts["spurious"] += 1
             if status in ("mismatch", "ext_missing"):
                 row_match = False
         row_results.append({"rowIndex": row_key, "rowMatch": row_match, "cells": cells})

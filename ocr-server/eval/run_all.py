@@ -82,6 +82,9 @@ def _measure(reuse: str | None, server: str, workers: int, testset: str,
         res["fieldMacro"] = (m["overall"].get("fieldMacro") or {}).get("accuracy")
         res["cellMacro"] = (m["overall"].get("cellMacro") or {}).get("accuracy")
         res["sampleCount"] = m.get("sampleCount")
+        _sp = m.get("spurious") or {}
+        res["spuriousField"] = (_sp.get("field") or {}).get("count", 0)
+        res["spuriousCell"] = (_sp.get("cell") or {}).get("count", 0)
         res["kind"] = C.get_testset(testset)["kind"]
         log(f"   field acc {res['fieldAcc']}  cell acc {res['cellAcc']}")
         log("== [5/6] report ==")
@@ -218,7 +221,12 @@ def _write_batch_summary(batch_dir: str, batch: str, results: list[dict[str, Any
         L.append(f"| {r['testset']} `{sub}/` | {role} | {n}건 | {fa} | {ca} | {dur} | {chk} "
                  f"| [리포트 보기]({sub}/report.html) |")
     all_ok = n_ok == len(results)
+    _sp_tot = sum((r.get("spuriousField") or 0) for r in results)
+    _sp_line = (f"- **지어내기(spurious)**: GT 빈칸인데 추출이 채운 필드 **{_sp_tot}건** "
+                "(정확도엔 안 잡히는 false positive) — 상세·rule/learn 태그는 각 리포트 참조"
+                ) if _sp_tot else "- 지어내기(spurious): 0건 (빈칸 지어내기 없음)"
     L += ["", f"**{'전체 GO' if all_ok else '일부 FAIL'}** ({n_ok}/{len(results)} checker PASS)", "",
+          _sp_line,
           "- 추세(직전 대비 ▲/▼): [TREND.html](TREND.html) · [TREND.md](TREND.md)",
           "- study = 기준점(사람검수 골든 6장, 회귀 안전망) · "
           "thin = 학습데이터 자리(현재는 모형, 실 DB 데이터 오면 교체)"]

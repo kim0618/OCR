@@ -22,6 +22,22 @@ import normalize as N
 #   gt_absent    field not in GT (e.g. the other per-sample field) -> skipped
 
 
+def _spurious_tag(field_type: str | None, ext_value: Any) -> str:
+    """Route a spurious (invented) value: `rule` when it violates the field's
+    type invariant — a deterministic guard can reject it (e.g. the label "합" in a
+    money field) — else `learn`, a type-valid value in the wrong field (mapping).
+    """
+    text = str(ext_value or "").strip()
+    digits = "".join(ch for ch in text if ch.isdigit())
+    if field_type == "amount":
+        return "rule" if not digits else "learn"
+    if field_type == "bizno":
+        return "rule" if len(digits) != 10 else "learn"
+    if field_type == "date":
+        return "rule" if len(digits) not in (6, 8) else "learn"
+    return "learn"
+
+
 def compare_fields(gt: dict[str, Any], ext_df: dict[str, Any]) -> dict[str, Any]:
     ext_df = ext_df or {}
     gt_fields: dict[str, Any] = gt["documentFields"]
@@ -35,7 +51,11 @@ def compare_fields(gt: dict[str, Any], ext_df: dict[str, Any]) -> dict[str, Any]
     scored_labels = list(gt_fields.keys())
 
     per_field: dict[str, dict[str, Any]] = {}
-    counts = {"scored": 0, "match": 0, "mismatch": 0, "ext_missing": 0, "gt_empty": 0}
+    # `spurious` = GT empty but extractor produced a value (a false positive the
+    # recall accuracy never sees, because gt_empty is excluded from scoring). We
+    # keep status == "gt_empty" untouched (recall denominator unchanged) and only
+    # add a parallel flag/tally, so existing accuracy and the TREND stay identical.
+    counts = {"scored": 0, "match": 0, "mismatch": 0, "ext_missing": 0, "gt_empty": 0, "spurious": 0}
     edited_counts = {"match": 0, "mismatch": 0, "ext_missing": 0}
     # ➌E coverage two denominators: of GT-present (graded) fields, separate the
     # extractor's genuine misses (tried, wrong/empty) from "never even attempted"
@@ -63,14 +83,20 @@ def compare_fields(gt: dict[str, Any], ext_df: dict[str, Any]) -> dict[str, Any]
         else:
             status = "mismatch"
 
+        # spurious = should-be-blank (GT empty) but extractor invented a value.
+        spurious = gt_empty and not ext_empty
+        field_type = N.FIELD_TYPE.get(label) or N._infer_type(label)
+
         per_field[label] = {
             "gt": gt_val, "ext": ext_val,
             "gtNorm": gt_n, "extNorm": ext_n,
-            "type": N.FIELD_TYPE.get(label) or N._infer_type(label),
+            "type": field_type,
             "status": status,
             "edited": edited,
             "difficult": difficult,
             "extAttempted": ext_attempted,
+            "spurious": spurious,
+            "spuriousTag": _spurious_tag(field_type, ext_val) if spurious else None,
         }
 
         if status != "gt_empty":
@@ -81,6 +107,8 @@ def compare_fields(gt: dict[str, Any], ext_df: dict[str, Any]) -> dict[str, Any]
             elif status == "ext_missing":
                 coverage["extNotAttempted" if not ext_attempted else "extAttemptedMiss"] += 1
         counts[status] = counts.get(status, 0) + 1
+        if spurious:
+            counts["spurious"] += 1
         if edited and status in edited_counts:
             edited_counts[status] += 1
 

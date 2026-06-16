@@ -64,6 +64,7 @@ from review_flags import build_review_flags
 from extractors.invoice_statement_free import (
     extract_invoice_statement_free,
     _is_valid_invoice_statement_free_result,
+    sanitize_document_scalar_fields,
 )
 from utils.regex_patterns import (
     _PHONE_RE,
@@ -2016,6 +2017,24 @@ def _build_preprocessing_debug(
     return _out
 
 
+def _serialize_ocr_lines_for_snapshot(ocr_lines) -> list:
+    """Eval-only: (pts, text, conf) -> JSON-safe [ [[x,y],...], text, conf ].
+
+    Preserves the exact tuple shape the free extractor consumes so an offline
+    replay (eval/replay_free.py) feeds it back losslessly. No-op on bad rows.
+    """
+    out: list = []
+    for line in (ocr_lines or []):
+        try:
+            pts, text, conf = line[0], line[1], line[2]
+            pts_j = [[float(p[0]), float(p[1])] for p in pts] if pts is not None else None
+            out.append([pts_j, "" if text is None else str(text),
+                        float(conf) if conf is not None else 0.0])
+        except Exception:
+            continue
+    return out
+
+
 @app.post("/ocr/extract")
 async def ocr_extract(
     file: UploadFile = File(...),
@@ -2032,6 +2051,7 @@ async def ocr_extract(
     debugPreprocessing: str = Form("false"),    # T-20d: debug compare_then_select (default=false, production unchanged)
     qualityTagsJson: str = Form(""),            # T-20d: qualityTags override for preprocessing debug
     autoApplyPreprocessing: str = Form("false"),# T-20i: limited auto-apply for receipt (default=false, invoice永久除外)
+    captureOcrSnapshot: str = Form(""),         # eval-only: dump free-extractor input envelope for offline parser replay (prod absent => no-op)
 ):
     import time
     start = time.time()
@@ -3001,22 +3021,39 @@ async def ocr_extract(
                 and _is_unstructured_template
             )
             if _try_invoice_free:
+                _free_full_text = "\n".join(full_lines)
+                _free_context = {
+                    "templateMode": False,
+                    "requestTemplateMode": _template_mode_marker,
+                    "isUnstructuredTemplate": _is_unstructured_template,
+                    "template_id": "" if _is_unstructured_template else template_id,
+                    "selectedTemplateId": template_id,
+                    "tableExpectedColumns": _tec,
+                    "tableBounds": _tbn,
+                    "columnGuides": _tcg,
+                }
+                # eval-only: capture the EXACT free-extractor input envelope so an
+                # offline replay (eval/replay_free.py) re-runs the parser on GPU's
+                # OCR with no re-OCR. Guarded by request flag => prod unchanged.
+                if (captureOcrSnapshot or "").strip().lower() in ("1", "true", "yes"):
+                    try:
+                        response["ocr_snapshot"] = {
+                            "schemaVersion": "ocr-free-input.v1",
+                            "ocr_lines_raw": _serialize_ocr_lines_for_snapshot(ocr_lines_raw),
+                            "full_text": _free_full_text,
+                            "image_size": [ocr_w, ocr_h],
+                            "doc_type": doc_type,
+                            "context": _free_context,
+                        }
+                    except Exception:
+                        pass
                 try:
                     _free_fields = extract_invoice_statement_free(
                         ocr_lines_raw=ocr_lines_raw,
-                        full_text="\n".join(full_lines),
+                        full_text=_free_full_text,
                         image_size=(ocr_w, ocr_h),
                         doc_type=doc_type,
-                        context={
-                            "templateMode": False,
-                            "requestTemplateMode": _template_mode_marker,
-                            "isUnstructuredTemplate": _is_unstructured_template,
-                            "template_id": "" if _is_unstructured_template else template_id,
-                            "selectedTemplateId": template_id,
-                            "tableExpectedColumns": _tec,
-                            "tableBounds": _tbn,
-                            "columnGuides": _tcg,
-                        },
+                        context=_free_context,
                     )
                     _free_rows = _free_fields.get("tableRows") if isinstance(_free_fields, dict) else None
                     _free_meta = _free_fields.get("tableMeta") if isinstance(_free_fields, dict) else None
@@ -3106,6 +3143,10 @@ async def ocr_extract(
                     table_bounds=_tbn,
                     column_guides=_tcg,
                 )
+            # Path-agnostic guard (free + fallback converge here): drop a document
+            # label that leaked into a party-representative field (e.g. "총수량")
+            # or a non-numeric value in a money scalar (e.g. the label "합").
+            document_fields = sanitize_document_scalar_fields(document_fields)
             if _free_debug:
                 extract_debug["invoice_statement_free"] = _free_debug
             response["document_fields"] = document_fields

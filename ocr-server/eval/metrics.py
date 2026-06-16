@@ -34,7 +34,9 @@ def _acc(scored: int, match: int) -> float | None:
 
 
 def _new_counts() -> dict[str, int]:
-    return {"scored": 0, "match": 0, "mismatch": 0, "ext_missing": 0, "gt_empty": 0}
+    # `spurious` is a parallel flag (GT empty + extractor filled), not a status —
+    # it rides alongside gt_empty and never enters the scored/accuracy math.
+    return {"scored": 0, "match": 0, "mismatch": 0, "ext_missing": 0, "gt_empty": 0, "spurious": 0}
 
 
 def _add(dst: dict[str, int], src: dict[str, int]) -> None:
@@ -119,6 +121,8 @@ def compute_metrics(run_dir: str) -> dict[str, Any]:
             if st != "gt_empty":
                 pf["scored"] += 1
             pf[st] = pf.get(st, 0) + 1
+            if info.get("spurious"):
+                pf["spurious"] += 1
             # edited split (field-level, rich)
             bucket = "edited" if info.get("edited") else "nonEdited"
             if st != "gt_empty":
@@ -174,6 +178,20 @@ def compute_metrics(run_dir: str) -> dict[str, Any]:
             "cellMacro": _macro(macro_cell),         # macro(샘플평균)
         },
         "perField": {k: finalize(v) for k, v in sorted(per_field.items())},
+        # spurious(지어내기) = GT 빈칸인데 추출이 값을 채운 false positive. recall 과
+        # 무관(채점 제외)이라 별도 노출. rate = spurious / 전체 GT-빈칸(gt_empty).
+        "spurious": {
+            "field": {
+                "count": overall_field["spurious"],
+                "gtEmpty": overall_field["gt_empty"],
+                "rate": _acc(overall_field["gt_empty"], overall_field["spurious"]),
+            },
+            "cell": {
+                "count": overall_cell["spurious"],
+                "gtEmpty": overall_cell["gt_empty"],
+                "rate": _acc(overall_cell["gt_empty"], overall_cell["spurious"]),
+            },
+        },
         "buckets": buckets_total,
         "byPath": {p: {"field": finalize(v["field"]), "cell": finalize(v["cell"])}
                    for p, v in sorted(by_path.items())},

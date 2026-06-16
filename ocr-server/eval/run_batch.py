@@ -94,7 +94,8 @@ def run_one(sample: dict[str, Any], server: str, timeout: float) -> dict[str, An
             resp = requests.post(
                 server.rstrip("/") + EXTRACT_PATH,
                 files={"file": (os.path.basename(img_path), fh, MIME.get(ext, "application/octet-stream"))},
-                data={"documentType": "invoice_statement", "templateMode": "unstructured"},
+                data={"documentType": "invoice_statement", "templateMode": "unstructured",
+                      "captureOcrSnapshot": "1"},  # ask server to return free-extractor input envelope
                 timeout=timeout,
             )
         rec["clientMs"] = round((time.time() - t0) * 1000.0, 1)
@@ -116,6 +117,11 @@ def run_one(sample: dict[str, Any], server: str, timeout: float) -> dict[str, An
         # Keep only the preprocess subtree (orientation+deskew); drop the rest of
         # extract_debug to stay small. Source: extract_debug.preprocess (verified live).
         rec["preprocess"] = (body.get("extract_debug") or {}).get("preprocess")
+        # Free-extractor input envelope for offline parser replay. Stashed under a
+        # private key here; run_batch pops it to runs/<ts>/snapshots/ so rec.json
+        # (the checker-validated result) keeps its exact schema. None if free path
+        # not taken (e.g. fallback) — pop tolerates absence.
+        rec["_ocrSnapshot"] = body.get("ocr_snapshot")
         rec["status"] = "ok"
     except Exception as exc:  # network/parse/etc -> isolate
         rec["clientMs"] = round((time.time() - t0) * 1000.0, 1)
@@ -162,6 +168,8 @@ def run_batch(
     run_dir = os.path.join(C.RUNS_DIR, ts)
     samples_dir = os.path.join(run_dir, "samples")
     os.makedirs(samples_dir, exist_ok=True)
+    snapshots_dir = os.path.join(run_dir, "snapshots")  # sidecar: free-extractor input for replay (NOT scored)
+    os.makedirs(snapshots_dir, exist_ok=True)
 
     todo = []
     skipped = []
@@ -186,10 +194,18 @@ def run_batch(
         futs = {ex.submit(dispatch, s): s for s in todo}
         for fut in as_completed(futs):
             rec = fut.result()
+            # Pop the snapshot BEFORE writing rec.json so the scored result keeps
+            # its exact schema; write the snapshot to the sidecar dir instead.
+            snap = rec.pop("_ocrSnapshot", None)
             out = os.path.join(samples_dir, rec["sourceFile"] + ".json")
             with open(out, "w", encoding="utf-8") as fh:
                 json.dump(rec, fh, ensure_ascii=False, indent=2)
                 fh.write("\n")
+            if snap:
+                with open(os.path.join(snapshots_dir, rec["sourceFile"] + ".json"),
+                          "w", encoding="utf-8") as sfh:
+                    json.dump(snap, sfh, ensure_ascii=False)
+                    sfh.write("\n")
             flag = "OK " if rec["status"] == "ok" else "ERR"
             print(
                 f"  {flag} {rec['sourceFile']:<8} http={rec['httpStatus']} "

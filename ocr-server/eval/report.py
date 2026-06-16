@@ -268,6 +268,30 @@ def render_report(run_dir: str, examples: int = 12) -> str:
              " · 컬럼밀림=표 안 열 어긋남 · 전처리=회전/기울기. **어느 종류가 많은지가 룰 보강 방향.**")
     L.append("")
 
+    sp = m.get("spurious") or {}
+    spf, spc = sp.get("field", {}), sp.get("cell", {})
+    L.append("## 지어내기 (spurious - GT 빈칸인데 추출이 값을 채움)")
+    L.append("")
+    L.append(f"- 필드: **{spf.get('count', 0)}건** / 빈칸 {spf.get('gtEmpty', 0)}개 = **{_pct(spf.get('rate'))}**"
+             f"  ·  셀: **{spc.get('count', 0)}건** / 빈칸 {spc.get('gtEmpty', 0)}개 = **{_pct(spc.get('rate'))}**")
+    L.append("> 정답(recall) 정확도엔 **안 잡히는** false positive(채점 제외). "
+             "`rule`=타입 불변식 위반(money에 비숫자 등 - 가드로 결정적 제거) · `learn`=타입은 맞지만 엉뚱한 칸(매핑 - 학습 몫).")
+    L.append("")
+    spur_rows = [
+        (info.get("spuriousTag") or "learn", d["sourceFile"], label, info.get("ext"))
+        for d in compares
+        for label, info in d["fields"]["perField"].items()
+        if info.get("spurious")
+    ]
+    if spur_rows:
+        L.append("| 종류 | 이미지 | 필드 | 추출값(지어냄) |")
+        L.append("|---|---|---|---|")
+        for tag, src, label, ext in sorted(spur_rows):
+            L.append(f"| `{tag}` | {src} | {_ko_field(label)} | {ext} |")
+        L.append("")
+        L.append("> 위 = 우리 루프의 수정목록. `rule`은 바로 룰로, `learn`은 학습 데이터(타깃)로.")
+        L.append("")
+
     L.append("## 슬라이스 (부분집계)")
     L.append("")
     for sname, groups in m["slices"].items():
@@ -510,6 +534,24 @@ def render_report_html(run_dir: str, examples: int = 40) -> str:
     H.append(f"<section><h2>결함 버킷</h2><p class='note'>인식오류 <b>{b['recognition']}</b> · "
              f"구조오류 <b>{b['structure']}</b> · 컬럼밀림 <b>{b['layout']}</b> · 전처리 <b>{b['preprocessing']}</b>"
              "<br>인식=OCR글자 · 구조=필드/행배치 · 컬럼=표 열밀림 · 전처리=회전/기울기</p></section>")
+
+    # 지어내기 (spurious)
+    sp = m.get("spurious") or {}
+    spf, spc = sp.get("field", {}), sp.get("cell", {})
+    H.append("<section><h2>지어내기 (spurious)</h2>"
+             "<p class='note'>GT 빈칸인데 추출이 값을 채운 false positive — 정확도(recall)엔 <b>안 잡힘</b>. "
+             f"필드 <b>{spf.get('count', 0)}</b>/{spf.get('gtEmpty', 0)} = <b>{_pct(spf.get('rate'))}</b> · "
+             f"셀 <b>{spc.get('count', 0)}</b>/{spc.get('gtEmpty', 0)} = <b>{_pct(spc.get('rate'))}</b><br>"
+             "<code>rule</code>=타입 불변식 위반(가드로 결정적 제거) · <code>learn</code>=엉뚱한 칸 매핑(학습 몫)</p>")
+    spur_rows = [(info.get("spuriousTag") or "learn", d["sourceFile"], label, info.get("ext"))
+                 for d in compares for label, info in d["fields"]["perField"].items() if info.get("spurious")]
+    if spur_rows:
+        H.append("<table><thead><tr><th>종류</th><th>이미지</th><th>필드</th><th>추출값(지어냄)</th></tr></thead><tbody>")
+        for tag, src, label, ext in sorted(spur_rows):
+            ko = _FIELD_KO.get(label, label)
+            H.append(f"<tr><td><code>{_esc(tag)}</code></td><td>{_esc(src)}</td><td>{_esc(ko)}</td><td>{_esc(ext)}</td></tr>")
+        H.append("</tbody></table>")
+    H.append("</section>")
 
     # 실패 예시
     H.append("<section><h2>실패 예시 (정답 GT vs 추출값)</h2>")
