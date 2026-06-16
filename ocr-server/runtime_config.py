@@ -1,10 +1,5 @@
-"""AWS GPU deploy values.  Deploy:  cp runtime_config.gpu.py runtime_config.py
-
-Keep this knob list in sync with runtime_config.py's docstring. This file is the
-gpu counterpart template; the live import target is always runtime_config.py.
-"""
-
+# GPU A/B: 034 클린값 + DEVICE만 gpu (server_det/고해상 롤백)
 DEVICE = "gpu"
-DET_MODEL = "PP-OCRv5_server_det"
-INVOICE_OCR_MAX_W = 2000
-DET_LIMIT_SIDE_LEN = 2000
+DET_MODEL = "PP-OCRv5_mobile_det"
+INVOICE_OCR_MAX_W = 950
+DET_LIMIT_SIDE_LEN = 960

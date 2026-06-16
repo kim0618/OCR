@@ -1,0 +1,849 @@
+<!doctype html><html lang='ko'><head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width,initial-scale=1'>
+<title>비교 리포트 - 회귀 기준값</title>
+<style>
+:root{--bg:#f6f8fa;--card:#ffffff;--line:#d0d7de;--fg:#1f2328;--muted:#59636e;
+--up:#1a7f37;--down:#cf222e;--warn:#9a6700;--link:#0969da}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+font-family:'Segoe UI','Malgun Gothic','Apple SD Gothic Neo',system-ui,sans-serif;
+font-size:14px;line-height:1.55;padding:clamp(14px,2.5vw,32px)}
+a{color:var(--link);text-decoration:none;font-weight:500}
+a:hover{text-decoration:underline}
+h1{font-size:20px;margin:0}
+.head{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;max-width:1600px;margin:0 auto 6px}
+.gen{color:var(--muted);font-size:12.5px;white-space:nowrap}
+.note{color:var(--muted);font-size:12.5px;max-width:1600px;margin:4px auto}
+.note.warn{color:var(--warn)}
+section{background:var(--card);border:1px solid var(--line);border-radius:10px;
+padding:16px 18px;margin:18px auto;max-width:1600px;overflow-x:auto;box-shadow:0 1px 2px rgba(27,31,36,.04)}
+h2{font-size:16px;margin:0 0 10px}
+h3{font-size:13.5px;margin:14px 0 6px}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--muted);font-weight:600;font-size:12.5px;border-bottom:2px solid var(--line)}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:#f6f8fa}
+code{background:#eff1f3;border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:12.5px}
+.up{color:var(--up);font-weight:600}
+.down{color:var(--down);font-weight:600}
+.muted{color:var(--muted)}
+.bup{color:var(--down);font-weight:700}
+.latest{margin-top:12px;padding:9px 12px;border-radius:8px;border:1px solid var(--line);font-size:13px}
+.latest.ok{background:#e9f7ec;border-color:#a7e0b5}
+.latest.warn{background:#fff8e6;border-color:#f0d99a}
+.latest.bad{background:#ffeef0;border-color:#f5b0b8}
+.legend{color:var(--muted);font-size:12px;margin-top:6px}
+.note .row{margin:3px 0}
+.btn{display:inline-block;padding:5px 12px;border-radius:6px;background:var(--link);
+color:#fff;font-weight:600;font-size:12.5px;text-decoration:none;border:1px solid var(--link)}
+.btn:hover{background:#0860ca;text-decoration:none}
+/* SUMMARY 표: 텍스트=왼쪽, 숫자=오른쪽(기본), 검증/상세=가운데 */
+table.sumtable td:nth-child(2),table.sumtable th:nth-child(2){text-align:left}
+table.sumtable td:nth-child(6),table.sumtable th:nth-child(6),
+table.sumtable td:nth-child(7),table.sumtable th:nth-child(7){text-align:center}
+@media (max-width:640px){body{font-size:13px}h1{font-size:18px}th,td{padding:6px 8px}
+.head{flex-direction:column;gap:2px}section{padding:14px}}
+
+table.sortable th{cursor:pointer;user-select:none}
+table.sortable th:hover{color:var(--fg)}
+.tag-ok{display:inline-block;padding:2px 8px;border-radius:4px;
+  background:#e9f7ec;border:1px solid #a7e0b5;color:#1a7f37;font-size:12px;font-weight:600}
+.tag-bad{display:inline-block;padding:2px 8px;border-radius:4px;
+  background:#ffeef0;border:1px solid #f5b0b8;color:#cf222e;font-size:12px;font-weight:600}
+.tag-chg{display:inline-block;padding:2px 8px;border-radius:4px;
+  background:#ffeef0;border:1px solid #f5b0b8;color:#cf222e;font-size:12px;font-weight:600}
+h3.tog{cursor:pointer;user-select:none;display:flex;align-items:center;gap:8px}
+h3.tog:hover{color:var(--link)}
+h3.tog .arr{font-size:11px;color:var(--muted);min-width:12px}
+.tog-body{overflow:hidden}
+</style></head><body>
+<div class='head'><h1>비교 리포트 - 회귀 기준값</h1><div class='gen'>생성 2026-06-16 16:33</div></div>
+<div class='note'><div class='row'><b>직전</b> 2026-06-16 16:28 &nbsp;→&nbsp; <b>이번</b> 2026-06-16 16:32</div><div class='row'><b>초록 = 좋아짐 · 빨강 = 나빠짐/변화</b></div><div class='row'><span class='tag-ok'>✅ 개선</span> 이전에 틀렸으나 이번에 맞음(초록) &nbsp; <span class='tag-bad'>❌ 악화</span> 이전에 맞았으나 이번에 틀림(빨강) &nbsp; <span class='tag-chg'>🔄 변화</span> 상태·값이 달라짐(빨강)</div></div>
+<section><h2>전체 요약</h2>
+<table><thead><tr><th>항목</th><th>직전</th><th>이번</th><th>변화</th></tr></thead><tbody>
+<tr><td>필드 정확도</td><td data-v='0.5082'>50.8%</td><td data-v='0.5984'>59.8%</td><td><span class='up'>▲ 9.0%</span></td></tr>
+<tr><td>셀 정확도</td><td data-v='0.5170'>51.7%</td><td data-v='0.7332'>73.3%</td><td><span class='up'>▲ 21.6%</span></td></tr>
+</tbody></table></section>
+<section><h2>이미지별 1:1 비교 <span class='muted'>(24장 · 컬럼 클릭=정렬)</span></h2>
+<table class='sortable'><thead><tr><th>이미지</th><th data-num='1'>직전 필드</th><th data-num='1'>이번 필드</th><th>필드 변화</th><th data-num='1'>직전 셀</th><th data-num='1'>이번 셀</th><th>셀 변화</th></tr></thead><tbody>
+<tr><td>1-1.jpg</td><td data-v='0.9091'>90.9%</td><td data-v='0.9091'>90.9%</td><td><span class='muted'>=</span></td><td data-v='0.1176'>11.8%</td><td data-v='0.7732'>77.3%</td><td><span class='up'>▲ 65.6%</span></td></tr>
+<tr><td>1-2.jpg</td><td data-v='0.7273'>72.7%</td><td data-v='0.9091'>90.9%</td><td><span class='up'>▲ 18.2%</span></td><td data-v='0.4706'>47.1%</td><td data-v='0.8402'>84.0%</td><td><span class='up'>▲ 37.0%</span></td></tr>
+<tr><td>1-3.jpg</td><td data-v='0.8182'>81.8%</td><td data-v='0.8182'>81.8%</td><td><span class='muted'>=</span></td><td data-v='0.8969'>89.7%</td><td data-v='0.8608'>86.1%</td><td><span class='down'>▼ 3.6%</span></td></tr>
+<tr><td>1.jpg</td><td data-v='0.7273'>72.7%</td><td data-v='0.8182'>81.8%</td><td><span class='up'>▲ 9.1%</span></td><td data-v='0.9072'>90.7%</td><td data-v='0.8969'>89.7%</td><td><span class='down'>▼ 1.0%</span></td></tr>
+<tr><td>3-1.jpg</td><td data-v='0.4167'>41.7%</td><td data-v='0.5000'>50.0%</td><td><span class='up'>▲ 8.3%</span></td><td data-v='0.1250'>12.5%</td><td data-v='0.1250'>12.5%</td><td><span class='muted'>=</span></td></tr>
+<tr><td>3-2.jpg</td><td data-v='0.3333'>33.3%</td><td data-v='0.4167'>41.7%</td><td><span class='up'>▲ 8.3%</span></td><td data-v='0.0000'>0.0%</td><td data-v='0.0000'>0.0%</td><td><span class='muted'>=</span></td></tr>
+<tr><td>3-3.jpg</td><td data-v='0.5833'>58.3%</td><td data-v='0.2500'>25.0%</td><td><span class='down'>▼ 33.3%</span></td><td data-v='0.0000'>0.0%</td><td data-v='0.0000'>0.0%</td><td><span class='muted'>=</span></td></tr>
+<tr><td>3.pdf</td><td data-v='0.4167'>41.7%</td><td data-v='0.5000'>50.0%</td><td><span class='up'>▲ 8.3%</span></td><td data-v='0.3750'>37.5%</td><td data-v='0.7500'>75.0%</td><td><span class='up'>▲ 37.5%</span></td></tr>
+<tr><td>4-1.jpg</td><td data-v='0.3333'>33.3%</td><td data-v='0.2500'>25.0%</td><td><span class='down'>▼ 8.3%</span></td><td data-v='0.0000'>0.0%</td><td data-v='0.0000'>0.0%</td><td><span class='muted'>=</span></td></tr>
+<tr><td>4-2.jpg</td><td data-v='0.0000'>0.0%</td><td data-v='0.3333'>33.3%</td><td><span class='up'>▲ 33.3%</span></td><td data-v='0.0000'>0.0%</td><td data-v='0.0000'>0.0%</td><td><span class='muted'>=</span></td></tr>
+<tr><td>4-3.jpg</td><td data-v='0.0000'>0.0%</td><td data-v='0.2500'>25.0%</td><td><span class='up'>▲ 25.0%</span></td><td data-v='0.0000'>0.0%</td><td data-v='0.0000'>0.0%</td><td><span class='muted'>=</span></td></tr>
+<tr><td>4.pdf</td><td data-v='0.1667'>16.7%</td><td data-v='0.5000'>50.0%</td><td><span class='up'>▲ 33.3%</span></td><td data-v='0.0000'>0.0%</td><td data-v='0.4000'>40.0%</td><td><span class='up'>▲ 40.0%</span></td></tr>
+<tr><td>5-1.jpg</td><td data-v='0.2500'>25.0%</td><td data-v='0.6667'>66.7%</td><td><span class='up'>▲ 41.7%</span></td><td data-v='0.2000'>20.0%</td><td data-v='0.1667'>16.7%</td><td><span class='down'>▼ 3.3%</span></td></tr>
+<tr><td>5-2.jpg</td><td data-v='0.8333'>83.3%</td><td data-v='0.7500'>75.0%</td><td><span class='down'>▼ 8.3%</span></td><td data-v='0.6000'>60.0%</td><td data-v='0.6000'>60.0%</td><td><span class='muted'>=</span></td></tr>
+<tr><td>5-3.jpg</td><td data-v='0.5000'>50.0%</td><td data-v='0.5833'>58.3%</td><td><span class='up'>▲ 8.3%</span></td><td data-v='0.1667'>16.7%</td><td data-v='0.5667'>56.7%</td><td><span class='up'>▲ 40.0%</span></td></tr>
+<tr><td>5.pdf</td><td data-v='0.5833'>58.3%</td><td data-v='0.9167'>91.7%</td><td><span class='up'>▲ 33.3%</span></td><td data-v='0.5333'>53.3%</td><td data-v='0.9667'>96.7%</td><td><span class='up'>▲ 43.3%</span></td></tr>
+<tr><td>6-1.jpg</td><td data-v='0.6000'>60.0%</td><td data-v='0.6000'>60.0%</td><td><span class='muted'>=</span></td><td data-v='0.0769'>7.7%</td><td data-v='0.0769'>7.7%</td><td><span class='muted'>=</span></td></tr>
+<tr><td>6-2.jpg</td><td data-v='0.6000'>60.0%</td><td data-v='0.0000'>0.0%</td><td><span class='down'>▼ 60.0%</span></td><td data-v='0.2308'>23.1%</td><td data-v='0.0000'>0.0%</td><td><span class='down'>▼ 23.1%</span></td></tr>
+<tr><td>6-3.jpg</td><td data-v='0.8000'>80.0%</td><td data-v='0.0000'>0.0%</td><td><span class='down'>▼ 80.0%</span></td><td data-v='0.3462'>34.6%</td><td data-v='0.0000'>0.0%</td><td><span class='down'>▼ 34.6%</span></td></tr>
+<tr><td>6.pdf</td><td data-v='0.8000'>80.0%</td><td data-v='1.0000'>100.0%</td><td><span class='up'>▲ 20.0%</span></td><td data-v='0.2000'>20.0%</td><td data-v='0.5000'>50.0%</td><td><span class='up'>▲ 30.0%</span></td></tr>
+<tr><td>7-1.jpg</td><td data-v='0.8889'>88.9%</td><td data-v='0.8889'>88.9%</td><td><span class='muted'>=</span></td><td data-v='0.3333'>33.3%</td><td data-v='0.3333'>33.3%</td><td><span class='muted'>=</span></td></tr>
+<tr><td>7-2.jpg</td><td data-v='0.5556'>55.6%</td><td data-v='0.8889'>88.9%</td><td><span class='up'>▲ 33.3%</span></td><td data-v='0.3333'>33.3%</td><td data-v='0.6667'>66.7%</td><td><span class='up'>▲ 33.3%</span></td></tr>
+<tr><td>7-3.jpg</td><td data-v='0.2222'>22.2%</td><td data-v='0.5556'>55.6%</td><td><span class='up'>▲ 33.3%</span></td><td data-v='0.3333'>33.3%</td><td data-v='0.3333'>33.3%</td><td><span class='muted'>=</span></td></tr>
+<tr><td>7.pdf</td><td data-v='0.7778'>77.8%</td><td data-v='0.8889'>88.9%</td><td><span class='up'>▲ 11.1%</span></td><td data-v='0.6667'>66.7%</td><td data-v='0.6667'>66.7%</td><td><span class='muted'>=</span></td></tr>
+</tbody></table></section>
+<section><h2>필드별 비교 <span class='muted'>(스칼라 상단값 · 컬럼 클릭=정렬)</span></h2>
+<table class='sortable'><thead><tr><th>필드명</th><th data-num='1'>직전 정확도</th><th data-num='1'>이번 정확도</th><th>변화</th><th data-num='1'>직전 일치</th><th data-num='1'>이번 일치</th></tr></thead><tbody>
+<tr><td><span>공급받는자 주소</span> <span class='muted' style='font-size:11.5px'>(buyerAddress)</span></td><td data-v='0.0833'>8.3%</td><td data-v='0.2917'>29.2%</td><td><span class='up'>▲ 20.8%</span></td><td data-v='2'>2</td><td data-v='7'>7</td></tr>
+<tr><td><span>공급받는자 사업자번호</span> <span class='muted' style='font-size:11.5px'>(buyerBizNumber)</span></td><td data-v='0.9167'>91.7%</td><td data-v='0.8750'>87.5%</td><td><span class='down'>▼ 4.2%</span></td><td data-v='22'>22</td><td data-v='21'>21</td></tr>
+<tr><td><span>공급받는자 상호</span> <span class='muted' style='font-size:11.5px'>(buyerCompany)</span></td><td data-v='0.5833'>58.3%</td><td data-v='0.5417'>54.2%</td><td><span class='down'>▼ 4.2%</span></td><td data-v='14'>14</td><td data-v='13'>13</td></tr>
+<tr><td><span>공급받는자 대표자</span> <span class='muted' style='font-size:11.5px'>(buyerRepresentative)</span></td><td data-v='0.4500'>45.0%</td><td data-v='0.6000'>60.0%</td><td><span class='up'>▲ 15.0%</span></td><td data-v='9'>9</td><td data-v='12'>12</td></tr>
+<tr><td><span>누계</span> <span class='muted' style='font-size:11.5px'>(cumulativeAmount)</span></td><td data-v='1.0000'>100.0%</td><td data-v='0.7500'>75.0%</td><td><span class='down'>▼ 25.0%</span></td><td data-v='4'>4</td><td data-v='3'>3</td></tr>
+<tr><td><span>작성일자</span> <span class='muted' style='font-size:11.5px'>(issueDate)</span></td><td data-v='0.8333'>83.3%</td><td data-v='0.7917'>79.2%</td><td><span class='down'>▼ 4.2%</span></td><td data-v='20'>20</td><td data-v='19'>19</td></tr>
+<tr><td><span>공급자 주소</span> <span class='muted' style='font-size:11.5px'>(supplierAddress)</span></td><td data-v='0.2500'>25.0%</td><td data-v='0.4000'>40.0%</td><td><span class='up'>▲ 15.0%</span></td><td data-v='5'>5</td><td data-v='8'>8</td></tr>
+<tr><td><span>공급자 사업자번호</span> <span class='muted' style='font-size:11.5px'>(supplierBizNumber)</span></td><td data-v='0.6500'>65.0%</td><td data-v='0.7500'>75.0%</td><td><span class='up'>▲ 10.0%</span></td><td data-v='13'>13</td><td data-v='15'>15</td></tr>
+<tr><td><span>공급자 상호</span> <span class='muted' style='font-size:11.5px'>(supplierCompany)</span></td><td data-v='0.7500'>75.0%</td><td data-v='0.7500'>75.0%</td><td><span class='muted'>=</span></td><td data-v='15'>15</td><td data-v='15'>15</td></tr>
+<tr><td><span>공급자 대표자</span> <span class='muted' style='font-size:11.5px'>(supplierRepresentative)</span></td><td data-v='0.2500'>25.0%</td><td data-v='0.3000'>30.0%</td><td><span class='up'>▲ 5.0%</span></td><td data-v='5'>5</td><td data-v='6'>6</td></tr>
+<tr><td><span>공급가액</span> <span class='muted' style='font-size:11.5px'>(supplyAmount)</span></td><td data-v='0.2500'>25.0%</td><td data-v='0.5000'>50.0%</td><td><span class='up'>▲ 25.0%</span></td><td data-v='3'>3</td><td data-v='6'>6</td></tr>
+<tr><td><span>세액</span> <span class='muted' style='font-size:11.5px'>(taxAmount)</span></td><td data-v='0.2500'>25.0%</td><td data-v='0.5000'>50.0%</td><td><span class='up'>▲ 25.0%</span></td><td data-v='3'>3</td><td data-v='6'>6</td></tr>
+<tr><td><span>합계금액</span> <span class='muted' style='font-size:11.5px'>(totalAmount)</span></td><td data-v='0.4375'>43.8%</td><td data-v='0.6875'>68.8%</td><td><span class='up'>▲ 25.0%</span></td><td data-v='7'>7</td><td data-v='11'>11</td></tr>
+<tr><td><span>총수량</span> <span class='muted' style='font-size:11.5px'>(totalQuantity)</span></td><td data-v='0.5000'>50.0%</td><td data-v='1.0000'>100.0%</td><td><span class='up'>▲ 50.0%</span></td><td data-v='2'>2</td><td data-v='4'>4</td></tr>
+</tbody></table></section>
+<section><h2>셀 컬럼별 비교 <span class='muted'>(표 내부 각 열 · 컬럼 클릭=정렬)</span></h2>
+<table class='sortable'><thead><tr><th>컬럼</th><th data-num='1'>직전 정확도</th><th data-num='1'>이번 정확도</th><th>변화</th><th data-num='1'>직전 일치</th><th data-num='1'>이번 일치</th></tr></thead><tbody>
+<tr><td><span>금액</span> <span class='muted' style='font-size:11.5px'>(amount)</span></td><td data-v='0.5775'>57.7%</td><td data-v='0.8819'>88.2%</td><td><span class='up'>▲ 30.4%</span></td><td data-v='82'>82</td><td data-v='127'>127</td></tr>
+<tr><td><span>유효기간</span> <span class='muted' style='font-size:11.5px'>(expiryDate)</span></td><td data-v='0.5610'>56.1%</td><td data-v='0.8943'>89.4%</td><td><span class='up'>▲ 33.3%</span></td><td data-v='69'>69</td><td data-v='110'>110</td></tr>
+<tr><td><span>품명</span> <span class='muted' style='font-size:11.5px'>(itemName)</span></td><td data-v='0.5333'>53.3%</td><td data-v='0.4294'>42.9%</td><td><span class='down'>▼ 10.4%</span></td><td data-v='88'>88</td><td data-v='70'>70</td></tr>
+<tr><td><span>LOT번호</span> <span class='muted' style='font-size:11.5px'>(lotNo)</span></td><td data-v='0.4885'>48.9%</td><td data-v='0.7481'>74.8%</td><td><span class='up'>▲ 26.0%</span></td><td data-v='64'>64</td><td data-v='98'>98</td></tr>
+<tr><td><span>품목코드</span> <span class='muted' style='font-size:11.5px'>(productCode)</span></td><td data-v='0.0000'>0.0%</td><td data-v='0.2558'>25.6%</td><td><span class='up'>▲ 25.6%</span></td><td data-v='0'>0</td><td data-v='11'>11</td></tr>
+<tr><td><span>수량</span> <span class='muted' style='font-size:11.5px'>(quantity)</span></td><td data-v='0.5091'>50.9%</td><td data-v='0.7853'>78.5%</td><td><span class='up'>▲ 27.6%</span></td><td data-v='84'>84</td><td data-v='128'>128</td></tr>
+<tr><td><span>규격</span> <span class='muted' style='font-size:11.5px'>(spec)</span></td><td data-v='0.5614'>56.1%</td><td data-v='0.7241'>72.4%</td><td><span class='up'>▲ 16.3%</span></td><td data-v='64'>64</td><td data-v='84'>84</td></tr>
+<tr><td><span>단가</span> <span class='muted' style='font-size:11.5px'>(unitPrice)</span></td><td data-v='0.5704'>57.0%</td><td data-v='0.8681'>86.8%</td><td><span class='up'>▲ 29.8%</span></td><td data-v='81'>81</td><td data-v='125'>125</td></tr>
+</tbody></table></section>
+<section><h2>상세 변화 <span class='muted'>(이미지별 · 바뀐 항목만 · 제목 클릭=펼치기)</span></h2>
+<h3 class='tog' onclick='tog(this)'><span class='arr'>▶</span>1-1.jpg &nbsp; <span class='tag-bad'>❌ 악화 13</span> &nbsp;<span class='tag-ok'>✅ 개선 134</span> &nbsp;<span class='tag-chg'>🔄 변화 37</span></h3>
+<div class='tog-body' style='display:none'>
+<table><thead><tr><th>위치</th><th>상태</th><th>GT(정답)</th><th>직전 추출값</th><th>이번 추출값</th></tr></thead><tbody>
+<tr><td>행1 - spec (규격)</td><td><span class='tag-bad'>❌ 악화</span></td><td>15m|*6포</td><td>15m|*6포</td><td>규격</td></tr>
+<tr><td>행10 - itemName (품명)</td><td><span class='tag-bad'>❌ 악화</span></td><td>안티로이드정</td><td>안티로이드정</td><td>알베릭스연질캡습</td></tr>
+<tr><td>행10 - lotNo (LOT번호)</td><td><span class='tag-bad'>❌ 악화</span></td><td>23004-20ea</td><td>23004-20ea</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행10 - spec (규격)</td><td><span class='tag-bad'>❌ 악화</span></td><td>100T</td><td>100T</td><td>안티로이드정</td></tr>
+<tr><td>행12 - itemName (품명)</td><td><span class='tag-bad'>❌ 악화</span></td><td>부스론정5mg</td><td>부스론정5mg</td><td>부스정5mg</td></tr>
+<tr><td>행14 - itemName (품명)</td><td><span class='tag-bad'>❌ 악화</span></td><td>딜라스틴나잘스프레이</td><td>딜라스틴나잘스프레이</td><td>딜라스티나잘스프레이 120DOSE</td></tr>
+<tr><td>행17 - itemName (품명)</td><td><span class='tag-bad'>❌ 악화</span></td><td>이소맥캡슬</td><td>이소맥캡슬</td><td>이소매캡습</td></tr>
+<tr><td>행20 - itemName (품명)</td><td><span class='tag-bad'>❌ 악화</span></td><td>메티마졸정</td><td>메티마졸정</td><td>메티마정</td></tr>
+<tr><td>행3 - spec (규격)</td><td><span class='tag-bad'>❌ 악화</span></td><td>30T</td><td>30T</td><td>30g</td></tr>
+<tr><td>행4 - itemName (품명)</td><td><span class='tag-bad'>❌ 악화</span></td><td>하드칼씨플러스정</td><td>하드칼씨플러스정</td><td>하드칼추어블이지정</td></tr>
+<tr><td>행5 - itemName (품명)</td><td><span class='tag-bad'>❌ 악화</span></td><td>레가론캡슬140</td><td>레가론캡슬140</td><td>한드칼씨플러스정 6OT</td></tr>
+<tr><td>행8 - itemName (품명)</td><td><span class='tag-bad'>❌ 악화</span></td><td>파자임정95mg</td><td>파자임정95mg</td><td>뮤코론캡슬375mg</td></tr>
+<tr><td>행9 - itemName (품명)</td><td><span class='tag-bad'>❌ 악화</span></td><td>알베릭스연질캡슬</td><td>알베릭스연질캡슬</td><td>파자임정95mg</td></tr>
+<tr><td>행1 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>420,000</td><td>449,000</td><td>420,000</td></tr>
+<tr><td>행1 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>20270205</td><td><span class='muted'>(없음)</span></td><td>20270205</td></tr>
+<tr><td>행1 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>400</td><td>100</td><td>400</td></tr>
+<tr><td>행1 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>1,050</td><td>4,490</td><td>1,050</td></tr>
+<tr><td>행10 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>57,000</td><td>41,700</td><td>57,000</td></tr>
+<tr><td>행10 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>280703</td><td><span class='muted'>(없음)</span></td><td>280703</td></tr>
+<tr><td>행10 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>20</td><td>10</td><td>20</td></tr>
+<tr><td>행10 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>2,850</td><td>4,170</td><td>2,850</td></tr>
+<tr><td>행11 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>41,700</td><td>27,900</td><td>41,700</td></tr>
+<tr><td>행11 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>280914</td><td>250202</td><td>280914</td></tr>
+<tr><td>행11 - lotNo (LOT번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>23005A1-10ea</td><td><span class='muted'>(없음)</span></td><td>23005A1-10ea</td></tr>
+<tr><td>행11 - spec (규격)</td><td><span class='tag-ok'>✅ 개선</span></td><td>30T</td><td>23001A1-10ea</td><td>30T</td></tr>
+<tr><td>행11 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>4,170</td><td>2,790</td><td>4.170</td></tr>
+<tr><td>행12 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>27,900</td><td>110,450</td><td>27,900</td></tr>
+<tr><td>행12 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>250202</td><td>280809</td><td>250202</td></tr>
+<tr><td>행12 - lotNo (LOT번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>23001A1-10ea</td><td>23009-5ea</td><td>23001A1-10ea</td></tr>
+<tr><td>행12 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>10</td><td>5</td><td>10</td></tr>
+<tr><td>행12 - spec (규격)</td><td><span class='tag-ok'>✅ 개선</span></td><td>30T</td><td>500T</td><td>30T</td></tr>
+<tr><td>행12 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>2,790</td><td>22,090</td><td>2,790</td></tr>
+<tr><td>행13 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>280809</td><td>250813</td><td>280809</td></tr>
+<tr><td>행13 - itemName (품명)</td><td><span class='tag-ok'>✅ 개선</span></td><td>싸이메트정200mg</td><td>싸이메트정200mg 120DOSE</td><td>싸이메트정200mg</td></tr>
+<tr><td>행13 - lotNo (LOT번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>23009-5ea</td><td><span class='muted'>(없음)</span></td><td>23009-5ea</td></tr>
+<tr><td>행13 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>5</td><td>400</td><td>5</td></tr>
+<tr><td>행13 - spec (규격)</td><td><span class='tag-ok'>✅ 개선</span></td><td>500T</td><td>1C30915-4000a</td><td>500T</td></tr>
+<tr><td>행13 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>22,090</td><td>10,090</td><td>22,090</td></tr>
+<tr><td>행14 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>250813</td><td>260416</td><td>250813</td></tr>
+<tr><td>행15 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>76,350</td><td>541,700</td><td>76,350</td></tr>
+<tr><td>행15 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>260416</td><td>250202</td><td>260416</td></tr>
+<tr><td>행15 - lotNo (LOT번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>23001-5ea</td><td>23002-10ea</td><td>23001-5ea</td></tr>
+<tr><td>행15 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>5</td><td>10</td><td>5</td></tr>
+<tr><td>행15 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>15,270</td><td>54,170</td><td>15,270</td></tr>
+<tr><td>행16 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>541,700</td><td>34,200</td><td>541,700</td></tr>
+<tr><td>행16 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>250202</td><td>260810</td><td>250202</td></tr>
+<tr><td>행16 - itemName (품명)</td><td><span class='tag-ok'>✅ 개선</span></td><td>프리어드정</td><td>이소맥랩슬 Le</td><td>프리어드정</td></tr>
+<tr><td>행16 - lotNo (LOT번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>23002-10ea</td><td>23012-20ea</td><td>23002-10ea</td></tr>
+<tr><td>행16 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>10</td><td>20</td><td>10</td></tr>
+<tr><td>행16 - spec (규격)</td><td><span class='tag-ok'>✅ 개선</span></td><td>30T</td><td>30C</td><td>30T</td></tr>
+<tr><td>행16 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>54,170</td><td>1,710</td><td>54.170</td></tr>
+<tr><td>행17 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>34,200</td><td>343,800</td><td>34,200</td></tr>
+<tr><td>행17 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>260810</td><td>261206</td><td>260810</td></tr>
+<tr><td>행17 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>20</td><td>60</td><td>20</td></tr>
+<tr><td>행17 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>1,710</td><td>5,730</td><td>1,710</td></tr>
+<tr><td>행18 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>343,800</td><td>301,100</td><td>343,800</td></tr>
+<tr><td>행18 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>261206</td><td>280118</td><td>261206</td></tr>
+<tr><td>행18 - lotNo (LOT번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>23017-60ea</td><td>23001A2-10ea</td><td>23017-60ea</td></tr>
+<tr><td>행18 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>60</td><td>10</td><td>60</td></tr>
+<tr><td>행18 - spec (규격)</td><td><span class='tag-ok'>✅ 개선</span></td><td>100C</td><td>100T</td><td>100C</td></tr>
+<tr><td>행18 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>5,730</td><td>30,110</td><td>5.730</td></tr>
+<tr><td>행19 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>301,100</td><td>782,160</td><td>301,100</td></tr>
+<tr><td>행19 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>280118</td><td>281206</td><td>280118</td></tr>
+<tr><td>행19 - lotNo (LOT번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>23001A2-10ea</td><td>23022-240ea</td><td>23001A2-10ea</td></tr>
+<tr><td>행19 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>10</td><td>240</td><td>10</td></tr>
+<tr><td>행19 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>30,110</td><td>3,259</td><td>30,110</td></tr>
+<tr><td>행2 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>449,000</td><td>252,000</td><td>449,000</td></tr>
+<tr><td>행2 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>100</td><td><span class='muted'>(없음)</span></td><td>100</td></tr>
+<tr><td>행2 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>4,490</td><td>1,400</td><td>4,490</td></tr>
+<tr><td>행20 - lotNo (LOT번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>23022-240ea</td><td>23019-10ea</td><td>23022-240ea</td></tr>
+<tr><td>행20 - spec (규격)</td><td><span class='tag-ok'>✅ 개선</span></td><td>100T</td><td>500T</td><td>100T</td></tr>
+<tr><td>행21 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>163,100</td><td>4,320,000</td><td>163,100</td></tr>
+<tr><td>행21 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>281206</td><td>260122</td><td>281206</td></tr>
+<tr><td>행21 - lotNo (LOT번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>23019-10ea</td><td>24001-320ea</td><td>23019-10ea</td></tr>
+<tr><td>행21 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>10</td><td>320</td><td>10</td></tr>
+<tr><td>행21 - spec (규격)</td><td><span class='tag-ok'>✅ 개선</span></td><td>500T</td><td>10g</td><td>500T</td></tr>
+<tr><td>행21 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>16,310</td><td>13,500</td><td>16,310</td></tr>
+<tr><td>행22 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>4,320,000</td><td>177,000</td><td>4,320,000</td></tr>
+<tr><td>행22 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>260122</td><td>261112</td><td>260122</td></tr>
+<tr><td>행22 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>320</td><td>60</td><td>320</td></tr>
+<tr><td>행22 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>13,500</td><td>2,950</td><td>13,500</td></tr>
+<tr><td>행23 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>177,000</td><td>128,400</td><td>177,000</td></tr>
+<tr><td>행23 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>261112</td><td>260906</td><td>261112</td></tr>
+<tr><td>행23 - itemName (품명)</td><td><span class='tag-ok'>✅ 개선</span></td><td>오르필시럽</td><td>오르필서방정300mg</td><td>오르필시럽</td></tr>
+<tr><td>행23 - lotNo (LOT번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>23045-60ea</td><td>23030-40ea</td><td>23045-60ea</td></tr>
+<tr><td>행23 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>60</td><td>40</td><td>60</td></tr>
+<tr><td>행23 - spec (규격)</td><td><span class='tag-ok'>✅ 개선</span></td><td>150mI</td><td>30T</td><td>150mI</td></tr>
+<tr><td>행23 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>2,950</td><td>3,210</td><td>2.950</td></tr>
+<tr><td>행24 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>128,400</td><td>207,700</td><td>128,400</td></tr>
+<tr><td>행24 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>260906</td><td>260420</td><td>260906</td></tr>
+<tr><td>행24 - itemName (품명)</td><td><span class='tag-ok'>✅ 개선</span></td><td>오르필서방정300mg</td><td>프레가스타캡슬75mg</td><td>오르필서방정300mg</td></tr>
+<tr><td>행24 - lotNo (LOT번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>23030-40ea</td><td>23003-10ea</td><td>23030-40ea</td></tr>
+<tr><td>행24 - spec (규격)</td><td><span class='tag-ok'>✅ 개선</span></td><td>30T</td><td>60C</td><td>30T</td></tr>
+<tr><td>행24 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>3,210</td><td>20,770</td><td>3,210</td></tr>
+<tr><td>행25 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>207,700</td><td>220,890</td><td>207,700</td></tr>
+<tr><td>행25 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>260420</td><td>261205</td><td>260420</td></tr>
+<tr><td>행25 - lotNo (LOT번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>23003-10ea</td><td>23021-30ea</td><td>23003-10ea</td></tr>
+<tr><td>행25 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>10</td><td>30</td><td>10</td></tr>
+<tr><td>행25 - spec (규격)</td><td><span class='tag-ok'>✅ 개선</span></td><td>60C</td><td>500ml</td><td>60C</td></tr>
+<tr><td>행25 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>20,770</td><td>7,363</td><td>20.770</td></tr>
+<tr><td>행26 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>220,890</td><td>523,200</td><td>220,890</td></tr>
+<tr><td>행26 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>261205</td><td>270107</td><td>261205</td></tr>
+<tr><td>행26 - itemName (품명)</td><td><span class='tag-ok'>✅ 개선</span></td><td>소아용프리마란시럽</td><td>씬지로이드정0.025mg</td><td>소아용프리마란시럽</td></tr>
+<tr><td>행26 - lotNo (LOT번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>23021-30ea</td><td>24001-240ea</td><td>23021-30ea</td></tr>
+<tr><td>행26 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>30</td><td>240</td><td>30</td></tr>
+<tr><td>행26 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>7,363</td><td>2,180</td><td>7,363</td></tr>
+<tr><td>행27 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>523,200</td><td>98,100</td><td>523,200</td></tr>
+<tr><td>행27 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>270107</td><td>260212</td><td>270107</td></tr>
+<tr><td>행27 - lotNo (LOT번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>24001-240ea</td><td>23001-30ea</td><td>24001-240ea</td></tr>
+<tr><td>행27 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>240</td><td>30</td><td>240</td></tr>
+<tr><td>행27 - spec (규격)</td><td><span class='tag-ok'>✅ 개선</span></td><td>100T</td><td>4T</td><td>100T</td></tr>
+<tr><td>행27 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>2,180</td><td>3,270</td><td>2,180</td></tr>
+<tr><td>행3 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>252,000</td><td>190,800</td><td>252,000</td></tr>
+<tr><td>행3 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>20250601</td><td><span class='muted'>(없음)</span></td><td>20250601</td></tr>
+<tr><td>행3 - lotNo (LOT번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>23010</td><td><span class='muted'>(없음)</span></td><td>23010</td></tr>
+<tr><td>행3 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>180</td><td>40</td><td>180</td></tr>
+<tr><td>행3 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>1,400</td><td>4,770</td><td>1,400</td></tr>
+<tr><td>행4 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>190,800</td><td>2,127,600</td><td>190,800</td></tr>
+<tr><td>행4 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>40</td><td>360</td><td>40</td></tr>
+<tr><td>행4 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>4,770</td><td>5,910</td><td>4,770</td></tr>
+<tr><td>행5 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>2,127,600</td><td>335,500</td><td>2,127,600</td></tr>
+<tr><td>행5 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>20260716</td><td>20280608</td><td>20260716</td></tr>
+<tr><td>행5 - lotNo (LOT번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>23042</td><td><span class='muted'>(없음)</span></td><td>23042</td></tr>
+<tr><td>행5 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>360</td><td>20</td><td>360</td></tr>
+<tr><td>행5 - spec (규격)</td><td><span class='tag-ok'>✅ 개선</span></td><td>30C</td><td>500C</td><td>30c</td></tr>
+<tr><td>행5 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>5,910</td><td>16,775</td><td>5,910</td></tr>
+<tr><td>행6 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>985,900</td><td>776,400</td><td>985,900</td></tr>
+<tr><td>행6 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>20260525</td><td><span class='muted'>(없음)</span></td><td>20260525</td></tr>
+<tr><td>행6 - lotNo (LOT번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>23030</td><td>23002</td><td>23030</td></tr>
+<tr><td>행6 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>10</td><td>20</td><td>10</td></tr>
+<tr><td>행6 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>98,590</td><td>38,820</td><td>98,590</td></tr>
+<tr><td>행7 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>335,500</td><td>20261212</td><td>335,500</td></tr>
+<tr><td>행7 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>20280608</td><td><span class='muted'>(없음)</span></td><td>20280608</td></tr>
+<tr><td>행7 - lotNo (LOT번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>23002</td><td><span class='muted'>(없음)</span></td><td>23002</td></tr>
+<tr><td>행7 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>20</td><td><span class='muted'>(없음)</span></td><td>20</td></tr>
+<tr><td>행7 - spec (규격)</td><td><span class='tag-ok'>✅ 개선</span></td><td>500C</td><td><span class='muted'>(없음)</span></td><td>500c</td></tr>
+<tr><td>행7 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>16,775</td><td>23058</td><td>16,775</td></tr>
+<tr><td>행8 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>776,400</td><td>370,800</td><td>776,400</td></tr>
+<tr><td>행8 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>20261212</td><td>260717</td><td>20261212</td></tr>
+<tr><td>행8 - lotNo (LOT번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>23058</td><td><span class='muted'>(없음)</span></td><td>23058</td></tr>
+<tr><td>행8 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>20</td><td>72</td><td>20</td></tr>
+<tr><td>행8 - spec (규격)</td><td><span class='tag-ok'>✅ 개선</span></td><td>500T(B)</td><td>23010-72ea</td><td>500T(B)</td></tr>
+<tr><td>행8 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>38,820</td><td>5,150</td><td>38,820</td></tr>
+<tr><td>행9 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>370,800</td><td>57,000</td><td>370,800</td></tr>
+<tr><td>행9 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>260717</td><td>280703</td><td>260717</td></tr>
+<tr><td>행9 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>72</td><td>20</td><td>72</td></tr>
+<tr><td>행9 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>5,150</td><td>2,850</td><td>5,150</td></tr>
+<tr><td>필드 - buyerAddress (공급받는자 주소)</td><td><span class='tag-chg'>🔄 변화</span></td><td>서울특별시 구로구 공원로8길24(구로동)</td><td>서울특별시 구로구 공원로 8길 24 (구로동</td><td>서울특별시 구로구 공원로 8길 24(구로동</td></tr>
+<tr><td>필드 - supplierRepresentative (공급자 대표자)</td><td><span class='tag-chg'>🔄 변화</span></td><td>LEE WOO HYUN</td><td>LEE WOORHYUN</td><td>LEE WOO</td></tr>
+<tr><td>행1 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>헥사메딘액0.12%</td><td>헥사메단액0.12%</td><td>품 목</td></tr>
+<tr><td>행11 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>아젭틴정</td><td>30T</td><td>아집틴청</td></tr>
+<tr><td>행14 - amount (금액)</td><td><span class='tag-chg'>🔄 변화</span></td><td>4,036,000</td><td>76,350</td><td>10,090</td></tr>
+<tr><td>행14 - lotNo (LOT번호)</td><td><span class='tag-chg'>🔄 변화</span></td><td>IC30915-400ea</td><td>23001-5ea</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행14 - quantity (수량)</td><td><span class='tag-chg'>🔄 변화</span></td><td>400</td><td>5</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행14 - spec (규격)</td><td><span class='tag-chg'>🔄 변화</span></td><td>120DOSE</td><td>30T</td><td>IC30915-400da</td></tr>
+<tr><td>행14 - unitPrice (단가)</td><td><span class='tag-chg'>🔄 변화</span></td><td>10,090</td><td>15,270</td><td>400</td></tr>
+<tr><td>행17 - lotNo (LOT번호)</td><td><span class='tag-chg'>🔄 변화</span></td><td>23012-20ea</td><td>23017-60ea</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행17 - spec (규격)</td><td><span class='tag-chg'>🔄 변화</span></td><td>30C</td><td>100C</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행18 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>이소액캡슬</td><td>켈론정20mg</td><td>이소맥랩습</td></tr>
+<tr><td>행19 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>켈론정20mg</td><td>메티마졸정</td><td>법정20mg</td></tr>
+<tr><td>행2 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>더모픽스크림</td><td>30g</td><td>핵사메단액0.12%</td></tr>
+<tr><td>행2 - spec (규격)</td><td><span class='tag-chg'>🔄 변화</span></td><td>30g</td><td><span class='muted'>(없음)</span></td><td>15m|*6포</td></tr>
+<tr><td>행20 - amount (금액)</td><td><span class='tag-chg'>🔄 변화</span></td><td>782,160</td><td>163,100</td><td>3,259</td></tr>
+<tr><td>행20 - quantity (수량)</td><td><span class='tag-chg'>🔄 변화</span></td><td>240</td><td>10</td><td>1240</td></tr>
+<tr><td>행20 - unitPrice (단가)</td><td><span class='tag-chg'>🔄 변화</span></td><td>3,259</td><td>16,310</td><td>1240</td></tr>
+<tr><td>행21 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>메티마줄정</td><td>나닥사크림</td><td>메티마정</td></tr>
+<tr><td>행22 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>나딕사크림</td><td>오르필시럽</td><td>나닥사크림</td></tr>
+<tr><td>행22 - lotNo (LOT번호)</td><td><span class='tag-chg'>🔄 변화</span></td><td>24001-320ea</td><td>23045-60ea</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행22 - spec (규격)</td><td><span class='tag-chg'>🔄 변화</span></td><td>10g</td><td>150mI</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행24 - quantity (수량)</td><td><span class='tag-chg'>🔄 변화</span></td><td>40</td><td>10</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행25 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>프레가스타캡슬75mg</td><td>소아용프리마란시럽</td><td>프레가스타캡75ng</td></tr>
+<tr><td>행26 - spec (규격)</td><td><span class='tag-chg'>🔄 변화</span></td><td>500ml</td><td>100T</td><td>500n1</td></tr>
+<tr><td>행27 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>씬지로이드정0.025ng</td><td>부광실데나필정50mg</td><td>2지로이드정0.025mg</td></tr>
+<tr><td>행28 - amount (금액)</td><td><span class='tag-chg'>🔄 변화</span></td><td>98,100</td><td><span class='muted'>(없음)</span></td><td>98,100</td></tr>
+<tr><td>행28 - expiryDate (유효기간)</td><td><span class='tag-chg'>🔄 변화</span></td><td>260212</td><td><span class='muted'>(없음)</span></td><td>260212</td></tr>
+<tr><td>행28 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>부광실데나필정50mg</td><td><span class='muted'>(없음)</span></td><td>부광실데나필정50mg</td></tr>
+<tr><td>행28 - lotNo (LOT번호)</td><td><span class='tag-chg'>🔄 변화</span></td><td>23001-30ea</td><td><span class='muted'>(없음)</span></td><td>23001-30ea</td></tr>
+<tr><td>행28 - quantity (수량)</td><td><span class='tag-chg'>🔄 변화</span></td><td>30</td><td><span class='muted'>(없음)</span></td><td>30</td></tr>
+<tr><td>행28 - spec (규격)</td><td><span class='tag-chg'>🔄 변화</span></td><td>4T</td><td><span class='muted'>(없음)</span></td><td>4T</td></tr>
+<tr><td>행28 - unitPrice (단가)</td><td><span class='tag-chg'>🔄 변화</span></td><td>3,270</td><td><span class='muted'>(없음)</span></td><td>3,270</td></tr>
+<tr><td>행3 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>하드칼츄어블이지정</td><td>하드칼추어블이지정</td><td>더모픽스크림</td></tr>
+<tr><td>행4 - spec (규격)</td><td><span class='tag-chg'>🔄 변화</span></td><td>6OT</td><td>60T</td><td>30T</td></tr>
+<tr><td>행6 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>레가론캡슬140</td><td>뮤코론캡슬375mg</td><td>레가습140</td></tr>
+<tr><td>행7 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>뮤코론캡슐375mg</td><td>500T(B)</td><td>레가캡140</td></tr>
+</tbody></table></div>
+<h3 class='tog' onclick='tog(this)'><span class='arr'>▶</span>1-2.jpg &nbsp; <span class='tag-bad'>❌ 악화 9</span> &nbsp;<span class='tag-ok'>✅ 개선 80</span> &nbsp;<span class='tag-chg'>🔄 변화 27</span></h3>
+<div class='tog-body' style='display:none'>
+<table><thead><tr><th>위치</th><th>상태</th><th>GT(정답)</th><th>직전 추출값</th><th>이번 추출값</th></tr></thead><tbody>
+<tr><td>행1 - spec (규격)</td><td><span class='tag-bad'>❌ 악화</span></td><td>15m|*6포</td><td>15m|*6포</td><td>15m1*6포</td></tr>
+<tr><td>행10 - lotNo (LOT번호)</td><td><span class='tag-bad'>❌ 악화</span></td><td>23004-20ea</td><td>23004-20ea</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행10 - spec (규격)</td><td><span class='tag-bad'>❌ 악화</span></td><td>100T</td><td>100T</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행12 - itemName (품명)</td><td><span class='tag-bad'>❌ 악화</span></td><td>부스론정5mg</td><td>부스론정5mg</td><td>부스정5mg</td></tr>
+<tr><td>행13 - itemName (품명)</td><td><span class='tag-bad'>❌ 악화</span></td><td>싸이메트정200mg</td><td>싸이메트정200mg</td><td>이메정200mng</td></tr>
+<tr><td>행5 - itemName (품명)</td><td><span class='tag-bad'>❌ 악화</span></td><td>레가론캡슬140</td><td>레가론캡슬140</td><td>레가랩슬140</td></tr>
+<tr><td>행7 - amount (금액)</td><td><span class='tag-bad'>❌ 악화</span></td><td>335,500</td><td>335,500</td><td>16,775</td></tr>
+<tr><td>행7 - spec (규격)</td><td><span class='tag-bad'>❌ 악화</span></td><td>500C</td><td>500C</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행7 - unitPrice (단가)</td><td><span class='tag-bad'>❌ 악화</span></td><td>16,775</td><td>16,775</td><td>5000</td></tr>
+<tr><td>필드 - buyerAddress (공급받는자 주소)</td><td><span class='tag-ok'>✅ 개선</span></td><td>서울특별시 구로구 공원로8길24(구로동)</td><td>서울특별시구로구</td><td>서울특별시 구로구 공원로8길24(구로동</td></tr>
+<tr><td>필드 - buyerRepresentative (공급받는자 대표자)</td><td><span class='tag-ok'>✅ 개선</span></td><td>김승관</td><td><span class='muted'>(없음)</span></td><td>김승관</td></tr>
+<tr><td>행14 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>250813</td><td><span class='muted'>(없음)</span></td><td>250813</td></tr>
+<tr><td>행15 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>76,350</td><td>541,700</td><td>76,350</td></tr>
+<tr><td>행15 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>260416</td><td>250202</td><td>260416</td></tr>
+<tr><td>행15 - itemName (품명)</td><td><span class='tag-ok'>✅ 개선</span></td><td>피나스틴정</td><td>프리어드정</td><td>피나스틴정</td></tr>
+<tr><td>행15 - lotNo (LOT번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>23001-5ea</td><td>23002-10ea</td><td>23001-5ea</td></tr>
+<tr><td>행15 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>5</td><td>10</td><td>5</td></tr>
+<tr><td>행15 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>15,270</td><td>54,170</td><td>15,270</td></tr>
+<tr><td>행16 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>541,700</td><td>34,200</td><td>541,700</td></tr>
+<tr><td>행16 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>250202</td><td>260810</td><td>250202</td></tr>
+<tr><td>행16 - itemName (품명)</td><td><span class='tag-ok'>✅ 개선</span></td><td>프리어드정</td><td>이소맥캡슬</td><td>프리어드정</td></tr>
+<tr><td>행16 - lotNo (LOT번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>23002-10ea</td><td>23012-20ea</td><td>23002-10ea</td></tr>
+<tr><td>행16 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>10</td><td>20</td><td>10</td></tr>
+<tr><td>행16 - spec (규격)</td><td><span class='tag-ok'>✅ 개선</span></td><td>30T</td><td>30C</td><td>30T</td></tr>
+<tr><td>행16 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>54,170</td><td>1,710</td><td>54,170</td></tr>
+<tr><td>행17 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>34,200</td><td>343,800</td><td>34,200</td></tr>
+<tr><td>행17 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>260810</td><td>261206</td><td>260810</td></tr>
+<tr><td>행17 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>20</td><td>60</td><td>20</td></tr>
+<tr><td>행17 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>1,710</td><td>5,730</td><td>1,710</td></tr>
+<tr><td>행18 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>343,800</td><td>301,100</td><td>343,800</td></tr>
+<tr><td>행18 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>261206</td><td>280118</td><td>261206</td></tr>
+<tr><td>행18 - lotNo (LOT번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>23017-60ea</td><td>23001A2-10ea</td><td>23017-60ea</td></tr>
+<tr><td>행18 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>60</td><td>10</td><td>60</td></tr>
+<tr><td>행18 - spec (규격)</td><td><span class='tag-ok'>✅ 개선</span></td><td>100C</td><td>100T</td><td>100C</td></tr>
+<tr><td>행18 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>5,730</td><td>30,110</td><td>5,730</td></tr>
+<tr><td>행19 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>301,100</td><td>782,160</td><td>301,100</td></tr>
+<tr><td>행19 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>280118</td><td>281206</td><td>280118</td></tr>
+<tr><td>행19 - lotNo (LOT번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>23001A2-10ea</td><td>23022-240ea</td><td>23001A2-10ea</td></tr>
+<tr><td>행19 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>10</td><td>240</td><td>10</td></tr>
+<tr><td>행19 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>30,110</td><td>3,259</td><td>30,110</td></tr>
+<tr><td>행20 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>782,160</td><td>163,100</td><td>782.160</td></tr>
+<tr><td>행20 - lotNo (LOT번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>23022-240ea</td><td>23019-10ea</td><td>23022-240ea</td></tr>
+<tr><td>행20 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>240</td><td>10</td><td>240</td></tr>
+<tr><td>행20 - spec (규격)</td><td><span class='tag-ok'>✅ 개선</span></td><td>100T</td><td>500T</td><td>100T</td></tr>
+<tr><td>행20 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>3,259</td><td>16,310</td><td>3,259</td></tr>
+<tr><td>행21 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>163,100</td><td>4,320,000</td><td>163,100</td></tr>
+<tr><td>행21 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>281206</td><td>260122</td><td>281206</td></tr>
+<tr><td>행21 - lotNo (LOT번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>23019-10ea</td><td>24001-320ea</td><td>23019-10ea</td></tr>
+<tr><td>행21 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>10</td><td>320</td><td>10</td></tr>
+<tr><td>행21 - spec (규격)</td><td><span class='tag-ok'>✅ 개선</span></td><td>500T</td><td>10g</td><td>500T</td></tr>
+<tr><td>행21 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>16,310</td><td>13,500</td><td>16,310</td></tr>
+<tr><td>행22 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>4,320,000</td><td>177,000</td><td>4,320,000</td></tr>
+<tr><td>행22 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>260122</td><td>261112</td><td>260122</td></tr>
+<tr><td>행22 - lotNo (LOT번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>24001-320ea</td><td>23045-60ea</td><td>24001-320ea</td></tr>
+<tr><td>행22 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>320</td><td>60</td><td>320</td></tr>
+<tr><td>행22 - spec (규격)</td><td><span class='tag-ok'>✅ 개선</span></td><td>10g</td><td>150mI</td><td>10g</td></tr>
+<tr><td>행22 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>13,500</td><td>2,950</td><td>13,500</td></tr>
+<tr><td>행23 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>177,000</td><td>128,400</td><td>177,000</td></tr>
+<tr><td>행23 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>261112</td><td>260906</td><td>261112</td></tr>
+<tr><td>행23 - itemName (품명)</td><td><span class='tag-ok'>✅ 개선</span></td><td>오르필시럽</td><td>오르필서방정300mg</td><td>오르필시럽</td></tr>
+<tr><td>행23 - lotNo (LOT번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>23045-60ea</td><td>23030-40ea</td><td>23045-60ea</td></tr>
+<tr><td>행23 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>60</td><td>40</td><td>60</td></tr>
+<tr><td>행23 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>2,950</td><td>3,210</td><td>2.950</td></tr>
+<tr><td>행24 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>128,400</td><td>207,700</td><td>128,400</td></tr>
+<tr><td>행24 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>260906</td><td>260420</td><td>260906</td></tr>
+<tr><td>행24 - itemName (품명)</td><td><span class='tag-ok'>✅ 개선</span></td><td>오르필서방정300mg</td><td>프레가스타캡슬75mg</td><td>오르필서방정300mg</td></tr>
+<tr><td>행24 - lotNo (LOT번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>23030-40ea</td><td>23003-10ea</td><td>23030-40ea</td></tr>
+<tr><td>행24 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>40</td><td>10</td><td>40</td></tr>
+<tr><td>행24 - spec (규격)</td><td><span class='tag-ok'>✅ 개선</span></td><td>30T</td><td>60C</td><td>30T</td></tr>
+<tr><td>행24 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>3,210</td><td>20,770</td><td>3,210</td></tr>
+<tr><td>행25 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>207,700</td><td>220,890</td><td>207,700</td></tr>
+<tr><td>행25 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>260420</td><td>261205</td><td>260420</td></tr>
+<tr><td>행25 - itemName (품명)</td><td><span class='tag-ok'>✅ 개선</span></td><td>프레가스타캡슬75mg</td><td>소아용프리마란시럽</td><td>프레가스타캡슬75mg</td></tr>
+<tr><td>행25 - lotNo (LOT번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>23003-10ea</td><td>23021-30ea</td><td>23003-10ea</td></tr>
+<tr><td>행25 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>10</td><td>30</td><td>10</td></tr>
+<tr><td>행25 - spec (규격)</td><td><span class='tag-ok'>✅ 개선</span></td><td>60C</td><td>500m1</td><td>60C</td></tr>
+<tr><td>행25 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>20,770</td><td>7,363</td><td>20,770</td></tr>
+<tr><td>행26 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>220,890</td><td>523,200</td><td>220,890</td></tr>
+<tr><td>행26 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>261205</td><td>270107</td><td>261205</td></tr>
+<tr><td>행26 - itemName (품명)</td><td><span class='tag-ok'>✅ 개선</span></td><td>소아용프리마란시럽</td><td>씬지로이드정0.025mg</td><td>소아용프리마란시럽</td></tr>
+<tr><td>행26 - lotNo (LOT번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>23021-30ea</td><td>24001-240ea</td><td>23021-30ea</td></tr>
+<tr><td>행26 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>30</td><td>240</td><td>30</td></tr>
+<tr><td>행26 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>7,363</td><td>2,180</td><td>7,363</td></tr>
+<tr><td>행27 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>523,200</td><td>98,100</td><td>523,200</td></tr>
+<tr><td>행27 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>270107</td><td>260212</td><td>270107</td></tr>
+<tr><td>행27 - lotNo (LOT번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>24001-240ea</td><td>23001-30ea</td><td>24001-240ea</td></tr>
+<tr><td>행27 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>240</td><td>30</td><td>240</td></tr>
+<tr><td>행27 - spec (규격)</td><td><span class='tag-ok'>✅ 개선</span></td><td>100T</td><td>4T</td><td>100T</td></tr>
+<tr><td>행27 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>2,180</td><td>3,270</td><td>2,180</td></tr>
+<tr><td>필드 - supplierAddress (공급자 주소)</td><td><span class='tag-chg'>🔄 변화</span></td><td>서울특별시 동작구 상도로7</td><td>서울특별시동작구 상도로7</td><td>서울특별시 동작구상도로7</td></tr>
+<tr><td>필드 - supplierRepresentative (공급자 대표자)</td><td><span class='tag-chg'>🔄 변화</span></td><td>LEE WOO HYUN</td><td>록호</td><td>LEE WO</td></tr>
+<tr><td>행1 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>헥사메딘액0.12%</td><td>헥사메디액0.12%</td><td>핵사메단액0.12%</td></tr>
+<tr><td>행1 - unitPrice (단가)</td><td><span class='tag-chg'>🔄 변화</span></td><td>1,050</td><td>1,050</td><td>1.050</td></tr>
+<tr><td>행11 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>아젭틴정</td><td>아집틴정</td><td>아집티청</td></tr>
+<tr><td>행14 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>딜라스틴나잘스프레이</td><td>딜라스틴나잘스프레이 120DOSE</td><td>딜라스티나잘스프레이 120DOSE</td></tr>
+<tr><td>행14 - spec (규격)</td><td><span class='tag-chg'>🔄 변화</span></td><td>120DOSE</td><td>1C30915-400ea250813</td><td>1C30915-400a</td></tr>
+<tr><td>행17 - lotNo (LOT번호)</td><td><span class='tag-chg'>🔄 변화</span></td><td>23012-20ea</td><td>23017-60ea</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행17 - spec (규격)</td><td><span class='tag-chg'>🔄 변화</span></td><td>30C</td><td>100C</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행18 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>이소액캡슬</td><td>벨론정20mg</td><td>이소맥캡슬</td></tr>
+<tr><td>행19 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>켈론정20mg</td><td>메티마졸정</td><td>론정20mg</td></tr>
+<tr><td>행21 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>메티마줄정</td><td>나닥사크림</td><td>메티마정</td></tr>
+<tr><td>행22 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>나딕사크림</td><td>오르필시럽</td><td>나먹사크림</td></tr>
+<tr><td>행23 - spec (규격)</td><td><span class='tag-chg'>🔄 변화</span></td><td>150mI</td><td>30T</td><td>150n1</td></tr>
+<tr><td>행26 - spec (규격)</td><td><span class='tag-chg'>🔄 변화</span></td><td>500ml</td><td>100T</td><td>500n1</td></tr>
+<tr><td>행27 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>씬지로이드정0.025ng</td><td>부광실데나필정50mg</td><td>씬지로이드정0.025mg</td></tr>
+<tr><td>행28 - amount (금액)</td><td><span class='tag-chg'>🔄 변화</span></td><td>98,100</td><td><span class='muted'>(없음)</span></td><td>98,100</td></tr>
+<tr><td>행28 - expiryDate (유효기간)</td><td><span class='tag-chg'>🔄 변화</span></td><td>260212</td><td><span class='muted'>(없음)</span></td><td>260212</td></tr>
+<tr><td>행28 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>부광실데나필정50mg</td><td><span class='muted'>(없음)</span></td><td>부광실데나필정50ng</td></tr>
+<tr><td>행28 - lotNo (LOT번호)</td><td><span class='tag-chg'>🔄 변화</span></td><td>23001-30ea</td><td><span class='muted'>(없음)</span></td><td>23001-30ea</td></tr>
+<tr><td>행28 - quantity (수량)</td><td><span class='tag-chg'>🔄 변화</span></td><td>30</td><td><span class='muted'>(없음)</span></td><td>30</td></tr>
+<tr><td>행28 - spec (규격)</td><td><span class='tag-chg'>🔄 변화</span></td><td>4T</td><td><span class='muted'>(없음)</span></td><td>4T</td></tr>
+<tr><td>행28 - unitPrice (단가)</td><td><span class='tag-chg'>🔄 변화</span></td><td>3,270</td><td><span class='muted'>(없음)</span></td><td>3,270</td></tr>
+<tr><td>행3 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>하드칼츄어블이지정</td><td>하드칼추어블이지정</td><td>하드칼쥬어불이지정</td></tr>
+<tr><td>행6 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>레가론캡슬140</td><td>레가른캡슬140</td><td>레가캡슬140</td></tr>
+<tr><td>행7 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>뮤코론캡슐375mg</td><td>뮤코론캡슬375mg</td><td>뮤375mg</td></tr>
+<tr><td>행9 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>알베릭스연질캡슬</td><td>알베릭스연질캠슬</td><td>알베릭스연질캡습</td></tr>
+</tbody></table></div>
+<h3 class='tog' onclick='tog(this)'><span class='arr'>▶</span>1-3.jpg &nbsp; <span class='tag-bad'>❌ 악화 13</span> &nbsp;<span class='tag-ok'>✅ 개선 6</span> &nbsp;<span class='tag-chg'>🔄 변화 16</span></h3>
+<div class='tog-body' style='display:none'>
+<table><thead><tr><th>위치</th><th>상태</th><th>GT(정답)</th><th>직전 추출값</th><th>이번 추출값</th></tr></thead><tbody>
+<tr><td>필드 - cumulativeAmount (누계)</td><td><span class='tag-bad'>❌ 악화</span></td><td>18,098,750</td><td>18,098,750</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행1 - spec (규격)</td><td><span class='tag-bad'>❌ 악화</span></td><td>15m|*6포</td><td>15m|*6포</td><td>15m1*6포</td></tr>
+<tr><td>행10 - lotNo (LOT번호)</td><td><span class='tag-bad'>❌ 악화</span></td><td>23004-20ea</td><td>23004-20ea</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행10 - spec (규격)</td><td><span class='tag-bad'>❌ 악화</span></td><td>100T</td><td>100T</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행12 - itemName (품명)</td><td><span class='tag-bad'>❌ 악화</span></td><td>부스론정5mg</td><td>부스론정5mg</td><td>부스정5mg</td></tr>
+<tr><td>행13 - itemName (품명)</td><td><span class='tag-bad'>❌ 악화</span></td><td>싸이메트정200mg</td><td>싸이메트정200mg</td><td>싸이에정200mg</td></tr>
+<tr><td>행17 - itemName (품명)</td><td><span class='tag-bad'>❌ 악화</span></td><td>이소맥캡슬</td><td>이소맥캡슬</td><td>이소매캡습</td></tr>
+<tr><td>행19 - itemName (품명)</td><td><span class='tag-bad'>❌ 악화</span></td><td>켈론정20mg</td><td>켈론정20mg</td><td>정20mg</td></tr>
+<tr><td>행20 - itemName (품명)</td><td><span class='tag-bad'>❌ 악화</span></td><td>메티마졸정</td><td>메티마졸정</td><td>메티마좋정</td></tr>
+<tr><td>행25 - itemName (품명)</td><td><span class='tag-bad'>❌ 악화</span></td><td>프레가스타캡슬75mg</td><td>프레가스타캡슬75mg</td><td>프레가스타캡75mg</td></tr>
+<tr><td>행26 - itemName (품명)</td><td><span class='tag-bad'>❌ 악화</span></td><td>소아용프리마란시럽</td><td>소아용프리마란시럽</td><td>소아용프리마라시럽</td></tr>
+<tr><td>행3 - itemName (품명)</td><td><span class='tag-bad'>❌ 악화</span></td><td>하드칼츄어블이지정</td><td>하드칼츄어블이지정</td><td>하드칼추어블이지정</td></tr>
+<tr><td>행5 - itemName (품명)</td><td><span class='tag-bad'>❌ 악화</span></td><td>레가론캡슬140</td><td>레가론캡슬140</td><td>레가140</td></tr>
+<tr><td>필드 - buyerAddress (공급받는자 주소)</td><td><span class='tag-ok'>✅ 개선</span></td><td>서울특별시 구로구 공원로8길24(구로동)</td><td>서울특별시구로구</td><td>서울특별시 구로구 공원로8길24(구로동</td></tr>
+<tr><td>행14 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>250813</td><td><span class='muted'>(없음)</span></td><td>250813</td></tr>
+<tr><td>행14 - lotNo (LOT번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>IC30915-400ea</td><td><span class='muted'>(없음)</span></td><td>IC30915-400ea</td></tr>
+<tr><td>행14 - spec (규격)</td><td><span class='tag-ok'>✅ 개선</span></td><td>120DOSE</td><td>1C30915-400ea250813</td><td>120DOSE</td></tr>
+<tr><td>행9 - lotNo (LOT번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>23010-72ea</td><td><span class='muted'>(없음)</span></td><td>23010-72ea</td></tr>
+<tr><td>행9 - spec (규격)</td><td><span class='tag-ok'>✅ 개선</span></td><td>90c</td><td><span class='muted'>(없음)</span></td><td>90c</td></tr>
+<tr><td>필드 - supplierAddress (공급자 주소)</td><td><span class='tag-chg'>🔄 변화</span></td><td>서울특별시 동작구 상도로7</td><td>서울특별시 동작구 상도로7</td><td>서울특별시 동작구상도로7</td></tr>
+<tr><td>필드 - supplierRepresentative (공급자 대표자)</td><td><span class='tag-chg'>🔄 변화</span></td><td>LEE WOO HYUN</td><td>록호</td><td>LEE WOO</td></tr>
+<tr><td>행1 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>헥사메딘액0.12%</td><td>헥사메단액0.12%</td><td>핵사메단액0.12%</td></tr>
+<tr><td>행1 - unitPrice (단가)</td><td><span class='tag-chg'>🔄 변화</span></td><td>1,050</td><td>1,050</td><td>1.050</td></tr>
+<tr><td>행11 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>아젭틴정</td><td>아집틴정</td><td>아집팀청</td></tr>
+<tr><td>행14 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>딜라스틴나잘스프레이</td><td>딜라스틴나잘스프레이 120D0SE</td><td>딜라스티나잘스프레이</td></tr>
+<tr><td>행18 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>이소액캡슬</td><td>이소맥캡슬</td><td>이소맥캡습</td></tr>
+<tr><td>행18 - spec (규격)</td><td><span class='tag-chg'>🔄 변화</span></td><td>100C</td><td>100C</td><td>100c</td></tr>
+<tr><td>행21 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>메티마줄정</td><td>메티마졸정</td><td>메티마정</td></tr>
+<tr><td>행22 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>나딕사크림</td><td>나닥사크림</td><td>나덕사크림</td></tr>
+<tr><td>행23 - spec (규격)</td><td><span class='tag-chg'>🔄 변화</span></td><td>150mI</td><td>150ml</td><td>150nl</td></tr>
+<tr><td>행26 - spec (규격)</td><td><span class='tag-chg'>🔄 변화</span></td><td>500ml</td><td>500m1</td><td>500n1</td></tr>
+<tr><td>행5 - spec (규격)</td><td><span class='tag-chg'>🔄 변화</span></td><td>30C</td><td>30C</td><td>30c</td></tr>
+<tr><td>행6 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>레가론캡슬140</td><td>레가른캡슬140</td><td>레가캡140</td></tr>
+<tr><td>행7 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>뮤코론캡슐375mg</td><td>뮤코론캡375mg</td><td>뮤코캡375mg</td></tr>
+<tr><td>행9 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>알베릭스연질캡슬</td><td>알베릭스연질캠슬</td><td>알베릭스연질캡습</td></tr>
+</tbody></table></div>
+<h3 class='tog' onclick='tog(this)'><span class='arr'>▶</span>1.jpg &nbsp; <span class='tag-bad'>❌ 악화 7</span> &nbsp;<span class='tag-ok'>✅ 개선 6</span> &nbsp;<span class='tag-chg'>🔄 변화 15</span></h3>
+<div class='tog-body' style='display:none'>
+<table><thead><tr><th>위치</th><th>상태</th><th>GT(정답)</th><th>직전 추출값</th><th>이번 추출값</th></tr></thead><tbody>
+<tr><td>필드 - buyerRepresentative (공급받는자 대표자)</td><td><span class='tag-bad'>❌ 악화</span></td><td>김승관</td><td>김승관</td><td>유효기간</td></tr>
+<tr><td>행12 - itemName (품명)</td><td><span class='tag-bad'>❌ 악화</span></td><td>부스론정5mg</td><td>부스론정5mg</td><td>부스로정5mdg</td></tr>
+<tr><td>행17 - itemName (품명)</td><td><span class='tag-bad'>❌ 악화</span></td><td>이소맥캡슬</td><td>이소맥캡슬</td><td>이소백캡술</td></tr>
+<tr><td>행19 - itemName (품명)</td><td><span class='tag-bad'>❌ 악화</span></td><td>켈론정20mg</td><td>켈론정20mg</td><td>필론정20mng</td></tr>
+<tr><td>행23 - quantity (수량)</td><td><span class='tag-bad'>❌ 악화</span></td><td>60</td><td>60</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행23 - unitPrice (단가)</td><td><span class='tag-bad'>❌ 악화</span></td><td>2,950</td><td>2,950</td><td>60</td></tr>
+<tr><td>행6 - itemName (품명)</td><td><span class='tag-bad'>❌ 악화</span></td><td>레가론캡슬140</td><td>레가론캡슬140</td><td>레가른캡슬140</td></tr>
+<tr><td>필드 - buyerAddress (공급받는자 주소)</td><td><span class='tag-ok'>✅ 개선</span></td><td>서울특별시 구로구 공원로8길24(구로동)</td><td>서울특별시</td><td>서울특별시구로구 공원로8길24(구로동</td></tr>
+<tr><td>필드 - supplierAddress (공급자 주소)</td><td><span class='tag-ok'>✅ 개선</span></td><td>서울특별시 동작구 상도로7</td><td>동작구 상도로7</td><td>서울특별시 동작구 상도로7</td></tr>
+<tr><td>행17 - lotNo (LOT번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>23012-20ea</td><td><span class='muted'>(없음)</span></td><td>23012-20ea</td></tr>
+<tr><td>행17 - spec (규격)</td><td><span class='tag-ok'>✅ 개선</span></td><td>30C</td><td><span class='muted'>(없음)</span></td><td>30c</td></tr>
+<tr><td>행3 - itemName (품명)</td><td><span class='tag-ok'>✅ 개선</span></td><td>하드칼츄어블이지정</td><td>하드칼추어블이지정</td><td>하드칼츄어블이지정</td></tr>
+<tr><td>행4 - spec (규격)</td><td><span class='tag-ok'>✅ 개선</span></td><td>6OT</td><td>60T</td><td>6OT</td></tr>
+<tr><td>필드 - supplierRepresentative (공급자 대표자)</td><td><span class='tag-chg'>🔄 변화</span></td><td>LEE WOO HYUN</td><td>LEEWOOHYUN</td><td>제조번호</td></tr>
+<tr><td>행1 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>헥사메딘액0.12%</td><td>헥사메디액0.12%</td><td>핵사메터액0.12%</td></tr>
+<tr><td>행11 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>아젭틴정</td><td>아젠틴정</td><td>아집린정</td></tr>
+<tr><td>행14 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>딜라스틴나잘스프레이</td><td>딜라스틴나잘스프레이 120DOSE</td><td>딜라스티나잘스프레이 120DOSE</td></tr>
+<tr><td>행14 - spec (규격)</td><td><span class='tag-chg'>🔄 변화</span></td><td>120DOSE</td><td>1C30915-400da</td><td>IC30915-400a</td></tr>
+<tr><td>행17 - unitPrice (단가)</td><td><span class='tag-chg'>🔄 변화</span></td><td>1,710</td><td>1,710</td><td>1.710</td></tr>
+<tr><td>행18 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>이소액캡슬</td><td>이소맥캡슬</td><td>이소맥캡술</td></tr>
+<tr><td>행21 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>메티마줄정</td><td>메티마졸정</td><td>에티마줄정</td></tr>
+<tr><td>행22 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>나딕사크림</td><td>나닥사크림</td><td>나덕사크림</td></tr>
+<tr><td>행23 - spec (규격)</td><td><span class='tag-chg'>🔄 변화</span></td><td>150mI</td><td>150ml</td><td>150m1</td></tr>
+<tr><td>행25 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>프레가스타캡슬75mg</td><td>프레가스타캡슐75mg</td><td>프레가스타캡슬75ng</td></tr>
+<tr><td>행26 - spec (규격)</td><td><span class='tag-chg'>🔄 변화</span></td><td>500ml</td><td>500m|</td><td>500n1</td></tr>
+<tr><td>행6 - spec (규격)</td><td><span class='tag-chg'>🔄 변화</span></td><td>500C</td><td>500C</td><td>500c</td></tr>
+<tr><td>행7 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>뮤코론캡슐375mg</td><td>뮤코론캡슬375mg</td><td>뮤코론캡375mg</td></tr>
+<tr><td>행9 - spec (규격)</td><td><span class='tag-chg'>🔄 변화</span></td><td>90c</td><td>90c</td><td>90C</td></tr>
+</tbody></table></div>
+<h3 class='tog' onclick='tog(this)'><span class='arr'>▶</span>3-1.jpg &nbsp; <span class='tag-bad'>❌ 악화 2</span> &nbsp;<span class='tag-ok'>✅ 개선 3</span> &nbsp;<span class='tag-chg'>🔄 변화 3</span></h3>
+<div class='tog-body' style='display:none'>
+<table><thead><tr><th>위치</th><th>상태</th><th>GT(정답)</th><th>직전 추출값</th><th>이번 추출값</th></tr></thead><tbody>
+<tr><td>필드 - issueDate (작성일자)</td><td><span class='tag-bad'>❌ 악화</span></td><td>2024-07-29</td><td>2024-07-29</td><td>2029-01-00</td></tr>
+<tr><td>행1 - quantity (수량)</td><td><span class='tag-bad'>❌ 악화</span></td><td>30</td><td>30</td><td>4</td></tr>
+<tr><td>필드 - supplyAmount (공급가액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>273,927</td><td>17,505</td><td>273,927</td></tr>
+<tr><td>필드 - taxAmount (세액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>27,393</td><td>17,505</td><td>27,393</td></tr>
+<tr><td>행1 - expiryDate (유효기간)</td><td><span class='tag-ok'>✅ 개선</span></td><td>20261204</td><td><span class='muted'>(없음)</span></td><td>20261204</td></tr>
+<tr><td>필드 - supplierAddress (공급자 주소)</td><td><span class='tag-chg'>🔄 변화</span></td><td>경기도 안양시 만안구 만안로 17 203A호(안양동,명지캐럿 162)</td><td>경기도 안양시 만안구 만안론 17 203A호(안양동,명지캐렇 162</td><td>경기도 안양시 만안구 만안로 17</td></tr>
+<tr><td>행1 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>에스피씨세파클러캡슐250mg 30</td><td>에스피씨세파클러캠슬250mg</td><td>669700020 에스씨세파클러캡슘250mg 30 캡슬 30 10,044 301,320()에스 2026120</td></tr>
+<tr><td>행1 - lotNo (LOT번호)</td><td><span class='tag-chg'>🔄 변화</span></td><td>23004A</td><td>017505</td><td><span class='muted'>(없음)</span></td></tr>
+</tbody></table></div>
+<h3 class='tog' onclick='tog(this)'><span class='arr'>▶</span>3-2.jpg &nbsp; <span class='tag-bad'>❌ 악화 1</span> &nbsp;<span class='tag-ok'>✅ 개선 2</span> &nbsp;<span class='tag-chg'>🔄 변화 4</span></h3>
+<div class='tog-body' style='display:none'>
+<table><thead><tr><th>위치</th><th>상태</th><th>GT(정답)</th><th>직전 추출값</th><th>이번 추출값</th></tr></thead><tbody>
+<tr><td>필드 - buyerCompany (공급받는자 상호)</td><td><span class='tag-bad'>❌ 악화</span></td><td>백제약품(주)영등포지점</td><td>백제약품(주)영등포지점</td><td>제조회사</td></tr>
+<tr><td>필드 - buyerRepresentative (공급받는자 대표자)</td><td><span class='tag-ok'>✅ 개선</span></td><td>김승관</td><td>위피아</td><td>김승관</td></tr>
+<tr><td>필드 - totalAmount (합계금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>301,320</td><td>889,035</td><td>301,320</td></tr>
+<tr><td>필드 - buyerAddress (공급받는자 주소)</td><td><span class='tag-chg'>🔄 변화</span></td><td>서울특별시 구로구 공원로8길 25 (구로동)</td><td>서울특별시 구로구 공원로8길 24 (구로동</td><td>서울특별시 구로구 공원로8길24(구로동</td></tr>
+<tr><td>필드 - supplierAddress (공급자 주소)</td><td><span class='tag-chg'>🔄 변화</span></td><td>경기도 안양시 만안구 만안로 17 203A호(안양동,명지캐럿 162)</td><td>경기도 안양시 만안구 만안로 17 203A호(안양동,명지캐 162</td><td>경기도 안양시 만안구 만안롯 17</td></tr>
+<tr><td>행1 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>에스피씨세파클러캡슐250mg 30</td><td>성명최정</td><td>에스피씨세파클러캡슐250mg 30캡슐</td></tr>
+<tr><td>행1 - quantity (수량)</td><td><span class='tag-chg'>🔄 변화</span></td><td>30</td><td><span class='muted'>(없음)</span></td><td>4</td></tr>
+</tbody></table></div>
+<h3 class='tog' onclick='tog(this)'><span class='arr'>▶</span>3-3.jpg &nbsp; <span class='tag-bad'>❌ 악화 4</span> &nbsp;<span class='tag-chg'>🔄 변화 4</span></h3>
+<div class='tog-body' style='display:none'>
+<table><thead><tr><th>위치</th><th>상태</th><th>GT(정답)</th><th>직전 추출값</th><th>이번 추출값</th></tr></thead><tbody>
+<tr><td>필드 - buyerCompany (공급받는자 상호)</td><td><span class='tag-bad'>❌ 악화</span></td><td>백제약품(주)영등포지점</td><td>백제약품(주)영등포지점</td><td>제조회사</td></tr>
+<tr><td>필드 - supplyAmount (공급가액)</td><td><span class='tag-bad'>❌ 악화</span></td><td>273,927</td><td>273,927</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>필드 - taxAmount (세액)</td><td><span class='tag-bad'>❌ 악화</span></td><td>27,393</td><td>27,393</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>필드 - totalAmount (합계금액)</td><td><span class='tag-bad'>❌ 악화</span></td><td>301,320</td><td>301,320</td><td>273,927</td></tr>
+<tr><td>필드 - buyerAddress (공급받는자 주소)</td><td><span class='tag-chg'>🔄 변화</span></td><td>서울특별시 구로구 공원로8길 25 (구로동)</td><td>서울특별시 구로구 공원로8길 24 (구로동</td><td>서울특별시 구로구 공원로8길 24(구로동</td></tr>
+<tr><td>필드 - buyerRepresentative (공급받는자 대표자)</td><td><span class='tag-chg'>🔄 변화</span></td><td>김승관</td><td><span class='muted'>(없음)</span></td><td>최정</td></tr>
+<tr><td>필드 - supplierAddress (공급자 주소)</td><td><span class='tag-chg'>🔄 변화</span></td><td>경기도 안양시 만안구 만안로 17 203A호(안양동,명지캐럿 162)</td><td>경기도 안양시 만안구 만안로17</td><td>앞았시 만안구</td></tr>
+<tr><td>행1 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>에스피씨세파클러캡슐250mg 30</td><td>에스피씨세파클러캠슬250mg_30_캠슬</td><td>에스피씨세파클러캡슬250mg30 캡슬</td></tr>
+</tbody></table></div>
+<h3 class='tog' onclick='tog(this)'><span class='arr'>▶</span>3.pdf &nbsp; <span class='tag-bad'>❌ 악화 1</span> &nbsp;<span class='tag-ok'>✅ 개선 5</span> &nbsp;<span class='tag-chg'>🔄 변화 4</span></h3>
+<div class='tog-body' style='display:none'>
+<table><thead><tr><th>위치</th><th>상태</th><th>GT(정답)</th><th>직전 추출값</th><th>이번 추출값</th></tr></thead><tbody>
+<tr><td>필드 - buyerCompany (공급받는자 상호)</td><td><span class='tag-bad'>❌ 악화</span></td><td>백제약품(주)영등포지점</td><td>백제약품(주)영등포지점</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>필드 - supplyAmount (공급가액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>273,927</td><td>27,393</td><td>273,927</td></tr>
+<tr><td>필드 - totalAmount (합계금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>301,320</td><td>54,786</td><td>301,320</td></tr>
+<tr><td>행1 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>301,320</td><td><span class='muted'>(없음)</span></td><td>301,320</td></tr>
+<tr><td>행1 - lotNo (LOT번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>23004A</td><td><span class='muted'>(없음)</span></td><td>23004A</td></tr>
+<tr><td>행1 - productCode (품목코드)</td><td><span class='tag-ok'>✅ 개선</span></td><td>669700020</td><td><span class='muted'>(없음)</span></td><td>669700020</td></tr>
+<tr><td>필드 - buyerAddress (공급받는자 주소)</td><td><span class='tag-chg'>🔄 변화</span></td><td>서울특별시 구로구 공원로8길 25 (구로동)</td><td>서울특별시 구로구 공원로8길 24(구로동 203A호(안양동 명지캐텃162</td><td>서울특별시구로구 공원로8길24(구로동</td></tr>
+<tr><td>필드 - buyerRepresentative (공급받는자 대표자)</td><td><span class='tag-chg'>🔄 변화</span></td><td>김승관</td><td><span class='muted'>(없음)</span></td><td>최정</td></tr>
+<tr><td>필드 - supplierAddress (공급자 주소)</td><td><span class='tag-chg'>🔄 변화</span></td><td>경기도 안양시 만안구 만안로 17 203A호(안양동,명지캐럿 162)</td><td>경기도 안양시만안구 만안로17 203A호(안양동 명지캐텃162</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행1 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>에스피씨세파클러캡슐250mg 30</td><td><span class='muted'>(없음)</span></td><td>에스피씨세파클러캡슐250mg 30 캡슐</td></tr>
+</tbody></table></div>
+<h3 class='tog' onclick='tog(this)'><span class='arr'>▶</span>4-1.jpg &nbsp; <span class='tag-bad'>❌ 악화 1</span> &nbsp;<span class='tag-chg'>🔄 변화 8</span></h3>
+<div class='tog-body' style='display:none'>
+<table><thead><tr><th>위치</th><th>상태</th><th>GT(정답)</th><th>직전 추출값</th><th>이번 추출값</th></tr></thead><tbody>
+<tr><td>필드 - supplyAmount (공급가액)</td><td><span class='tag-bad'>❌ 악화</span></td><td>25,760,000</td><td>25,760,000</td><td>200,811</td></tr>
+<tr><td>필드 - buyerAddress (공급받는자 주소)</td><td><span class='tag-chg'>🔄 변화</span></td><td>(17811)경기도 평택시 청북읍 청북로 175(현곡리)</td><td>서울특법시 병등포구 당산토41길 11,301</td><td>서울특별시영용포구당산로41길 11,301</td></tr>
+<tr><td>필드 - buyerCompany (공급받는자 상호)</td><td><span class='tag-chg'>🔄 변화</span></td><td>백제약품(주)영등포지점</td><td>백계약통(주)형동표지쟁</td><td>백계약통(주)영동표지점</td></tr>
+<tr><td>필드 - supplierAddress (공급자 주소)</td><td><span class='tag-chg'>🔄 변화</span></td><td>서울특별시 영등포구 당산로41길 11,301호 302호(당산동4가,SK V1센터)</td><td>서울특법시 병등포구 당산토41길 11,301</td><td>서울특별시영용포구당산로41길 11,301</td></tr>
+<tr><td>필드 - supplierCompany (공급자 상호)</td><td><span class='tag-chg'>🔄 변화</span></td><td>주식회사엘비아브노바</td><td>주식회사 엘써아보노바</td><td>주식회사 엘버아보노바</td></tr>
+<tr><td>필드 - supplierRepresentative (공급자 대표자)</td><td><span class='tag-chg'>🔄 변화</span></td><td>남이레</td><td>동록번호</td><td>상효</td></tr>
+<tr><td>필드 - taxAmount (세액)</td><td><span class='tag-chg'>🔄 변화</span></td><td>2,576,000</td><td>760,000</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>필드 - totalAmount (합계금액)</td><td><span class='tag-chg'>🔄 변화</span></td><td>28,336,000</td><td>26,520,000</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행1 - quantity (수량)</td><td><span class='tag-chg'>🔄 변화</span></td><td>1,000</td><td>28,338.00 25,760,000 2,578,000</td><td>25,760,000 2,578,000</td></tr>
+</tbody></table></div>
+<h3 class='tog' onclick='tog(this)'><span class='arr'>▶</span>4-2.jpg &nbsp; <span class='tag-ok'>✅ 개선 4</span> &nbsp;<span class='tag-chg'>🔄 변화 7</span></h3>
+<div class='tog-body' style='display:none'>
+<table><thead><tr><th>위치</th><th>상태</th><th>GT(정답)</th><th>직전 추출값</th><th>이번 추출값</th></tr></thead><tbody>
+<tr><td>필드 - buyerBizNumber (공급받는자 사업자번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>113-85-04425</td><td><span class='muted'>(없음)</span></td><td>113-85-04425</td></tr>
+<tr><td>필드 - buyerRepresentative (공급받는자 대표자)</td><td><span class='tag-ok'>✅ 개선</span></td><td>김승관</td><td><span class='muted'>(없음)</span></td><td>김승관</td></tr>
+<tr><td>필드 - issueDate (작성일자)</td><td><span class='tag-ok'>✅ 개선</span></td><td>2024-07-02</td><td>1450-28-85</td><td>2024-07-02</td></tr>
+<tr><td>필드 - supplierBizNumber (공급자 사업자번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>117-81-53390</td><td><span class='muted'>(없음)</span></td><td>117-81-53390</td></tr>
+<tr><td>필드 - buyerCompany (공급받는자 상호)</td><td><span class='tag-chg'>🔄 변화</span></td><td>백제약품(주)영등포지점</td><td><span class='muted'>(없음)</span></td><td>학(주)영</td></tr>
+<tr><td>필드 - supplierCompany (공급자 상호)</td><td><span class='tag-chg'>🔄 변화</span></td><td>주식회사엘비아브노바</td><td><span class='muted'>(없음)</span></td><td>주식회사</td></tr>
+<tr><td>필드 - supplierRepresentative (공급자 대표자)</td><td><span class='tag-chg'>🔄 변화</span></td><td>남이레</td><td><span class='muted'>(없음)</span></td><td>세역</td></tr>
+<tr><td>필드 - totalAmount (합계금액)</td><td><span class='tag-chg'>🔄 변화</span></td><td>28,336,000</td><td>220,202,202</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행1 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>클리마토플란정</td><td>000 xoa "ONOT 1OE 4 (0 눔을 20nVZ0 주려늘을 2206 0EE 1 1120-698-70</td><td>2 업데 클리마로플란정</td></tr>
+<tr><td>행1 - lotNo (LOT번호)</td><td><span class='tag-chg'>🔄 변화</span></td><td>0350623-231024-260811</td><td>2206</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행1 - quantity (수량)</td><td><span class='tag-chg'>🔄 변화</span></td><td>1,000</td><td>20</td><td><span class='muted'>(없음)</span></td></tr>
+</tbody></table></div>
+<h3 class='tog' onclick='tog(this)'><span class='arr'>▶</span>4-3.jpg &nbsp; <span class='tag-ok'>✅ 개선 3</span> &nbsp;<span class='tag-chg'>🔄 변화 6</span></h3>
+<div class='tog-body' style='display:none'>
+<table><thead><tr><th>위치</th><th>상태</th><th>GT(정답)</th><th>직전 추출값</th><th>이번 추출값</th></tr></thead><tbody>
+<tr><td>필드 - buyerBizNumber (공급받는자 사업자번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>113-85-04425</td><td><span class='muted'>(없음)</span></td><td>113-85-04425</td></tr>
+<tr><td>필드 - issueDate (작성일자)</td><td><span class='tag-ok'>✅ 개선</span></td><td>2024-07-02</td><td>2009-42-00</td><td>2024-07-02</td></tr>
+<tr><td>필드 - supplierBizNumber (공급자 사업자번호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>117-81-53390</td><td><span class='muted'>(없음)</span></td><td>117-81-53390</td></tr>
+<tr><td>필드 - buyerRepresentative (공급받는자 대표자)</td><td><span class='tag-chg'>🔄 변화</span></td><td>김승관</td><td><span class='muted'>(없음)</span></td><td>업데</td></tr>
+<tr><td>필드 - supplierRepresentative (공급자 대표자)</td><td><span class='tag-chg'>🔄 변화</span></td><td>남이레</td><td><span class='muted'>(없음)</span></td><td>조업/도소네</td></tr>
+<tr><td>필드 - totalAmount (합계금액)</td><td><span class='tag-chg'>🔄 변화</span></td><td>28,336,000</td><td>2,012,200</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행1 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>클리마토플란정</td><td>후술을 후&amp;</td><td>클리아트플란정</td></tr>
+<tr><td>행1 - lotNo (LOT번호)</td><td><span class='tag-chg'>🔄 변화</span></td><td>0350623-231024-260811</td><td><span class='muted'>(없음)</span></td><td>2024</td></tr>
+<tr><td>행1 - quantity (수량)</td><td><span class='tag-chg'>🔄 변화</span></td><td>1,000</td><td>11</td><td>2,024</td></tr>
+</tbody></table></div>
+<h3 class='tog' onclick='tog(this)'><span class='arr'>▶</span>4.pdf &nbsp; <span class='tag-ok'>✅ 개선 6</span> &nbsp;<span class='tag-chg'>🔄 변화 7</span></h3>
+<div class='tog-body' style='display:none'>
+<table><thead><tr><th>위치</th><th>상태</th><th>GT(정답)</th><th>직전 추출값</th><th>이번 추출값</th></tr></thead><tbody>
+<tr><td>필드 - buyerRepresentative (공급받는자 대표자)</td><td><span class='tag-ok'>✅ 개선</span></td><td>김승관</td><td>똥목</td><td>김승관</td></tr>
+<tr><td>필드 - supplyAmount (공급가액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>25,760,000</td><td>2,576,000</td><td>25,760,000</td></tr>
+<tr><td>필드 - taxAmount (세액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>2,576,000</td><td><span class='muted'>(없음)</span></td><td>2,576,000</td></tr>
+<tr><td>필드 - totalAmount (합계금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>28,336,000</td><td>28,338,000</td><td>28,336,000</td></tr>
+<tr><td>행1 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>25,760,000</td><td><span class='muted'>(없음)</span></td><td>25,760,000</td></tr>
+<tr><td>행1 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>1,000</td><td><span class='muted'>(없음)</span></td><td>1,000</td></tr>
+<tr><td>필드 - buyerAddress (공급받는자 주소)</td><td><span class='tag-chg'>🔄 변화</span></td><td>(17811)경기도 평택시 청북읍 청북로 175(현곡리)</td><td>17811] 경기도 통택시 창북읍 청북료 75(연곡데</td><td>서울특별시영등포구당산로41길11,301 17811)경기도백시 청북읍 청복175(현목례</td></tr>
+<tr><td>필드 - buyerCompany (공급받는자 상호)</td><td><span class='tag-chg'>🔄 변화</span></td><td>백제약품(주)영등포지점</td><td>백계약품(주)형동모지점</td><td>백계약동(주)영동표지</td></tr>
+<tr><td>필드 - issueDate (작성일자)</td><td><span class='tag-chg'>🔄 변화</span></td><td>2024-07-02</td><td>7024-41-03</td><td>2020-03-03</td></tr>
+<tr><td>필드 - supplierAddress (공급자 주소)</td><td><span class='tag-chg'>🔄 변화</span></td><td>서울특별시 영등포구 당산로41길 11,301호 302호(당산동4가,SK V1센터)</td><td>서울특별시 영등포구 당산로41길 11,301 302(당산동4가,8K&lt;V1 센터</td><td>302(당산동4가,KV1센터</td></tr>
+<tr><td>필드 - supplierCompany (공급자 상호)</td><td><span class='tag-chg'>🔄 변화</span></td><td>주식회사엘비아브노바</td><td>주식회사 엘벼아브노바</td><td>주식회사 엘비아브노바대표</td></tr>
+<tr><td>행1 - lotNo (LOT번호)</td><td><span class='tag-chg'>🔄 변화</span></td><td>0350623-231024-260811</td><td><span class='muted'>(없음)</span></td><td>0350623-231024-200811</td></tr>
+<tr><td>행1 - unitPrice (단가)</td><td><span class='tag-chg'>🔄 변화</span></td><td>28,338</td><td><span class='muted'>(없음)</span></td><td>28,336</td></tr>
+</tbody></table></div>
+<h3 class='tog' onclick='tog(this)'><span class='arr'>▶</span>5-1.jpg &nbsp; <span class='tag-bad'>❌ 악화 2</span> &nbsp;<span class='tag-ok'>✅ 개선 6</span> &nbsp;<span class='tag-chg'>🔄 변화 8</span></h3>
+<div class='tog-body' style='display:none'>
+<table><thead><tr><th>위치</th><th>상태</th><th>GT(정답)</th><th>직전 추출값</th><th>이번 추출값</th></tr></thead><tbody>
+<tr><td>필드 - supplierCompany (공급자 상호)</td><td><span class='tag-bad'>❌ 악화</span></td><td>일양약품</td><td>일양약품</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행6 - itemName (품명)</td><td><span class='tag-bad'>❌ 악화</span></td><td>노루모에프내복액75ML</td><td>노루모에프내복액75ML</td><td>노루모에프내북액75ML</td></tr>
+<tr><td>필드 - buyerRepresentative (공급받는자 대표자)</td><td><span class='tag-ok'>✅ 개선</span></td><td>김승관</td><td><span class='muted'>(없음)</span></td><td>김승관</td></tr>
+<tr><td>필드 - issueDate (작성일자)</td><td><span class='tag-ok'>✅ 개선</span></td><td>2024-07-19</td><td>2024-07-22</td><td>2024-07-19</td></tr>
+<tr><td>필드 - supplierRepresentative (공급자 대표자)</td><td><span class='tag-ok'>✅ 개선</span></td><td>김동연,정유석</td><td>김승관</td><td>김동연,정유석</td></tr>
+<tr><td>필드 - supplyAmount (공급가액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>3,046,635</td><td>79,763,073</td><td>3,046,635</td></tr>
+<tr><td>필드 - taxAmount (세액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>304,663</td><td><span class='muted'>(없음)</span></td><td>304,663</td></tr>
+<tr><td>필드 - totalAmount (합계금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>3,351,298</td><td>205,000,000</td><td>3,351,298</td></tr>
+<tr><td>필드 - buyerAddress (공급받는자 주소)</td><td><span class='tag-chg'>🔄 변화</span></td><td>서울특별시 구로구 공원로8길 24(구로동)</td><td>서울특벌시 구로구 공원로8길 24 (구로동 서울강서약국</td><td>우서울강저약국팀거래처코드 사울독받자 구모구 공원로8강24(무로동</td></tr>
+<tr><td>필드 - buyerCompany (공급받는자 상호)</td><td><span class='tag-chg'>🔄 변화</span></td><td>백제약품(주)영등포지점</td><td>백제약품(주)명등포지점</td><td>백제약종(주)명등포지점</td></tr>
+<tr><td>필드 - supplierAddress (공급자 주소)</td><td><span class='tag-chg'>🔄 변화</span></td><td>경기도 용인시 기흥구 하갈로 110(하갈동)</td><td>경기도 용인시 기흥구</td><td>경기도용인시 기흥구</td></tr>
+<tr><td>행3 - amount (금액)</td><td><span class='tag-chg'>🔄 변화</span></td><td>460,000</td><td>3,351,298</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행3 - quantity (수량)</td><td><span class='tag-chg'>🔄 변화</span></td><td>200</td><td>100</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행4 - amount (금액)</td><td><span class='tag-chg'>🔄 변화</span></td><td>163,635</td><td>13,450,000</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행6 - amount (금액)</td><td><span class='tag-chg'>🔄 변화</span></td><td>1,650,000</td><td>79,763,073</td><td>3,046,635</td></tr>
+<tr><td>행6 - unitPrice (단가)</td><td><span class='tag-chg'>🔄 변화</span></td><td>550</td><td>3,046,635</td><td><span class='muted'>(없음)</span></td></tr>
+</tbody></table></div>
+<h3 class='tog' onclick='tog(this)'><span class='arr'>▶</span>5-2.jpg &nbsp; <span class='tag-bad'>❌ 악화 3</span> &nbsp;<span class='tag-ok'>✅ 개선 2</span> &nbsp;<span class='tag-chg'>🔄 변화 3</span></h3>
+<div class='tog-body' style='display:none'>
+<table><thead><tr><th>위치</th><th>상태</th><th>GT(정답)</th><th>직전 추출값</th><th>이번 추출값</th></tr></thead><tbody>
+<tr><td>필드 - issueDate (작성일자)</td><td><span class='tag-bad'>❌ 악화</span></td><td>2024-07-19</td><td>2024-07-19</td><td>2024-07-02</td></tr>
+<tr><td>필드 - supplierRepresentative (공급자 대표자)</td><td><span class='tag-bad'>❌ 악화</span></td><td>김동연,정유석</td><td>김동연,정유석</td><td>감동연,정휴석</td></tr>
+<tr><td>행2 - itemName (품명)</td><td><span class='tag-bad'>❌ 악화</span></td><td>노루모에이스산250G캔</td><td>노루모에이스산250G캔</td><td>노루모에이스산250G캔 O</td></tr>
+<tr><td>필드 - buyerCompany (공급받는자 상호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>백제약품(주)영등포지점</td><td>백제약품(주)명등포지점</td><td>백제약품(주)영등포지점</td></tr>
+<tr><td>행4 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>300</td><td>100</td><td>300</td></tr>
+<tr><td>필드 - buyerAddress (공급받는자 주소)</td><td><span class='tag-chg'>🔄 변화</span></td><td>서울특별시 구로구 공원로8길 24(구로동)</td><td>서울특별시 구로구 공원호8길 24(구로동</td><td>사울목발시 구로구 공원로8길 24(구로등</td></tr>
+<tr><td>필드 - supplierAddress (공급자 주소)</td><td><span class='tag-chg'>🔄 변화</span></td><td>경기도 용인시 기흥구 하갈로 110(하갈동)</td><td>경기도 용인시 기흥구 하갈로 110(하갈동</td><td>경기도용인시 기흥구 하갈로 110(하갈동</td></tr>
+<tr><td>행4 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>나프록센나트륨정10T</td><td>나프록센나트름정10T</td><td>나프록센나트롭정10T</td></tr>
+</tbody></table></div>
+<h3 class='tog' onclick='tog(this)'><span class='arr'>▶</span>5-3.jpg &nbsp; <span class='tag-bad'>❌ 악화 4</span> &nbsp;<span class='tag-ok'>✅ 개선 17</span> &nbsp;<span class='tag-chg'>🔄 변화 7</span></h3>
+<div class='tog-body' style='display:none'>
+<table><thead><tr><th>위치</th><th>상태</th><th>GT(정답)</th><th>직전 추출값</th><th>이번 추출값</th></tr></thead><tbody>
+<tr><td>필드 - supplierRepresentative (공급자 대표자)</td><td><span class='tag-bad'>❌ 악화</span></td><td>김동연,정유석</td><td>김동연,정유석</td><td>김동연,정휴석</td></tr>
+<tr><td>행1 - itemName (품명)</td><td><span class='tag-bad'>❌ 악화</span></td><td>두피나액30ML</td><td>두피나액30ML</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행2 - itemName (품명)</td><td><span class='tag-bad'>❌ 악화</span></td><td>노루모에이스산250G캔</td><td>노루모에이스산250G캔</td><td>O</td></tr>
+<tr><td>행3 - itemName (품명)</td><td><span class='tag-bad'>❌ 악화</span></td><td>노루모에스산15P</td><td>노루모에스산15P</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>필드 - buyerCompany (공급받는자 상호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>백제약품(주)영등포지점</td><td>백제약품(주명등포지점</td><td>백제약품(주)영등포지점</td></tr>
+<tr><td>필드 - supplierAddress (공급자 주소)</td><td><span class='tag-ok'>✅ 개선</span></td><td>경기도 용인시 기흥구 하갈로 110(하갈동)</td><td>경기도 용인시 기흥구 하갈로 110(하갈동 김동연,정유석</td><td>경기도 용인시 기흥구 하갈로 110(하갈동</td></tr>
+<tr><td>행1 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>273,000</td><td><span class='muted'>(없음)</span></td><td>273,000</td></tr>
+<tr><td>행1 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>2,730</td><td><span class='muted'>(없음)</span></td><td>2,730</td></tr>
+<tr><td>행2 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>400,000</td><td><span class='muted'>(없음)</span></td><td>400,000</td></tr>
+<tr><td>행2 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>100</td><td><span class='muted'>(없음)</span></td><td>100</td></tr>
+<tr><td>행2 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>4,000</td><td><span class='muted'>(없음)</span></td><td>4,000</td></tr>
+<tr><td>행3 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>460,000</td><td><span class='muted'>(없음)</span></td><td>460,000</td></tr>
+<tr><td>행3 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>200</td><td><span class='muted'>(없음)</span></td><td>200</td></tr>
+<tr><td>행3 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>2,300</td><td><span class='muted'>(없음)</span></td><td>2,300</td></tr>
+<tr><td>행4 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>163,635</td><td><span class='muted'>(없음)</span></td><td>163,635</td></tr>
+<tr><td>행4 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>300</td><td><span class='muted'>(없음)</span></td><td>300</td></tr>
+<tr><td>행4 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>545</td><td><span class='muted'>(없음)</span></td><td>545</td></tr>
+<tr><td>행5 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>2,000</td><td><span class='muted'>(없음)</span></td><td>2,000</td></tr>
+<tr><td>행6 - amount (금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>1,650,000</td><td><span class='muted'>(없음)</span></td><td>1,650,000</td></tr>
+<tr><td>행6 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>3,000</td><td><span class='muted'>(없음)</span></td><td>3,000</td></tr>
+<tr><td>행6 - unitPrice (단가)</td><td><span class='tag-ok'>✅ 개선</span></td><td>550</td><td><span class='muted'>(없음)</span></td><td>550</td></tr>
+<tr><td>필드 - buyerAddress (공급받는자 주소)</td><td><span class='tag-chg'>🔄 변화</span></td><td>서울특별시 구로구 공원로8길 24(구로동)</td><td>서울특벌시 구로구 공원로8길 24(구로동</td><td>사울목발지 구도구 공원로8길 24 (구로동</td></tr>
+<tr><td>필드 - supplyAmount (공급가액)</td><td><span class='tag-chg'>🔄 변화</span></td><td>3,046,635</td><td><span class='muted'>(없음)</span></td><td>304,663</td></tr>
+<tr><td>필드 - taxAmount (세액)</td><td><span class='tag-chg'>🔄 변화</span></td><td>304,663</td><td><span class='muted'>(없음)</span></td><td>1,650,000</td></tr>
+<tr><td>필드 - totalAmount (합계금액)</td><td><span class='tag-chg'>🔄 변화</span></td><td>3,351,298</td><td>163,635</td><td>205,000,000</td></tr>
+<tr><td>행1 - quantity (수량)</td><td><span class='tag-chg'>🔄 변화</span></td><td>100</td><td><span class='muted'>(없음)</span></td><td>400</td></tr>
+<tr><td>행4 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>나프록센나트륨정10T</td><td>나프록센나트름정10T</td><td>100</td></tr>
+<tr><td>행5 - quantity (수량)</td><td><span class='tag-chg'>🔄 변화</span></td><td>50</td><td>22</td><td><span class='muted'>(없음)</span></td></tr>
+</tbody></table></div>
+<h3 class='tog' onclick='tog(this)'><span class='arr'>▶</span>5.pdf &nbsp; <span class='tag-ok'>✅ 개선 17</span> &nbsp;<span class='tag-chg'>🔄 변화 4</span></h3>
+<div class='tog-body' style='display:none'>
+<table><thead><tr><th>위치</th><th>상태</th><th>GT(정답)</th><th>직전 추출값</th><th>이번 추출값</th></tr></thead><tbody>
+<tr><td>필드 - buyerCompany (공급받는자 상호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>백제약품(주)영등포지점</td><td>백제약품(주영능교지점</td><td>백제약품(주)영등포지점</td></tr>
+<tr><td>필드 - supplyAmount (공급가액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>3,046,635</td><td>3,351,298</td><td>3,046,635</td></tr>
+<tr><td>필드 - taxAmount (세액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>304,663</td><td>3,351,298</td><td>304,663</td></tr>
+<tr><td>필드 - totalAmount (합계금액)</td><td><span class='tag-ok'>✅ 개선</span></td><td>3,351,298</td><td>205,000,000</td><td>3,351,298</td></tr>
+<tr><td>행1 - itemName (품명)</td><td><span class='tag-ok'>✅ 개선</span></td><td>두피나액30ML</td><td><span class='muted'>(없음)</span></td><td>두피나액30ML</td></tr>
+<tr><td>행1 - productCode (품목코드)</td><td><span class='tag-ok'>✅ 개선</span></td><td>DPNL3OM</td><td><span class='muted'>(없음)</span></td><td>DPNL3OM</td></tr>
+<tr><td>행1 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>100</td><td>10Q</td><td>100</td></tr>
+<tr><td>행2 - productCode (품목코드)</td><td><span class='tag-ok'>✅ 개선</span></td><td>INAP250G</td><td><span class='muted'>(없음)</span></td><td>INAP250G</td></tr>
+<tr><td>행3 - itemName (품명)</td><td><span class='tag-ok'>✅ 개선</span></td><td>노루모에스산15P</td><td><span class='muted'>(없음)</span></td><td>노루모에스산15P</td></tr>
+<tr><td>행3 - productCode (품목코드)</td><td><span class='tag-ok'>✅ 개선</span></td><td>NASP15P</td><td><span class='muted'>(없음)</span></td><td>NASP15P</td></tr>
+<tr><td>행4 - itemName (품명)</td><td><span class='tag-ok'>✅ 개선</span></td><td>나프록센나트륨정10T</td><td>100</td><td>나프록센나트륨정10T</td></tr>
+<tr><td>행4 - productCode (품목코드)</td><td><span class='tag-ok'>✅ 개선</span></td><td>NPRT10T</td><td><span class='muted'>(없음)</span></td><td>NPRT10T</td></tr>
+<tr><td>행5 - itemName (품명)</td><td><span class='tag-ok'>✅ 개선</span></td><td>노루모듀얼액션현탁액4P</td><td><span class='muted'>(없음)</span></td><td>노루모듀얼액션현탁액4P</td></tr>
+<tr><td>행5 - productCode (품목코드)</td><td><span class='tag-ok'>✅ 개선</span></td><td>NRDA4P</td><td><span class='muted'>(없음)</span></td><td>NRDA4P</td></tr>
+<tr><td>행5 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>50</td><td><span class='muted'>(없음)</span></td><td>50</td></tr>
+<tr><td>행6 - itemName (품명)</td><td><span class='tag-ok'>✅ 개선</span></td><td>노루모에프내복액75ML</td><td><span class='muted'>(없음)</span></td><td>노루모에프내복액75ML</td></tr>
+<tr><td>행6 - productCode (품목코드)</td><td><span class='tag-ok'>✅ 개선</span></td><td>NRFS75M</td><td><span class='muted'>(없음)</span></td><td>NRFS75M</td></tr>
+<tr><td>필드 - buyerAddress (공급받는자 주소)</td><td><span class='tag-chg'>🔄 변화</span></td><td>서울특별시 구로구 공원로8길 24(구로동)</td><td>사울특별시 구로구 공원로8길 24 (구로동</td><td>사술특발자 구로구 공원토8길24(구로동</td></tr>
+<tr><td>필드 - supplierAddress (공급자 주소)</td><td><span class='tag-chg'>🔄 변화</span></td><td>경기도 용인시 기흥구 하갈로 110(하갈동)</td><td>경기도 용인시기흥구 하갈로 110(하갈동</td><td>경기도용인시기흥구 하갈로110(하갈동</td></tr>
+<tr><td>행2 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>노루모에이스산250G캔</td><td>02</td><td>노루모에이스산250G캔 Oc</td></tr>
+<tr><td>행6 - quantity (수량)</td><td><span class='tag-chg'>🔄 변화</span></td><td>3,000</td><td>3,000</td><td>3000</td></tr>
+</tbody></table></div>
+<h3 class='tog' onclick='tog(this)'><span class='arr'>▶</span>6-1.jpg &nbsp; <span class='tag-bad'>❌ 악화 2</span> &nbsp;<span class='tag-ok'>✅ 개선 2</span> &nbsp;<span class='tag-chg'>🔄 변화 2</span></h3>
+<div class='tog-body' style='display:none'>
+<table><thead><tr><th>위치</th><th>상태</th><th>GT(정답)</th><th>직전 추출값</th><th>이번 추출값</th></tr></thead><tbody>
+<tr><td>행1 - itemName (품명)</td><td><span class='tag-bad'>❌ 악화</span></td><td>알코텔정100T</td><td>알코텔정100T</td><td>에소시움정20MG28T</td></tr>
+<tr><td>행2 - itemName (품명)</td><td><span class='tag-bad'>❌ 악화</span></td><td>액티글리정30T</td><td>액티글리정30T</td><td>알코텔정100T</td></tr>
+<tr><td>행3 - itemName (품명)</td><td><span class='tag-ok'>✅ 개선</span></td><td>올고탄정10MG30T</td><td>에소시움정20MG28T</td><td>올고탄정10MG30T</td></tr>
+<tr><td>행5 - itemName (품명)</td><td><span class='tag-ok'>✅ 개선</span></td><td>알드린현탁액1.5G30P</td><td>앤디락생캡슬300C</td><td>알드린현탁액1.5G30P</td></tr>
+<tr><td>행4 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>에소시움정20MG28T</td><td>올고탄정10MG30T</td><td>앤디락생캡슬300C</td></tr>
+<tr><td>행6 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>앤디락생캡슬300C</td><td>알드린현탁액1.5G30P</td><td>액티글리정30T</td></tr>
+</tbody></table></div>
+<h3 class='tog' onclick='tog(this)'><span class='arr'>▶</span>6-2.jpg &nbsp; <span class='tag-bad'>❌ 악화 5</span> &nbsp;<span class='tag-chg'>🔄 변화 17</span></h3>
+<div class='tog-body' style='display:none'>
+<table><thead><tr><th>위치</th><th>상태</th><th>GT(정답)</th><th>직전 추출값</th><th>이번 추출값</th></tr></thead><tbody>
+<tr><td>필드 - buyerBizNumber (공급받는자 사업자번호)</td><td><span class='tag-bad'>❌ 악화</span></td><td>113-85-04425</td><td>113-85-04425</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>필드 - buyerCompany (공급받는자 상호)</td><td><span class='tag-bad'>❌ 악화</span></td><td>백제약품(주)영등포지점</td><td>백제약품(주)영등포지점</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>필드 - issueDate (작성일자)</td><td><span class='tag-bad'>❌ 악화</span></td><td>2024-07-19</td><td>2024-07-19</td><td>2061-20-02</td></tr>
+<tr><td>행1 - itemName (품명)</td><td><span class='tag-bad'>❌ 악화</span></td><td>알코텔정100T</td><td>알코텔정100T</td><td>1/ X()K VB : Y울 0N107 20007 6 20007 10 20007 10</td></tr>
+<tr><td>행2 - itemName (품명)</td><td><span class='tag-bad'>❌ 악화</span></td><td>액티글리정30T</td><td>액티글리정30T</td><td>22-48-811 몸 100 10 1OEOWO 10 00 61-20-02 ZI1:SERY VLLS10:SER</td></tr>
+<tr><td>행1 - lotNo (LOT번호)</td><td><span class='tag-chg'>🔄 변화</span></td><td>24001</td><td><span class='muted'>(없음)</span></td><td>20007</td></tr>
+<tr><td>행3 - expiryDate (유효기간)</td><td><span class='tag-chg'>🔄 변화</span></td><td>260809</td><td><span class='muted'>(없음)</span></td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행3 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>올고탄정10MG30T</td><td>올고탄정10MG30T</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행3 - lotNo (LOT번호)</td><td><span class='tag-chg'>🔄 변화</span></td><td>23001</td><td><span class='muted'>(없음)</span></td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행3 - productCode (품목코드)</td><td><span class='tag-chg'>🔄 변화</span></td><td>OLGT30T</td><td><span class='muted'>(없음)</span></td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행3 - quantity (수량)</td><td><span class='tag-chg'>🔄 변화</span></td><td>10</td><td><span class='muted'>(없음)</span></td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행4 - expiryDate (유효기간)</td><td><span class='tag-chg'>🔄 변화</span></td><td>251213</td><td><span class='muted'>(없음)</span></td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행4 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>에소시움정20MG28T</td><td>에소시움정20MG28T</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행4 - lotNo (LOT번호)</td><td><span class='tag-chg'>🔄 변화</span></td><td>T17322003</td><td><span class='muted'>(없음)</span></td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행4 - productCode (품목코드)</td><td><span class='tag-chg'>🔄 변화</span></td><td>ASZT28T</td><td><span class='muted'>(없음)</span></td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행4 - quantity (수량)</td><td><span class='tag-chg'>🔄 변화</span></td><td>30</td><td><span class='muted'>(없음)</span></td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행5 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>알드린현탁액1.5G30P</td><td>알드린현탁액1.5G30P</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행5 - productCode (품목코드)</td><td><span class='tag-chg'>🔄 변화</span></td><td>ALG30P</td><td><span class='muted'>(없음)</span></td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행5 - quantity (수량)</td><td><span class='tag-chg'>🔄 변화</span></td><td>0</td><td><span class='muted'>(없음)</span></td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행6 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>앤디락생캡슬300C</td><td>앤디락생캡슬300C</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행6 - productCode (품목코드)</td><td><span class='tag-chg'>🔄 변화</span></td><td>ANDC300C</td><td><span class='muted'>(없음)</span></td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행6 - quantity (수량)</td><td><span class='tag-chg'>🔄 변화</span></td><td>0</td><td><span class='muted'>(없음)</span></td><td><span class='muted'>(없음)</span></td></tr>
+</tbody></table></div>
+<h3 class='tog' onclick='tog(this)'><span class='arr'>▶</span>6-3.jpg &nbsp; <span class='tag-bad'>❌ 악화 5</span> &nbsp;<span class='tag-chg'>🔄 변화 23</span></h3>
+<div class='tog-body' style='display:none'>
+<table><thead><tr><th>위치</th><th>상태</th><th>GT(정답)</th><th>직전 추출값</th><th>이번 추출값</th></tr></thead><tbody>
+<tr><td>필드 - buyerBizNumber (공급받는자 사업자번호)</td><td><span class='tag-bad'>❌ 악화</span></td><td>113-85-04425</td><td>113-85-04425</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>필드 - buyerCompany (공급받는자 상호)</td><td><span class='tag-bad'>❌ 악화</span></td><td>백제약품(주)영등포지점</td><td>백제약품(주)영등포지점</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>필드 - buyerRepresentative (공급받는자 대표자)</td><td><span class='tag-bad'>❌ 악화</span></td><td>김승관</td><td>김승관</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>필드 - issueDate (작성일자)</td><td><span class='tag-bad'>❌ 악화</span></td><td>2024-07-19</td><td>2024-07-19</td><td>2072-30-10</td></tr>
+<tr><td>행1 - itemName (품명)</td><td><span class='tag-bad'>❌ 악화</span></td><td>알코텔정100T</td><td>알코텔정100T</td><td>ON107 없몸</td></tr>
+<tr><td>필드 - buyerAddress (공급받는자 주소)</td><td><span class='tag-chg'>🔄 변화</span></td><td>서울 구로구 구로동 44번지</td><td>서울구로구구로동44번지 담당자명:안남구</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행1 - quantity (수량)</td><td><span class='tag-chg'>🔄 변화</span></td><td>5</td><td>2</td><td>100</td></tr>
+<tr><td>행2 - expiryDate (유효기간)</td><td><span class='tag-chg'>🔄 변화</span></td><td>260403</td><td><span class='muted'>(없음)</span></td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행2 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>액티글리정30T</td><td>액티글리정30T</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행2 - lotNo (LOT번호)</td><td><span class='tag-chg'>🔄 변화</span></td><td>23001</td><td>24001</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행2 - productCode (품목코드)</td><td><span class='tag-chg'>🔄 변화</span></td><td>ATGT30T</td><td><span class='muted'>(없음)</span></td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행2 - quantity (수량)</td><td><span class='tag-chg'>🔄 변화</span></td><td>10</td><td>5</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행3 - expiryDate (유효기간)</td><td><span class='tag-chg'>🔄 변화</span></td><td>260809</td><td><span class='muted'>(없음)</span></td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행3 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>올고탄정10MG30T</td><td>올고탄정10MG30T</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행3 - lotNo (LOT번호)</td><td><span class='tag-chg'>🔄 변화</span></td><td>23001</td><td>23001</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행3 - productCode (품목코드)</td><td><span class='tag-chg'>🔄 변화</span></td><td>OLGT30T</td><td><span class='muted'>(없음)</span></td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행3 - quantity (수량)</td><td><span class='tag-chg'>🔄 변화</span></td><td>10</td><td>10</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행4 - expiryDate (유효기간)</td><td><span class='tag-chg'>🔄 변화</span></td><td>251213</td><td><span class='muted'>(없음)</span></td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행4 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>에소시움정20MG28T</td><td>에소시움정20MG28T</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행4 - lotNo (LOT번호)</td><td><span class='tag-chg'>🔄 변화</span></td><td>T17322003</td><td>23001</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행4 - productCode (품목코드)</td><td><span class='tag-chg'>🔄 변화</span></td><td>ASZT28T</td><td><span class='muted'>(없음)</span></td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행4 - quantity (수량)</td><td><span class='tag-chg'>🔄 변화</span></td><td>30</td><td>10</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행5 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>알드린현탁액1.5G30P</td><td>알드린현탁액1.5G30P</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행5 - productCode (품목코드)</td><td><span class='tag-chg'>🔄 변화</span></td><td>ALG30P</td><td><span class='muted'>(없음)</span></td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행5 - quantity (수량)</td><td><span class='tag-chg'>🔄 변화</span></td><td>0</td><td>6</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행6 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>앤디락생캡슬300C</td><td>앤디락생캡슬300C</td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행6 - productCode (품목코드)</td><td><span class='tag-chg'>🔄 변화</span></td><td>ANDC300C</td><td><span class='muted'>(없음)</span></td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행6 - quantity (수량)</td><td><span class='tag-chg'>🔄 변화</span></td><td>0</td><td>0</td><td><span class='muted'>(없음)</span></td></tr>
+</tbody></table></div>
+<h3 class='tog' onclick='tog(this)'><span class='arr'>▶</span>6.pdf &nbsp; <span class='tag-ok'>✅ 개선 3</span> &nbsp;<span class='tag-chg'>🔄 변화 23</span></h3>
+<div class='tog-body' style='display:none'>
+<table><thead><tr><th>위치</th><th>상태</th><th>GT(정답)</th><th>직전 추출값</th><th>이번 추출값</th></tr></thead><tbody>
+<tr><td>필드 - buyerAddress (공급받는자 주소)</td><td><span class='tag-ok'>✅ 개선</span></td><td>서울 구로구 구로동 44번지</td><td>소서울구로구구로동44번자</td><td>서울구로구구로동44번지</td></tr>
+<tr><td>행1 - itemName (품명)</td><td><span class='tag-ok'>✅ 개선</span></td><td>알코텔정100T</td><td>NO</td><td>알코텔정100T</td></tr>
+<tr><td>행1 - productCode (품목코드)</td><td><span class='tag-ok'>✅ 개선</span></td><td>ATT100T</td><td><span class='muted'>(없음)</span></td><td>ATT100T</td></tr>
+<tr><td>행1 - expiryDate (유효기간)</td><td><span class='tag-chg'>🔄 변화</span></td><td>270305</td><td><span class='muted'>(없음)</span></td><td>260403</td></tr>
+<tr><td>행1 - lotNo (LOT번호)</td><td><span class='tag-chg'>🔄 변화</span></td><td>24001</td><td><span class='muted'>(없음)</span></td><td>23001</td></tr>
+<tr><td>행2 - expiryDate (유효기간)</td><td><span class='tag-chg'>🔄 변화</span></td><td>260403</td><td><span class='muted'>(없음)</span></td><td>260809</td></tr>
+<tr><td>행2 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>액티글리정30T</td><td><span class='muted'>(없음)</span></td><td>액티글리정30T</td></tr>
+<tr><td>행2 - lotNo (LOT번호)</td><td><span class='tag-chg'>🔄 변화</span></td><td>23001</td><td><span class='muted'>(없음)</span></td><td>23001</td></tr>
+<tr><td>행2 - productCode (품목코드)</td><td><span class='tag-chg'>🔄 변화</span></td><td>ATGT30T</td><td><span class='muted'>(없음)</span></td><td>ATGT3OT</td></tr>
+<tr><td>행2 - quantity (수량)</td><td><span class='tag-chg'>🔄 변화</span></td><td>10</td><td><span class='muted'>(없음)</span></td><td>10</td></tr>
+<tr><td>행3 - expiryDate (유효기간)</td><td><span class='tag-chg'>🔄 변화</span></td><td>260809</td><td><span class='muted'>(없음)</span></td><td>251213</td></tr>
+<tr><td>행3 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>올고탄정10MG30T</td><td><span class='muted'>(없음)</span></td><td>올고탄정10MG30T</td></tr>
+<tr><td>행3 - lotNo (LOT번호)</td><td><span class='tag-chg'>🔄 변화</span></td><td>23001</td><td><span class='muted'>(없음)</span></td><td>T17322003</td></tr>
+<tr><td>행3 - productCode (품목코드)</td><td><span class='tag-chg'>🔄 변화</span></td><td>OLGT30T</td><td><span class='muted'>(없음)</span></td><td>OLGT3OT</td></tr>
+<tr><td>행3 - quantity (수량)</td><td><span class='tag-chg'>🔄 변화</span></td><td>10</td><td><span class='muted'>(없음)</span></td><td>30</td></tr>
+<tr><td>행4 - expiryDate (유효기간)</td><td><span class='tag-chg'>🔄 변화</span></td><td>251213</td><td><span class='muted'>(없음)</span></td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행4 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>에소시움정20MG28T</td><td><span class='muted'>(없음)</span></td><td>에소시움정20MG28T</td></tr>
+<tr><td>행4 - lotNo (LOT번호)</td><td><span class='tag-chg'>🔄 변화</span></td><td>T17322003</td><td><span class='muted'>(없음)</span></td><td><span class='muted'>(없음)</span></td></tr>
+<tr><td>행4 - productCode (품목코드)</td><td><span class='tag-chg'>🔄 변화</span></td><td>ASZT28T</td><td><span class='muted'>(없음)</span></td><td>ASZT28T</td></tr>
+<tr><td>행4 - quantity (수량)</td><td><span class='tag-chg'>🔄 변화</span></td><td>30</td><td><span class='muted'>(없음)</span></td><td>4</td></tr>
+<tr><td>행5 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>알드린현탁액1.5G30P</td><td><span class='muted'>(없음)</span></td><td>알드린현탁액1.5G30P</td></tr>
+<tr><td>행5 - productCode (품목코드)</td><td><span class='tag-chg'>🔄 변화</span></td><td>ALG30P</td><td><span class='muted'>(없음)</span></td><td>ALG30P</td></tr>
+<tr><td>행5 - quantity (수량)</td><td><span class='tag-chg'>🔄 변화</span></td><td>0</td><td><span class='muted'>(없음)</span></td><td>5</td></tr>
+<tr><td>행6 - itemName (품명)</td><td><span class='tag-chg'>🔄 변화</span></td><td>앤디락생캡슬300C</td><td><span class='muted'>(없음)</span></td><td>앤디락생캡슬300C</td></tr>
+<tr><td>행6 - productCode (품목코드)</td><td><span class='tag-chg'>🔄 변화</span></td><td>ANDC300C</td><td><span class='muted'>(없음)</span></td><td>ANDC300C</td></tr>
+<tr><td>행6 - quantity (수량)</td><td><span class='tag-chg'>🔄 변화</span></td><td>0</td><td><span class='muted'>(없음)</span></td><td>6</td></tr>
+</tbody></table></div>
+<h3 class='tog' onclick='tog(this)'><span class='arr'>▶</span>7-1.jpg &nbsp; <span class='tag-bad'>❌ 악화 1</span> &nbsp;<span class='tag-ok'>✅ 개선 1</span> &nbsp;<span class='tag-chg'>🔄 변화 1</span></h3>
+<div class='tog-body' style='display:none'>
+<table><thead><tr><th>위치</th><th>상태</th><th>GT(정답)</th><th>직전 추출값</th><th>이번 추출값</th></tr></thead><tbody>
+<tr><td>필드 - buyerAddress (공급받는자 주소)</td><td><span class='tag-bad'>❌ 악화</span></td><td>(17811) 경기도평택시 청북읍청북로175(현곡리)</td><td>(17811) 경기도 평택시 청북읍청북로175(현곡리</td><td>청북청복175(현국리 백제약품(주) 영동포지점:(17811)경기도 평택시</td></tr>
+<tr><td>필드 - supplierAddress (공급자 주소)</td><td><span class='tag-ok'>✅ 개선</span></td><td>서울특별시영등포구당산로41길11,301호 302호(당산동4가, SK V1 센터)</td><td>서울특별시 영등포구 당산로41길 11,301호</td><td>서울특별시영등포구 당산로41길 11,301호 302호(당산동4가,sKV1센터</td></tr>
+<tr><td>행1 - quantity (수량)</td><td><span class='tag-chg'>🔄 변화</span></td><td>1,000</td><td><span class='muted'>(없음)</span></td><td>2</td></tr>
+</tbody></table></div>
+<h3 class='tog' onclick='tog(this)'><span class='arr'>▶</span>7-2.jpg &nbsp; <span class='tag-ok'>✅ 개선 4</span> &nbsp;<span class='tag-chg'>🔄 변화 1</span></h3>
+<div class='tog-body' style='display:none'>
+<table><thead><tr><th>위치</th><th>상태</th><th>GT(정답)</th><th>직전 추출값</th><th>이번 추출값</th></tr></thead><tbody>
+<tr><td>필드 - buyerAddress (공급받는자 주소)</td><td><span class='tag-ok'>✅ 개선</span></td><td>(17811) 경기도평택시 청북읍청북로175(현곡리)</td><td>시리얼/로트No</td><td>(17811) 경기도 평택시 청북읍 청북로 175(현곡리</td></tr>
+<tr><td>필드 - supplierRepresentative (공급자 대표자)</td><td><span class='tag-ok'>✅ 개선</span></td><td>남이레</td><td>일련번호</td><td>남이레</td></tr>
+<tr><td>필드 - totalQuantity (총수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>1,000</td><td>17,811</td><td>1,000</td></tr>
+<tr><td>행1 - quantity (수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>1,000</td><td><span class='muted'>(없음)</span></td><td>1,000</td></tr>
+<tr><td>필드 - supplierAddress (공급자 주소)</td><td><span class='tag-chg'>🔄 변화</span></td><td>서울특별시영등포구당산로41길11,301호 302호(당산동4가, SK V1 센터)</td><td>302호(당산동4가,SKV1센터</td><td>서울특별시 영등포구 당산로41길11,301호</td></tr>
+</tbody></table></div>
+<h3 class='tog' onclick='tog(this)'><span class='arr'>▶</span>7-3.jpg &nbsp; <span class='tag-bad'>❌ 악화 1</span> &nbsp;<span class='tag-ok'>✅ 개선 4</span> &nbsp;<span class='tag-chg'>🔄 변화 3</span></h3>
+<div class='tog-body' style='display:none'>
+<table><thead><tr><th>위치</th><th>상태</th><th>GT(정답)</th><th>직전 추출값</th><th>이번 추출값</th></tr></thead><tbody>
+<tr><td>필드 - buyerBizNumber (공급받는자 사업자번호)</td><td><span class='tag-bad'>❌ 악화</span></td><td>113-85-04425</td><td>113-85-04425</td><td>117-81-53390</td></tr>
+<tr><td>필드 - buyerCompany (공급받는자 상호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>백제약품(주)영등포지점</td><td><span class='muted'>(없음)</span></td><td>백제약품(주)영등포지점</td></tr>
+<tr><td>필드 - supplierCompany (공급자 상호)</td><td><span class='tag-ok'>✅ 개선</span></td><td>주식회사 엘비아브노바</td><td><span class='muted'>(없음)</span></td><td>주식회사 엘비아브노바</td></tr>
+<tr><td>필드 - supplierRepresentative (공급자 대표자)</td><td><span class='tag-ok'>✅ 개선</span></td><td>남이레</td><td><span class='muted'>(없음)</span></td><td>남이레</td></tr>
+<tr><td>필드 - totalQuantity (총수량)</td><td><span class='tag-ok'>✅ 개선</span></td><td>1,000</td><td>60</td><td>1,000</td></tr>
+<tr><td>필드 - buyerAddress (공급받는자 주소)</td><td><span class='tag-chg'>🔄 변화</span></td><td>(17811) 경기도평택시 청북읍청북로175(현곡리)</td><td>시리얼/로트NO</td><td>서울특별시영등포구당산로41길 11,301호 302호(당산동4가,8KV1센터</td></tr>
+<tr><td>필드 - supplierAddress (공급자 주소)</td><td><span class='tag-chg'>🔄 변화</span></td><td>서울특별시영등포구당산로41길11,301호 302호(당산동4가, SK V1 센터)</td><td><span class='muted'>(없음)</span></td><td>(17811) 경기도 팽택시 청북읍 청북로 175(현곡리</td></tr>
+<tr><td>필드 - supplierBizNumber (공급자 사업자번호)</td><td><span class='tag-chg'>🔄 변화</span></td><td>117-81-53390</td><td>000-99-16000</td><td>113-85-04425</td></tr>
+</tbody></table></div>
+<h3 class='tog' onclick='tog(this)'><span class='arr'>▶</span>7.pdf &nbsp; <span class='tag-ok'>✅ 개선 1</span></h3>
+<div class='tog-body' style='display:none'>
+<table><thead><tr><th>위치</th><th>상태</th><th>GT(정답)</th><th>직전 추출값</th><th>이번 추출값</th></tr></thead><tbody>
+<tr><td>필드 - buyerAddress (공급받는자 주소)</td><td><span class='tag-ok'>✅ 개선</span></td><td>(17811) 경기도평택시 청북읍청북로175(현곡리)</td><td>(17811) 경기도평택시 302호(당산동4가,SKV1센터</td><td>(17811) 경기도평택시 청북읍청북로175(현곡리</td></tr>
+</tbody></table></div>
+</section>
+<script>
+function st(t,c,n){var b=t.tBodies[0],r=[].slice.call(b.rows);
+ var d=(t.getAttribute('data-sc')==c&&t.getAttribute('data-sd')=='asc')?'desc':'asc';
+ r.sort(function(a,e){var x=a.cells[c].getAttribute('data-v'),y=e.cells[c].getAttribute('data-v');
+  if(x===null)x=a.cells[c].innerText; if(y===null)y=e.cells[c].innerText;
+  if(n){x=parseFloat(x);y=parseFloat(y);x=isNaN(x)?-1:x;y=isNaN(y)?-1:y;}
+  else{x=(''+x).toLowerCase();y=(''+y).toLowerCase();}
+  return (x<y?-1:x>y?1:0)*(d=='asc'?1:-1);});
+ r.forEach(function(x){b.appendChild(x);});t.setAttribute('data-sc',c);t.setAttribute('data-sd',d);}
+document.querySelectorAll('table.sortable').forEach(function(t){
+ [].slice.call(t.tHead.rows[0].cells).forEach(function(h,i){h.onclick=function(){st(t,i,h.dataset.num=='1');};});});
+function tog(el){
+ var body=el.nextElementSibling;
+ var open=body.style.display!=='none';
+ body.style.display=open?'none':'';
+ el.querySelector('.arr').textContent=open?'▶':'▼';}
+</script>
+</body></html>
