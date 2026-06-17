@@ -11,8 +11,11 @@ gpu counterpart template; the live import target is always runtime_config.py.
 # server_det 는 일단 보류; 필요시 dense-표 한정 box param 튜닝으로 별도 재시도.
 DEVICE = "gpu"
 DET_MODEL = "PP-OCRv5_mobile_det"
-INVOICE_OCR_MAX_W = 950
-DET_LIMIT_SIDE_LEN = 960
+# 해상도 테스트(2026-06-17): 작은글자 문서(4-3/3-2 = 8px→950px서 2.5px로 뭉개짐, 저신뢰)
+# 살리기. 036의 2000px 과분할은 server_det와 묶여있었고 지금은 mobile_det → 미검증 조합.
+# 950→1400 보수적 중간값. DET_LIMIT도 같이 올려야 엔진이 도로 안 줄임. 과분할 재발하면 死.
+INVOICE_OCR_MAX_W = 1400
+DET_LIMIT_SIDE_LEN = 1400
 # P1(039 net-negative, 롤백): 무조건 4방향+512는 6-2/6-3(작은표) 살리나 1.jpg/1-2(큰표)를
 # 오회전(0°→90°)해 셀 73→45%·base 85→22% 폭락. early-stop이 맞던 방향을 512 스코어러가 재채점해
 # 틀린 방향이 이김. '확신하며 맞음'vs'확신하며 틀림'을 confidence로 구분 불가 → 무조건 4방향은 틀린 도구.
