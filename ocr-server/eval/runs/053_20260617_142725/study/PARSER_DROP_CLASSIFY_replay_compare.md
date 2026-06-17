@@ -1,14 +1,14 @@
 # Parser-drop classification — 053_20260617_142725\study
 
-Defects scored (mismatch|ext_missing): **306**  |  parser-drop (OCR read it, recoverable): **158**  |  recognition (OCR-bound): **148**
-Parser-recoverable share of defects: **51.6%**
+Defects scored (mismatch|ext_missing): **300**  |  parser-drop (OCR read it, recoverable): **152**  |  recognition (OCR-bound): **148**
+Parser-recoverable share of defects: **50.7%**
 
-## Parser-drops by column × pattern — CLEAN originals  (n=28)
+## Parser-drops by column × pattern — CLEAN originals  (n=27)
 
 | column | drop | mislocate | wrongpick | total |
 |---|--:|--:|--:|--:|
 | itemName | 0 | 1 | 5 | **6** |
-| lotNo | 2 | 2 | 1 | **5** |
+| lotNo | 1 | 2 | 1 | **4** |
 | quantity | 1 | 3 | 0 | **4** |
 | expiryDate | 0 | 3 | 1 | **4** |
 | buyerRepresentative | 0 | 0 | 2 | **2** |
@@ -19,14 +19,14 @@ Parser-recoverable share of defects: **51.6%**
 | supplierRepresentative | 0 | 0 | 1 | **1** |
 | amount | 0 | 1 | 0 | **1** |
 
-## Parser-drops by column × pattern — ANGLE variants  (n=130)
+## Parser-drops by column × pattern — ANGLE variants  (n=125)
 
 | column | drop | mislocate | wrongpick | total |
 |---|--:|--:|--:|--:|
 | itemName | 0 | 7 | 17 | **24** |
-| quantity | 8 | 6 | 7 | **21** |
+| quantity | 7 | 5 | 7 | **19** |
 | spec | 0 | 10 | 5 | **15** |
-| lotNo | 14 | 0 | 1 | **15** |
+| lotNo | 11 | 0 | 1 | **12** |
 | amount | 2 | 4 | 3 | **9** |
 | expiryDate | 5 | 3 | 1 | **9** |
 | unitPrice | 5 | 3 | 0 | **8** |
@@ -40,16 +40,16 @@ Parser-recoverable share of defects: **51.6%**
 | cumulativeAmount | 0 | 1 | 0 | **1** |
 | buyerCompany | 0 | 0 | 1 | **1** |
 | totalAmount | 1 | 0 | 0 | **1** |
-| totalQuantity | 0 | 0 | 1 | **1** |
+| totalQuantity | 0 | 1 | 0 | **1** |
 
-## Parser-drops by column × pattern — ALL  (n=158)
+## Parser-drops by column × pattern — ALL  (n=152)
 
 | column | drop | mislocate | wrongpick | total |
 |---|--:|--:|--:|--:|
 | itemName | 0 | 8 | 22 | **30** |
-| quantity | 9 | 9 | 7 | **25** |
-| lotNo | 16 | 2 | 2 | **20** |
+| quantity | 8 | 8 | 7 | **23** |
 | spec | 0 | 10 | 6 | **16** |
+| lotNo | 12 | 2 | 2 | **16** |
 | expiryDate | 5 | 6 | 2 | **13** |
 | amount | 2 | 5 | 3 | **10** |
 | unitPrice | 5 | 4 | 1 | **10** |
@@ -64,7 +64,7 @@ Parser-recoverable share of defects: **51.6%**
 | buyerCompany | 0 | 0 | 1 | **1** |
 | totalAmount | 1 | 0 | 0 | **1** |
 | supplierCompany | 0 | 0 | 1 | **1** |
-| totalQuantity | 0 | 0 | 1 | **1** |
+| totalQuantity | 0 | 1 | 0 | **1** |
 
 ## Recognition (OCR-bound, NOT parser) by column
 

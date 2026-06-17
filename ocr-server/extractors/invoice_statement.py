@@ -7735,6 +7735,105 @@ def _apply_legacy_single_supply_tax_reconstruction(
     return True
 
 
+_LEGACY_SERIAL_QTY_LOT_RE = re.compile(r"\b\d{6,}-\d{6}-\d{6}\b")
+_LEGACY_SERIAL_QTY_RE = re.compile(r"(?<!\d)\d{1,3},\d{3}(?!\d)")
+
+
+def _select_legacy_serial_quantity(row_text: str, evidence: str) -> str:
+    def _valid_quantity(match: re.Match[str]) -> str:
+        value = match.group(0)
+        try:
+            numeric = int(value.replace(",", ""))
+        except ValueError:
+            return ""
+        # Keep this legacy rescue to plausible item quantities. This avoids
+        # supplier address / biz-number fragments such as 11,301.
+        return value if 0 < numeric <= 9999 else ""
+
+    for match in _LEGACY_SERIAL_QTY_RE.finditer(row_text or ""):
+        quantity = _valid_quantity(match)
+        if quantity:
+            return quantity
+    for match in _LEGACY_SERIAL_QTY_RE.finditer(evidence or ""):
+        quantity = _valid_quantity(match)
+        if quantity:
+            return quantity
+    return ""
+
+
+def _apply_legacy_single_serial_quantity_reconstruction(
+    canonical: dict[str, Any],
+    lines: list[OcrLine] | None = None,
+) -> bool:
+    rows = canonical.get("tableRows") or []
+    meta = canonical.get("tableMeta") or {}
+    if len(rows) != 1:
+        return False
+    row = rows[0]
+    if not _clean_value(str(row.get("itemName") or "")):
+        return False
+    if any(_clean_value(str(row.get(k) or "")) for k in ("unitPrice", "supplyAmount", "taxAmount", "amount", "totalAmount")):
+        return False
+
+    row_text = _clean_value(str(row.get("_rawText") or row.get("rawText") or ""))
+    evidence_parts = [
+        row_text,
+        _clean_value(str(row.get("lotNo") or "")),
+        _clean_value(str(row.get("serialNo") or "")),
+    ]
+    for line in lines or []:
+        evidence_parts.append(_clean_value(getattr(line, "text", "") if not isinstance(line, dict) else line.get("text", "")))
+    evidence = "\n".join(part for part in evidence_parts if part)
+
+    lot_match = _LEGACY_SERIAL_QTY_LOT_RE.search(evidence)
+    if not lot_match:
+        return False
+    lot_no = lot_match.group(0)
+    quantity = _select_legacy_serial_quantity(row_text, evidence)
+    if not lot_no and not quantity:
+        return False
+
+    changed = False
+    if _clean_value(str(row.get("lotNo") or "")) != lot_no:
+        row["lotNo"] = lot_no
+        changed = True
+    if row.get("serialNo") == lot_no:
+        row["serialNo"] = ""
+        changed = True
+    if quantity and _clean_value(str(row.get("quantity") or "")) != quantity:
+        row["quantity"] = quantity
+        changed = True
+    expiry = _clean_value(str(row.get("expiryDate") or ""))
+    if expiry and expiry in lot_no:
+        row["expiryDate"] = ""
+        changed = True
+    if not changed:
+        return False
+
+    meta["rowCount"] = 1
+    columns = list(meta.get("columns") or [])
+    for key in ("lotNo", "quantity"):
+        if key not in columns:
+            columns.append(key)
+    meta["columns"] = columns
+    labels = meta.setdefault("columnLabels", {})
+    labels.setdefault("lotNo", "LotNo")
+    labels.setdefault("quantity", "수량")
+    meta["legacySerialQuantityReconstructionApplied"] = True
+    warnings = meta.setdefault("valueMappingWarnings", [])
+    for warning in (
+        "legacy_serial_quantity_row:lot_no_recovered_from_ocr_evidence",
+        "legacy_serial_quantity_row:quantity_recovered_from_ocr_evidence",
+        "legacy_serial_quantity_row:expiry_fragment_cleared",
+    ):
+        if warning not in warnings:
+            warnings.append(warning)
+    canonical["tableMeta"] = meta
+    if canonical.get("tableRowsDebug"):
+        canonical["tableRowsDebug"]["source"] = "legacy_text_items_serial_quantity_reconstructed"
+    return True
+
+
 def _apply_invoice_column_postsplit(
     rows: list[dict],
     meta: dict,
@@ -8045,10 +8144,17 @@ def extract_invoice_statement_fields(
             full_text,
         )
 
+    _legacy_serial_quantity_reconstructed = False
+    if not _legacy_detail_reconstructed and not _legacy_pharma_reconstructed:
+        _legacy_serial_quantity_reconstructed = _apply_legacy_single_serial_quantity_reconstruction(
+            canonical,
+            lines,
+        )
+
     # 3BD: 4.pdf-style single-row supply/tax fallback remap (runs only when the
     # detail/pharma reconstructors did not fire and the shape gate matches).
     # 3BE: pass OCR lines so itemName header-leak can be un-merged via line evidence.
-    if not _legacy_detail_reconstructed and not _legacy_pharma_reconstructed:
+    if not _legacy_detail_reconstructed and not _legacy_pharma_reconstructed and not _legacy_serial_quantity_reconstructed:
         _apply_legacy_single_supply_tax_reconstruction(canonical, lines)
 
     # T-26a: apply company name spacing normalization to actual output fields
