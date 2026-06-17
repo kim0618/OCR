@@ -217,7 +217,7 @@ _OP_ANCHOR_CODE_RE = re.compile(r"(?<![A-Za-z])((?:OP|0P)[-\s]?[A-Z][A-Za-z0-9]{
 
 # T-3: canonical tableRows
 _TABLE_ROW_COLUMNS = [
-    "rowIndex", "itemCode", "itemName", "spec", "lotNo", "serialNo",
+    "rowIndex", "itemCode", "productCode", "itemName", "spec", "lotNo", "serialNo",
     "manufacturingNo", "expiryDate", "quantity", "unit", "unitPrice",
     "supplyAmount", "taxAmount", "amount", "totalAmount", "manufacturer",
     "insuranceCode", "remark",
@@ -6209,7 +6209,7 @@ def _detect_table(
 def _empty_table_row(row_index: int, raw_text: str = "") -> dict[str, Any]:
     return {
         "rowIndex": row_index,
-        "itemCode": "", "itemName": "", "spec": "", "lotNo": "", "serialNo": "",
+        "itemCode": "", "productCode": "", "itemName": "", "spec": "", "lotNo": "", "serialNo": "",
         "manufacturingNo": "", "expiryDate": "", "quantity": "", "unit": "",
         "unitPrice": "", "supplyAmount": "", "taxAmount": "", "amount": "",
         "totalAmount": "", "manufacturer": "", "insuranceCode": "", "remark": "",
@@ -6454,6 +6454,38 @@ def _cleanup_spec_trailing_chars(value: str) -> tuple[str, list[str]]:
     return cleaned, debug
 
 
+_FB_PRODUCT_CODE_RE = re.compile(r"^[A-Z]{2,}[\dA-Z]+$")
+
+
+def _fb_looks_like_product_code(value: Any) -> bool:
+    """Compact product-code shape test (mirrors invoice_statement_free).
+
+    Strict on purpose so real specs (sizes/units, Korean text) never match:
+    needs >=4 chars, >=2 leading uppercase letters, at least one digit, and no
+    non-alnum / Hangul characters.
+    """
+    text = str(value or "").strip()
+    if len(text) < 4:
+        return False
+    up = text.upper()
+    if not _FB_PRODUCT_CODE_RE.fullmatch(up):
+        return False
+    if not any(ch.isdigit() for ch in up):
+        return False
+    return True
+
+
+def _fb_normalize_product_code(value: Any) -> str:
+    text = str(value or "").strip("()[]{}.,:;|").upper()
+    if not _fb_looks_like_product_code(text):
+        return ""
+    text = re.sub(r"^0P", "OP", text)
+    # OCR confuses trailing zero-as-O in compact tablet-count suffixes
+    # (NPRT1OT -> NPRT10T); keep narrow so codes like DPNL3OM stay unchanged.
+    text = re.sub(r"(?<=\d)O(?=T$)", "0", text)
+    return text
+
+
 def _build_canonical_table_rows(
     table_items: list[dict[str, Any]],
     expected_columns: dict[str, list[str]] | None = None,
@@ -6526,6 +6558,21 @@ def _build_canonical_table_rows(
                 code = _tr_extract_item_code(raw_text, row["itemName"], row["spec"])
                 if code:
                     row["itemCode"] = code
+
+        # P1: surface productCode for the canonical (non-legacy) fallback path,
+        # which previously only emitted itemCode (eval/free contract uses
+        # productCode). Two recovery sources, both shape-gated so real specs are
+        # never promoted:
+        #   1) itemCode already holds a product-code-shaped token -> mirror it.
+        #   2) angle variants mis-route the code token into spec (e.g. INAP250G
+        #      -> spec); promote it and clear the spurious spec cell.
+        if not row.get("productCode"):
+            _code_src = _fb_normalize_product_code(row.get("itemCode"))
+            if _code_src:
+                row["productCode"] = _code_src
+            elif _fb_looks_like_product_code(row.get("spec")):
+                row["productCode"] = _fb_normalize_product_code(row["spec"]) or str(row["spec"])
+                row["spec"] = ""
 
         # T-6h: auto-populate composite display keys from component fields
         if not row.get("manufacturingExpiryComposite"):
