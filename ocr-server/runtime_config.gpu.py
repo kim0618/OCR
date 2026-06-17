@@ -38,4 +38,7 @@ REFINE_MONEY_COLS_FROM_BODY = True
 # UVDoc 문서 펴기(dewarping): 회전(deskew/orient)이 못 푸는 비균일 왜곡(종이 휨·국소 원근·
 # keystone, 6-2 줄산포 4.35° 같은 것)을 ML로 픽셀단위 보정. 모서리검출 불필요→풀프레임 사진도 됨.
 # CPU는 '속도 주범'이라 OFF, GPU는 ON. 스케일에서 회전 안 먹는 사진을 겨냥한 핵심 레버.
-DOC_UNWARPING = True
+DOC_UNWARPING = False  # 엔진 전역 flag는 OFF (전역은 clean 파괴). 조건부는 아래 GATED로.
+# 조건부 UVDoc(dual-pass 신뢰도 게이트): standalone UVDoc로 펴서 재OCR→원본보다 신뢰도 높을때만
+# 채택. 평평한 문서(PDF/clean)는 원본 유지, 휜 사진만 펴짐. 049 전역 net-neg → 게이트로 win만.
+DOC_UNWARPING_GATED = True

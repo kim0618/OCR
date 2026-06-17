@@ -8,4 +8,5 @@ IMAGE_TEXT_DESKEW_PROJECTION = False  # P3 롤백(040 net-negative: 투영이 de
 IMAGE_BBOX_DESKEW_REOCR = True  # P3': bbox 각도(신뢰소스)로 deskew+재OCR. dense=스킵, 진짜기운것만 보정
 ORIENT_KOREAN_REVERIFY = True  # P1: 한글다움<0.10(garbage)이면 4방향 재OCR해 한글최다 채택(6-2/6-3 거꾸로 교정)
 REFINE_MONEY_COLS_FROM_BODY = True  # 사진 칸밀림: 수량/단가/금액 경계를 본문 money X-클러스터로 snap(swap 교정)
-DOC_UNWARPING = True  # UVDoc 문서펴기: 회전 못푸는 비균일왜곡(휨/원근) ML 보정. CPU OFF(속도)/GPU ON
+DOC_UNWARPING = False  # 엔진 전역 OFF (전역은 clean 파괴 5.pdf 97→0)
+DOC_UNWARPING_GATED = True  # 조건부 UVDoc: 펴서 재OCR→신뢰도 높을때만 채택(평평=원본유지, 휨=펴짐)

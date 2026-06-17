@@ -1144,6 +1144,22 @@ def get_ocr_engine():
     return _ocr_engine
 
 
+_unwarp_model = None
+
+
+def get_unwarp_model():
+    """UVDoc 문서펴기 standalone 모델(lazy). predict(img)→[{...,'doctr_img':펴진ndarray}].
+    조건부 dewarping용(엔진 전역 use_doc_unwarping 대신 per-image 적용)."""
+    global _unwarp_model
+    if _unwarp_model is None:
+        from paddleocr import TextImageUnwarping
+        try:
+            _unwarp_model = TextImageUnwarping(device=RT.DEVICE)
+        except Exception:
+            _unwarp_model = TextImageUnwarping()
+    return _unwarp_model
+
+
 def _korean_char_count(ocr_lines, min_conf: float = 0.5) -> tuple[int, int]:
     """OCR 텍스트의 (한글자수, 전체비공백자수). 방향이 맞아야 한글이 인식됨 —
     거꾸로/옆으로면 한글≈0(라틴·숫자 fragment). orientation 정오 판정의 신뢰 신호."""
@@ -2868,6 +2884,46 @@ async def ocr_extract(
         # 장별 deskew 발동/각도를 run 분석에서 직접 볼 수 있게(셀 델타 추정 불필요).
         if isinstance(_preprocess_debug, dict) and isinstance(_preprocess_debug.get("deskew"), dict):
             _preprocess_debug["deskew"]["bboxReocr"] = _bbox_deskew
+        # UVDoc 조건부 펴기(flag, dual-pass): 회전/deskew로 못 푼 비균일 왜곡(휨/원근)을 standalone
+        # UVDoc로 펴고 재OCR. 평평한 문서(PDF/clean)는 UVDoc이 오히려 망치므로(5.pdf 97→0), 원본 vs
+        # 펴진것 OCR 신뢰도(median conf) 비교해 펴진 게 +0.01 이상 나을 때만 채택 = 왜곡 자동 게이트
+        # (파일타입 무관 — 평평하면 원본 유지, 휘었으면 펴짐. 사진PDF도 올바르게 처리).
+        _uvdoc = {"name": "UVDOC_GATED", "applied": False, "reason": "off",
+                  "confBefore": None, "confAfter": None}
+        if getattr(RT, "DOC_UNWARPING_GATED", False) and _orient_is_invoice:
+            try:
+                import statistics as _stt
+
+                def _medconf(_lns):
+                    _cs = [c for _, t, c in _lns if t and c]
+                    return _stt.median(_cs) if _cs else 0.0
+
+                _conf_b = _medconf(ocr_lines_raw)
+                _uw = get_unwarp_model().predict(doc_deskewed)
+                _uw_img = _uw[0]["doctr_img"] if (_uw and isinstance(_uw[0], dict) and "doctr_img" in _uw[0]) else None
+                if _uw_img is not None:
+                    _uw_lines, _uw_prep = _prep_and_ocr_lines(_uw_img, ocr, ocr_max_w, ocr_min_w)
+                    _conf_a = _medconf(_uw_lines)
+                    _uvdoc.update({"confBefore": round(_conf_b, 3), "confAfter": round(_conf_a, 3)})
+                    if (_conf_a >= _conf_b + 0.01
+                            and len(_uw_lines) >= max(8, int(len(ocr_lines_raw) * 0.8))):
+                        doc_deskewed = _uw_img
+                        ocr_img = _uw_prep
+                        ocr_lines_raw = _uw_lines
+                        ocr_h, ocr_w = _uw_prep.shape[:2]
+                        _, _u_enc = cv2.imencode('.jpg', _uw_prep, [cv2.IMWRITE_JPEG_QUALITY, 85])
+                        processed_b64 = base64.b64encode(_u_enc.tobytes()).decode('utf-8')
+                        timings["ocr_image_wh"] = [ocr_w, ocr_h]
+                        _uvdoc.update({"applied": True, "reason": "unwarp_improved_conf"})
+                    else:
+                        _uvdoc["reason"] = "unwarp_not_better_kept_original"
+                else:
+                    _uvdoc["reason"] = "no_unwarp_output"
+            except Exception as _ue:
+                _uvdoc["reason"] = f"error:{type(_ue).__name__}"
+        timings["uvdoc"] = _uvdoc
+        if isinstance(_preprocess_debug, dict) and isinstance(_preprocess_debug.get("document"), dict):
+            _preprocess_debug["document"]["uvdocGated"] = _uvdoc
         field_idx = 0
         for bbox_points, text, confidence in ocr_lines_raw:
             if not text or len(text) < 1:
