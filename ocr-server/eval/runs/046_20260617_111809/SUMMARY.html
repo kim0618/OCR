@@ -1,7 +1,6 @@
 <!doctype html><html lang='ko'><head><meta charset='utf-8'>
 <meta name='viewport' content='width=device-width,initial-scale=1'>
-<title>평가 추세 - TREND</title>
-<style>
+<title>학습 종합보고서 - 046_20260617_111809</title><style>
 :root{--bg:#f6f8fa;--card:#ffffff;--line:#d0d7de;--fg:#1f2328;--muted:#59636e;
 --up:#1a7f37;--down:#cf222e;--warn:#9a6700;--link:#0969da}
 *{box-sizing:border-box}
@@ -46,9 +45,16 @@ table.sumtable td:nth-child(7),table.sumtable th:nth-child(7){text-align:center}
 @media (max-width:640px){body{font-size:13px}h1{font-size:18px}th,td{padding:6px 8px}
 .head{flex-direction:column;gap:2px}section{padding:14px}}
 </style></head><body>
-<div class='head'><h1>평가 추세 - run별 누적 이력</h1><div class='gen'>갱신 2026-06-17 11:19</div></div>
-<p class='note'><code>run_all</code> 돌릴 때마다 자동 갱신. 한 행 = 측정 1회. <b>변화</b> = 같은 testset의 직전 run 대비 변화(퍼센트포인트, ▲좋아짐/▼나빠짐). 버킷은 룰 보강 방향(인식=OCR글자, 구조=필드/행배치, 컬럼=표 열밀림, 전처리=회전/기울기).</p>
-<p class='note warn'>⚠️ 소표본 숫자는 가설이지 릴리스 합격선이 아님 (계획 §8).</p>
+<div class='head'><h1>학습 종합보고서</h1><div class='gen'>실행 046_20260617_111809 · 생성 2026-06-17 11:19 · 소요 54초</div></div>
+<div class='note'><div class='row'><b>필드 정확도</b> = 공급자 상호·사업자번호·대표자·주소, 공급받는자 상호·사업자번호·대표자·주소, 작성일자, 공급가액, 세액, 합계금액, 누계, 총수량 <span class='muted'>(thin 추가: 할인액·문서번호·과세유형)</span></div><div class='row'><b>셀 정확도</b> = 품명, 규격, 품목코드, LOT번호, 유효기간, 수량, 단가, 금액 <span class='muted'>(thin 추가: 제조번호)</span></div><div class='row'><b>정확도 = micro / macro</b> · <b>micro</b>=일치÷전체 채점칸(큰 표가 지배) · <b>macro</b>=샘플당 정확도의 평균(샘플 동등 가중). <span class='muted'>둘이 벌어지면 큰 표가 평균을 좌우하는 것 — 수천장에선 macro 가 '핵심 샘플 다수가 깨져도 전체는 좋아 보임'을 정직하게 드러냄.</span></div><div class='row'><b>검증(게이트)</b> = 하니스 자기점검(PASS여야 수치 신뢰)</div></div>
+<section><table class='sumtable'><thead><tr><th>데이터셋</th><th>종류</th><th>건수</th><th>필드 정확도<br><span class='muted' style='font-weight:400'>micro / macro</span></th><th>셀 정확도<br><span class='muted' style='font-weight:400'>micro / macro</span></th><th>소요 시간</th><th>검증(게이트)</th><th>상세 리포트</th><th>비교 리포트</th></tr></thead><tbody>
+<tr><td>invoice_study <code>study/</code></td><td>회귀 기준점</td><td>24건</td><td>65.6% <span class='muted'>/ 68.1%</span></td><td>74.5% <span class='muted'>/ 45.0%</span></td><td>54초</td><td><span class='up'>✅ PASS</span></td><td><a class='btn' href='study/report.html'>리포트 보기</a></td><td><a class='btn' style='background:var(--warn);border-color:var(--warn)' href='study/compare.html'>비교 보기</a></td></tr>
+<tr><td>invoice_thin <code>thin/</code></td><td>학습데이터 <span class='muted'>(실데이터 대기)</span></td><td>6건</td><td>67.6% <span class='muted'>/ 72.1%</span></td><td>89.5% <span class='muted'>/ 82.4%</span></td><td>0초</td><td><span class='up'>✅ PASS</span></td><td><a class='btn' href='thin/report.html'>리포트 보기</a></td><td><a class='btn' style='background:var(--warn);border-color:var(--warn)' href='thin/compare.html'>비교 보기</a></td></tr>
+</tbody></table>
+<div class='latest ok'>🟢 <b>전체 GO</b> (2/2 checker PASS)</div>
+<div class='legend'>study=기준점(사람검수 골든 6장)  ·  thin=학습데이터 자리(현재는 모형, 실 DB 오면 교체)  ·  전체 룰 수정 이력: <a href='../CHANGES.html'>CHANGES.html</a></div>
+</section>
+<div class='head' style='margin-top:24px'><h1 style='font-size:17px'>이전 학습 비교</h1><div class='gen'>직전 대비 ▲ 좋아짐 / ▼ 나빠짐 · 단독 보기: <a href='TREND.html'>TREND.html</a></div></div>
 <div class='note'><div class='row'><span class='up'>초록 = 좋아짐</span> · <span class='down'>빨강 = 나빠짐</span> (정확도·버킷 공통)</div><div class='row'><b>필드/셀 변화</b> = 직전 대비 정확도 <span class='up'>▲ 올라감(좋음)</span> · <span class='down'>▼ 내려감(나쁨)</span></div><div class='row'><b>버킷(결함 수) 변화</b> = <span class='up'>▼ 줄어듦(좋음)</span> · <span class='down'>▲ 늘어남(나쁨)</span></div><div class='row'><b>인식오류</b> = OCR 글자 틀림</div><div class='row'><b>구조오류</b> = 값이 엉뚱한 필드/행</div><div class='row'><b>컬럼밀림</b> = 표 안 열 어긋남</div><div class='row'><b>전처리</b> = 회전/기울기</div></div>
 <section>
 <h2>invoice_study · <span class='muted'>회귀 기준점</span> <span class='muted'>(run 41회)</span></h2>
