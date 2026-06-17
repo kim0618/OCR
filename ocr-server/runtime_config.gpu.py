@@ -42,5 +42,6 @@ DOC_UNWARPING = False  # 엔진 전역 flag는 OFF (전역은 clean 파괴). 조
 # 조건부 UVDoc(dual-pass 신뢰도 게이트): standalone UVDoc로 펴서 재OCR→원본보다 신뢰도 높을때만
 # 채택. 평평한 문서(PDF/clean)는 원본 유지, 휜 사진만 펴짐. 049 전역 net-neg → 게이트로 win만.
 DOC_UNWARPING_GATED = True
-# 줄단위 textline orientation(180° 교정): 문서단위 P1이 못 잡는 줄별 뒤집힘. CPU OFF(속도)/GPU 테스트.
-TEXTLINE_ORIENTATION = True
+# 줄단위 textline orientation(051 net-negative 롤백): 정상 줄을 오판·뒤집어 파괴(1.jpg 90→34,
+# 5.pdf 97→63). P1 문서단위와 중복 + 오판 위험. 死.
+TEXTLINE_ORIENTATION = False
