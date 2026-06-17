@@ -1128,7 +1128,8 @@ def get_ocr_engine():
             device=RT.DEVICE,
             use_textline_orientation=False,
             use_doc_orientation_classify=False,  # 자체 detect_orientation 사용, 중복 제거
-            use_doc_unwarping=False,             # UVDoc 비활성화 (영수증에 불필요, 속도 주범)
+            use_doc_unwarping=getattr(RT, "DOC_UNWARPING", False),  # UVDoc dewarping: 회전이 못 펴는
+            # 비균일 왜곡(휨/국소원근/keystone) 픽셀단위 보정. CPU=False(속도주범), GPU=True(RT 게이트).
             # NOTE: enable_mkldnn=True 는 현재 PaddlePaddle 빌드(PIR executor)에서
             #       `ConvertPirAttribute2RuntimeAttribute not support ...ArrayAttribute<DoubleAttribute>`
             #       런타임 에러로 inference 실패 → False 유지. paddle 버전이 PIR+oneDNN 지원 시 재검토.

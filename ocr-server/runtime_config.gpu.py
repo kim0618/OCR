@@ -11,11 +11,11 @@ gpu counterpart template; the live import target is always runtime_config.py.
 # server_det 는 일단 보류; 필요시 dense-표 한정 box param 튜닝으로 별도 재시도.
 DEVICE = "gpu"
 DET_MODEL = "PP-OCRv5_mobile_det"
-# 해상도 테스트(2026-06-17): 작은글자 문서(4-3/3-2 = 8px→950px서 2.5px로 뭉개짐, 저신뢰)
-# 살리기. 036의 2000px 과분할은 server_det와 묶여있었고 지금은 mobile_det → 미검증 조합.
-# 950→1400 보수적 중간값. DET_LIMIT도 같이 올려야 엔진이 도로 안 줄임. 과분할 재발하면 死.
-INVOICE_OCR_MAX_W = 1400
-DET_LIMIT_SIDE_LEN = 1400
+# 해상도 테스트(048, net-negative 롤백): 1400은 작은글자 살리나(4-1 0→60) dense 28행표 파괴
+# (1-1 77→12, 행28→27). **mobile_det@1400도 1-1 붕괴 = 해상도 자체가 dense표와 상극**(036의
+# server_det 탓 아님 확정). 950 = dense표 sweet spot. 글로벌 해상도 死, 레버는 텍스트크기 적응형뿐.
+INVOICE_OCR_MAX_W = 950
+DET_LIMIT_SIDE_LEN = 960
 # P1(039 net-negative, 롤백): 무조건 4방향+512는 6-2/6-3(작은표) 살리나 1.jpg/1-2(큰표)를
 # 오회전(0°→90°)해 셀 73→45%·base 85→22% 폭락. early-stop이 맞던 방향을 512 스코어러가 재채점해
 # 틀린 방향이 이김. '확신하며 맞음'vs'확신하며 틀림'을 confidence로 구분 불가 → 무조건 4방향은 틀린 도구.
@@ -35,3 +35,7 @@ ORIENT_KOREAN_REVERIFY = True
 # 사진 칸밀림 보정: 수량/단가/금액 컬럼경계를 본문 money 토큰 X-클러스터로 snap(위치노이즈 평균화).
 # 헤더는 '어느 칸'만, 위치는 본문에서 → 5-2 수량3000↔단가550 swap 교정. PDF/clean은 무영향.
 REFINE_MONEY_COLS_FROM_BODY = True
+# UVDoc 문서 펴기(dewarping): 회전(deskew/orient)이 못 푸는 비균일 왜곡(종이 휨·국소 원근·
+# keystone, 6-2 줄산포 4.35° 같은 것)을 ML로 픽셀단위 보정. 모서리검출 불필요→풀프레임 사진도 됨.
+# CPU는 '속도 주범'이라 OFF, GPU는 ON. 스케일에서 회전 안 먹는 사진을 겨냥한 핵심 레버.
+DOC_UNWARPING = True
