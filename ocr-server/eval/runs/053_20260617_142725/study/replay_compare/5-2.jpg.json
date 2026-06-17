@@ -1,7 +1,7 @@
 {
   "sourceFile": "5-2.jpg",
   "profile": "rich",
-  "extractionPath": "fallback",
+  "extractionPath": "free",
   "pageCount": null,
   "multiPage": null,
   "fields": {
@@ -202,8 +202,8 @@
   "table": {
     "alignMode": "rowIndex",
     "rowCountGt": 6,
-    "rowCountExt": 7,
-    "rowCountMatch": false,
+    "rowCountExt": 6,
+    "rowCountMatch": true,
     "matchedRowIdx": [
       "1",
       "2",
@@ -213,9 +213,7 @@
       "6"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [
-      "7"
-    ],
+    "extOnlyRowIdx": [],
     "rows": [
       {
         "rowIndex": "1",
@@ -449,10 +447,10 @@
           },
           "productCode": {
             "gt": "NPRT10T",
-            "ext": "",
+            "ext": "NPRT10T",
             "gtNorm": "NPRT10T",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "NPRT10T",
+            "status": "match",
             "spurious": false
           },
           "lotNo": {
@@ -481,10 +479,10 @@
           },
           "unitPrice": {
             "gt": "545",
-            "ext": "",
+            "ext": "545",
             "gtNorm": "545",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "545",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -569,7 +567,7 @@
       },
       {
         "rowIndex": "6",
-        "rowMatch": false,
+        "rowMatch": true,
         "cells": {
           "itemName": {
             "gt": "노루모에프내복액75ML",
@@ -589,10 +587,10 @@
           },
           "productCode": {
             "gt": "NRFS75M",
-            "ext": "",
+            "ext": "NRFS75M",
             "gtNorm": "NRFS75M",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "NRFS75M",
+            "status": "match",
             "spurious": false
           },
           "lotNo": {
@@ -613,18 +611,18 @@
           },
           "quantity": {
             "gt": "3,000",
-            "ext": "550",
+            "ext": "3000",
             "gtNorm": "3000",
-            "extNorm": "550",
-            "status": "mismatch",
+            "extNorm": "3000",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "550",
-            "ext": "3,000",
+            "ext": "550",
             "gtNorm": "550",
-            "extNorm": "3000",
-            "status": "mismatch",
+            "extNorm": "550",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -640,13 +638,13 @@
     ],
     "cellCounts": {
       "scored": 30,
-      "match": 22,
-      "mismatch": 4,
-      "ext_missing": 4,
+      "match": 27,
+      "mismatch": 2,
+      "ext_missing": 1,
       "gt_empty": 18,
       "spurious": 0
     },
-    "cellAccuracy": 0.7333333333333333
+    "cellAccuracy": 0.9
   },
   "buckets": {
     "defects": [
@@ -675,14 +673,6 @@
         "reason": "char-level diff (sim=0.75)"
       },
       {
-        "location": "table",
-        "status": "rows_extra",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor invented rows ['7']"
-      },
-      {
         "location": "row2:itemName",
         "status": "mismatch",
         "gtNorm": "노루모에이스산250g캔",
@@ -699,58 +689,18 @@
         "reason": "char-level diff (sim=0.91)"
       },
       {
-        "location": "row4:productCode",
-        "status": "ext_missing",
-        "gtNorm": "NPRT10T",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "545",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row5:quantity",
         "status": "ext_missing",
         "gtNorm": "50",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row6:productCode",
-        "status": "ext_missing",
-        "gtNorm": "NRFS75M",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row6:quantity",
-        "status": "mismatch",
-        "gtNorm": "3000",
-        "extNorm": "550",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['unitPrice']"
-      },
-      {
-        "location": "row6:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "550",
-        "extNorm": "3000",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['quantity']"
       }
     ],
     "bucketTally": {
       "recognition": 5,
-      "structure": 5,
-      "layout": 2,
+      "structure": 1,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

@@ -1718,6 +1718,7 @@ def _metadata_negative_reason(text: str) -> str:
         "business_or_party_metadata": (
             "business", "supplier", "buyer", "address", "tel", "fax",
             "사업자", "대표자", "공급자", "공급받", "상호", "성명", "주소", "전화",
+            "지점코드", "팀코드", "부서코드", "거래처코드", "창고코드", "담당자",
         ),
         "summary_or_balance": (
             "total", "balance", "vat", "tax", "합계", "소계", "총액", "부가세", "누계", "잔액", "계약잔액",
@@ -2700,11 +2701,40 @@ def _ratio(numerator: Any, denominator: Any) -> float:
         return 0.0
 
 
+def _table_amount_sum_reconciles(rows: list[dict[str, Any]], full_text: str) -> bool:
+    """True when the sum of row amounts matches an independent money scalar in
+    full_text (e.g. supplyAmount/totalAmount), within 0.5%. Strategy-independent
+    mirror of the columnar diag check (lines ~2442-2461). Used as the safety net
+    for the non-columnar quantity-optional release (3G): a real table's line
+    amounts sum to the document total; a garbled/partial table's do not."""
+    vals: list[float] = []
+    for r in rows:
+        v = _number_value(_normalize_text(r.get("amount")))
+        if v is not None and v > 0:
+            vals.append(v)
+    if not vals or not full_text:
+        return False
+    sum_amount = sum(vals)
+    if sum_amount <= 0:
+        return False
+    for tok in _money_tokens_from_text(full_text):
+        tok_val = _number_value(tok)
+        if tok_val is None or tok_val <= 0:
+            continue
+        # Skip a match against an individual line amount itself.
+        if any(abs(tok_val - v) <= max(1.0, v * 0.005) for v in vals):
+            continue
+        if abs(tok_val - sum_amount) <= max(1.0, sum_amount * 0.005):
+            return True
+    return False
+
+
 def _evaluate_release_threshold(
     table_rows: list[dict[str, Any]],
     field_quality: dict[str, Any] | None = None,
     *,
     columnar_context: dict[str, Any] | None = None,
+    amount_sum_reconciles: bool = False,
 ) -> tuple[bool, list[str], dict[str, Any]]:
     rows = [_normalize_candidate_row(row) for row in table_rows]
     quality = deepcopy(field_quality) if isinstance(field_quality, dict) else _summarize_candidate_field_quality(rows)
@@ -2891,6 +2921,61 @@ def _evaluate_release_threshold(
                 columnar_release_decision["reason"] = (
                     f"relaxed_ready_{relaxed_ready}/{total}_ratio_{round(relaxed_ratio,4)}_still_below_floor"
                 )
+
+    # 3G: extend the quantity-optional release to NON-columnar strategies
+    # (relaxed_line/strict_column rows that did not go through columnar_2d).
+    # The columnar 3F gate uses confidence + amount-sum reconciliation as its
+    # safety net; here confidence is unavailable, so amount-sum reconciliation
+    # (sum of row amounts == an independent scalar in full_text) is the sole,
+    # strong arithmetic safety net. Same strict invariants as 3F otherwise. This
+    # keeps a clean angle-variant table (itemName/amount/unitPrice near-perfect,
+    # only quantity OCR-noisy) in free instead of demoting it to the much-weaker
+    # fallback, while non-reconciling/garbled tables still demote.
+    if (
+        not columnar_release_decision.get("applied")
+        and amount_sum_reconciles
+        and ratios["itemNamePresentRatio"] >= 1.0
+        and ratios["amountPresentRatio"] >= 1.0
+        and ratios["unitPriceParseableRatio"] >= rules["minUnitPriceParseableRatio"]
+        and metadata_row_count == 0
+        and forbidden_row_count == 0
+    ):
+        qty_missing_3g = sum(1 for r in rows if not _normalize_text(r.get("quantity")))
+        qty_missing_ratio_3g = qty_missing_3g / total if total else 1.0
+        if qty_missing_ratio_3g <= columnar_release_decision["qtyOptionalMissingMaxRatio"]:
+            relaxed_ready_3g = 0
+            for row in rows:
+                name_t = _normalize_text(row.get("itemName"))
+                amt_t = _normalize_text(row.get("amount"))
+                if not name_t or not amt_t:
+                    continue
+                joined = " ".join(_normalize_text(row.get(k)) for k in REQUIRED_TABLE_ROW_KEYS)
+                if _metadata_negative_reason(joined):
+                    continue
+                if _has_forbidden_keys(row, FORBIDDEN_FREE_ROW_KEYS):
+                    continue
+                up_val = _number_value(_normalize_text(row.get("unitPrice")))
+                amt_val = _number_value(amt_t)
+                if up_val is not None and amt_val is not None and amt_val < up_val:
+                    continue
+                relaxed_ready_3g += 1
+            relaxed_ratio_3g = (relaxed_ready_3g / total) if total else 0.0
+            if relaxed_ratio_3g >= min_release_ready_ratio and relaxed_ready_3g >= rules["minReleaseReadyRows"]:
+                pre_apply_3g = list(fail_reasons)
+                for r in (
+                    "release_ready_ratio_below_threshold",
+                    "release_ready_rows_below_threshold",
+                    "quantity_parseable_ratio_below_threshold",
+                ):
+                    if r in fail_reasons:
+                        fail_reasons.remove(r)
+                columnar_release_decision["applied"] = True
+                columnar_release_decision["appliedVia"] = "non_columnar_amount_reconciled"
+                columnar_release_decision["relaxedReleaseReady"] = relaxed_ready_3g
+                columnar_release_decision["relaxedReleaseReadyRatio"] = round(relaxed_ratio_3g, 4)
+                columnar_release_decision["droppedFailReasons"] = [
+                    r for r in pre_apply_3g if r not in fail_reasons
+                ]
 
     decision = {
         "enabled": True,
@@ -3162,6 +3247,12 @@ def _normalize_success_table_rows(table_rows: Any) -> list[dict[str, Any]]:
             and normalized.get("spec") == normalized.get("productCode")
         ):
             normalized["spec"] = ""
+        if normalized.get("productCode") and normalized.get("itemName"):
+            code = re.escape(_normalize_text(normalized["productCode"]))
+            item_name = _normalize_text(normalized["itemName"])
+            stripped_name = re.sub(rf"\s+{code}$", "", item_name)
+            if stripped_name and stripped_name != item_name:
+                normalized["itemName"] = stripped_name
         if "rowIndex" not in normalized:
             normalized["rowIndex"] = str(index)
         normalized_rows.append(normalized)
@@ -3583,10 +3674,12 @@ def extract_invoice_statement_free(
             "amountSumActual": columnar_diag.get("amountSumActual"),
             "amountSumTarget": columnar_diag.get("amountSumTarget"),
         }
+    release_amount_reconciles = _table_amount_sum_reconciles(table_rows, source_text)
     release_pass, release_fail_reasons, release_decision = _evaluate_release_threshold(
         table_rows,
         table_candidate_diagnostics.get("fieldQuality"),
         columnar_context=columnar_context_for_release,
+        amount_sum_reconciles=release_amount_reconciles,
     )
     table_candidate_diagnostics["releaseDecision"] = release_decision
     line_count = len(lines)

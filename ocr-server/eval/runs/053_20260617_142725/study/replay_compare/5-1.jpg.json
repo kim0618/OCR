@@ -1,7 +1,7 @@
 {
   "sourceFile": "5-1.jpg",
   "profile": "rich",
-  "extractionPath": "fallback",
+  "extractionPath": "free",
   "pageCount": null,
   "multiPage": null,
   "fields": {
@@ -202,8 +202,8 @@
   "table": {
     "alignMode": "rowIndex",
     "rowCountGt": 6,
-    "rowCountExt": 7,
-    "rowCountMatch": false,
+    "rowCountExt": 6,
+    "rowCountMatch": true,
     "matchedRowIdx": [
       "1",
       "2",
@@ -213,9 +213,7 @@
       "6"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [
-      "7"
-    ],
+    "extOnlyRowIdx": [],
     "rows": [
       {
         "rowIndex": "1",
@@ -231,11 +229,11 @@
           },
           "spec": {
             "gt": "",
-            "ext": "",
+            "ext": "L0Q",
             "gtNorm": "",
-            "extNorm": "",
+            "extNorm": "l0q",
             "status": "gt_empty",
-            "spurious": false
+            "spurious": true
           },
           "productCode": {
             "gt": "DPNL3OM",
@@ -449,10 +447,10 @@
           },
           "productCode": {
             "gt": "NPRT10T",
-            "ext": "",
+            "ext": "NPRT10T",
             "gtNorm": "NPRT10T",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "NPRT10T",
+            "status": "match",
             "spurious": false
           },
           "lotNo": {
@@ -473,18 +471,18 @@
           },
           "quantity": {
             "gt": "300",
-            "ext": "100",
+            "ext": "300",
             "gtNorm": "300",
-            "extNorm": "100",
-            "status": "mismatch",
+            "extNorm": "300",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "545",
-            "ext": "",
+            "ext": "545",
             "gtNorm": "545",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "545",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -569,7 +567,7 @@
       },
       {
         "rowIndex": "6",
-        "rowMatch": false,
+        "rowMatch": true,
         "cells": {
           "itemName": {
             "gt": "노루모에프내복액75ML",
@@ -589,10 +587,10 @@
           },
           "productCode": {
             "gt": "NRFS75M",
-            "ext": "",
+            "ext": "NRFS75M",
             "gtNorm": "NRFS75M",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "NRFS75M",
+            "status": "match",
             "spurious": false
           },
           "lotNo": {
@@ -613,18 +611,18 @@
           },
           "quantity": {
             "gt": "3,000",
-            "ext": "550",
+            "ext": "3000",
             "gtNorm": "3000",
-            "extNorm": "550",
-            "status": "mismatch",
+            "extNorm": "3000",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "550",
-            "ext": "3,000",
+            "ext": "550",
             "gtNorm": "550",
-            "extNorm": "3000",
-            "status": "mismatch",
+            "extNorm": "550",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -640,13 +638,13 @@
     ],
     "cellCounts": {
       "scored": 30,
-      "match": 19,
-      "mismatch": 6,
-      "ext_missing": 5,
+      "match": 25,
+      "mismatch": 3,
+      "ext_missing": 2,
       "gt_empty": 18,
-      "spurious": 0
+      "spurious": 1
     },
-    "cellAccuracy": 0.6333333333333333
+    "cellAccuracy": 0.8333333333333334
   },
   "buckets": {
     "defects": [
@@ -699,14 +697,6 @@
         "reason": "char-level diff (sim=0.75)"
       },
       {
-        "location": "table",
-        "status": "rows_extra",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor invented rows ['7']"
-      },
-      {
         "location": "row1:productCode",
         "status": "mismatch",
         "gtNorm": "DPNL3OM",
@@ -739,66 +729,18 @@
         "reason": "char-level diff (sim=0.91)"
       },
       {
-        "location": "row4:productCode",
-        "status": "ext_missing",
-        "gtNorm": "NPRT10T",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:quantity",
-        "status": "mismatch",
-        "gtNorm": "300",
-        "extNorm": "100",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
-      },
-      {
-        "location": "row4:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "545",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row5:quantity",
         "status": "ext_missing",
         "gtNorm": "50",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row6:productCode",
-        "status": "ext_missing",
-        "gtNorm": "NRFS75M",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row6:quantity",
-        "status": "mismatch",
-        "gtNorm": "3000",
-        "extNorm": "550",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['unitPrice']"
-      },
-      {
-        "location": "row6:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "550",
-        "extNorm": "3000",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['quantity']"
       }
     ],
     "bucketTally": {
-      "recognition": 6,
-      "structure": 10,
-      "layout": 2,
+      "recognition": 5,
+      "structure": 6,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,
