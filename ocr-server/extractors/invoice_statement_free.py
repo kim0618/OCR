@@ -226,6 +226,9 @@ def _looks_like_product_code_token(value: Any) -> bool:
 
 def _normalize_product_code_token(value: Any) -> str:
     text = _normalize_text(value).strip("()[]{}.,:;|").upper()
+    # OCR can read compact tablet-count suffixes as letters only
+    # (NPRTIOT -> NPRT10T). Normalize before the digit-required shape check.
+    text = re.sub(r"IOT$", "10T", text)
     if not _looks_like_product_code_token(text):
         return ""
     text = re.sub(r"^0P", "OP", text)
@@ -1644,6 +1647,11 @@ def _repair_candidate_column_split(row: dict[str, Any], source: dict[str, Any]) 
         if split:
             repaired["itemName"], repaired["spec"] = split
             repaired["lotNo"] = _normalize_text(row.get("spec"))
+    if raw_text and not _normalize_text(repaired.get("lotNo")):
+        for token in re.split(r"\s+", raw_text):
+            if _looks_like_lot_code_with_unit_suffix(token):
+                repaired["lotNo"] = _normalize_text(token).strip("()[]{}.,:;|")
+                break
     return repaired
 
 
@@ -3253,9 +3261,28 @@ def _normalize_success_table_rows(table_rows: Any) -> list[dict[str, Any]]:
             stripped_name = re.sub(rf"\s+{code}$", "", item_name)
             if stripped_name and stripped_name != item_name:
                 normalized["itemName"] = stripped_name
+                item_name = stripped_name
+            if _HANGUL_RE.search(item_name):
+                stripped_noise = re.sub(r"\s+O(?:C)?$", "", item_name, flags=re.IGNORECASE)
+                if stripped_noise and stripped_noise != item_name:
+                    normalized["itemName"] = stripped_noise
         if "rowIndex" not in normalized:
             normalized["rowIndex"] = str(index)
         normalized_rows.append(normalized)
+    product_code_rows = sum(1 for row in normalized_rows if _normalize_text(row.get("productCode")))
+    product_code_table_like = product_code_rows >= max(1, len(normalized_rows) // 2)
+    if product_code_table_like:
+        for row in normalized_rows:
+            code = _normalize_text(row.get("productCode"))
+            spec = _normalize_text(row.get("spec"))
+            item_name = _normalize_text(row.get("itemName"))
+            if not code or not spec:
+                continue
+            if item_name == code and _HANGUL_RE.search(spec):
+                row["itemName"] = spec
+                row["spec"] = ""
+            elif not _HANGUL_RE.search(spec):
+                row["spec"] = ""
     return normalized_rows
 
 
