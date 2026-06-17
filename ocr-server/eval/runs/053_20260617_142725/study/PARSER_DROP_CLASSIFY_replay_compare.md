@@ -1,7 +1,7 @@
 # Parser-drop classification — 053_20260617_142725\study
 
-Defects scored (mismatch|ext_missing): **308**  |  parser-drop (OCR read it, recoverable): **160**  |  recognition (OCR-bound): **148**
-Parser-recoverable share of defects: **51.9%**
+Defects scored (mismatch|ext_missing): **306**  |  parser-drop (OCR read it, recoverable): **158**  |  recognition (OCR-bound): **148**
+Parser-recoverable share of defects: **51.6%**
 
 ## Parser-drops by column × pattern — CLEAN originals  (n=28)
 
@@ -19,16 +19,16 @@ Parser-recoverable share of defects: **51.9%**
 | supplierRepresentative | 0 | 0 | 1 | **1** |
 | amount | 0 | 1 | 0 | **1** |
 
-## Parser-drops by column × pattern — ANGLE variants  (n=132)
+## Parser-drops by column × pattern — ANGLE variants  (n=130)
 
 | column | drop | mislocate | wrongpick | total |
 |---|--:|--:|--:|--:|
 | itemName | 0 | 7 | 17 | **24** |
 | quantity | 8 | 6 | 7 | **21** |
-| lotNo | 14 | 1 | 1 | **16** |
 | spec | 0 | 10 | 5 | **15** |
-| expiryDate | 5 | 4 | 1 | **10** |
+| lotNo | 14 | 0 | 1 | **15** |
 | amount | 2 | 4 | 3 | **9** |
+| expiryDate | 5 | 3 | 1 | **9** |
 | unitPrice | 5 | 3 | 0 | **8** |
 | productCode | 7 | 0 | 0 | **7** |
 | taxAmount | 3 | 0 | 1 | **4** |
@@ -42,15 +42,15 @@ Parser-recoverable share of defects: **51.9%**
 | totalAmount | 1 | 0 | 0 | **1** |
 | totalQuantity | 0 | 0 | 1 | **1** |
 
-## Parser-drops by column × pattern — ALL  (n=160)
+## Parser-drops by column × pattern — ALL  (n=158)
 
 | column | drop | mislocate | wrongpick | total |
 |---|--:|--:|--:|--:|
 | itemName | 0 | 8 | 22 | **30** |
 | quantity | 9 | 9 | 7 | **25** |
-| lotNo | 16 | 3 | 2 | **21** |
+| lotNo | 16 | 2 | 2 | **20** |
 | spec | 0 | 10 | 6 | **16** |
-| expiryDate | 5 | 7 | 2 | **14** |
+| expiryDate | 5 | 6 | 2 | **13** |
 | amount | 2 | 5 | 3 | **10** |
 | unitPrice | 5 | 4 | 1 | **10** |
 | productCode | 7 | 0 | 0 | **7** |

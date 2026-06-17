@@ -3276,13 +3276,30 @@ def _normalize_success_table_rows(table_rows: Any) -> list[dict[str, Any]]:
             code = _normalize_text(row.get("productCode"))
             spec = _normalize_text(row.get("spec"))
             item_name = _normalize_text(row.get("itemName"))
-            if not code or not spec:
+            if not code:
                 continue
-            if item_name == code and _HANGUL_RE.search(spec):
-                row["itemName"] = spec
-                row["spec"] = ""
-            elif not _HANGUL_RE.search(spec):
-                row["spec"] = ""
+            unit_price = _normalize_text(row.get("unitPrice"))
+            amount = _normalize_text(row.get("amount"))
+            if (
+                unit_price
+                and amount
+                and not _normalize_text(row.get("lotNo"))
+                and not _normalize_text(row.get("expiryDate"))
+                and "," not in unit_price
+                and "," not in amount
+                and _is_lot_or_manufacturing_like_number(unit_price)
+                and _is_strict_expiry_date_number(amount)
+            ):
+                row["lotNo"] = unit_price
+                row["expiryDate"] = amount
+                row["unitPrice"] = ""
+                row["amount"] = ""
+            if spec:
+                if item_name == code and _HANGUL_RE.search(spec):
+                    row["itemName"] = spec
+                    row["spec"] = ""
+                elif not _HANGUL_RE.search(spec):
+                    row["spec"] = ""
     return normalized_rows
 
 
