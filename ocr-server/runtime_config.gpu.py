@@ -29,3 +29,6 @@ IMAGE_BBOX_DESKEW_REOCR = True
 # confidence 못 거르는 '확신하며 틀림'(6-2 거꾸로) 교정. 깨끗한 장은 트리거 안 됨(039 회귀 회피).
 # 6-series 필드 회복용(셀은 파서 바운드라 별개). invoice+image 전용.
 ORIENT_KOREAN_REVERIFY = True
+# 사진 칸밀림 보정: 수량/단가/금액 컬럼경계를 본문 money 토큰 X-클러스터로 snap(위치노이즈 평균화).
+# 헤더는 '어느 칸'만, 위치는 본문에서 → 5-2 수량3000↔단가550 swap 교정. PDF/clean은 무영향.
+REFINE_MONEY_COLS_FROM_BODY = True

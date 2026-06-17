@@ -2405,6 +2405,71 @@ def _build_boundaries_from_column_guides(
     return boundaries
 
 
+def _refine_money_boundaries_from_body(
+    boundaries: list[dict[str, Any]],
+    scope_rows: list,
+    header_idx: int,
+    last_header_y: float,
+    row_y_max: float,
+    debug: dict[str, Any] | None = None,
+) -> None:
+    """사진 OCR 위치노이즈로 어긋난 수량/단가/금액 컬럼 경계를 표 본문 money 토큰의
+    X-클러스터(전역=per-row 노이즈 평균화)로 보정. 헤더는 '어느 칸'만 쓰고 '위치'는 본문에서
+    가져와 snap. 멀티행+3 money컬럼 다 매칭+현재순서 정상일 때만 in-place 보정(보수적)."""
+    import re as _re
+    money_keys = ("quantity", "unitPrice", "amount")
+    bmap = {b.get("canonical_key"): b for b in boundaries}
+    if not all(k in bmap for k in money_keys):
+        return
+    cxs: list[float] = []
+    for idx in range(header_idx + 1, len(scope_rows)):
+        row = scope_rows[idx]
+        ry = _row_center_y(row)
+        if ry <= last_header_y or ry > row_y_max:
+            continue
+        for line in row:
+            t = (getattr(line, "text", "") or "").strip().rstrip(",")
+            if _re.fullmatch(r"-?\d{1,3}(?:,\d{3})+|-?\d{2,7}", t) and not (len(t) == 8 and t.startswith("20")):
+                try:
+                    cxs.append(float(line.cx))
+                except Exception:
+                    continue
+    if len(cxs) < 6:
+        return
+    cxs.sort()
+    span = cxs[-1] - cxs[0]
+    gap = max(25.0, span * 0.06)
+    cols: list[list[float]] = [[cxs[0]]]
+    for x in cxs[1:]:
+        if x - cols[-1][-1] > gap:
+            cols.append([x])
+        else:
+            cols[-1].append(x)
+    centers = [sum(c) / len(c) for c in cols if len(c) >= 2]
+    if len(centers) < 3:
+        return
+    c1, c2, c3 = centers[-3], centers[-2], centers[-1]  # 오른쪽 3 = 수량/단가/금액
+    if not (c1 < c2 < c3):
+        return
+    q, u, a = bmap["quantity"], bmap["unitPrice"], bmap["amount"]
+    if not (q.get("x_start", 0) < u.get("x_start", 0) < a.get("x_start", 0)):
+        return  # 현재 순서가 정상일 때만(역전이면 미지의 구조 → 손 안 댐)
+    d1 = (c1 + c2) / 2.0
+    d2 = (c2 + c3) / 2.0
+    before = {k: (round(bmap[k]["x_start"], 1), round(bmap[k]["x_end"], 1)) for k in money_keys}
+    q["x_end"] = d1
+    u["x_start"] = d1
+    u["x_end"] = d2
+    a["x_start"] = d2
+    if debug is not None:
+        debug["moneyColBodySnap"] = {
+            "applied": True,
+            "centers": [round(c1), round(c2), round(c3)],
+            "dividers": [round(d1), round(d2)],
+            "before": before,
+        }
+
+
 def _extract_items_using_boundaries(
     scope_rows: list[list["OcrLine"]],
     boundaries: list[dict[str, Any]],
@@ -2826,6 +2891,17 @@ def _table_items_with_expected_columns(
     # T-6l-fix: extend default cutoff from 0.96 to 0.98 to capture bottom-of-page rows
     # (e.g. 6.pdf landscape page where row 6 center y ≈ 97% of page height).
     _row_y_max = table_bounds.get("yMax", page_h * 0.98) if table_bounds else page_h * 0.98
+
+    # 사진 위치노이즈 보정(flag): 수량/단가/금액 경계를 본문 money X-클러스터로 snap.
+    # 헤더가 흔들려 컬럼이 어긋날 때 swap/누락을 잡음(5-2 3000↔550). PDF는 정확해 무영향.
+    try:
+        import runtime_config as _RT
+        if getattr(_RT, "REFINE_MONEY_COLS_FROM_BODY", False):
+            _refine_money_boundaries_from_body(
+                boundaries, scope_rows, header_idx, last_header_y, _row_y_max, debug=debug,
+            )
+    except Exception:
+        pass
 
     for idx in range(header_idx + 1, len(scope_rows)):
         row = scope_rows[idx]
