@@ -65,6 +65,13 @@ def _fmt_date(run_ts: str) -> str:
     return run_ts
 
 
+def _run_no(run_ts: str, fallback: int) -> str:
+    """runTs 'NNN_YYYYMMDD_HHMMSS'의 NNN(run 폴더번호)을 회차로. 프리픽스 없으면 #순번 fallback."""
+    import re as _re
+    m = _re.match(r"(\d{1,4})_\d{8}_\d{6}", run_ts or "")
+    return m.group(1) if m else f"#{fallback}"
+
+
 def _delta_pp(cur, prev) -> str:
     """Delta in percentage points with ▲/▼/= marker."""
     if cur is None or prev is None:
@@ -188,7 +195,7 @@ def render_md(path: str | None = None) -> str:
                 fdp = _delta_pp(r["fieldAcc"], prev["fieldAcc"]).strip()
                 cdp = _delta_pp(r["cellAcc"], prev["cellAcc"]).strip()
             L.append(
-                f"| #{i + 1} | {_fmt_date(r['runTs'])} | {r['sampleCount']} | {_pct(r['fieldAcc']).strip()} | {fdp} "
+                f"| {_run_no(r['runTs'], i + 1)} | {_fmt_date(r['runTs'])} | {r['sampleCount']} | {_pct(r['fieldAcc']).strip()} | {fdp} "
                 f"| {_pct(r['cellAcc']).strip()} | {cdp} "
                 f"| {_bucket_cell(r, bprev, 'bRecognition')} | {_bucket_cell(r, bprev, 'bStructure')} "
                 f"| {_bucket_cell(r, bprev, 'bLayout')} | {_bucket_cell(r, bprev, 'bPreprocessing')} |"
@@ -342,7 +349,7 @@ def trend_sections_html(testsets: list[str] | None = None) -> str:
                 fdh = _delta_html(r["fieldAcc"], prev["fieldAcc"])
                 cdh = _delta_html(r["cellAcc"], prev["cellAcc"])
             H.append(
-                f"<tr><td>#{i + 1}</td><td title='{_esc(r['runTs'])}'>{_esc(_fmt_date(r['runTs']))}</td>"
+                f"<tr><td>{_esc(_run_no(r['runTs'], i + 1))}</td><td title='{_esc(r['runTs'])}'>{_esc(_fmt_date(r['runTs']))}</td>"
                 f"<td>{r['sampleCount']}</td>"
                 f"<td>{_pct(r['fieldAcc']).strip()}</td><td>{fdh}</td>"
                 f"<td>{_pct(r['cellAcc']).strip()}</td><td>{cdh}</td>"

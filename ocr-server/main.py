@@ -1126,7 +1126,8 @@ def get_ocr_engine():
             text_detection_model_name=RT.DET_MODEL,
             text_recognition_model_name="korean_PP-OCRv5_mobile_rec",
             device=RT.DEVICE,
-            use_textline_orientation=False,
+            use_textline_orientation=getattr(RT, "TEXTLINE_ORIENTATION", False),  # 줄단위 180° 교정.
+            # 문서단위 orientation(P1)이 못 잡는 줄별 뒤집힘 보정. CPU 속도로 OFF, GPU 게이트.
             use_doc_orientation_classify=False,  # 자체 detect_orientation 사용, 중복 제거
             use_doc_unwarping=getattr(RT, "DOC_UNWARPING", False),  # UVDoc dewarping: 회전이 못 펴는
             # 비균일 왜곡(휨/국소원근/keystone) 픽셀단위 보정. CPU=False(속도주범), GPU=True(RT 게이트).

@@ -10,3 +10,4 @@ ORIENT_KOREAN_REVERIFY = True  # P1: 한글다움<0.10(garbage)이면 4방향 �
 REFINE_MONEY_COLS_FROM_BODY = True  # 사진 칸밀림: 수량/단가/금액 경계를 본문 money X-클러스터로 snap(swap 교정)
 DOC_UNWARPING = False  # 엔진 전역 OFF (전역은 clean 파괴 5.pdf 97→0)
 DOC_UNWARPING_GATED = True  # 조건부 UVDoc: 펴서 재OCR→신뢰도 높을때만 채택(평평=원본유지, 휨=펴짐)
+TEXTLINE_ORIENTATION = True  # 줄단위 180° 교정(곁다리 테스트). CPU OFF(속도)/GPU ON
