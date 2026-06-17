@@ -2825,7 +2825,9 @@ async def ocr_extract(
                 and (not _is_pdf_input) and _orient_is_invoice):
             _bba = _median_textline_angle(ocr_lines_raw)
             _bbox_deskew["measuredAngle"] = _bba
-            if _bba is not None and 1.5 <= abs(_bba) <= 15.0:
+            # 임계 3.0°: 044 전수분석 — 유일 손해(6-1 -2.4°)는 작은tilt(회전이득<컬럼밀림비용),
+            # 진짜 WIN은 전부 ≥3.3°(5-1 13.8·3-3 8.7·6-3 5.8). <3° 회전은 컬럼정렬만 깨므로 스킵.
+            if _bba is not None and 3.0 <= abs(_bba) <= 15.0:
                 (_bdh, _bdw) = doc_deskewed.shape[:2]
                 _bdM = cv2.getRotationMatrix2D((_bdw // 2, _bdh // 2), _bba, 1.0)
                 _bdrot = cv2.warpAffine(doc_deskewed, _bdM, (_bdw, _bdh),
