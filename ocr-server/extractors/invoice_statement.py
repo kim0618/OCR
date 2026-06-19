@@ -8480,6 +8480,43 @@ def extract_invoice_statement_fields(
                 if (not _clean_value(str(fields.get(_st_key) or ""))
                         and _clean_value(str(_st_row0.get(_st_key) or ""))):
                     fields[_st_key] = _clean_value(str(_st_row0.get(_st_key)))
+    if (canonical.get("tableMeta") or {}).get("legacySerialQuantityReconstructionApplied"):
+        _sq_rows = canonical.get("tableRows") or []
+        if len(_sq_rows) == 1:
+            _sq_values = _quantity_values(str(_sq_rows[0].get("quantity") or ""))
+            _sq_current = _quantity_values(str(fields.get("totalQuantity") or ""))
+            if _sq_values and (not _sq_current or _sq_current[0] != _sq_values[0]):
+                fields["totalQuantity"] = _sq_values[0]
+                canonical["tableMeta"]["totalQuantityBackfilledFromSingleSerialRow"] = True
+                warnings = canonical["tableMeta"].setdefault("valueMappingWarnings", [])
+                warning = "totalQuantity:backfilled_from_single_serial_table_quantity"
+                if warning not in warnings:
+                    warnings.append(warning)
+                fields["tableMeta"] = canonical["tableMeta"]
+    if not _clean_value(str(fields.get("taxAmount") or "")):
+        _tax_supply_digits = re.sub(r"\D", "", str(fields.get("supplyAmount") or ""))
+        _tax_total_digits = re.sub(r"\D", "", str(fields.get("totalAmount") or ""))
+        if _tax_supply_digits and _tax_total_digits:
+            _tax_supply_num = int(_tax_supply_digits)
+            _tax_total_num = int(_tax_total_digits)
+            _tax_candidate_num = _tax_total_num - _tax_supply_num
+            _tax_ocr_values = {
+                int(value.replace(",", ""))
+                for line in lines
+                for value in _amount_values(getattr(line, "text", ""))
+            }
+            if (
+                _tax_candidate_num > 0
+                and 0.01 <= (_tax_candidate_num / max(_tax_total_num, 1)) <= 0.3
+                and _tax_candidate_num in _tax_ocr_values
+            ):
+                fields["taxAmount"] = f"{_tax_candidate_num:,}"
+                canonical["tableMeta"]["taxAmountBackfilledFromSupplyTotalChecksum"] = True
+                warnings = canonical["tableMeta"].setdefault("valueMappingWarnings", [])
+                warning = "taxAmount:backfilled_from_supply_total_checksum"
+                if warning not in warnings:
+                    warnings.append(warning)
+                fields["tableMeta"] = canonical["tableMeta"]
     if _legacy_pharma_reconstructed and _LEGACY_MONEY_COMPANY_RE.search(str(fields.get("buyerCompany") or "")):
         fields["buyerCompany"] = ""
         canonical["tableMeta"]["scalarContaminationGuardApplied"] = True
