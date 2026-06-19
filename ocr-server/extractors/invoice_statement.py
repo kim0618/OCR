@@ -3351,11 +3351,17 @@ def _is_representative_candidate(text: str) -> bool:
         value,
     ):
         return False
+    if re.search(r"\uc774\s*\ud558|\ucd1d\s*\uc218\s*\ub7c9|\uc218\s*\ub7c9|\ud2b9\s*\uc774\s*\uc0ac\s*\ud56d", value):
+        return False
+    if re.search(r"\uac70\ub798\s*\uba85\s*\uc138|\uba85\s*\uc138\s*\uc11c|\uc81c\s*\ud488\s*\uba85|\ud488\s*\uba85", value):
+        return False
     # \uc5c5\ud0dc/\uc885\ubaa9 \uac12\uacfc \ud45c \ub77c\ubca8\uc774 \uc774\ub984 \ud328\ud134([\uac00-\ud7a3]{2,5}[,/]...)\uacfc \uac19\uc740 shape\ub77c \ud1b5\uacfc\ub418\ub358 \uac83 \ucc28\ub2e8.
     # \uc774\ub984\uc5d4 \uc548 \ub098\uc624\ub294 \ud1a0\ud070: \uc5c5\ud0dc\uac12(X\uc5c5 \u2014 \ubb34\uc5ed\uc5c5/\uc81c\uc870\uc5c5), \ub77c\ubca8(\ubc88\ud638/\uae30\uac04/\uae08\uc561/\uc77c\uc790 \ub4f1).
     if re.search(r"[\uac00-\ud7a3]{2,}\uc5c5(?:[,/]|$)", compact):  # X\uc5c5 (\uc5c5\ud0dc\uac12)
         return False
     if re.search(r"\ubc88\ud638|\uae30\uac04|\uae08\uc561|\uc77c\uc790|\ub2e8\uac00|\uaddc\uaca9|\ub2e8\uc704|\uc138\uc561|\uc138\uc5ed|\uc5c5\ub370|\uc885\ubaa9", value):  # \ubc88\ud638/\uae30\uac04/\uae08\uc561/\uc77c\uc790/\ub2e8\uac00/\uaddc\uaca9/\ub2e8\uc704/\uc138\uc561/\uc138\uc5ed/\uc5c5\ub370/\uc885\ubaa9
+        return False
+    if compact.endswith("\ubc88"):
         return False
     if re.fullmatch(r"[\uac00-\ud7a3]{2,5}(?:[,/][\uac00-\ud7a3]{2,5})?", compact):
         return True
@@ -3398,20 +3404,20 @@ def _representative_from_scope(lines: list[OcrLine]) -> str:
     for idx, line in enumerate(ordered):
         if not _REP_ANCHOR_RE.search(line.text):
             continue
-        same = _clean_representative_candidate(_REP_ANCHOR_RE.sub("", line.text, count=1))
+        same = _clean_representative_candidate_lenient(_REP_ANCHOR_RE.sub("", line.text, count=1))
         if same:
             return same
         for peer in _same_row_candidates(ordered, line):
-            candidate = _clean_representative_candidate(peer.text)
+            candidate = _clean_representative_candidate_lenient(peer.text)
             if candidate:
                 return candidate
         for nxt in ordered[idx + 1 : idx + 5]:
-            candidate = _clean_representative_candidate(nxt.text)
+            candidate = _clean_representative_candidate_lenient(nxt.text)
             if candidate:
                 return candidate
     candidates: list[tuple[int, str]] = []
     for line in ordered:
-        candidate = _clean_representative_candidate(line.text)
+        candidate = _clean_representative_candidate_lenient(line.text)
         if candidate:
             score = 10
             if "," in candidate or "/" in candidate:
@@ -3657,6 +3663,109 @@ def _dedupe_cross_party_representative(supplier: dict[str, str], buyer: dict[str
                 "reason": "same_candidate_buyer_block_preferred",
             }
         )
+
+
+def _clean_representative_candidate_lenient(text: str) -> str:
+    value = _clean_representative_candidate(text)
+    if value:
+        return value
+    cleaned = re.sub(r"(\ub300\s*\ud45c\s*\uc790?)\s*\uc601\s*[:：]?", r"\1 ", _clean_value(text))
+    cleaned = re.sub(r"^\uc601\s*[:：]?\s*", "", cleaned).strip()
+    return _clean_representative_candidate(cleaned)
+
+
+def _representative_zone_candidates(
+    lines: list[OcrLine],
+    *,
+    x_min: float,
+    x_max: float,
+    y_hint: float | None = None,
+    page_h: float,
+) -> list[tuple[float, str]]:
+    candidates: list[tuple[float, str]] = []
+    rep_anchors = [
+        line for line in lines
+        if x_min <= line.cx <= x_max and _REP_ANCHOR_RE.search(line.text)
+    ]
+    for line in lines:
+        if not (x_min <= line.cx <= x_max):
+            continue
+        if y_hint is not None and abs(line.cy - y_hint) > page_h * 0.22:
+            continue
+        value = _clean_representative_candidate_lenient(line.text)
+        if not value:
+            continue
+        score = 0.0
+        if _REP_ANCHOR_RE.search(line.text):
+            score += 18.0
+        if any(abs(line.cy - anchor.cy) <= max(line.h, anchor.h) * 1.6 and line.x > anchor.x for anchor in rep_anchors):
+            score += 14.0
+        if "," in value or "/" in value:
+            score += 8.0
+        if re.fullmatch(r"[\uac00-\ud7a3]{2,3}", value):
+            score += 6.0
+        if y_hint is not None:
+            score -= abs(line.cy - y_hint) / max(page_h, 1) * 30.0
+        candidates.append((score, value))
+    candidates.sort(key=lambda item: (-item[0], item[1]))
+    return candidates
+
+
+def _recover_representatives_from_party_zones(
+    supplier: dict[str, str],
+    buyer: dict[str, str],
+    all_lines: list[OcrLine],
+    bizs: list[tuple[float, float, str, OcrLine]],
+    split_x: float,
+    page_w: float,
+    page_h: float,
+    debug: dict[str, Any],
+) -> None:
+    biz_by_value = {value: (x, y) for x, y, value, _ in bizs}
+
+    def maybe_set(role: str, party: dict[str, str], candidates: list[tuple[float, str]], other: dict[str, str]) -> None:
+        if not candidates:
+            return
+        current = party.get("representative", "")
+        current_valid = _is_representative_candidate(current)
+        current_same_as_other = bool(current and _party_norm(current) == _party_norm(other.get("representative", "")))
+        for _, candidate in candidates:
+            if _party_norm(candidate) == _party_norm(other.get("representative", "")) and not current_same_as_other:
+                if not current:
+                    debug.setdefault("representativeZoneRecoveryRejected", []).append(
+                        {"role": role, "candidate": candidate, "reason": "top_candidate_already_assigned_to_other_party"}
+                    )
+                    return
+                continue
+            if not current or not current_valid or current_same_as_other:
+                party["representative"] = candidate
+                debug.setdefault("representativeZoneRecovery", []).append(
+                    {"role": role, "candidate": candidate, "reason": "zone_candidate"}
+                )
+                return
+
+    supplier_hint = biz_by_value.get(supplier.get("bizNumber", ""))
+    buyer_hint = biz_by_value.get(buyer.get("bizNumber", ""))
+    supplier_candidates = (
+        _representative_zone_candidates(
+            all_lines,
+            x_min=0,
+            x_max=split_x + page_w * 0.08,
+            y_hint=supplier_hint[1],
+            page_h=page_h,
+        )
+        if supplier_hint
+        else []
+    )
+    buyer_candidates = _representative_zone_candidates(
+        all_lines,
+        x_min=split_x - page_w * 0.08,
+        x_max=page_w,
+        y_hint=buyer_hint[1] if buyer_hint else None,
+        page_h=page_h,
+    )
+    maybe_set("supplier", supplier, supplier_candidates, buyer)
+    maybe_set("buyer", buyer, buyer_candidates, supplier)
 
 
 def _remove_cross_party_address_fragments(supplier: dict[str, str], buyer: dict[str, str], debug: dict[str, Any]) -> None:
@@ -4272,6 +4381,7 @@ def _extract_party_fields(
             _party["representative"] = _split_name
             block_debug.setdefault("applied", []).append("company_split.representative")
     _dedupe_cross_party_representative(supplier, buyer, block_debug)
+    _recover_representatives_from_party_zones(supplier, buyer, all_lines, bizs, split_x, page_w, page_h, block_debug)
     _remove_cross_party_address_fragments(supplier, buyer, block_debug)
     continuation_debug = _apply_address_continuation_post(supplier, buyer, all_lines, bizs, page_w, page_h)
     supplier_recovery_debug = _recover_missing_supplier_fields(supplier, buyer, all_lines, page_w, page_h)
@@ -7014,6 +7124,9 @@ def _normalize_invoice_representative(value: str) -> tuple[str, list[dict[str, s
     before = normalized
     normalized = re.sub(r"\s*[,/]\s*", ", ", normalized)
     _add_norm_rule(rules, "representative_separator_spacing", before, normalized, "safe", "multiple_representative_separator")
+    before = normalized
+    normalized = re.sub(r"^\uc601(?=[\uac00-\ud7a3]{2,4}$)", "", normalized)
+    _add_norm_rule(rules, "representative_leading_yeong_label_removed", before, normalized, "safe", "ocr_label_fragment_before_name")
     if re.fullmatch(r"[\uac00-\ud7a3]{2,4}", normalized or ""):
         rules.append(
             {
