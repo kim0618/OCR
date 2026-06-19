@@ -1789,6 +1789,22 @@ def _row_numeric_arithmetic_matches(row: dict[str, Any]) -> bool:
     return quantity > 0 and abs((quantity * unit_price) - amount) < 0.01
 
 
+def _repair_quantity_from_row_arithmetic(row: dict[str, Any]) -> bool:
+    unit_price = _money_for_sum(row.get("unitPrice"))
+    amount = _money_for_sum(row.get("amount"))
+    if unit_price is None or amount is None or unit_price <= 0 or amount <= 0:
+        return False
+    quotient = amount / unit_price
+    rounded = round(quotient)
+    if rounded <= 0 or rounded > 9999 or abs(quotient - rounded) > 0.0001:
+        return False
+    current = _number_value(row.get("quantity"))
+    if current is not None and abs((current * unit_price) - amount) < 0.01:
+        return False
+    row["quantity"] = _normalize_quantity(str(rounded))
+    return True
+
+
 def _row_item_money_column_candidate(item: dict[str, Any]) -> bool:
     value = _normalize_text(item.get("value"))
     raw_text = _normalize_text(item.get("text"))
@@ -3300,6 +3316,7 @@ def _normalize_success_table_rows(table_rows: Any) -> list[dict[str, Any]]:
                     row["spec"] = ""
                 elif not _HANGUL_RE.search(spec):
                     row["spec"] = ""
+            _repair_quantity_from_row_arithmetic(row)
     return normalized_rows
 
 
