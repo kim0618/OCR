@@ -1539,6 +1539,20 @@ def _looks_like_lot_code_with_unit_suffix(value: Any) -> bool:
     return bool(re.fullmatch(r"(?=.*\d)[A-Z0-9]+(?:-[A-Z0-9]+)*-\d+EA", compact))
 
 
+def _normalize_free_lot_code_with_ocr_unit_suffix(value: Any) -> str:
+    text = _normalize_text(value).strip("()[]{}.,:;|")
+    if not text:
+        return ""
+    compact = re.sub(r"\s+", "", text).upper()
+    compact = re.sub(r"^1C(?=\d)", "IC", compact)
+    if _looks_like_lot_code_with_unit_suffix(compact):
+        return compact[:-2] + "ea"
+    match = re.fullmatch(r"(IC\d{5}-\d{3})(?:D?A)", compact)
+    if match:
+        return f"{match.group(1)}ea"
+    return ""
+
+
 def _looks_like_item_name_spec_tail(value: Any) -> bool:
     text = _normalize_spec(value).strip("()[]{}.,:;|")
     if not text or len(text) > 20:
@@ -3321,6 +3335,27 @@ def _repair_leading_header_stub_row(rows: list[dict[str, Any]]) -> None:
         rows[0]["spec"] = next_spec
 
 
+def _repair_item_spec_lot_shift(row: dict[str, Any]) -> bool:
+    split = _split_item_name_spec_tail(row.get("itemName"))
+    lot_code = _normalize_free_lot_code_with_ocr_unit_suffix(row.get("spec"))
+    if not split or not lot_code or _normalize_text(row.get("lotNo")):
+        return False
+
+    row["itemName"], row["spec"] = split
+    row["lotNo"] = lot_code
+
+    # When the row was split one column too early, quantity/unitPrice/amount can
+    # appear as unitPrice/amount/(missing). Repair only when arithmetic is exact.
+    if not _normalize_text(row.get("quantity")):
+        shifted_qty = _number_value(row.get("unitPrice"))
+        shifted_unit_price = _money_for_sum(row.get("amount"))
+        if shifted_qty is not None and shifted_unit_price is not None and shifted_qty > 0 and shifted_unit_price > 0:
+            row["quantity"] = _normalize_quantity(str(int(shifted_qty)))
+            row["unitPrice"] = _normalize_money(f"{int(shifted_unit_price):,}")
+            row["amount"] = _normalize_money(f"{int(round(shifted_qty * shifted_unit_price)):,}")
+    return True
+
+
 def _normalize_success_table_rows(table_rows: Any) -> list[dict[str, Any]]:
     if not isinstance(table_rows, list):
         return []
@@ -3355,6 +3390,7 @@ def _normalize_success_table_rows(table_rows: Any) -> list[dict[str, Any]]:
                 stripped_noise = re.sub(r"\s+O(?:C)?$", "", item_name, flags=re.IGNORECASE)
                 if stripped_noise and stripped_noise != item_name:
                     normalized["itemName"] = stripped_noise
+        _repair_item_spec_lot_shift(normalized)
         if "rowIndex" not in normalized:
             normalized["rowIndex"] = str(index)
         normalized_rows.append(normalized)
