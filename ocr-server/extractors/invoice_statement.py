@@ -7503,6 +7503,16 @@ def _legacy_st_unit_in_text(text: str) -> str:
     return ""
 
 
+def _legacy_st_ascii_unit_in_text(text: str) -> str:
+    upper = (text or "").upper()
+    for unit in ("BOX", "EA", "PK", "SET", "VIAL", "TAB", "CAP"):
+        if re.search(rf"(?<![A-Z0-9]){re.escape(unit)}(?![A-Z0-9])", upper):
+            return unit
+    if "B0X" in upper:
+        return "BOX"
+    return ""
+
+
 def _legacy_st_row_is_item_shaped(row: dict[str, Any]) -> bool:
     """A single supply/tax item row: rawText carries a lot composite + a unit token
     + >=3 grouped money tokens (수량 + 단가 + 공급가액 …)."""
@@ -7523,6 +7533,15 @@ def _legacy_st_item_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [row for row in rows if _legacy_st_row_is_item_shaped(row)]
 
 
+def _legacy_st_item_row_signature(row: dict[str, Any]) -> tuple[str, tuple[str, ...]]:
+    raw = _clean_value(str(row.get("_rawText") or row.get("rawText") or ""))
+    lot_match = _LEGACY_ST_LOT_COMPOSITE_RE.search(raw)
+    return (
+        lot_match.group(0) if lot_match else "",
+        tuple(_LEGACY_ST_MONEY_RE.findall(raw)),
+    )
+
+
 def _looks_like_legacy_supply_tax_single_row(
     rows: list[dict[str, Any]],
     meta: dict[str, Any],
@@ -7535,7 +7554,11 @@ def _looks_like_legacy_supply_tax_single_row(
     # (the rest are summary/footer noise, e.g. a 외상매출금/합계 line spuriously parsed
     # as a table row when OCR runs on the de-skew-reverted straight image). The single
     # item row is reconstructed and the noise rows are dropped.
-    return len(_legacy_st_item_rows(rows)) == 1
+    item_rows = _legacy_st_item_rows(rows)
+    if not item_rows:
+        return False
+    signatures = {_legacy_st_item_row_signature(row) for row in item_rows}
+    return len(signatures) == 1
 
 
 def _legacy_st_line_text_set(lines: list[OcrLine] | None) -> set[str]:
@@ -7568,6 +7591,10 @@ def _legacy_st_unmerge_item_name(name: str, line_texts: set[str]) -> str:
         else:
             break
     return " ".join(tokens)
+
+
+def _legacy_st_money_int(value: str) -> str:
+    return _format_legacy_money((value or "").split(".", 1)[0])
 
 
 def _reconstruct_legacy_supply_tax_row(
@@ -7632,11 +7659,6 @@ def _reconstruct_legacy_supply_tax_row(
     # not a literal value hardcode). e.g. "클리마트플란정 중욕명" -> "클리마트플란정".
     name = _legacy_st_unmerge_item_name(name, _legacy_st_line_text_set(lines))
 
-    # KRW invoice amounts are integers; drop any OCR decimal tail (e.g. 28,338.00)
-    # BEFORE re-grouping so the fractional digits are not folded into the integer.
-    def _money_int(value: str) -> str:
-        return _format_legacy_money((value or "").split(".", 1)[0])
-
     new_row = _empty_table_row(1, str(row.get("_rawText") or ""))
     new_row.update({
         "itemName": name,
@@ -7645,26 +7667,154 @@ def _reconstruct_legacy_supply_tax_row(
         "lotNo": lot_no,
         "serialNo": lot_no,
         "expiryDate": "",  # no independent 유효기간 column; keep lot composite intact.
-        "quantity": _money_int(quantity) if quantity else "",
+        "quantity": _legacy_st_money_int(quantity) if quantity else "",
         "unit": unit,
-        "unitPrice": _money_int(unit_price),
-        "supplyAmount": _money_int(supply),
-        "taxAmount": _money_int(tax),
+        "unitPrice": _legacy_st_money_int(unit_price),
+        "supplyAmount": _legacy_st_money_int(supply),
+        "taxAmount": _legacy_st_money_int(tax),
         # Standard 8-key ``amount`` mirrors 공급가액 (row line amount); the document
         # 합계금액 stays a document scalar (no per-row total token in OCR evidence).
-        "amount": _money_int(supply),
+        "amount": _legacy_st_money_int(supply),
         "totalAmount": "",
         "_source": "legacy_text_items_supply_tax_reconstructed",
     })
     # 3BE: preserve non-standard-8-key evidence (단위/세액) so it is not lost when
     # the Draft GT export keeps only the 8 standard keys. tableExtraColumns mirrors
     # the established 2.pdf extra-column shape; sourceRowMeta keeps a raw-evidence copy.
-    tax_value = _money_int(tax)
+    tax_value = _legacy_st_money_int(tax)
     extra_columns: dict[str, str] = {}
     if unit:
         extra_columns["unit"] = unit
     if tax_value:
         extra_columns["taxAmount"] = tax_value
+    if extra_columns:
+        new_row["tableExtraColumns"] = extra_columns
+        new_row["sourceRowMeta"] = dict(extra_columns)
+    return new_row
+
+
+def _reconstruct_legacy_supply_tax_row_from_scattered_lines(
+    rows: list[dict[str, Any]],
+    meta: dict[str, Any],
+    lines: list[OcrLine] | None = None,
+) -> dict[str, Any] | None:
+    if meta.get("extractionSource") != "legacy_text_items":
+        return None
+    if not rows or len(rows) > 3 or not lines:
+        return None
+    if _legacy_st_item_rows(rows):
+        return None
+
+    item_row = rows[0]
+    name = _clean_value(str(item_row.get("itemName") or ""))
+    if not name:
+        return None
+
+    lot_candidates: list[tuple[OcrLine, str]] = []
+    unit = _clean_value(str(item_row.get("unit") or ""))
+    money_candidates: list[tuple[OcrLine, str, int]] = []
+    for line in lines:
+        text = _clean_value(getattr(line, "text", "") if not isinstance(line, dict) else line.get("text", ""))
+        if not text:
+            continue
+        for match in _LEGACY_ST_LOT_COMPOSITE_RE.finditer(text):
+            lot_candidates.append((line, match.group(0)))
+        if not unit:
+            unit = _legacy_st_ascii_unit_in_text(text)
+        for match in _LEGACY_ST_MONEY_RE.finditer(text):
+            value = match.group(0)
+            try:
+                numeric = int(re.sub(r"\D", "", value.split(".", 1)[0]))
+            except ValueError:
+                continue
+            if numeric > 0:
+                money_candidates.append((line, value, numeric))
+
+    if not lot_candidates or not unit or len(money_candidates) < 3:
+        return None
+
+    decimal_candidates = [(line, value, num) for line, value, num in money_candidates if "." in value]
+    if not decimal_candidates:
+        return None
+    unit_price_line, unit_price, unit_price_num = decimal_candidates[0]
+    if unit_price_num <= 0:
+        return None
+
+    quantity_candidates = [
+        (line, value, num) for line, value, num in money_candidates
+        if "." not in value and 0 < num <= 9999
+    ]
+    if not quantity_candidates:
+        return None
+    quantity_line, quantity, _ = min(
+        quantity_candidates,
+        key=lambda cand: (abs(cand[0].x - unit_price_line.x) + abs(cand[0].cy - unit_price_line.cy), cand[0].cy),
+    )
+
+    supply_candidates = [
+        (line, value, num) for line, value, num in money_candidates
+        if "." not in value and num >= 10_000_000
+    ]
+    if not supply_candidates:
+        return None
+    supply_line, supply, _ = min(
+        supply_candidates,
+        key=lambda cand: (abs(cand[0].x - unit_price_line.x) + abs(cand[0].cy - unit_price_line.cy), cand[0].cy),
+    )
+
+    tax_candidates = [
+        (line, value, num) for line, value, num in money_candidates
+        if "." not in value and 1_000_000 <= num < 10_000_000
+    ]
+    tax = ""
+    if tax_candidates:
+        _, tax, _ = min(
+            tax_candidates,
+            key=lambda cand: (abs(cand[0].x - supply_line.x) + abs(cand[0].cy - supply_line.cy), cand[0].cy),
+        )
+
+    _, lot_no = min(
+        lot_candidates,
+        key=lambda cand: (
+            abs(cand[0].x - quantity_line.x) + abs(cand[0].cy - quantity_line.cy),
+            cand[0].cy,
+        ),
+    )
+
+    raw_text = " ".join(
+        part for part in (
+            str(item_row.get("_rawText") or item_row.get("rawText") or ""),
+            lot_no,
+            unit,
+            quantity,
+            unit_price,
+            supply,
+            tax,
+        )
+        if _clean_value(part)
+    )
+    new_row = _empty_table_row(1, raw_text)
+    new_row.update({
+        "itemName": name,
+        "spec": "",
+        "itemCode": "",
+        "lotNo": lot_no,
+        "serialNo": lot_no,
+        "expiryDate": "",
+        "quantity": _legacy_st_money_int(quantity),
+        "unit": unit,
+        "unitPrice": _legacy_st_money_int(unit_price),
+        "supplyAmount": _legacy_st_money_int(supply),
+        "taxAmount": _legacy_st_money_int(tax),
+        "amount": _legacy_st_money_int(supply),
+        "totalAmount": "",
+        "_source": "legacy_text_items_supply_tax_scattered_reconstructed",
+    })
+    extra_columns: dict[str, str] = {}
+    if unit:
+        extra_columns["unit"] = unit
+    if new_row.get("taxAmount"):
+        extra_columns["taxAmount"] = new_row["taxAmount"]
     if extra_columns:
         new_row["tableExtraColumns"] = extra_columns
         new_row["sourceRowMeta"] = dict(extra_columns)
@@ -7677,9 +7827,11 @@ def _apply_legacy_single_supply_tax_reconstruction(
 ) -> bool:
     rows = canonical.get("tableRows") or []
     meta = canonical.get("tableMeta") or {}
-    if not _looks_like_legacy_supply_tax_single_row(rows, meta):
-        return False
-    new_row = _reconstruct_legacy_supply_tax_row(rows, meta, lines)
+    new_row = None
+    if _looks_like_legacy_supply_tax_single_row(rows, meta):
+        new_row = _reconstruct_legacy_supply_tax_row(rows, meta, lines)
+    if not new_row:
+        new_row = _reconstruct_legacy_supply_tax_row_from_scattered_lines(rows, meta, lines)
     if not new_row:
         return False
 
@@ -7705,6 +7857,8 @@ def _apply_legacy_single_supply_tax_reconstruction(
     })
     meta["extractionSource"] = "legacy_text_items_supply_tax_reconstructed"
     meta["legacySupplyTaxReconstructionApplied"] = True
+    if new_row.get("_source") == "legacy_text_items_supply_tax_scattered_reconstructed":
+        meta["legacySupplyTaxScatteredLineReconstructionApplied"] = True
     meta["legacySupplyTaxUnitPreserved"] = new_row.get("unit") or ""
     # 3BE: surface the extra-column definitions for the units/tax preserved on the row.
     extra_cols = new_row.get("tableExtraColumns") or {}

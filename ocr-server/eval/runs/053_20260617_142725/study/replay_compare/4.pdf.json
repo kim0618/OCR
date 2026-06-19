@@ -202,15 +202,13 @@
   "table": {
     "alignMode": "rowIndex",
     "rowCountGt": 1,
-    "rowCountExt": 2,
-    "rowCountMatch": false,
+    "rowCountExt": 1,
+    "rowCountMatch": true,
     "matchedRowIdx": [
       "1"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [
-      "2"
-    ],
+    "extOnlyRowIdx": [],
     "rows": [
       {
         "rowIndex": "1",
@@ -242,42 +240,42 @@
           },
           "lotNo": {
             "gt": "0350623-231024-260811",
-            "ext": "",
+            "ext": "0350823-231024-200811",
             "gtNorm": "0350623231024260811",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "0350823231024200811",
+            "status": "mismatch",
             "spurious": false
           },
           "expiryDate": {
             "gt": "",
-            "ext": "231024",
+            "ext": "",
             "gtNorm": "",
-            "extNorm": "231024",
+            "extNorm": "",
             "status": "gt_empty",
-            "spurious": true
+            "spurious": false
           },
           "quantity": {
             "gt": "1,000",
-            "ext": "",
+            "ext": "1,000",
             "gtNorm": "1000",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "1000",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "28,338",
-            "ext": "25,760,000",
+            "ext": "28,338",
             "gtNorm": "28338",
-            "extNorm": "25760000",
-            "status": "mismatch",
+            "extNorm": "28338",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "25,760,000",
-            "ext": "28,338",
+            "ext": "25,760,000",
             "gtNorm": "25760000",
-            "extNorm": "28338",
-            "status": "mismatch",
+            "extNorm": "25760000",
+            "status": "match",
             "spurious": false
           }
         }
@@ -285,13 +283,13 @@
     ],
     "cellCounts": {
       "scored": 5,
-      "match": 0,
-      "mismatch": 3,
-      "ext_missing": 2,
+      "match": 3,
+      "mismatch": 2,
+      "ext_missing": 0,
       "gt_empty": 3,
-      "spurious": 1
+      "spurious": 0
     },
-    "cellAccuracy": 0.0
+    "cellAccuracy": 0.6
   },
   "buckets": {
     "defects": [
@@ -344,14 +342,6 @@
         "reason": "char-level diff (sim=0.88)"
       },
       {
-        "location": "table",
-        "status": "rows_extra",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor invented rows ['2']"
-      },
-      {
         "location": "row1:itemName",
         "status": "mismatch",
         "gtNorm": "클리마토플란정",
@@ -361,41 +351,17 @@
       },
       {
         "location": "row1:lotNo",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "0350623231024260811",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "1000",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "28338",
-        "extNorm": "25760000",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
-      },
-      {
-        "location": "row1:amount",
-        "status": "mismatch",
-        "gtNorm": "25760000",
-        "extNorm": "28338",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['unitPrice']"
+        "extNorm": "0350823231024200811",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.89)"
       }
     ],
     "bucketTally": {
-      "recognition": 7,
-      "structure": 3,
-      "layout": 2,
+      "recognition": 8,
+      "structure": 0,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

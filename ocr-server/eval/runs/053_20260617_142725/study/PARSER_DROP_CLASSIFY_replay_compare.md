@@ -1,68 +1,67 @@
 # Parser-drop classification — 053_20260617_142725\study
 
-Defects scored (mismatch|ext_missing): **300**  |  parser-drop (OCR read it, recoverable): **152**  |  recognition (OCR-bound): **148**
-Parser-recoverable share of defects: **50.7%**
+Defects scored (mismatch|ext_missing): **289**  |  parser-drop (OCR read it, recoverable): **141**  |  recognition (OCR-bound): **148**
+Parser-recoverable share of defects: **48.8%**
 
-## Parser-drops by column × pattern — CLEAN originals  (n=27)
+## Parser-drops by column × pattern — CLEAN originals  (n=24)
 
 | column | drop | mislocate | wrongpick | total |
 |---|--:|--:|--:|--:|
 | itemName | 0 | 1 | 5 | **6** |
 | lotNo | 1 | 2 | 1 | **4** |
-| quantity | 1 | 3 | 0 | **4** |
 | expiryDate | 0 | 3 | 1 | **4** |
+| quantity | 0 | 3 | 0 | **3** |
 | buyerRepresentative | 0 | 0 | 2 | **2** |
-| unitPrice | 0 | 1 | 1 | **2** |
 | spec | 0 | 0 | 1 | **1** |
+| unitPrice | 0 | 0 | 1 | **1** |
 | buyerAddress | 0 | 0 | 1 | **1** |
 | supplierCompany | 0 | 0 | 1 | **1** |
 | supplierRepresentative | 0 | 0 | 1 | **1** |
-| amount | 0 | 1 | 0 | **1** |
 
-## Parser-drops by column × pattern — ANGLE variants  (n=125)
+## Parser-drops by column × pattern — ANGLE variants  (n=117)
 
 | column | drop | mislocate | wrongpick | total |
 |---|--:|--:|--:|--:|
 | itemName | 0 | 7 | 17 | **24** |
-| quantity | 7 | 5 | 7 | **19** |
+| quantity | 6 | 5 | 6 | **17** |
 | spec | 0 | 10 | 5 | **15** |
 | lotNo | 11 | 0 | 1 | **12** |
-| amount | 2 | 4 | 3 | **9** |
 | expiryDate | 5 | 3 | 1 | **9** |
-| unitPrice | 5 | 3 | 0 | **8** |
+| amount | 0 | 4 | 3 | **7** |
 | productCode | 7 | 0 | 0 | **7** |
-| taxAmount | 3 | 0 | 1 | **4** |
+| unitPrice | 3 | 3 | 0 | **6** |
+| taxAmount | 1 | 0 | 3 | **4** |
 | buyerAddress | 0 | 0 | 3 | **3** |
 | issueDate | 0 | 0 | 3 | **3** |
-| supplyAmount | 2 | 1 | 0 | **3** |
 | buyerRepresentative | 1 | 1 | 1 | **3** |
 | supplierRepresentative | 0 | 0 | 2 | **2** |
 | cumulativeAmount | 0 | 1 | 0 | **1** |
 | buyerCompany | 0 | 0 | 1 | **1** |
-| totalAmount | 1 | 0 | 0 | **1** |
+| supplyAmount | 0 | 1 | 0 | **1** |
+| totalAmount | 0 | 0 | 1 | **1** |
 | totalQuantity | 0 | 1 | 0 | **1** |
 
-## Parser-drops by column × pattern — ALL  (n=152)
+## Parser-drops by column × pattern — ALL  (n=141)
 
 | column | drop | mislocate | wrongpick | total |
 |---|--:|--:|--:|--:|
 | itemName | 0 | 8 | 22 | **30** |
-| quantity | 8 | 8 | 7 | **23** |
+| quantity | 6 | 8 | 6 | **20** |
 | spec | 0 | 10 | 6 | **16** |
 | lotNo | 12 | 2 | 2 | **16** |
 | expiryDate | 5 | 6 | 2 | **13** |
-| amount | 2 | 5 | 3 | **10** |
-| unitPrice | 5 | 4 | 1 | **10** |
+| amount | 0 | 4 | 3 | **7** |
+| unitPrice | 3 | 3 | 1 | **7** |
 | productCode | 7 | 0 | 0 | **7** |
 | buyerRepresentative | 1 | 1 | 3 | **5** |
 | buyerAddress | 0 | 0 | 4 | **4** |
-| taxAmount | 3 | 0 | 1 | **4** |
+| taxAmount | 1 | 0 | 3 | **4** |
 | issueDate | 0 | 0 | 3 | **3** |
 | supplierRepresentative | 0 | 0 | 3 | **3** |
-| supplyAmount | 2 | 1 | 0 | **3** |
 | cumulativeAmount | 0 | 1 | 0 | **1** |
 | buyerCompany | 0 | 0 | 1 | **1** |
-| totalAmount | 1 | 0 | 0 | **1** |
+| supplyAmount | 0 | 1 | 0 | **1** |
+| totalAmount | 0 | 0 | 1 | **1** |
 | supplierCompany | 0 | 0 | 1 | **1** |
 | totalQuantity | 0 | 1 | 0 | **1** |
 
