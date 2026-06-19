@@ -1,7 +1,7 @@
 # Parser-drop classification — 053_20260617_142725\study
 
-Defects scored (mismatch|ext_missing): **267**  |  parser-drop (OCR read it, recoverable): **119**  |  recognition (OCR-bound): **148**
-Parser-recoverable share of defects: **44.6%**
+Defects scored (mismatch|ext_missing): **266**  |  parser-drop (OCR read it, recoverable): **118**  |  recognition (OCR-bound): **148**
+Parser-recoverable share of defects: **44.4%**
 
 ## Parser-drops by column × pattern — CLEAN originals  (n=24)
 
@@ -18,7 +18,7 @@ Parser-recoverable share of defects: **44.6%**
 | supplierCompany | 0 | 0 | 1 | **1** |
 | supplierRepresentative | 0 | 0 | 1 | **1** |
 
-## Parser-drops by column × pattern — ANGLE variants  (n=95)
+## Parser-drops by column × pattern — ANGLE variants  (n=94)
 
 | column | drop | mislocate | wrongpick | total |
 |---|--:|--:|--:|--:|
@@ -28,11 +28,11 @@ Parser-recoverable share of defects: **44.6%**
 | quantity | 3 | 3 | 3 | **9** |
 | expiryDate | 4 | 3 | 1 | **8** |
 | amount | 0 | 1 | 3 | **4** |
-| taxAmount | 1 | 0 | 3 | **4** |
 | productCode | 4 | 0 | 0 | **4** |
 | unitPrice | 0 | 3 | 0 | **3** |
 | buyerAddress | 0 | 0 | 3 | **3** |
 | issueDate | 0 | 0 | 3 | **3** |
+| taxAmount | 0 | 0 | 3 | **3** |
 | buyerRepresentative | 1 | 1 | 1 | **3** |
 | supplierRepresentative | 0 | 0 | 2 | **2** |
 | cumulativeAmount | 0 | 1 | 0 | **1** |
@@ -40,7 +40,7 @@ Parser-recoverable share of defects: **44.6%**
 | supplyAmount | 0 | 1 | 0 | **1** |
 | totalAmount | 0 | 0 | 1 | **1** |
 
-## Parser-drops by column × pattern — ALL  (n=119)
+## Parser-drops by column × pattern — ALL  (n=118)
 
 | column | drop | mislocate | wrongpick | total |
 |---|--:|--:|--:|--:|
@@ -53,10 +53,10 @@ Parser-recoverable share of defects: **44.6%**
 | amount | 0 | 1 | 3 | **4** |
 | unitPrice | 0 | 3 | 1 | **4** |
 | buyerAddress | 0 | 0 | 4 | **4** |
-| taxAmount | 1 | 0 | 3 | **4** |
 | productCode | 4 | 0 | 0 | **4** |
 | issueDate | 0 | 0 | 3 | **3** |
 | supplierRepresentative | 0 | 0 | 3 | **3** |
+| taxAmount | 0 | 0 | 3 | **3** |
 | cumulativeAmount | 0 | 1 | 0 | **1** |
 | buyerCompany | 0 | 0 | 1 | **1** |
 | supplyAmount | 0 | 1 | 0 | **1** |
