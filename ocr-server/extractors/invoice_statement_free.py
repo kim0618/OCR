@@ -3356,6 +3356,37 @@ def _repair_item_spec_lot_shift(row: dict[str, Any]) -> bool:
     return True
 
 
+def _repair_spec_like_unit_price_shift(row: dict[str, Any]) -> bool:
+    raw_text = _normalize_text(row.get("_rawText"))
+    if not raw_text or _normalize_text(row.get("spec")):
+        return False
+    current_unit = _normalize_text(row.get("unitPrice"))
+    quantity_value = _number_value(row.get("quantity"))
+    if quantity_value is None or quantity_value <= 0:
+        return False
+    if not re.fullmatch(r"\d{3,4}", current_unit):
+        return False
+    if not re.search(r"(?:0{2,}|[O0][TC])$", current_unit, re.IGNORECASE):
+        return False
+
+    money_tokens = [
+        _clean_number_token(token)
+        for token in re.split(r"\s+", raw_text)
+        if "," in token and _money_for_sum(_clean_number_token(token)) is not None
+    ]
+    if len(money_tokens) < 2:
+        return False
+    unit_price = _money_for_sum(money_tokens[-2])
+    amount = _money_for_sum(money_tokens[-1])
+    if unit_price is None or amount is None or abs((quantity_value * unit_price) - amount) > 0.01:
+        return False
+
+    row["spec"] = re.sub(r"0$", "C", current_unit)
+    row["unitPrice"] = _normalize_money(money_tokens[-2])
+    row["amount"] = _normalize_money(money_tokens[-1])
+    return True
+
+
 def _normalize_success_table_rows(table_rows: Any) -> list[dict[str, Any]]:
     if not isinstance(table_rows, list):
         return []
@@ -3391,6 +3422,7 @@ def _normalize_success_table_rows(table_rows: Any) -> list[dict[str, Any]]:
                 if stripped_noise and stripped_noise != item_name:
                     normalized["itemName"] = stripped_noise
         _repair_item_spec_lot_shift(normalized)
+        _repair_spec_like_unit_price_shift(normalized)
         if "rowIndex" not in normalized:
             normalized["rowIndex"] = str(index)
         normalized_rows.append(normalized)

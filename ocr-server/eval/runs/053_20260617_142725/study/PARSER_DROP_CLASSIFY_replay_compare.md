@@ -1,7 +1,7 @@
 # Parser-drop classification — 053_20260617_142725\study
 
-Defects scored (mismatch|ext_missing): **219**  |  parser-drop (OCR read it, recoverable): **80**  |  recognition (OCR-bound): **139**
-Parser-recoverable share of defects: **36.5%**
+Defects scored (mismatch|ext_missing): **216**  |  parser-drop (OCR read it, recoverable): **77**  |  recognition (OCR-bound): **139**
+Parser-recoverable share of defects: **35.6%**
 
 ## Parser-drops by column × pattern — CLEAN originals  (n=10)
 
@@ -12,12 +12,12 @@ Parser-recoverable share of defects: **36.5%**
 | buyerAddress | 0 | 0 | 1 | **1** |
 | supplierCompany | 0 | 0 | 1 | **1** |
 
-## Parser-drops by column × pattern — ANGLE variants  (n=70)
+## Parser-drops by column × pattern — ANGLE variants  (n=67)
 
 | column | drop | mislocate | wrongpick | total |
 |---|--:|--:|--:|--:|
 | itemName | 0 | 7 | 17 | **24** |
-| spec | 0 | 9 | 3 | **12** |
+| spec | 0 | 8 | 3 | **11** |
 | productCode | 4 | 0 | 0 | **4** |
 | lotNo | 4 | 0 | 0 | **4** |
 | expiryDate | 4 | 0 | 0 | **4** |
@@ -26,20 +26,18 @@ Parser-recoverable share of defects: **36.5%**
 | taxAmount | 0 | 0 | 3 | **3** |
 | buyerRepresentative | 1 | 1 | 1 | **3** |
 | quantity | 3 | 0 | 0 | **3** |
-| unitPrice | 0 | 1 | 0 | **1** |
-| amount | 0 | 0 | 1 | **1** |
 | cumulativeAmount | 0 | 1 | 0 | **1** |
 | buyerCompany | 0 | 0 | 1 | **1** |
 | supplyAmount | 0 | 1 | 0 | **1** |
 | supplierRepresentative | 0 | 0 | 1 | **1** |
 | totalAmount | 0 | 0 | 1 | **1** |
 
-## Parser-drops by column × pattern — ALL  (n=80)
+## Parser-drops by column × pattern — ALL  (n=77)
 
 | column | drop | mislocate | wrongpick | total |
 |---|--:|--:|--:|--:|
 | itemName | 0 | 8 | 22 | **30** |
-| spec | 0 | 9 | 3 | **12** |
+| spec | 0 | 8 | 3 | **11** |
 | buyerRepresentative | 2 | 1 | 2 | **5** |
 | buyerAddress | 0 | 0 | 4 | **4** |
 | productCode | 4 | 0 | 0 | **4** |
@@ -48,8 +46,6 @@ Parser-recoverable share of defects: **36.5%**
 | issueDate | 0 | 0 | 3 | **3** |
 | taxAmount | 0 | 0 | 3 | **3** |
 | quantity | 3 | 0 | 0 | **3** |
-| unitPrice | 0 | 1 | 0 | **1** |
-| amount | 0 | 0 | 1 | **1** |
 | cumulativeAmount | 0 | 1 | 0 | **1** |
 | buyerCompany | 0 | 0 | 1 | **1** |
 | supplyAmount | 0 | 1 | 0 | **1** |
