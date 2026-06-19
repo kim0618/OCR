@@ -3979,12 +3979,34 @@ def extract_invoice_statement_free(
         for key in ("supplyAmount", "taxAmount"):
             if _has_meaningful_value(labeled_summary_fields.get(key)):
                 document_fields[key] = labeled_summary_fields[key]
+        labeled_summary_has_pair = (
+            _money_for_sum(labeled_summary_fields.get("supplyAmount")) is not None
+            and _money_for_sum(labeled_summary_fields.get("taxAmount")) is not None
+        )
         if _has_meaningful_value(document_fields.get("taxAmount")) and document_fields.get("taxAmount") == document_fields.get("cumulativeAmount"):
             document_fields["cumulativeAmount"] = ""
         supply_value = _money_for_sum(document_fields.get("supplyAmount"))
         tax_value = _money_for_sum(document_fields.get("taxAmount"))
+        current_total_value = _money_for_sum(document_fields.get("totalAmount"))
+        source_money_values = [
+            value
+            for token in re.findall(r"\d{1,3}(?:[,.]\d{3})+", source_text)
+            if (value := _money_for_sum(token)) is not None
+        ]
+        largest_source_money = max(source_money_values) if source_money_values else None
+        if (
+            current_total_value is not None
+            and largest_source_money is not None
+            and current_total_value < 1_000_000
+            and largest_source_money > current_total_value * 10
+        ):
+            document_fields["totalAmount"] = f"{int(round(largest_source_money)):,}"
+            scalar_merge_debug["totalAmountLargeSourceMoneyPreserved"] = True
         if supply_value is not None and tax_value is not None:
-            document_fields["totalAmount"] = f"{int(round(supply_value + tax_value)):,}"
+            current_total_value = _money_for_sum(document_fields.get("totalAmount"))
+            summed_total = supply_value + tax_value
+            if labeled_summary_has_pair or current_total_value is None or current_total_value <= summed_total * 1.2:
+                document_fields["totalAmount"] = f"{int(round(summed_total)):,}"
         scalar_merge_debug["reference"] = reference_debug
         scalar_merge_debug["labeledSummaryScalars"] = labeled_summary_debug
         free_debug_payload.update(

@@ -3077,22 +3077,46 @@ def _table_items_with_expected_columns(
     return items
 
 
+def _valid_calendar_day(year: str, month: str, day: str) -> bool:
+    try:
+        y, m, d = int(year), int(month), int(day)
+    except (TypeError, ValueError):
+        return False
+    if y < 1900 or y > 2099 or m < 1 or m > 12 or d < 1:
+        return False
+    month_days = [31, 29 if y % 4 == 0 and (y % 100 != 0 or y % 400 == 0) else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+    return d <= month_days[m - 1]
+
+
 def _normalize_date(full_text: str) -> str:
-    match = _DATE_RE.search(full_text or "")
-    if not match:
-        compact = re.sub(r"\D", "", full_text or "")
-        m = re.search(r"(20\d{2})(\d{2})(\d{2})", compact)
-        if not m:
-            return ""
-        year, month, day = m.group(1), m.group(2), m.group(3)
-    elif match.group(1):
-        year, month, day = match.group(1), match.group(2), match.group(3)
-    elif match.group(4):
-        year, month, day = match.group(4), match.group(5), match.group(6)
-    else:
-        yy = int(match.group(7))
-        year = str(2000 + yy if yy < 70 else 1900 + yy)
-        month, day = match.group(8), match.group(9)
+    text = full_text or ""
+    candidates: list[tuple[int, int, int, str, str, str]] = []
+    for idx, match in enumerate(_DATE_RE.finditer(text)):
+        if match.group(1):
+            year, month, day = match.group(1), match.group(2), match.group(3)
+            four_digit_year = 1
+        elif match.group(4):
+            year, month, day = match.group(4), match.group(5), match.group(6)
+            four_digit_year = 1
+        else:
+            yy = int(match.group(7))
+            year = str(2000 + yy if yy < 70 else 1900 + yy)
+            month, day = match.group(8), match.group(9)
+            four_digit_year = 0
+        if not _valid_calendar_day(year, month, day):
+            continue
+        complete_parts = int(len(str(month)) == 2) + int(len(str(day)) == 2)
+        candidates.append((four_digit_year, complete_parts, -idx, year, month, day))
+
+    if not candidates:
+        compact = re.sub(r"\D", "", text)
+        for idx, match in enumerate(re.finditer(r"(20\d{2})(\d{2})(\d{2})", compact)):
+            year, month, day = match.group(1), match.group(2), match.group(3)
+            if _valid_calendar_day(year, month, day):
+                candidates.append((1, 2, -idx, year, month, day))
+    if not candidates:
+        return ""
+    _, _, _, year, month, day = max(candidates)
     return f"{int(year):04d}-{int(month):02d}-{int(day):02d}"
 
 
@@ -5528,6 +5552,129 @@ def _infer_summary_pair_from_amount_pool(
     return result, debug
 
 
+def _amount_int(value: Any) -> int | None:
+    digits = re.sub(r"\D", "", str(value or ""))
+    if not digits:
+        return None
+    try:
+        return int(digits)
+    except ValueError:
+        return None
+
+
+def _vat_checksum_tolerance(value: int) -> int:
+    return max(2_500, int(value * 0.001))
+
+
+def _repair_vat_checksum_amount_fields(
+    lines: list[OcrLine],
+    supply: str,
+    tax: str,
+    total: str,
+) -> tuple[dict[str, str], dict[str, Any]]:
+    debug: dict[str, Any] = {
+        "enabled": True,
+        "applied": False,
+        "reason": "",
+        "before": {"supplyAmount": supply, "taxAmount": tax, "totalAmount": total},
+    }
+    s_num = _amount_int(supply)
+    t_num = _amount_int(tax)
+    total_num = _amount_int(total)
+    ocr_values: set[int] = {
+        numeric
+        for line in lines
+        for value in _amount_values(getattr(line, "text", ""))
+        if (numeric := _amount_int(value)) is not None and numeric >= 10_000
+    }
+
+    def apply_candidate(candidate_supply: int, reason: str) -> tuple[dict[str, str], dict[str, Any]]:
+        expected_tax = candidate_supply // 10
+        expected_total = candidate_supply + expected_tax
+        repaired = {
+            "supplyAmount": f"{candidate_supply:,}",
+            "taxAmount": f"{expected_tax:,}",
+            "totalAmount": f"{expected_total:,}",
+        }
+        debug.update({
+            "applied": True,
+            "reason": reason,
+            "after": repaired,
+            "expectedTax": expected_tax,
+            "expectedTotal": expected_total,
+            "taxOcrExact": expected_tax in ocr_values,
+            "nearTotalOcr": [
+                value for value in sorted(ocr_values)
+                if abs(value - expected_total) <= _vat_checksum_tolerance(expected_total)
+            ][:5],
+        })
+        return repaired, debug
+
+    if s_num and s_num >= 100_000 and s_num % 10 == 0:
+        expected_tax = s_num // 10
+        expected_total = s_num + expected_tax
+        tax_close = t_num is not None and abs(t_num - expected_tax) <= _vat_checksum_tolerance(expected_tax)
+        total_close = total_num is not None and abs(total_num - expected_total) <= _vat_checksum_tolerance(expected_total)
+        current_checksum = (
+            t_num is not None
+            and total_num is not None
+            and abs((s_num + t_num) - total_num) <= _vat_checksum_tolerance(max(total_num, s_num + t_num))
+        )
+        if tax_close and (total_num is None or total_close or current_checksum):
+            if t_num != expected_tax or total_num != expected_total:
+                return apply_candidate(s_num, "corrected_from_existing_supply_vat_checksum")
+            debug["reason"] = "existing_values_already_vat_consistent"
+            return {"supplyAmount": supply, "taxAmount": tax, "totalAmount": total}, debug
+
+    candidate_scores: list[tuple[int, int, dict[str, Any]]] = []
+    for candidate_supply in sorted(ocr_values):
+        if candidate_supply < 100_000 or candidate_supply % 10 != 0:
+            continue
+        expected_tax = candidate_supply // 10
+        expected_total = candidate_supply + expected_tax
+        tol_tax = _vat_checksum_tolerance(expected_tax)
+        tol_total = _vat_checksum_tolerance(expected_total)
+        tax_exact = expected_tax in ocr_values
+        tax_close = t_num is not None and abs(t_num - expected_tax) <= tol_tax
+        total_near_ocr = any(abs(value - expected_total) <= tol_total for value in ocr_values)
+        current_supply_implausible = bool(
+            s_num is None
+            or s_num < 100_000
+            or (t_num is not None and s_num < t_num * 2)
+            or (total_num is not None and s_num < total_num * 0.2)
+        )
+        if not current_supply_implausible:
+            continue
+        if not (tax_exact or tax_close):
+            continue
+        if not total_near_ocr and total_num is not None and total_num > expected_total * 0.2:
+            continue
+        score = 0
+        score += 5 if tax_exact else 0
+        score += 3 if tax_close else 0
+        score += 3 if total_near_ocr else 0
+        if total_num is not None and total_num == (s_num or 0) + (t_num or 0):
+            score += 1
+        candidate_scores.append((
+            score,
+            candidate_supply,
+            {
+                "taxExact": tax_exact,
+                "taxClose": tax_close,
+                "totalNearOcr": total_near_ocr,
+            },
+        ))
+    if candidate_scores:
+        candidate_scores.sort(key=lambda item: (-item[0], -item[1]))
+        score, candidate_supply, meta = candidate_scores[0]
+        if score >= 6:
+            debug["selectedCandidateMeta"] = meta
+            return apply_candidate(candidate_supply, "recovered_supply_from_vat_checksum_ocr_pool")
+
+    debug["reason"] = "no_safe_vat_checksum_repair"
+    return {"supplyAmount": supply, "taxAmount": tax, "totalAmount": total}, debug
+
+
 def _extract_footer_summary_triple(
     lines: list[OcrLine],
     page_h: float,
@@ -5850,12 +5997,18 @@ def _extract_amount_fields(
             single_supply_decision["blockReason"] = candidate_block.get("reason")
             if candidate_block.get("risk"):
                 single_supply_decision["blockRisk"] = candidate_block.get("risk")
+    vat_repair, vat_repair_debug = _repair_vat_checksum_amount_fields(lines, supply, tax, total)
+    if vat_repair_debug.get("applied"):
+        supply = vat_repair.get("supplyAmount", supply)
+        tax = vat_repair.get("taxAmount", tax)
+        total = vat_repair.get("totalAmount", total)
     if debug is not None:
         debug["amount_label_window"] = labeled_debug
         debug["amount_summary_triple"] = summary_debug
         debug["amount_pair_checksum"] = pair_debug
         debug["amount_total_evidence"] = total_debug
         debug["amount_summary_blocks"] = block_debug
+        debug["amount_vat_checksum_repair"] = vat_repair_debug
         debug["totalSuppressionDecision"] = suppression_decision
         debug["suppressedTotalCandidates"] = suppression_decision.get("suppressedTotalCandidates", [])
     return {"supplyAmount": supply, "taxAmount": tax, "totalAmount": total}
@@ -8709,6 +8862,22 @@ def extract_invoice_statement_fields(
                 if warning not in warnings:
                     warnings.append(warning)
                 fields["tableMeta"] = canonical["tableMeta"]
+    _final_vat_repair, _final_vat_repair_debug = _repair_vat_checksum_amount_fields(
+        lines,
+        str(fields.get("supplyAmount") or ""),
+        str(fields.get("taxAmount") or ""),
+        str(fields.get("totalAmount") or ""),
+    )
+    if _final_vat_repair_debug.get("applied"):
+        for _vat_key in ("supplyAmount", "taxAmount", "totalAmount"):
+            fields[_vat_key] = _final_vat_repair.get(_vat_key, fields.get(_vat_key, ""))
+        canonical["tableMeta"]["vatChecksumAmountRepairApplied"] = True
+        canonical["tableMeta"]["vatChecksumAmountRepairReason"] = _final_vat_repair_debug.get("reason", "")
+        warnings = canonical["tableMeta"].setdefault("valueMappingWarnings", [])
+        warning = f"amount:vat_checksum_repair:{_final_vat_repair_debug.get('reason', '')}"
+        if warning not in warnings:
+            warnings.append(warning)
+        fields["tableMeta"] = canonical["tableMeta"]
     if not _clean_value(str(fields.get("taxAmount") or "")):
         _tax_supply_digits = re.sub(r"\D", "", str(fields.get("supplyAmount") or ""))
         _tax_total_digits = re.sub(r"\D", "", str(fields.get("totalAmount") or ""))
@@ -8764,6 +8933,7 @@ def extract_invoice_statement_fields(
             "amount_summary_blocks": amount_debug.get("amount_summary_blocks", {}),
             "amount_summary_triple": amount_debug.get("amount_summary_triple", {}),
             "amount_pair_checksum": amount_debug.get("amount_pair_checksum", {}),
+            "amountVatChecksumRepair": _final_vat_repair_debug,
             "totalSuppressionDecision": amount_debug.get("totalSuppressionDecision", {}),
             "suppressedTotalCandidates": amount_debug.get("suppressedTotalCandidates", []),
             "normalization": normalization_debug,
