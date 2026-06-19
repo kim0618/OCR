@@ -7368,9 +7368,11 @@ def _legacy_detail_code_candidates(text: str) -> list[str]:
 def _legacy_detail_select_product_code(row: dict[str, Any], raw_text: str) -> str:
     existing = _clean_value(str(row.get("productCode") or row.get("itemCode") or ""))
     if existing and _LEGACY_DETAIL_ALPHA_CODE_RE.match(existing) and not _LEGACY_DETAIL_T_LOT_RE.match(existing):
-        return existing
+        return _fb_normalize_product_code(existing) or existing
     candidates = _legacy_detail_code_candidates(raw_text)
-    return candidates[0] if candidates else ""
+    if not candidates:
+        return ""
+    return _fb_normalize_product_code(candidates[0]) or candidates[0]
 
 
 def _legacy_detail_select_lot(row: dict[str, Any], raw_text: str, product_code: str) -> str:
@@ -7491,6 +7493,178 @@ def _legacy_detail_quantity_candidates_for_rows(
     return quantity_by_row
 
 
+def _legacy_detail_sequence_evidence_for_rows(
+    lines: list[OcrLine],
+    rows: list[dict[str, Any]],
+) -> dict[int, dict[str, str]]:
+    """Recover detail-table qty/lot/expiry from OCR reading sequence.
+
+    Some legacy detail layouts are read as column snippets rather than complete
+    rows. The canonical row may already have a row-number in quantity and a
+    shifted lot/expiry. Use the nearby OCR token sequence around each product
+    code/name anchor to pick a coherent qty/lot/expiry triplet.
+    """
+    tokens = [_clean_value(line.text) for line in lines if _clean_value(line.text)]
+    if not tokens or not rows:
+        return {}
+
+    header_labels = {"NO", "No", "no", "제품코드", "제품명", "수량", "Lot No", "LOT NO", "유효일자", "유효기간"}
+    header_end = -1
+    for idx, token in enumerate(tokens):
+        if token in header_labels:
+            header_end = max(header_end, idx)
+
+    row_anchor_spans: dict[int, tuple[int, int]] = {}
+    all_anchor_indices: set[int] = set()
+    row_names = [_clean_value(str(row.get("itemName") or "")) for row in rows]
+    row_codes = [
+        _clean_value(str(row.get("productCode") or row.get("itemCode") or "")).upper()
+        for row in rows
+    ]
+
+    for idx, row in enumerate(rows):
+        name = row_names[idx]
+        code = row_codes[idx]
+        anchors: list[int] = []
+        for tok_idx, token in enumerate(tokens):
+            compact = re.sub(r"\s+", "", token)
+            token_u = token.upper()
+            token_has_hangul = bool(re.search("[\uac00-\ud7a3]", token))
+            if name and token_has_hangul and (name == token or name in token or token in name):
+                anchors.append(tok_idx)
+            elif code and (token_u == code or token_u.replace("O", "0") == code.replace("O", "0")):
+                anchors.append(tok_idx)
+        if anchors:
+            span = (min(anchors), max(anchors))
+            row_anchor_spans[idx] = span
+            all_anchor_indices.update(anchors)
+
+    if len(row_anchor_spans) < max(3, len(rows) - 1):
+        return {}
+
+    def _is_sequence_quantity(token: str) -> bool:
+        return bool(re.fullmatch(r"\d{1,4}", token))
+
+    def _is_sequence_lot(token: str) -> bool:
+        upper = token.upper()
+        return bool(_LEGACY_DETAIL_T_LOT_RE.match(upper) or re.fullmatch(r"\d{5}", token))
+
+    def _is_sequence_expiry(token: str) -> bool:
+        return bool(_LEGACY_DETAIL_EXPIRY_RE.match(token))
+
+    def _is_sequence_metadata_token(token: str) -> bool:
+        return ":" in token and not _is_sequence_quantity(token)
+
+    evidence: dict[int, dict[str, str]] = {}
+    token_count = len(tokens)
+    ordered_spans = sorted(row_anchor_spans.items(), key=lambda item: item[1][0])
+    previous_end_by_row: dict[int, int] = {}
+    next_start_by_row: dict[int, int] = {}
+    for order_idx, (row_idx, (anchor_start, anchor_end)) in enumerate(ordered_spans):
+        previous_end_by_row[row_idx] = (
+            ordered_spans[order_idx - 1][1][1] if order_idx > 0 else header_end
+        )
+        next_start_by_row[row_idx] = (
+            ordered_spans[order_idx + 1][1][0] if order_idx + 1 < len(ordered_spans) else token_count
+        )
+
+    def _clean_segment(start: int, end: int) -> list[tuple[int, str]]:
+        local: list[tuple[int, str]] = []
+        for tok_idx in range(max(header_end + 1, start), min(token_count, end)):
+            token = tokens[tok_idx]
+            if tok_idx in all_anchor_indices:
+                continue
+            if token in header_labels or _is_sequence_metadata_token(token):
+                continue
+            local.append((tok_idx, token))
+        return local
+
+    def _segment_score(segment: list[tuple[int, str]], row_idx: int) -> int:
+        lot_count = sum(1 for _, token in segment if _is_sequence_lot(token))
+        expiry_count = sum(1 for _, token in segment if _is_sequence_expiry(token))
+        qty_values = [
+            token for _, token in segment
+            if _is_sequence_quantity(token)
+            and not _is_sequence_lot(token)
+            and not _is_sequence_expiry(token)
+        ]
+        row_index_tokens = {str(value) for value in range(1, len(rows) + 1)}
+        non_index_qty = [token for token in qty_values if token not in row_index_tokens]
+        score = (lot_count + expiry_count) * 3 + (1 if qty_values else 0) * 2
+        if not lot_count and not expiry_count and non_index_qty:
+            score += 1
+        return score
+
+    for row_idx, (anchor_start, anchor_end) in row_anchor_spans.items():
+        anchor_center = (anchor_start + anchor_end) / 2.0
+        before_segment = _clean_segment(previous_end_by_row[row_idx] + 1, anchor_start)
+        inner_segment = _clean_segment(anchor_start + 1, anchor_end)
+        after_segment = _clean_segment(anchor_end + 1, next_start_by_row[row_idx])
+        ranked_segments = [
+            (inner_segment, 3),
+            (before_segment, 2),
+            (after_segment, 1),
+        ]
+        local, _priority = max(
+            ranked_segments,
+            key=lambda pair: (_segment_score(pair[0], row_idx), pair[1], -len(pair[0])),
+        )
+        if not local:
+            continue
+
+        expiry_candidates = [(i, t) for i, t in local if _is_sequence_expiry(t)]
+        lot_candidates = [(i, t) for i, t in local if _is_sequence_lot(t)]
+        qty_candidates = [
+            (i, t)
+            for i, t in local
+            if _is_sequence_quantity(t)
+            and not _is_sequence_lot(t)
+            and not _is_sequence_expiry(t)
+        ]
+        chosen_expiry = ""
+        chosen_expiry_idx: int | None = None
+        if expiry_candidates:
+            chosen_expiry_idx, chosen_expiry = min(
+                expiry_candidates,
+                key=lambda pair: abs(pair[0] - anchor_center),
+            )
+
+        chosen_lot = ""
+        chosen_lot_idx: int | None = None
+        if lot_candidates:
+            target = chosen_expiry_idx if chosen_expiry_idx is not None else anchor_center
+            chosen_lot_idx, chosen_lot = min(
+                lot_candidates,
+                key=lambda pair: (abs(pair[0] - target), abs(pair[0] - anchor_center)),
+            )
+
+        chosen_qty = ""
+        if qty_candidates:
+            row_index_tokens = {str(value) for value in range(1, len(rows) + 1)}
+            non_index_qty = [pair for pair in qty_candidates if pair[1] not in row_index_tokens]
+            candidates = non_index_qty or qty_candidates
+            target_indices = [
+                value for value in (chosen_lot_idx, chosen_expiry_idx)
+                if isinstance(value, int)
+            ]
+            target = sum(target_indices) / len(target_indices) if target_indices else anchor_center
+            _, chosen_qty = min(
+                candidates,
+                key=lambda pair: (abs(pair[0] - target), abs(pair[0] - anchor_center)),
+            )
+
+        row_evidence: dict[str, str] = {}
+        if chosen_qty != "":
+            row_evidence["quantity"] = chosen_qty
+        if chosen_lot:
+            row_evidence["lotNo"] = chosen_lot
+        if chosen_expiry:
+            row_evidence["expiryDate"] = chosen_expiry
+        if row_evidence:
+            evidence[row_idx] = row_evidence
+    return evidence
+
+
 def _looks_like_legacy_detail_table(rows: list[dict[str, Any]], meta: dict[str, Any]) -> bool:
     if meta.get("extractionSource") != "legacy_text_items":
         return False
@@ -7526,9 +7700,11 @@ def _apply_legacy_detail_table_reconstruction(
         return False
 
     quantity_evidence = _legacy_detail_quantity_candidates_for_rows(lines, rows)
+    sequence_evidence = _legacy_detail_sequence_evidence_for_rows(lines, rows)
     reconstructed: list[dict[str, Any]] = []
     product_remap_count = 0
     lot_remap_count = 0
+    expiry_remap_count = 0
     spec_remap_count = 0
     quantity_recovered_count = 0
 
@@ -7547,12 +7723,22 @@ def _apply_legacy_detail_table_reconstruction(
             new_row["spec"] = ""
             spec_remap_count += 1
 
-        lot_no = _legacy_detail_select_lot(new_row, raw_text, product_code)
+        row_sequence = sequence_evidence.get(idx, {})
+        lot_no = row_sequence.get("lotNo") or _legacy_detail_select_lot(new_row, raw_text, product_code)
         if lot_no and _clean_value(str(new_row.get("lotNo") or "")) != lot_no:
             new_row["lotNo"] = lot_no
             lot_remap_count += 1
 
-        if not _clean_value(str(new_row.get("quantity") or "")) and idx in quantity_evidence:
+        expiry_date = row_sequence.get("expiryDate")
+        if expiry_date and _clean_value(str(new_row.get("expiryDate") or "")) != expiry_date:
+            new_row["expiryDate"] = expiry_date
+            expiry_remap_count += 1
+
+        sequence_quantity = row_sequence.get("quantity")
+        if sequence_quantity is not None and _clean_value(str(new_row.get("quantity") or "")) != sequence_quantity:
+            new_row["quantity"] = sequence_quantity
+            quantity_recovered_count += 1
+        elif not _clean_value(str(new_row.get("quantity") or "")) and idx in quantity_evidence:
             new_row["quantity"] = quantity_evidence[idx]
             quantity_recovered_count += 1
 
@@ -7563,7 +7749,30 @@ def _apply_legacy_detail_table_reconstruction(
 
     if not reconstructed:
         return False
-    if quantity_recovered_count == 0 and product_remap_count == 0 and lot_remap_count == 0 and spec_remap_count == 0:
+
+    final_sequence_evidence = _legacy_detail_sequence_evidence_for_rows(lines, reconstructed)
+    for idx, new_row in enumerate(reconstructed):
+        row_sequence = final_sequence_evidence.get(idx, {})
+        sequence_lot = row_sequence.get("lotNo")
+        if sequence_lot and _clean_value(str(new_row.get("lotNo") or "")) != sequence_lot:
+            new_row["lotNo"] = sequence_lot
+            lot_remap_count += 1
+        sequence_expiry = row_sequence.get("expiryDate")
+        if sequence_expiry and _clean_value(str(new_row.get("expiryDate") or "")) != sequence_expiry:
+            new_row["expiryDate"] = sequence_expiry
+            expiry_remap_count += 1
+        sequence_quantity = row_sequence.get("quantity")
+        if sequence_quantity is not None and _clean_value(str(new_row.get("quantity") or "")) != sequence_quantity:
+            new_row["quantity"] = sequence_quantity
+            quantity_recovered_count += 1
+
+    if (
+        quantity_recovered_count == 0
+        and product_remap_count == 0
+        and lot_remap_count == 0
+        and expiry_remap_count == 0
+        and spec_remap_count == 0
+    ):
         return False
 
     canonical["tableRows"] = reconstructed
@@ -7589,6 +7798,7 @@ def _apply_legacy_detail_table_reconstruction(
     meta["legacyDetailQuantityRecoveredCount"] = quantity_recovered_count
     meta["legacyDetailProductCodeRemapCount"] = product_remap_count
     meta["legacyDetailLotNoRemapCount"] = lot_remap_count
+    meta["legacyDetailExpiryDateRemapCount"] = expiry_remap_count
     meta["legacyDetailSpecToProductCodeRemapCount"] = spec_remap_count
     warnings = meta.setdefault("valueMappingWarnings", [])
     for warning in (
