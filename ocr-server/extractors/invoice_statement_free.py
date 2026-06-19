@@ -1850,13 +1850,19 @@ def _numeric_items_from_row_items(row_items: list[dict[str, Any]]) -> list[dict[
             numeric_items.append({
                 "value": _clean_number_token(value),
                 "cx": (float(item["cx"]) + float(next_item["cx"])) / 2.0,
+                "cy": (float(item.get("cy") or 0.0) + float(next_item.get("cy") or 0.0)) / 2.0,
                 "text": f"{text} {next_text}",
             })
             idx += 2
             continue
         value = _numeric_value_from_row_item_text(text)
         if value:
-            numeric_items.append({"value": value, "cx": float(item["cx"]), "text": text})
+            numeric_items.append({
+                "value": value,
+                "cx": float(item["cx"]),
+                "cy": float(item.get("cy") or 0.0),
+                "text": text,
+            })
         idx += 1
     return numeric_items
 
@@ -1867,6 +1873,9 @@ def _repair_numeric_assignment_from_row_items(
 ) -> dict[str, str]:
     if not row_items:
         return row
+    arithmetic_repaired = dict(row)
+    if _repair_quantity_from_row_arithmetic(arithmetic_repaired):
+        return arithmetic_repaired
     numeric_items = _numeric_items_from_row_items(row_items)
     if len(numeric_items) < 2:
         return row
@@ -1879,7 +1888,12 @@ def _repair_numeric_assignment_from_row_items(
     if len(money_items) < 2:
         return row
     money_items.sort(key=lambda item: item["cx"])
-    amount_item = money_items[-1]
+    rightmost_cx = float(money_items[-1]["cx"])
+    amount_cluster = [item for item in money_items if abs(float(item["cx"]) - rightmost_cx) <= 18.0]
+    if len(amount_cluster) >= 2 and all(isinstance(item.get("cy"), (int, float)) for item in amount_cluster):
+        amount_item = min(amount_cluster, key=lambda item: float(item.get("cy") or 0.0))
+    else:
+        amount_item = money_items[-1]
     unit_price_candidates = [item for item in money_items[:-1] if item["cx"] < amount_item["cx"] - 8.0]
     if not unit_price_candidates:
         return row
@@ -1894,6 +1908,27 @@ def _repair_numeric_assignment_from_row_items(
         and "," not in item["value"]
     ]
     quantity_item = quantity_candidates[-1] if quantity_candidates else None
+    quantity_value = _number_value(quantity_item["value"]) if quantity_item is not None else _number_value(row.get("quantity"))
+    unit_price_value = _money_for_sum(unit_price_item["value"])
+    amount_value = _money_for_sum(amount_item["value"])
+    if quantity_value is not None and unit_price_value is not None:
+        expected_amount = quantity_value * unit_price_value
+        if amount_value is None or abs(amount_value - expected_amount) > 0.01:
+            amount_cx = float(amount_item["cx"])
+            amount_cy = float(amount_item.get("cy") or 0.0)
+            arithmetic_amount_candidates = [
+                item
+                for item in numeric_items
+                if item is not amount_item
+                and ("," in _normalize_text(item.get("value")) or "," in _normalize_text(item.get("text")))
+                and abs(float(item.get("cx") or 0.0) - amount_cx) <= 18.0
+                and abs((_money_for_sum(item.get("value")) or 0.0) - expected_amount) <= 0.01
+            ]
+            if arithmetic_amount_candidates:
+                amount_item = min(
+                    arithmetic_amount_candidates,
+                    key=lambda item: abs(float(item.get("cy") or 0.0) - amount_cy),
+                )
     quantity_is_expiry_like = bool(row.get("quantity") and _is_date_like_number(row.get("quantity")))
     current_is_suspicious = not _row_numeric_arithmetic_matches(row) or quantity_is_expiry_like
     if not current_is_suspicious:
@@ -3258,6 +3293,34 @@ def _is_valid_invoice_statement_free_result(result: Any) -> bool:
         return False
 
 
+def _is_free_table_header_stub_row(row: Any) -> bool:
+    if not isinstance(row, dict):
+        return False
+    item_name = re.sub(r"\s+", "", _normalize_text(row.get("itemName")))
+    spec = re.sub(r"\s+", "", _normalize_text(row.get("spec")))
+    if item_name not in {"품목", "품명"} or spec != "규격":
+        return False
+    numeric_filled = sum(
+        1
+        for key in ("lotNo", "expiryDate", "quantity", "unitPrice", "amount")
+        if _normalize_text(row.get(key))
+    )
+    return numeric_filled >= 3
+
+
+def _repair_leading_header_stub_row(rows: list[dict[str, Any]]) -> None:
+    if len(rows) < 2 or not _is_free_table_header_stub_row(rows[0]):
+        return
+    next_row = rows[1]
+    next_item = _normalize_text(next_row.get("itemName"))
+    if not _has_item_name_signal(next_item):
+        return
+    rows[0]["itemName"] = next_item
+    next_spec = _normalize_text(next_row.get("spec"))
+    if next_spec and re.sub(r"\s+", "", next_spec) not in {"품목", "품명", "규격"}:
+        rows[0]["spec"] = next_spec
+
+
 def _normalize_success_table_rows(table_rows: Any) -> list[dict[str, Any]]:
     if not isinstance(table_rows, list):
         return []
@@ -3295,6 +3358,9 @@ def _normalize_success_table_rows(table_rows: Any) -> list[dict[str, Any]]:
         if "rowIndex" not in normalized:
             normalized["rowIndex"] = str(index)
         normalized_rows.append(normalized)
+    _repair_leading_header_stub_row(normalized_rows)
+    for row in normalized_rows:
+        _repair_quantity_from_row_arithmetic(row)
     product_code_rows = sum(1 for row in normalized_rows if _normalize_text(row.get("productCode")))
     product_code_table_like = product_code_rows >= max(1, len(normalized_rows) // 2)
     if product_code_table_like:
