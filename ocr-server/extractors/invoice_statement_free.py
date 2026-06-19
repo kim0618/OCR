@@ -112,6 +112,7 @@ _PARTY_NAME_REJECT_LABELS = frozenset({
 })
 PARTY_NAME_FIELD_KEYS = ("supplierRepresentative", "buyerRepresentative")
 ADDRESS_FIELD_KEYS = ("supplierAddress", "buyerAddress")
+COMPANY_FIELD_KEYS = ("supplierCompany", "buyerCompany")
 # Money scalars that must hold a parseable number; a non-numeric value (e.g. the
 # label "합") is garbage regardless of which extractor produced it.
 MONEY_SCALAR_FIELD_KEYS = (
@@ -138,6 +139,18 @@ def _strip_address_label_fragment(value: str) -> str:
     return cleaned.strip()
 
 
+def _strip_company_label_fragment(value: str) -> str:
+    cleaned = _normalize_text(value)
+    match = re.match(r"^(.+?)(?:대표자?|대표\s*자)\s*$", cleaned)
+    if not match:
+        return cleaned.strip()
+    rest = match.group(1).strip()
+    compact = re.sub(r"\s+", "", rest)
+    if re.search(r"(?:주식회사|\(\s*주\s*\)|㈜|약품|상사|회사|산업|제약|바이오|메디|헬스|유통)", compact):
+        return compact
+    return cleaned.strip()
+
+
 def sanitize_document_scalar_fields(document_fields: dict[str, Any]) -> dict[str, Any]:
     """Path-agnostic output guard (run after free/fallback converge), so it guards
     both extractors regardless of which one produced a field:
@@ -159,6 +172,10 @@ def sanitize_document_scalar_fields(document_fields: dict[str, Any]) -> dict[str
         val = document_fields.get(key)
         if isinstance(val, str):
             document_fields[key] = _strip_address_label_fragment(val)
+    for key in COMPANY_FIELD_KEYS:
+        val = document_fields.get(key)
+        if isinstance(val, str):
+            document_fields[key] = _strip_company_label_fragment(val)
     for key in MONEY_SCALAR_FIELD_KEYS:
         val = document_fields.get(key)
         if isinstance(val, str) and val.strip() and _money_for_sum(val) is None:
@@ -4033,6 +4050,33 @@ def extract_invoice_statement_free(
             summed_total = supply_value + tax_value
             if labeled_summary_has_pair or current_total_value is None or current_total_value <= summed_total * 1.2:
                 document_fields["totalAmount"] = f"{int(round(summed_total)):,}"
+        current_total_value = _money_for_sum(document_fields.get("totalAmount"))
+        if (
+            not _has_meaningful_value(document_fields.get("cumulativeAmount"))
+            and current_total_value is not None
+            and current_total_value >= 1_000_000
+            and not (supply_value is not None and tax_value is not None)
+            and (
+                max(value for value in (supply_value, tax_value) if value is not None) * 10 <= current_total_value
+                if any(value is not None for value in (supply_value, tax_value))
+                else True
+            )
+        ):
+            total_digits = str(int(round(current_total_value)))
+            footer_total_hits = 0
+            for item in ocr_items:
+                if float(item.get("cy") or 0) < float(image_wh[1] if isinstance(image_wh, list) and len(image_wh) >= 2 else 0) * 0.72:
+                    continue
+                for token in re.findall(r"\d{1,3}(?:[,.]\d{3})+", str(item.get("text") or "")):
+                    if re.sub(r"\D", "", token) == total_digits:
+                        footer_total_hits += 1
+            if footer_total_hits >= 2:
+                document_fields["cumulativeAmount"] = f"{int(round(current_total_value)):,}"
+                scalar_merge_debug["cumulativeAmountMirroredFromRepeatedFooterTotal"] = {
+                    "value": document_fields["cumulativeAmount"],
+                    "footerTotalHits": footer_total_hits,
+                    "reason": "free_success_repeated_footer_total_without_supply_tax_pair",
+                }
         scalar_merge_debug["reference"] = reference_debug
         scalar_merge_debug["labeledSummaryScalars"] = labeled_summary_debug
         free_debug_payload.update(

@@ -1,17 +1,16 @@
 # Parser-drop classification — 053_20260617_142725\study
 
-Defects scored (mismatch|ext_missing): **200**  |  parser-drop (OCR read it, recoverable): **64**  |  recognition (OCR-bound): **136**
-Parser-recoverable share of defects: **32.0%**
+Defects scored (mismatch|ext_missing): **198**  |  parser-drop (OCR read it, recoverable): **62**  |  recognition (OCR-bound): **136**
+Parser-recoverable share of defects: **31.3%**
 
-## Parser-drops by column × pattern — CLEAN originals  (n=8)
+## Parser-drops by column × pattern — CLEAN originals  (n=7)
 
 | column | drop | mislocate | wrongpick | total |
 |---|--:|--:|--:|--:|
 | itemName | 0 | 1 | 5 | **6** |
 | buyerAddress | 0 | 0 | 1 | **1** |
-| supplierCompany | 0 | 0 | 1 | **1** |
 
-## Parser-drops by column × pattern — ANGLE variants  (n=56)
+## Parser-drops by column × pattern — ANGLE variants  (n=55)
 
 | column | drop | mislocate | wrongpick | total |
 |---|--:|--:|--:|--:|
@@ -23,10 +22,9 @@ Parser-recoverable share of defects: **32.0%**
 | quantity | 3 | 0 | 0 | **3** |
 | buyerAddress | 0 | 0 | 2 | **2** |
 | buyerRepresentative | 1 | 1 | 0 | **2** |
-| cumulativeAmount | 0 | 1 | 0 | **1** |
 | buyerCompany | 0 | 0 | 1 | **1** |
 
-## Parser-drops by column × pattern — ALL  (n=64)
+## Parser-drops by column × pattern — ALL  (n=62)
 
 | column | drop | mislocate | wrongpick | total |
 |---|--:|--:|--:|--:|
@@ -38,9 +36,7 @@ Parser-recoverable share of defects: **32.0%**
 | buyerAddress | 0 | 0 | 3 | **3** |
 | quantity | 3 | 0 | 0 | **3** |
 | buyerRepresentative | 1 | 1 | 0 | **2** |
-| cumulativeAmount | 0 | 1 | 0 | **1** |
 | buyerCompany | 0 | 0 | 1 | **1** |
-| supplierCompany | 0 | 0 | 1 | **1** |
 
 ## Recognition (OCR-bound, NOT parser) by column
 
