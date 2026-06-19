@@ -3327,6 +3327,12 @@ def _is_representative_candidate(text: str) -> bool:
         value,
     ):
         return False
+    # \uc5c5\ud0dc/\uc885\ubaa9 \uac12\uacfc \ud45c \ub77c\ubca8\uc774 \uc774\ub984 \ud328\ud134([\uac00-\ud7a3]{2,5}[,/]...)\uacfc \uac19\uc740 shape\ub77c \ud1b5\uacfc\ub418\ub358 \uac83 \ucc28\ub2e8.
+    # \uc774\ub984\uc5d4 \uc548 \ub098\uc624\ub294 \ud1a0\ud070: \uc5c5\ud0dc\uac12(X\uc5c5 \u2014 \ubb34\uc5ed\uc5c5/\uc81c\uc870\uc5c5), \ub77c\ubca8(\ubc88\ud638/\uae30\uac04/\uae08\uc561/\uc77c\uc790 \ub4f1).
+    if re.search(r"[\uac00-\ud7a3]{2,}\uc5c5(?:[,/]|$)", compact):  # X\uc5c5 (\uc5c5\ud0dc\uac12)
+        return False
+    if re.search(r"\ubc88\ud638|\uae30\uac04|\uae08\uc561|\uc77c\uc790|\ub2e8\uac00|\uaddc\uaca9|\ub2e8\uc704|\uc138\uc561|\uc138\uc5ed|\uc5c5\ub370|\uc885\ubaa9", value):  # \ubc88\ud638/\uae30\uac04/\uae08\uc561/\uc77c\uc790/\ub2e8\uac00/\uaddc\uaca9/\ub2e8\uc704/\uc138\uc561/\uc138\uc5ed/\uc5c5\ub370/\uc885\ubaa9
+        return False
     if re.fullmatch(r"[\uac00-\ud7a3]{2,5}(?:[,/][\uac00-\ud7a3]{2,5})?", compact):
         return True
     return bool(re.fullmatch(r"[A-Z][A-Z\s.]{3,30}", value))

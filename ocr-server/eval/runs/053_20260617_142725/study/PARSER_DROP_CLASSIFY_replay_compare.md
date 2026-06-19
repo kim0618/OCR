@@ -1,19 +1,18 @@
 # Parser-drop classification — 053_20260617_142725\study
 
-Defects scored (mismatch|ext_missing): **221**  |  parser-drop (OCR read it, recoverable): **82**  |  recognition (OCR-bound): **139**
-Parser-recoverable share of defects: **37.1%**
+Defects scored (mismatch|ext_missing): **219**  |  parser-drop (OCR read it, recoverable): **80**  |  recognition (OCR-bound): **139**
+Parser-recoverable share of defects: **36.5%**
 
-## Parser-drops by column × pattern — CLEAN originals  (n=11)
+## Parser-drops by column × pattern — CLEAN originals  (n=10)
 
 | column | drop | mislocate | wrongpick | total |
 |---|--:|--:|--:|--:|
 | itemName | 0 | 1 | 5 | **6** |
-| buyerRepresentative | 0 | 0 | 2 | **2** |
+| buyerRepresentative | 1 | 0 | 1 | **2** |
 | buyerAddress | 0 | 0 | 1 | **1** |
 | supplierCompany | 0 | 0 | 1 | **1** |
-| supplierRepresentative | 0 | 0 | 1 | **1** |
 
-## Parser-drops by column × pattern — ANGLE variants  (n=71)
+## Parser-drops by column × pattern — ANGLE variants  (n=70)
 
 | column | drop | mislocate | wrongpick | total |
 |---|--:|--:|--:|--:|
@@ -27,27 +26,26 @@ Parser-recoverable share of defects: **37.1%**
 | taxAmount | 0 | 0 | 3 | **3** |
 | buyerRepresentative | 1 | 1 | 1 | **3** |
 | quantity | 3 | 0 | 0 | **3** |
-| supplierRepresentative | 0 | 0 | 2 | **2** |
 | unitPrice | 0 | 1 | 0 | **1** |
 | amount | 0 | 0 | 1 | **1** |
 | cumulativeAmount | 0 | 1 | 0 | **1** |
 | buyerCompany | 0 | 0 | 1 | **1** |
 | supplyAmount | 0 | 1 | 0 | **1** |
+| supplierRepresentative | 0 | 0 | 1 | **1** |
 | totalAmount | 0 | 0 | 1 | **1** |
 
-## Parser-drops by column × pattern — ALL  (n=82)
+## Parser-drops by column × pattern — ALL  (n=80)
 
 | column | drop | mislocate | wrongpick | total |
 |---|--:|--:|--:|--:|
 | itemName | 0 | 8 | 22 | **30** |
 | spec | 0 | 9 | 3 | **12** |
-| buyerRepresentative | 1 | 1 | 3 | **5** |
+| buyerRepresentative | 2 | 1 | 2 | **5** |
 | buyerAddress | 0 | 0 | 4 | **4** |
 | productCode | 4 | 0 | 0 | **4** |
 | lotNo | 4 | 0 | 0 | **4** |
 | expiryDate | 4 | 0 | 0 | **4** |
 | issueDate | 0 | 0 | 3 | **3** |
-| supplierRepresentative | 0 | 0 | 3 | **3** |
 | taxAmount | 0 | 0 | 3 | **3** |
 | quantity | 3 | 0 | 0 | **3** |
 | unitPrice | 0 | 1 | 0 | **1** |
@@ -55,6 +53,7 @@ Parser-recoverable share of defects: **37.1%**
 | cumulativeAmount | 0 | 1 | 0 | **1** |
 | buyerCompany | 0 | 0 | 1 | **1** |
 | supplyAmount | 0 | 1 | 0 | **1** |
+| supplierRepresentative | 0 | 0 | 1 | **1** |
 | totalAmount | 0 | 0 | 1 | **1** |
 | supplierCompany | 0 | 0 | 1 | **1** |
 

@@ -16,12 +16,18 @@ working tree에 적용(미커밋), 게이트 레벨만 검증됨 → 순 cell �
   `runs/<ts>/study/snapshots/<img>.json`에 얼려둠. 파서를 재-OCR 없이 재실행 가능.
   파서는 GPU/CPU 어디서든 동일 CPU 코드 → **여기서 본 parser 결론은 GPU 프로덕션에 그대로
   전이됨.** "GPU 가서 확인/고치자"로 미루지 말 것(검출 server_det는 이미 검증→무효).
-- 로컬 루프 (재-OCR/서버/AWS 불요):
+- 로컬 루프 (재-OCR/서버/AWS 불요) — **이 두 개만 돌리면 됨**:
   ```
   cd ocr-server
   .\.venv\Scripts\python.exe eval\replay_compare.py --ts 053_20260617_142725/study
   .\.venv\Scripts\python.exe eval\parser_drop_classify.py --compare-dir replay_compare
   ```
+  → `PARSER_DROP_CLASSIFY_replay_compare.html`(브라우저로 봄). parser_drop_classify가
+  HTML 쓴 직후 `replay_summary.append_history`로 **이번 KPI를 영구 로그
+  `runs/<ts>/study/replay_history.json`에 한 줄 추가(변화 있을 때만)** 하고 누적 표를 HTML
+  상단에 주입(셀%/필드%/parser_drop/spurious/Δ). git/커밋 무관 — **돌릴 때마다 자동 누적.**
+  로그가 없으면 최초 1회만 git 과거 커밋에서 시드. 별도 명령 불필요. `replay_history.json`은
+  커밋해두면 이력 보존됨.
   → `runs/053.../study/replay_compare/<img>.json` (수정 파서 재채점, GT 대비 compare 스키마)
   → `PARSER_DROP_CLASSIFY_replay_compare.{md,json,html}` (결함 분류). 둘 다 사이드카(읽기전용,
   checker 무영향). `.html`을 브라우저로 보면 KPI+샘플별점수+부류×패턴.

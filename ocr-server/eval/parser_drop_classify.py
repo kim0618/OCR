@@ -198,9 +198,10 @@ def _render_html(run_label, compare_dir, scores, pdrops, recog, n_def, col_patte
     except Exception:
         _FIELD_KO = {}
 
-    def ko(col):  # "itemName (품명)" — matches report.html convention
+    def ko(col):  # 한글 우선(잘 보이게) + 영문 식별자 보조: "품명 (itemName)"
         k = _FIELD_KO.get(col)
-        return f"{_esc(col)} <span class='muted'>({_esc(k)})</span>" if k else _esc(col)
+        return (f"<b>{_esc(k)}</b> <span class='muted' style='font-size:12px'>({_esc(col)})</span>"
+                if k else _esc(col))
 
     gen = _dt.datetime.now().strftime("%Y-%m-%d %H:%M")
     fS = sum(s["fScored"] for s in scores); fM = sum(s["fMatch"] for s in scores)
@@ -419,6 +420,18 @@ def main() -> int:
               open(out_json, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
     open(out_html, "w", encoding="utf-8").write(
         _render_html(run_label, args.compare_dir, scores, pdrops, recog, n_def, col_pattern_table))
+
+    # Auto-embed the replay progress history (git-reconstructed) at the top of the
+    # HTML, so running just replay_compare + parser_drop_classify shows the trend
+    # too — no separate command. Best-effort: never break the classifier.
+    if args.compare_dir == "replay_compare":
+        try:
+            from replay_summary import append_history, inject_html
+            _hist = append_history(run_label)   # appends a row (only if KPIs changed)
+            if _hist:
+                inject_html(out_html, _hist)
+        except Exception as _e:
+            print(f"[replay_summary skipped] {_e}")
 
     # console: ascii-safe summary (cp949 consoles mangle hangul; full table in .md/.html)
     sys.stdout.reconfigure(errors="replace")
