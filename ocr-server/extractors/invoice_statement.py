@@ -7152,6 +7152,135 @@ def _reconstruct_legacy_single_pharma_row(
     return None
 
 
+def _legacy_pharma_money_candidates(texts: list[str]) -> list[str]:
+    values: list[str] = []
+    for text in texts:
+        for match in _LEGACY_ST_MONEY_RE.finditer(text):
+            value = match.group(0)
+            if value not in values:
+                values.append(value)
+    return values
+
+
+def _legacy_pharma_clean_scattered_name(text: str, product_code: str, lot_no: str, expiry_date: str) -> str:
+    name = _clean_value(text)
+    for value in (product_code, lot_no, expiry_date):
+        if value:
+            name = name.replace(value, " ")
+    name = _LEGACY_ST_MONEY_RE.sub(" ", name)
+    name = re.sub(r"\([^)]*\)\S*", " ", name)
+    name = re.sub(r"^\s*\d{1,3}\s+", " ", name)
+    name = re.sub(r"(?:\s+\d{1,4})+\s*$", " ", name)
+    name = re.sub(r"\s+", " ", name).strip(" -_/")
+    return _normalize_legacy_pharma_item_name(name)
+
+
+def _reconstruct_legacy_single_pharma_row_from_scattered_evidence(
+    lines: list[OcrLine],
+    rows: list[dict[str, Any]],
+    meta: dict[str, Any],
+    full_text: str,
+) -> dict[str, Any] | None:
+    if meta.get("extractionSource") != "legacy_text_items":
+        return None
+    if not rows or len(rows) > 4:
+        return None
+
+    row_texts = [
+        _clean_value(str(row.get("_rawText") or row.get("itemName") or ""))
+        for row in rows
+    ]
+    line_texts = [_clean_value(line.text) for line in lines if _clean_value(line.text)]
+    evidence_texts = row_texts + line_texts + [_clean_value(full_text)]
+    evidence = "\n".join(text for text in evidence_texts if text)
+    if all(_LEGACY_SCALAR_TABLE_TEXT_RE.search(text) for text in row_texts if text):
+        return None
+
+    product_codes: list[str] = []
+    for text in evidence_texts:
+        for match in _LEGACY_PHARMA_CODE_RE.finditer(text):
+            value = match.group(1)
+            if value.startswith("20") or len(value) < 9:
+                continue
+            if value not in product_codes:
+                product_codes.append(value)
+    if not product_codes:
+        return None
+    product_code = product_codes[0]
+
+    lot_no = _find_legacy_pharma_lot(evidence, 0, len(evidence))
+    expiry_match = re.search(r"(?<!\d)(20\d{6})(?!\d)", evidence)
+    if not lot_no or not expiry_match:
+        return None
+    expiry_date = expiry_match.group(1)
+
+    money_values = _legacy_pharma_money_candidates(evidence_texts)
+    numeric_money: list[tuple[str, int]] = []
+    for value in money_values:
+        digits = re.sub(r"\D", "", value.split(".", 1)[0])
+        if digits:
+            numeric_money.append((value, int(digits)))
+    unit_price = amount = quantity = ""
+    for unit_value, unit_num in numeric_money:
+        if not (100 <= unit_num <= 999_999):
+            continue
+        for amount_value, amount_num in numeric_money:
+            if amount_num <= unit_num or amount_num < 10_000:
+                continue
+            if amount_num % unit_num:
+                continue
+            quotient = amount_num // unit_num
+            if 1 <= quotient <= 9999:
+                unit_price = unit_value
+                amount = amount_value
+                quantity = str(quotient)
+                break
+        if unit_price:
+            break
+    if not unit_price or not amount or not quantity:
+        return None
+
+    name_source = ""
+    for text in row_texts + line_texts:
+        compact = re.sub(r"\s+", "", text)
+        if _HANGUL_RE.search(text) and re.search(r"(?i)(mg|ml|g|캡[슐슬]|정|포|vial|tab|cap)", compact):
+            name_source = text
+            break
+    if not name_source:
+        return None
+    name = _legacy_pharma_clean_scattered_name(name_source, product_code, lot_no, expiry_date)
+    name = re.sub(rf"\s+{re.escape(quantity)}$", "", name).strip()
+    name = _normalize_legacy_pharma_reconstructed_name(
+        name,
+        product_code=product_code,
+        lot_no=lot_no,
+        expiry_date=expiry_date,
+        quantity=quantity,
+        unit_price=unit_price,
+        amount=amount,
+    )
+    if not _HANGUL_RE.search(name) or _LEGACY_SCALAR_TABLE_TEXT_RE.search(name):
+        return None
+
+    raw_text = _summarize_table_row(" ".join(
+        part for part in (product_code, name, quantity, unit_price, amount, lot_no, expiry_date)
+        if part
+    ))
+    row = _empty_table_row(1, raw_text)
+    row.update({
+        "productCode": product_code,
+        "itemName": name,
+        "spec": "",
+        "lotNo": lot_no,
+        "expiryDate": expiry_date,
+        "quantity": quantity,
+        "unitPrice": _format_legacy_money(unit_price),
+        "amount": _format_legacy_money(amount),
+        "_source": "legacy_text_items_pharma_scattered_reconstructed",
+    })
+    return row
+
+
 def _apply_legacy_single_pharma_reconstruction(
     canonical: dict[str, Any],
     lines: list[OcrLine],
@@ -7160,6 +7289,13 @@ def _apply_legacy_single_pharma_reconstruction(
     rows = canonical.get("tableRows") or []
     meta = canonical.get("tableMeta") or {}
     reconstructed = _reconstruct_legacy_single_pharma_row(lines, rows, meta, full_text)
+    if not reconstructed:
+        reconstructed = _reconstruct_legacy_single_pharma_row_from_scattered_evidence(
+            lines,
+            rows,
+            meta,
+            full_text,
+        )
     if not reconstructed:
         return False
 
@@ -7182,6 +7318,8 @@ def _apply_legacy_single_pharma_reconstruction(
     }
     meta["extractionSource"] = "legacy_text_items_pharma_reconstructed"
     meta["legacyPharmaReconstructionApplied"] = True
+    if reconstructed.get("_source") == "legacy_text_items_pharma_scattered_reconstructed":
+        meta["legacyPharmaScatteredEvidenceReconstructionApplied"] = True
     meta["excludedLegacyScalarRows"] = [
         text for text in (
             _clean_value(str(row.get("itemName") or row.get("_rawText") or ""))

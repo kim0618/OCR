@@ -1,7 +1,7 @@
 # Parser-drop classification — 053_20260617_142725\study
 
-Defects scored (mismatch|ext_missing): **289**  |  parser-drop (OCR read it, recoverable): **141**  |  recognition (OCR-bound): **148**
-Parser-recoverable share of defects: **48.8%**
+Defects scored (mismatch|ext_missing): **273**  |  parser-drop (OCR read it, recoverable): **125**  |  recognition (OCR-bound): **148**
+Parser-recoverable share of defects: **45.8%**
 
 ## Parser-drops by column × pattern — CLEAN originals  (n=24)
 
@@ -18,19 +18,19 @@ Parser-recoverable share of defects: **48.8%**
 | supplierCompany | 0 | 0 | 1 | **1** |
 | supplierRepresentative | 0 | 0 | 1 | **1** |
 
-## Parser-drops by column × pattern — ANGLE variants  (n=117)
+## Parser-drops by column × pattern — ANGLE variants  (n=101)
 
 | column | drop | mislocate | wrongpick | total |
 |---|--:|--:|--:|--:|
 | itemName | 0 | 7 | 17 | **24** |
-| quantity | 6 | 5 | 6 | **17** |
 | spec | 0 | 10 | 5 | **15** |
-| lotNo | 11 | 0 | 1 | **12** |
-| expiryDate | 5 | 3 | 1 | **9** |
-| amount | 0 | 4 | 3 | **7** |
-| productCode | 7 | 0 | 0 | **7** |
-| unitPrice | 3 | 3 | 0 | **6** |
+| quantity | 6 | 5 | 3 | **14** |
+| lotNo | 9 | 0 | 0 | **9** |
+| expiryDate | 4 | 3 | 1 | **8** |
+| amount | 0 | 1 | 3 | **4** |
 | taxAmount | 1 | 0 | 3 | **4** |
+| productCode | 4 | 0 | 0 | **4** |
+| unitPrice | 0 | 3 | 0 | **3** |
 | buyerAddress | 0 | 0 | 3 | **3** |
 | issueDate | 0 | 0 | 3 | **3** |
 | buyerRepresentative | 1 | 1 | 1 | **3** |
@@ -41,21 +41,21 @@ Parser-recoverable share of defects: **48.8%**
 | totalAmount | 0 | 0 | 1 | **1** |
 | totalQuantity | 0 | 1 | 0 | **1** |
 
-## Parser-drops by column × pattern — ALL  (n=141)
+## Parser-drops by column × pattern — ALL  (n=125)
 
 | column | drop | mislocate | wrongpick | total |
 |---|--:|--:|--:|--:|
 | itemName | 0 | 8 | 22 | **30** |
-| quantity | 6 | 8 | 6 | **20** |
+| quantity | 6 | 8 | 3 | **17** |
 | spec | 0 | 10 | 6 | **16** |
-| lotNo | 12 | 2 | 2 | **16** |
-| expiryDate | 5 | 6 | 2 | **13** |
-| amount | 0 | 4 | 3 | **7** |
-| unitPrice | 3 | 3 | 1 | **7** |
-| productCode | 7 | 0 | 0 | **7** |
+| lotNo | 10 | 2 | 1 | **13** |
+| expiryDate | 4 | 6 | 2 | **12** |
 | buyerRepresentative | 1 | 1 | 3 | **5** |
+| amount | 0 | 1 | 3 | **4** |
+| unitPrice | 0 | 3 | 1 | **4** |
 | buyerAddress | 0 | 0 | 4 | **4** |
 | taxAmount | 1 | 0 | 3 | **4** |
+| productCode | 4 | 0 | 0 | **4** |
 | issueDate | 0 | 0 | 3 | **3** |
 | supplierRepresentative | 0 | 0 | 3 | **3** |
 | cumulativeAmount | 0 | 1 | 0 | **1** |

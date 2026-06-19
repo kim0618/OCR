@@ -202,16 +202,13 @@
   "table": {
     "alignMode": "rowIndex",
     "rowCountGt": 1,
-    "rowCountExt": 3,
-    "rowCountMatch": false,
+    "rowCountExt": 1,
+    "rowCountMatch": true,
     "matchedRowIdx": [
       "1"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [
-      "2",
-      "3"
-    ],
+    "extOnlyRowIdx": [],
     "rows": [
       {
         "rowIndex": "1",
@@ -219,9 +216,9 @@
         "cells": {
           "itemName": {
             "gt": "에스피씨세파클러캡슐250mg 30",
-            "ext": "669700020 에스씨세파클러캡슘250mg 30 캡슬 30 10,044 301,320()에스 2026120",
+            "ext": "에스씨세파클러캡슘250mg 30 캡슐",
             "gtNorm": "에스피씨세파클러캡슐250mg 30",
-            "extNorm": "669700020 에스씨세파클러캡슘250mg 30 캡슬 30 10,044 301,320()에스 2026120",
+            "extNorm": "에스씨세파클러캡슘250mg 30 캡슐",
             "status": "mismatch",
             "spurious": false
           },
@@ -235,18 +232,18 @@
           },
           "productCode": {
             "gt": "669700020",
-            "ext": "",
+            "ext": "669700020",
             "gtNorm": "669700020",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "669700020",
+            "status": "match",
             "spurious": false
           },
           "lotNo": {
             "gt": "23004A",
-            "ext": "",
+            "ext": "23004A",
             "gtNorm": "23004A",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "23004A",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -259,26 +256,26 @@
           },
           "quantity": {
             "gt": "30",
-            "ext": "4",
+            "ext": "30",
             "gtNorm": "30",
-            "extNorm": "4",
-            "status": "mismatch",
+            "extNorm": "30",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "10,044",
-            "ext": "",
+            "ext": "10,044",
             "gtNorm": "10044",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10044",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "301,320",
-            "ext": "",
+            "ext": "301,320",
             "gtNorm": "301320",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "301320",
+            "status": "match",
             "spurious": false
           }
         }
@@ -286,13 +283,13 @@
     ],
     "cellCounts": {
       "scored": 8,
-      "match": 1,
-      "mismatch": 2,
-      "ext_missing": 5,
+      "match": 6,
+      "mismatch": 1,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.125
+    "cellAccuracy": 0.75
   },
   "buckets": {
     "defects": [
@@ -345,20 +342,12 @@
         "reason": "char-level diff (sim=0.50)"
       },
       {
-        "location": "table",
-        "status": "rows_extra",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor invented rows ['2', '3']"
-      },
-      {
         "location": "row1:itemName",
         "status": "mismatch",
         "gtNorm": "에스피씨세파클러캡슐250mg 30",
-        "extNorm": "669700020 에스씨세파클러캡슘250mg 30 캡슬 30 10,044 301,320()에스 2026120",
+        "extNorm": "에스씨세파클러캡슘250mg 30 캡슐",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.84)"
       },
       {
         "location": "row1:spec",
@@ -367,51 +356,11 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:productCode",
-        "status": "ext_missing",
-        "gtNorm": "669700020",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:lotNo",
-        "status": "ext_missing",
-        "gtNorm": "23004A",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:quantity",
-        "status": "mismatch",
-        "gtNorm": "30",
-        "extNorm": "4",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "10044",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:amount",
-        "status": "ext_missing",
-        "gtNorm": "301320",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 7,
-      "structure": 7,
+      "recognition": 6,
+      "structure": 2,
       "layout": 0,
       "preprocessing": 0
     },
