@@ -1378,14 +1378,24 @@ def _find_amount_candidates(text: str) -> list[str]:
     return _unique_preserve_order(candidates)
 
 
-def _is_number_token(value: str) -> bool:
+def _normalize_ocr_money_punctuation(value: Any) -> str:
     token = _normalize_text(value).strip("()[]{}.,:;|")
+    token = token.replace("￦", "").replace("₩", "").replace("원", "")
+    token = token.replace("占?,", "").replace("??,", "").replace("??,", "")
+    token = re.sub(r"(?<=\d)[,.]{2,}(?=\d{3}(?!\d))", ",", token)
+    if re.fullmatch(r"-?\d{1,3}(?:[,.]\d{3})+", token):
+        return token.replace(".", ",")
+    return token
+
+
+def _is_number_token(value: str) -> bool:
+    token = _normalize_ocr_money_punctuation(value)
     token = token.replace("￦", "").replace("₩", "").replace("원", "")
     return bool(re.fullmatch(r"-?\d+(?:,\d{3})*(?:\.\d+)?", token))
 
 
 def _clean_number_token(value: str) -> str:
-    return _normalize_text(value).strip("()[]{}.,:;|").replace("￦", "").replace("₩", "").replace("원", "")
+    return _normalize_ocr_money_punctuation(value)
 
 
 def _normalize_comma_space_money_text(value: Any) -> str:
