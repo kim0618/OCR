@@ -1,7 +1,7 @@
 # Parser-drop classification — 053_20260617_142725\study
 
-Defects scored (mismatch|ext_missing): **202**  |  parser-drop (OCR read it, recoverable): **66**  |  recognition (OCR-bound): **136**
-Parser-recoverable share of defects: **32.7%**
+Defects scored (mismatch|ext_missing): **200**  |  parser-drop (OCR read it, recoverable): **64**  |  recognition (OCR-bound): **136**
+Parser-recoverable share of defects: **32.0%**
 
 ## Parser-drops by column × pattern — CLEAN originals  (n=8)
 
@@ -11,7 +11,7 @@ Parser-recoverable share of defects: **32.7%**
 | buyerAddress | 0 | 0 | 1 | **1** |
 | supplierCompany | 0 | 0 | 1 | **1** |
 
-## Parser-drops by column × pattern — ANGLE variants  (n=58)
+## Parser-drops by column × pattern — ANGLE variants  (n=56)
 
 | column | drop | mislocate | wrongpick | total |
 |---|--:|--:|--:|--:|
@@ -20,24 +20,24 @@ Parser-recoverable share of defects: **32.7%**
 | productCode | 4 | 0 | 0 | **4** |
 | lotNo | 4 | 0 | 0 | **4** |
 | expiryDate | 4 | 0 | 0 | **4** |
-| buyerAddress | 0 | 0 | 3 | **3** |
-| buyerRepresentative | 1 | 1 | 1 | **3** |
 | quantity | 3 | 0 | 0 | **3** |
+| buyerAddress | 0 | 0 | 2 | **2** |
+| buyerRepresentative | 1 | 1 | 0 | **2** |
 | cumulativeAmount | 0 | 1 | 0 | **1** |
 | buyerCompany | 0 | 0 | 1 | **1** |
 
-## Parser-drops by column × pattern — ALL  (n=66)
+## Parser-drops by column × pattern — ALL  (n=64)
 
 | column | drop | mislocate | wrongpick | total |
 |---|--:|--:|--:|--:|
 | itemName | 0 | 8 | 22 | **30** |
 | spec | 0 | 8 | 3 | **11** |
-| buyerAddress | 0 | 0 | 4 | **4** |
 | productCode | 4 | 0 | 0 | **4** |
 | lotNo | 4 | 0 | 0 | **4** |
 | expiryDate | 4 | 0 | 0 | **4** |
-| buyerRepresentative | 1 | 1 | 1 | **3** |
+| buyerAddress | 0 | 0 | 3 | **3** |
 | quantity | 3 | 0 | 0 | **3** |
+| buyerRepresentative | 1 | 1 | 0 | **2** |
 | cumulativeAmount | 0 | 1 | 0 | **1** |
 | buyerCompany | 0 | 0 | 1 | **1** |
 | supplierCompany | 0 | 0 | 1 | **1** |

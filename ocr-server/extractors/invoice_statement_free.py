@@ -111,12 +111,31 @@ _PARTY_NAME_REJECT_LABELS = frozenset({
     "성명", "비고", "합", "계", "공급자", "공급받는자",
 })
 PARTY_NAME_FIELD_KEYS = ("supplierRepresentative", "buyerRepresentative")
+ADDRESS_FIELD_KEYS = ("supplierAddress", "buyerAddress")
 # Money scalars that must hold a parseable number; a non-numeric value (e.g. the
 # label "합") is garbage regardless of which extractor produced it.
 MONEY_SCALAR_FIELD_KEYS = (
     "supplyAmount", "taxAmount", "totalAmount", "cumulativeAmount", "subtotal",
     "previousBalance", "transactionAmount", "cumulativeBalance",
 )
+
+
+def _strip_party_name_label_fragment(value: str) -> str:
+    cleaned = _normalize_text(value)
+    cleaned = re.sub(r"^\s*대표\s*자\s*(?:명|영)?\s*[:：]?\s*", "", cleaned)
+    cleaned = re.sub(r"^\s*영\s*[:：]?\s*(?=[가-힣]{2,4}\s*$)", "", cleaned)
+    return cleaned.strip()
+
+
+def _strip_address_label_fragment(value: str) -> str:
+    cleaned = _normalize_text(value)
+    match = re.match(r"^\s*(?:주소|주\s*소|소)\s*[:：]\s*(.+)$", cleaned)
+    if not match:
+        return cleaned.strip()
+    rest = match.group(1).strip()
+    if re.search(r"(?:서울|경기|인천|구로|평택|[가-힣]{1,8}(?:구|동|읍|면|리)|[가-힣]{1,16}(?:로|길)|번지|\d)", rest):
+        return rest
+    return cleaned.strip()
 
 
 def sanitize_document_scalar_fields(document_fields: dict[str, Any]) -> dict[str, Any]:
@@ -131,8 +150,15 @@ def sanitize_document_scalar_fields(document_fields: dict[str, Any]) -> dict[str
         return document_fields
     for key in PARTY_NAME_FIELD_KEYS:
         val = document_fields.get(key)
-        if isinstance(val, str) and val.strip() in _PARTY_NAME_REJECT_LABELS:
-            document_fields[key] = ""
+        if isinstance(val, str):
+            stripped = _strip_party_name_label_fragment(val)
+            document_fields[key] = stripped
+            if stripped.strip() in _PARTY_NAME_REJECT_LABELS:
+                document_fields[key] = ""
+    for key in ADDRESS_FIELD_KEYS:
+        val = document_fields.get(key)
+        if isinstance(val, str):
+            document_fields[key] = _strip_address_label_fragment(val)
     for key in MONEY_SCALAR_FIELD_KEYS:
         val = document_fields.get(key)
         if isinstance(val, str) and val.strip() and _money_for_sum(val) is None:
