@@ -552,6 +552,9 @@ def main() -> int:
             "ambiguousFuzzy": len(ambiguous),
             "recognitionConfirmed": len(recog),
         },
+        # per-sample field/cell accuracy — persisted so a batch-level combiner
+        # (local_summary.py) can compute KPIs without re-reading every compare/.
+        "scores": scores,
         "defects": defects,
     }, open(out_json, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
     open(out_html, "w", encoding="utf-8").write(
@@ -569,6 +572,23 @@ def main() -> int:
                 inject_html(out_html, _hist)
         except Exception as _e:
             print(f"[replay_summary skipped] {_e}")
+
+    # Batch-level combined view: if this run sits inside a run_all --all batch
+    # (runs/<batch>/<sub>/), regenerate LOCAL_SUMMARY so the existing loop
+    # (replay_compare -> parser_drop_classify) auto-produces the combined
+    # study+thin page with NO extra command. Merge-only (refresh=False) reads the
+    # per-testset JSONs already on disk and never re-invokes this classifier
+    # (no recursion). Flat single runs (parent == runs/) are not batches -> skip.
+    # Best-effort: never break the classifier.
+    try:
+        batch_dir = os.path.dirname(run_dir)
+        if os.path.abspath(batch_dir) != os.path.abspath(C.RUNS_DIR):
+            from local_summary import build as _ls_build
+            _out = _ls_build(batch_dir, args.compare_dir, refresh=False)
+            if _out:
+                print(f"[written] {_out}  <- 로컬 합산뷰")
+    except Exception as _e:
+        print(f"[local_summary skipped] {_e}")
 
     # console: ascii-safe summary (cp949 consoles mangle hangul; full table in .md/.html)
     sys.stdout.reconfigure(errors="replace")
