@@ -23,9 +23,12 @@ CLI:
 from __future__ import annotations
 
 import argparse
+import base64
 import datetime
 import json
 import os
+import platform
+import subprocess
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any
@@ -35,8 +38,58 @@ import requests
 import contract as C
 from build_manifest import build_manifest
 
+
+def _save_processed(data_url: str, out_path: str) -> None:
+    """Decode the response's 'data:image/jpeg;base64,...' into a JPEG file.
+
+    This is the EXACT image OCR ran on (main.py processed_image == ocr_img, kept
+    in sync through all rotate/deskew/unwarp branches), so ocr_lines_raw bboxes
+    line up with it — the faithful crop source for fine-tune, no re-derivation.
+    Best-effort: a failure here never breaks the run.
+    """
+    try:
+        b64 = data_url.split(",", 1)[1] if "," in data_url else data_url
+        with open(out_path, "wb") as fh:
+            fh.write(base64.b64decode(b64))
+    except Exception as exc:
+        print(f"  [processed save failed] {out_path}: {exc}")
+
+
 DEFAULT_SERVER = "http://127.0.0.1:9099"
 EXTRACT_PATH = "/ocr/extract"
+_REPO = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
+
+
+def _code_versions(results: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    """Version stamp so a metrics change can be traced to code vs model/data
+    (the 035-drift problem: was it the parser edit or the GPU/detector swap?).
+
+    Client-capturable: git rev of the code (= parser+eval version), dirty flag
+    (uncommitted => not reproducible), python/platform, and the server-reported
+    preprocess policy version. The OCR engine/detector model is server-side and
+    not exposed in the response yet — recorded as null until the server emits it.
+    """
+    def _git(*a: str) -> str:
+        try:
+            return subprocess.run(["git", *a], cwd=_REPO, capture_output=True,
+                                  text=True, timeout=5).stdout.strip()
+        except Exception:
+            return ""
+    policy = None
+    for r in results or []:
+        pv = (r.get("preprocess") or {}).get("policyVersion")
+        if pv:
+            policy = pv
+            break
+    return {
+        "codeRevision": _git("rev-parse", "--short", "HEAD") or "unknown",
+        "codeDirty": bool(_git("status", "--porcelain")),
+        "python": platform.python_version(),
+        "platform": platform.platform(),
+        "preprocessPolicyVersion": policy,
+        "ocrEngine": None,        # server-side; not exposed in response yet
+        "detectorProfile": None,  # server-side; not exposed in response yet
+    }
 MIME = {
     ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png",
     ".pdf": "application/pdf", ".tif": "image/tiff", ".tiff": "image/tiff",
@@ -122,6 +175,10 @@ def run_one(sample: dict[str, Any], server: str, timeout: float) -> dict[str, An
         # (the checker-validated result) keeps its exact schema. None if free path
         # not taken (e.g. fallback) — pop tolerates absence.
         rec["_ocrSnapshot"] = body.get("ocr_snapshot")
+        # The EXACT preprocessed image OCR ran on (bbox coordinate space). Stashed
+        # private; run_batch pops it to runs/<ts>/processed/<src>.jpg so the scored
+        # rec.json schema is untouched. Source of fine-tune crops (no re-derivation).
+        rec["_processedImage"] = body.get("processed_image")
         rec["status"] = "ok"
     except Exception as exc:  # network/parse/etc -> isolate
         rec["clientMs"] = round((time.time() - t0) * 1000.0, 1)
@@ -170,6 +227,8 @@ def run_batch(
     os.makedirs(samples_dir, exist_ok=True)
     snapshots_dir = os.path.join(run_dir, "snapshots")  # sidecar: free-extractor input for replay (NOT scored)
     os.makedirs(snapshots_dir, exist_ok=True)
+    processed_dir = os.path.join(run_dir, "processed")  # sidecar: exact OCR-input image (bbox space) for crop extraction
+    os.makedirs(processed_dir, exist_ok=True)
 
     todo = []
     skipped = []
@@ -197,6 +256,7 @@ def run_batch(
             # Pop the snapshot BEFORE writing rec.json so the scored result keeps
             # its exact schema; write the snapshot to the sidecar dir instead.
             snap = rec.pop("_ocrSnapshot", None)
+            proc = rec.pop("_processedImage", None)  # pop BEFORE writing rec.json (keep schema clean)
             out = os.path.join(samples_dir, rec["sourceFile"] + ".json")
             with open(out, "w", encoding="utf-8") as fh:
                 json.dump(rec, fh, ensure_ascii=False, indent=2)
@@ -206,6 +266,8 @@ def run_batch(
                           "w", encoding="utf-8") as sfh:
                     json.dump(snap, sfh, ensure_ascii=False)
                     sfh.write("\n")
+            if proc:
+                _save_processed(proc, os.path.join(processed_dir, rec["sourceFile"] + ".jpg"))
             flag = "OK " if rec["status"] == "ok" else "ERR"
             print(
                 f"  {flag} {rec['sourceFile']:<8} http={rec['httpStatus']} "
@@ -238,6 +300,7 @@ def run_batch(
         "serverUrl": server,
         "extractPath": EXTRACT_PATH,
         "request": {"documentType": "invoice_statement", "templateMode": "unstructured"},
+        "versions": _code_versions(results),
         "manifestCounts": manifest["counts"],
         "activeCount": len(actives),
         "ran": [r["sourceFile"] for r in results],

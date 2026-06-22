@@ -105,6 +105,14 @@ def _align_by_content(gt_rows, ext_rows, threshold: float = 0.30):
     return pairs, gt_only, ext_only, len(gt_rows), len(ext_rows)
 
 
+def _gt_only_rows(gt_rows, gt_only, use_rowindex):
+    """Return unmatched GT rows in the same key space used by the aligner."""
+    if use_rowindex:
+        gt_by = _index(gt_rows)
+        return [(idx, gt_by[idx]) for idx in gt_only]
+    return [(idx, gt_rows[int(idx) - 1]) for idx in gt_only]
+
+
 def compare_table(gt_rows: list[dict[str, Any]], ext_rows: list[dict[str, Any]],
                   align: str = "auto") -> dict[str, Any]:
     if align == "auto":
@@ -150,6 +158,33 @@ def compare_table(gt_rows: list[dict[str, Any]], ext_rows: list[dict[str, Any]],
             if status in ("mismatch", "ext_missing"):
                 row_match = False
         row_results.append({"rowIndex": row_key, "rowMatch": row_match, "cells": cells})
+
+    # A structurally missing GT row is still part of cell recall.  Previously
+    # these rows were exposed only through gtOnlyRowIdx, so every non-empty GT
+    # cell in them disappeared from both the numerator and denominator.
+    for row_key, g in _gt_only_rows(gt_rows, gt_only, use_rowindex):
+        cells: dict[str, dict[str, Any]] = {}
+        for key in _value_keys(g):
+            gv = g.get(key, "")
+            gn = N.normalize_cell(key, gv)
+            status = "gt_empty" if N.is_empty(gv) else "ext_missing"
+            cells[key] = {
+                "gt": gv,
+                "ext": "",
+                "gtNorm": gn,
+                "extNorm": "",
+                "status": status,
+                "spurious": False,
+            }
+            if status != "gt_empty":
+                cell_counts["scored"] += 1
+            cell_counts[status] += 1
+        row_results.append({
+            "rowIndex": row_key,
+            "rowMatch": False,
+            "missingGtRow": True,
+            "cells": cells,
+        })
 
     scored = cell_counts["scored"]
     cell_accuracy = (cell_counts["match"] / scored) if scored else None

@@ -3378,6 +3378,85 @@ def _repair_leading_header_stub_row(rows: list[dict[str, Any]]) -> None:
         rows[0]["spec"] = next_spec
 
 
+def _repair_dense_staggered_name_spec_columns(
+    rows: list[dict[str, Any]], ocr_items: list[dict[str, Any]] | None
+) -> bool:
+    """Realign dense item-name/spec columns against intact numeric rows.
+
+    On some angle variants, the header and first numeric row share a visual
+    band while the item-name/spec columns start lower. Row grouping then shifts
+    only those two columns. Apply only to a large table whose first row is the
+    known header stub and whose OCR contains exactly one item-name anchor per
+    output row.
+    """
+    if len(rows) < 20 or not ocr_items or not _is_free_table_header_stub_row(rows[0]):
+        return False
+    spec_headers = [
+        item for item in ocr_items
+        if re.sub(r"\s+", "", _normalize_text(item.get("text"))) == "\uaddc\uaca9"
+    ]
+    if len(spec_headers) != 1:
+        return False
+    header = spec_headers[0]
+    spec_x = float(header.get("cx") or 0.0)
+    header_y = float(header.get("cy") or 0.0)
+    if spec_x <= 0 or header_y <= 0:
+        return False
+
+    name_candidates: list[dict[str, Any]] = []
+    for item in ocr_items:
+        text = _normalize_text(item.get("text"))
+        cx = float(item.get("cx") or 0.0)
+        cy = float(item.get("cy") or 0.0)
+        if cy <= header_y + 8.0 or cx >= spec_x * 0.75:
+            continue
+        if not _has_item_name_signal(text) or _is_summary_or_header_line(text):
+            continue
+        name_candidates.append(item)
+    name_candidates.sort(key=lambda item: (float(item.get("cy") or 0.0), float(item.get("cx") or 0.0)))
+    if len(name_candidates) < len(rows):
+        return False
+    name_candidates = name_candidates[:len(rows)]
+
+    name_positions = [float(item.get("cy") or 0.0) for item in name_candidates]
+    gaps = sorted(
+        b - a for a, b in zip(name_positions, name_positions[1:]) if b > a
+    )
+    if not gaps:
+        return False
+    median_gap = gaps[len(gaps) // 2]
+    if not (8.0 <= median_gap <= 80.0):
+        return False
+
+    spec_candidates: list[dict[str, Any]] = []
+    for item in ocr_items:
+        text = _normalize_text(item.get("text"))
+        cx = float(item.get("cx") or 0.0)
+        cy = float(item.get("cy") or 0.0)
+        if cy <= header_y + 8.0 or abs(cx - spec_x) > max(70.0, spec_x * 0.18):
+            continue
+        if _looks_like_spec_token(text):
+            spec_candidates.append(item)
+
+    for index, (row, item) in enumerate(zip(rows, name_candidates), start=1):
+        row["itemName"] = _normalize_text(item.get("text"))
+        row["spec"] = ""
+        row["rowIndex"] = str(index)
+
+    used_rows: set[int] = set()
+    for item in sorted(spec_candidates, key=lambda value: float(value.get("cy") or 0.0)):
+        cy = float(item.get("cy") or 0.0)
+        available = [idx for idx in range(len(rows)) if idx not in used_rows]
+        if not available:
+            break
+        idx = min(available, key=lambda row_idx: abs(cy - name_positions[row_idx]))
+        if abs(cy - name_positions[idx]) > median_gap * 0.8:
+            continue
+        rows[idx]["spec"] = _normalize_spec(item.get("text"))
+        used_rows.add(idx)
+    return True
+
+
 def _repair_item_spec_lot_shift(row: dict[str, Any]) -> bool:
     split = _split_item_name_spec_tail(row.get("itemName"))
     lot_code = _normalize_free_lot_code_with_ocr_unit_suffix(row.get("spec"))
@@ -3430,7 +3509,44 @@ def _repair_spec_like_unit_price_shift(row: dict[str, Any]) -> bool:
     return True
 
 
-def _normalize_success_table_rows(table_rows: Any) -> list[dict[str, Any]]:
+def _repair_spec_from_indexed_raw_text(row: dict[str, Any]) -> bool:
+    """Recover a spec hidden behind a standalone row-number token.
+
+    Angle variants can merge ``itemName 6 100T lotNo ...`` into one OCR row.
+    The single-digit table index is not a spec, while the following compact
+    unit token is.  Require the known lot number after it so ordinary product
+    names containing digits are never rewritten.
+    """
+    raw_text = _normalize_text(row.get("_rawText"))
+    lot_no = _normalize_text(row.get("lotNo"))
+    if not raw_text or not lot_no:
+        return False
+    lot_pos = raw_text.casefold().find(lot_no.casefold())
+    if lot_pos <= 0:
+        return False
+    prefix_tokens = [
+        token.strip("()[]{}.,:;|")
+        for token in re.split(r"\s+", raw_text[:lot_pos].strip())
+        if token.strip("()[]{}.,:;|")
+    ]
+    for idx in range(len(prefix_tokens) - 1, 0, -1):
+        candidate = prefix_tokens[idx]
+        row_marker = prefix_tokens[idx - 1]
+        if not re.fullmatch(r"\d{1,2}", row_marker):
+            continue
+        if not _looks_like_spec_token(candidate):
+            continue
+        current = _normalize_text(row.get("spec"))
+        if current and _looks_like_spec_token(current):
+            return False
+        row["spec"] = _normalize_spec(candidate)
+        return True
+    return False
+
+
+def _normalize_success_table_rows(
+    table_rows: Any, ocr_items: list[dict[str, Any]] | None = None
+) -> list[dict[str, Any]]:
     if not isinstance(table_rows, list):
         return []
     normalized_rows: list[dict[str, Any]] = []
@@ -3465,11 +3581,14 @@ def _normalize_success_table_rows(table_rows: Any) -> list[dict[str, Any]]:
                 if stripped_noise and stripped_noise != item_name:
                     normalized["itemName"] = stripped_noise
         _repair_item_spec_lot_shift(normalized)
+        _repair_spec_from_indexed_raw_text(normalized)
         _repair_spec_like_unit_price_shift(normalized)
         if "rowIndex" not in normalized:
             normalized["rowIndex"] = str(index)
         normalized_rows.append(normalized)
-    _repair_leading_header_stub_row(normalized_rows)
+    dense_repaired = _repair_dense_staggered_name_spec_columns(normalized_rows, ocr_items)
+    if not dense_repaired:
+        _repair_leading_header_stub_row(normalized_rows)
     for row in normalized_rows:
         _repair_quantity_from_row_arithmetic(row)
     product_code_rows = sum(1 for row in normalized_rows if _normalize_text(row.get("productCode")))
@@ -3904,6 +4023,12 @@ def extract_invoice_statement_free(
         if columnar_rows:
             parsed_table_rows = columnar_rows
     table_rows, precision_debug = _filter_table_row_candidates(parsed_table_rows)
+    # Release must evaluate the same row shape that is returned to callers.
+    # Normalization can move tokens between columns (for example product code,
+    # lot number and expiry date) and thereby empty unitPrice/amount. Evaluating
+    # the pre-normalized shape could incorrectly release a structurally partial
+    # one-row table as complete (the 6-2 regression case).
+    table_rows = _normalize_success_table_rows(table_rows, ocr_items=ocr_items)
     table_candidate_diagnostics = _build_table_candidate_diagnostics(
         raw_line_count=len(lines),
         grouped_line_count=len(grouped_lines),
@@ -3912,6 +4037,7 @@ def extract_invoice_statement_free(
         grouping_debug=grouping_debug,
         precision_debug=precision_debug,
     )
+    table_candidate_diagnostics["postNormalizationReleaseEvaluation"] = True
     # 3F: thread columnar context through release evaluation so the
     # quantity-optional gate has access to confidence + amount-sum reconciliation.
     columnar_context_for_release = None

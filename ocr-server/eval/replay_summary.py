@@ -67,17 +67,18 @@ def _kpi_from_blobs(get_file, rc_files: list[str], classify_path: str) -> dict |
                 fm += 1 if cell.get("status") == "match" else 0
     if not any_row:
         return None
-    pdrop = recog = None
+    pdrop = ambiguous = recog = None
     cj = get_file(classify_path)
     if cj:
         try:
             defs = json.loads(cj).get("defects", [])
             pdrop = sum(1 for x in defs if x.get("class") == "parser_drop")
+            ambiguous = sum(1 for x in defs if x.get("class") == "ambiguous_fuzzy")
             recog = sum(1 for x in defs if x.get("class") == "recognition")
         except Exception:
             pass
     return {"cm": cm, "cs": cs, "fm": fm, "fs": fs, "spur": spur,
-            "paths": paths, "pdrop": pdrop, "recog": recog}
+            "paths": paths, "pdrop": pdrop, "ambiguous": ambiguous, "recog": recog}
 
 
 def _paths(ts: str) -> tuple[str, str, str]:
@@ -121,7 +122,7 @@ def _seed_from_git(ts: str) -> list[dict]:
 def _tuple(k: dict) -> tuple:
     p = k.get("paths") or {}
     return (k.get("cm"), k.get("cs"), k.get("fm"), k.get("fs"),
-            k.get("pdrop"), k.get("recog"), k.get("spur"),
+            k.get("pdrop"), k.get("ambiguous"), k.get("recog"), k.get("spur"),
             p.get("free"), p.get("fallback"))
 
 
@@ -169,18 +170,26 @@ def inject_html(html_path: str, hist: list[dict]) -> None:
         else:
             dcol = "var(--up)" if d > 0 else ("var(--down)" if d < 0 else "var(--muted)")
             dtxt = f"{d:+.1f}"
+        pending = k.get("ambiguous")
+        pdrop_text = str(k.get("pdrop")) if pending is None else f"{k.get('pdrop')} (+{pending} pending)"
         cells.append(
             f"<tr><td>{k.get('ts','')}</td><td>{k['cm']}/{k['cs']} ({pct:.1f}%)</td>"
-            f"<td style='color:{dcol}'>{dtxt}</td><td>{fld}</td><td>{k.get('pdrop')}</td>"
-            f"<td>{k.get('recog')}</td><td>{k.get('spur')}</td><td>{paths_s}</td></tr>"
+            f"<td style='color:{dcol}'>{dtxt}</td><td>{fld}</td>"
+            f"<td>{pdrop_text}</td><td>{k.get('recog')}</td>"
+            f"<td>{k.get('spur')}</td><td>{paths_s}</td></tr>"
         )
     total = ""
     if len(hist) >= 2 and hist[0].get("cs") and hist[-1].get("cs"):
         f0 = 100 * hist[0]["cm"] / hist[0]["cs"]
         f1 = 100 * hist[-1]["cm"] / hist[-1]["cs"]
+        taxonomy_changed = hist[0].get("ambiguous") is None and hist[-1].get("ambiguous") is not None
+        parser_part = (
+            "parser taxonomy changed (old/new counts are not directly comparable), "
+            if taxonomy_changed else
+            f"parser_drop {hist[0].get('pdrop')} &rarr; {hist[-1].get('pdrop')}, "
+        )
         total = (f"<p class='note'><b>총 개선: 셀 {f0:.1f}% &rarr; {f1:.1f}% ({f1-f0:+.1f}pp), "
-                 f"parser_drop {hist[0].get('pdrop')} &rarr; {hist[-1].get('pdrop')}, "
-                 f"spurious {hist[0].get('spur')} &rarr; {hist[-1].get('spur')}.</b></p>")
+                 f"{parser_part}spurious {hist[0].get('spur')} &rarr; {hist[-1].get('spur')}.</b></p>")
     legend = (
         "<p class='note'>"
         "<b>셀 정확도</b>=표 안 값(품명·규격·수량·단가·금액 등) 일치율 · "
@@ -228,7 +237,8 @@ def main() -> int:
     for k, pct, d, fld, paths_s in _render_rows(hist):
         dtxt = "·" if d is None else f"{d:+.1f}"
         L.append(f"| {k.get('ts','')} | {k['cm']}/{k['cs']} ({pct:.1f}%) | {dtxt} | {fld} "
-                 f"| {k.get('pdrop')} | {k.get('recog')} | {k.get('spur')} | {paths_s} |")
+                 f"| {k.get('pdrop')} (+{k.get('ambiguous')} pending) "
+                 f"| {k.get('recog')} | {k.get('spur')} | {paths_s} |")
     open(OUT_MD, "w", encoding="utf-8").write("\n".join(L) + "\n")
     html_path = os.path.join(REPO, f"ocr-server/eval/runs/{args.ts.replace(chr(92),'/')}/PARSER_DROP_CLASSIFY_replay_compare.html")
     if os.path.isfile(html_path):

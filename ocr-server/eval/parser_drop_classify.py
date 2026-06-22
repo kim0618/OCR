@@ -9,8 +9,9 @@ For every defective cell/field (status mismatch | ext_missing) it asks the one
 question that splits parser-work from OCR-work (feedback_systematic_report_analysis):
 
     Is the GT value actually present in the OCR output?
-      present  -> PARSER-DROP   (recoverable on CPU: OCR read it, parser lost it)
-      absent   -> RECOGNITION   (OCR-bound: model/scale, NOT a parser target)
+      exact/strong present -> PARSER-DROP (recoverable: OCR read it, parser lost it)
+      fuzzy-only present   -> AMBIGUOUS-FUZZY (do not claim parser recovery)
+      absent               -> RECOGNITION (OCR-bound, NOT a parser target)
 
 Parser-drops are then split into PATTERNS so we fix by CLASS, not per-case
 (feedback_class_not_per_case):
@@ -119,6 +120,70 @@ def _present_in_ocr(gt_norm: str, vtype: str, hay) -> tuple[bool, str]:
     return False, f"absent(best={best:.2f})"
 
 
+# bbox-locality: a fuzzy/exact GT match SOMEWHERE on the page is not proof the
+# OCR read this cell's value AT this row. We locate the row's Y-band from its
+# matched cells, then check whether a clean GT token sits within that band.
+LOCAL_TOL = 15.0     # px around the row's median Y to count as "this row"
+LOCAL_CLEAN = 0.97   # local token must match GT this well to confirm parser
+
+
+def _ocr_tokens_xy(snap: dict):
+    """[(alnum, digits, y_center), ...] from snapshot bboxes (ocr_lines_raw row = [box, text, score])."""
+    out = []
+    for item in snap.get("ocr_lines_raw") or []:
+        try:
+            box, text = item[0], str(item[1])
+            yc = sum(p[1] for p in box) / len(box)
+        except (IndexError, TypeError, ZeroDivisionError):
+            continue
+        out.append((_collapse_alnum(text), _collapse_digits(text), yc))
+    return out
+
+
+def _row_yband(row: dict, tokens) -> float | None:
+    """Median Y of the row's matched-cell ext values located in OCR. None if unlocatable."""
+    ys = []
+    for _ck, cell in row["cells"].items():
+        if cell.get("status") != "match":
+            continue
+        ev = _collapse_alnum(cell.get("extNorm") or "")
+        if len(ev) < 4:   # need a distinctive anchor (skip short numerics)
+            continue
+        for a, _d, yc in tokens:
+            if ev in a:
+                ys.append(yc)
+                break
+    if not ys:
+        return None
+    ys.sort()
+    return ys[len(ys) // 2]
+
+
+def _local_ratio(gt: str, vtype: str, tokens, yband: float | None) -> float | None:
+    """Best GT-match ratio among OCR tokens within the row's Y-band.
+    None = band unknown or no token in band (can't judge locally)."""
+    if yband is None:
+        return None
+    g = _collapse_digits(gt) if vtype in DIGIT_TYPES else _collapse_alnum(gt)
+    if len(g) < 2:
+        return None
+    best = 0.0
+    seen = False
+    for a, d, yc in tokens:
+        if abs(yc - yband) > LOCAL_TOL:
+            continue
+        hay = d if vtype in DIGIT_TYPES else a
+        if not hay:
+            continue
+        seen = True
+        if g in hay:
+            return 1.0
+        r = SequenceMatcher(None, g, hay).ratio()
+        if r > best:
+            best = r
+    return best if seen else None
+
+
 def _ext_value_locations(fields: dict, table: dict) -> dict[str, set[str]]:
     """normalized ext value -> set of locations it appears at on the EXTRACTED side."""
     idx: dict[str, set[str]] = defaultdict(set)
@@ -137,14 +202,21 @@ def _ext_value_locations(fields: dict, table: dict) -> dict[str, set[str]]:
 def classify_sample(src: str, cmp: dict, snap: dict | None) -> list[dict]:
     fields, table = cmp["fields"], cmp["table"]
     hay = _ocr_haystacks(snap) if snap else (None,) * 4
+    tokens_xy = _ocr_tokens_xy(snap) if snap else []
     ext_idx = _ext_value_locations(fields, table)
     out: list[dict] = []
 
-    def emit(loc, col, vtype, status, gtn, extn):
+    def emit(loc, col, vtype, status, gtn, extn, yband=None):
         present = how = None
         if snap is not None:
             present, how = _present_in_ocr(gtn, vtype, hay)
-        if not present:
+        if present and str(how).startswith("line_fuzzy"):
+            # A near string somewhere on the page is not proof that OCR read
+            # the exact GT value at this field/row. Keep it out of both the
+            # confirmed parser and confirmed OCR backlogs until row/bbox-local
+            # evidence can resolve it.
+            cls, pattern = "ambiguous_fuzzy", "fuzzy_only"
+        elif not present:
             cls, pattern = "recognition", "ocr_absent" if snap is not None else "no_snapshot"
         else:
             elsewhere = {l for l in ext_idx.get(gtn, set()) if l != loc}
@@ -154,6 +226,30 @@ def classify_sample(src: str, cmp: dict, snap: dict | None) -> list[dict]:
                 cls, pattern = "parser_drop", "mislocate"
             else:
                 cls, pattern = "parser_drop", "wrongpick"
+        # bbox-locality override (table cells only — fields have no row band).
+        # Resolve parser_drop/ambiguous by the OCR token AT this cell's row:
+        #   clean GT token local (>=LOCAL_CLEAN) -> confirmed parser (promote ambiguous)
+        #   only a garbled token local           -> recognition (OCR misread THIS cell)
+        # The page-elsewhere duplicate (e.g. same drug name on another row) no
+        # longer counts as proof.
+        if yband is not None and cls in ("parser_drop", "ambiguous_fuzzy"):
+            lr = _local_ratio(gtn, vtype, tokens_xy, yband)
+            if lr is not None:
+                if lr >= LOCAL_CLEAN:
+                    if cls == "ambiguous_fuzzy":
+                        cls, pattern = "parser_drop", "wrongpick"
+                else:
+                    cls, pattern = "recognition", "ocr_local_garbled"
+                how = f"{how};local({lr:.2f})"
+        # Fields (no row band) / cells the band couldn't place: if the parser's
+        # OWN ext is a char-garbled version of GT (GT is NOT a clean substring of
+        # ext), the parser DID extract this value and the OCR misread it ->
+        # recognition. (A clean GT-substring-of-ext means parser noise -> parser.)
+        if cls == "ambiguous_fuzzy" and extn:
+            ge, ee = _collapse_alnum(gtn), _collapse_alnum(extn)
+            if ge and ge not in ee:
+                cls, pattern = "recognition", "ocr_garbled_ext"
+                how = f"{how};ext_garble"
         out.append({
             "src": src, "clean": src in CLEAN, "location": loc, "column": col,
             "vtype": vtype, "status": status, "gtNorm": gtn, "extNorm": extn,
@@ -165,10 +261,11 @@ def classify_sample(src: str, cmp: dict, snap: dict | None) -> list[dict]:
             emit(f"field:{label}", label, _field_type(label), info["status"],
                  info["gtNorm"], info["extNorm"])
     for row in table["rows"]:
+        yband = _row_yband(row, tokens_xy) if tokens_xy else None
         for ck, cell in row["cells"].items():
             if cell["status"] in ("mismatch", "ext_missing"):
                 emit(f"row{row['rowIndex']}:{ck}", ck, _cell_type(ck),
-                     cell["status"], cell["gtNorm"], cell["extNorm"])
+                     cell["status"], cell["gtNorm"], cell["extNorm"], yband=yband)
     return out
 
 
@@ -190,7 +287,7 @@ document.querySelectorAll('table.sortable').forEach(t=>{
 </script>"""
 
 
-def _render_html(run_label, compare_dir, scores, pdrops, recog, n_def, col_pattern_table):
+def _render_html(run_label, compare_dir, scores, pdrops, ambiguous, recog, n_def, col_pattern_table):
     import datetime as _dt
     from trend import _CSS, _esc  # shared look with report.html / SUMMARY.html
     try:
@@ -206,7 +303,7 @@ def _render_html(run_label, compare_dir, scores, pdrops, recog, n_def, col_patte
     gen = _dt.datetime.now().strftime("%Y-%m-%d %H:%M")
     fS = sum(s["fScored"] for s in scores); fM = sum(s["fMatch"] for s in scores)
     cS = sum(s["cScored"] for s in scores); cM = sum(s["cMatch"] for s in scores)
-    n_pd, n_rc = len(pdrops), len(recog)
+    n_pd, n_af, n_rc = len(pdrops), len(ambiguous), len(recog)
     rec_pct = (100 * n_pd / n_def) if n_def else 0
     is_replay = compare_dir != "compare"
     src_label = "수정 후 (로컬 replay)" if is_replay else "AWS run 기준 (수정 전)"
@@ -258,6 +355,8 @@ def _render_html(run_label, compare_dir, scores, pdrops, recog, n_def, col_patte
              f"<div class='sub'>불일치+누락</div></div>"
              f"<div class='kpi'><div class='lab'>parser-drop</div><b>{n_pd}</b>"
              f"<div class='sub'>OCR 읽음 · 회수가능 {rec_pct:.0f}%</div></div>"
+             f"<div class='kpi'><div class='lab'>ambiguous_fuzzy</div><b>{n_af}</b>"
+             f"<div class='sub'>fuzzy-only · pending</div></div>"
              f"<div class='kpi'><div class='lab'>recognition</div><b>{n_rc}</b>"
              f"<div class='sub'>OCR 바운드</div></div></div>")
 
@@ -306,6 +405,18 @@ def _render_html(run_label, compare_dir, scores, pdrops, recog, n_def, col_patte
                      + "".join(f"<td data-v='{pats.get(p,0)}'>{pats.get(p,0)}</td>" for p in P)
                      + f"<td data-v='{tot}'><b>{tot}</b></td></tr>")
         H.append("</tbody></table></section>")
+
+    # Fuzzy-only evidence is intentionally not mixed into either actionable
+    # parser work or confirmed OCR work.
+    aagg = defaultdict(int)
+    for d in ambiguous:
+        aagg[d["column"]] += 1
+    H.append("<section><h2>ambiguous_fuzzy <span class='muted'>(fuzzy-only · pending row/bbox proof)</span></h2>"
+             "<table class='sortable'><thead><tr><th>column</th><th data-num='1'>count</th>"
+             "</tr></thead><tbody>")
+    for col, n in sorted(aagg.items(), key=lambda kv: -kv[1]):
+        H.append(f"<tr><td>{ko(col)}</td><td data-v='{n}'>{n}</td></tr>")
+    H.append("</tbody></table></section>")
 
     # recognition by column
     ragg = defaultdict(int)
@@ -362,8 +473,11 @@ def main() -> int:
 
     # --- aggregate ---
     pdrops = [d for d in defects if d["class"] == "parser_drop"]
+    ambiguous = [d for d in defects if d["class"] == "ambiguous_fuzzy"]
     recog = [d for d in defects if d["class"] == "recognition"]
     n_def = len(defects)
+    if len(pdrops) + len(ambiguous) + len(recog) != n_def:
+        raise RuntimeError("defect taxonomy does not partition all defects")
 
     def col_pattern_table(rows):
         agg: dict = defaultdict(lambda: defaultdict(int))
@@ -376,6 +490,7 @@ def main() -> int:
     lines.append("")
     lines.append(f"Defects scored (mismatch|ext_missing): **{n_def}**  "
                  f"|  parser-drop (OCR read it, recoverable): **{len(pdrops)}**  "
+                 f"|  ambiguous_fuzzy (fuzzy-only, pending): **{len(ambiguous)}**  "
                  f"|  recognition (OCR-bound): **{len(recog)}**"
                  + ("" if has_snap else "  _(NO SNAPSHOTS — class=no_snapshot)_"))
     pct = (100 * len(pdrops) / n_def) if n_def else 0
@@ -398,6 +513,17 @@ def main() -> int:
         lines.append("")
 
     # recognition (OCR-bound) by column — so we don't mistake it for parser work
+    aagg: dict = defaultdict(int)
+    for d in ambiguous:
+        aagg[d["column"]] += 1
+    lines.append("## Ambiguous fuzzy-only evidence by column")
+    lines.append("")
+    lines.append("| column | count |")
+    lines.append("|---|--:|")
+    for col, n in sorted(aagg.items(), key=lambda kv: -kv[1]):
+        lines.append(f"| {col} | {n} |")
+    lines.append("")
+
     ragg: dict = defaultdict(int)
     for d in recog:
         ragg[d["column"]] += 1
@@ -416,10 +542,21 @@ def main() -> int:
     out_json = os.path.join(run_dir, f"PARSER_DROP_CLASSIFY{suffix}.json")
     out_html = os.path.join(run_dir, f"PARSER_DROP_CLASSIFY{suffix}.html")
     open(out_md, "w", encoding="utf-8").write(md)
-    json.dump({"runDir": run_dir, "hasSnapshots": has_snap, "defects": defects},
-              open(out_json, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
+    json.dump({
+        "schemaVersion": "parser-drop-classification.v2",
+        "runDir": run_dir,
+        "hasSnapshots": has_snap,
+        "summary": {
+            "defects": n_def,
+            "parserDropConfirmed": len(pdrops),
+            "ambiguousFuzzy": len(ambiguous),
+            "recognitionConfirmed": len(recog),
+        },
+        "defects": defects,
+    }, open(out_json, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
     open(out_html, "w", encoding="utf-8").write(
-        _render_html(run_label, args.compare_dir, scores, pdrops, recog, n_def, col_pattern_table))
+        _render_html(run_label, args.compare_dir, scores, pdrops, ambiguous, recog,
+                     n_def, col_pattern_table))
 
     # Auto-embed the replay progress history (git-reconstructed) at the top of the
     # HTML, so running just replay_compare + parser_drop_classify shows the trend

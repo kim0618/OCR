@@ -1504,6 +1504,158 @@ def _postprocess_multiline_column_layout(
     return out
 
 
+def _postprocess_header_axis_table(
+    lines: list["OcrLine"], rows: list[dict[str, Any]]
+) -> dict[str, Any]:
+    """Recover a strongly-headered table in normal or transposed coordinates.
+
+    Some rotated pages keep OCR text readable but return boxes with the row and
+    column axes swapped.  When all five pharmaceutical headers are present, use
+    the item-name column as row anchors and attach sparse values by their nearest
+    row coordinate.  The full-header and exact row-count guards keep this out of
+    unrelated invoice layouts.
+    """
+    out: dict[str, Any] = {
+        "applied": False,
+        "orientation": None,
+        "filledCounts": {},
+        "reason": "",
+    }
+    if len(rows) < 2:
+        out["reason"] = "row_count_below_2"
+        return out
+
+    aliases = {
+        "productCode": {"\uc81c\ud488\ucf54\ub4dc"},
+        "itemName": {"\uc81c\ud488\uba85"},
+        "quantity": {"\uc218\ub7c9"},
+        "lotNo": {"lotno"},
+        "expiryDate": {"\uc720\ud6a8\uc77c\uc790"},
+    }
+    headers: dict[str, OcrLine] = {}
+    for line in lines:
+        compact = re.sub(r"[\s:._-]+", "", _clean_value(line.text)).casefold()
+        for key, values in aliases.items():
+            if compact in values and key not in headers:
+                headers[key] = line
+    if set(headers) != set(aliases):
+        out["reason"] = "required_headers_missing"
+        return out
+
+    hlines = list(headers.values())
+    x_span = max(line.cx for line in hlines) - min(line.cx for line in hlines)
+    y_span = max(line.cy for line in hlines) - min(line.cy for line in hlines)
+    if x_span >= max(40.0, y_span * 3.0):
+        orientation = "normal"
+        col_axis = lambda line: line.cx
+        row_axis = lambda line: line.cy
+    elif y_span >= max(40.0, x_span * 3.0):
+        orientation = "transposed"
+        col_axis = lambda line: line.cy
+        # Vertical OCR boxes have text-length-dependent widths. Their edge
+        # nearest the header is the stable row baseline; center points drift
+        # enough to attach expiry/lot values to the preceding row.
+        row_axis = lambda line: line.x + line.w
+    else:
+        out["reason"] = "header_axis_not_dominant"
+        return out
+    out["orientation"] = orientation
+
+    header_col = {key: col_axis(line) for key, line in headers.items()}
+    header_row_values = sorted(row_axis(line) for line in hlines)
+    header_row = header_row_values[len(header_row_values) // 2]
+    header_ids = {id(line) for line in hlines}
+
+    def assigned_column(line: OcrLine) -> str:
+        return min(header_col, key=lambda key: abs(col_axis(line) - header_col[key]))
+
+    def on_data_side(line: OcrLine) -> bool:
+        value = row_axis(line)
+        return value > header_row + 4.0 if orientation == "normal" else value < header_row - 4.0
+
+    item_lines: list[OcrLine] = []
+    for line in lines:
+        text = _clean_value(line.text)
+        if id(line) in header_ids or not on_data_side(line):
+            continue
+        if assigned_column(line) != "itemName":
+            continue
+        if not re.search(r"[\uac00-\ud7a3]", text) or _item_start_score(text) <= 0:
+            continue
+        item_lines.append(line)
+    if len(item_lines) != len(rows):
+        out["reason"] = f"item_anchor_count_{len(item_lines)}_expected_{len(rows)}"
+        return out
+
+    item_lines.sort(key=row_axis, reverse=(orientation == "transposed"))
+    unused = list(rows)
+    ordered_rows: list[dict[str, Any]] = []
+    for anchor in item_lines:
+        name = _clean_value(anchor.text)
+        match = next(
+            (row for row in unused if _clean_value(str(row.get("itemName") or "")) == name),
+            None,
+        )
+        if match is None:
+            out["reason"] = "item_anchor_name_mismatch"
+            return out
+        unused.remove(match)
+        match["itemName"] = name
+        ordered_rows.append(match)
+
+    row_positions = [row_axis(line) for line in item_lines]
+
+    candidates: dict[str, list[tuple[OcrLine, str]]] = {
+        "productCode": [], "quantity": [], "lotNo": [], "expiryDate": [],
+    }
+    for line in lines:
+        if id(line) in header_ids or not on_data_side(line):
+            continue
+        key = assigned_column(line)
+        if key not in candidates:
+            continue
+        text = _clean_value(line.text)
+        value = ""
+        if key == "productCode":
+            value = _fb_normalize_product_code(text) or ""
+        elif key == "expiryDate":
+            value = _tr_extract_expiry_date(text) or ""
+        elif key == "lotNo":
+            compact = re.sub(r"[^A-Z0-9]", "", text.upper())
+            if re.fullmatch(r"(?:[A-Z]\d{7,10}|\d{5})", compact):
+                value = compact
+        elif key == "quantity":
+            compact = re.sub(r"[\s,.]", "", _canonical_digits(text))
+            if re.fullmatch(r"\d{1,4}", compact) and int(compact) <= 9999:
+                value = str(int(compact))
+        if value:
+            candidates[key].append((line, value))
+
+    filled: dict[str, int] = {}
+    for key, values in candidates.items():
+        used_rows: set[int] = set()
+        count = 0
+        for line, value in sorted(values, key=lambda pair: row_axis(pair[0]),
+                                  reverse=(orientation == "transposed")):
+            available = [idx for idx in range(len(row_positions)) if idx not in used_rows]
+            if not available:
+                continue
+            axis_value = row_axis(line)
+            idx = min(available, key=lambda row_idx: abs(axis_value - row_positions[row_idx]))
+            used_rows.add(idx)
+            ordered_rows[idx][key] = value
+            count += 1
+        filled[key] = count
+
+    for index, row in enumerate(ordered_rows, start=1):
+        row["rowIndex"] = index
+    rows[:] = ordered_rows
+    out["applied"] = True
+    out["filledCounts"] = filled
+    out["reason"] = "full_header_axis_mapping"
+    return out
+
+
 def _item_start_score(text: str) -> float:
     value = _clean_value(text)
     compact = re.sub(r"\s+", "", value)
@@ -8786,6 +8938,18 @@ def extract_invoice_statement_fields(
     canonical["tableMeta"]["variableGridStopKeyword"] = tdbg.get("variableGridStopKeyword")
     canonical["tableMeta"]["variableGridScanYMax"] = tdbg.get("variableGridScanYMax")
     canonical["tableMeta"]["variableGridOriginalYMax"] = tdbg.get("variableGridOriginalYMax")
+
+    # Strongly-headered normal/transposed table recovery. This is independent of
+    # template expected-columns and is guarded by the complete five-header set.
+    _header_axis = _postprocess_header_axis_table(lines, canonical["tableRows"])
+    canonical["tableMeta"]["headerAxisMapping"] = _header_axis
+    if _header_axis.get("applied"):
+        canonical["tableMeta"]["headerAxisMappingApplied"] = True
+        for _key in ("productCode", "quantity", "lotNo", "expiryDate"):
+            if any(str(row.get(_key) or "").strip() for row in canonical["tableRows"]):
+                _cols = canonical["tableMeta"].setdefault("columns", [])
+                if _key not in _cols:
+                    _cols.append(_key)
 
     # T-7a: For single-row tables, push document-level amounts into the row
     # when the row-level column is empty AND the expected columns include it.

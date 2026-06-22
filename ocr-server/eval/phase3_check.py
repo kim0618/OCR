@@ -21,6 +21,7 @@ import sys
 
 import contract as C
 import normalize as N
+from compare_table import compare_table
 from compare_run import compare_run, _latest_run
 
 BUCKETS = {"recognition", "structure", "layout", "preprocessing"}
@@ -44,12 +45,57 @@ def _freeze_anchors() -> list[str]:
     return problems
 
 
+def _missing_gt_row_golden() -> list[str]:
+    """Lock the denominator rule: every non-empty GT cell is scored."""
+    problems: list[str] = []
+    gt = [
+        {"rowIndex": 1, "itemName": "kept", "quantity": "1", "amount": ""},
+        {"rowIndex": 2, "itemName": "missing", "quantity": "2", "amount": "200"},
+    ]
+    ext = [{"rowIndex": 1, "itemName": "kept", "quantity": "1", "amount": ""}]
+    cases = [
+        ("partial", compare_table(gt, ext), 5, 3, ["2"]),
+        ("zero-extracted", compare_table(gt[:1], []), 2, 2, ["1"]),
+        ("duplicate-ext-rowindex", compare_table(gt, ext + ext), 5, 3, ["2"]),
+        (
+            "content-aligned-missing",
+            compare_table(
+                [{k: v for k, v in row.items() if k != "rowIndex"} for row in gt],
+                [{k: v for k, v in row.items() if k != "rowIndex"} for row in ext],
+            ),
+            5,
+            3,
+            ["2"],
+        ),
+    ]
+    for name, table, expected_scored, expected_missing, expected_gt_only in cases:
+        cc = table["cellCounts"]
+        if cc["scored"] != expected_scored or cc["ext_missing"] != expected_missing:
+            problems.append(
+                f"missing-row golden/{name}: scored/missing "
+                f"{cc['scored']}/{cc['ext_missing']} != "
+                f"{expected_scored}/{expected_missing}"
+            )
+        if table["gtOnlyRowIdx"] != expected_gt_only:
+            problems.append(
+                f"missing-row golden/{name}: gtOnlyRowIdx "
+                f"{table['gtOnlyRowIdx']} != {expected_gt_only}"
+            )
+        missing_rows = [r for r in table["rows"] if r.get("missingGtRow")]
+        if len(missing_rows) != len(expected_gt_only):
+            problems.append(
+                f"missing-row golden/{name}: materialized "
+                f"{len(missing_rows)} != {len(expected_gt_only)}"
+            )
+    return problems
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--ts", default=None)
     args = ap.parse_args()
 
-    problems: list[str] = _freeze_anchors()
+    problems: list[str] = _freeze_anchors() + _missing_gt_row_golden()
 
     out = compare_run(args.ts)
     samples = out["summary"]["samples"]
@@ -79,6 +125,19 @@ def main() -> int:
         cc = d["table"]["cellCounts"]
         if cc["scored"] != cc["match"] + cc["mismatch"] + cc["ext_missing"]:
             problems.append(f"{src}: cell scored {cc['scored']} != m+mm+miss")
+        missing_rows = {str(r["rowIndex"]): r for r in d["table"]["rows"]
+                        if r.get("missingGtRow")}
+        gt_only = {str(idx) for idx in d["table"]["gtOnlyRowIdx"]}
+        if set(missing_rows) != gt_only:
+            problems.append(
+                f"{src}: materialized missing rows {sorted(missing_rows)} "
+                f"!= gtOnlyRowIdx {sorted(gt_only)}"
+            )
+        for idx, row in missing_rows.items():
+            bad = [key for key, cell in row["cells"].items()
+                   if not N.is_empty(cell.get("gt")) and cell.get("status") != "ext_missing"]
+            if bad:
+                problems.append(f"{src}: missing GT row {idx} has unpenalized cells {bad}")
 
         tags = d["buckets"]
         tally = tags["bucketTally"]

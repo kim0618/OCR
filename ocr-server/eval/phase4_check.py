@@ -35,6 +35,44 @@ def _sum_field_counts(run_dir):
     return scored, match
 
 
+def _table_denominator_problems(run_dir):
+    """Cross-foot gtOnlyRowIdx against materialized, penalized GT rows."""
+    problems = []
+    for p in sorted(glob.glob(os.path.join(run_dir, "compare", "*.json"))):
+        d = json.load(open(p, encoding="utf-8"))
+        table = d["table"]
+        src = d.get("sourceFile") or os.path.basename(p)[:-5]
+        missing_rows = {str(r["rowIndex"]): r for r in table["rows"]
+                        if r.get("missingGtRow")}
+        gt_only = {str(idx) for idx in table["gtOnlyRowIdx"]}
+        if set(missing_rows) != gt_only:
+            problems.append(
+                f"{src}: materialized missing rows {sorted(missing_rows)} "
+                f"!= gtOnlyRowIdx {sorted(gt_only)}"
+            )
+        row_scored = 0
+        row_match = 0
+        for row in table["rows"]:
+            for key, cell in row["cells"].items():
+                if cell["status"] != "gt_empty":
+                    row_scored += 1
+                if cell["status"] == "match":
+                    row_match += 1
+                if row.get("missingGtRow") and cell.get("gt") not in (None, "") \
+                        and cell["status"] != "ext_missing":
+                    problems.append(
+                        f"{src}: missing GT row {row['rowIndex']} cell {key} "
+                        f"is {cell['status']}, expected ext_missing"
+                    )
+        cc = table["cellCounts"]
+        if (row_scored, row_match) != (cc["scored"], cc["match"]):
+            problems.append(
+                f"{src}: row cell cross-foot {row_scored}/{row_match} "
+                f"!= cellCounts {cc['scored']}/{cc['match']}"
+            )
+    return problems
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--ts", default=None)
@@ -45,6 +83,8 @@ def main() -> int:
     problems: list[str] = []
     m = compute_metrics(run_dir)
     report_path = render_report(run_dir)
+
+    problems.extend(_table_denominator_problems(run_dir))
 
     # cross-foot overall vs per-sample
     s_scored, s_match = _sum_field_counts(run_dir)

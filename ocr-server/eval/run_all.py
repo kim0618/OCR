@@ -114,6 +114,29 @@ def _measure(reuse: str | None, server: str, workers: int, testset: str,
         if not res["ok"] and not verbose:
             out = (p.stdout or "") + (p.stderr or "")
             res["error"] = next((ln for ln in reversed(out.strip().splitlines()) if ln.strip()), "checker FAIL")
+
+        # Analysis sidecars — generated HERE so they're produced wherever the run
+        # executes (e.g. AWS overnight); no separate local pass needed. Best-effort:
+        # never raises, never touches res["ok"] (not a gate). finetune_ledger runs
+        # only on LIVE runs — canned thin is a mock, not real recognition to bank.
+        log("== [analysis] finetune ledger + crops + table-align ==")
+        try:
+            # live only (real recognition + real images): ledger first (writes
+            # FINETUNE_LEDGER.json), then crops (reads it + processed/). table-align
+            # always. Order matters: crops depends on ledger.
+            tools = []
+            if not canned:
+                tools += ["finetune_ledger.py", "finetune_crops.py", "finetune_crops_balance.py"]
+            tools.append("table_align_diag.py")
+            for tool in tools:
+                rc = subprocess.run(
+                    [sys.executable, os.path.join(C.HERE, tool), "--ts", ts, "--testset", testset],
+                    capture_output=not verbose, text=True, encoding="utf-8",
+                ).returncode
+                if rc != 0:
+                    log(f"   (WARN {tool} exit={rc} — sidecar not generated)")
+        except Exception as exc:
+            log(f"   (analysis sidecars skipped: {exc})")
     except Exception as exc:  # isolation: a broken testset must not sink the others
         res["error"] = f"{type(exc).__name__}: {exc}"
     res["elapsedSec"] = round(time.perf_counter() - t0, 1)

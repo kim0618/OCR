@@ -1,0 +1,86 @@
+# PP-OCR recognition fine-tune config — TEMPLATE (fill <...>, verify vs installed PaddleOCR).
+#
+# This is a scaffold, NOT a verified runnable config. Before use:
+#   1. Match it to the EXACT rec model/version we serve (PP-OCRv4/v5 Korean rec).
+#      Pull the matching official rec config and diff Architecture/Transforms —
+#      those are version-specific and must equal the pretrained model.
+#   2. Fill the <PLACEHOLDERS>.
+#   3. Hyperparameters (lr/epoch/batch) are starting points; tune on real data.
+#
+# data_dir = eval/finetune_corpus/  ;  label lists from build_dataset.py.
+
+Global:
+  use_gpu: true
+  epoch_num: 50                      # start small; watch val, early-stop on plateau/drop
+  log_smooth_window: 20
+  print_batch_step: 50
+  save_model_dir: <OUT_DIR>/rec_finetune      # e.g. eval/finetune/output/
+  save_epoch_step: 5
+  eval_batch_step: [0, 200]          # eval on val every N steps
+  cal_metric_during_train: true
+  pretrained_model: <PRETRAINED_REC_PDPARAMS>  # the served PP-OCR rec weights = START POINT
+  checkpoints:                       # set to resume
+  character_dict_path: <KOREAN_DICT_TXT>       # the served model's dict; EXTEND only if new glyphs
+  max_text_length: 25
+  use_space_char: true
+  save_res_path: <OUT_DIR>/predicts.txt
+
+Optimizer:
+  name: Adam
+  beta1: 0.9
+  beta2: 0.999
+  lr:
+    name: Cosine
+    learning_rate: 0.0005            # fine-tune = SMALL lr (not from-scratch); raise/lower per val
+    warmup_epoch: 2
+  regularizer:
+    name: L2
+    factor: 1.0e-05
+
+Architecture:                        # MUST match the pretrained model exactly (copy from its config)
+  model_type: rec
+  algorithm: <SVTR_LCNet|CRNN|...>   # whatever the served rec uses
+  Transform:
+  Backbone:
+    name: <...>
+  Head:
+    name: <...>
+
+Loss:
+  name: <CTCLoss|MultiLoss|...>      # match algorithm
+
+PostProcess:
+  name: CTCLabelDecode
+
+Metric:
+  name: RecMetric
+  main_indicator: acc
+
+Train:
+  dataset:
+    name: SimpleDataSet
+    data_dir: <CORPUS_DIR>           # = ocr-server/eval/finetune_corpus
+    label_file_list: [<CORPUS_DIR>/dataset/train.txt]
+    transforms:                      # copy the served model's rec transforms; image_shape must match
+      - DecodeImage: {img_mode: BGR, channel_first: false}
+      - RecResizeImg: {image_shape: [3, 48, 320]}   # <- version-specific; verify
+      - KeepKeys: {keep_keys: [image, label, length]}
+  loader:
+    shuffle: true
+    batch_size_per_card: 64          # GPU-memory bound (the "한번에 몇 장")
+    drop_last: true
+    num_workers: 4
+
+Eval:
+  dataset:
+    name: SimpleDataSet
+    data_dir: <CORPUS_DIR>
+    label_file_list: [<CORPUS_DIR>/dataset/val.txt]
+    transforms:
+      - DecodeImage: {img_mode: BGR, channel_first: false}
+      - RecResizeImg: {image_shape: [3, 48, 320]}
+      - KeepKeys: {keep_keys: [image, label, length]}
+  loader:
+    shuffle: false
+    batch_size_per_card: 64
+    num_workers: 4
