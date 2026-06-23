@@ -1,0 +1,96 @@
+<!doctype html><html lang='ko'><head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width,initial-scale=1'>
+<title>Parser-drop 요약 - 054_20260623_090942\thin</title><style>
+
+:root{--bg:#f6f8fa;--card:#ffffff;--line:#d0d7de;--fg:#1f2328;--muted:#59636e;
+--up:#1a7f37;--down:#cf222e;--warn:#9a6700;--link:#0969da}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+font-family:'Segoe UI','Malgun Gothic','Apple SD Gothic Neo',system-ui,sans-serif;
+font-size:14px;line-height:1.55;padding:clamp(14px,2.5vw,32px)}
+a{color:var(--link);text-decoration:none;font-weight:500}
+a:hover{text-decoration:underline}
+h1{font-size:20px;margin:0}
+.head{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;max-width:1600px;margin:0 auto 6px}
+.gen{color:var(--muted);font-size:12.5px;white-space:nowrap}
+.note{color:var(--muted);font-size:12.5px;max-width:1600px;margin:4px auto}
+.note.warn{color:var(--warn)}
+section{background:var(--card);border:1px solid var(--line);border-radius:10px;
+padding:16px 18px;margin:18px auto;max-width:1600px;overflow-x:auto;box-shadow:0 1px 2px rgba(27,31,36,.04)}
+h2{font-size:16px;margin:0 0 10px}
+h3{font-size:13.5px;margin:14px 0 6px}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--muted);font-weight:600;font-size:12.5px;border-bottom:2px solid var(--line)}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:#f6f8fa}
+code{background:#eff1f3;border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:12.5px}
+.up{color:var(--up);font-weight:600}
+.down{color:var(--down);font-weight:600}
+.muted{color:var(--muted)}
+.bup{color:var(--down);font-weight:700}
+.latest{margin-top:12px;padding:9px 12px;border-radius:8px;border:1px solid var(--line);font-size:13px}
+.latest.ok{background:#e9f7ec;border-color:#a7e0b5}
+.latest.warn{background:#fff8e6;border-color:#f0d99a}
+.latest.bad{background:#ffeef0;border-color:#f5b0b8}
+.legend{color:var(--muted);font-size:12px;margin-top:6px}
+.note .row{margin:3px 0}
+.btn{display:inline-block;padding:5px 12px;border-radius:6px;background:var(--link);
+color:#fff;font-weight:600;font-size:12.5px;text-decoration:none;border:1px solid var(--link)}
+.btn:hover{background:#0860ca;text-decoration:none}
+/* SUMMARY 표: 텍스트=왼쪽, 숫자=오른쪽(기본), 검증/상세=가운데 */
+table.sumtable td:nth-child(2),table.sumtable th:nth-child(2){text-align:left}
+table.sumtable td:nth-child(6),table.sumtable th:nth-child(6),
+table.sumtable td:nth-child(7),table.sumtable th:nth-child(7){text-align:center}
+@media (max-width:640px){body{font-size:13px}h1{font-size:18px}th,td{padding:6px 8px}
+.head{flex-direction:column;gap:2px}section{padding:14px}}
+
+table.sortable th:hover{color:var(--fg)}.acc-lo{background:#ffeef0}.acc-mid{background:#fff8e6}.acc-ok{background:#e9f7ec}.free{color:var(--link);font-weight:600}.fallback{color:var(--warn);font-weight:600}.kpis{display:flex;flex-wrap:wrap;gap:10px;max-width:1600px;margin:0 auto}.kpi{flex:1;min-width:130px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 16px;box-shadow:0 1px 2px rgba(27,31,36,.04)}.kpi .lab{color:var(--muted);font-size:12px}.kpi b{font-size:24px;display:block;margin:2px 0}.kpi .sub{color:var(--muted);font-size:11.5px}
+</style></head><body>
+<div class='head'><h1>Parser-drop 요약 <span class='muted' style='font-size:14px'>(054_20260623_090942\thin)</span></h1><div class='gen'>생성 2026-06-23 09:47 · AWS run 기준 (수정 전)</div></div>
+<div class='note'><div class='row'><b>parser-drop</b> = GT 값이 OCR 출력엔 있는데 파서가 떨군 것 <b>(회수 가능)</b> · <b>recognition</b> = OCR이 글자 자체를 못 읽음(OCR 바운드, 파서 대상 아님)</div><div class='row'><b>패턴</b> — <b>누락(drop)</b>: 칸 통째 누락 · <b>오배치(mislocate)</b>: 값이 엉뚱한 컬럼에 배치 · <b>오선택(wrongpick)</b>: 정답 라인 있는데 다른 걸 선택</div><div class='row'><b>추출경로</b> — <b class='free'>free</b>(비정형 룰 파서) / <b class='fallback'>fallback</b>(레퍼런스 보조, free 게이트 탈락 시)</div></div>
+<div class='kpis'><div class='kpi'><div class='lab'>전체 필드</div><b>67.6%</b><div class='sub'>23/34</div></div><div class='kpi'><div class='lab'>전체 셀</div><b>89.5%</b><div class='sub'>170/190</div></div><div class='kpi'><div class='lab'>결함</div><b>31</b><div class='sub'>불일치+누락</div></div><div class='kpi'><div class='lab'>parser-drop</div><b>0</b><div class='sub'>OCR 읽음 · 회수가능 0%</div></div><div class='kpi'><div class='lab'>ambiguous_fuzzy</div><b>0</b><div class='sub'>fuzzy-only · pending</div></div><div class='kpi'><div class='lab'>recognition</div><b>31</b><div class='sub'>OCR 바운드</div></div></div>
+<section><h2>추출경로별 parser-drop <span class='muted'>(우선순위 축)</span></h2><table class='sortable'><thead><tr><th>경로</th><th data-num='1'>누락(drop)</th><th data-num='1'>오배치(mislocate)</th><th data-num='1'>오선택(wrongpick)</th><th data-num='1'>합계</th></tr></thead><tbody>
+<tr><td><b class='fallback'>fallback</b></td><td data-v='0'>0</td><td data-v='0'>0</td><td data-v='0'>0</td><td data-v='0'><b>0</b></td></tr>
+<tr><td><b class='free'>free</b></td><td data-v='0'>0</td><td data-v='0'>0</td><td data-v='0'>0</td><td data-v='0'><b>0</b></td></tr>
+</tbody></table></section>
+<section><h2>샘플별 점수 <span class='muted'>(약한 순 · 컬럼 클릭=정렬)</span></h2><table class='sortable'><thead><tr><th>이미지</th><th>구분</th><th>추출경로</th><th data-num='1'>필드 정확도</th><th data-num='1'>셀 정확도</th></tr></thead><tbody>
+<tr><td>3.pdf</td><td>정상</td><td><span class='fallback'>fallback</span></td><td data-v='0.5714' class='acc-mid'>57.1%</td><td data-v='0.8000' class='acc-ok'>80.0%</td></tr>
+<tr><td>4.pdf</td><td>정상</td><td><span class='fallback'>fallback</span></td><td data-v='0.5714' class='acc-mid'>57.1%</td><td data-v='0.7500' class='acc-mid'>75.0%</td></tr>
+<tr><td>1.jpg</td><td>정상</td><td><span class='free'>free</span></td><td data-v='0.6667' class='acc-mid'>66.7%</td><td data-v='0.9353' class='acc-ok'>93.5%</td></tr>
+<tr><td>5.pdf</td><td>정상</td><td><span class='free'>free</span></td><td data-v='0.7143' class='acc-mid'>71.4%</td><td data-v='0.9583' class='acc-ok'>95.8%</td></tr>
+<tr><td>7.pdf</td><td>정상</td><td><span class='fallback'>fallback</span></td><td data-v='0.8000' class='acc-ok'>80.0%</td><td data-v='1.0000' class='acc-ok'>100.0%</td></tr>
+<tr><td>6.pdf</td><td>정상</td><td><span class='fallback'>fallback</span></td><td data-v='1.0000' class='acc-ok'>100.0%</td><td data-v='0.5000' class='acc-mid'>50.0%</td></tr>
+</tbody></table></section>
+<section><h2>컬럼 × 패턴 — 전체 <span class='muted'>(n=0 · 클릭=정렬)</span></h2><table class='sortable'><thead><tr><th>컬럼</th><th data-num='1'>누락(drop)</th><th data-num='1'>오배치(mislocate)</th><th data-num='1'>오선택(wrongpick)</th><th data-num='1'>합계</th></tr></thead><tbody>
+</tbody></table></section>
+<section><h2>컬럼 × 패턴 — 정상 원본 <span class='muted'>(n=0 · 클릭=정렬)</span></h2><table class='sortable'><thead><tr><th>컬럼</th><th data-num='1'>누락(drop)</th><th data-num='1'>오배치(mislocate)</th><th data-num='1'>오선택(wrongpick)</th><th data-num='1'>합계</th></tr></thead><tbody>
+</tbody></table></section>
+<section><h2>컬럼 × 패턴 — 변주(각도) <span class='muted'>(n=0 · 클릭=정렬)</span></h2><table class='sortable'><thead><tr><th>컬럼</th><th data-num='1'>누락(drop)</th><th data-num='1'>오배치(mislocate)</th><th data-num='1'>오선택(wrongpick)</th><th data-num='1'>합계</th></tr></thead><tbody>
+</tbody></table></section>
+<section><h2>ambiguous_fuzzy <span class='muted'>(fuzzy-only · pending row/bbox proof)</span></h2><table class='sortable'><thead><tr><th>column</th><th data-num='1'>count</th></tr></thead><tbody>
+</tbody></table></section>
+<section><h2>recognition <span class='muted'>(OCR 바운드 · 파서 대상 아님)</span></h2><table class='sortable'><thead><tr><th>컬럼</th><th data-num='1'>건수</th></tr></thead><tbody>
+<tr><td><b>품명</b> <span class='muted' style='font-size:12px'>(itemName)</span></td><td data-v='11'>11</td></tr>
+<tr><td><b>공급자 주소</b> <span class='muted' style='font-size:12px'>(supplierAddress)</span></td><td data-v='5'>5</td></tr>
+<tr><td><b>수량</b> <span class='muted' style='font-size:12px'>(quantity)</span></td><td data-v='5'>5</td></tr>
+<tr><td><b>유효기간</b> <span class='muted' style='font-size:12px'>(expiryDate)</span></td><td data-v='4'>4</td></tr>
+<tr><td><b>공급받는자 사업자번호</b> <span class='muted' style='font-size:12px'>(buyerBizNumber)</span></td><td data-v='2'>2</td></tr>
+<tr><td><b>합계금액</b> <span class='muted' style='font-size:12px'>(totalAmount)</span></td><td data-v='2'>2</td></tr>
+<tr><td><b>공급자 사업자번호</b> <span class='muted' style='font-size:12px'>(supplierBizNumber)</span></td><td data-v='1'>1</td></tr>
+<tr><td><b>공급자 상호</b> <span class='muted' style='font-size:12px'>(supplierCompany)</span></td><td data-v='1'>1</td></tr>
+</tbody></table></section>
+<script>
+document.querySelectorAll('table.sortable').forEach(t=>{
+ t.querySelectorAll('th').forEach((th,i)=>{th.style.cursor='pointer';th.title='클릭=정렬';
+  th.addEventListener('click',()=>{const tb=t.tBodies[0];const rows=[...tb.rows];
+   const num=th.dataset.num==='1';const asc=th.dataset.asc!=='1';
+   t.querySelectorAll('th').forEach(o=>o.dataset.asc='');th.dataset.asc=asc?'1':'0';
+   rows.sort((a,b)=>{let x=a.cells[i].dataset.v??a.cells[i].textContent,
+     y=b.cells[i].dataset.v??b.cells[i].textContent;
+    if(num){x=parseFloat(x)||0;y=parseFloat(y)||0;return asc?x-y:y-x;}
+    return asc?(''+x).localeCompare(y):(''+y).localeCompare(x);});
+   rows.forEach(r=>tb.appendChild(r));});});});
+</script>
+</body></html>
