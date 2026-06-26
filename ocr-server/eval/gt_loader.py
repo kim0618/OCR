@@ -146,9 +146,106 @@ def load_gt(path: str, profile: str | None = None) -> dict[str, Any]:
     }
 
 
+def _load_one_entry(source_file: str, entry: dict[str, Any], profile: str) -> dict[str, Any]:
+    """Normalize ONE aggregate entry (war/thin ETL GT) into the same shape load_gt
+    returns. Shares the rich path's helpers so scoring is identical; the only
+    difference is the container (one big {documents:{...}} file, not per-image files).
+    """
+    nr = entry.get("normalizedResult")
+    if not isinstance(nr, dict):
+        raise GTLoadError(f"{source_file}: normalizedResult missing / not an object")
+    fields = nr.get("fields")
+    if not isinstance(fields, list):
+        raise GTLoadError(f"{source_file}: normalizedResult.fields missing / not a list")
+    document_fields, present_per_sample, rich_signal, field_meta = _flatten_fields(fields, source_file)
+
+    required = C.required_scalar_fields(profile)  # thin => () : absent-by-design, no gate
+    missing_common = [k for k in required if k not in document_fields]
+    if missing_common:
+        raise GTLoadError(f"{source_file}: missing required fields ({profile}): {missing_common}")
+    if C.enforce_per_sample(profile) and len(present_per_sample) != 1:
+        raise GTLoadError(
+            f"{source_file}: per-sample field must be exactly one of "
+            f"{list(C.PER_SAMPLE)}, found {present_per_sample}"
+        )
+    per_sample_label = present_per_sample[0] if present_per_sample else None
+
+    rows_raw = nr.get("tableRows")
+    if not isinstance(rows_raw, list):
+        raise GTLoadError(f"{source_file}: normalizedResult.tableRows missing / not a list")
+    table_rows = _value_rows(rows_raw, source_file)
+
+    return {
+        "sourceFile": source_file,
+        "sampleId": entry.get("sampleId"),
+        "schemaVersion": C.SCHEMA_VERSION,
+        "profile": profile,
+        "documentFields": document_fields,
+        "fieldMeta": field_meta,
+        "perSampleField": per_sample_label,
+        "tableRows": table_rows,
+        "excludedRows": entry.get("excludedRows", []) if isinstance(entry.get("excludedRows"), list) else [],
+        "_meta": {
+            "fieldCount": len(document_fields),
+            "rowCount": len(table_rows),
+            "excludedRowCount": 0,
+            "gtPath": None,            # filled by caller (aggregate file path)
+            "richSignal": rich_signal,
+            "profileInjected": True,
+        },
+    }
+
+
+def load_gt_aggregate(path: str, profile: str | None = None) -> dict[str, dict[str, Any]]:
+    """Load a THIN aggregate GT file (war ETL): one file, many images.
+
+    Shape: { schemaVersion, profile, month, documents:{ "<imgKey>": <entry>, ... } }
+    Returns { imgKey: <load_gt-shaped dict> }. The per-entry normalization is
+    identical to load_gt (same helpers), so downstream comparators are agnostic to
+    whether the GT came from per-image files (rich) or this aggregate (thin).
+    """
+    try:
+        with open(path, encoding="utf-8") as fh:
+            d = json.load(fh)
+    except (OSError, json.JSONDecodeError) as exc:
+        raise GTLoadError(f"{path}: unreadable / invalid JSON: {exc}") from exc
+
+    if d.get("schemaVersion") != C.SCHEMA_VERSION:
+        raise GTLoadError(f"{path}: schemaVersion {d.get('schemaVersion')!r} != {C.SCHEMA_VERSION!r}")
+
+    resolved = profile if profile in ("rich", "thin") else (d.get("profile") if d.get("profile") in ("rich", "thin") else "thin")
+
+    documents = d.get("documents")
+    if not isinstance(documents, dict):
+        raise GTLoadError(f"{path}: documents missing / not an object")
+
+    out: dict[str, dict[str, Any]] = {}
+    for img_key, entry in documents.items():
+        if not isinstance(entry, dict):
+            raise GTLoadError(f"{path}: documents[{img_key!r}] not an object")
+        src = entry.get("sourceFile") or img_key
+        loaded = _load_one_entry(src, entry, resolved)
+        loaded["_meta"]["gtPath"] = path
+        out[img_key] = loaded
+    return out
+
+
 if __name__ == "__main__":  # quick manual smoke
     import glob
     import os
+    import sys
+
+    # aggregate smoke:  python gt_loader.py <path-to-aggregate.json>
+    if len(sys.argv) > 1:
+        agg = load_gt_aggregate(sys.argv[1])
+        nrows = sum(g["_meta"]["rowCount"] for g in agg.values())
+        nfields = sum(g["_meta"]["fieldCount"] for g in agg.values())
+        print(f"OK aggregate: {len(agg)} docs, {nfields} fields, {nrows} rows, profile=thin")
+        for k in list(agg)[:3]:
+            g = agg[k]
+            print(f"   {k:<40} fields={g['_meta']['fieldCount']} rows={g['_meta']['rowCount']} "
+                  f"keys={sorted(g['documentFields'])[:4]}...")
+        raise SystemExit(0)
 
     for p in sorted(glob.glob(os.path.join(C.GT_DIR, "*.json"))):
         try:

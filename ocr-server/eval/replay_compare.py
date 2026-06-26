@@ -40,7 +40,7 @@ from build_manifest import build_manifest  # noqa: E402
 from compare_fields import compare_fields  # noqa: E402
 from compare_table import compare_table  # noqa: E402
 from buckets import tag_sample  # noqa: E402
-from gt_loader import load_gt  # noqa: E402
+from gt_loader import load_gt, load_gt_aggregate  # noqa: E402
 from replay_free import _deserialize_lines, _recorded_df, _canon  # noqa: E402
 
 # server post-step + free-result gate + fallback extractor — all live in extractors
@@ -97,7 +97,13 @@ def replay_compare(ts: str | None, testset: str, out_subdir: str) -> int:
 
     manifest = build_manifest(testset)
     kind = manifest["kind"]
-    gt_by_src = {s["sourceFile"]: s["gt"] for s in manifest["samples"] if s.get("gt")}
+    # War/ETL thin: ONE aggregate GT, indexed by gtKey (load once). Else per-image.
+    agg = None
+    if manifest.get("gtAggregate"):
+        agg = load_gt_aggregate(os.path.normpath(os.path.join(C.HERE, manifest["gtAggregate"])), profile=kind)
+        gtkey_by_src = {s["sourceFile"]: s["gtKey"] for s in manifest["samples"] if s.get("gtKey")}
+    else:
+        gt_by_src = {s["sourceFile"]: s["gt"] for s in manifest["samples"] if s.get("gt")}
 
     snaps = sorted(f for f in os.listdir(snap_dir) if f.endswith(".json"))
     print(f"replay+score over {os.path.relpath(run_dir, C.RUNS_DIR)}: {len(snaps)} snapshot(s) "
@@ -106,13 +112,17 @@ def replay_compare(ts: str | None, testset: str, out_subdir: str) -> int:
     sys.stdout.reconfigure(errors="replace")
     for f in snaps:
         src = f[:-5]
-        gt_rel = gt_by_src.get(src)
-        if not gt_rel:
+        if agg is not None:
+            gtkey = gtkey_by_src.get(src)
+            if not gtkey or gtkey not in agg:
+                print(f"  skip {src:<10} (no GT in manifest)"); continue
+        elif not gt_by_src.get(src):
             print(f"  skip {src:<10} (no GT in manifest)"); continue
         snap = json.load(open(os.path.join(snap_dir, f), encoding="utf-8"))
         ext_df, path = replay_dispatch(snap)            # (edited) parser, faithful dispatch
         n_free += 1 if path == "free" else 0
-        gt = load_gt(os.path.normpath(os.path.join(C.HERE, gt_rel)), profile=kind)
+        gt = agg[gtkey] if agg is not None else load_gt(
+            os.path.normpath(os.path.join(C.HERE, gt_by_src[src])), profile=kind)
 
         fcmp = compare_fields(gt, ext_df)
         tcmp = compare_table(gt["tableRows"], ext_df.get("tableRows") or [])

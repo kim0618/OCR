@@ -35,7 +35,7 @@ sys.path.insert(0, HERE)
 
 import contract as C  # noqa: E402
 import compare_table as CT  # noqa: E402  (reuse the SAME aligner + similarity)
-from gt_loader import load_gt  # noqa: E402
+from gt_loader import load_gt, load_gt_aggregate  # noqa: E402
 
 
 def _cell_acc(res: dict) -> float | None:
@@ -139,6 +139,11 @@ def main() -> int:
     kind = manifest["kind"]
     runnable = [s for s in manifest["samples"] if s["status"] in ("active", "canned")]
 
+    # War/ETL thin: ONE aggregate GT indexed by gtKey (load once). Else per-image.
+    agg = None
+    if manifest.get("gtAggregate"):
+        agg = load_gt_aggregate(os.path.normpath(os.path.join(C.HERE, manifest["gtAggregate"])), profile=kind)
+
     per_sample: list[dict] = []
     tot_scored = tot_match = tot_misaligned_cells = tot_explosion = tot_misaligned = 0
     for s in runnable:
@@ -147,7 +152,8 @@ def main() -> int:
         if not os.path.exists(rp):
             continue
         try:
-            gt = load_gt(os.path.normpath(os.path.join(C.HERE, s["gt"])), profile=kind)
+            gt = agg[s["gtKey"]] if agg is not None else load_gt(
+                os.path.normpath(os.path.join(C.HERE, s["gt"])), profile=kind)
         except Exception as e:
             print(f"  skip {src}: GT load failed ({e})")
             continue

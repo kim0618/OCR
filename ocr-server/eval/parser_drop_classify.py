@@ -62,6 +62,119 @@ def _cell_type(key: str) -> str:
     return N.ROW_KEY_TYPE.get(key) or N._infer_type(key)
 
 
+def _pp_features(pp: dict | None) -> dict | None:
+    """Extract the actionable preprocessing risk signals from a sample's
+    `preprocess` telemetry (run_batch captured extract_debug.preprocess).
+
+    These are all knowable BEFORE GT — so a bucket that's systematically worse
+    points at a preprocessing DECISION to fix server-side, not a parser rule.
+    orientMargin = gap between the top-2 orientation scores (low = the 90/180/270
+    pick was a coin-flip = the catastrophic 'whole page rotated wrong' risk)."""
+    if not isinstance(pp, dict):
+        return None
+    o = pp.get("orientation") or {}
+    d = pp.get("deskew") or {}
+    doc = pp.get("document") or {}
+    margin = None
+    try:
+        vals = sorted((float(v) for v in (o.get("allScores") or {}).values()), reverse=True)
+        if len(vals) >= 2:
+            margin = round(vals[0] - vals[1], 1)
+    except (TypeError, ValueError):
+        pass
+    applied = o.get("finalAppliedAfterPolicy")
+    if applied is None:
+        applied = o.get("applied")
+    def _num(x):
+        return x if isinstance(x, (int, float)) else None
+    return {
+        "orientApplied": bool(applied),
+        "orientAngle": o.get("angle"),
+        "orientMargin": margin,
+        "deskewApplied": bool(d.get("applied")),
+        "deskewAbs": _num(d.get("absAngle")),
+        "deskewReverted": bool((d.get("overApplyGuard") or {}).get("reverted")),
+        "areaPct": _num(doc.get("areaPct")),
+        "forcedWarp": bool(doc.get("forcedWarpOnSkip")),
+    }
+
+
+def _orient_bucket(f: dict) -> list[str]:
+    if not f["orientApplied"] or f["orientAngle"] in (0, None):
+        return ["미적용(0°)"]
+    return [f"{f['orientAngle']}° 적용"]
+
+
+def _deskew_bucket(f: dict) -> list[str]:
+    if f["deskewReverted"]:
+        return ["guard-revert"]
+    if not f["deskewApplied"]:
+        return ["미적용"]
+    a = f["deskewAbs"]
+    return ["≤2°" if (a is not None and a <= 2.0) else ">2°"]
+
+
+def _warp_bucket(f: dict) -> list[str]:
+    out = []
+    a = f["areaPct"]
+    if a is not None:
+        out.append("영역≥90%" if a >= 90 else ("영역50–90%" if a >= 50 else "영역<50%"))
+    if f["forcedWarp"]:
+        out.append("forcedWarpOnSkip")
+    return out or ["영역미상"]
+
+
+def _preprocess_buckets(scores: list[dict], recog: list[dict], samples_dir: str) -> dict | None:
+    """Cross-tab: for each preprocessing condition bucket, the cell accuracy +
+    recognition rate (recognition defects / scored cells). Scale-invariant
+    (O(buckets), not O(samples)) and micro-aggregated. Δ vs baseline = the cost.
+
+    Returns None if no sample carries preprocess telemetry (older runs)."""
+    from collections import Counter
+    recog_by_src: Counter = Counter(d["src"] for d in recog)
+    feats: dict[str, dict] = {}
+    for s in scores:
+        try:
+            pp = json.load(open(os.path.join(samples_dir, s["src"] + ".json"),
+                                encoding="utf-8")).get("preprocess")
+        except (OSError, json.JSONDecodeError):
+            pp = None
+        f = _pp_features(pp)
+        if f is not None:
+            feats[s["src"]] = f
+    if not feats:
+        return None
+
+    def agg_by(keyfn) -> list[dict]:
+        bk: dict[str, dict] = {}
+        for s in scores:
+            f = feats.get(s["src"])
+            if f is None:
+                continue
+            for k in keyfn(f):
+                a = bk.setdefault(k, {"bucket": k, "n": 0, "cM": 0, "cS": 0, "recog": 0,
+                                      "mSum": 0.0, "mN": 0})
+                a["n"] += 1
+                a["cM"] += s["cScored"] and s["cMatch"]
+                a["cS"] += s["cScored"]
+                a["recog"] += recog_by_src.get(s["src"], 0)
+                if f["orientMargin"] is not None:
+                    a["mSum"] += f["orientMargin"]; a["mN"] += 1
+        rows = list(bk.values())
+        for a in rows:
+            a["cellAcc"] = (a["cM"] / a["cS"]) if a["cS"] else None
+            a["recogRate"] = (a["recog"] / a["cS"]) if a["cS"] else None
+            a["avgMargin"] = round(a["mSum"] / a["mN"], 1) if a["mN"] else None
+        return rows
+
+    return {
+        "orientation": agg_by(_orient_bucket),
+        "deskew": agg_by(_deskew_bucket),
+        "warp": agg_by(_warp_bucket),
+        "coverage": {"withTelemetry": len(feats), "total": len(scores)},
+    }
+
+
 def _collapse_alnum(s: str) -> str:
     return _NON_ALNUM.sub("", unicodedata.normalize("NFC", s or "")).casefold()
 
@@ -287,7 +400,66 @@ document.querySelectorAll('table.sortable').forEach(t=>{
 </script>"""
 
 
-def _render_html(run_label, compare_dir, scores, pdrops, ambiguous, recog, n_def, col_pattern_table):
+def _render_preprocess_section(pp_buckets, _esc) -> str:
+    """전처리 진단 섹션 — 조건 버킷별 셀정확도 + recognition율(+baseline 대비 Δ).
+    수천장에서 '전처리가 어느 조건에서 체계적으로 깎는가'를 한 표로."""
+    if not pp_buckets:
+        return ""
+    cov = pp_buckets.get("coverage", {})
+    H = ["<section><h2>전처리 진단 "
+         "<span class='muted'>(recognition = OCR 바운드 결함; 전처리 실패가 여기로 나타남)</span></h2>",
+         f"<div class='note'><div class='row'>각 표 = 전처리 조건 버킷별 <b>셀 정확도</b>·"
+         f"<b>recognition율</b>(결함/채점셀). <b>Δ</b> = baseline 대비 recognition율 차이"
+         f"(<b>+면 그 조건이 깎는 중</b> → 서버 전처리에서 고칠 후보). "
+         f"<span class='muted'>텔레메트리 보유 {cov.get('withTelemetry','?')}/{cov.get('total','?')} 샘플</span>"
+         f"</div></div>"]
+
+    def table(title, hint, rows, baseline_key, extra_col=None):
+        if not rows:
+            return ""
+        base = next((r for r in rows if r["bucket"] == baseline_key), None)
+        base_rr = base["recogRate"] if base else None
+        rows = sorted(rows, key=lambda r: -(r["recogRate"] or 0))
+        h = [f"<h3 style='margin:14px 0 6px'>{_esc(title)} "
+             f"<span class='muted' style='font-size:12px;font-weight:400'>{_esc(hint)}</span></h3>",
+             "<table class='sortable'><thead><tr><th>조건</th><th data-num='1'>샘플수</th>"
+             "<th data-num='1'>셀 정확도</th><th data-num='1'>recognition율</th>"
+             "<th data-num='1'>Δ vs baseline</th>"
+             + ("<th data-num='1'>평균 orient margin</th>" if extra_col else "")
+             + "</tr></thead><tbody>"]
+        for r in rows:
+            ca = r["cellAcc"]; rr = r["recogRate"]
+            ca_s = "n/a" if ca is None else f"{ca*100:.1f}%"
+            rr_s = "n/a" if rr is None else f"{rr*100:.1f}%"
+            d = (rr - base_rr) if (rr is not None and base_rr is not None) else None
+            d_s = "—" if r["bucket"] == baseline_key else ("n/a" if d is None
+                  else f"<b style='color:{'#cf222e' if d>0.005 else '#1a7f37' if d<-0.005 else 'inherit'}'>"
+                       f"{'+' if d>=0 else ''}{d*100:.1f}pp</b>")
+            cacls = "acc-lo" if (ca is not None and ca<0.5) else ("acc-mid" if (ca is not None and ca<0.8) else "acc-ok" if ca is not None else "")
+            mg = ""
+            if extra_col:
+                m = r.get("avgMargin")
+                mg = f"<td data-v='{m if m is not None else -1}'>{'n/a' if m is None else m}</td>"
+            h.append(f"<tr><td><b>{_esc(r['bucket'])}</b></td>"
+                     f"<td data-v='{r['n']}'>{r['n']}</td>"
+                     f"<td data-v='{ca or 0:.4f}' class='{cacls}'>{ca_s}</td>"
+                     f"<td data-v='{rr or 0:.4f}'>{rr_s}</td>"
+                     f"<td data-v='{d if d is not None else 0:.4f}'>{d_s}</td>{mg}</tr>")
+        h.append("</tbody></table>")
+        return "".join(h)
+
+    H.append(table("방향(orientation)", "margin 낮음+적용=오회전 위험(페이지 통째 깨짐)",
+                   pp_buckets.get("orientation"), "미적용(0°)", extra_col=True))
+    H.append(table("기울기(deskew)", "guard-revert=과적용 가드 작동",
+                   pp_buckets.get("deskew"), "미적용"))
+    H.append(table("문서검출(warp)", "영역% 낮음/강제warp=크롭 위험",
+                   pp_buckets.get("warp"), "영역≥90%"))
+    H.append("</section>")
+    return "".join(H)
+
+
+def _render_html(run_label, compare_dir, scores, pdrops, ambiguous, recog, n_def, col_pattern_table,
+                 pp_buckets=None):
     import datetime as _dt
     from trend import _CSS, _esc  # shared look with report.html / SUMMARY.html
     try:
@@ -428,6 +600,7 @@ def _render_html(run_label, compare_dir, scores, pdrops, ambiguous, recog, n_def
     for col, n in sorted(ragg.items(), key=lambda kv: -kv[1]):
         H.append(f"<tr><td>{ko(col)}</td><td data-v='{n}'>{n}</td></tr>")
     H.append("</tbody></table></section>")
+    H.append(_render_preprocess_section(pp_buckets, _esc))
     H.append(_SORT_JS)
     H.append("</body></html>")
     return "\n".join(H)
@@ -535,6 +708,36 @@ def main() -> int:
         lines.append(f"| {col} | {n} |")
     lines.append("")
 
+    # --- preprocessing diagnosis (scale-actionable buckets) ---
+    pp_buckets = _preprocess_buckets(scores, recog, os.path.join(run_dir, "samples"))
+    if pp_buckets:
+        cov = pp_buckets["coverage"]
+        lines.append(f"## Preprocessing diagnosis  (telemetry {cov['withTelemetry']}/{cov['total']} samples)")
+        lines.append("")
+        lines.append("recognition rate = recognition defects / scored cells. Δ = vs baseline bucket (+ = that condition is costing accuracy → fix server-side preprocessing).")
+        lines.append("")
+        for title, key, base in (("Orientation", "orientation", "미적용(0°)"),
+                                 ("Deskew", "deskew", "미적용"),
+                                 ("Warp", "warp", "영역≥90%")):
+            rows = sorted(pp_buckets[key], key=lambda r: -(r["recogRate"] or 0))
+            if not rows:
+                continue
+            base_rr = next((r["recogRate"] for r in rows if r["bucket"] == base), None)
+            lines.append(f"### {title}")
+            lines.append("")
+            lines.append("| condition | n | cellAcc | recognition% | Δ vs base |")
+            lines.append("|---|--:|--:|--:|--:|")
+            for r in rows:
+                ca = "n/a" if r["cellAcc"] is None else f"{r['cellAcc']*100:.1f}%"
+                rr = "n/a" if r["recogRate"] is None else f"{r['recogRate']*100:.1f}%"
+                if r["bucket"] == base or base_rr is None or r["recogRate"] is None:
+                    dlt = "—"
+                else:
+                    d = r["recogRate"] - base_rr
+                    dlt = f"{'+' if d>=0 else ''}{d*100:.1f}pp"
+                lines.append(f"| {r['bucket']} | {r['n']} | {ca} | {rr} | {dlt} |")
+            lines.append("")
+
     md = "\n".join(lines)
     suffix = "" if args.compare_dir == "compare" else "_" + args.compare_dir
     run_label = os.path.relpath(run_dir, C.RUNS_DIR)
@@ -555,11 +758,12 @@ def main() -> int:
         # per-sample field/cell accuracy — persisted so a batch-level combiner
         # (local_summary.py) can compute KPIs without re-reading every compare/.
         "scores": scores,
+        "preprocess": pp_buckets,   # scale-actionable preprocessing diagnosis buckets
         "defects": defects,
     }, open(out_json, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
     open(out_html, "w", encoding="utf-8").write(
         _render_html(run_label, args.compare_dir, scores, pdrops, ambiguous, recog,
-                     n_def, col_pattern_table))
+                     n_def, col_pattern_table, pp_buckets=pp_buckets))
 
     # Auto-embed the replay progress history (git-reconstructed) at the top of the
     # HTML, so running just replay_compare + parser_drop_classify shows the trend

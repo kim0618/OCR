@@ -20,7 +20,7 @@ import os
 from typing import Any
 
 import contract as C
-from gt_loader import GTLoadError, load_gt
+from gt_loader import GTLoadError, load_gt, load_gt_aggregate
 
 # Angle/condition variants ("<base>-<N>.<ext>", e.g. 1-1.jpg = reshot 1.jpg)
 # inherit the base document's GT (same document => same answers). The pattern
@@ -85,8 +85,80 @@ def _variant_base_map(img_by_src: dict[str, str],
     return out
 
 
+def _images_nested(img_dir: str) -> dict[str, str]:
+    """Map relative-path key ('<subfolder>/<file>.jpg') -> image path, walking
+    nested dirs. Key uses forward slashes so it matches the aggregate GT keys
+    (war: separate_img_path relative to the month folder)."""
+    out: dict[str, str] = {}
+    if not os.path.isdir(img_dir):
+        return out
+    for root, _dirs, files in os.walk(img_dir):
+        for name in files:
+            if not name.lower().endswith(C.IMAGE_EXTS):
+                continue
+            full = os.path.join(root, name)
+            key = os.path.relpath(full, img_dir).replace("\\", "/")
+            out[key] = full
+    return out
+
+
+def _build_manifest_aggregate(testset: str, ts: dict[str, Any]) -> dict[str, Any]:
+    """Manifest for a war/ETL thin testset: ONE aggregate GT file + nested images.
+
+    Pairing key = relative image path ('<subfolder>/<file>.jpg'). sourceFile =
+    filesystem-safe id (slash->__) used for result/snapshot filenames; the original
+    key is carried as `gtKey` so compare_run can look it up in the preloaded
+    aggregate. Only images actually on disk become `active` — drop a sample of
+    images in and exactly those run (the rest stay `gt_orphan`, never run)."""
+    kind = ts["kind"]
+    agg = load_gt_aggregate(ts["gtAggregate"], profile=kind)   # {gtKey: loaded-gt}
+    img_by_key = _images_nested(ts["dir"])
+    gt_rel = os.path.relpath(ts["gtAggregate"], C.HERE)
+    samples: list[dict[str, Any]] = []
+    for key in sorted(set(agg) | set(img_by_key)):
+        has_img = key in img_by_key
+        has_gt = key in agg
+        entry: dict[str, Any] = {
+            "sourceFile": C.safe_sample_id(key),     # flat, filesystem-safe
+            "gtKey": key,                            # original aggregate key
+            "image": os.path.relpath(img_by_key[key], C.HERE) if has_img else None,
+            "gt": gt_rel if has_gt else None,        # the aggregate file (shared)
+            "rec": None,
+        }
+        if has_img and has_gt:
+            entry["status"] = "active"
+        elif has_img:
+            entry["status"] = "pending_gt"
+        else:
+            entry["status"] = "gt_orphan"
+        if entry["status"] == "active":
+            g = agg[key]
+            entry["profile"] = g["profile"]
+            entry["perSampleField"] = g["perSampleField"]
+            entry["rowCount"] = g["_meta"]["rowCount"]
+            entry["excludedRowCount"] = g["_meta"]["excludedRowCount"]
+        samples.append(entry)
+
+    counts: dict[str, int] = {}
+    for s in samples:
+        counts[s["status"]] = counts.get(s["status"], 0) + 1
+    return {
+        "schemaVersion": "eval-manifest.v1",
+        "testset": testset,
+        "kind": kind,
+        "runMode": ts["runMode"],
+        "gtAggregate": gt_rel,            # signals compare_run to use the aggregate loader
+        "generatedFrom": os.path.basename(ts["dir"]),
+        "testsetDir": os.path.relpath(ts["dir"], C.HERE),
+        "counts": counts,
+        "samples": samples,
+    }
+
+
 def build_manifest(testset: str = C.DEFAULT_TESTSET) -> dict[str, Any]:
     ts = C.get_testset(testset)
+    if ts.get("gtAggregate"):
+        return _build_manifest_aggregate(testset, ts)
     kind = ts["kind"]
     gt_by_src = _gt_index(ts["gtDir"])
     img_by_src = _images(ts["dir"])

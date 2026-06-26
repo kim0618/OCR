@@ -20,7 +20,7 @@ from build_manifest import build_manifest
 from compare_fields import compare_fields
 from compare_table import compare_table
 from buckets import tag_sample
-from gt_loader import load_gt
+from gt_loader import load_gt, load_gt_aggregate
 
 
 def _latest_run() -> str | None:
@@ -41,10 +41,16 @@ def compare_run(ts: str | None = None, testset: str = C.DEFAULT_TESTSET) -> dict
     # active (live) and canned (recorded) samples are both compared.
     runnable = [s for s in manifest["samples"] if s["status"] in ("active", "canned")]
 
+    # War/ETL thin testset: ONE aggregate GT file, indexed by gtKey. Load it once
+    # here instead of a per-image load_gt (which assumes one file per sample).
+    agg = None
+    if manifest.get("gtAggregate"):
+        agg = load_gt_aggregate(os.path.normpath(os.path.join(C.HERE, manifest["gtAggregate"])), profile=kind)
+
     rows_summary: list[dict[str, Any]] = []
     for s in runnable:
         src = s["sourceFile"]
-        gt = load_gt(os.path.normpath(os.path.join(C.HERE, s["gt"])), profile=kind)
+        gt = agg[s["gtKey"]] if agg is not None else load_gt(os.path.normpath(os.path.join(C.HERE, s["gt"])), profile=kind)
         res_path = os.path.join(samples_dir, src + ".json")
         result = json.load(open(res_path, encoding="utf-8"))
         ext_df = result.get("documentFields") or {}

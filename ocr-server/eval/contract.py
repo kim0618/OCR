@@ -102,7 +102,8 @@ RICH_FIELD_KEYS = ("bboxRefs", "edited", "confidence", "fieldStatus")
 
 
 def _testset(dir_path: str, kind: str, run_mode: str,
-             expected: dict[str, int], excluded: dict[str, str] | None = None) -> dict:
+             expected: dict[str, int], excluded: dict[str, str] | None = None,
+             gt_aggregate: str | None = None, images_nested: bool = False) -> dict:
     return {
         "dir": dir_path,
         "gtDir": os.path.join(dir_path, "GT"),
@@ -111,7 +112,22 @@ def _testset(dir_path: str, kind: str, run_mode: str,
         "runMode": run_mode,                       # "live" | "canned"
         "expected": dict(expected),                # sourceFile -> verified row count
         "excluded": dict(excluded or {}),          # sourceFile -> reason
+        # War/ETL thin testset: ONE aggregate GT file ({documents:{<key>:entry}})
+        # instead of per-image GT files, and images nested under <dir>/<subfolder>/<file>
+        # keyed by relative path (basenames collide). None/False = classic per-image mode.
+        "gtAggregate": gt_aggregate,
+        "imagesNested": images_nested,
     }
+
+
+def safe_sample_id(key: str) -> str:
+    """Filesystem-safe sample id from a GT key that may contain path separators.
+
+    War keys are '<subfolder>/<file>.jpg' (slash) — results/snapshots are written
+    flat as '<sourceFile>.json', so the slash must be neutralized. The reverse
+    (id -> key) is never needed: the manifest carries the original key as gtKey.
+    """
+    return key.replace("\\", "/").replace("/", "__")
 
 
 TESTSETS: dict[str, dict] = {
@@ -125,13 +141,16 @@ TESTSETS: dict[str, dict] = {
         expected={"1.jpg": 28, "3.pdf": 1, "4.pdf": 1, "5.pdf": 6, "6.pdf": 6, "7.pdf": 1},
         excluded={"2.pdf": "temporary exclusion (no GT, no image) — pending re-add"},
     ),
+    # thin = 학습데이터 자리. 2026-06-24: 모형(canned 픽스처)에서 **war 실데이터**로 교체.
+    # GT = 집계 1파일(ground_truth_2606.json), 이미지 = data/invoice_war/images/ 아래
+    # <하위폴더>/<파일>로 (Z:\LIVE\processed\2606 통째 복사). 이미지 올린 것만 active.
     "invoice_thin": _testset(
-        os.path.join(FIXTURES_DIR, "invoice_thin"),
+        os.path.join(HERE, "data", "invoice_war", "images"),
         kind="thin",
-        run_mode="canned",
-        # Down-projection preserves row count, so the thin fixture's expected row
-        # counts equal the rich source's (derived fact, not a guess).
-        expected={"1.jpg": 28, "3.pdf": 1, "4.pdf": 1, "5.pdf": 6, "6.pdf": 6, "7.pdf": 1},
+        run_mode="live",          # 실 이미지 OCR (모형 canned 아님)
+        expected={},              # 회귀 고정셋 없음 — 올린 이미지가 곧 대상
+        gt_aggregate=os.path.join(HERE, "data", "invoice_war", "ground_truth_2606.json"),
+        images_nested=True,
     ),
 }
 DEFAULT_TESTSET = "invoice_study"

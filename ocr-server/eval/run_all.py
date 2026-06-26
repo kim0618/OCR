@@ -119,15 +119,18 @@ def _measure(reuse: str | None, server: str, workers: int, testset: str,
         # executes (e.g. AWS overnight); no separate local pass needed. Best-effort:
         # never raises, never touches res["ok"] (not a gate). finetune_ledger runs
         # only on LIVE runs — canned thin is a mock, not real recognition to bank.
-        log("== [analysis] finetune ledger + crops + table-align ==")
+        log("== [analysis] finetune ledger + crops + table-align + parser-drop(전처리) ==")
         try:
             # live only (real recognition + real images): ledger first (writes
             # FINETUNE_LEDGER.json), then crops (reads it + processed/). table-align
-            # always. Order matters: crops depends on ledger.
+            # + parser-drop-classify always (read compare/ + snapshots/ + samples/;
+            # the latter emits PARSER_DROP_CLASSIFY incl. the 전처리 진단 section).
+            # Order matters: crops depends on ledger.
             tools = []
             if not canned:
                 tools += ["finetune_ledger.py", "finetune_crops.py", "finetune_crops_balance.py"]
             tools.append("table_align_diag.py")
+            tools.append("parser_drop_classify.py")  # parser-drop 분류 + 전처리 진단(자동 생성)
             for tool in tools:
                 rc = subprocess.run(
                     [sys.executable, os.path.join(C.HERE, tool), "--ts", ts, "--testset", testset],
