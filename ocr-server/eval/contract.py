@@ -89,6 +89,7 @@ ROW_VALUE_KEYS = (
 ROW_META_KEYS = (
     "rowType", "amountOnly", "missingFields", "fieldStatus", "reviewStatus",
     "excludeReason", "sourceRowMeta", "tableExtraColumns",
+    "item_match_type",  # war 매칭 provenance(SIMILAR/NM_L/L_n) — 순환분리용, 값채점 대상 아님
 )
 ROW_ALIGN_KEY = "rowIndex"
 
