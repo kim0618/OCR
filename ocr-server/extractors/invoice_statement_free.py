@@ -16,6 +16,7 @@ Fallback policy (active):
 
 from __future__ import annotations
 
+import bisect
 from copy import deepcopy
 import math
 import os
@@ -3957,6 +3958,311 @@ def empty_invoice_statement_free_result() -> dict[str, Any]:
         }
     )
     return fields
+
+
+# --- header-anchored column segmentation (H0~H2) ---------------------------
+# 약품 거래명세서 대부분은 라벨 헤더(코드/품명/규격/유효기간/제조번호/보험코드/수량/
+# 단가/금액)를 인쇄한다. OCR은 토큰을 x좌표로 분리해 이미 읽었으므로, 각 장의 자기
+# 헤더로 열 경계를 잡아(header-anchored) 행 토큰을 x위치로 배정하면 벤더마다 순서가
+# 달라도(보험코드 앞/뒤/없음) 일반화된다. 스냅샷 2002장 전수 측정(H0): 헤더 검출 78%,
+# 강신호≥2 게이트. Voronoi 배정 검증(H1/H2): manufacturingNo·insuranceCode·spec·
+# expiryDate가 기존 ~0%(전량 드롭)에서 ~50%로 회수됨. 헤더 미검출 장은 기존 경로 유지.
+_HA_STRONG = ("수량", "단가", "금액", "규격", "유효", "제조번호", "보험",
+              "공급가액", "공급단가", "입고수량", "판매단가", "판매금액", "로트", "배치")
+# 문서레벨 라벨(표 컬럼 아님) — 표 헤더 밴드로 오인 금지
+_HA_DOC = ("사업자번호", "주문번호", "송장번호", "전표번호", "거래처코드", "사원코드",
+           "등록번호", "출고번호", "발행일자", "작성일자", "거래일자", "납품일자",
+           "인수일자", "매출일자", "전표일자", "공급받는자", "공급자", "비고", "적요",
+           "공급받는", "전화번호", "창고코드", "담당자코드", "번호구분")
+# 라벨(부분일치, 구체적인 것 먼저) → 표준 셀 키. 인쇄된 코드열은 productCode(비채점)로:
+# GT itemCode는 마스터매칭 산출코드(b.item_cd)라 인쇄코드와 달라 itemCode로 내면 오배정.
+_HA_ALIAS = (
+    ("보험코드", "insuranceCode"), ("보험약가", "insuranceCode"), ("보험번호", "insuranceCode"),
+    ("보험No", "insuranceCode"), ("보험", "insuranceCode"), ("약가코드", "insuranceCode"),
+    ("제조번호", "manufacturingNo"), ("제조No", "manufacturingNo"), ("로트", "manufacturingNo"),
+    ("LOT", "manufacturingNo"), ("배치", "manufacturingNo"),
+    ("유효기간", "expiryDate"), ("유효기한", "expiryDate"), ("사용기한", "expiryDate"),
+    ("유효일자", "expiryDate"), ("유효", "expiryDate"),
+    ("상품코드", "productCode"), ("상품번호", "productCode"), ("품목코드", "productCode"),
+    ("제품코드", "productCode"), ("제품번호", "productCode"), ("물류코드", "productCode"),
+    ("표준코드", "productCode"), ("바코드", "productCode"),
+    ("공급단가", "unitPrice"), ("판매단가", "unitPrice"), ("단가", "unitPrice"),
+    ("공급가액", "amount"), ("판매금액", "amount"), ("합계금액", "amount"), ("금액", "amount"),
+    ("입고수량", "quantity"), ("박스수량", "quantity"), ("수량", "quantity"),
+    ("규격", "spec"), ("포장", "spec"), ("단위", "spec"),
+    ("상품명", "itemName"), ("제품명", "itemName"), ("품목명", "itemName"),
+    ("품명", "itemName"), ("품목", "itemName"),
+)
+_HA_SUMMARY_RE = re.compile(r"합\s*계|소\s*계|이\s*상|부가세|공급가액|미\s*수|받을|총\s*액|"
+                            r"외\s*상|페이지|page", re.I)
+_HA_MONEY_RE = re.compile(r"^\d{1,3}(?:[,\.]\d{3})+(?:\.\d+)?$|^\d+\.\d{2}$")
+
+
+def _ha_map_label(token: str) -> str | None:
+    compact = re.sub(r"\s+", "", token or "")
+    for doc in _HA_DOC:
+        if doc in compact:
+            return None
+    for alias, key in _HA_ALIAS:
+        if alias in compact:
+            return key
+    return None
+
+
+def _ha_bands(ocr_items: list[dict[str, Any]]) -> list[list[dict[str, Any]]]:
+    """Group OCR tokens into y-bands (rows), each x-sorted."""
+    toks = [it for it in ocr_items
+            if _normalize_text(it.get("text")) and it.get("cx") is not None and it.get("cy") is not None]
+    toks.sort(key=lambda it: (float(it["cy"]), float(it["cx"])))
+    bands: list[list[dict[str, Any]]] = []
+    cur: list[dict[str, Any]] = []
+    last = None
+    for it in toks:
+        cy = float(it["cy"])
+        if last is None or cy - last <= 12:
+            cur.append(it)
+        else:
+            bands.append(cur)
+            cur = [it]
+        last = cy
+    if cur:
+        bands.append(cur)
+    return bands
+
+
+def _ha_fnum(value: Any) -> float | None:
+    text = re.sub(r"[,\s]", "", str(value or "")).rstrip(".")
+    return float(text) if re.fullmatch(r"\d+(?:\.\d+)?", text or "") else None
+
+
+def _extract_header_anchored_table(
+    ocr_items: list[dict[str, Any]],
+    *,
+    fill_mode: bool = False,
+) -> tuple[list[dict[str, str]], dict[str, Any]]:
+    """Header-anchored table extraction. Returns (rows, debug).
+
+    Default (fill_mode=False): ``debug['use']`` is True only for a COMPLETE table
+    (itemName + money + a strict-dropped pharma column) — the strict gate.
+    fill_mode=True: relaxed gate for column-FILL — passes whenever the header
+    declares a pharma column (manufacturingNo/insuranceCode/expiryDate) and >=2
+    rows were assigned; itemName/amount completeness is irrelevant because the
+    caller copies ONLY the pharma columns into an existing table (empty cells)."""
+    debug: dict[str, Any] = {"attempted": True, "use": False, "reason": "", "columns": [], "rowCount": 0}
+    bands = _ha_bands(ocr_items)
+    if not bands:
+        debug["reason"] = "no_tokens"
+        return [], debug
+    # 1) header band = y-band with the most DISTINCT strong table signals (>=2)
+    hi, best_n = -1, 0
+    for i, band in enumerate(bands):
+        sig = {s for it in band for s in _HA_STRONG if s in re.sub(r"\s+", "", _normalize_text(it.get("text")))}
+        if len(sig) > best_n:
+            best_n, hi = len(sig), i
+    if best_n < 2:
+        debug["reason"] = "no_header"
+        return [], debug
+    # 2) map header cells -> standard keys, sorted by x-center (leftmost per key)
+    cols: list[tuple[float, str]] = []
+    seen: set[str] = set()
+    for it in sorted(bands[hi], key=lambda z: float(z["cx"])):
+        key = _ha_map_label(_normalize_text(it.get("text")))
+        if key and key not in seen:
+            cols.append((float(it["cx"]), key))
+            seen.add(key)
+    debug["columns"] = [k for _, k in cols]
+    if len(cols) < 4:
+        debug["reason"] = f"too_few_columns:{len(cols)}"
+        return [], debug
+    centers = [c for c, _ in cols]
+    keys = [k for _, k in cols]
+    bounds = [(centers[i] + centers[i + 1]) / 2 for i in range(len(centers) - 1)]
+    # 3) collect table-region tokens (below header, until first summary line)
+    toks: list[dict[str, Any]] = []
+    for band in bands[hi + 1:]:
+        if _HA_SUMMARY_RE.search("".join(_normalize_text(it.get("text")) for it in band)):
+            break
+        toks.extend(band)
+    if not toks:
+        debug["reason"] = "no_body"
+        return [], debug
+    # 4) row anchors = money tokens under the amount(or unitPrice) column
+    if "amount" in keys:
+        acx = centers[keys.index("amount")]
+    elif "unitPrice" in keys:
+        acx = centers[keys.index("unitPrice")]
+    else:
+        acx = centers[-1]
+    colw = (max(centers) - min(centers)) / max(1, len(centers) - 1)
+    anchors = sorted(float(it["cy"]) for it in toks
+                     if _HA_MONEY_RE.match(_normalize_text(it.get("text"))) and abs(float(it["cx"]) - acx) <= colw * 0.9)
+    rows_y: list[float] = []
+    for y in anchors:
+        if not rows_y or y - rows_y[-1] > 8:
+            rows_y.append(y)
+    if len(rows_y) < 2:
+        debug["reason"] = f"too_few_rows:{len(rows_y)}"
+        return [], debug
+    # 5) assign each token to nearest row anchor, then Voronoi-x to a column
+    buckets: list[dict[str, list[tuple[float, str]]]] = [dict() for _ in rows_y]
+    for it in toks:
+        cy = float(it["cy"])
+        ri = min(range(len(rows_y)), key=lambda i: abs(rows_y[i] - cy))
+        if abs(rows_y[ri] - cy) > max(18.0, colw * 1.2):
+            continue
+        j = bisect.bisect_right(bounds, float(it["cx"]))
+        buckets[ri].setdefault(keys[j], []).append((float(it["cx"]), _normalize_text(it.get("text"))))
+    out: list[dict[str, str]] = []
+    for idx, bucket in enumerate(buckets, start=1):
+        row: dict[str, str] = {
+            "rowIndex": str(idx), "itemName": "", "spec": "", "lotNo": "",
+            "productCode": "", "expiryDate": "", "manufacturingNo": "",
+            "insuranceCode": "", "quantity": "", "unitPrice": "", "amount": "",
+        }
+        raw_parts: list[str] = []
+        for key, vals in bucket.items():
+            vals.sort()
+            joined = " ".join(t for _, t in vals).strip()
+            row[key] = joined
+            raw_parts.append(joined)
+        # numeric-column hygiene: strip stray non-numeric noise from qty/price/amount
+        for nk in ("quantity", "unitPrice", "amount"):
+            if row[nk]:
+                nums = re.findall(r"\d[\d,\.]*", row[nk])
+                row[nk] = nums[-1] if nums else ""
+        # qty<->unitPrice swap fix via arithmetic (adjacent numeric columns)
+        q, u, a = _ha_fnum(row["quantity"]), _ha_fnum(row["unitPrice"]), _ha_fnum(row["amount"])
+        if q and u and a and abs(q * u - a) > 1 and abs(u * q - a) > 1:
+            row["quantity"], row["unitPrice"] = row["unitPrice"], row["quantity"]
+        row["_rawText"] = " ".join(raw_parts)
+        row["_confidence"] = "0.55"
+        row["_source"] = "invoice_statement_free_header_anchored"
+        if row["itemName"] or row["amount"] or row["manufacturingNo"]:
+            out.append(row)
+    # 6) release gate
+    colset = set(keys)
+    has_valueadd = bool(colset & {"manufacturingNo", "insuranceCode", "expiryDate"})
+    if fill_mode:
+        # FILL gate: a pharma column + >=2 assigned rows is enough — we copy only
+        # those columns into an existing table (empty cells), so itemName/amount
+        # completeness cannot regress non-pharma cells.
+        if not has_valueadd or len(out) < 2:
+            debug["reason"] = f"fill_no_pharma_or_rows:{len(out)}"
+            return [], debug
+    else:
+        # value-add gate (whole-table use): only for a COMPLETE table where
+        # header-anchoring adds what strict drops. itemName + money + pharma col.
+        good = sum(1 for r in out if r["amount"] or (r["quantity"] and r["unitPrice"]))
+        has_money = bool(colset & {"amount", "unitPrice"})
+        if good < 2 or not ("itemName" in colset and has_money and has_valueadd):
+            debug["reason"] = "not_valueadd_table"
+            return [], debug
+    debug["use"] = True
+    debug["rowCount"] = len(out)
+    debug["reason"] = "ok"
+    return out, debug
+
+
+# columns filled into an existing table (never overwrite a correct value).
+_HA_FILL_COLUMNS = ("manufacturingNo", "insuranceCode", "expiryDate")
+
+
+def _ha_amount_key(row: dict[str, Any]) -> str:
+    return re.sub(r"[,\s]", "", str(row.get("amount") or "")).rstrip(".")
+
+
+def _ha_clean_fill(col: str, value: Any) -> str | None:
+    """Extract the clean typed token for a pharma column from a (possibly merged)
+    header-anchored cell. Returns None when no type-matching token is found → the
+    caller then skips the fill (avoids injecting garbage / spurious values when a
+    doc's header was detected with imprecise column boundaries)."""
+    text = str(value or "").strip()
+    if not text:
+        return None
+    if col == "expiryDate":
+        m = re.search(r"20\d{2}[./-]?\d{2}[./-]?\d{2}", text.replace(" ", ""))
+        return m.group(0) if m else None
+    if col == "insuranceCode":
+        # split on non-digits, take a standalone 8–11 digit code (drops 13-digit
+        # barcodes and row-index prefixes). Insurance code is usually the last one.
+        cand = [t for t in re.split(r"[^0-9]+", text) if 8 <= len(t) <= 11]
+        return cand[-1] if cand else None
+    if col == "manufacturingNo":
+        toks = re.findall(r"[A-Za-z0-9]{5,12}", text.replace(",", ""))
+        # batch codes carry letters (484FP61) or are a short 5–8 digit run; a
+        # comma-stripped long amount is excluded by the length cap + digit rule.
+        cand = [t for t in toks if re.search(r"[A-Za-z]", t) or re.fullmatch(r"\d{5,8}", t)]
+        return cand[-1] if cand else None
+    return text
+
+
+def fill_pharma_columns(
+    table_rows: Any, ocr_lines_raw: Any,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Fill manufacturingNo/insuranceCode/expiryDate into EXISTING table rows from
+    a header-anchored read of the OCR — EMPTY cells only, so a correct value is
+    never overwritten (protects the strict/study path). Path-agnostic: call at the
+    free/fallback join in main.py so both paths gain the strict-dropped pharma
+    columns. Returns (rows, debug)."""
+    debug: dict[str, Any] = {"applied": False, "filled": 0, "reason": "", "columns": []}
+    if not isinstance(table_rows, list) or not table_rows:
+        debug["reason"] = "no_rows"
+        return table_rows if isinstance(table_rows, list) else [], debug
+    ocr_items = _extract_ocr_line_items(ocr_lines_raw)
+    ha_rows, ha_dbg = _extract_header_anchored_table(ocr_items, fill_mode=True)
+    if not ha_dbg.get("use") or not ha_rows:
+        debug["reason"] = ha_dbg.get("reason", "no_header")
+        return table_rows, debug
+    debug["columns"] = ha_dbg.get("columns")
+    # align existing rows to header-anchored rows: index when counts match, else
+    # by amount value (each line item's amount is usually distinct).
+    pairs: list[tuple[dict[str, Any], dict[str, Any]]] = []
+    if len(ha_rows) == len(table_rows):
+        pairs = list(zip(table_rows, ha_rows))
+    else:
+        by_amt: dict[str, dict[str, Any]] = {}
+        for hr in ha_rows:
+            a = _ha_amount_key(hr)
+            if a and a not in by_amt:
+                by_amt[a] = hr
+        for tr in table_rows:
+            hr = by_amt.get(_ha_amount_key(tr))
+            if hr:
+                pairs.append((tr, hr))
+    filled = 0
+    for tr, hr in pairs:
+        if not isinstance(tr, dict):
+            continue
+        for col in _HA_FILL_COLUMNS:
+            if str(tr.get(col) or "").strip():
+                continue  # never overwrite an existing (strict/study) value
+            clean = _ha_clean_fill(col, hr.get(col))
+            if clean:
+                tr[col] = clean
+                filled += 1
+    debug.update(applied=True, filled=filled, pairs=len(pairs), reason="ok")
+    return table_rows, debug
+
+
+def fill_scalar_defaults(document_fields: Any) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Emit taxType/discountAmount when the parser left them empty. war GT carries
+    both in ~100%/99% of docs (taxType 과세 86%, discountAmount '0' 90%), so these
+    domain defaults are correct-not-spurious (the field exists in GT). Only fills
+    EMPTY values → never overrides a detected 면세/discount. Measured: default 과세
+    = 88% vs GT on 800 thin docs; 면세 is a document-level flag not reliably in the
+    OCR text (TODO: vendor-based 면세 detection). documentNumber is intentionally
+    NOT emitted — GT has it in 0% (all invoice_num are '0'/blank) → emitting would
+    only create spurious false-positives."""
+    dbg: dict[str, Any] = {}
+    if not isinstance(document_fields, dict):
+        return document_fields, dbg
+    if not str(document_fields.get("taxType") or "").strip():
+        document_fields["taxType"] = "과세"
+        dbg["taxType"] = "과세"
+    if not str(document_fields.get("discountAmount") or "").strip():
+        document_fields["discountAmount"] = "0"
+        dbg["discountAmount"] = "0"
+    return document_fields, dbg
 
 
 def extract_invoice_statement_free(

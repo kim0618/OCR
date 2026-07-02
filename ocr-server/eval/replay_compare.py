@@ -49,6 +49,8 @@ from extractors.invoice_statement_free import (  # noqa: E402
     extract_invoice_statement_free,
     sanitize_document_scalar_fields as _sanitize,
     _is_valid_invoice_statement_free_result as _free_ok,
+    fill_pharma_columns as _fill_pharma,
+    fill_scalar_defaults as _fill_scalars,
 )
 from extractors.invoice_statement import extract_invoice_statement_fields  # noqa: E402
 
@@ -82,6 +84,18 @@ def replay_dispatch(snap: dict) -> tuple[dict, str]:
         path = "fallback"
     if isinstance(df, dict) and _sanitize is not None:
         df = _sanitize(df)
+    # mirror main.py join-point pharma-column fill (empty cells only)
+    if isinstance(df, dict) and df.get("tableRows"):
+        try:
+            df["tableRows"], _ = _fill_pharma(df["tableRows"], lines)
+        except Exception:
+            pass
+    # mirror main.py scalar defaults (taxType/discountAmount)
+    if isinstance(df, dict):
+        try:
+            df, _ = _fill_scalars(df)
+        except Exception:
+            pass
     return (df if isinstance(df, dict) else {}), path
 
 

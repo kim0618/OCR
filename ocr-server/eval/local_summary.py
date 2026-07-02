@@ -226,6 +226,54 @@ def _render(batch_name: str, compare_dir: str, per: list[dict]) -> str:
              "상세 리포트 = report.html · 비교 = 직전 run 대비 compare.html · "
              "AWS 정확도/게이트 요약은 <a href='SUMMARY.html'>SUMMARY.html</a></div></section>")
 
+    # accumulated history — moved to the TOP (above the column×pattern tables) per
+    # request. '#' = shared batch no. aligned by the NEWEST run so study #N and thin
+    # #N are the SAME replay batch (foreach study,thin). Δ셀/Δ필드 = vs prev batch.
+    try:
+        from replay_summary import _render_rows as _rr
+    except Exception:
+        _rr = None
+    if _rr and any(p["hist"] for p in per):
+        _max_len = max((len(p["hist"]) for p in per if p.get("hist")), default=0)
+        H.append("<div class='head' style='margin-top:8px'><h1 style='font-size:17px'>누적 결과 "
+                 "<span class='muted' style='font-size:13px'>(replay 돌릴 때마다 자동 누적 · #=배치, "
+                 "study·thin 같은 #가 함께 돈 것)</span></h1></div>")
+        for p in per:
+            if not p["hist"]:
+                continue
+            H.append(f"<section><h2>{_esc(p['testset'])} <span class='muted'>누적 이력</span></h2>"
+                     "<table><thead><tr><th>#</th><th>시각</th><th>셀 정확도</th><th>Δ셀</th>"
+                     "<th>필드 정확도</th><th>Δ필드</th>"
+                     "<th>파서누락</th><th>인식오류</th><th>지어내기</th><th>경로 free/fb</th>"
+                     "</tr></thead><tbody>")
+            _hlen = len(p["hist"])
+            _fprev = None
+            for _i, (k, pct, d, fld, paths_s) in enumerate(_rr(p["hist"])):
+                batch_no = _max_len - _hlen + 1 + _i
+                if d is None:
+                    dcol, dtxt = "var(--muted)", "·"
+                else:
+                    dcol = "var(--up)" if d > 0 else ("var(--down)" if d < 0 else "var(--muted)")
+                    dtxt = f"{d:+.1f}"
+                fpct = (100 * k["fm"] / k["fs"]) if k.get("fs") else None
+                if _fprev is None or fpct is None:
+                    fdcol, fdtxt = "var(--muted)", "·"
+                else:
+                    _fd = fpct - _fprev
+                    fdcol = "var(--up)" if _fd > 0 else ("var(--down)" if _fd < 0 else "var(--muted)")
+                    fdtxt = f"{_fd:+.1f}"
+                if fpct is not None:
+                    _fprev = fpct
+                pending = k.get("ambiguous")
+                pdrop_text = str(k.get("pdrop")) if pending is None else f"{k.get('pdrop')} (+{pending} pending)"
+                H.append(f"<tr><td><b>{batch_no}</b></td><td>{_esc(k.get('ts', ''))}</td>"
+                         f"<td>{k['cm']}/{k['cs']} ({pct:.1f}%)</td>"
+                         f"<td style='color:{dcol}'>{dtxt}</td>"
+                         f"<td>{_esc(fld)}</td><td style='color:{fdcol}'>{fdtxt}</td>"
+                         f"<td>{pdrop_text}</td><td>{k.get('recog')}</td>"
+                         f"<td>{k.get('spur')}</td><td>{_esc(paths_s)}</td></tr>")
+            H.append("</tbody></table></section>")
+
     # per-testset parser-drop column x pattern (the actionable axis)
     pat_th = "".join(f"<th>{_PAT_KO[p]}</th>" for p in _P)
     for p in per:
@@ -248,37 +296,6 @@ def _render(batch_name: str, compare_dir: str, per: list[dict]) -> str:
                      + "".join(f"<td>{pats.get(pp, 0)}</td>" for pp in _P)
                      + f"<td><b>{tot}</b></td></tr>")
         H.append("</tbody></table></section>")
-
-    # accumulated history — the LOCAL equivalent of SUMMARY's embedded TREND.
-    # Each testset's replay_history.json (auto-grown by parser_drop_classify on
-    # every replay run) shows the KPI progression edit-over-edit.
-    try:
-        from replay_summary import _render_rows as _rr
-    except Exception:
-        _rr = None
-    if _rr and any(p["hist"] for p in per):
-        H.append("<div class='head' style='margin-top:24px'><h1 style='font-size:17px'>누적 결과 "
-                 "<span class='muted' style='font-size:13px'>(replay 돌릴 때마다 자동 누적)</span></h1></div>")
-        for p in per:
-            if not p["hist"]:
-                continue
-            H.append(f"<section><h2>{_esc(p['testset'])} <span class='muted'>누적 이력</span></h2>"
-                     "<table><thead><tr><th>시각</th><th>셀 정확도</th><th>Δ셀</th><th>필드 정확도</th>"
-                     "<th>파서누락</th><th>인식오류</th><th>지어내기</th><th>경로 free/fb</th>"
-                     "</tr></thead><tbody>")
-            for k, pct, d, fld, paths_s in _rr(p["hist"]):
-                if d is None:
-                    dcol, dtxt = "var(--muted)", "·"
-                else:
-                    dcol = "var(--up)" if d > 0 else ("var(--down)" if d < 0 else "var(--muted)")
-                    dtxt = f"{d:+.1f}"
-                pending = k.get("ambiguous")
-                pdrop_text = str(k.get("pdrop")) if pending is None else f"{k.get('pdrop')} (+{pending} pending)"
-                H.append(f"<tr><td>{_esc(k.get('ts', ''))}</td><td>{k['cm']}/{k['cs']} ({pct:.1f}%)</td>"
-                         f"<td style='color:{dcol}'>{dtxt}</td><td>{_esc(fld)}</td>"
-                         f"<td>{pdrop_text}</td><td>{k.get('recog')}</td>"
-                         f"<td>{k.get('spur')}</td><td>{_esc(paths_s)}</td></tr>")
-            H.append("</tbody></table></section>")
 
     H.append("</body></html>")
     return "\n".join(H)

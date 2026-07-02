@@ -273,8 +273,16 @@ def load_paddle():
     import glob
     fcnt = {}  # labelEn -> [match, scored]
     for d in sorted(glob.glob(os.path.join(HERE, "runs", "*")), reverse=True):
-        cdir = os.path.join(d, "thin", "compare")
+        # prefer the local parser-edit re-score (replay_compare) so the matrix's
+        # Paddle base reflects the CURRENT parser (column-matching complete: C1+C2);
+        # fall back to the AWS run's compare/ when no local replay exists.
+        replayed = True
+        cdir = os.path.join(d, "thin", "replay_compare")
         files = glob.glob(os.path.join(cdir, "*.json"))
+        if not files:
+            replayed = False
+            cdir = os.path.join(d, "thin", "compare")
+            files = glob.glob(os.path.join(cdir, "*.json"))
         files = [f for f in files if not f.endswith("compare_summary.json")]
         if not files:
             continue
@@ -299,7 +307,7 @@ def load_paddle():
                     fcnt[ck][1] += 1
                     fcnt[ck][0] += 1 if st == "match" else 0
         out = {lab: (100.0 * m / s if s else None) for lab, (m, s) in fcnt.items()}
-        return out, os.path.basename(d)
+        return out, os.path.basename(d) + ("/replay" if replayed else "")
     return {}, None
 
 

@@ -66,6 +66,8 @@ from extractors.invoice_statement_free import (
     extract_invoice_statement_free,
     _is_valid_invoice_statement_free_result,
     sanitize_document_scalar_fields,
+    fill_pharma_columns,
+    fill_scalar_defaults,
 )
 from utils.regex_patterns import (
     _PHONE_RE,
@@ -3417,6 +3419,28 @@ async def ocr_extract(
             # label that leaked into a party-representative field (e.g. "총수량")
             # or a non-numeric value in a money scalar (e.g. the label "합").
             document_fields = sanitize_document_scalar_fields(document_fields)
+            # Path-agnostic pharma-column fill (free + fallback converge here):
+            # a header-anchored read fills manufacturingNo/insuranceCode/expiryDate
+            # into EMPTY cells only, so a correct strict/study value is never
+            # overwritten. Covers both free and fallback tables (run 061: fallback
+            # 1656 > free 346), unlike a free-only fix.
+            try:
+                if isinstance(document_fields, dict) and document_fields.get("tableRows"):
+                    _filled_rows, _pharma_fill_dbg = fill_pharma_columns(
+                        document_fields["tableRows"], ocr_lines_raw
+                    )
+                    document_fields["tableRows"] = _filled_rows
+                    if _pharma_fill_dbg.get("applied"):
+                        extract_debug["pharmaColumnFill"] = _pharma_fill_dbg
+            except Exception as _pf_e:
+                print(f"[pharma_fill] failed (response unaffected): {_pf_e}")
+            # emit war-GT scalar columns the parser leaves empty (taxType/discountAmount)
+            try:
+                document_fields, _scalar_dbg = fill_scalar_defaults(document_fields)
+                if _scalar_dbg:
+                    extract_debug["scalarDefaults"] = _scalar_dbg
+            except Exception as _sd_e:
+                print(f"[scalar_defaults] failed (response unaffected): {_sd_e}")
             if _free_debug:
                 extract_debug["invoice_statement_free"] = _free_debug
             response["document_fields"] = document_fields
