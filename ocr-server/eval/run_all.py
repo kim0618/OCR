@@ -414,6 +414,60 @@ def run_all_multi(server: str, workers: int, testsets: list[str] | None = None) 
     return 0 if all_ok else 1
 
 
+def summarize_batch(batch: str) -> int:
+    """재-OCR 없이 기존 배치 폴더에서 SUMMARY.md/html + TREND 만 재생성.
+
+    각 testset 하위(<batch>/study, <batch>/thin)의 metrics.json을 읽어 요약을 만든다.
+    --all 이 중간에 끊겨(또는 --reuse 로 개별만 돌려) 배치 SUMMARY 가 없을 때 사용:
+        python eval/run_all.py --summary-only 061_20260702_111643
+    """
+    import json
+    import shutil
+    bdir = os.path.join(C.RUNS_DIR, batch)
+    if not os.path.isdir(bdir):
+        print(f"배치 폴더 없음: {bdir}")
+        return 1
+    sub2ts = {_short(name): name for name in C.TESTSETS}   # 'study'->'invoice_study'
+    results: list[dict[str, Any]] = []
+    for sub in sorted(os.listdir(bdir)):
+        mp = os.path.join(bdir, sub, "metrics.json")
+        if not os.path.isfile(mp) or sub not in sub2ts:
+            continue
+        testset = sub2ts[sub]
+        m = json.load(open(mp, encoding="utf-8"))
+        ov = m.get("overall", {})
+        sp = m.get("spurious") or {}
+        results.append({
+            "testset": testset, "ts": f"{batch}/{sub}", "ok": True,
+            "fieldAcc": (ov.get("field") or {}).get("accuracy"),
+            "cellAcc": (ov.get("cell") or {}).get("accuracy"),
+            "fieldMacro": (ov.get("fieldMacro") or {}).get("accuracy"),
+            "cellMacro": (ov.get("cellMacro") or {}).get("accuracy"),
+            "sampleCount": m.get("sampleCount"),
+            "spuriousField": (sp.get("field") or {}).get("count", 0),
+            "spuriousCell": (sp.get("cell") or {}).get("count", 0),
+            "kind": C.get_testset(testset)["kind"], "elapsedSec": None,
+        })
+    if not results:
+        print("metrics.json 있는 하위 testset 없음 — 먼저 리포트를 만들어야 함")
+        return 1
+    try:  # TREND 갱신 후 배치 폴더로 복사(자기완결)
+        from trend import render_md, render_html
+        shutil.copyfile(render_md(), os.path.join(bdir, "TREND.md"))
+        shutil.copyfile(render_html(), os.path.join(bdir, "TREND.html"))
+    except Exception as exc:
+        print(f"(trend 재생성 스킵: {exc})")
+    out = _write_batch_summary(bdir, batch, results)
+    try:
+        render_summary_html(bdir, batch, results)
+    except Exception as exc:
+        print(f"(SUMMARY.html 스킵: {exc})")
+    print(f"SUMMARY 생성 완료 → {out}")
+    print(f"  {os.path.join(bdir, 'SUMMARY.html')}")
+    print(f"  {os.path.join(bdir, 'TREND.html')}")
+    return 0
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--reuse", default=None, help="reuse an existing run_ts (skip live OCR)")
@@ -421,7 +475,11 @@ if __name__ == "__main__":
     ap.add_argument("--workers", type=int, default=3)
     ap.add_argument("--testset", default=C.DEFAULT_TESTSET)
     ap.add_argument("--all", action="store_true", help="run every registered testset in one shot")
+    ap.add_argument("--summary-only", default=None,
+                    help="재-OCR 없이 배치 SUMMARY/TREND만 재생성 (배치 폴더명, 예: 061_20260702_111643)")
     args = ap.parse_args()
+    if args.summary_only:
+        sys.exit(summarize_batch(args.summary_only))
     if args.all:
         sys.exit(run_all_multi(args.server, args.workers))
     sys.exit(run_all(args.reuse, args.server, args.workers, args.testset))
