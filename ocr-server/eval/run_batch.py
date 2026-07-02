@@ -252,13 +252,24 @@ def run_batch(
 
     # 고해상(대용량) 이미지는 동시에 처리하면 RAM(16GB) 폭증→스왑→시스템 멈춤/타임아웃.
     # 크기로 분리: 일반은 병렬(빠름), 고해상은 1장씩(박스 독점)으로 돌려 멈춤/ERR 제거.
-    HEAVY_BYTES = 2 * 1024 * 1024   # 2MB 초과 = 고해상 위험군(측정상 _1.1.jpg 계열 123장)
+    # 멈춤의 원인은 파일 크기가 아니라 "처리 시 RAM" = 입력 이미지의 픽셀 해상도.
+    # free 경로가 큰 해상도를 업스케일+재OCR 하며 RAM 폭증. JPG는 픽셀이 커도 파일은
+    # 작을 수 있으므로 파일크기(보조) + 픽셀수(주) 둘 중 하나라도 크면 고해상으로 본다.
+    HEAVY_BYTES = 2 * 1024 * 1024   # 2MB 초과 파일
+    HEAVY_PIXELS = 4_000_000        # 4메가픽셀 초과(예: 2500x1800≈4.5MP) = 고해상
 
     def _is_heavy(s: dict[str, Any]) -> bool:
         p = s.get("image")
+        if not p:
+            return False
         try:
-            return bool(p) and os.path.getsize(p) > HEAVY_BYTES
-        except OSError:
+            if os.path.getsize(p) > HEAVY_BYTES:
+                return True
+            from PIL import Image
+            with Image.open(p) as im:   # .size는 헤더만 읽음(전체 디코드 X) → 빠름
+                w, h = im.size
+            return (w * h) > HEAVY_PIXELS
+        except Exception:
             return False
 
     todo_light = [s for s in todo if not _is_heavy(s)]
