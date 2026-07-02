@@ -252,24 +252,20 @@ def run_batch(
 
     # 고해상(대용량) 이미지는 동시에 처리하면 RAM(16GB) 폭증→스왑→시스템 멈춤/타임아웃.
     # 크기로 분리: 일반은 병렬(빠름), 고해상은 1장씩(박스 독점)으로 돌려 멈춤/ERR 제거.
-    # 멈춤의 원인은 파일 크기가 아니라 "처리 시 RAM" = 입력 이미지의 픽셀 해상도.
-    # free 경로가 큰 해상도를 업스케일+재OCR 하며 RAM 폭증. JPG는 픽셀이 커도 파일은
-    # 작을 수 있으므로 파일크기(보조) + 픽셀수(주) 둘 중 하나라도 크면 고해상으로 본다.
-    HEAVY_BYTES = 2 * 1024 * 1024   # 2MB 초과 파일
-    HEAVY_PIXELS = 4_000_000        # 4메가픽셀 초과(예: 2500x1800≈4.5MP) = 고해상
+    # 멈춤을 일으킨 건 파일 >2MB 초대형 스캔(_1.1.jpg 계열, 측정상 123장). 이것만
+    # 1장씩 격리하면 됨. (픽셀 기준은 일반 송장까지 걸려 과잉 → 크기 기준이 정확)
+    HEAVY_BYTES = 2 * 1024 * 1024   # 2MB 초과 파일 = 고해상 위험군
 
     def _is_heavy(s: dict[str, Any]) -> bool:
-        p = s.get("image")
-        if not p:
+        rel = s.get("image")
+        if not rel:
             return False
+        # run_one(123줄)과 동일하게 C.HERE 기준으로 경로 해석(그냥 상대경로면 cwd가 달라
+        # 파일을 못 찾아 전부 '고해상 아님'으로 처리되는 버그가 남 → "0 고해상"의 원인).
+        p = os.path.normpath(os.path.join(C.HERE, rel))
         try:
-            if os.path.getsize(p) > HEAVY_BYTES:
-                return True
-            from PIL import Image
-            with Image.open(p) as im:   # .size는 헤더만 읽음(전체 디코드 X) → 빠름
-                w, h = im.size
-            return (w * h) > HEAVY_PIXELS
-        except Exception:
+            return os.path.getsize(p) > HEAVY_BYTES
+        except OSError:
             return False
 
     todo_light = [s for s in todo if not _is_heavy(s)]
