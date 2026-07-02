@@ -92,13 +92,24 @@ def _images_nested(img_dir: str) -> dict[str, str]:
     out: dict[str, str] = {}
     if not os.path.isdir(img_dir):
         return out
+    empty = 0
     for root, _dirs, files in os.walk(img_dir):
         for name in files:
             if not name.lower().endswith(C.IMAGE_EXTS):
                 continue
             full = os.path.join(root, name)
+            # 0바이트 빈 파일 = OCR 불가(cv2 imdecode 실패→500). active에서 제외해
+            # '실패'로 안 잡히게 함(gt_orphan 처리). 원본 데이터에 껍데기 파일 섞일 때 대비.
+            try:
+                if os.path.getsize(full) == 0:
+                    empty += 1
+                    continue
+            except OSError:
+                continue
             key = os.path.relpath(full, img_dir).replace("\\", "/")
             out[key] = full
+    if empty:
+        print(f"  [manifest] 0바이트 빈 이미지 {empty}개 제외 (active 아님, 실패로 안 잡힘)")
     return out
 
 
