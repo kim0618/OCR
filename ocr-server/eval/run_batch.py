@@ -246,36 +246,61 @@ def run_batch(
     def dispatch(s: dict[str, Any]) -> dict[str, Any]:
         return run_one_canned(s) if s["status"] == "canned" else run_one(s, server, timeout)
 
-    print(f"run {ts}: {len(todo)} to run, {len(skipped)} resumed-skip, "
-          f"testset={testset}, mode={manifest['runMode']}, server={server}")
     results: list[dict[str, Any]] = []
-    with ThreadPoolExecutor(max_workers=max(1, workers)) as ex:
-        futs = {ex.submit(dispatch, s): s for s in todo}
-        for fut in as_completed(futs):
-            rec = fut.result()
-            # Pop the snapshot BEFORE writing rec.json so the scored result keeps
-            # its exact schema; write the snapshot to the sidecar dir instead.
-            snap = rec.pop("_ocrSnapshot", None)
-            proc = rec.pop("_processedImage", None)  # pop BEFORE writing rec.json (keep schema clean)
-            out = os.path.join(samples_dir, rec["sourceFile"] + ".json")
-            with open(out, "w", encoding="utf-8") as fh:
-                json.dump(rec, fh, ensure_ascii=False, indent=2)
-                fh.write("\n")
-            if snap:
-                with open(os.path.join(snapshots_dir, rec["sourceFile"] + ".json"),
-                          "w", encoding="utf-8") as sfh:
-                    json.dump(snap, sfh, ensure_ascii=False)
-                    sfh.write("\n")
-            if proc:
-                _save_processed(proc, os.path.join(processed_dir, rec["sourceFile"] + ".jpg"))
-            flag = "OK " if rec["status"] == "ok" else "ERR"
-            print(
-                f"  {flag} {rec['sourceFile']:<8} http={rec['httpStatus']} "
-                f"path={rec['extractionPath']:<8} rows={rec['rowCount']} "
-                f"pages={rec['pageCount']} {rec['clientMs']}ms"
-                + (f"  !! {rec['error']}" if rec["error"] else "")
-            )
-            results.append(rec)
+    total = len(todo)   # 진행 카운터용 총 대상 수
+    done = 0            # 완료 순서대로 증가(메인 스레드에서만 집계 → 스레드 안전)
+
+    # 고해상(대용량) 이미지는 동시에 처리하면 RAM(16GB) 폭증→스왑→시스템 멈춤/타임아웃.
+    # 크기로 분리: 일반은 병렬(빠름), 고해상은 1장씩(박스 독점)으로 돌려 멈춤/ERR 제거.
+    HEAVY_BYTES = 2 * 1024 * 1024   # 2MB 초과 = 고해상 위험군(측정상 _1.1.jpg 계열 123장)
+
+    def _is_heavy(s: dict[str, Any]) -> bool:
+        p = s.get("image")
+        try:
+            return bool(p) and os.path.getsize(p) > HEAVY_BYTES
+        except OSError:
+            return False
+
+    todo_light = [s for s in todo if not _is_heavy(s)]
+    todo_heavy = [s for s in todo if _is_heavy(s)]
+
+    def _run_pass(items: list[dict[str, Any]], w: int, label: str) -> None:
+        nonlocal done
+        if not items:
+            return
+        print(f"  == {label}: {len(items)}장, 동시 {w} ==")
+        with ThreadPoolExecutor(max_workers=max(1, w)) as ex:
+            futs = {ex.submit(dispatch, s): s for s in items}
+            for fut in as_completed(futs):
+                rec = fut.result()
+                # Pop sidecars BEFORE writing rec.json so the scored result keeps its schema.
+                snap = rec.pop("_ocrSnapshot", None)
+                proc = rec.pop("_processedImage", None)
+                out = os.path.join(samples_dir, rec["sourceFile"] + ".json")
+                with open(out, "w", encoding="utf-8") as fh:
+                    json.dump(rec, fh, ensure_ascii=False, indent=2)
+                    fh.write("\n")
+                if snap:
+                    with open(os.path.join(snapshots_dir, rec["sourceFile"] + ".json"),
+                              "w", encoding="utf-8") as sfh:
+                        json.dump(snap, sfh, ensure_ascii=False)
+                        sfh.write("\n")
+                if proc:
+                    _save_processed(proc, os.path.join(processed_dir, rec["sourceFile"] + ".jpg"))
+                done += 1
+                flag = "OK " if rec["status"] == "ok" else "ERR"
+                print(
+                    f"  [{done:>4}/{total}] {flag} {rec['sourceFile']:<8} http={rec['httpStatus']} "
+                    f"path={rec['extractionPath']:<8} rows={rec['rowCount']} "
+                    f"pages={rec['pageCount']} {rec['clientMs']}ms"
+                    + (f"  !! {rec['error']}" if rec["error"] else "")
+                )
+                results.append(rec)
+
+    print(f"run {ts}: {len(todo)} to run ({len(todo_light)} 일반 + {len(todo_heavy)} 고해상), "
+          f"{len(skipped)} resumed-skip, testset={testset}, mode={manifest['runMode']}, server={server}")
+    _run_pass(todo_light, workers, "일반(병렬)")     # 일반 이미지: 병렬로 빠르게
+    _run_pass(todo_heavy, 1, "고해상(1장씩·독점)")   # 고해상: 1장씩 → RAM 안전, 멈춤 없음
 
     # merge resumed-skip records into the summary view
     for src in skipped:
