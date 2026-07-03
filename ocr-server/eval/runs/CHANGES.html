@@ -58,11 +58,11 @@ h3.tog:hover{color:var(--link)}h3.tog .arr{font-size:11px;color:var(--muted);min
 .tog-body{padding:6px 0 4px 22px}
 .kv{margin:4px 0}.kv b{display:inline-block;min-width:84px;color:var(--muted);font-weight:600}
 </style></head><body>
-<div class='head'><h1>룰 수정 장부</h1><div class='gen'>갱신 2026-06-23 09:10 · 총 2건</div></div>
+<div class='head'><h1>룰 수정 장부</h1><div class='gen'>갱신 2026-07-03 11:33 · 총 2건</div></div>
 <div class='note'><div class='row'>룰 1개 고칠 때마다 한 줄. <b>분류</b> = <span class='kind-gen'>일반</span>(구조·패턴 의존, 수천장에 이월) / <span class='kind-of'>오버핏</span>(특정 값 외우기 — 피해야 함).</div><div class='row'><b>효과</b>는 기준 run↔이후 run의 metrics에서 자동 계산. <b>회귀</b> = 안 건드린 필드가 깨졌는지 신호. 제목 클릭=상세 펼치기.</div></div>
 <section><h2>요약</h2><table><thead><tr><th>ID</th><th>시각</th><th>타겟</th><th>분류</th><th>필드 Δ</th><th>셀 Δ</th><th>회귀</th><th>판정</th></tr></thead><tbody>
-<tr><td>R001</td><td>2026-06-10 16:29</td><td>supplierAddress 구조오류 (대표자값이 주소칸에 중복)</td><td><span class='kind-gen'>일반</span></td><td><span class='muted'>=</span></td><td><span class='muted'>=</span></td><td><span class='up'>없음</span></td><td class='v-keep'>유지</td></tr>
-<tr><td>R002</td><td>2026-06-11 09:15</td><td>품명 인식오류 (free 950px 저해상 OCR)</td><td><span class='kind-gen'>일반</span></td><td><span class='muted'>=</span></td><td><span class='down'>▼ 0.8%</span></td><td><span class='up'>없음</span></td><td class='v-wait'>대기</td></tr>
+<tr><td>R001</td><td>2026-06-10 16:29</td><td>supplierAddress 구조오류 (대표자값이 주소칸에 중복)</td><td><span class='kind-gen'>일반</span></td><td><span class='muted'>대기</span></td><td><span class='muted'>대기</span></td><td><span class='muted'>·</span></td><td class='v-keep'>유지</td></tr>
+<tr><td>R002</td><td>2026-06-11 09:15</td><td>품명 인식오류 (free 950px 저해상 OCR)</td><td><span class='kind-gen'>일반</span></td><td><span class='muted'>대기</span></td><td><span class='muted'>대기</span></td><td><span class='muted'>·</span></td><td class='v-wait'>대기</td></tr>
 </tbody></table></section>
 <section><h2>상세 이력 <span class='muted'>(최신 먼저 · 제목 클릭=펼치기)</span></h2>
 <h3 class='tog' onclick='tog(this)'><span class='arr'>▶</span><b>R002</b> 2026-06-11 09:15 &nbsp;<span class='kind-gen'>일반</span>&nbsp; 품명 인식오류 (free 950px 저해상 OCR)</h3>
@@ -71,10 +71,7 @@ h3.tog:hover{color:var(--link)}h3.tog .arr{font-size:11px;color:var(--muted);min
 <div class='kv'><b>수정 상세</b> G1 table_region.derive_table_bbox(표 bbox 도출) + G2 main.py invoice-free 분기 배선(additive·env게이트). 6장 probe 결과: 품명 +4(뮤코론캡슐/부스론/켈론/프레가스타) /-3(이소맥·단위·규격번짐), 셀 88.7→88.0%(-0.7pp, 고해상 재구성이 규격을 품명칸으로 번짐) + OCR 2패스 지연. net-negative라 기본 OFF(FREE_HIRES_TABLE_REOCR). 메커니즘은 검증됨, 수천장 단계 재튜닝 후 ON 검토.</div>
 <div class='kv'><b>위치</b> <code>extractors/table_region.py + main.py(invoice-free 분기, env게이트 기본OFF)</code></div>
 <div class='kv'><b>기준 run</b> <code>002_20260610_163020/study</code> &nbsp;→&nbsp; <b>이후 run</b> <code>003_20260611_090547/study</code></div>
-<div class='kv'><b>필드</b> 62.3% → 62.3% <span class='muted'>=</span> &nbsp;·&nbsp; <b>셀</b> 88.7% → 88.0% <span class='down'>▼ 0.8%</span></div>
-<div class='kv'><b>버킷</b> 인식 40→42 · 구조 13→13 · 컬럼 0→0 · 전처리 0→0</div>
-<div class='kv'><b>개선필드</b> 없음</div>
-<div class='kv'><b>회귀필드</b> <span class='up'>없음</span></div>
+<div class='kv'><b>효과</b> <span class='muted'>이후 run 측정 대기</span></div>
 <div class='kv'><b>비고</b> 기본 OFF=production 무영향(baseline 자동 안전). 백업 backup/main_20260610_R002_before_free_hires_table_reocr.py. 코드 검증: eval/test_table_region.py, eval/smoke_hires_table.py</div>
 </div>
 <h3 class='tog' onclick='tog(this)'><span class='arr'>▶</span><b>R001</b> 2026-06-10 16:29 &nbsp;<span class='kind-gen'>일반</span>&nbsp; supplierAddress 구조오류 (대표자값이 주소칸에 중복)</h3>
@@ -83,10 +80,7 @@ h3.tog:hover{color:var(--link)}h3.tog .arr{font-size:11px;color:var(--muted);min
 <div class='kv'><b>수정 상세</b> _is_address_candidate_line 진입부에 _is_representative_candidate 가드 추가. 원인=이름 "김동연"의 "동"을 _ADDRESS_TOKEN_RE(洞)로 오인 → 대표자값이 주소로 통과. 실주소는 숫자·로/길/번지를 가져 대표자후보가 될 수 없으므로 영향 0(패턴기반, 특정값 아님).</div>
 <div class='kv'><b>위치</b> <code>extractors/invoice_statement.py:_is_address_candidate_line</code></div>
 <div class='kv'><b>기준 run</b> <code>001_20260610_152454/study</code> &nbsp;→&nbsp; <b>이후 run</b> <code>002_20260610_163020/study</code></div>
-<div class='kv'><b>필드</b> 62.3% → 62.3% <span class='muted'>=</span> &nbsp;·&nbsp; <b>셀</b> 88.7% → 88.7% <span class='muted'>=</span></div>
-<div class='kv'><b>버킷</b> 인식 39→40 · 구조 14→13 · 컬럼 0→0 · 전처리 0→0</div>
-<div class='kv'><b>개선필드</b> 없음</div>
-<div class='kv'><b>회귀필드</b> <span class='up'>없음</span></div>
+<div class='kv'><b>효과</b> <span class='muted'>이후 run 측정 대기</span></div>
 <div class='kv'><b>비고</b> 백업 backup/invoice_statement_20260610_R001_before_address_rep_guard.py. 결과: 구조 14→13 해소, 대표자값 주소칸 제거 성공. 필드점수 불변=진짜주소가 OCR로 깨져 인식오류로 이동(39→40, frozen 영역). 회귀 0.</div>
 </div>
 </section>
