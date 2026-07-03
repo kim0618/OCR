@@ -1235,6 +1235,30 @@ def _median_textline_angle(ocr_lines, min_conf: float = 0.5):
     return round(angs[n // 2] if n % 2 else (angs[n // 2 - 1] + angs[n // 2]) / 2.0, 3)
 
 
+def _median_box_aspect(ocr_lines):
+    """OCR 텍스트라인 박스 종횡비(w/h)의 중앙값. 방향이 맞아야 글자줄이 가로(w>h)로 —
+    페이지가 90/270로 누우면 줄이 세로(w<h)라 medAR<1. 한글수로는 90↔270을 못 가리는
+    '옆으로 누운' 장을 잡는 기하 신호(검증: 누움 medAR≈0.5 vs upright≈2.3으로 깔끔히 분리).
+    유효 박스<8 이면 None(신뢰 부족). 채점 하네스의 verify_orient 와 동일 계산."""
+    ars = []
+    for ln in (ocr_lines or []):
+        try:
+            box = ln[0]
+            xs = [p[0] for p in box]
+            ys = [p[1] for p in box]
+        except Exception:
+            continue
+        w = max(xs) - min(xs)
+        h = max(ys) - min(ys)
+        if w > 0 and h > 0 and (w + h) > 8:
+            ars.append(w / h)
+    if len(ars) < 8:
+        return None
+    ars.sort()
+    n = len(ars)
+    return ars[n // 2] if n % 2 else (ars[n // 2 - 1] + ars[n // 2]) / 2.0
+
+
 def _ocr_crop_region(img, ocr, x, y, w, h):
     """이미지에서 특정 영역을 크롭하여 OCR 실행. 모든 텍스트를 합쳐 반환."""
     img_h, img_w = img.shape[:2]
@@ -2801,22 +2825,46 @@ async def ocr_extract(
         # 방향 맞아야 한글 인식됨. 인식 한글이 거의 0(garbage)일 때만 4방향 재OCR해 한글 최다 채택.
         # 깨끗한 장(1.jpg KR0.22, 6-1 0.41)은 트리거 안 됨 → 039 같은 회귀 없음. invoice+flag 전용.
         _orient_reverify = {"name": "ORIENT_KOREAN_REVERIFY", "applied": False,
-                            "reason": "off_or_not_garbage", "krBefore": None, "krAfter": None, "pickedRot": 0}
+                            "reason": "off_or_not_garbage", "krBefore": None, "krAfter": None,
+                            "boxArBefore": None, "boxArAfter": None, "trigger": None, "pickedRot": 0}
         if (getattr(RT, "ORIENT_KOREAN_REVERIFY", False) and _orient_is_invoice):
             _kr0, _tot0 = _korean_char_count(ocr_lines_raw)
             _ratio0 = (_kr0 / _tot0) if _tot0 else 0.0
+            _ar0 = _median_box_aspect(ocr_lines_raw)
             _orient_reverify["krBefore"] = round(_ratio0, 3)
-            if _tot0 >= 8 and _ratio0 < 0.10:  # garbage = 방향 오판 강력 의심
+            _orient_reverify["boxArBefore"] = round(_ar0, 2) if _ar0 is not None else None
+            # 방향 오판 트리거 2종: (a) 한글 garbage(<0.10=거꾸로 강력의심), (b) 텍스트라인 박스가
+            # 세로(medAR<1.0=페이지가 90/270로 누움). box-AR은 한글수로 90↔270을 못 가리는 '옆으로
+            # 누운' 장을 잡는 신호. upright 장은 medAR≈2.3이라 (b) 절대 미발동 → 정상표 오회전 없음.
+            _garbage = _tot0 >= 8 and _ratio0 < 0.10
+            _sideways = _tot0 >= 8 and _ar0 is not None and _ar0 < 1.0
+            if _garbage or _sideways:
+                _orient_reverify["trigger"] = "korean_garbage" if _garbage else "vertical_boxes"
+                # 후보 선택: 한글수 최대. 단 박스가 세로(AR<1.2)면 크게 감점 → '가로로 읽히면서'
+                # 한글 최다인 방향을 고름(90↔270/0↔180 동시 해결).
+                def _orient_score(kr, ar):
+                    return kr * (1.0 if (ar is not None and ar >= 1.2) else 0.3)
                 _best_kr, _best_rot, _best_lines, _best_img = _kr0, 0, ocr_lines_raw, None
+                _best_ar = _ar0
+                _best_sc = _orient_score(_kr0, _ar0)
                 for _rot, _cvrot in ((90, cv2.ROTATE_90_CLOCKWISE), (180, cv2.ROTATE_180),
                                      (270, cv2.ROTATE_90_COUNTERCLOCKWISE)):
                     _cand_img = cv2.rotate(doc_deskewed, _cvrot)
                     _cand_lines, _cand_prepped = _prep_and_ocr_lines(_cand_img, ocr, ocr_max_w, ocr_min_w)
                     _ckr, _ = _korean_char_count(_cand_lines)
-                    if _ckr > _best_kr:
-                        _best_kr, _best_rot, _best_lines, _best_img = _ckr, _rot, _cand_lines, _cand_prepped
-                # 채택: 회전본이 한글을 *현저히* 더 많이 읽을 때만(2배+ & 최소 20자)
-                if _best_rot != 0 and _best_kr >= max(20, _kr0 * 2):
+                    _car = _median_box_aspect(_cand_lines)
+                    _csc = _orient_score(_ckr, _car)
+                    if _csc > _best_sc:
+                        _best_sc, _best_kr, _best_rot = _csc, _ckr, _rot
+                        _best_lines, _best_img, _best_ar = _cand_lines, _cand_prepped, _car
+                # 채택 조건(둘 중 하나): (1) 한글이 *현저히* ↑(2배+ & ≥20, 기존 가드) 또는
+                # (2) 세로트리거였고 회전이 박스를 가로로 되돌리며(AR<1→≥1.5) 한글 손실 없음.
+                _korean_win = _best_kr >= max(20, _kr0 * 2)
+                _horizontal_win = (
+                    _sideways and _best_ar is not None and _best_ar >= 1.5
+                    and _ar0 is not None and _ar0 < 1.0 and _best_kr >= _kr0
+                )
+                if _best_rot != 0 and (_korean_win or _horizontal_win):
                     doc_deskewed = cv2.rotate(doc_deskewed,
                                               {90: cv2.ROTATE_90_CLOCKWISE, 180: cv2.ROTATE_180,
                                                270: cv2.ROTATE_90_COUNTERCLOCKWISE}[_best_rot])
@@ -2829,7 +2877,9 @@ async def ocr_extract(
                     _bkr2, _btot2 = _korean_char_count(ocr_lines_raw)
                     _orient_reverify.update({"applied": True, "pickedRot": _best_rot,
                                              "krAfter": round((_bkr2 / _btot2) if _btot2 else 0.0, 3),
-                                             "reason": "reoriented_by_korean_signal"})
+                                             "boxArAfter": round(_best_ar, 2) if _best_ar is not None else None,
+                                             "reason": ("reoriented_by_korean_signal" if _korean_win
+                                                        else "reoriented_by_box_aspect")})
                 else:
                     _orient_reverify["reason"] = "no_better_orientation"
         timings["orient_reverify"] = _orient_reverify
