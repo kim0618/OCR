@@ -68,6 +68,7 @@ from extractors.invoice_statement_free import (
     sanitize_document_scalar_fields,
     fill_pharma_columns,
     fill_scalar_defaults,
+    drop_boilerplate_table_rows,
 )
 from utils.regex_patterns import (
     _PHONE_RE,
@@ -2844,44 +2845,52 @@ async def ocr_extract(
                 # 한글 최다인 방향을 고름(90↔270/0↔180 동시 해결).
                 def _orient_score(kr, ar):
                     return kr * (1.0 if (ar is not None and ar >= 1.2) else 0.3)
-                _best_kr, _best_rot, _best_lines, _best_img = _kr0, 0, ocr_lines_raw, None
-                _best_ar = _ar0
-                _best_sc = _orient_score(_kr0, _ar0)
-                for _rot, _cvrot in ((90, cv2.ROTATE_90_CLOCKWISE), (180, cv2.ROTATE_180),
-                                     (270, cv2.ROTATE_90_COUNTERCLOCKWISE)):
-                    _cand_img = cv2.rotate(doc_deskewed, _cvrot)
-                    _cand_lines, _cand_prepped = _prep_and_ocr_lines(_cand_img, ocr, ocr_max_w, ocr_min_w)
-                    _ckr, _ = _korean_char_count(_cand_lines)
-                    _car = _median_box_aspect(_cand_lines)
-                    _csc = _orient_score(_ckr, _car)
-                    if _csc > _best_sc:
-                        _best_sc, _best_kr, _best_rot = _csc, _ckr, _rot
-                        _best_lines, _best_img, _best_ar = _cand_lines, _cand_prepped, _car
-                # 채택 조건(둘 중 하나): (1) 한글이 *현저히* ↑(2배+ & ≥20, 기존 가드) 또는
-                # (2) 세로트리거였고 회전이 박스를 가로로 되돌리며(AR<1→≥1.5) 한글 손실 없음.
-                _korean_win = _best_kr >= max(20, _kr0 * 2)
-                _horizontal_win = (
-                    _sideways and _best_ar is not None and _best_ar >= 1.5
-                    and _ar0 is not None and _ar0 < 1.0 and _best_kr >= _kr0
-                )
-                if _best_rot != 0 and (_korean_win or _horizontal_win):
-                    doc_deskewed = cv2.rotate(doc_deskewed,
-                                              {90: cv2.ROTATE_90_CLOCKWISE, 180: cv2.ROTATE_180,
-                                               270: cv2.ROTATE_90_COUNTERCLOCKWISE}[_best_rot])
-                    ocr_lines_raw = _best_lines
-                    ocr_img = _best_img
-                    ocr_h, ocr_w = _best_img.shape[:2]
-                    _, _oenc = cv2.imencode('.jpg', _best_img, [cv2.IMWRITE_JPEG_QUALITY, 85])
-                    processed_b64 = base64.b64encode(_oenc.tobytes()).decode('utf-8')
-                    timings["ocr_image_wh"] = [ocr_w, ocr_h]
-                    _bkr2, _btot2 = _korean_char_count(ocr_lines_raw)
-                    _orient_reverify.update({"applied": True, "pickedRot": _best_rot,
-                                             "krAfter": round((_bkr2 / _btot2) if _btot2 else 0.0, 3),
-                                             "boxArAfter": round(_best_ar, 2) if _best_ar is not None else None,
-                                             "reason": ("reoriented_by_korean_signal" if _korean_win
-                                                        else "reoriented_by_box_aspect")})
-                else:
-                    _orient_reverify["reason"] = "no_better_orientation"
+                # 견고성: 후보 재-OCR(3방향) 중 하나라도 예외/실패해도 요청이 죽지 않게 방어.
+                # 실패 시 원본 orientation 유지(미채택). 재-OCR 부하로 인한 드문 커넥션 드롭 대비.
+                try:
+                    _best_kr, _best_rot, _best_lines, _best_img = _kr0, 0, ocr_lines_raw, None
+                    _best_ar = _ar0
+                    _best_sc = _orient_score(_kr0, _ar0)
+                    for _rot, _cvrot in ((90, cv2.ROTATE_90_CLOCKWISE), (180, cv2.ROTATE_180),
+                                         (270, cv2.ROTATE_90_COUNTERCLOCKWISE)):
+                        try:
+                            _cand_img = cv2.rotate(doc_deskewed, _cvrot)
+                            _cand_lines, _cand_prepped = _prep_and_ocr_lines(_cand_img, ocr, ocr_max_w, ocr_min_w)
+                        except Exception:
+                            continue  # 이 후보만 스킵(다른 방향은 계속 평가)
+                        _ckr, _ = _korean_char_count(_cand_lines)
+                        _car = _median_box_aspect(_cand_lines)
+                        _csc = _orient_score(_ckr, _car)
+                        if _csc > _best_sc:
+                            _best_sc, _best_kr, _best_rot = _csc, _ckr, _rot
+                            _best_lines, _best_img, _best_ar = _cand_lines, _cand_prepped, _car
+                    # 채택 조건(둘 중 하나): (1) 한글이 *현저히* ↑(2배+ & ≥20, 기존 가드) 또는
+                    # (2) 세로트리거였고 회전이 박스를 가로로 되돌리며(AR<1→≥1.5) 한글 손실 없음.
+                    _korean_win = _best_kr >= max(20, _kr0 * 2)
+                    _horizontal_win = (
+                        _sideways and _best_ar is not None and _best_ar >= 1.5
+                        and _ar0 is not None and _ar0 < 1.0 and _best_kr >= _kr0
+                    )
+                    if _best_rot != 0 and (_korean_win or _horizontal_win):
+                        doc_deskewed = cv2.rotate(doc_deskewed,
+                                                  {90: cv2.ROTATE_90_CLOCKWISE, 180: cv2.ROTATE_180,
+                                                   270: cv2.ROTATE_90_COUNTERCLOCKWISE}[_best_rot])
+                        ocr_lines_raw = _best_lines
+                        ocr_img = _best_img
+                        ocr_h, ocr_w = _best_img.shape[:2]
+                        _, _oenc = cv2.imencode('.jpg', _best_img, [cv2.IMWRITE_JPEG_QUALITY, 85])
+                        processed_b64 = base64.b64encode(_oenc.tobytes()).decode('utf-8')
+                        timings["ocr_image_wh"] = [ocr_w, ocr_h]
+                        _bkr2, _btot2 = _korean_char_count(ocr_lines_raw)
+                        _orient_reverify.update({"applied": True, "pickedRot": _best_rot,
+                                                 "krAfter": round((_bkr2 / _btot2) if _btot2 else 0.0, 3),
+                                                 "boxArAfter": round(_best_ar, 2) if _best_ar is not None else None,
+                                                 "reason": ("reoriented_by_korean_signal" if _korean_win
+                                                            else "reoriented_by_box_aspect")})
+                    else:
+                        _orient_reverify["reason"] = "no_better_orientation"
+                except Exception as _rv_e:
+                    _orient_reverify["reason"] = f"reverify_error:{type(_rv_e).__name__}"
         timings["orient_reverify"] = _orient_reverify
         if isinstance(_preprocess_debug, dict) and isinstance(_preprocess_debug.get("orientation"), dict):
             _preprocess_debug["orientation"]["koreanReverify"] = _orient_reverify
@@ -3469,6 +3478,17 @@ async def ocr_extract(
             # label that leaked into a party-representative field (e.g. "총수량")
             # or a non-numeric value in a money scalar (e.g. the label "합").
             document_fields = sanitize_document_scalar_fields(document_fields)
+            # R1: 표 파서가 품목행으로 오인한 요약/푸터/장식 줄(이하여백·합계·총매출액·☆☆☆)
+            # 드롭. GT엔 없는 행이라 과분할 노이즈 제거+정렬 회복. 진짜 약품명 행은 보호.
+            # 합류점(free+fallback 공통)이라 경로무관. pharma-fill 전에 정리.
+            try:
+                if isinstance(document_fields, dict) and document_fields.get("tableRows"):
+                    _clean_rows, _boiler_dbg = drop_boilerplate_table_rows(document_fields["tableRows"])
+                    document_fields["tableRows"] = _clean_rows
+                    if _boiler_dbg.get("dropped"):
+                        extract_debug["boilerplateRowDrop"] = _boiler_dbg
+            except Exception as _br_e:
+                print(f"[boilerplate_drop] failed (response unaffected): {_br_e}")
             # Path-agnostic pharma-column fill (free + fallback converge here):
             # a header-anchored read fills manufacturingNo/insuranceCode/expiryDate
             # into EMPTY cells only, so a correct strict/study value is never

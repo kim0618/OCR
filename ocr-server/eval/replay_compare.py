@@ -51,6 +51,7 @@ from extractors.invoice_statement_free import (  # noqa: E402
     _is_valid_invoice_statement_free_result as _free_ok,
     fill_pharma_columns as _fill_pharma,
     fill_scalar_defaults as _fill_scalars,
+    drop_boilerplate_table_rows as _drop_boiler,
 )
 from extractors.invoice_statement import extract_invoice_statement_fields  # noqa: E402
 
@@ -84,6 +85,12 @@ def replay_dispatch(snap: dict) -> tuple[dict, str]:
         path = "fallback"
     if isinstance(df, dict) and _sanitize is not None:
         df = _sanitize(df)
+    # mirror main.py join-point boilerplate/footer row drop (R1) — before pharma fill
+    if isinstance(df, dict) and df.get("tableRows"):
+        try:
+            df["tableRows"], _ = _drop_boiler(df["tableRows"])
+        except Exception:
+            pass
     # mirror main.py join-point pharma-column fill (empty cells only)
     if isinstance(df, dict) and df.get("tableRows"):
         try:

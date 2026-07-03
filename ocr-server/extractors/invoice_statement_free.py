@@ -4265,6 +4265,72 @@ def fill_scalar_defaults(document_fields: Any) -> tuple[dict[str, Any], dict[str
     return document_fields, dbg
 
 
+# ── R1: boilerplate/footer 행 드롭 (free+fallback 합류점, 경로무관) ────────────
+# war GT tableRows 는 body 품목행만 담는다(build_gt.sql: description<>''). 표 파서가
+# 표 바닥의 요약/장식 줄(이하여백·합계·총매출액·부가세액·☆☆☆)을 품목행으로 오인해
+# 한 행 더 만드는 것이 과분할의 노이즈 성분(run061 thin: boilerplate 647행). 이들은
+# GT에 절대 없으므로 드롭은 항상 정답. 고정밀 원칙: itemName 이 진짜 약품명(정/캡슐/mg…)
+# 이면 절대 드롭 안 함 → 실품목 보호. 특정값 아닌 구조/키워드 의존 = 일반화 룰.
+_BOILERPLATE_ROW_RE = re.compile(
+    r"이\s*하\s*여\s*백|여\s*백|총\s*매\s*출|총\s*매\s*입|부\s*가\s*세\s*액|"
+    r"합\s*계|소\s*계|총\s*계|미\s*수\s*금|전\s*잔\s*금|현\s*잔\s*고|잔\s*액|"
+    r"인\s*수\s*자|인\s*수\s*확\s*인|담\s*당\s*자|아\s*래\s*와\s*같\s*이|거\s*래\s*함|"
+    r"월\s*계|누\s*계|받\s*을\s*채\s*권|받\s*은\s*금\s*액|현\s*재\s*잔\s*액"
+)
+_DECORATION_ONLY_RE = re.compile(r"^[\s☆★✩✱\*·・\-=_~〃″”]+$")
+_PHARMA_PRODUCT_RE = re.compile(
+    r"정$|정\b|정\s*\d|정\s*[TCPtcp)]|\d\s*정|"          # 제형 '정'(+용량 30T/10mg/맨끝)
+    r"캡슐|캡셀|캡슈|캅셀|연질|시럽|크림|과립|주사|점안|점\s*안|정제|"
+    r"밀리그람|밀리그램|mg|ml|캡\)"
+)
+
+
+def _row_names_a_pharma_product(name: str) -> bool:
+    """itemName 이 진짜 약품명처럼 보이면 True(한글 + 제형/용량 시그널). 이런 행은
+    보일러플레이트로 오인해 드롭하면 안 됨(실품목 보호막)."""
+    n = (name or "").strip()
+    if not n or not re.search(r"[가-힣]", n):
+        return False
+    return bool(_PHARMA_PRODUCT_RE.search(n))
+
+
+def drop_boilerplate_table_rows(rows: Any) -> tuple[Any, dict[str, Any]]:
+    """표 파서가 품목행으로 오인한 요약/푸터/장식 줄을 제거한다. 진짜 약품명 행은
+    보호(절대 드롭 안 함). 빈칸만 채우는 다른 가드처럼 합류점(경로무관)에서 호출."""
+    dbg: dict[str, Any] = {"dropped": 0, "samples": []}
+    if not isinstance(rows, list) or not rows:
+        return rows, dbg
+    kept: list[Any] = []
+    for r in rows:
+        if not isinstance(r, dict):
+            kept.append(r)
+            continue
+        name = str(r.get("itemName") or "").strip()
+        raw = str(r.get("_rawText") or "").strip()
+        probe = name or raw
+        # 보호: itemName *또는* _rawText 에 진짜 약품 시그널이 있으면 유지. 블롭 행
+        # (itemName 빈칸·rawText에 품목명 뭉침)이 푸터단어와 섞여도 실품목이라 보존.
+        if _row_names_a_pharma_product(name) or _row_names_a_pharma_product(raw):
+            kept.append(r)
+            continue
+        compact = re.sub(r"\s", "", probe)
+        drop = bool(probe) and (
+            _DECORATION_ONLY_RE.match(probe) is not None
+            or _BOILERPLATE_ROW_RE.search(compact) is not None
+        )
+        if drop:
+            dbg["dropped"] += 1
+            if len(dbg["samples"]) < 8:
+                dbg["samples"].append(probe[:40])
+        else:
+            kept.append(r)
+    # 안전망: 표를 통째로 비우지 않는다. 전부 드롭 대상이면(예: 블롭 5행이 모두 푸터단어
+    # 흡수) 원본 유지 — 표를 없애는 것보다 노이즈 남기는 게 채점상 안전(빈표=0점).
+    if rows and not kept:
+        return rows, {"dropped": 0, "samples": [], "reason": "kept_all_would_empty"}
+    return kept, dbg
+
+
 def extract_invoice_statement_free(
     *,
     ocr_lines_raw: list[tuple[Any, str, float]] | None = None,
