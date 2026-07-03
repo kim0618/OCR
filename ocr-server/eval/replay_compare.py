@@ -52,6 +52,7 @@ from extractors.invoice_statement_free import (  # noqa: E402
     fill_pharma_columns as _fill_pharma,
     fill_scalar_defaults as _fill_scalars,
     drop_boilerplate_table_rows as _drop_boiler,
+    salvage_blob_amount as _salvage_blob_amount,
 )
 from extractors.invoice_statement import extract_invoice_statement_fields  # noqa: E402
 
@@ -89,6 +90,12 @@ def replay_dispatch(snap: dict) -> tuple[dict, str]:
     if isinstance(df, dict) and df.get("tableRows"):
         try:
             df["tableRows"], _ = _drop_boiler(df["tableRows"])
+        except Exception:
+            pass
+    # mirror main.py join-point blob-amount salvage (empty amount -> last comma-money)
+    if isinstance(df, dict) and df.get("tableRows"):
+        try:
+            df["tableRows"], _ = _salvage_blob_amount(df["tableRows"])
         except Exception:
             pass
     # mirror main.py join-point pharma-column fill (empty cells only)

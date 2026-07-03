@@ -32,6 +32,17 @@ def _run_ts_key(run_ts: str) -> str:
     return m.group(1) + m.group(2) if m else ""
 
 
+# 이력에서 이 회차(run 폴더번호 NNN) 미만은 숨긴다. 오래된 초기 실험 run을 걷어내고
+# 현재 작업 구간만 보이게. NNN 프리픽스가 없는 행(예 canned 고정 id)은 유지.
+_MIN_RUN_NO = 61
+
+
+def _run_no_int(run_ts: str) -> int | None:
+    import re as _re
+    m = _re.match(r"(\d{1,4})_\d{8}_\d{6}", run_ts or "")
+    return int(m.group(1)) if m else None
+
+
 def _rows(testset: str) -> list[dict[str, Any]]:
     con = sqlite3.connect(TIMESERIES_DB)
     try:
@@ -42,6 +53,9 @@ def _rows(testset: str) -> list[dict[str, Any]]:
         )
         rows = [dict(zip(_COLS, r)) for r in cur.fetchall()]
         rows.sort(key=lambda r: _run_ts_key(r["runTs"]))  # 안정정렬: 같은 키면 rowid 순
+        # 회차 하한 필터: NNN>=_MIN_RUN_NO 만 노출(번호 없는 행은 유지).
+        rows = [r for r in rows
+                if (_run_no_int(r["runTs"]) is None or _run_no_int(r["runTs"]) >= _MIN_RUN_NO)]
         return rows
     finally:
         con.close()
@@ -83,12 +97,22 @@ def _delta_pp(cur, prev) -> str:
 
 
 def _changed_population(cur, prev) -> bool:
-    """직전 run과 표본 수(sampleCount)가 다르면 True.
+    """직전 run과 표본 수(sampleCount)가 *유의하게* 다르면 True.
 
-    표본이 바뀌면(예: 6장 base-only → 24장 base+변주) 직전 대비 pp/버킷 델타는
+    표본이 크게 바뀌면(예: 6장 base-only → 24장 base+변주) 직전 대비 pp/버킷 델타는
     품질 변화가 아니라 모집단 변화이므로 비교가 무의미 → 표시에서 보류한다.
+    단, 몇 장 실패로 2004→2002 처럼 소폭 차이(상대 5% 이하)는 비교가 유효하므로
+    보류하지 않고 델타를 그대로 보여준다.
     """
-    return bool(prev and cur.get("sampleCount") != prev.get("sampleCount"))
+    if not prev:
+        return False
+    c = cur.get("sampleCount") or 0
+    p = prev.get("sampleCount") or 0
+    if c == p:
+        return False
+    if p == 0:
+        return True
+    return abs(c - p) / p > 0.05
 
 
 _BUCKET_KO = {"bRecognition": "인식", "bStructure": "구조", "bLayout": "컬럼", "bPreprocessing": "전처리"}

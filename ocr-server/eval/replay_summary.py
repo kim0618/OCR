@@ -142,7 +142,13 @@ def append_history(ts: str, now_str: str | None = None) -> list[dict]:
     if cur:
         if now_str is None:
             now_str = _dt.datetime.now().strftime("%m-%d %H:%M")
-        if not hist or _tuple(hist[-1]) != _tuple(cur):
+        # 매 배치(replay 루프)마다 testset별로 한 행씩 항상 기록한다. 값이 안 바뀐
+        # testset(예: 이번 룰이 thin만 건드려 study 동일)도 carry-forward 로 남겨야
+        # study·thin 행 수가 어긋나지 않아 배치번호(#)가 lockstep 정렬된다
+        # (#N = 같은 replay 배치). 이전엔 동일 KPI면 skip 해서 study 행이 빠지고
+        # 최신정렬 번호와 충돌 → #1이 사라진 듯 보였다. 단, 연속으로 완전히 동일한
+        # 행이 2줄 이상 쌓이는 것만 막는다(같은 배치 리포트 재생성 방지).
+        if len(hist) < 2 or _tuple(hist[-1]) != _tuple(cur) or _tuple(hist[-2]) != _tuple(cur):
             hist.append({"ts": now_str, **cur})
     try:
         json.dump(hist, open(hist_path, "w", encoding="utf-8"), ensure_ascii=False, indent=1)

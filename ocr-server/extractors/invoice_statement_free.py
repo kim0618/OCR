@@ -2011,6 +2011,33 @@ def _repair_numeric_assignment_from_row_items(
     return repaired
 
 
+_LEADING_ROW_INDEX_RE = re.compile(r"^\s*\d{1,3}\s+(.+)$", re.DOTALL)
+
+
+def _strip_leading_row_index(text: str) -> str:
+    """표 각 행 앞에 붙은 순번(1,2,3…)을 벗긴다.
+
+    war 송장 표는 행마다 선행 순번이 있어, free 컬럼파서가 '첫 토큰이 숫자'라며
+    행을 통째로 거부(_parse_table_row_candidate: first_numeric_idx=0 → label 없음)
+    → fallback으로 떨어져 줄 전체가 itemName blob → GT와 content-align 실패로
+    행 전체(8셀)가 손실되는 지배적 파편화 원인. 순번을 벗겨 실제 품명이 첫
+    토큰이 되게 하면 free 가 컬럼화하고 정렬도 복원된다.
+
+    가드(오작동 방지): 남은 첫 글자가 한글(품명)이고, 콤마 금액 토큰이 2개 이상인
+    '진짜 품목행'에서만 벗긴다. 순번이 아닌 선행 숫자(수량-우선 레이아웃 등)는
+    한글-우선 조건에 걸려 건드리지 않는다.
+    """
+    m = _LEADING_ROW_INDEX_RE.match(text)
+    if not m:
+        return text
+    rest = m.group(1).lstrip()
+    if not _HANGUL_RE.match(rest[:1]):
+        return text
+    if len(re.findall(r"\d{1,3}(?:,\d{3})+", rest)) < 2:
+        return text
+    return rest
+
+
 def _parse_table_row_candidate(
     line: str,
     row_index: int,
@@ -2020,6 +2047,7 @@ def _parse_table_row_candidate(
     text = _normalize_comma_space_money_text(line)
     if _is_summary_or_header_line(text):
         return None
+    text = _strip_leading_row_index(text)
     tokens = _merge_comma_space_money_tokens(text.split())
     if len(tokens) < 3:
         return None
@@ -2100,6 +2128,7 @@ def _parse_relaxed_table_row_candidate(line: str, row_index: int) -> dict[str, s
         return None
     if _metadata_negative_reason(text):
         return None
+    text = _strip_leading_row_index(text)
     money_tokens = _money_tokens_from_text(text)
     if not money_tokens:
         return None
@@ -4171,6 +4200,68 @@ def _ha_amount_key(row: dict[str, Any]) -> str:
     return re.sub(r"[,\s]", "", str(row.get("amount") or "")).rstrip(".")
 
 
+def _ha_unit_key(row: dict[str, Any]) -> str:
+    return re.sub(r"[,\s]", "", str(row.get("unitPrice") or "")).rstrip(".")
+
+
+def _ha_fmt_money(value: float) -> str:
+    return str(int(value)) if float(value).is_integer() else str(value)
+
+
+def _ha_fill_arith_and_spec(tr: dict[str, Any], hr: dict[str, Any]) -> int:
+    """R2: fill money (amount/unitPrice/quantity) and spec into EMPTY cells of an
+    already-aligned table row from the header-anchored read.
+
+    Spurious-proof by construction: a money cell is filled ONLY when the other two
+    money cells are present and the header-anchored candidate closes the
+    quantity x unitPrice = amount triangle (so a mis-assigned OCR token cannot be
+    injected). ``spec`` is filled only when the candidate is a spec-shaped token
+    (unit/dosage) and not a product code. Never overwrites an existing value.
+    """
+    filled = 0
+    # snapshot ORIGINAL present values so a fresh fill never seeds another fill
+    q0 = _ha_fnum(tr.get("quantity"))
+    u0 = _ha_fnum(tr.get("unitPrice"))
+    a0 = _ha_fnum(tr.get("amount"))
+
+    def _empty(col: str) -> bool:
+        return not str(tr.get(col) or "").strip()
+
+    def _close(x: float, y: float) -> bool:
+        return abs(x - y) <= max(1.0, abs(y) * 0.005)
+
+    # amount: need qty + unitPrice present, verify qty*unitPrice == candidate
+    if _empty("amount") and q0 is not None and u0 is not None:
+        cand = _ha_fnum(hr.get("amount"))
+        if cand is not None and cand > 0 and _close(q0 * u0, cand):
+            tr["amount"] = _ha_fmt_money(cand)
+            filled += 1
+    # unitPrice: need qty + amount present, verify amount/qty == candidate
+    if _empty("unitPrice") and q0 not in (None, 0) and a0 is not None:
+        cand = _ha_fnum(hr.get("unitPrice"))
+        if cand is not None and cand > 0 and _close(a0 / q0, cand):
+            tr["unitPrice"] = _ha_fmt_money(cand)
+            filled += 1
+    # quantity: need unitPrice + amount present, verify amount/unitPrice == candidate
+    if _empty("quantity") and u0 not in (None, 0) and a0 is not None:
+        cand = _ha_fnum(hr.get("quantity"))
+        if cand is not None and cand > 0 and cand.is_integer() and _close(a0 / u0, cand):
+            tr["quantity"] = _ha_fmt_money(cand)
+            filled += 1
+    # spec: token-shape guard only (no arithmetic anchor available)
+    if _empty("spec"):
+        cand = _normalize_text(hr.get("spec"))
+        if (
+            cand
+            and _looks_like_spec_token(cand)
+            and not _looks_like_product_code_token(cand)
+            and not _is_number_token(cand)
+        ):
+            tr["spec"] = _normalize_spec(cand)
+            filled += 1
+    return filled
+
+
 def _ha_clean_fill(col: str, value: Any) -> str | None:
     """Extract the clean typed token for a pharma column from a (possibly merged)
     header-anchored cell. Returns None when no type-matching token is found → the
@@ -4220,13 +4311,20 @@ def fill_pharma_columns(
     if len(ha_rows) == len(table_rows):
         pairs = list(zip(table_rows, ha_rows))
     else:
+        # match by amount value first (distinct per line item); fall back to
+        # unitPrice so rows whose amount cell is EMPTY (the money-drop pattern
+        # R2 targets) can still pair for arithmetic fill.
         by_amt: dict[str, dict[str, Any]] = {}
+        by_unit: dict[str, dict[str, Any]] = {}
         for hr in ha_rows:
             a = _ha_amount_key(hr)
             if a and a not in by_amt:
                 by_amt[a] = hr
+            u = _ha_unit_key(hr)
+            if u and u not in by_unit:
+                by_unit[u] = hr
         for tr in table_rows:
-            hr = by_amt.get(_ha_amount_key(tr))
+            hr = by_amt.get(_ha_amount_key(tr)) or by_unit.get(_ha_unit_key(tr))
             if hr:
                 pairs.append((tr, hr))
     filled = 0
@@ -4240,7 +4338,63 @@ def fill_pharma_columns(
             if clean:
                 tr[col] = clean
                 filled += 1
+        # R2: money (arithmetic-verified) + spec fill into empty cells
+        filled += _ha_fill_arith_and_spec(tr, hr)
     debug.update(applied=True, filled=filled, pairs=len(pairs), reason="ok")
+    return table_rows, debug
+
+
+_BLOB_MONEY_RE = re.compile(r"\d{1,3}(?:,\d{3})+")
+
+
+def salvage_blob_amount(table_rows: Any) -> tuple[Any, dict[str, Any]]:
+    """놓친 행 회복(정렬용): 파서가 컬럼화에 실패해 amount 칸이 빈 'blob' 행에서
+    _rawText 의 마지막 콤마-금액을 amount 로 살린다.
+
+    근거: content-align 은 ``0.5·이름유사도 + 0.35·금액일치 + 0.15·수량일치``(임계 0.30).
+    blob 행은 amount 필드가 비어 금액일치=0 → 이름유사도만으로는 임계 미달 → GT 행이
+    통째로 미매칭(8셀 손실)된다. amount 만 채워도 금액일치(0.35)로 정렬이 복원된다.
+    (062 측정: 놓친 GT 행의 30% 가 GT amount == blob 행의 마지막 콤마-금액.)
+
+    가드: 이미 amount 가 있으면 건드리지 않음, 요약/합계·party 메타 행 제외,
+    한글 품명이 있는 진짜 품목행 + 콤마-금액이 있을 때만. 빈 unitPrice 는 마지막
+    직전 콤마-금액으로 보조 채움(있을 때만).
+    """
+    debug: dict[str, Any] = {"salvaged": 0, "unitFilled": 0}
+    if not isinstance(table_rows, list):
+        return table_rows, debug
+    for row in table_rows:
+        if not isinstance(row, dict):
+            continue
+        if str(row.get("amount") or "").strip():
+            continue
+        raw = _normalize_text(row.get("_rawText") or row.get("itemName") or "")
+        if not raw or not _HANGUL_RE.search(raw):
+            continue
+        if _is_summary_or_header_line(raw) or _metadata_negative_reason(raw):
+            continue
+        # 합계/순매출/품절 등 요약·장식 행은 salvage 금지(spurious 금액 방지). 진짜
+        # 약품명 행은 요약마커와 무관하므로 통과. drop_boilerplate 와 같은 기준.
+        if _BOILERPLATE_ROW_RE.search(raw) and not _row_names_a_pharma_product(
+            _normalize_text(row.get("itemName"))
+        ):
+            continue
+        moneys = _BLOB_MONEY_RE.findall(raw)
+        if not moneys:
+            continue
+        cand = moneys[-1]
+        cand_num = re.sub(r"[^0-9]", "", cand)
+        qty_num = re.sub(r"[^0-9]", "", str(row.get("quantity") or ""))
+        unit_num = re.sub(r"[^0-9]", "", str(row.get("unitPrice") or ""))
+        # 마지막 콤마-금액이 이미 파싱된 수량/단가와 같으면 그건 amount 가 아니라
+        # 그 필드의 값 → salvage 금지(수량을 amount 로 넣는 spurious 방지).
+        if cand_num and (cand_num == qty_num or cand_num == unit_num):
+            continue
+        row["amount"] = cand
+        debug["salvaged"] += 1
+        if len(moneys) >= 2 and not str(row.get("unitPrice") or "").strip():
+            row["unitPrice"] = moneys[-2]
+            debug["unitFilled"] += 1
     return table_rows, debug
 
 
@@ -4272,7 +4426,8 @@ def fill_scalar_defaults(document_fields: Any) -> tuple[dict[str, Any], dict[str
 # GT에 절대 없으므로 드롭은 항상 정답. 고정밀 원칙: itemName 이 진짜 약품명(정/캡슐/mg…)
 # 이면 절대 드롭 안 함 → 실품목 보호. 특정값 아닌 구조/키워드 의존 = 일반화 룰.
 _BOILERPLATE_ROW_RE = re.compile(
-    r"이\s*하\s*여\s*백|여\s*백|총\s*매\s*출|총\s*매\s*입|부\s*가\s*세\s*액|"
+    r"이\s*하\s*여\s*백|여\s*백|총\s*매\s*출|총\s*매\s*입|순\s*매\s*출|순\s*매\s*입|"
+    r"부\s*가\s*세\s*액|품\s*절|미\s*출\s*고|공\s*급\s*가\s*액|반\s*품|"
     r"합\s*계|소\s*계|총\s*계|미\s*수\s*금|전\s*잔\s*금|현\s*잔\s*고|잔\s*액|"
     r"인\s*수\s*자|인\s*수\s*확\s*인|담\s*당\s*자|아\s*래\s*와\s*같\s*이|거\s*래\s*함|"
     r"월\s*계|누\s*계|받\s*을\s*채\s*권|받\s*은\s*금\s*액|현\s*재\s*잔\s*액"

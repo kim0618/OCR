@@ -267,7 +267,21 @@ def render_summary_html(batch_dir: str, batch: str, results: list[dict[str, Any]
     """SUMMARY.html - styled batch summary (same look as TREND.html, in a browser)."""
     import datetime as _dt
     from trend import _CSS, _esc, trend_sections_html
+    from trend import _rows as _trend_rows, _delta_html, _changed_population
     gen = _dt.datetime.now().strftime("%Y-%m-%d %H:%M")
+
+    def _prev_acc(testset: str) -> tuple[Any, Any] | None:
+        """직전 run의 (fieldAcc, cellAcc). 표본 수가 다르면 비교 보류(None)."""
+        try:
+            trows = _trend_rows(testset)
+        except Exception:
+            return None
+        if len(trows) < 2:
+            return None
+        cur, prev = trows[-1], trows[-2]
+        if _changed_population(cur, prev):
+            return None
+        return prev.get("fieldAcc"), prev.get("cellAcc")
     dur_txt = f" · 소요 {_fmt_dur(elapsed)}" if elapsed is not None else ""
     n_ok = sum(1 for r in results if r["ok"])
     all_ok = n_ok == len(results)
@@ -304,6 +318,13 @@ def render_summary_html(batch_dir: str, batch: str, results: list[dict[str, Any]
         sub = _short(r["testset"])
         fa = _mm(r["fieldAcc"], r.get("fieldMacro"))
         ca = _mm(r["cellAcc"], r.get("cellMacro"))
+        # 이전 run 대비 델타(▲/▼) — 상단 필드/셀 정확도 옆에
+        _prev = _prev_acc(r["testset"])
+        if _prev is not None:
+            _fdh = _delta_html(r["fieldAcc"], _prev[0])
+            _cdh = _delta_html(r["cellAcc"], _prev[1])
+            fa = f"{fa} <span style='font-size:12px'>{_fdh}pp</span>"
+            ca = f"{ca} <span style='font-size:12px'>{_cdh}pp</span>"
         chk = ("<span class='up'>✅ PASS</span>" if r["ok"]
                else f"<span class='down'>❌ FAIL</span>")
         role = _role_label(r["testset"], r.get("kind", ""), html=True)

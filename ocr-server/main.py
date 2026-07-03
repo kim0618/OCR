@@ -69,6 +69,7 @@ from extractors.invoice_statement_free import (
     fill_pharma_columns,
     fill_scalar_defaults,
     drop_boilerplate_table_rows,
+    salvage_blob_amount,
 )
 from utils.regex_patterns import (
     _PHONE_RE,
@@ -3489,6 +3490,19 @@ async def ocr_extract(
                         extract_debug["boilerplateRowDrop"] = _boiler_dbg
             except Exception as _br_e:
                 print(f"[boilerplate_drop] failed (response unaffected): {_br_e}")
+            # Path-agnostic blob-amount salvage (free + fallback converge here):
+            # rows the parser couldn't columnarize leave amount empty with the
+            # money stuck in _rawText → content-align (amt_match) can't recover the
+            # row → whole GT row (8 cells) lost. Salvage the last comma-money into
+            # the empty amount so alignment is restored. Empty cells only.
+            try:
+                if isinstance(document_fields, dict) and document_fields.get("tableRows"):
+                    _salv_rows, _salv_dbg = salvage_blob_amount(document_fields["tableRows"])
+                    document_fields["tableRows"] = _salv_rows
+                    if _salv_dbg.get("salvaged"):
+                        extract_debug["blobAmountSalvage"] = _salv_dbg
+            except Exception as _sv_e:
+                print(f"[blob_amount_salvage] failed (response unaffected): {_sv_e}")
             # Path-agnostic pharma-column fill (free + fallback converge here):
             # a header-anchored read fills manufacturingNo/insuranceCode/expiryDate
             # into EMPTY cells only, so a correct strict/study value is never
