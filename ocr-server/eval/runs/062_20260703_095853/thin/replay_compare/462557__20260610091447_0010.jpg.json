@@ -176,13 +176,15 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 1,
-    "rowCountExt": 1,
-    "rowCountMatch": true,
+    "rowCountExt": 2,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "2"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -191,17 +193,17 @@
           "itemName": {
             "gt": "세렌잘액 [500ML]",
             "ext": "세렌잘액[500ML]",
-            "gtNorm": "세렌잘액 [500ml]",
-            "extNorm": "세렌잘액[500ml]",
-            "status": "mismatch",
+            "gtNorm": "세렌잘액500ml",
+            "extNorm": "세렌잘액500ml",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "쎄렌잘액500mL",
-            "ext": "",
+            "ext": "세롤주500mL(백)",
             "gtNorm": "쎄렌잘액500ml",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "세롤주500ml(백)",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
@@ -254,10 +256,10 @@
           },
           "itemCode": {
             "gt": "16000463",
-            "ext": "",
+            "ext": "107027",
             "gtNorm": "16000463",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "107027",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -265,13 +267,13 @@
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 4,
-      "mismatch": 3,
-      "ext_missing": 2,
+      "match": 5,
+      "mismatch": 4,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4444444444444444
+    "cellAccuracy": 0.5555555555555556
   },
   "buckets": {
     "defects": [
@@ -324,20 +326,20 @@
         "reason": "value differs, low similarity"
       },
       {
-        "location": "row1:itemName",
-        "status": "mismatch",
-        "gtNorm": "세렌잘액 [500ml]",
-        "extNorm": "세렌잘액[500ml]",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.96)"
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['2']"
       },
       {
         "location": "row1:itemNameMaster",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "쎄렌잘액500ml",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "세롤주500ml(백)",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "row1:spec",
@@ -357,16 +359,16 @@
       },
       {
         "location": "row1:itemCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "16000463",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "107027",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       }
     ],
     "bucketTally": {
-      "recognition": 6,
-      "structure": 5,
+      "recognition": 7,
+      "structure": 4,
       "layout": 0,
       "preprocessing": 0
     },

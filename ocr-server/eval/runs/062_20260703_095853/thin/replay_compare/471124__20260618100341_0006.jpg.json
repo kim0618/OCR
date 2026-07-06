@@ -207,7 +207,7 @@
             "gt": "팜시어정",
             "ext": "잠시어정 21T",
             "gtNorm": "팜시어정",
-            "extNorm": "잠시어정 21t",
+            "extNorm": "잠시어정21t",
             "status": "mismatch",
             "spurious": false
           },
@@ -269,16 +269,16 @@
             "gt": "프라빅센정",
             "ext": "프라빅센정 30T",
             "gtNorm": "프라빅센정",
-            "extNorm": "프라빅센정 30t",
+            "extNorm": "프라빅센정30t",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "프라빅센정",
-            "ext": "",
+            "ext": "프라빅센정",
             "gtNorm": "프라빅센정",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "프라빅센정",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -315,10 +315,10 @@
           },
           "itemCode": {
             "gt": "12000209",
-            "ext": "",
+            "ext": "12000209",
             "gtNorm": "12000209",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "12000209",
+            "status": "match",
             "spurious": false
           }
         }
@@ -331,16 +331,16 @@
             "gt": "프로닐정",
             "ext": "프로닐정 30T",
             "gtNorm": "프로닐정",
-            "extNorm": "프로닐정 30t",
+            "extNorm": "프로닐정30t",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "프로닐정",
-            "ext": "",
+            "ext": "프로닐정",
             "gtNorm": "프로닐정",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "프로닐정",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -377,10 +377,10 @@
           },
           "itemCode": {
             "gt": "05001143",
-            "ext": "",
+            "ext": "05001143",
             "gtNorm": "05001143",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "05001143",
+            "status": "match",
             "spurious": false
           }
         }
@@ -388,13 +388,13 @@
     ],
     "cellCounts": {
       "scored": 21,
-      "match": 9,
+      "match": 13,
       "mismatch": 6,
-      "ext_missing": 6,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.42857142857142855
+    "cellAccuracy": 0.6190476190476191
   },
   "buckets": {
     "defects": [
@@ -442,9 +442,9 @@
         "location": "row1:itemName",
         "status": "mismatch",
         "gtNorm": "팜시어정",
-        "extNorm": "잠시어정 21t",
+        "extNorm": "잠시어정21t",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
+        "reason": "char-level diff (sim=0.55)"
       },
       {
         "location": "row1:itemNameMaster",
@@ -474,17 +474,9 @@
         "location": "row2:itemName",
         "status": "mismatch",
         "gtNorm": "프라빅센정",
-        "extNorm": "프라빅센정 30t",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.71)"
-      },
-      {
-        "location": "row2:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "프라빅센정",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "프라빅센정30t",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemNameMaster']"
       },
       {
         "location": "row2:spec",
@@ -495,28 +487,12 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row2:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "12000209",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row3:itemName",
         "status": "mismatch",
         "gtNorm": "프로닐정",
-        "extNorm": "프로닐정 30t",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
-      },
-      {
-        "location": "row3:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "프로닐정",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "프로닐정30t",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemNameMaster']"
       },
       {
         "location": "row3:spec",
@@ -525,20 +501,12 @@
         "extNorm": "√",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row3:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "05001143",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 10,
-      "structure": 7,
-      "layout": 0,
+      "recognition": 8,
+      "structure": 3,
+      "layout": 2,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

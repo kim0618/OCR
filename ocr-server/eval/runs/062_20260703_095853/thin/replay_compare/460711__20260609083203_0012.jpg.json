@@ -194,13 +194,13 @@
     "matchedRowIdx": [
       "1",
       "2",
-      "5"
+      "3"
     ],
     "gtOnlyRowIdx": [
       "1"
     ],
     "extOnlyRowIdx": [
-      "3"
+      "5"
     ],
     "rows": [
       {
@@ -209,9 +209,9 @@
         "cells": {
           "itemName": {
             "gt": "티론정 100T",
-            "ext": "2 티론정100T T00정 10 10,350 103,500 25003 2028.04.21 654303020",
-            "gtNorm": "티론정 100t",
-            "extNorm": "2 티론정100t t00정 10 10,350 103,500 25003 2028.04.21 654303020",
+            "ext": "2 티론정100T T00정 10",
+            "gtNorm": "티론정100t",
+            "extNorm": "2티론정100tt00정10",
             "status": "mismatch",
             "spurious": false
           },
@@ -295,18 +295,18 @@
         "cells": {
           "itemName": {
             "gt": "티론정",
-            "ext": "3 티론정 30T 20 3,105 62,100 25003 2028.04.21654303020",
+            "ext": "3 티론정",
             "gtNorm": "티론정",
-            "extNorm": "3 티론정 30t 20 3,105 62,100 25003 2028.04.21654303020",
+            "extNorm": "3티론정",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "티론정",
-            "ext": "",
+            "ext": "티론정",
             "gtNorm": "티론정",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "티론정",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -359,10 +359,10 @@
           },
           "itemCode": {
             "gt": "01005563",
-            "ext": "",
+            "ext": "01005563",
             "gtNorm": "01005563",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "01005563",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -376,23 +376,23 @@
         }
       },
       {
-        "rowIndex": "5",
+        "rowIndex": "3",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "히든정",
-            "ext": "4 히든정 100T 10 8,460 84,600 25004 2028.05.12654303490",
+            "ext": "4 히든정",
             "gtNorm": "히든정",
-            "extNorm": "4 히든정 100t 10 8,460 84,600 25004 2028.05.12654303490",
+            "extNorm": "4히든정",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "히든정",
-            "ext": "",
+            "ext": "히든정",
             "gtNorm": "히든정",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "히든정",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -445,10 +445,10 @@
           },
           "itemCode": {
             "gt": "14000287",
-            "ext": "",
+            "ext": "14000287",
             "gtNorm": "14000287",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "14000287",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -469,7 +469,7 @@
           "itemName": {
             "gt": "테살핀정80/5mg 30T",
             "ext": "",
-            "gtNorm": "테살핀정80/5mg 30t",
+            "gtNorm": "테살핀정805mg30t",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -551,13 +551,13 @@
     ],
     "cellCounts": {
       "scored": 40,
-      "match": 7,
+      "match": 11,
       "mismatch": 3,
-      "ext_missing": 30,
+      "ext_missing": 26,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.175
+    "cellAccuracy": 0.275
   },
   "buckets": {
     "defects": [
@@ -631,15 +631,15 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['3']"
+        "reason": "extractor invented rows ['5']"
       },
       {
         "location": "row1:itemName",
         "status": "mismatch",
-        "gtNorm": "티론정 100t",
-        "extNorm": "2 티론정100t t00정 10 10,350 103,500 25003 2028.04.21 654303020",
+        "gtNorm": "티론정100t",
+        "extNorm": "2티론정100tt00정10",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "row1:itemNameMaster",
@@ -693,17 +693,9 @@
         "location": "row2:itemName",
         "status": "mismatch",
         "gtNorm": "티론정",
-        "extNorm": "3 티론정 30t 20 3,105 62,100 25003 2028.04.21654303020",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row2:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "티론정",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "3티론정",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemNameMaster']"
       },
       {
         "location": "row2:spec",
@@ -738,14 +730,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "01005563",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row2:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "654303020",
@@ -754,23 +738,15 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row5:itemName",
+        "location": "row3:itemName",
         "status": "mismatch",
         "gtNorm": "히든정",
-        "extNorm": "4 히든정 100t 10 8,460 84,600 25004 2028.05.12654303490",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "extNorm": "4히든정",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemNameMaster']"
       },
       {
-        "location": "row5:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "히든정",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row5:spec",
+        "location": "row3:spec",
         "status": "ext_missing",
         "gtNorm": "100t",
         "extNorm": "",
@@ -778,7 +754,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row5:quantity",
+        "location": "row3:quantity",
         "status": "ext_missing",
         "gtNorm": "10",
         "extNorm": "",
@@ -786,7 +762,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row5:expiryDate",
+        "location": "row3:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20280512",
         "extNorm": "",
@@ -794,7 +770,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row5:manufacturingNo",
+        "location": "row3:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "25004",
         "extNorm": "",
@@ -802,15 +778,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row5:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "14000287",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row5:insuranceCode",
+        "location": "row3:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "654303490",
         "extNorm": "",
@@ -820,7 +788,7 @@
       {
         "location": "row1:itemName",
         "status": "ext_missing",
-        "gtNorm": "테살핀정80/5mg 30t",
+        "gtNorm": "테살핀정805mg30t",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -899,9 +867,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 9,
-      "structure": 33,
-      "layout": 0,
+      "recognition": 7,
+      "structure": 29,
+      "layout": 2,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

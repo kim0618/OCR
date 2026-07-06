@@ -185,10 +185,10 @@
           },
           "itemNameMaster": {
             "gt": "애드칼큐정",
-            "ext": "",
+            "ext": "애드칼큐정",
             "gtNorm": "애드칼큐정",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "애드칼큐정",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -233,10 +233,10 @@
           },
           "itemCode": {
             "gt": "05006490",
-            "ext": "",
+            "ext": "05006489",
             "gtNorm": "05006490",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "05006489",
+            "status": "mismatch",
             "spurious": false
           },
           "insuranceCode": {
@@ -252,13 +252,13 @@
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 1,
-      "mismatch": 3,
-      "ext_missing": 5,
+      "match": 2,
+      "mismatch": 4,
+      "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.1111111111111111
+    "cellAccuracy": 0.2222222222222222
   },
   "buckets": {
     "defects": [
@@ -323,16 +323,8 @@
         "status": "mismatch",
         "gtNorm": "애드칼큐정",
         "extNorm": "애드칼큐정90t",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.77)"
-      },
-      {
-        "location": "row1:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "애드칼큐정",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemNameMaster']"
       },
       {
         "location": "row1:spec",
@@ -368,11 +360,11 @@
       },
       {
         "location": "row1:itemCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "05006490",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "05006489",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.88)"
       },
       {
         "location": "row1:insuranceCode",
@@ -385,8 +377,8 @@
     ],
     "bucketTally": {
       "recognition": 4,
-      "structure": 9,
-      "layout": 2,
+      "structure": 7,
+      "layout": 3,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

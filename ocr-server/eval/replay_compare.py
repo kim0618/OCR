@@ -52,9 +52,17 @@ from extractors.invoice_statement_free import (  # noqa: E402
     fill_pharma_columns as _fill_pharma,
     fill_scalar_defaults as _fill_scalars,
     drop_boilerplate_table_rows as _drop_boiler,
+    append_missing_ha_rows as _append_ha,
     salvage_blob_amount as _salvage_blob_amount,
+    split_merged_item_name as _split_merged_item_name,
+    recover_shifted_item_name as _recover_shifted_item_name,
 )
 from extractors.invoice_statement import extract_invoice_statement_fields  # noqa: E402
+from extractors.master_match import fill_master_match as _fill_master  # noqa: E402
+
+# ②G4 마스터 매칭 포함 여부. False(--no-master-match)로 돌리면 Rule 단계(매칭 전) 사이드카가
+# 나온다 — baseline_matrix가 Rule=replay_compare_rule / Master=replay_compare로 단계 분리.
+MASTER_MATCH = True
 
 
 def replay_dispatch(snap: dict) -> tuple[dict, str]:
@@ -92,6 +100,12 @@ def replay_dispatch(snap: dict) -> tuple[dict, str]:
             df["tableRows"], _ = _drop_boiler(df["tableRows"])
         except Exception:
             pass
+    # mirror main.py join-point ③P1 HA-append (품명단독라인 → 2D 재구성 행 추가)
+    if isinstance(df, dict) and isinstance(df.get("tableRows"), list):
+        try:
+            df["tableRows"], _ = _append_ha(df["tableRows"], lines)
+        except Exception:
+            pass
     # mirror main.py join-point blob-amount salvage (empty amount -> last comma-money)
     if isinstance(df, dict) and df.get("tableRows"):
         try:
@@ -102,6 +116,24 @@ def replay_dispatch(snap: dict) -> tuple[dict, str]:
     if isinstance(df, dict) and df.get("tableRows"):
         try:
             df["tableRows"], _ = _fill_pharma(df["tableRows"], lines)
+        except Exception:
+            pass
+    # mirror main.py join-point 같이읽힘(blob) itemName split (blob 신호 행만)
+    if isinstance(df, dict) and df.get("tableRows"):
+        try:
+            df["tableRows"], _ = _split_merged_item_name(df["tableRows"])
+        except Exception:
+            pass
+    # mirror main.py join-point 컬럼밀림 복구 (itemName 빈칸 + spec 약품명)
+    if isinstance(df, dict) and df.get("tableRows"):
+        try:
+            df["tableRows"], _ = _recover_shifted_item_name(df["tableRows"])
+        except Exception:
+            pass
+    # mirror main.py join-point 마스터 자동매칭 (itemNameMaster/itemCode 빈칸 채움, ②G4)
+    if MASTER_MATCH and isinstance(df, dict) and df.get("tableRows"):
+        try:
+            df["tableRows"], _ = _fill_master(df["tableRows"])
         except Exception:
             pass
     # mirror main.py scalar defaults (taxType/discountAmount)
@@ -186,5 +218,10 @@ if __name__ == "__main__":
     ap.add_argument("--testset", default=C.DEFAULT_TESTSET)
     ap.add_argument("--out-subdir", default="replay_compare",
                     help="sidecar dir under the run (NOT the checker's compare/)")
+    ap.add_argument("--no-master-match", action="store_true",
+                    help="②G4 마스터 매칭 없이 replay (Rule 단계 사이드카용; "
+                         "관례: --out-subdir replay_compare_rule)")
     args = ap.parse_args()
+    if args.no_master_match:
+        MASTER_MATCH = False
     raise SystemExit(replay_compare(args.ts, args.testset, args.out_subdir))

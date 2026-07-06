@@ -176,7 +176,7 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 2,
-    "rowCountExt": 3,
+    "rowCountExt": 4,
     "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
@@ -184,7 +184,8 @@
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "3"
+      "3",
+      "4"
     ],
     "rows": [
       {
@@ -193,18 +194,18 @@
         "cells": {
           "itemName": {
             "gt": "성광알파헥시딘가글액(글루콘산클로르헥",
-            "ext": "1 일반 성광알파헥시딘가글액(글루콘산클로르핵 100ml V 600 w 820 W 492,000 S0301 2",
-            "gtNorm": "성광알파헥시딘가글액(글루콘산클로르헥",
-            "extNorm": "1 일반 성광알파헥시딘가글액(글루콘산클로르핵 100ml v 600 w 820 w 492,000 s0301 2",
+            "ext": "1 일반 성광알파헥시딘가글액(글루콘산클로르핵 100ml",
+            "gtNorm": "성광알파헥시딘가글액글루콘산클로르헥",
+            "extNorm": "1일반성광알파헥시딘가글액글루콘산클로르핵100ml",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "알파헥시딘가글액100mL(비급여)",
-            "ext": "",
+            "ext": "알파헥시딘가글액100mL(비급여)",
             "gtNorm": "알파헥시딘가글액100ml(비급여)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "알파헥시딘가글액100ml(비급여)",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -257,10 +258,10 @@
           },
           "itemCode": {
             "gt": "8806574002042",
-            "ext": "",
+            "ext": "8806574002042",
             "gtNorm": "8806574002042",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "8806574002042",
+            "status": "match",
             "spurious": false
           }
         }
@@ -271,18 +272,18 @@
         "cells": {
           "itemName": {
             "gt": "바세린 450g(D)",
-            "ext": "2 원료 바세린 450g(D) 450g V 50 W 6,000 W 300,000 1000250004",
-            "gtNorm": "바세린 450g(d)",
-            "extNorm": "2 원료 바세린 450g(d) 450g v 50 w 6,000 w 300,000 1000250004",
+            "ext": "2 원료 바세린 450g(D) 450g",
+            "gtNorm": "바세린450gd",
+            "extNorm": "2원료바세린450gd450g",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "대봉백색바세린450g",
-            "ext": "",
+            "ext": "대봉백색바세린450g",
             "gtNorm": "대봉백색바세린450g",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "대봉백색바세린450g",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -335,10 +336,10 @@
           },
           "itemCode": {
             "gt": "316158",
-            "ext": "",
+            "ext": "316158",
             "gtNorm": "316158",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "316158",
+            "status": "match",
             "spurious": false
           }
         }
@@ -346,13 +347,13 @@
     ],
     "cellCounts": {
       "scored": 18,
-      "match": 9,
+      "match": 13,
       "mismatch": 2,
-      "ext_missing": 7,
+      "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5
+    "cellAccuracy": 0.7222222222222222
   },
   "buckets": {
     "defects": [
@@ -410,23 +411,15 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['3']"
+        "reason": "extractor invented rows ['3', '4']"
       },
       {
         "location": "row1:itemName",
         "status": "mismatch",
-        "gtNorm": "성광알파헥시딘가글액(글루콘산클로르헥",
-        "extNorm": "1 일반 성광알파헥시딘가글액(글루콘산클로르핵 100ml v 600 w 820 w 492,000 s0301 2",
+        "gtNorm": "성광알파헥시딘가글액글루콘산클로르헥",
+        "extNorm": "1일반성광알파헥시딘가글액글루콘산클로르핵100ml",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row1:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "알파헥시딘가글액100ml(비급여)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "reason": "char-level diff (sim=0.77)"
       },
       {
         "location": "row1:quantity",
@@ -445,28 +438,12 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "8806574002042",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row2:itemName",
         "status": "mismatch",
-        "gtNorm": "바세린 450g(d)",
-        "extNorm": "2 원료 바세린 450g(d) 450g v 50 w 6,000 w 300,000 1000250004",
+        "gtNorm": "바세린450gd",
+        "extNorm": "2원료바세린450gd450g",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row2:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "대봉백색바세린450g",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "reason": "char-level diff (sim=0.70)"
       },
       {
         "location": "row2:manufacturingNo",
@@ -475,19 +452,11 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "316158",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
       "recognition": 7,
-      "structure": 9,
+      "structure": 5,
       "layout": 0,
       "preprocessing": 0
     },

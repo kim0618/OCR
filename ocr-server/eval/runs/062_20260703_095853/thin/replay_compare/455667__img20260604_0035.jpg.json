@@ -150,35 +150,36 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 1,
-    "rowCountExt": 3,
+    "rowCountExt": 4,
     "rowCountMatch": false,
     "matchedRowIdx": [
-      "2"
+      "1"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "1",
-      "3"
+      "2",
+      "3",
+      "4"
     ],
     "rows": [
       {
-        "rowIndex": "2",
+        "rowIndex": "1",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "푸로스판200ml",
-            "ext": "18 합게 27,300",
+            "ext": "푸로스판200m|",
             "gtNorm": "푸로스판200ml",
-            "extNorm": "18 합게 27,300",
+            "extNorm": "푸로스판200m",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "광동푸로스판시럽200mL",
-            "ext": "",
+            "ext": "푸로스타정",
             "gtNorm": "광동푸로스판시럽200ml",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "푸로스타정",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
@@ -199,10 +200,10 @@
           },
           "unitPrice": {
             "gt": "5460",
-            "ext": "",
+            "ext": "5,460",
             "gtNorm": "5460",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "5460",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -215,7 +216,7 @@
           },
           "expiryDate": {
             "gt": "20270930",
-            "ext": "2027.09.30",
+            "ext": "20270930",
             "gtNorm": "20270930",
             "extNorm": "20270930",
             "status": "match",
@@ -231,10 +232,10 @@
           },
           "itemCode": {
             "gt": "22000098",
-            "ext": "",
+            "ext": "085425",
             "gtNorm": "22000098",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "085425",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -242,13 +243,13 @@
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 3,
-      "mismatch": 1,
-      "ext_missing": 5,
+      "match": 4,
+      "mismatch": 3,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3333333333333333
+    "cellAccuracy": 0.4444444444444444
   },
   "buckets": {
     "defects": [
@@ -314,26 +315,26 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '3']"
+        "reason": "extractor invented rows ['2', '3', '4']"
       },
       {
-        "location": "row2:itemName",
+        "location": "row1:itemName",
         "status": "mismatch",
         "gtNorm": "푸로스판200ml",
-        "extNorm": "18 합게 27,300",
+        "extNorm": "푸로스판200m",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.94)"
+      },
+      {
+        "location": "row1:itemNameMaster",
+        "status": "mismatch",
+        "gtNorm": "광동푸로스판시럽200ml",
+        "extNorm": "푸로스타정",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row2:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "광동푸로스판시럽200ml",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:quantity",
+        "location": "row1:quantity",
         "status": "ext_missing",
         "gtNorm": "5",
         "extNorm": "",
@@ -341,15 +342,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "5460",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:manufacturingNo",
+        "location": "row1:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "24K013A",
         "extNorm": "",
@@ -357,17 +350,17 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:itemCode",
-        "status": "ext_missing",
+        "location": "row1:itemCode",
+        "status": "mismatch",
         "gtNorm": "22000098",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "085425",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       }
     ],
     "bucketTally": {
-      "recognition": 3,
-      "structure": 11,
+      "recognition": 5,
+      "structure": 8,
       "layout": 0,
       "preprocessing": 0
     },

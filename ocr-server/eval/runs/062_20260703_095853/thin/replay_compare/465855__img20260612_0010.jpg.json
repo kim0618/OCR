@@ -186,10 +186,10 @@
           },
           "itemNameMaster": {
             "gt": "클래팍신정500mg",
-            "ext": "",
+            "ext": "클래신정500mg(제약사품절)",
             "gtNorm": "클래팍신정500mg",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "클래신정500mg(제약사품절)",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
@@ -234,10 +234,10 @@
           },
           "itemCode": {
             "gt": "07001267",
-            "ext": "",
+            "ext": "18000054",
             "gtNorm": "07001267",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "18000054",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -256,10 +256,10 @@
           },
           "itemNameMaster": {
             "gt": "텐포버정",
-            "ext": "",
+            "ext": "텐포버정",
             "gtNorm": "텐포버정",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "텐포버정",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -304,10 +304,10 @@
           },
           "itemCode": {
             "gt": "22000558",
-            "ext": "",
+            "ext": "22000558",
             "gtNorm": "22000558",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "22000558",
+            "status": "match",
             "spurious": false
           }
         }
@@ -315,13 +315,13 @@
     ],
     "cellCounts": {
       "scored": 16,
-      "match": 7,
-      "mismatch": 1,
-      "ext_missing": 8,
+      "match": 9,
+      "mismatch": 3,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4375
+    "cellAccuracy": 0.5625
   },
   "buckets": {
     "defects": [
@@ -383,11 +383,11 @@
       },
       {
         "location": "row1:itemNameMaster",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "클래팍신정500mg",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "클래신정500mg(제약사품절)",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.69)"
       },
       {
         "location": "row1:spec",
@@ -407,19 +407,11 @@
       },
       {
         "location": "row1:itemCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "07001267",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "텐포버정",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "18000054",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row2:spec",
@@ -436,19 +428,11 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "22000558",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 2,
-      "structure": 13,
+      "recognition": 4,
+      "structure": 9,
       "layout": 0,
       "preprocessing": 0
     },

@@ -204,17 +204,17 @@
           "itemName": {
             "gt": "칼테란점안액 2% 0.4mL 30s(1회용)",
             "ext": "칼테란점안액2%0.4mL 30s(1회용",
-            "gtNorm": "칼테란점안액 2% 0.4ml 30s(1회용)",
-            "extNorm": "칼테란점안액2%0.4ml 30s(1회용",
-            "status": "mismatch",
+            "gtNorm": "칼테란점안액204ml30s1회용",
+            "extNorm": "칼테란점안액204ml30s1회용",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "레타스점안액0.05%/0.4mL",
-            "ext": "",
+            "ext": "칼테란점안액2%",
             "gtNorm": "레타스점안액0.05%/0.4ml",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "칼테란점안액2%",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
@@ -267,10 +267,10 @@
           },
           "itemCode": {
             "gt": "03000807",
-            "ext": "",
+            "ext": "04007175",
             "gtNorm": "03000807",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "04007175",
+            "status": "mismatch",
             "spurious": false
           },
           "insuranceCode": {
@@ -286,13 +286,13 @@
     ],
     "cellCounts": {
       "scored": 10,
-      "match": 1,
-      "mismatch": 2,
-      "ext_missing": 7,
+      "match": 2,
+      "mismatch": 3,
+      "ext_missing": 5,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.1
+    "cellAccuracy": 0.2
   },
   "buckets": {
     "defects": [
@@ -329,20 +329,12 @@
         "reason": "value differs, low similarity"
       },
       {
-        "location": "row1:itemName",
-        "status": "mismatch",
-        "gtNorm": "칼테란점안액 2% 0.4ml 30s(1회용)",
-        "extNorm": "칼테란점안액2%0.4ml 30s(1회용",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.93)"
-      },
-      {
         "location": "row1:itemNameMaster",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "레타스점안액0.05%/0.4ml",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "칼테란점안액2%",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:spec",
@@ -386,11 +378,11 @@
       },
       {
         "location": "row1:itemCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "03000807",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "04007175",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "row1:insuranceCode",
@@ -402,8 +394,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 8,
+      "recognition": 6,
+      "structure": 6,
       "layout": 0,
       "preprocessing": 0
     },

@@ -69,8 +69,12 @@ from extractors.invoice_statement_free import (
     fill_pharma_columns,
     fill_scalar_defaults,
     drop_boilerplate_table_rows,
+    append_missing_ha_rows,
     salvage_blob_amount,
+    split_merged_item_name,
+    recover_shifted_item_name,
 )
+from extractors.master_match import fill_master_match
 from utils.regex_patterns import (
     _PHONE_RE,
     _ADDR_START_RE, _NEXT_LABEL_RE, _FIELD_NOISE_RE,
@@ -3490,6 +3494,18 @@ async def ocr_extract(
                         extract_debug["boilerplateRowDrop"] = _boiler_dbg
             except Exception as _br_e:
                 print(f"[boilerplate_drop] failed (response unaffected): {_br_e}")
+            # ③P1 HA-append (free+fallback 합류점): 셀이 라인으로 안 뭉친 '품명단독라인'
+            # 행을 헤더-앵커 2D 재구성으로 회수해 추가. 기존 행 불변(추가만).
+            try:
+                if isinstance(document_fields, dict) and isinstance(document_fields.get("tableRows"), list):
+                    _ha_rows, _ha_dbg = append_missing_ha_rows(
+                        document_fields["tableRows"], ocr_lines_raw
+                    )
+                    document_fields["tableRows"] = _ha_rows
+                    if _ha_dbg.get("appended"):
+                        extract_debug["haRowAppend"] = _ha_dbg
+            except Exception as _ha_e:
+                print(f"[ha_row_append] failed (response unaffected): {_ha_e}")
             # Path-agnostic blob-amount salvage (free + fallback converge here):
             # rows the parser couldn't columnarize leave amount empty with the
             # money stuck in _rawText → content-align (amt_match) can't recover the
@@ -3518,6 +3534,38 @@ async def ocr_extract(
                         extract_debug["pharmaColumnFill"] = _pharma_fill_dbg
             except Exception as _pf_e:
                 print(f"[pharma_fill] failed (response unaffected): {_pf_e}")
+            # Path-agnostic 같이읽힘(blob) 분리: itemName 칸에 코드+품명+규격+날짜가
+            # 뭉친 행에서 품명 코어만 남긴다(blob 신호 있는 행만, _rawText 불변).
+            # 062 thin itemName wrongpick 중 merged 1,510건(22%) 타겟. pharma-fill 뒤에
+            # 두어 빈칸 채움/정렬을 방해하지 않음(itemName 만 정리).
+            try:
+                if isinstance(document_fields, dict) and document_fields.get("tableRows"):
+                    _split_rows, _split_dbg = split_merged_item_name(document_fields["tableRows"])
+                    document_fields["tableRows"] = _split_rows
+                    if _split_dbg.get("split"):
+                        extract_debug["mergedItemNameSplit"] = _split_dbg
+            except Exception as _sp_e:
+                print(f"[merged_item_name_split] failed (response unaffected): {_sp_e}")
+            # Path-agnostic 컬럼밀림 복구: itemName 빈칸 + spec이 약품명 → spec에서 이름 회복
+            try:
+                if isinstance(document_fields, dict) and document_fields.get("tableRows"):
+                    _rec_rows, _rec_dbg = recover_shifted_item_name(document_fields["tableRows"])
+                    document_fields["tableRows"] = _rec_rows
+                    if _rec_dbg.get("recovered"):
+                        extract_debug["shiftedItemNameRecover"] = _rec_dbg
+            except Exception as _rc_e:
+                print(f"[shifted_item_name_recover] failed (response unaffected): {_rc_e}")
+            # Path-agnostic 마스터 자동매칭(②G4): itemName 있는 행의 itemNameMaster/itemCode
+            # 빈칸을 정적 master_dict trigram 매칭(clean+유사도+가격 tiebreak, floor 게이트)으로
+            # 채움. 빈칸만이라 읽힌 값 보존, master_dict.json 없으면 자동 비활성.
+            try:
+                if isinstance(document_fields, dict) and document_fields.get("tableRows"):
+                    _mm_rows, _mm_dbg = fill_master_match(document_fields["tableRows"])
+                    document_fields["tableRows"] = _mm_rows
+                    if _mm_dbg.get("filled"):
+                        extract_debug["masterMatchFill"] = _mm_dbg
+            except Exception as _mm_e:
+                print(f"[master_match_fill] failed (response unaffected): {_mm_e}")
             # emit war-GT scalar columns the parser leaves empty (taxType/discountAmount)
             try:
                 document_fields, _scalar_dbg = fill_scalar_defaults(document_fields)

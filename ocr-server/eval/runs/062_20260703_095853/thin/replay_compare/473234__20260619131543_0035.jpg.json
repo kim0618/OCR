@@ -205,17 +205,17 @@
           "itemName": {
             "gt": "(주)씨티씨 필로겐정 100T바이오",
             "ext": "필로겐정100T",
-            "gtNorm": "(주)씨티씨 필로겐정 100t바이오",
+            "gtNorm": "주씨티씨필로겐정100t바이오",
             "extNorm": "필로겐정100t",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "필로겐정(우메딕스)",
-            "ext": "",
+            "ext": "필로겐정(우메딕스)",
             "gtNorm": "필로겐정(우메딕스)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "필로겐정(우메딕스)",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -291,17 +291,17 @@
           "itemName": {
             "gt": "(주)씨티씨 필로겐정 30T바이오",
             "ext": "필로겐정30T",
-            "gtNorm": "(주)씨티씨 필로겐정 30t바이오",
+            "gtNorm": "주씨티씨필로겐정30t바이오",
             "extNorm": "필로겐정30t",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "필로겐정(우메딕스)",
-            "ext": "",
+            "ext": "필로겐정(우메딕스)",
             "gtNorm": "필로겐정(우메딕스)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "필로겐정(우메딕스)",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -354,10 +354,10 @@
           },
           "itemCode": {
             "gt": "01007006",
-            "ext": "",
+            "ext": "22000928",
             "gtNorm": "01007006",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "22000928",
+            "status": "mismatch",
             "spurious": false
           },
           "insuranceCode": {
@@ -373,13 +373,13 @@
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 2,
-      "mismatch": 5,
-      "ext_missing": 13,
+      "match": 4,
+      "mismatch": 6,
+      "ext_missing": 10,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.1
+    "cellAccuracy": 0.2
   },
   "buckets": {
     "defects": [
@@ -418,18 +418,10 @@
       {
         "location": "row1:itemName",
         "status": "mismatch",
-        "gtNorm": "(주)씨티씨 필로겐정 100t바이오",
+        "gtNorm": "주씨티씨필로겐정100t바이오",
         "extNorm": "필로겐정100t",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.59)"
-      },
-      {
-        "location": "row1:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "필로겐정(우메딕스)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "reason": "char-level diff (sim=0.70)"
       },
       {
         "location": "row1:spec",
@@ -490,18 +482,10 @@
       {
         "location": "row2:itemName",
         "status": "mismatch",
-        "gtNorm": "(주)씨티씨 필로겐정 30t바이오",
+        "gtNorm": "주씨티씨필로겐정30t바이오",
         "extNorm": "필로겐정30t",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.56)"
-      },
-      {
-        "location": "row2:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "필로겐정(우메딕스)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "row2:spec",
@@ -545,11 +529,11 @@
       },
       {
         "location": "row2:itemCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "01007006",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "22000928",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row2:insuranceCode",
@@ -561,8 +545,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 8,
-      "structure": 12,
+      "recognition": 9,
+      "structure": 9,
       "layout": 2,
       "preprocessing": 0
     },

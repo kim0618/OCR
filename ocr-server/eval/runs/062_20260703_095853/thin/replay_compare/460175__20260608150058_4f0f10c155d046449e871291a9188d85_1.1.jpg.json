@@ -191,12 +191,11 @@
     "rowCountGt": 1,
     "rowCountExt": 4,
     "rowCountMatch": false,
-    "matchedRowIdx": [],
-    "gtOnlyRowIdx": [
+    "matchedRowIdx": [
       "1"
     ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "1",
       "2",
       "3",
       "4"
@@ -205,22 +204,21 @@
       {
         "rowIndex": "1",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "클래신건조시럽 125mg/5mL 100mL×1병",
-            "ext": "",
-            "gtNorm": "클래신건조시럽 125mg/5ml 100ml×1병",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "1 클래심건조시럼125mg/5mL 100mLx1 100ML×1",
+            "gtNorm": "클래신건조시럽125mg5ml100ml1병",
+            "extNorm": "1클래심건조시럼125mg5ml100mlx1100ml1",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "클래신건조시럽125mg/5mL",
-            "ext": "",
+            "ext": "세로프건조시럽125mg/5mL",
             "gtNorm": "클래신건조시럽125mg/5ml",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "세로프건조시럽125mg/5ml",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
@@ -233,10 +231,10 @@
           },
           "quantity": {
             "gt": "150",
-            "ext": "",
+            "ext": "9,150",
             "gtNorm": "150",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "9150",
+            "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
@@ -249,18 +247,18 @@
           },
           "amount": {
             "gt": "1254544",
-            "ext": "",
+            "ext": "631,254,544",
             "gtNorm": "1254544",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "631254544",
+            "status": "mismatch",
             "spurious": false
           },
           "expiryDate": {
             "gt": "20280205",
-            "ext": "",
+            "ext": "20280205",
             "gtNorm": "20280205",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20280205",
+            "status": "match",
             "spurious": false
           },
           "manufacturingNo": {
@@ -273,10 +271,10 @@
           },
           "itemCode": {
             "gt": "8806718030313",
-            "ext": "",
+            "ext": "18000095",
             "gtNorm": "8806718030313",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "18000095",
+            "status": "mismatch",
             "spurious": false
           },
           "insuranceCode": {
@@ -292,13 +290,13 @@
     ],
     "cellCounts": {
       "scored": 10,
-      "match": 0,
-      "mismatch": 0,
-      "ext_missing": 10,
+      "match": 1,
+      "mismatch": 5,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.0
+    "cellAccuracy": 0.1
   },
   "buckets": {
     "defects": [
@@ -336,35 +334,27 @@
       },
       {
         "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['1']"
-      },
-      {
-        "location": "table",
         "status": "rows_extra",
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '2', '3', '4']"
+        "reason": "extractor invented rows ['2', '3', '4']"
       },
       {
         "location": "row1:itemName",
-        "status": "ext_missing",
-        "gtNorm": "클래신건조시럽 125mg/5ml 100ml×1병",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "클래신건조시럽125mg5ml100ml1병",
+        "extNorm": "1클래심건조시럼125mg5ml100mlx1100ml1",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.75)"
       },
       {
         "location": "row1:itemNameMaster",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "클래신건조시럽125mg/5ml",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "세로프건조시럽125mg/5ml",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.81)"
       },
       {
         "location": "row1:spec",
@@ -376,11 +366,11 @@
       },
       {
         "location": "row1:quantity",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "150",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "9150",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.86)"
       },
       {
         "location": "row1:unitPrice",
@@ -392,19 +382,11 @@
       },
       {
         "location": "row1:amount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "1254544",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:expiryDate",
-        "status": "ext_missing",
-        "gtNorm": "20280205",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "631254544",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.88)"
       },
       {
         "location": "row1:manufacturingNo",
@@ -416,11 +398,11 @@
       },
       {
         "location": "row1:itemCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "8806718030313",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "18000095",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:insuranceCode",
@@ -432,8 +414,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 3,
-      "structure": 13,
+      "recognition": 8,
+      "structure": 6,
       "layout": 0,
       "preprocessing": 0
     },

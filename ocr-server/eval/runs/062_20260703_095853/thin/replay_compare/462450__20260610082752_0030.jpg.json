@@ -208,17 +208,17 @@
           "itemName": {
             "gt": "컴배트 개미 6",
             "ext": "컴배트개미6",
-            "gtNorm": "컴배트 개미 6",
+            "gtNorm": "컴배트개미6",
             "extNorm": "컴배트개미6",
-            "status": "mismatch",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "컴배트파워개미(딸기향)",
-            "ext": "",
+            "ext": "컴배트파워(작은바퀴용)",
             "gtNorm": "컴배트파워개미(딸기향)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "컴배트파워(작은바퀴용)",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
@@ -270,17 +270,17 @@
           "itemName": {
             "gt": "홈키파 모기향 10매",
             "ext": "홈키파 모기향10매",
-            "gtNorm": "홈키파 모기향 10매",
-            "extNorm": "홈키파 모기향10매",
-            "status": "mismatch",
+            "gtNorm": "홈키파모기향10매",
+            "extNorm": "홈키파모기향10매",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "홈키파모기향(무향)",
-            "ext": "",
+            "ext": "홈키파모기향(무향)",
             "gtNorm": "홈키파모기향(무향)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "홈키파모기향(무향)",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -332,17 +332,17 @@
           "itemName": {
             "gt": "매입에누리(OCR)",
             "ext": "63,200",
-            "gtNorm": "매입에누리(ocr)",
-            "extNorm": "63,200",
+            "gtNorm": "매입에누리ocr",
+            "extNorm": "63200",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "매입에누리",
-            "ext": "",
+            "ext": "실로듀오서방정200/20mg",
             "gtNorm": "매입에누리",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "실로듀오서방정200/20mg",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
@@ -390,13 +390,13 @@
     ],
     "cellCounts": {
       "scored": 21,
-      "match": 7,
+      "match": 10,
       "mismatch": 7,
-      "ext_missing": 7,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3333333333333333
+    "cellAccuracy": 0.47619047619047616
   },
   "buckets": {
     "defects": [
@@ -406,7 +406,7 @@
         "gtNorm": "63200",
         "extNorm": "0",
         "bucket": "structure",
-        "reason": "gt value present at ['row4:amount']"
+        "reason": "gt value present at ['row4:amount', 'row4:itemName']"
       },
       {
         "location": "field:supplierCompany",
@@ -449,20 +449,12 @@
         "reason": "extractor invented rows ['3']"
       },
       {
-        "location": "row1:itemName",
-        "status": "mismatch",
-        "gtNorm": "컴배트 개미 6",
-        "extNorm": "컴배트개미6",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.86)"
-      },
-      {
         "location": "row1:itemNameMaster",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "컴배트파워개미(딸기향)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "컴배트파워(작은바퀴용)",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.58)"
       },
       {
         "location": "row1:spec",
@@ -479,22 +471,6 @@
         "extNorm": "5001559",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.53)"
-      },
-      {
-        "location": "row2:itemName",
-        "status": "mismatch",
-        "gtNorm": "홈키파 모기향 10매",
-        "extNorm": "홈키파 모기향10매",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.95)"
-      },
-      {
-        "location": "row2:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "홈키파모기향(무향)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row2:spec",
@@ -515,18 +491,18 @@
       {
         "location": "row4:itemName",
         "status": "mismatch",
-        "gtNorm": "매입에누리(ocr)",
-        "extNorm": "63,200",
+        "gtNorm": "매입에누리ocr",
+        "extNorm": "63200",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
       {
         "location": "row4:itemNameMaster",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "매입에누리",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "실로듀오서방정200/20mg",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row4:spec",
@@ -563,7 +539,7 @@
     ],
     "bucketTally": {
       "recognition": 11,
-      "structure": 9,
+      "structure": 6,
       "layout": 0,
       "preprocessing": 0
     },

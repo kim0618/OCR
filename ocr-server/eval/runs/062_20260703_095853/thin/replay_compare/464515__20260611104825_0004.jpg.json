@@ -176,15 +176,17 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 2,
-    "rowCountExt": 1,
-    "rowCountMatch": false,
+    "rowCountExt": 2,
+    "rowCountMatch": true,
     "matchedRowIdx": [
       "1"
     ],
     "gtOnlyRowIdx": [
       "2"
     ],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "2"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -193,17 +195,17 @@
           "itemName": {
             "gt": "포리부틴드라이시럽[250ML]",
             "ext": "포리부틴드라이시럽[250ML]",
-            "gtNorm": "포리부틴드라이시럽[250ml]",
-            "extNorm": "포리부틴드라이시럽[250ml]",
+            "gtNorm": "포리부틴드라이시럽250ml",
+            "extNorm": "포리부틴드라이시럽250ml",
             "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "포리부틴드라이시럽250mL",
-            "ext": "",
+            "ext": "포리부틴드라이시럽250mL",
             "gtNorm": "포리부틴드라이시럽250ml",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "포리부틴드라이시럽250ml",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -256,10 +258,10 @@
           },
           "itemCode": {
             "gt": "8806439016214",
-            "ext": "",
+            "ext": "8806439016214",
             "gtNorm": "8806439016214",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "8806439016214",
+            "status": "match",
             "spurious": false
           }
         }
@@ -272,7 +274,7 @@
           "itemName": {
             "gt": "포리부틴드라이시럽 [250ML]",
             "ext": "",
-            "gtNorm": "포리부틴드라이시럽 [250ml]",
+            "gtNorm": "포리부틴드라이시럽250ml",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -346,13 +348,13 @@
     ],
     "cellCounts": {
       "scored": 18,
-      "match": 4,
+      "match": 6,
       "mismatch": 3,
-      "ext_missing": 11,
+      "ext_missing": 9,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.2222222222222222
+    "cellAccuracy": 0.3333333333333333
   },
   "buckets": {
     "defects": [
@@ -413,12 +415,12 @@
         "reason": "extractor missed rows ['2']"
       },
       {
-        "location": "row1:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "포리부틴드라이시럽250ml",
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "reason": "extractor invented rows ['2']"
       },
       {
         "location": "row1:spec",
@@ -445,17 +447,9 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row1:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "8806439016214",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row2:itemName",
         "status": "ext_missing",
-        "gtNorm": "포리부틴드라이시럽 [250ml]",
+        "gtNorm": "포리부틴드라이시럽250ml",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -527,7 +521,7 @@
     ],
     "bucketTally": {
       "recognition": 7,
-      "structure": 14,
+      "structure": 13,
       "layout": 0,
       "preprocessing": 0
     },

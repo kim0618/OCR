@@ -192,31 +192,31 @@
     "rowCountExt": 2,
     "rowCountMatch": false,
     "matchedRowIdx": [
-      "4"
+      "1"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "1"
+      "4"
     ],
     "rows": [
       {
-        "rowIndex": "4",
+        "rowIndex": "1",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "뉴브이로토이엑스점안액(12ML/병)",
-            "ext": "2 1 뉴브이로토이엑스점안액(12M/병) 300 2,701 810,150 6C1 2029-02-28",
-            "gtNorm": "뉴브이로토이엑스점안액(12ml/병)",
-            "extNorm": "2 1 뉴브이로토이엑스점안액(12m/병) 300 2,701 810,150 6c1 2029-02-28",
+            "ext": "2 1 뉴브이로토이엑스점안액(12M/병)",
+            "gtNorm": "뉴브이로토이엑스점안액12ml병",
+            "extNorm": "21뉴브이로토이엑스점안액12m병",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "뉴브이로토이엑스점안액12mL(롯도이엑스)(제약사품절)",
-            "ext": "",
+            "ext": "뉴브이로토이엑스점안액12mL(롯도이엑스)(제약사품절)",
             "gtNorm": "뉴브이로토이엑스점안액12ml(롯도이엑스)(제약사품절)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "뉴브이로토이엑스점안액12ml(롯도이엑스)(제약사품절)",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -229,10 +229,10 @@
           },
           "quantity": {
             "gt": "300",
-            "ext": "",
+            "ext": "5",
             "gtNorm": "300",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "5",
+            "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
@@ -269,10 +269,10 @@
           },
           "itemCode": {
             "gt": "22001814",
-            "ext": "",
+            "ext": "22001814",
             "gtNorm": "22001814",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "22001814",
+            "status": "match",
             "spurious": false
           }
         }
@@ -280,13 +280,13 @@
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 3,
-      "mismatch": 1,
-      "ext_missing": 5,
+      "match": 5,
+      "mismatch": 2,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3333333333333333
+    "cellAccuracy": 0.5555555555555556
   },
   "buckets": {
     "defects": [
@@ -328,26 +328,18 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1']"
+        "reason": "extractor invented rows ['4']"
       },
       {
-        "location": "row4:itemName",
+        "location": "row1:itemName",
         "status": "mismatch",
-        "gtNorm": "뉴브이로토이엑스점안액(12ml/병)",
-        "extNorm": "2 1 뉴브이로토이엑스점안액(12m/병) 300 2,701 810,150 6c1 2029-02-28",
+        "gtNorm": "뉴브이로토이엑스점안액12ml병",
+        "extNorm": "21뉴브이로토이엑스점안액12m병",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.91)"
       },
       {
-        "location": "row4:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "뉴브이로토이엑스점안액12ml(롯도이엑스)(제약사품절)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:spec",
+        "location": "row1:spec",
         "status": "ext_missing",
         "gtNorm": "1ea",
         "extNorm": "",
@@ -355,33 +347,25 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row4:quantity",
-        "status": "ext_missing",
+        "location": "row1:quantity",
+        "status": "mismatch",
         "gtNorm": "300",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "5",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
-        "location": "row4:manufacturingNo",
+        "location": "row1:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "6C1",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "22001814",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 6,
+      "recognition": 6,
+      "structure": 3,
       "layout": 0,
       "preprocessing": 0
     },

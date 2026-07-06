@@ -205,17 +205,17 @@
           "itemName": {
             "gt": "아고틴정 25밀리그램",
             "ext": "아고틴정25밀리그램",
-            "gtNorm": "아고틴정 25밀리그램",
+            "gtNorm": "아고틴정25밀리그램",
             "extNorm": "아고틴정25밀리그램",
-            "status": "mismatch",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "아고틴정25mg",
-            "ext": "",
+            "ext": "아고틴정25mg",
             "gtNorm": "아고틴정25mg",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "아고틴정25mg",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -268,10 +268,10 @@
           },
           "itemCode": {
             "gt": "22006045",
-            "ext": "",
+            "ext": "22006045",
             "gtNorm": "22006045",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "22006045",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -291,17 +291,17 @@
           "itemName": {
             "gt": "제비닉스정 800MG",
             "ext": "제비너스정800MG",
-            "gtNorm": "제비닉스정 800mg",
+            "gtNorm": "제비닉스정800mg",
             "extNorm": "제비너스정800mg",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "제비닉스정800mg",
-            "ext": "",
+            "ext": "제비닉스정800mg",
             "gtNorm": "제비닉스정800mg",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "제비닉스정800mg",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -354,10 +354,10 @@
           },
           "itemCode": {
             "gt": "05004823",
-            "ext": "",
+            "ext": "05004823",
             "gtNorm": "05004823",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "05004823",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -373,13 +373,13 @@
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 7,
-      "mismatch": 7,
-      "ext_missing": 6,
+      "match": 12,
+      "mismatch": 6,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.35
+    "cellAccuracy": 0.6
   },
   "buckets": {
     "defects": [
@@ -440,22 +440,6 @@
         "reason": "char-level diff (sim=0.94)"
       },
       {
-        "location": "row1:itemName",
-        "status": "mismatch",
-        "gtNorm": "아고틴정 25밀리그램",
-        "extNorm": "아고틴정25밀리그램",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.95)"
-      },
-      {
-        "location": "row1:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "아고틴정25mg",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row1:spec",
         "status": "mismatch",
         "gtNorm": "100t",
@@ -480,28 +464,12 @@
         "reason": "char-level diff (sim=0.83)"
       },
       {
-        "location": "row1:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "22006045",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row2:itemName",
         "status": "mismatch",
-        "gtNorm": "제비닉스정 800mg",
-        "extNorm": "제비너스정800mg",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.86)"
-      },
-      {
-        "location": "row2:itemNameMaster",
-        "status": "ext_missing",
         "gtNorm": "제비닉스정800mg",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "제비너스정800mg",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemNameMaster']"
       },
       {
         "location": "row2:spec",
@@ -534,20 +502,12 @@
         "extNorm": "ARO4AA",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.83)"
-      },
-      {
-        "location": "row2:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "05004823",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 12,
-      "structure": 8,
-      "layout": 0,
+      "recognition": 10,
+      "structure": 4,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

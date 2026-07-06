@@ -192,17 +192,17 @@
           "itemName": {
             "gt": "네시나정 25mg 30T (셀)",
             "ext": "네시나정",
-            "gtNorm": "네시나정 25mg 30t (셀)",
+            "gtNorm": "네시나정25mg30t셀",
             "extNorm": "네시나정",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "네시나정25mg(셀트리온)(한국메딕스)",
-            "ext": "",
+            "ext": "네시나정25mg(셀트리온)(한국메딕스)",
             "gtNorm": "네시나정25mg(셀트리온)(한국메딕스)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "네시나정25mg(셀트리온)(한국메딕스)",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -278,17 +278,17 @@
           "itemName": {
             "gt": "액토스정 30mg 30T",
             "ext": "액토스정30mg",
-            "gtNorm": "액토스정 30mg 30t",
+            "gtNorm": "액토스정30mg30t",
             "extNorm": "액토스정30mg",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "액토스정30mg(병)(셀트리온)(한국메딕스)",
-            "ext": "",
+            "ext": "액토스정30mg(병)(셀트리온)(한국메딕스)",
             "gtNorm": "액토스정30mg(병)(셀트리온)(한국메딕스)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "액토스정30mg(병)(셀트리온)(한국메딕스)",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -341,10 +341,10 @@
           },
           "itemCode": {
             "gt": "01014213",
-            "ext": "",
+            "ext": "01014213",
             "gtNorm": "01014213",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "01014213",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -360,13 +360,13 @@
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 7,
+      "match": 10,
       "mismatch": 7,
-      "ext_missing": 6,
+      "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.35
+    "cellAccuracy": 0.5
   },
   "buckets": {
     "defects": [
@@ -405,18 +405,10 @@
       {
         "location": "row1:itemName",
         "status": "mismatch",
-        "gtNorm": "네시나정 25mg 30t (셀)",
+        "gtNorm": "네시나정25mg30t셀",
         "extNorm": "네시나정",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row1:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "네시나정25mg(셀트리온)(한국메딕스)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "row1:spec",
@@ -453,18 +445,10 @@
       {
         "location": "row2:itemName",
         "status": "mismatch",
-        "gtNorm": "액토스정 30mg 30t",
+        "gtNorm": "액토스정30mg30t",
         "extNorm": "액토스정30mg",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.76)"
-      },
-      {
-        "location": "row2:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "액토스정30mg(병)(셀트리온)(한국메딕스)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "reason": "char-level diff (sim=0.84)"
       },
       {
         "location": "row2:spec",
@@ -497,19 +481,11 @@
         "extNorm": "25833",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row2:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "01014213",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
       "recognition": 11,
-      "structure": 6,
+      "structure": 3,
       "layout": 0,
       "preprocessing": 0
     },

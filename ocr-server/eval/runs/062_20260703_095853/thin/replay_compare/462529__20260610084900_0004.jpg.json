@@ -189,13 +189,15 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 1,
-    "rowCountExt": 1,
-    "rowCountMatch": true,
+    "rowCountExt": 2,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "2"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -204,17 +206,17 @@
           "itemName": {
             "gt": "플로리네프정 [100T]",
             "ext": "플로리네프정[100T] 100T 5J1485",
-            "gtNorm": "플로리네프정 [100t]",
-            "extNorm": "플로리네프정[100t] 100t 5j1485",
+            "gtNorm": "플로리네프정100t",
+            "extNorm": "플로리네프정100t100t5j1485",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "플로리네프정(2군/냉장)",
-            "ext": "",
+            "ext": "플로리네프정(2군/냉장)",
             "gtNorm": "플로리네프정(2군/냉장)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "플로리네프정(2군/냉장)",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -267,10 +269,10 @@
           },
           "itemCode": {
             "gt": "03000892",
-            "ext": "",
+            "ext": "03000892",
             "gtNorm": "03000892",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "03000892",
+            "status": "match",
             "spurious": false
           }
         }
@@ -278,13 +280,13 @@
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 5,
+      "match": 7,
       "mismatch": 2,
-      "ext_missing": 2,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5555555555555556
+    "cellAccuracy": 0.7777777777777778
   },
   "buckets": {
     "defects": [
@@ -353,20 +355,20 @@
         "reason": "value differs, low similarity"
       },
       {
-        "location": "row1:itemName",
-        "status": "mismatch",
-        "gtNorm": "플로리네프정 [100t]",
-        "extNorm": "플로리네프정[100t] 100t 5j1485",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.65)"
-      },
-      {
-        "location": "row1:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "플로리네프정(2군/냉장)",
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "reason": "extractor invented rows ['2']"
+      },
+      {
+        "location": "row1:itemName",
+        "status": "mismatch",
+        "gtNorm": "플로리네프정100t",
+        "extNorm": "플로리네프정100t100t5j1485",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "row1:spec",
@@ -375,19 +377,11 @@
         "extNorm": "2027.08.05",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row1:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "03000892",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
       "recognition": 7,
-      "structure": 5,
+      "structure": 4,
       "layout": 0,
       "preprocessing": 0
     },

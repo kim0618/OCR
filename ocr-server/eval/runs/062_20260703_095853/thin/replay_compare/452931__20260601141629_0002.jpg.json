@@ -204,17 +204,17 @@
           "itemName": {
             "gt": "록시스린정 150MG 100T(병)",
             "ext": "록시스린정150MG100T(병)//1",
-            "gtNorm": "록시스린정 150mg 100t(병)",
-            "extNorm": "록시스린정150mg100t(병)//1",
+            "gtNorm": "록시스린정150mg100t병",
+            "extNorm": "록시스린정150mg100t병1",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "록시스린정150mg",
-            "ext": "",
+            "ext": "록시스린정150mg",
             "gtNorm": "록시스린정150mg",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "록시스린정150mg",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -267,10 +267,10 @@
           },
           "itemCode": {
             "gt": "013504",
-            "ext": "",
+            "ext": "013510",
             "gtNorm": "013504",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "013510",
+            "status": "mismatch",
             "spurious": false
           },
           "insuranceCode": {
@@ -286,13 +286,13 @@
     ],
     "cellCounts": {
       "scored": 10,
-      "match": 0,
-      "mismatch": 2,
-      "ext_missing": 8,
+      "match": 1,
+      "mismatch": 3,
+      "ext_missing": 6,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.0
+    "cellAccuracy": 0.1
   },
   "buckets": {
     "defects": [
@@ -331,18 +331,10 @@
       {
         "location": "row1:itemName",
         "status": "mismatch",
-        "gtNorm": "록시스린정 150mg 100t(병)",
-        "extNorm": "록시스린정150mg100t(병)//1",
+        "gtNorm": "록시스린정150mg100t병",
+        "extNorm": "록시스린정150mg100t병1",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.87)"
-      },
-      {
-        "location": "row1:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "록시스린정150mg",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "reason": "char-level diff (sim=0.97)"
       },
       {
         "location": "row1:spec",
@@ -394,11 +386,11 @@
       },
       {
         "location": "row1:itemCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "013504",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "013510",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.83)"
       },
       {
         "location": "row1:insuranceCode",
@@ -410,8 +402,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 6,
-      "structure": 7,
+      "recognition": 7,
+      "structure": 5,
       "layout": 1,
       "preprocessing": 0
     },

@@ -179,33 +179,33 @@
     "rowCountExt": 4,
     "rowCountMatch": false,
     "matchedRowIdx": [
-      "1",
-      "2"
-    ],
-    "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [
       "3",
       "4"
     ],
+    "gtOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "1",
+      "2"
+    ],
     "rows": [
       {
-        "rowIndex": "1",
+        "rowIndex": "3",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "메톨론점안액",
-            "ext": "1 665506742 메톨론점안액 6ml 40 1,910 76,400 2504 281221",
+            "ext": "1 665506742 메톨론점안액 6ml",
             "gtNorm": "메톨론점안액",
-            "extNorm": "1 665506742 메톨론점안액 6ml 40 1,910 76,400 2504 281221",
+            "extNorm": "1665506742메톨론점안액6ml",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "메톨론점안액6mL(지에스팜)",
-            "ext": "",
+            "ext": "메톨론점안액6mL(지에스팜)",
             "gtNorm": "메톨론점안액6ml(지에스팜)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "메톨론점안액6ml(지에스팜)",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -258,10 +258,10 @@
           },
           "itemCode": {
             "gt": "01008542",
-            "ext": "",
+            "ext": "01008542",
             "gtNorm": "01008542",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "01008542",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -275,23 +275,23 @@
         }
       },
       {
-        "rowIndex": "2",
+        "rowIndex": "4",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "히론아이점안액",
-            "ext": "2 665506145 히론아이점안액 10ml 140 3,996 559,440 2501 280511",
+            "ext": "2 665506145 히론아이점안액 10ml",
             "gtNorm": "히론아이점안액",
-            "extNorm": "2 665506145 히론아이점안액 10ml 140 3,996 559,440 2501 280511",
+            "extNorm": "2665506145히론아이점안액10ml",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "히론아이점안액6mL(지에스팜)",
-            "ext": "",
+            "ext": "히론아이점안액10mL(지에스팜)",
             "gtNorm": "히론아이점안액6ml(지에스팜)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "히론아이점안액10ml(지에스팜)",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
@@ -344,10 +344,10 @@
           },
           "itemCode": {
             "gt": "01008748",
-            "ext": "",
+            "ext": "01008747",
             "gtNorm": "01008748",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "01008747",
+            "status": "mismatch",
             "spurious": false
           },
           "insuranceCode": {
@@ -363,13 +363,13 @@
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 4,
-      "mismatch": 4,
-      "ext_missing": 12,
+      "match": 6,
+      "mismatch": 6,
+      "ext_missing": 8,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.2
+    "cellAccuracy": 0.3
   },
   "buckets": {
     "defects": [
@@ -427,26 +427,18 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['3', '4']"
+        "reason": "extractor invented rows ['1', '2']"
       },
       {
-        "location": "row1:itemName",
+        "location": "row3:itemName",
         "status": "mismatch",
         "gtNorm": "메톨론점안액",
-        "extNorm": "1 665506742 메톨론점안액 6ml 40 1,910 76,400 2504 281221",
+        "extNorm": "1665506742메톨론점안액6ml",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row1:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "메톨론점안액6ml(지에스팜)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:spec",
+        "location": "row3:spec",
         "status": "ext_missing",
         "gtNorm": "6ml",
         "extNorm": "",
@@ -454,7 +446,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:quantity",
+        "location": "row3:quantity",
         "status": "ext_missing",
         "gtNorm": "40",
         "extNorm": "",
@@ -462,7 +454,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:expiryDate",
+        "location": "row3:expiryDate",
         "status": "mismatch",
         "gtNorm": "20281221",
         "extNorm": "281221",
@@ -470,7 +462,7 @@
         "reason": "char-level diff (sim=0.86)"
       },
       {
-        "location": "row1:manufacturingNo",
+        "location": "row3:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "2504",
         "extNorm": "",
@@ -478,15 +470,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "01008542",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:insuranceCode",
+        "location": "row3:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "665506742",
         "extNorm": "",
@@ -494,23 +478,23 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:itemName",
+        "location": "row4:itemName",
         "status": "mismatch",
         "gtNorm": "히론아이점안액",
-        "extNorm": "2 665506145 히론아이점안액 10ml 140 3,996 559,440 2501 280511",
+        "extNorm": "2665506145히론아이점안액10ml",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.50)"
       },
       {
-        "location": "row2:itemNameMaster",
-        "status": "ext_missing",
+        "location": "row4:itemNameMaster",
+        "status": "mismatch",
         "gtNorm": "히론아이점안액6ml(지에스팜)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "히론아이점안액10ml(지에스팜)",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.91)"
       },
       {
-        "location": "row2:spec",
+        "location": "row4:spec",
         "status": "ext_missing",
         "gtNorm": "10ml",
         "extNorm": "",
@@ -518,7 +502,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:quantity",
+        "location": "row4:quantity",
         "status": "ext_missing",
         "gtNorm": "140",
         "extNorm": "",
@@ -526,7 +510,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:expiryDate",
+        "location": "row4:expiryDate",
         "status": "mismatch",
         "gtNorm": "20280511",
         "extNorm": "280511",
@@ -534,7 +518,7 @@
         "reason": "char-level diff (sim=0.86)"
       },
       {
-        "location": "row2:manufacturingNo",
+        "location": "row4:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "2501",
         "extNorm": "",
@@ -542,15 +526,15 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:itemCode",
-        "status": "ext_missing",
+        "location": "row4:itemCode",
+        "status": "mismatch",
         "gtNorm": "01008748",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "01008747",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.88)"
       },
       {
-        "location": "row2:insuranceCode",
+        "location": "row4:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "665506145",
         "extNorm": "",
@@ -559,8 +543,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 8,
-      "structure": 15,
+      "recognition": 10,
+      "structure": 11,
       "layout": 0,
       "preprocessing": 0
     },

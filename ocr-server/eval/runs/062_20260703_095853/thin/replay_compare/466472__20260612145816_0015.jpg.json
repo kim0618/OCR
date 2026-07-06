@@ -182,17 +182,17 @@
           "itemName": {
             "gt": "코미시럽 500mL (슈가프리)",
             "ext": "코미시럽500mL(슈가프리",
-            "gtNorm": "코미시럽 500ml (슈가프리)",
-            "extNorm": "코미시럽500ml(슈가프리",
-            "status": "mismatch",
+            "gtNorm": "코미시럽500ml슈가프리",
+            "extNorm": "코미시럽500ml슈가프리",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "코미시럽500mL",
-            "ext": "",
+            "ext": "코미시럽500mL",
             "gtNorm": "코미시럽500ml",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "코미시럽500ml",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -260,17 +260,17 @@
           "itemName": {
             "gt": "드로피진시럽 500mL",
             "ext": "드로피진시럼500mL",
-            "gtNorm": "드로피진시럽 500ml",
+            "gtNorm": "드로피진시럽500ml",
             "extNorm": "드로피진시럼500ml",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "드로피진시럽500mL",
-            "ext": "",
+            "ext": "드로피진시럽500mL",
             "gtNorm": "드로피진시럽500ml",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "드로피진시럽500ml",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -338,17 +338,17 @@
           "itemName": {
             "gt": "하미돈현탁액 500mL",
             "ext": "하미돈현탁액500mL",
-            "gtNorm": "하미돈현탁액 500ml",
+            "gtNorm": "하미돈현탁액500ml",
             "extNorm": "하미돈현탁액500ml",
-            "status": "mismatch",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "하미돈현탁액",
-            "ext": "",
+            "ext": "하미돈현탁액",
             "gtNorm": "하미돈현탁액",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "하미돈현탁액",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -412,13 +412,13 @@
     ],
     "cellCounts": {
       "scored": 27,
-      "match": 7,
-      "mismatch": 14,
-      "ext_missing": 6,
+      "match": 12,
+      "mismatch": 12,
+      "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.25925925925925924
+    "cellAccuracy": 0.4444444444444444
   },
   "buckets": {
     "defects": [
@@ -455,22 +455,6 @@
         "reason": "extractor invented rows ['4']"
       },
       {
-        "location": "row1:itemName",
-        "status": "mismatch",
-        "gtNorm": "코미시럽 500ml (슈가프리)",
-        "extNorm": "코미시럽500ml(슈가프리",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.90)"
-      },
-      {
-        "location": "row1:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "코미시럽500ml",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row1:spec",
         "status": "mismatch",
         "gtNorm": "500 ml",
@@ -505,18 +489,10 @@
       {
         "location": "row2:itemName",
         "status": "mismatch",
-        "gtNorm": "드로피진시럽 500ml",
-        "extNorm": "드로피진시럼500ml",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.87)"
-      },
-      {
-        "location": "row2:itemNameMaster",
-        "status": "ext_missing",
         "gtNorm": "드로피진시럽500ml",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "드로피진시럼500ml",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemNameMaster']"
       },
       {
         "location": "row2:spec",
@@ -557,22 +533,6 @@
         "extNorm": "DRPSO500",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row3:itemName",
-        "status": "mismatch",
-        "gtNorm": "하미돈현탁액 500ml",
-        "extNorm": "하미돈현탁액500ml",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.96)"
-      },
-      {
-        "location": "row3:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "하미돈현탁액",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row3:spec",
@@ -616,9 +576,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 17,
-      "structure": 7,
-      "layout": 0,
+      "recognition": 14,
+      "structure": 4,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

@@ -32,6 +32,7 @@ reads (samples/, compare/, metrics/, trend).
 from __future__ import annotations
 
 import argparse
+import glob
 import json
 import os
 import subprocess
@@ -133,8 +134,13 @@ def _render(batch_name: str, compare_dir: str, per: list[dict]) -> str:
     except Exception:
         _FIELD_KO = {}
 
+    # 품명 계열 라벨 명시: 읽기 raw vs ②마스터매칭 산출(정식명/코드) 구분이 한눈에 보이게
+    _LOCAL_KO = {"itemName": "품명 — 읽기 raw",
+                 "itemNameMaster": "품명 — ②마스터매칭 정식명",
+                 "itemCode": "itemCode — ②마스터매칭 채움"}
+
     def ko(col: str) -> str:
-        k = _FIELD_KO.get(col)
+        k = _LOCAL_KO.get(col) or _FIELD_KO.get(col)
         return (f"<b>{_esc(k)}</b> <span class='muted' style='font-size:12px'>({_esc(col)})</span>"
                 if k else _esc(col))
 
@@ -275,30 +281,84 @@ def _render(batch_name: str, compare_dir: str, per: list[dict]) -> str:
             H.append("</tbody></table></section>")
 
     # per-testset parser-drop column x pattern (the actionable axis)
+    # + 컬럼별 인식(recognition) 건수·비율 = OCR 바운드(룰 불가) vs 파서 회수가능 판별.
     pat_th = "".join(f"<th>{_PAT_KO[p]}</th>" for p in _P)
     for p in per:
         agg: dict = defaultdict(lambda: defaultdict(int))
         for d in p["pdrops"]:
             agg[d["column"]][d["pattern"]] += 1
-        ordered = sorted(agg.items(), key=lambda kv: -sum(kv[1].values()))
+        col_class = p.get("colClass") or {}
+        # 표시 대상 = parser-drop 있는 컬럼 ∪ recognition 있는 컬럼
+        all_cols = set(agg) | {c for c, cc in col_class.items() if cc.get("recognition")}
+        def _coltot(c):  # 그 컬럼 전체 결함(회수+인식+모호)
+            return sum((col_class.get(c) or {}).values())
+        ordered = sorted(all_cols, key=lambda c: -_coltot(c))
+        # 품명 3형제(읽기 raw → 매칭 정식명 → 매칭 코드)는 붙여서 보여줌 (②매칭 전후 대조)
+        _trio = [c for c in ("itemName", "itemNameMaster", "itemCode") if c in ordered]
+        if len(_trio) > 1:
+            pos = min(ordered.index(c) for c in _trio)
+            ordered = [c for c in ordered if c not in _trio]
+            ordered[pos:pos] = _trio
+        col_acc = p.get("colAcc") or {}
         H.append(f"<section><h2>{_esc(p['testset'])} — 컬럼 × 패턴 "
-                 f"<span class='muted'>(parser-drop n={p['nPd']})</span></h2>")
+                 f"<span class='muted'>(정확도 = 맞음/채점셀(주지표) · 인식% = 인식/전체결함, "
+                 f"높을수록 OCR 바운드=룰 대상 아님)</span></h2>")
         if not ordered:
             empty = ("스냅샷 없음 — 실데이터(이미지+스냅샷) 오면 채워짐"
-                     if not p["hasSnap"] else "parser-drop 0건")
+                     if not p["hasSnap"] else "결함 0건")
             H.append(f"<div class='muted'>{empty}</div></section>")
             continue
-        H.append("<table class='sumtable'><thead><tr><th>컬럼</th>" + pat_th
-                 + "<th>합계</th></tr></thead><tbody>")
-        for col, pats in ordered:
-            tot = sum(pats.values())
-            H.append(f"<tr><td>{ko(col)}</td>"
+        H.append("<table class='sumtable'><thead><tr><th>컬럼</th><th>정확도</th>" + pat_th
+                 + "<th>parser-drop</th><th>인식</th><th>인식%</th></tr></thead><tbody>")
+        for col in ordered:
+            pats = agg.get(col, {})
+            pd_tot = sum(pats.values())
+            cc = col_class.get(col) or {}
+            rec = cc.get("recognition", 0)
+            coltot = sum(cc.values())
+            rec_pct = (100 * rec / coltot) if coltot else 0
+            ca = col_acc.get(col)
+            if ca and ca[1]:
+                ap = 100 * ca[0] / ca[1]
+                acls = "acc-lo" if ap < 50 else ("acc-mid" if ap < 80 else "acc-ok")
+                acc_html = (f"<td class='{acls}'><b>{ap:.0f}%</b> "
+                            f"<span class='muted' style='font-size:11px'>({ca[0]}/{ca[1]})</span></td>")
+            else:
+                acc_html = "<td class='muted'>-</td>"
+            H.append(f"<tr><td>{ko(col)}</td>" + acc_html
                      + "".join(f"<td>{pats.get(pp, 0)}</td>" for pp in _P)
-                     + f"<td><b>{tot}</b></td></tr>")
+                     + f"<td><b>{pd_tot}</b></td><td>{rec}</td>"
+                     + f"<td><b>{rec_pct:.0f}%</b> <span class='muted' style='font-size:11px'>"
+                     + f"({rec}/{coltot})</span></td></tr>")
         H.append("</tbody></table></section>")
 
     H.append("</body></html>")
     return "\n".join(H)
+
+
+def _col_accuracy(cdir_path: str) -> dict:
+    """compare 디렉토리의 필드·셀별 정확도(맞음/채점셀) 집계. col -> [match, scored].
+    gt_empty(GT빈칸) 제외 — parser_drop_classify/baseline_matrix와 동일 기준."""
+    acc: dict = defaultdict(lambda: [0, 0])
+    for f in glob.glob(os.path.join(cdir_path, "*.json")):
+        if f.endswith("compare_summary.json"):
+            continue
+        try:
+            c = json.load(open(f, encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        for lab, info in c.get("fields", {}).get("perField", {}).items():
+            if info.get("status") == "gt_empty":
+                continue
+            acc[lab][1] += 1
+            acc[lab][0] += 1 if info.get("status") == "match" else 0
+        for row in c.get("table", {}).get("rows", []):
+            for ck, ci in row.get("cells", {}).items():
+                if ci.get("status") == "gt_empty":
+                    continue
+                acc[ck][1] += 1
+                acc[ck][0] += 1 if ci.get("status") == "match" else 0
+    return {k: v for k, v in acc.items()}
 
 
 def build(batch_dir: str, requested_compare_dir: str, refresh: bool = True) -> str | None:
@@ -335,6 +395,12 @@ def build(batch_dir: str, requested_compare_dir: str, refresh: bool = True) -> s
         scores = j.get("scores") or []
         defects = j.get("defects") or []
         pdrops = [d for d in defects if d["class"] == "parser_drop"]
+        # 컬럼별 class 집계 (인식% 표시용): col -> {parser_drop, recognition, ambiguous_fuzzy}
+        col_class: dict = defaultdict(lambda: defaultdict(int))
+        for d in defects:
+            col_class[d.get("column", "")][d.get("class", "")] += 1
+        # 컬럼별 정확도(맞음/채점셀) — compare 셀 직접 집계 (gt_empty 제외)
+        col_acc = _col_accuracy(os.path.join(sub_dir, cdir))
         faccs = [s["fieldAcc"] for s in scores if s.get("fieldAcc") is not None]
         caccs = [s["cellAcc"] for s in scores if s.get("cellAcc") is not None]
         hist = []
@@ -359,6 +425,8 @@ def build(batch_dir: str, requested_compare_dir: str, refresh: bool = True) -> s
             "nRc": sum(1 for d in defects if d["class"] == "recognition"),
             "nAf": sum(1 for d in defects if d["class"] == "ambiguous_fuzzy"),
             "pdrops": pdrops,
+            "colClass": {c: dict(v) for c, v in col_class.items()},
+            "colAcc": col_acc,
             # links that mirror the AWS SUMMARY (상세 리포트 / 비교 / 분류 상세) + 누적 이력
             "hasReport": os.path.isfile(os.path.join(sub_dir, "report.html")),
             "hasCompare": os.path.isfile(os.path.join(sub_dir, "compare.html")),

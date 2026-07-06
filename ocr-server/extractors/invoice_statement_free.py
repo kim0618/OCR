@@ -4344,6 +4344,77 @@ def fill_pharma_columns(
     return table_rows, debug
 
 
+def append_missing_ha_rows(
+    table_rows: Any, ocr_lines_raw: Any,
+) -> tuple[Any, dict[str, Any]]:
+    """③P1: 헤더-앵커 2D 재구성(HA) 행 중 기존 표에 없는 품목행을 '추가만' 한다.
+
+    근거(062 P0 전수실측): 미추출 GT행 3,539 중 dropped 53.7%, 그 90.9%가
+    '품명 단독 라인' — 셀들이 한 라인으로 안 뭉쳐 라인=행 후보 로직이 못 본다.
+    HA는 money-anchor y밴드 × 컬럼 Voronoi로 행을 재구성하므로 이 부류를 통째
+    회수한다. 기존 행은 절대 수정하지 않음(추가만). 중복 가드: 이름 포함(양방향)
+    ·유사도·amount 키. 요약/보일러플레이트/파티메타 행은 추가 금지.
+    """
+    import difflib
+
+    dbg: dict[str, Any] = {"appended": 0, "reason": ""}
+    if not isinstance(table_rows, list):
+        return table_rows, dbg
+    ocr_items = _extract_ocr_line_items(ocr_lines_raw)
+    ha_rows, ha_dbg = _extract_header_anchored_table(ocr_items, fill_mode=True)
+    if not ha_dbg.get("use") or not ha_rows:
+        dbg["reason"] = ha_dbg.get("reason", "no_ha")
+        return table_rows, dbg
+    if "itemName" not in (ha_dbg.get("columns") or []):
+        dbg["reason"] = "no_itemName_col"
+        return table_rows, dbg
+
+    def _n(s: Any) -> str:
+        return re.sub(r"\s+", "", _normalize_text(str(s or ""))).lower()
+
+    exist_names = [_n(r.get("itemName")) for r in table_rows
+                   if isinstance(r, dict) and str(r.get("itemName") or "").strip()]
+    exist_texts = [_n(" ".join(str(v) for v in r.values() if isinstance(v, str)))
+                   for r in table_rows if isinstance(r, dict)]
+    exist_amts = {_ha_amount_key(r) for r in table_rows if isinstance(r, dict)}
+    exist_amts.discard("")
+
+    next_idx = len(table_rows) + 1
+    for ha in ha_rows:
+        name = str(ha.get("itemName") or "").strip()
+        nm = _n(name)
+        if len(nm) < 3 or not _HANGUL_RE.search(name):
+            continue
+        if _is_summary_or_header_line(name) or _metadata_negative_reason(name):
+            continue
+        if _BOILERPLATE_ROW_RE.search(name) and not _row_names_a_pharma_product(
+            _normalize_text(name)
+        ):
+            continue
+        # 중복 가드 ①: 이름이 기존 행 텍스트에 있거나(부분포함 양방향) 유사(0.6+)
+        if any(nm in t or (len(t) >= 4 and t in nm) for t in exist_texts if t):
+            continue
+        if any(difflib.SequenceMatcher(None, nm, en).ratio() >= 0.6
+               for en in exist_names if en):
+            continue
+        # 중복 가드 ②: 같은 amount 가 이미 표에 있으면 같은 행의 변형일 가능성 → 금지
+        amt = _ha_amount_key(ha)
+        if amt and amt in exist_amts:
+            continue
+        row = dict(ha)
+        row["rowIndex"] = str(next_idx)
+        row["_source"] = "invoice_statement_free_ha_appended"
+        table_rows.append(row)
+        exist_names.append(nm)
+        exist_texts.append(_n(" ".join(str(v) for v in row.values() if isinstance(v, str))))
+        if amt:
+            exist_amts.add(amt)
+        next_idx += 1
+        dbg["appended"] += 1
+    dbg["reason"] = "ok"
+    return table_rows, dbg
+
+
 _BLOB_MONEY_RE = re.compile(r"\d{1,3}(?:,\d{3})+")
 
 
@@ -4484,6 +4555,135 @@ def drop_boilerplate_table_rows(rows: Any) -> tuple[Any, dict[str, Any]]:
     if rows and not kept:
         return rows, {"dropped": 0, "samples": [], "reason": "kept_all_would_empty"}
     return kept, dbg
+
+
+# ── 같이읽힘(blob) 분리: itemName 칸에 선행코드+품명+규격+날짜가 뭉친 행에서 ────
+# 품명 코어만 남긴다. free 경로가 라인 전체를 itemName 에 통째로 넣어(text[:60])
+# 생기는 최다 결함(062 thin: itemName wrongpick 중 merged 1,510건=22%). 예:
+#   "B2110 관류용식염-L 1000ML 2029/04/14" → "관류용식염-L"
+# 고정밀 가드: **선행 품목코드 또는 내장 만료일**(=blob 신호)이 있는 행에만 적용.
+# 클린한 '이름+규격'(선행코드·날짜 없음) 행은 절대 안 건드림 → 규격유지 GT 회귀 방지
+# (이전 blanket token-strip 반증 회피). _rawText 는 불변(정렬/salvage 근거 보존).
+_ITEM_LEADING_CODE_RE = re.compile(r"^\s*[A-Za-z]{0,3}\d[A-Za-z0-9]{2,}\s+(?=[가-힣])")
+_ITEM_DATE_RE = re.compile(
+    r"(?:19|20)\d{2}[.\-/]\d{1,2}[.\-/]\d{1,2}|\b\d{4}[.\-/]\d{2}[.\-/]\d{2}\b"
+)
+_ITEM_SPEC_CUT_RE = re.compile(
+    r"\s\d+(?:\.\d+)?\s*(?:ml|mg|g|l|t|tab|cap|iu|병|bt|box|ea|kg)\b", re.I
+)
+_ITEM_BLOB_MONEY_RE = re.compile(r"\s\d{1,3}(?:[,.]\d{3})+\b")
+
+# 확인표시(체크마크) 제거: √/∨ 와 'V/v+숫자'(검수 마크)는 어떤 약품명에도 없는 명백 junk.
+# 062 실측: √/V-숫자만 자르면 회복 25/회귀 1(선행√), 팩수·PTP는 GT 비일관이라 제외.
+_VERIFY_LEAD_RE = re.compile(r"^\s*[√∨]+\s*")
+_VERIFY_TAIL_RE = re.compile(r"\s*(?:[√∨]|[vV]\s*\d).*$")
+
+
+def _strip_verify_marks(name: str) -> str | None:
+    """선행 체크마크 제거 + 꼬리 확인표시(√/V숫자)부터 절단. 마커 없으면 None(무변경)."""
+    s = (name or "")
+    s2 = _VERIFY_LEAD_RE.sub("", s)
+    m = _VERIFY_TAIL_RE.search(s2)
+    if m:
+        s2 = s2[: m.start()]
+    s2 = s2.strip()
+    if s2 == s.strip() or not re.search(r"[가-힣]", s2) or len(s2) < 2:
+        return None
+    return s2
+
+
+def _extract_blob_item_name(name: str) -> str | None:
+    """blob 신호가 있으면 품명 코어를 반환, 없으면 None(=건드리지 않음)."""
+    s = (name or "").strip()
+    if not s or not re.search(r"[가-힣]", s):
+        return None
+    if not (_ITEM_LEADING_CODE_RE.search(s) or _ITEM_DATE_RE.search(s)):
+        return None  # blob 신호 없음 → 클린 행, 보존
+    s2 = _ITEM_LEADING_CODE_RE.sub("", s, count=1)          # 선행 코드 제거
+    cut = len(s2)                                            # 규격/날짜/금액에서 절단
+    for rx in (_ITEM_DATE_RE, _ITEM_SPEC_CUT_RE, _ITEM_BLOB_MONEY_RE):
+        m = rx.search(s2)
+        if m:
+            cut = min(cut, m.start())
+    base = s2[:cut].strip()
+    base = re.sub(r"\s+[A-Za-z0-9][A-Za-z0-9/\-]{2,}$", "", base).strip()  # 후행 lot코드
+    if not re.search(r"[가-힣]", base) or len(base) < 2 or base == s:
+        return None
+    return base
+
+
+def split_merged_item_name(rows: Any) -> tuple[Any, dict[str, Any]]:
+    """itemName 이 blob(코드+품명+규격+날짜 뭉침)인 행에서 품명 코어만 남긴다.
+    합류점(free+fallback 공통)에서 호출 → 경로무관. blob 신호 있는 행만."""
+    dbg: dict[str, Any] = {"split": 0, "samples": []}
+    if not isinstance(rows, list):
+        return rows, dbg
+    for r in rows:
+        if not isinstance(r, dict):
+            continue
+        name = str(r.get("itemName") or "")
+        base = _extract_blob_item_name(name)
+        if base is not None:
+            r["itemName"] = base
+            name = base
+            dbg["split"] += 1
+            if len(dbg["samples"]) < 8:
+                dbg["samples"].append({"from": name[:50], "to": base})
+        # 확인표시(√/V숫자) 꼬리 제거 — blob 분리 후에도 남을 수 있어 이어서 적용
+        marked = _strip_verify_marks(name)
+        if marked is not None:
+            r["itemName"] = marked
+            dbg["split"] += 1
+    return rows, dbg
+
+
+def _item_name_core_from_text(text: str) -> str:
+    """텍스트 앞에서 약품명 코어(이름+규격)만 누적 — 순수숫자/코드 만나면 정지."""
+    out: list[str] = []
+    for part in re.split(r"\s+", text or ""):
+        if not part:
+            continue
+        compact = re.sub(r"[^\w가-힣]", "", part)
+        if not compact:
+            continue
+        if re.fullmatch(r"\d+(?:[.,]\d+)?", compact):
+            break
+        if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_\-/.]{1,24}", compact) and out:
+            break
+        out.append(part)
+        if len(" ".join(out)) >= 60:
+            break
+    return " ".join(out).strip()
+
+
+_ITEM_PHARMA_SIG_RE = re.compile(
+    r"정$|정\s|정\d|정[TCP]|캡슐|캡셀|캅셀|연질|시럽|크림|과립|주사|주$|액$|점안|정제|"
+    r"밀리그람|밀리그램|mg|ml|환$", re.I
+)
+
+
+def recover_shifted_item_name(rows: Any) -> tuple[Any, dict[str, Any]]:
+    """컬럼밀림 복구: itemName 이 비었는데 spec 셀이 약품명으로 시작하면(행이 한 칸
+    밀림) spec 에서 이름 코어를 뽑아 itemName 에 채운다. 빈 itemName 행만 건드리므로
+    맞는 행은 회귀 없음. spec 등 다른 셀은 그대로(각자 별도 결함)."""
+    dbg: dict[str, Any] = {"recovered": 0, "samples": []}
+    if not isinstance(rows, list):
+        return rows, dbg
+    for r in rows:
+        if not isinstance(r, dict):
+            continue
+        if str(r.get("itemName") or "").strip():
+            continue
+        spec = str(r.get("spec") or "")
+        if not spec or not _ITEM_PHARMA_SIG_RE.search(spec):
+            continue
+        cand = _item_name_core_from_text(spec)
+        if cand and re.search(r"[가-힣]", cand) and len(cand) >= 2:
+            r["itemName"] = cand
+            dbg["recovered"] += 1
+            if len(dbg["samples"]) < 8:
+                dbg["samples"].append({"spec": spec[:50], "to": cand})
+    return rows, dbg
 
 
 def extract_invoice_statement_free(

@@ -189,32 +189,34 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 1,
-    "rowCountExt": 1,
-    "rowCountMatch": true,
+    "rowCountExt": 2,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "2"
+    ],
     "rows": [
       {
         "rowIndex": "1",
-        "rowMatch": false,
+        "rowMatch": true,
         "cells": {
           "itemName": {
             "gt": "자낙스정0.25mg[100T]",
             "ext": "자낙스정0.25mg[100T]",
-            "gtNorm": "자낙스정0.25mg[100t]",
-            "extNorm": "자낙스정0.25mg[100t]",
+            "gtNorm": "자낙스정025mg100t",
+            "extNorm": "자낙스정025mg100t",
             "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "자낙스정0.25mg(비아트리스)(향정)",
-            "ext": "",
+            "ext": "자낙스정0.25mg(비아트리스)(향정)",
             "gtNorm": "자낙스정0.25mg(비아트리스)(향정)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "자낙스정0.25mg(비아트리스)(향정)",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -267,10 +269,10 @@
           },
           "itemCode": {
             "gt": "04005139",
-            "ext": "",
+            "ext": "04005139",
             "gtNorm": "04005139",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "04005139",
+            "status": "match",
             "spurious": false
           }
         }
@@ -278,13 +280,13 @@
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 7,
+      "match": 9,
       "mismatch": 0,
-      "ext_missing": 2,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.7777777777777778
+    "cellAccuracy": 1.0
   },
   "buckets": {
     "defects": [
@@ -345,25 +347,17 @@
         "reason": "value differs, low similarity"
       },
       {
-        "location": "row1:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "자낙스정0.25mg(비아트리스)(향정)",
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "04005139",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "reason": "extractor invented rows ['2']"
       }
     ],
     "bucketTally": {
       "recognition": 4,
-      "structure": 5,
+      "structure": 4,
       "layout": 0,
       "preprocessing": 0
     },

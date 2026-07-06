@@ -179,47 +179,47 @@
     "rowCountExt": 2,
     "rowCountMatch": false,
     "matchedRowIdx": [
-      "1"
+      "2"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "2"
+      "1"
     ],
     "rows": [
       {
-        "rowIndex": "1",
+        "rowIndex": "2",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "베아로신서방정",
-            "ext": "1 694003090 대바 베아로신서방정 0.4/30T 150 18,731 2,809,650 25TA500T",
+            "ext": "1 694003090 대바 베아로신서방정 0.4/30T",
             "gtNorm": "베아로신서방정",
-            "extNorm": "1 694003090 대바 베아로신서방정 0.4/30t 150 18,731 2,809,650 25ta500t",
+            "extNorm": "1694003090대바베아로신서방정0430t",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "베아로신서방정0.4mg",
-            "ext": "",
+            "ext": "베아로신서방정0.4mg",
             "gtNorm": "베아로신서방정0.4mg",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "베아로신서방정0.4mg",
+            "status": "match",
             "spurious": false
           },
           "spec": {
             "gt": "0.4/30T",
-            "ext": "",
+            "ext": "0T",
             "gtNorm": "0.4/30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "0t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
             "gt": "150",
-            "ext": "2",
+            "ext": "",
             "gtNorm": "150",
-            "extNorm": "2",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "unitPrice": {
@@ -256,10 +256,10 @@
           },
           "itemCode": {
             "gt": "01012232",
-            "ext": "",
+            "ext": "01012232",
             "gtNorm": "01012232",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "01012232",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -275,13 +275,13 @@
     ],
     "cellCounts": {
       "scored": 10,
-      "match": 2,
+      "match": 4,
       "mismatch": 3,
-      "ext_missing": 5,
+      "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.2
+    "cellAccuracy": 0.4
   },
   "buckets": {
     "defects": [
@@ -291,7 +291,7 @@
         "gtNorm": "2809650",
         "extNorm": "411600800",
         "bucket": "structure",
-        "reason": "gt value present at ['field:taxAmount', 'row1:amount']"
+        "reason": "gt value present at ['field:taxAmount', 'row2:amount']"
       },
       {
         "location": "field:taxAmount",
@@ -299,7 +299,7 @@
         "gtNorm": "255423",
         "extNorm": "2809650",
         "bucket": "structure",
-        "reason": "ext value is gt's ['field:totalAmount', 'row1:amount']"
+        "reason": "ext value is gt's ['field:totalAmount', 'row2:amount']"
       },
       {
         "location": "field:supplierBizNumber",
@@ -347,42 +347,34 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['2']"
+        "reason": "extractor invented rows ['1']"
       },
       {
-        "location": "row1:itemName",
+        "location": "row2:itemName",
         "status": "mismatch",
         "gtNorm": "베아로신서방정",
-        "extNorm": "1 694003090 대바 베아로신서방정 0.4/30t 150 18,731 2,809,650 25ta500t",
+        "extNorm": "1694003090대바베아로신서방정0430t",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row1:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "베아로신서방정0.4mg",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "0.4/30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:quantity",
+        "location": "row2:spec",
         "status": "mismatch",
-        "gtNorm": "150",
-        "extNorm": "2",
+        "gtNorm": "0.4/30t",
+        "extNorm": "0t",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row1:expiryDate",
+        "location": "row2:quantity",
+        "status": "ext_missing",
+        "gtNorm": "150",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row2:expiryDate",
         "status": "mismatch",
         "gtNorm": "20280625",
         "extNorm": "280625",
@@ -390,7 +382,7 @@
         "reason": "char-level diff (sim=0.86)"
       },
       {
-        "location": "row1:manufacturingNo",
+        "location": "row2:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "251A5001",
         "extNorm": "",
@@ -398,15 +390,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "01012232",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:insuranceCode",
+        "location": "row2:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "694003090",
         "extNorm": "",
@@ -416,7 +400,7 @@
     ],
     "bucketTally": {
       "recognition": 6,
-      "structure": 10,
+      "structure": 8,
       "layout": 0,
       "preprocessing": 0
     },

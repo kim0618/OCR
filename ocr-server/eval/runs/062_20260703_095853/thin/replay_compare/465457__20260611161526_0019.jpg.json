@@ -195,17 +195,17 @@
           "itemName": {
             "gt": "0.9% 생리식염주사액*1000ML-TOP",
             "ext": "0.9%생리식염주사액*1000ML-TOP",
-            "gtNorm": "0.9% 생리식염주사액*1000ml-top",
-            "extNorm": "0.9%생리식염주사액*1000ml-top",
-            "status": "mismatch",
+            "gtNorm": "09생리식염주사액1000mltop",
+            "extNorm": "09생리식염주사액1000mltop",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "이노엔0.9%생리식염주",
-            "ext": "",
+            "ext": "생리식염주사액20mL",
             "gtNorm": "이노엔0.9%생리식염주",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "생리식염주사액20ml",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
@@ -281,17 +281,17 @@
           "itemName": {
             "gt": "[D/W] 5% 포도당주사액*1000ML-TOP",
             "ext": "D/W]5%포도당주사액*100OML-TOP",
-            "gtNorm": "[d/w] 5% 포도당주사액*1000ml-top",
-            "extNorm": "d/w]5%포도당주사액*100oml-top",
+            "gtNorm": "dw5포도당주사액1000mltop",
+            "extNorm": "dw5포도당주사액100omltop",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "이노엔5%포도당주",
-            "ext": "",
+            "ext": "5%포도당주(백)",
             "gtNorm": "이노엔5%포도당주",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "5%포도당주(백)",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
@@ -374,10 +374,10 @@
           },
           "itemNameMaster": {
             "gt": "오마프원페리주1448mL",
-            "ext": "",
+            "ext": "오마프원페리주1448mL",
             "gtNorm": "오마프원페리주1448ml",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "오마프원페리주1448ml",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -449,13 +449,13 @@
     ],
     "cellCounts": {
       "scored": 30,
-      "match": 12,
-      "mismatch": 10,
-      "ext_missing": 8,
+      "match": 14,
+      "mismatch": 11,
+      "ext_missing": 5,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4
+    "cellAccuracy": 0.4666666666666667
   },
   "buckets": {
     "defects": [
@@ -508,20 +508,12 @@
         "reason": "extractor invented rows ['4']"
       },
       {
-        "location": "row1:itemName",
-        "status": "mismatch",
-        "gtNorm": "0.9% 생리식염주사액*1000ml-top",
-        "extNorm": "0.9%생리식염주사액*1000ml-top",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.98)"
-      },
-      {
         "location": "row1:itemNameMaster",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "이노엔0.9%생리식염주",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "생리식염주사액20ml",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:spec",
@@ -566,18 +558,18 @@
       {
         "location": "row2:itemName",
         "status": "mismatch",
-        "gtNorm": "[d/w] 5% 포도당주사액*1000ml-top",
-        "extNorm": "d/w]5%포도당주사액*100oml-top",
+        "gtNorm": "dw5포도당주사액1000mltop",
+        "extNorm": "dw5포도당주사액100omltop",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.90)"
+        "reason": "char-level diff (sim=0.94)"
       },
       {
         "location": "row2:itemNameMaster",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "이노엔5%포도당주",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "5%포도당주(백)",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "row2:spec",
@@ -620,14 +612,6 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row3:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "오마프원페리주1448ml",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row3:quantity",
         "status": "mismatch",
         "gtNorm": "24",
@@ -653,8 +637,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 13,
-      "structure": 11,
+      "recognition": 14,
+      "structure": 8,
       "layout": 0,
       "preprocessing": 0
     },

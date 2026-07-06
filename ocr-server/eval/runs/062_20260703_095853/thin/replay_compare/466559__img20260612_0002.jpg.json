@@ -210,10 +210,10 @@
           },
           "itemNameMaster": {
             "gt": "판콜에스내복액30mL",
-            "ext": "",
+            "ext": "판콜에스내복액30mL",
             "gtNorm": "판콜에스내복액30ml",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "판콜에스내복액30ml",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -273,8 +273,8 @@
           "itemName": {
             "gt": "매입에누리(OCR)",
             "ext": "78,840",
-            "gtNorm": "매입에누리(ocr)",
-            "extNorm": "78,840",
+            "gtNorm": "매입에누리ocr",
+            "extNorm": "78840",
             "status": "mismatch",
             "spurious": false
           },
@@ -331,13 +331,13 @@
     ],
     "cellCounts": {
       "scored": 15,
-      "match": 4,
+      "match": 5,
       "mismatch": 5,
-      "ext_missing": 6,
+      "ext_missing": 5,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.26666666666666666
+    "cellAccuracy": 0.3333333333333333
   },
   "buckets": {
     "defects": [
@@ -363,7 +363,7 @@
         "gtNorm": "78840",
         "extNorm": "0",
         "bucket": "structure",
-        "reason": "gt value present at ['row3:amount']"
+        "reason": "gt value present at ['row3:amount', 'row3:itemName']"
       },
       {
         "location": "field:supplierBizNumber",
@@ -438,14 +438,6 @@
         "reason": "char-level diff (sim=0.78)"
       },
       {
-        "location": "row1:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "판콜에스내복액30ml",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row1:spec",
         "status": "ext_missing",
         "gtNorm": "30ml x 5",
@@ -472,8 +464,8 @@
       {
         "location": "row3:itemName",
         "status": "mismatch",
-        "gtNorm": "매입에누리(ocr)",
-        "extNorm": "78,840",
+        "gtNorm": "매입에누리ocr",
+        "extNorm": "78840",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
@@ -520,7 +512,7 @@
     ],
     "bucketTally": {
       "recognition": 9,
-      "structure": 13,
+      "structure": 12,
       "layout": 0,
       "preprocessing": 0
     },

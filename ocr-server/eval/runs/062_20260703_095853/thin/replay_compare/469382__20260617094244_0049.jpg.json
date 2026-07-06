@@ -181,17 +181,17 @@
           "itemName": {
             "gt": "코미시럽 500mL (슈가프리)",
             "ext": "코미시럼500mL(슈가프리",
-            "gtNorm": "코미시럽 500ml (슈가프리)",
-            "extNorm": "코미시럼500ml(슈가프리",
+            "gtNorm": "코미시럽500ml슈가프리",
+            "extNorm": "코미시럼500ml슈가프리",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "코미시럽500mL",
-            "ext": "",
+            "ext": "코미시럽500mL",
             "gtNorm": "코미시럽500ml",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "코미시럽500ml",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -259,17 +259,17 @@
           "itemName": {
             "gt": "아이벡시럽 500mL",
             "ext": "아이백시럼500mL",
-            "gtNorm": "아이벡시럽 500ml",
+            "gtNorm": "아이벡시럽500ml",
             "extNorm": "아이백시럼500ml",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "아이벡시럽500mL",
-            "ext": "",
+            "ext": "아이벡시럽500mL",
             "gtNorm": "아이벡시럽500ml",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "아이벡시럽500ml",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -333,13 +333,13 @@
     ],
     "cellCounts": {
       "scored": 18,
-      "match": 6,
+      "match": 8,
       "mismatch": 8,
-      "ext_missing": 4,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3333333333333333
+    "cellAccuracy": 0.4444444444444444
   },
   "buckets": {
     "defects": [
@@ -378,18 +378,10 @@
       {
         "location": "row1:itemName",
         "status": "mismatch",
-        "gtNorm": "코미시럽 500ml (슈가프리)",
-        "extNorm": "코미시럼500ml(슈가프리",
+        "gtNorm": "코미시럽500ml슈가프리",
+        "extNorm": "코미시럼500ml슈가프리",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.84)"
-      },
-      {
-        "location": "row1:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "코미시럽500ml",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "row1:spec",
@@ -426,18 +418,10 @@
       {
         "location": "row2:itemName",
         "status": "mismatch",
-        "gtNorm": "아이벡시럽 500ml",
-        "extNorm": "아이백시럼500ml",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.76)"
-      },
-      {
-        "location": "row2:itemNameMaster",
-        "status": "ext_missing",
         "gtNorm": "아이벡시럽500ml",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "아이백시럼500ml",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemNameMaster']"
       },
       {
         "location": "row2:spec",
@@ -473,9 +457,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 11,
-      "structure": 5,
-      "layout": 0,
+      "recognition": 10,
+      "structure": 3,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

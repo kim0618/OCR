@@ -267,54 +267,74 @@ user-select:none;background:var(--card);border:1px solid var(--line);border-radi
 """
 
 
-def load_paddle():
-    """최신 run의 thin/compare/*.json에서 필드별·셀별 정확도(=우리 파이프라인) 집계.
-    반환: ({labelEn: pct}, run_ts) — run 없으면 ({}, None)."""
+def _score_compare_dir(cdir):
+    """한 compare 디렉토리의 필드·셀별 정확도 집계 → {labelEn: pct}."""
     import glob
     fcnt = {}  # labelEn -> [match, scored]
-    for d in sorted(glob.glob(os.path.join(HERE, "runs", "*")), reverse=True):
-        # prefer the local parser-edit re-score (replay_compare) so the matrix's
-        # Paddle base reflects the CURRENT parser (column-matching complete: C1+C2);
-        # fall back to the AWS run's compare/ when no local replay exists.
-        replayed = True
-        cdir = os.path.join(d, "thin", "replay_compare")
-        files = glob.glob(os.path.join(cdir, "*.json"))
-        if not files:
-            replayed = False
-            cdir = os.path.join(d, "thin", "compare")
-            files = glob.glob(os.path.join(cdir, "*.json"))
-        files = [f for f in files if not f.endswith("compare_summary.json")]
-        if not files:
+    files = [f for f in glob.glob(os.path.join(cdir, "*.json"))
+             if not f.endswith("compare_summary.json")]
+    for f in files:
+        try:
+            c = json.load(open(f, encoding="utf-8"))
+        except Exception:
             continue
-        for f in files:
-            try:
-                c = json.load(open(f, encoding="utf-8"))
-            except Exception:
+        for lab, info in c.get("fields", {}).get("perField", {}).items():
+            st = info.get("status")
+            if st == "gt_empty":
                 continue
-            for lab, info in c.get("fields", {}).get("perField", {}).items():
-                st = info.get("status")
+            fcnt.setdefault(lab, [0, 0])
+            fcnt[lab][1] += 1
+            fcnt[lab][0] += 1 if st == "match" else 0
+        for row in c.get("table", {}).get("rows", []):
+            for ck, ci in row.get("cells", {}).items():
+                st = ci.get("status")
                 if st == "gt_empty":
                     continue
-                fcnt.setdefault(lab, [0, 0])
-                fcnt[lab][1] += 1
-                fcnt[lab][0] += 1 if st == "match" else 0
-            for row in c.get("table", {}).get("rows", []):
-                for ck, ci in row.get("cells", {}).items():
-                    st = ci.get("status")
-                    if st == "gt_empty":
-                        continue
-                    fcnt.setdefault(ck, [0, 0])
-                    fcnt[ck][1] += 1
-                    fcnt[ck][0] += 1 if st == "match" else 0
-        out = {lab: (100.0 * m / s if s else None) for lab, (m, s) in fcnt.items()}
-        return out, os.path.basename(d) + ("/replay" if replayed else "")
-    return {}, None
+                fcnt.setdefault(ck, [0, 0])
+                fcnt[ck][1] += 1
+                fcnt[ck][0] += 1 if st == "match" else 0
+    return {lab: (100.0 * m / s if s else None) for lab, (m, s) in fcnt.items()}, len(files)
+
+
+def load_paddle():
+    """최신 run에서 우리 파이프라인 정확도를 **단계별로** 집계.
+      - Base   = thin/compare/              (AWS run, 파서룰 적용 전 기준선)
+      - Rule   = thin/replay_compare_rule/  (파서룰 적용, ②마스터 매칭 제외 —
+                 replay_compare.py --no-master-match --out-subdir replay_compare_rule)
+      - Master = thin/replay_compare/       (파서룰 + ②G4 마스터 매칭 배선)
+    반환: ({'base':{lab:pct}, 'rule':{...}, 'master':{...}}, run_ts). Finetune=Master 이어받음.
+    replay_compare_rule 없으면 rule=master 폴백, compare 없으면 base=rule 폴백."""
+    import glob
+    for d in sorted(glob.glob(os.path.join(HERE, "runs", "*")), reverse=True):
+        mdir = os.path.join(d, "thin", "replay_compare")
+        if not glob.glob(os.path.join(mdir, "*.json")):
+            continue
+        master, _ = _score_compare_dir(mdir)
+        rdir = os.path.join(d, "thin", "replay_compare_rule")
+        if glob.glob(os.path.join(rdir, "*.json")):
+            rule, _ = _score_compare_dir(rdir)
+        else:
+            rule = master  # 매칭-제외 사이드카 없으면 단계 구분 불가 → 동일값
+        bdir = os.path.join(d, "thin", "compare")
+        if glob.glob(os.path.join(bdir, "*.json")):
+            base, _ = _score_compare_dir(bdir)
+        else:
+            base = rule  # AWS compare 없으면 룰전 기준선 없음 → 동일값
+        # Master 단계 품명 = 매칭된 정식명(itemNameMaster). 구글 Master 99.4%도 매칭
+        # 교체값이므로 raw 읽기(itemName)를 그대로 두면 불공정 비교가 된다.
+        if master.get("itemNameMaster") is not None:
+            master = dict(master, itemName=master["itemNameMaster"])
+        return {"base": base, "rule": rule, "master": master}, os.path.basename(d)
+    return {"base": {}, "rule": {}, "master": {}}, None
 
 
 def _stage_value(stage, side, lab, b, item_pct, paddle, grule, gmaster):
-    """side: 'google'(war) | 'paddle'(우리 PP-OCR, run 결과 자동)."""
+    """side: 'google'(war) | 'paddle'(우리 PP-OCR, run 결과 자동).
+    paddle = {'base','rule','master'} — Base=룰전(compare), Rule=룰후(매칭전),
+    Master/Finetune=룰+②마스터매칭(replay_compare)."""
     if side == "paddle":
-        return paddle.get(lab)  # run 결과 있으면 자동, 없으면 None
+        pkey = {"base": "base", "rule": "rule"}.get(stage, "master")
+        return (paddle.get(pkey) or {}).get(lab)  # run 결과 있으면 자동, 없으면 None
     base_val = item_pct if b == ITEM else b
     if stage == "base":
         return base_val
@@ -435,7 +455,9 @@ def build_html(ndocs, item_pct, item_ok, item_tot, paddle, paddle_run, grule, gd
         f'순환 컬럼 숨기기 <span class="muted">(금액·날짜·수량 등 pass-through 제외)</span></label></div>'
         f'<div class="gen" style="max-width:1600px;margin:0 auto 6px">1차 샘플 {ndocs:,}장 (지점 분산) · 구글 vs GT</div>'
         f'<p class="note">탭 = 단계 · Google base = 구글 읽은 값 vs GT(값 없으면 0%) · '
-        f'Paddle = {("run " + paddle_run + " 자동") if paddle_run else "run 없음(이미지 돌리면 자동)"} · '
+        f'Paddle {("run " + paddle_run) if paddle_run else "(run 없음)"}: '
+        f'<b>Base=룰전(compare)</b> → <b>Rule=룰후(replay_compare_rule, 매칭 전)</b> → '
+        f'<b>Master=룰+②매칭(replay_compare, 품명=매칭 정식명 itemNameMaster)</b>, Finetune는 Master 이어받음 · '
         f'Google Rule = ocr.xml learndata EXACT(min={gdet.get("learn_min","")}) · '
         f'Master = 품목(learndata→LIKE→trigram) + 거래처(지점+사업자번호 정확일치) + 지점(brch_cd) — ocr.xml 충실재현</p>'
         f'<div class="tabbar">{tabs}</div>{panels}'

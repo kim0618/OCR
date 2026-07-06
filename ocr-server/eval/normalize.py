@@ -29,7 +29,7 @@ FIELD_TYPE = {
 }
 ROW_KEY_TYPE = {
     "rowIndex": "index",
-    "itemName": "text", "spec": "text",
+    "itemName": "name", "spec": "text",
     "productCode": "code", "lotNo": "code",
     "expiryDate": "date",
     "quantity": "qty", "unitPrice": "amount", "amount": "amount",
@@ -99,7 +99,16 @@ def norm_code(v) -> str:
 def norm_address(v) -> str:
     # P3-b: 주소는 띄어쓰기·괄호·쉼표가 비의미(가변) — 같은 주소를 사람은 동일하다고 본다.
     # 공백/괄호/구두점 전부 제거하고 alnum+한글만 비교(글자 오류는 그대로 신호로 남김).
-    # text 전역(상호/대표자/품명)은 공백이 의미 있을 수 있어 안 건드리고 주소 2필드만 적용.
+    s = unicodedata.normalize("NFC", _s(v))
+    s = _NON_ALNUM.sub("", s)
+    return s.casefold()
+
+
+def norm_name(v) -> str:
+    # 2026-07-06: 품명(itemName)도 공백/괄호가 비의미(GT 포맷 비일관: '생리식염 - 신형백'
+    # vs '생리식염-신형백', '휴드론 정' vs '휴드론정'). 062 실측 = 공백만 다른 spurious
+    # 결함 1,331건(itemName 결함의 20%). 주소식으로 공백/괄호 제거, 글자오류는 신호로 유지.
+    # (이전 '품명은 공백 의미 있을 수 있어 text 유지' 가정을 데이터로 반증·정정.)
     s = unicodedata.normalize("NFC", _s(v))
     s = _NON_ALNUM.sub("", s)
     return s.casefold()
@@ -113,7 +122,7 @@ def norm_index(v) -> str:
 _NORMALIZERS = {
     "text": norm_text, "amount": norm_amount, "qty": norm_qty,
     "bizno": norm_bizno, "date": norm_date, "code": norm_code, "index": norm_index,
-    "address": norm_address,
+    "address": norm_address, "name": norm_name,
 }
 
 

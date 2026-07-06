@@ -206,17 +206,17 @@
           "itemName": {
             "gt": "코디핀정 4mg 30T",
             "ext": "코디핀정4mg30T",
-            "gtNorm": "코디핀정 4mg 30t",
+            "gtNorm": "코디핀정4mg30t",
             "extNorm": "코디핀정4mg30t",
-            "status": "mismatch",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "코디핀정4mg(영진)",
-            "ext": "",
+            "ext": "코디핀정4mg(판매원변경)",
             "gtNorm": "코디핀정4mg(영진)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "코디핀정4mg(판매원변경)",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
@@ -269,10 +269,10 @@
           },
           "itemCode": {
             "gt": "05006048",
-            "ext": "",
+            "ext": "083642",
             "gtNorm": "05006048",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "083642",
+            "status": "mismatch",
             "spurious": false
           },
           "insuranceCode": {
@@ -293,7 +293,7 @@
           "itemName": {
             "gt": "매입에누리(OCR)",
             "ext": "",
-            "gtNorm": "매입에누리(ocr)",
+            "gtNorm": "매입에누리ocr",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -351,13 +351,13 @@
     ],
     "cellCounts": {
       "scored": 17,
-      "match": 3,
-      "mismatch": 1,
-      "ext_missing": 13,
+      "match": 4,
+      "mismatch": 2,
+      "ext_missing": 11,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.17647058823529413
+    "cellAccuracy": 0.23529411764705882
   },
   "buckets": {
     "defects": [
@@ -426,20 +426,12 @@
         "reason": "extractor missed rows ['2']"
       },
       {
-        "location": "row1:itemName",
-        "status": "mismatch",
-        "gtNorm": "코디핀정 4mg 30t",
-        "extNorm": "코디핀정4mg30t",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.91)"
-      },
-      {
         "location": "row1:itemNameMaster",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "코디핀정4mg(영진)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "코디핀정4mg(판매원변경)",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.72)"
       },
       {
         "location": "row1:spec",
@@ -467,11 +459,11 @@
       },
       {
         "location": "row1:itemCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "05006048",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "083642",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:insuranceCode",
@@ -484,7 +476,7 @@
       {
         "location": "row2:itemName",
         "status": "ext_missing",
-        "gtNorm": "매입에누리(ocr)",
+        "gtNorm": "매입에누리ocr",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -539,8 +531,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 7,
-      "structure": 15,
+      "recognition": 8,
+      "structure": 13,
       "layout": 0,
       "preprocessing": 0
     },

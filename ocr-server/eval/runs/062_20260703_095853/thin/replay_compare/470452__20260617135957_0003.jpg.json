@@ -204,17 +204,17 @@
           "itemName": {
             "gt": "잘라탄점안액 50 µg/mL(1회용) (0.2mL)(비아트",
             "ext": "잘라탄점안액 50μg/mL(1회용)(0.2mL)(비아트",
-            "gtNorm": "잘라탄점안액 50 μg/ml(1회용) (0.2ml)(비아트",
-            "extNorm": "잘라탄점안액 50μg/ml(1회용)(0.2ml)(비아트",
-            "status": "mismatch",
+            "gtNorm": "잘라탄점안액50gml1회용02ml비아트",
+            "extNorm": "잘라탄점안액50gml1회용02ml비아트",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "잘라탄점안액50mcg/mL(비아트리스)(2군/냉장)",
-            "ext": "",
+            "ext": "잘라탄점안액50mcg/mL(비아트리스)",
             "gtNorm": "잘라탄점안액50mcg/ml(비아트리스)(2군/냉장)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "잘라탄점안액50mcg/ml(비아트리스)",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
@@ -259,10 +259,10 @@
           },
           "itemCode": {
             "gt": "05005955",
-            "ext": "",
+            "ext": "22004389",
             "gtNorm": "05005955",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "22004389",
+            "status": "mismatch",
             "spurious": false
           },
           "insuranceCode": {
@@ -278,13 +278,13 @@
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 1,
-      "mismatch": 2,
-      "ext_missing": 6,
+      "match": 2,
+      "mismatch": 3,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.1111111111111111
+    "cellAccuracy": 0.2222222222222222
   },
   "buckets": {
     "defects": [
@@ -345,20 +345,12 @@
         "reason": "char-level diff (sim=0.73)"
       },
       {
-        "location": "row1:itemName",
-        "status": "mismatch",
-        "gtNorm": "잘라탄점안액 50 μg/ml(1회용) (0.2ml)(비아트",
-        "extNorm": "잘라탄점안액 50μg/ml(1회용)(0.2ml)(비아트",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.97)"
-      },
-      {
         "location": "row1:itemNameMaster",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "잘라탄점안액50mcg/ml(비아트리스)(2군/냉장)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "잘라탄점안액50mcg/ml(비아트리스)",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.86)"
       },
       {
         "location": "row1:spec",
@@ -394,11 +386,11 @@
       },
       {
         "location": "row1:itemCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "05005955",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "22004389",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:insuranceCode",
@@ -410,8 +402,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 7,
-      "structure": 7,
+      "recognition": 8,
+      "structure": 5,
       "layout": 1,
       "preprocessing": 0
     },

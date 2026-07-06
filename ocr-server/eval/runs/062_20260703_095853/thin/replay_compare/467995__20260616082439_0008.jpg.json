@@ -194,17 +194,17 @@
           "itemName": {
             "gt": "엔블로정0.3밀리그램",
             "ext": "엔블로정 0.3밀리그램",
-            "gtNorm": "엔블로정0.3밀리그램",
-            "extNorm": "엔블로정 0.3밀리그램",
-            "status": "mismatch",
+            "gtNorm": "엔블로정03밀리그램",
+            "extNorm": "엔블로정03밀리그램",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "엔블로정0.3mg",
-            "ext": "",
+            "ext": "엔블로정0.3mg(병)",
             "gtNorm": "엔블로정0.3mg",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "엔블로정0.3mg(병)",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
@@ -249,10 +249,10 @@
           },
           "itemCode": {
             "gt": "22004775",
-            "ext": "",
+            "ext": "22004776",
             "gtNorm": "22004775",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "22004776",
+            "status": "mismatch",
             "spurious": false
           },
           "insuranceCode": {
@@ -273,7 +273,7 @@
           "itemName": {
             "gt": "엔블로정0.3밀리그램",
             "ext": "",
-            "gtNorm": "엔블로정0.3밀리그램",
+            "gtNorm": "엔블로정03밀리그램",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -352,7 +352,7 @@
           "itemName": {
             "gt": "매입에누리(OCR)",
             "ext": "",
-            "gtNorm": "매입에누리(ocr)",
+            "gtNorm": "매입에누리ocr",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -410,13 +410,13 @@
     ],
     "cellCounts": {
       "scored": 25,
-      "match": 4,
-      "mismatch": 1,
-      "ext_missing": 20,
+      "match": 5,
+      "mismatch": 2,
+      "ext_missing": 18,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.16
+    "cellAccuracy": 0.2
   },
   "buckets": {
     "defects": [
@@ -485,20 +485,12 @@
         "reason": "extractor missed rows ['1', '3']"
       },
       {
-        "location": "row1:itemName",
-        "status": "mismatch",
-        "gtNorm": "엔블로정0.3밀리그램",
-        "extNorm": "엔블로정 0.3밀리그램",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.96)"
-      },
-      {
         "location": "row1:itemNameMaster",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "엔블로정0.3mg",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "엔블로정0.3mg(병)",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.86)"
       },
       {
         "location": "row1:manufacturingNo",
@@ -510,11 +502,11 @@
       },
       {
         "location": "row1:itemCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "22004775",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "22004776",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.88)"
       },
       {
         "location": "row1:insuranceCode",
@@ -527,7 +519,7 @@
       {
         "location": "row1:itemName",
         "status": "ext_missing",
-        "gtNorm": "엔블로정0.3밀리그램",
+        "gtNorm": "엔블로정03밀리그램",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -599,7 +591,7 @@
       {
         "location": "row3:itemName",
         "status": "ext_missing",
-        "gtNorm": "매입에누리(ocr)",
+        "gtNorm": "매입에누리ocr",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -654,8 +646,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 7,
-      "structure": 22,
+      "recognition": 8,
+      "structure": 20,
       "layout": 0,
       "preprocessing": 0
     },
