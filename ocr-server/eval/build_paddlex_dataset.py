@@ -91,6 +91,15 @@ def main() -> int:
     if "train" not in copied or "val" not in copied:
         raise SystemExit(
             f"train.txt/val.txt missing in {DATASET_SUBDIR} — run build_dataset.py first")
+    # PaddleX's TextRecDatasetChecker.get_dataset_root globs `**/train.txt` under
+    # dataset_dir and asserts EXACTLY ONE. The nested dataset/ copies would be a second
+    # match → AssertionError. The surfaced root copies are now the canonical PaddleX
+    # inputs, so drop the nested list files (regenerable anytime via build_dataset.py;
+    # manifest.json is kept). Re-run order is always build_dataset → build_paddlex_dataset.
+    for tag in ("train", "val", "test"):
+        nested = os.path.join(DATASET_SUBDIR, f"{tag}.txt")
+        if os.path.isfile(nested):
+            os.remove(nested)
 
     sys.stdout.reconfigure(errors="replace")
     print(f"[paddlex-dataset] dict.txt = {len(chars):,} chars (from served model) -> {dict_path}")
