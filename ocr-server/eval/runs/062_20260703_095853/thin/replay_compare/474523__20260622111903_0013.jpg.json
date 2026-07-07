@@ -189,7 +189,7 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 23,
-    "rowCountExt": 25,
+    "rowCountExt": 27,
     "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
@@ -213,15 +213,15 @@
       "21",
       "23",
       "24",
-      "25"
+      "25",
+      "27"
     ],
-    "gtOnlyRowIdx": [
-      "23"
-    ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
       "10",
       "20",
-      "22"
+      "22",
+      "26"
     ],
     "rows": [
       {
@@ -2109,24 +2109,23 @@
         }
       },
       {
-        "rowIndex": "23",
+        "rowIndex": "27",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "칸디놀캡슐50MG 30C (병)",
-            "ext": "",
+            "ext": "칸디놀캡슬50MG 30C (병)",
             "gtNorm": "칸디놀캡슐50mg30c병",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "칸디놀캡슬50mg30c병",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "칸디놀캡슐50mg",
-            "ext": "",
+            "ext": "칸디놀캡슐50mg",
             "gtNorm": "칸디놀캡슐50mg",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "칸디놀캡슐50mg",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -2139,26 +2138,26 @@
           },
           "quantity": {
             "gt": "20",
-            "ext": "",
+            "ext": "49,773",
             "gtNorm": "20",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "49773",
+            "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "49773",
-            "ext": "",
+            "ext": "20",
             "gtNorm": "49773",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "904980",
-            "ext": "",
+            "ext": "904,980",
             "gtNorm": "904980",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "904980",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -2179,18 +2178,18 @@
           },
           "itemCode": {
             "gt": "14000357",
-            "ext": "",
+            "ext": "14000357",
             "gtNorm": "14000357",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "14000357",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "654004300",
-            "ext": "",
+            "ext": "654004300 202901041 A003262",
             "gtNorm": "654004300",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "654004300202901041A003262",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -2198,13 +2197,13 @@
     ],
     "cellCounts": {
       "scored": 229,
-      "match": 124,
-      "mismatch": 45,
-      "ext_missing": 60,
+      "match": 127,
+      "mismatch": 49,
+      "ext_missing": 53,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5414847161572053
+    "cellAccuracy": 0.5545851528384279
   },
   "buckets": {
     "defects": [
@@ -2274,19 +2273,11 @@
       },
       {
         "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['23']"
-      },
-      {
-        "location": "table",
         "status": "rows_extra",
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['10', '20', '22']"
+        "reason": "extractor invented rows ['10', '20', '22', '26']"
       },
       {
         "location": "row1:itemName",
@@ -3049,23 +3040,15 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row23:itemName",
-        "status": "ext_missing",
+        "location": "row27:itemName",
+        "status": "mismatch",
         "gtNorm": "칸디놀캡슐50mg30c병",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "칸디놀캡슬50mg30c병",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.92)"
       },
       {
-        "location": "row23:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "칸디놀캡슐50mg",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row23:spec",
+        "location": "row27:spec",
         "status": "ext_missing",
         "gtNorm": "30c",
         "extNorm": "",
@@ -3073,31 +3056,23 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row23:quantity",
-        "status": "ext_missing",
+        "location": "row27:quantity",
+        "status": "mismatch",
         "gtNorm": "20",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "49773",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['unitPrice']"
       },
       {
-        "location": "row23:unitPrice",
-        "status": "ext_missing",
+        "location": "row27:unitPrice",
+        "status": "mismatch",
         "gtNorm": "49773",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "20",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['quantity']"
       },
       {
-        "location": "row23:amount",
-        "status": "ext_missing",
-        "gtNorm": "904980",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row23:expiryDate",
+        "location": "row27:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20290104",
         "extNorm": "",
@@ -3105,7 +3080,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row23:manufacturingNo",
+        "location": "row27:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "A003262",
         "extNorm": "",
@@ -3113,26 +3088,18 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row23:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "14000357",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row23:insuranceCode",
-        "status": "ext_missing",
+        "location": "row27:insuranceCode",
+        "status": "mismatch",
         "gtNorm": "654004300",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "654004300202901041A003262",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.53)"
       }
     ],
     "bucketTally": {
-      "recognition": 48,
-      "structure": 67,
-      "layout": 0,
+      "recognition": 50,
+      "structure": 59,
+      "layout": 2,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

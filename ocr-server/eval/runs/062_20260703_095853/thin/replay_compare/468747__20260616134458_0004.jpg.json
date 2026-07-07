@@ -189,14 +189,13 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 2,
-    "rowCountExt": 1,
-    "rowCountMatch": false,
+    "rowCountExt": 2,
+    "rowCountMatch": true,
     "matchedRowIdx": [
-      "1"
-    ],
-    "gtOnlyRowIdx": [
+      "1",
       "2"
     ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [],
     "rows": [
       {
@@ -264,62 +263,61 @@
       {
         "rowIndex": "2",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "쎄로테정(세티리진염산염)",
-            "ext": "",
+            "ext": "세로테정(세티리진염산염)",
             "gtNorm": "쎄로테정세티리진염산염",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "세로테정세티리진염산염",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "쎄로테정(비급여)(반품불가)넥스메디칼",
-            "ext": "",
+            "ext": "세로펜정",
             "gtNorm": "쎄로테정(비급여)(반품불가)넥스메디칼",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "세로펜정",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
             "gt": "10T",
-            "ext": "",
+            "ext": "다 이하여백 10T 12a0",
             "gtNorm": "10t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "다 이하여백 10t 12a0",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
             "gt": "800",
-            "ext": "",
+            "ext": "800",
             "gtNorm": "800",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "800",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "470",
-            "ext": "",
+            "ext": "470",
             "gtNorm": "470",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "470",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "376000",
-            "ext": "",
+            "ext": "376,000",
             "gtNorm": "376000",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "376000",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
             "gt": "8806486009016",
-            "ext": "",
+            "ext": "069067",
             "gtNorm": "8806486009016",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "069067",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -327,13 +325,13 @@
     ],
     "cellCounts": {
       "scored": 14,
-      "match": 3,
-      "mismatch": 2,
-      "ext_missing": 9,
+      "match": 6,
+      "mismatch": 6,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.21428571428571427
+    "cellAccuracy": 0.42857142857142855
   },
   "buckets": {
     "defects": [
@@ -378,14 +376,6 @@
         "reason": "value differs, low similarity"
       },
       {
-        "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['2']"
-      },
-      {
         "location": "row1:itemName",
         "status": "mismatch",
         "gtNorm": "젠타졸2정",
@@ -419,64 +409,40 @@
       },
       {
         "location": "row2:itemName",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "쎄로테정세티리진염산염",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "세로테정세티리진염산염",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.91)"
       },
       {
         "location": "row2:itemNameMaster",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "쎄로테정(비급여)(반품불가)넥스메디칼",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "세로펜정",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row2:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "10t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:quantity",
-        "status": "ext_missing",
-        "gtNorm": "800",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "470",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:amount",
-        "status": "ext_missing",
-        "gtNorm": "376000",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "다 이하여백 10t 12a0",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row2:itemCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "8806486009016",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "069067",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.53)"
       }
     ],
     "bucketTally": {
-      "recognition": 6,
-      "structure": 11,
+      "recognition": 10,
+      "structure": 3,
       "layout": 0,
       "preprocessing": 0
     },

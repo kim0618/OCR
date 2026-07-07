@@ -189,73 +189,75 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 2,
-    "rowCountExt": 2,
-    "rowCountMatch": true,
+    "rowCountExt": 3,
+    "rowCountMatch": false,
     "matchedRowIdx": [
-      "1",
+      "3",
       "2"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "1"
+    ],
     "rows": [
       {
-        "rowIndex": "1",
+        "rowIndex": "3",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "시너지아정500mg",
-            "ext": "주식회사 시너지아정500mg",
+            "ext": "시너지아정500mg 상계",
             "gtNorm": "시너지아정500mg",
-            "extNorm": "주식회사시너지아정500mg",
+            "extNorm": "시너지아정500mg상계",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "시너지아정(킴스제약)",
-            "ext": "케파베아정500mg",
+            "ext": "시너지아정(킴스제약)",
             "gtNorm": "시너지아정(킴스제약)",
-            "extNorm": "케파베아정500mg",
-            "status": "mismatch",
+            "extNorm": "시너지아정(킴스제약)",
+            "status": "match",
             "spurious": false
           },
           "spec": {
             "gt": "180정",
-            "ext": "180정",
+            "ext": "01 42정 하여백",
             "gtNorm": "180정",
-            "extNorm": "180정",
-            "status": "match",
+            "extNorm": "01 42정 하여백",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
             "gt": "20",
-            "ext": "8316",
+            "ext": "38,808",
             "gtNorm": "20",
-            "extNorm": "8316",
+            "extNorm": "38808",
             "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "166320",
-            "ext": "20",
+            "ext": "10",
             "gtNorm": "166320",
-            "extNorm": "20",
+            "extNorm": "10",
             "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "3326400",
-            "ext": "166,320",
+            "ext": "24001",
             "gtNorm": "3326400",
-            "extNorm": "166320",
+            "extNorm": "24001",
             "status": "mismatch",
             "spurious": false
           },
           "expiryDate": {
             "gt": "20280720",
-            "ext": "2028.07.20",
+            "ext": "2027.06.02",
             "gtNorm": "20280720",
-            "extNorm": "20280720",
-            "status": "match",
+            "extNorm": "20270602",
+            "status": "mismatch",
             "spurious": false
           },
           "manufacturingNo": {
@@ -268,9 +270,9 @@
           },
           "itemCode": {
             "gt": "05005906",
-            "ext": "04004060",
+            "ext": "05006533",
             "gtNorm": "05005906",
-            "extNorm": "04004060",
+            "extNorm": "05006533",
             "status": "mismatch",
             "spurious": false
           }
@@ -330,18 +332,18 @@
           },
           "expiryDate": {
             "gt": "20270602",
-            "ext": "2027.06.02",
+            "ext": "",
             "gtNorm": "20270602",
-            "extNorm": "20270602",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "manufacturingNo": {
             "gt": "T24001",
-            "ext": "T24001",
+            "ext": "",
             "gtNorm": "T24001",
-            "extNorm": "T24001",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemCode": {
@@ -357,13 +359,13 @@
     ],
     "cellCounts": {
       "scored": 18,
-      "match": 8,
-      "mismatch": 9,
-      "ext_missing": 1,
+      "match": 5,
+      "mismatch": 10,
+      "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4444444444444444
+    "cellAccuracy": 0.2777777777777778
   },
   "buckets": {
     "defects": [
@@ -408,47 +410,63 @@
         "reason": "value differs, low similarity"
       },
       {
-        "location": "row1:itemName",
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['1']"
+      },
+      {
+        "location": "row3:itemName",
         "status": "mismatch",
         "gtNorm": "시너지아정500mg",
-        "extNorm": "주식회사시너지아정500mg",
+        "extNorm": "시너지아정500mg상계",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.83)"
+        "reason": "char-level diff (sim=0.91)"
       },
       {
-        "location": "row1:itemNameMaster",
+        "location": "row3:spec",
         "status": "mismatch",
-        "gtNorm": "시너지아정(킴스제약)",
-        "extNorm": "케파베아정500mg",
+        "gtNorm": "180정",
+        "extNorm": "01 42정 하여백",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row1:quantity",
+        "location": "row3:quantity",
         "status": "mismatch",
         "gtNorm": "20",
-        "extNorm": "8316",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['unitPrice']"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "166320",
-        "extNorm": "20",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
-      },
-      {
-        "location": "row1:amount",
-        "status": "mismatch",
-        "gtNorm": "3326400",
-        "extNorm": "166320",
+        "extNorm": "38808",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row1:manufacturingNo",
+        "location": "row3:unitPrice",
+        "status": "mismatch",
+        "gtNorm": "166320",
+        "extNorm": "10",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.50)"
+      },
+      {
+        "location": "row3:amount",
+        "status": "mismatch",
+        "gtNorm": "3326400",
+        "extNorm": "24001",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.67)"
+      },
+      {
+        "location": "row3:expiryDate",
+        "status": "mismatch",
+        "gtNorm": "20280720",
+        "extNorm": "20270602",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.62)"
+      },
+      {
+        "location": "row3:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "25034",
         "extNorm": "",
@@ -456,10 +474,10 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemCode",
+        "location": "row3:itemCode",
         "status": "mismatch",
         "gtNorm": "05005906",
-        "extNorm": "04004060",
+        "extNorm": "05006533",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.62)"
       },
@@ -480,6 +498,22 @@
         "reason": "cell differs, low similarity"
       },
       {
+        "location": "row2:expiryDate",
+        "status": "ext_missing",
+        "gtNorm": "20270602",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row2:manufacturingNo",
+        "status": "ext_missing",
+        "gtNorm": "T24001",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
         "location": "row2:itemCode",
         "status": "mismatch",
         "gtNorm": "05005906",
@@ -489,9 +523,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 11,
-      "structure": 2,
-      "layout": 2,
+      "recognition": 14,
+      "structure": 5,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

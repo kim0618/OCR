@@ -189,17 +189,16 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 5,
-    "rowCountExt": 4,
-    "rowCountMatch": false,
+    "rowCountExt": 5,
+    "rowCountMatch": true,
     "matchedRowIdx": [
       "1",
       "2",
       "3",
-      "4"
-    ],
-    "gtOnlyRowIdx": [
+      "4",
       "5"
     ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [],
     "rows": [
       {
@@ -517,54 +516,53 @@
       {
         "rowIndex": "5",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "메모엠연질캡슐 90캡슐(콜",
-            "ext": "",
+            "ext": "(주)마더스 D-417-- 메모엠연질캡슬 90캡슬(콜 이하 여백",
             "gtNorm": "메모엠연질캡슐90캡슐콜",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "주마더스d417메모엠연질캡슬90캡슬콜이하여백",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "메모엠연질캡슐",
-            "ext": "",
+            "ext": "메모엠연질캡슐",
             "gtNorm": "메모엠연질캡슐",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "메모엠연질캡슐",
+            "status": "match",
             "spurious": false
           },
           "spec": {
             "gt": "400mg/90캡슐",
-            "ext": "",
+            "ext": "400mg/90캡슬",
             "gtNorm": "400mg/90캡슐",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "400mg/90캡슬",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
             "gt": "30",
-            "ext": "",
+            "ext": "30",
             "gtNorm": "30",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "40500",
-            "ext": "",
+            "ext": "40,500.00",
             "gtNorm": "40500",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "4050000",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "1215000",
-            "ext": "",
+            "ext": "1,215,000",
             "gtNorm": "1215000",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "1215000",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -577,18 +575,18 @@
           },
           "manufacturingNo": {
             "gt": "6001",
-            "ext": "",
+            "ext": "6001 20290108",
             "gtNorm": "6001",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "600120290108",
+            "status": "mismatch",
             "spurious": false
           },
           "itemCode": {
             "gt": "22003644",
-            "ext": "",
+            "ext": "22003644",
             "gtNorm": "22003644",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "22003644",
+            "status": "match",
             "spurious": false
           }
         }
@@ -596,13 +594,13 @@
     ],
     "cellCounts": {
       "scored": 45,
-      "match": 13,
-      "mismatch": 11,
-      "ext_missing": 21,
+      "match": 17,
+      "mismatch": 15,
+      "ext_missing": 13,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.28888888888888886
+    "cellAccuracy": 0.37777777777777777
   },
   "buckets": {
     "defects": [
@@ -637,14 +635,6 @@
         "extNorm": "전북전주시덕진구신복로1167팔복동4",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.88)"
-      },
-      {
-        "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['5']"
       },
       {
         "location": "row1:itemName",
@@ -832,51 +822,27 @@
       },
       {
         "location": "row5:itemName",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "메모엠연질캡슐90캡슐콜",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row5:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "메모엠연질캡슐",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "주마더스d417메모엠연질캡슬90캡슬콜이하여백",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.56)"
       },
       {
         "location": "row5:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "400mg/90캡슐",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row5:quantity",
-        "status": "ext_missing",
-        "gtNorm": "30",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "400mg/90캡슬",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.90)"
       },
       {
         "location": "row5:unitPrice",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "40500",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row5:amount",
-        "status": "ext_missing",
-        "gtNorm": "1215000",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "4050000",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.83)"
       },
       {
         "location": "row5:expiryDate",
@@ -888,24 +854,16 @@
       },
       {
         "location": "row5:manufacturingNo",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "6001",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row5:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "22003644",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "600120290108",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.50)"
       }
     ],
     "bucketTally": {
-      "recognition": 15,
-      "structure": 22,
+      "recognition": 19,
+      "structure": 13,
       "layout": 0,
       "preprocessing": 0
     },

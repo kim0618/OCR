@@ -176,27 +176,29 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 2,
-    "rowCountExt": 3,
+    "rowCountExt": 5,
     "rowCountMatch": false,
     "matchedRowIdx": [
-      "1",
+      "4",
       "3"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "2"
+      "1",
+      "2",
+      "5"
     ],
     "rows": [
       {
-        "rowIndex": "1",
+        "rowIndex": "4",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "일동)리피스톱 20mg",
-            "ext": "일동)리피스톱20mg",
+            "ext": "1 일동)리피스톱20mg 7",
             "gtNorm": "일동리피스톱20mg",
-            "extNorm": "일동리피스톱20mg",
-            "status": "match",
+            "extNorm": "1일동리피스톱20mg7",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
@@ -217,58 +219,58 @@
           },
           "quantity": {
             "gt": "20",
-            "ext": "",
+            "ext": "18,770",
             "gtNorm": "20",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "18770",
+            "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "18770",
-            "ext": "",
+            "ext": "20",
             "gtNorm": "18770",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "375408",
-            "ext": "",
+            "ext": "375,408",
             "gtNorm": "375408",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "375408",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
             "gt": "20290126",
-            "ext": "",
+            "ext": "290126",
             "gtNorm": "20290126",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "290126",
+            "status": "mismatch",
             "spurious": false
           },
           "manufacturingNo": {
             "gt": "GKE001",
-            "ext": "",
+            "ext": "GKE001",
             "gtNorm": "GKE001",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "GKE001",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
             "gt": "8806429028524",
-            "ext": "8806429028531",
+            "ext": "8806429028524",
             "gtNorm": "8806429028524",
-            "extNorm": "8806429028531",
-            "status": "mismatch",
+            "extNorm": "8806429028524",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "642902850",
-            "ext": "",
+            "ext": "642902850 전/보",
             "gtNorm": "642902850",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "642902850전보",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -362,13 +364,13 @@
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 6,
-      "mismatch": 2,
-      "ext_missing": 12,
+      "match": 8,
+      "mismatch": 6,
+      "ext_missing": 6,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3
+    "cellAccuracy": 0.4
   },
   "buckets": {
     "defects": [
@@ -410,10 +412,18 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['2']"
+        "reason": "extractor invented rows ['1', '2', '5']"
       },
       {
-        "location": "row1:spec",
+        "location": "row4:itemName",
+        "status": "mismatch",
+        "gtNorm": "일동리피스톱20mg",
+        "extNorm": "1일동리피스톱20mg7",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.91)"
+      },
+      {
+        "location": "row4:spec",
         "status": "ext_missing",
         "gtNorm": "30t(ptp)",
         "extNorm": "",
@@ -421,60 +431,36 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "20",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "18770",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:amount",
-        "status": "ext_missing",
-        "gtNorm": "375408",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:expiryDate",
-        "status": "ext_missing",
-        "gtNorm": "20290126",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:manufacturingNo",
-        "status": "ext_missing",
-        "gtNorm": "GKE001",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:itemCode",
+        "location": "row4:quantity",
         "status": "mismatch",
-        "gtNorm": "8806429028524",
-        "extNorm": "8806429028531",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.85)"
+        "gtNorm": "20",
+        "extNorm": "18770",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['unitPrice']"
       },
       {
-        "location": "row1:insuranceCode",
-        "status": "ext_missing",
+        "location": "row4:unitPrice",
+        "status": "mismatch",
+        "gtNorm": "18770",
+        "extNorm": "20",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['quantity']"
+      },
+      {
+        "location": "row4:expiryDate",
+        "status": "mismatch",
+        "gtNorm": "20290126",
+        "extNorm": "290126",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.86)"
+      },
+      {
+        "location": "row4:insuranceCode",
+        "status": "mismatch",
         "gtNorm": "642902850",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "642902850전보",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.90)"
       },
       {
         "location": "row3:spec",
@@ -526,9 +512,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 13,
-      "layout": 1,
+      "recognition": 7,
+      "structure": 7,
+      "layout": 3,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

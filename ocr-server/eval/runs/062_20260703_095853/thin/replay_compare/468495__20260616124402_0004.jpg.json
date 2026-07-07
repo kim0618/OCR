@@ -176,8 +176,8 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 10,
-    "rowCountExt": 10,
-    "rowCountMatch": true,
+    "rowCountExt": 11,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
       "2",
@@ -187,11 +187,13 @@
       "6",
       "7",
       "8",
-      "9",
+      "11",
       "10"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "9"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -215,10 +217,10 @@
           },
           "spec": {
             "gt": "375/100T",
-            "ext": "",
+            "ext": "375/100T",
             "gtNorm": "375/100t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "375/100t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -387,10 +389,10 @@
           },
           "spec": {
             "gt": "250/3000",
-            "ext": "",
+            "ext": "250/300C",
             "gtNorm": "250/3000",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "250/300c",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -465,10 +467,10 @@
           },
           "spec": {
             "gt": "5/30T",
-            "ext": "",
+            "ext": "5/30T",
             "gtNorm": "5/30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "5/30t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -858,39 +860,39 @@
         }
       },
       {
-        "rowIndex": "9",
+        "rowIndex": "11",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "레바신정",
-            "ext": "0 스케이케레바신정 칼 100/30T",
+            "ext": "0 칼 스케이케레바신정",
             "gtNorm": "레바신정",
-            "extNorm": "0스케이케레바신정칼10030t",
+            "extNorm": "0칼스케이케레바신정",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "레바신정",
-            "ext": "",
+            "ext": "레바신정",
             "gtNorm": "레바신정",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "레바신정",
+            "status": "match",
             "spurious": false
           },
           "spec": {
             "gt": "100/30T",
-            "ext": "",
+            "ext": "100/30T",
             "gtNorm": "100/30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "100/30t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
             "gt": "10",
-            "ext": "310",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "310",
-            "status": "mismatch",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -911,26 +913,26 @@
           },
           "expiryDate": {
             "gt": "20280622",
-            "ext": "20280622",
+            "ext": "644700310",
             "gtNorm": "20280622",
-            "extNorm": "20280622",
-            "status": "match",
+            "extNorm": "644700310",
+            "status": "mismatch",
             "spurious": false
           },
           "manufacturingNo": {
             "gt": "0012502",
-            "ext": "20280622",
+            "ext": "00125G2 20280622",
             "gtNorm": "0012502",
-            "extNorm": "20280622",
+            "extNorm": "00125G220280622",
             "status": "mismatch",
             "spurious": false
           },
           "itemCode": {
             "gt": "218138",
-            "ext": "",
+            "ext": "218138",
             "gtNorm": "218138",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "218138",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -973,10 +975,10 @@
           },
           "quantity": {
             "gt": "20",
-            "ext": "20",
+            "ext": "",
             "gtNorm": "20",
-            "extNorm": "20",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "unitPrice": {
@@ -1032,13 +1034,13 @@
     ],
     "cellCounts": {
       "scored": 97,
-      "match": 49,
-      "mismatch": 28,
-      "ext_missing": 20,
+      "match": 53,
+      "mismatch": 29,
+      "ext_missing": 15,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5051546391752577
+    "cellAccuracy": 0.5463917525773195
   },
   "buckets": {
     "defects": [
@@ -1107,6 +1109,14 @@
         "reason": "value differs, low similarity"
       },
       {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['9']"
+      },
+      {
         "location": "row1:itemName",
         "status": "mismatch",
         "gtNorm": "크라목스정",
@@ -1118,14 +1128,6 @@
         "location": "row1:itemNameMaster",
         "status": "ext_missing",
         "gtNorm": "크라목스정625mg",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "375/100t",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -1196,11 +1198,11 @@
       },
       {
         "location": "row3:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "250/3000",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "250/300c",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.88)"
       },
       {
         "location": "row3:insuranceCode",
@@ -1222,14 +1224,6 @@
         "location": "row4:itemNameMaster",
         "status": "ext_missing",
         "gtNorm": "씨엠케어정5mg",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:spec",
-        "status": "ext_missing",
-        "gtNorm": "5/30t",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -1395,60 +1389,36 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row9:itemName",
+        "location": "row11:itemName",
         "status": "mismatch",
         "gtNorm": "레바신정",
-        "extNorm": "0스케이케레바신정칼10030t",
+        "extNorm": "0칼스케이케레바신정",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemNameMaster']"
+      },
+      {
+        "location": "row11:expiryDate",
+        "status": "mismatch",
+        "gtNorm": "20280622",
+        "extNorm": "644700310",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row9:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "레바신정",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row9:spec",
-        "status": "ext_missing",
-        "gtNorm": "100/30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row9:quantity",
-        "status": "mismatch",
-        "gtNorm": "10",
-        "extNorm": "310",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.80)"
-      },
-      {
-        "location": "row9:manufacturingNo",
+        "location": "row11:manufacturingNo",
         "status": "mismatch",
         "gtNorm": "0012502",
-        "extNorm": "20280622",
+        "extNorm": "00125G220280622",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.64)"
       },
       {
-        "location": "row9:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "218138",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row9:insuranceCode",
+        "location": "row11:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "644700310",
         "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['expiryDate']"
       },
       {
         "location": "row10:itemName",
@@ -1462,6 +1432,14 @@
         "location": "row10:itemNameMaster",
         "status": "ext_missing",
         "gtNorm": "로바젯정10/5mg",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row10:quantity",
+        "status": "ext_missing",
+        "gtNorm": "20",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -1493,8 +1471,8 @@
     ],
     "bucketTally": {
       "recognition": 32,
-      "structure": 23,
-      "layout": 1,
+      "structure": 18,
+      "layout": 3,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

@@ -189,27 +189,28 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 1,
-    "rowCountExt": 3,
+    "rowCountExt": 4,
     "rowCountMatch": false,
     "matchedRowIdx": [
-      "1"
+      "4"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
+      "1",
       "2",
       "4"
     ],
     "rows": [
       {
-        "rowIndex": "1",
+        "rowIndex": "4",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "뉴로케이정 10mg 300TBL(BTL)",
-            "ext": "",
+            "ext": "3 4 2 N 3000004882뉴로케이정10mg 300TBL(BTL)",
             "gtNorm": "뉴로케이정10mg300tblbtl",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "342n3000004882뉴로케이정10mg300tblbtl",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
@@ -230,18 +231,18 @@
           },
           "quantity": {
             "gt": "3",
-            "ext": "O 3,000",
+            "ext": "140,505",
             "gtNorm": "3",
-            "extNorm": "3000",
+            "extNorm": "140505",
             "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "140505",
-            "ext": "140,505",
+            "ext": "3,000",
             "gtNorm": "140505",
-            "extNorm": "140505",
-            "status": "match",
+            "extNorm": "3000",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
@@ -254,7 +255,7 @@
           },
           "expiryDate": {
             "gt": "20281125",
-            "ext": "20281125",
+            "ext": "2028-11-25",
             "gtNorm": "20281125",
             "extNorm": "20281125",
             "status": "match",
@@ -262,10 +263,10 @@
           },
           "manufacturingNo": {
             "gt": "25005",
-            "ext": "",
+            "ext": "25005",
             "gtNorm": "25005",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "25005",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
@@ -282,8 +283,8 @@
     "cellCounts": {
       "scored": 9,
       "match": 3,
-      "mismatch": 1,
-      "ext_missing": 5,
+      "mismatch": 3,
+      "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -345,18 +346,18 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['2', '4']"
+        "reason": "extractor invented rows ['1', '2', '4']"
       },
       {
-        "location": "row1:itemName",
-        "status": "ext_missing",
+        "location": "row4:itemName",
+        "status": "mismatch",
         "gtNorm": "뉴로케이정10mg300tblbtl",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "342n3000004882뉴로케이정10mg300tblbtl",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.72)"
       },
       {
-        "location": "row1:itemNameMaster",
+        "location": "row4:itemNameMaster",
         "status": "ext_missing",
         "gtNorm": "뉴로케이정",
         "extNorm": "",
@@ -364,7 +365,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:spec",
+        "location": "row4:spec",
         "status": "ext_missing",
         "gtNorm": "100t",
         "extNorm": "",
@@ -372,23 +373,23 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:quantity",
+        "location": "row4:quantity",
         "status": "mismatch",
         "gtNorm": "3",
-        "extNorm": "3000",
+        "extNorm": "140505",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row1:manufacturingNo",
-        "status": "ext_missing",
-        "gtNorm": "25005",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "location": "row4:unitPrice",
+        "status": "mismatch",
+        "gtNorm": "140505",
+        "extNorm": "3000",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['quantity']"
       },
       {
-        "location": "row1:itemCode",
+        "location": "row4:itemCode",
         "status": "ext_missing",
         "gtNorm": "8806424001331",
         "extNorm": "",
@@ -397,9 +398,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 8,
-      "layout": 0,
+      "recognition": 6,
+      "structure": 6,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

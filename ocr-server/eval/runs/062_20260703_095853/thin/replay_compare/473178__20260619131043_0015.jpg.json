@@ -163,8 +163,8 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 11,
-    "rowCountExt": 11,
-    "rowCountMatch": true,
+    "rowCountExt": 21,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
       "2",
@@ -173,13 +173,24 @@
       "5",
       "6",
       "7",
-      "8",
+      "18",
       "9",
       "10",
       "11"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "8",
+      "12",
+      "13",
+      "14",
+      "15",
+      "16",
+      "17",
+      "19",
+      "20",
+      "21"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -616,63 +627,63 @@
         }
       },
       {
-        "rowIndex": "8",
+        "rowIndex": "18",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "알보칼디정 90T",
-            "ext": "알보칼디정90T",
+            "ext": "06 18 알보칼디정90T",
             "gtNorm": "알보칼디정90t",
-            "extNorm": "알보칼디정90t",
-            "status": "match",
+            "extNorm": "0618알보칼디정90t",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "알보칼디정",
-            "ext": "알보칼디정",
-            "gtNorm": "알보칼디정",
-            "extNorm": "알보칼디정",
-            "status": "match",
-            "spurious": false
-          },
-          "spec": {
-            "gt": "90T",
-            "ext": "90T",
-            "gtNorm": "90t",
-            "extNorm": "90t",
-            "status": "match",
-            "spurious": false
-          },
-          "quantity": {
-            "gt": "50",
-            "ext": "50",
-            "gtNorm": "50",
-            "extNorm": "50",
-            "status": "match",
-            "spurious": false
-          },
-          "unitPrice": {
-            "gt": "6189",
             "ext": "",
-            "gtNorm": "6189",
+            "gtNorm": "알보칼디정",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
           },
-          "amount": {
-            "gt": "309450",
+          "spec": {
+            "gt": "90T",
+            "ext": "9OT",
+            "gtNorm": "90t",
+            "extNorm": "9ot",
+            "status": "mismatch",
+            "spurious": false
+          },
+          "quantity": {
+            "gt": "50",
             "ext": "6,189",
-            "gtNorm": "309450",
+            "gtNorm": "50",
             "extNorm": "6189",
             "status": "mismatch",
             "spurious": false
           },
+          "unitPrice": {
+            "gt": "6189",
+            "ext": "500",
+            "gtNorm": "6189",
+            "extNorm": "500",
+            "status": "mismatch",
+            "spurious": false
+          },
+          "amount": {
+            "gt": "309450",
+            "ext": "309,450",
+            "gtNorm": "309450",
+            "extNorm": "309450",
+            "status": "match",
+            "spurious": false
+          },
           "itemCode": {
             "gt": "04006155",
-            "ext": "04006155",
+            "ext": "",
             "gtNorm": "04006155",
-            "extNorm": "04006155",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           }
         }
@@ -866,13 +877,13 @@
     ],
     "cellCounts": {
       "scored": 77,
-      "match": 41,
-      "mismatch": 12,
-      "ext_missing": 24,
+      "match": 37,
+      "mismatch": 15,
+      "ext_missing": 25,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5324675324675324
+    "cellAccuracy": 0.4805194805194805
   },
   "buckets": {
     "defects": [
@@ -907,6 +918,14 @@
         "extNorm": "광주광역시동구제봉로200대인동",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.90)"
+      },
+      {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['8', '12', '13', '14', '15', '16', '17', '19', '20', '21']"
       },
       {
         "location": "row1:itemName",
@@ -1117,20 +1136,52 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row8:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "6189",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
+        "location": "row18:itemName",
+        "status": "mismatch",
+        "gtNorm": "알보칼디정90t",
+        "extNorm": "0618알보칼디정90t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.80)"
       },
       {
-        "location": "row8:amount",
+        "location": "row18:itemNameMaster",
+        "status": "ext_missing",
+        "gtNorm": "알보칼디정",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row18:spec",
         "status": "mismatch",
-        "gtNorm": "309450",
+        "gtNorm": "90t",
+        "extNorm": "9ot",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.67)"
+      },
+      {
+        "location": "row18:quantity",
+        "status": "mismatch",
+        "gtNorm": "50",
         "extNorm": "6189",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
+      },
+      {
+        "location": "row18:unitPrice",
+        "status": "mismatch",
+        "gtNorm": "6189",
+        "extNorm": "500",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['quantity']"
+      },
+      {
+        "location": "row18:itemCode",
+        "status": "ext_missing",
+        "gtNorm": "04006155",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row9:spec",
@@ -1198,8 +1249,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 15,
-      "structure": 22,
+      "recognition": 17,
+      "structure": 25,
       "layout": 3,
       "preprocessing": 0
     },

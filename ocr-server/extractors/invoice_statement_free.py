@@ -4021,7 +4021,11 @@ _HA_ALIAS = (
     ("규격", "spec"), ("포장", "spec"), ("단위", "spec"),
     ("상품명", "itemName"), ("제품명", "itemName"), ("품목명", "itemName"),
     ("품명", "itemName"), ("품목", "itemName"),
+    # NOTE: 복합 라벨('품명 및 규격' 합본 컬럼)을 itemName 으로 매핑하는 v6 시도는
+    # 062 실측 -0.24pp 순손해(합본 셀에 규격이 붙어 GT 품명과 mismatch)라 미채택.
 )
+# 그리디 분해용: 긴 alias 우선(뭉친 concat '품명규격'에서 '품명'을 '품'보다 먼저 떼도록)
+_HA_ALIAS_BY_LEN = sorted(_HA_ALIAS, key=lambda kv: -len(kv[0]))
 _HA_SUMMARY_RE = re.compile(r"합\s*계|소\s*계|이\s*상|부가세|공급가액|미\s*수|받을|총\s*액|"
                             r"외\s*상|페이지|page", re.I)
 _HA_MONEY_RE = re.compile(r"^\d{1,3}(?:[,\.]\d{3})+(?:\.\d+)?$|^\d+\.\d{2}$")
@@ -4068,6 +4072,7 @@ def _extract_header_anchored_table(
     ocr_items: list[dict[str, Any]],
     *,
     fill_mode: bool = False,
+    append_mode: bool = False,
 ) -> tuple[list[dict[str, str]], dict[str, Any]]:
     """Header-anchored table extraction. Returns (rows, debug).
 
@@ -4091,13 +4096,64 @@ def _extract_header_anchored_table(
     if best_n < 2:
         debug["reason"] = "no_header"
         return [], debug
-    # 2) map header cells -> standard keys, sorted by x-center (leftmost per key)
+    # 2) map header cells -> standard keys, sorted by x-center (leftmost per key).
+    # ③v3: 자간 인쇄로 글자 단위 토큰으로 쪼개진 라벨('품|명','금|액','제|품|명')은
+    # 단독 매핑이 안 되므로, 미매핑 짧은 토큰(≤2자)의 x-연속 run을 병합해 재매핑.
+    # ③v5: 뭉친 run concat 은 여러 컬럼이 붙었을 수 있다('품명규격' = 품명+규격).
+    # _ha_map_label 부분매치는 하나만(그것도 alias 순서상 '규격'→spec) 잡아 itemName 이
+    # 사라졌음 (062 실측: append_gate 302/318). → concat 을 왼쪽부터 최장 alias 그리디
+    # 분해해 걸친 모든 컬럼을 추출하고, 각 컬럼 cx 는 해당 문자구간에 걸친 토큰 평균.
+    header_cells: list[tuple[float, str]] = []
+    _run: list[dict[str, Any]] = []
+
+    def _flush_run() -> None:
+        if not _run:
+            return
+        parts = [re.sub(r"\s+", "", _normalize_text(it.get("text"))) for it in _run]
+        concat = "".join(parts)
+        offs, o = [], 0
+        for p in parts:
+            offs.append((o, o + len(p)))
+            o += len(p)
+
+        def _cx_for(a: int, b: int) -> float:
+            cxs = [float(_run[j]["cx"]) for j, (s, e) in enumerate(offs) if s < b and e > a]
+            return sum(cxs) / len(cxs) if cxs else float(_run[0]["cx"])
+
+        i = 0
+        while i < len(concat):
+            # _HA_DOC(문서레벨 라벨)이 이 위치서 시작하면 컬럼 아님 → 건너뜀
+            if any(concat.startswith(doc, i) for doc in _HA_DOC):
+                i += 1
+                continue
+            hit = None
+            for alias, key in _HA_ALIAS_BY_LEN:
+                if concat.startswith(alias, i):
+                    hit = (alias, key)
+                    break
+            if hit:
+                header_cells.append((_cx_for(i, i + len(hit[0])), hit[1]))
+                i += len(hit[0])
+            else:
+                i += 1
+        _run.clear()
+
+    for it in sorted(bands[hi], key=lambda z: float(z["cx"])):
+        txt = _normalize_text(it.get("text"))
+        key = _ha_map_label(txt)
+        if key:
+            _flush_run()
+            header_cells.append((float(it["cx"]), key))
+        elif len(re.sub(r"\s+", "", txt)) <= 2:
+            _run.append(it)
+        else:
+            _flush_run()
+    _flush_run()
     cols: list[tuple[float, str]] = []
     seen: set[str] = set()
-    for it in sorted(bands[hi], key=lambda z: float(z["cx"])):
-        key = _ha_map_label(_normalize_text(it.get("text")))
-        if key and key not in seen:
-            cols.append((float(it["cx"]), key))
+    for cx, key in header_cells:  # x-정렬 유지됨
+        if key not in seen:
+            cols.append((cx, key))
             seen.add(key)
     debug["columns"] = [k for _, k in cols]
     if len(cols) < 4:
@@ -4158,7 +4214,14 @@ def _extract_header_anchored_table(
         for nk in ("quantity", "unitPrice", "amount"):
             if row[nk]:
                 nums = re.findall(r"\d[\d,\.]*", row[nk])
-                row[nk] = nums[-1] if nums else ""
+                v = nums[-1] if nums else ""
+                # OCR이 콤마 천단위를 점으로 읽는 케이스(267.916 == 267,916). amount/money
+                # 는 정수라 '\d{1,3}(\.\d{3})+' 는 소수가 아니라 천단위 → 점 제거. 소수
+                # 단가(950.00, 2자리 소수)는 패턴이 달라 건드리지 않음. (062 실측: HA가
+                # 재구성한 행의 amount 상당수가 이 점-천단위라 정렬·채점이 어긋났음.)
+                if re.fullmatch(r"\d{1,3}(?:\.\d{3})+", v):
+                    v = v.replace(".", "")
+                row[nk] = v
         # qty<->unitPrice swap fix via arithmetic (adjacent numeric columns)
         q, u, a = _ha_fnum(row["quantity"]), _ha_fnum(row["unitPrice"]), _ha_fnum(row["amount"])
         if q and u and a and abs(q * u - a) > 1 and abs(u * q - a) > 1:
@@ -4171,7 +4234,15 @@ def _extract_header_anchored_table(
     # 6) release gate
     colset = set(keys)
     has_valueadd = bool(colset & {"manufacturingNo", "insuranceCode", "expiryDate"})
-    if fill_mode:
+    if append_mode:
+        # ③P1-v2 APPEND gate: 행 '추가'용이라 pharma 컬럼 불요 — 품명+금액 헤더면 충분.
+        # (v1이 fill 게이트를 재사용해 일반 표를 스킵 → dropped 1,901 중 252만 회수.
+        #  추가 행은 기존 행을 못 건드리고 호출부 중복가드가 있어 완화해도 안전.)
+        has_money = bool(colset & {"amount", "unitPrice"})
+        if "itemName" not in colset or not has_money or len(out) < 2:
+            debug["reason"] = f"append_gate:{len(out)}"
+            return [], debug
+    elif fill_mode:
         # FILL gate: a pharma column + >=2 assigned rows is enough — we copy only
         # those columns into an existing table (empty cells), so itemName/amount
         # completeness cannot regress non-pharma cells.
@@ -4361,12 +4432,9 @@ def append_missing_ha_rows(
     if not isinstance(table_rows, list):
         return table_rows, dbg
     ocr_items = _extract_ocr_line_items(ocr_lines_raw)
-    ha_rows, ha_dbg = _extract_header_anchored_table(ocr_items, fill_mode=True)
+    ha_rows, ha_dbg = _extract_header_anchored_table(ocr_items, append_mode=True)
     if not ha_dbg.get("use") or not ha_rows:
         dbg["reason"] = ha_dbg.get("reason", "no_ha")
-        return table_rows, dbg
-    if "itemName" not in (ha_dbg.get("columns") or []):
-        dbg["reason"] = "no_itemName_col"
         return table_rows, dbg
 
     def _n(s: Any) -> str:
@@ -4391,15 +4459,19 @@ def append_missing_ha_rows(
             _normalize_text(name)
         ):
             continue
-        # 중복 가드 ①: 이름이 기존 행 텍스트에 있거나(부분포함 양방향) 유사(0.6+)
+        amt = _ha_amount_key(ha)
+        # 중복 가드 ①: 이름이 기존 행 텍스트에 있으면(부분포함 양방향) 확실 중복
         if any(nm in t or (len(t) >= 4 and t in nm) for t in exist_texts if t):
             continue
-        if any(difflib.SequenceMatcher(None, nm, en).ratio() >= 0.6
-               for en in exist_names if en):
-            continue
-        # 중복 가드 ②: 같은 amount 가 이미 표에 있으면 같은 행의 변형일 가능성 → 금지
-        amt = _ha_amount_key(ha)
+        # 중복 가드 ②: 같은 amount 가 이미 표에 있으면 같은 행 → 금지 (amount 는 고유)
         if amt and amt in exist_amts:
+            continue
+        # 중복 가드 ③: 이름 유사도(0.6)는 amount 로 구분 불가할 때(빈 amount)만 적용.
+        # war 품명은 'XX정 용량 포장' 구조라 다른 품목도 접미사가 겹쳐 유사도가 부풀려짐
+        # (라코르정120/12.5mg30T vs 로티브정10/5mg30T = 0.62 오탐). amount 가 있고 기존에
+        # 없으면 확실히 다른 행이므로 유사도와 무관하게 append.
+        if not amt and any(difflib.SequenceMatcher(None, nm, en).ratio() >= 0.6
+                           for en in exist_names if en):
             continue
         row = dict(ha)
         row["rowIndex"] = str(next_idx)

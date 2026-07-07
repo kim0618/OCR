@@ -211,10 +211,10 @@
           },
           "spec": {
             "gt": "100T",
-            "ext": "",
+            "ext": "100T",
             "gtNorm": "100t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "100t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -297,10 +297,10 @@
           },
           "spec": {
             "gt": "5 mL/병",
-            "ext": "",
+            "ext": "5m/병",
             "gtNorm": "5 ml/병",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "5m/병",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -383,10 +383,10 @@
           },
           "spec": {
             "gt": "30T",
-            "ext": "",
+            "ext": "이미 01 30T 하여백 시 F 7 꼬",
             "gtNorm": "30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "이미 01 30t 하여백 시 f 7 꼬",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -450,13 +450,13 @@
     ],
     "cellCounts": {
       "scored": 30,
-      "match": 7,
-      "mismatch": 10,
-      "ext_missing": 13,
+      "match": 8,
+      "mismatch": 12,
+      "ext_missing": 10,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.23333333333333334
+    "cellAccuracy": 0.26666666666666666
   },
   "buckets": {
     "defects": [
@@ -512,14 +512,6 @@
         "location": "row1:itemNameMaster",
         "status": "ext_missing",
         "gtNorm": "나도가드정40mg(이노트로닉)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "100t",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -582,11 +574,11 @@
       },
       {
         "location": "row2:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "5 ml/병",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "5m/병",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "row2:quantity",
@@ -638,11 +630,11 @@
       },
       {
         "location": "row3:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "이미 01 30t 하여백 시 f 7 꼬",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row3:quantity",
@@ -686,8 +678,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 14,
-      "structure": 14,
+      "recognition": 16,
+      "structure": 11,
       "layout": 0,
       "preprocessing": 0
     },

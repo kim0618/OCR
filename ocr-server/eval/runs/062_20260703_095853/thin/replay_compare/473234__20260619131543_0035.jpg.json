@@ -220,10 +220,10 @@
           },
           "spec": {
             "gt": "100T",
-            "ext": "",
+            "ext": "100T",
             "gtNorm": "100t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "100t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -260,10 +260,10 @@
           },
           "manufacturingNo": {
             "gt": "BH012505B",
-            "ext": "",
+            "ext": "BH012505B",
             "gtNorm": "BH012505B",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "BH012505B",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
@@ -276,10 +276,10 @@
           },
           "insuranceCode": {
             "gt": "1669500950",
-            "ext": "",
+            "ext": "669500950",
             "gtNorm": "1669500950",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "669500950",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -306,10 +306,10 @@
           },
           "spec": {
             "gt": "30T",
-            "ext": "",
+            "ext": "이하여백 30T 2",
             "gtNorm": "30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "이하여백 30t 2",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -338,34 +338,34 @@
           },
           "expiryDate": {
             "gt": "20290211",
-            "ext": "",
+            "ext": "2029.02.11",
             "gtNorm": "20290211",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20290211",
+            "status": "match",
             "spurious": false
           },
           "manufacturingNo": {
             "gt": "BH012601",
-            "ext": "",
+            "ext": "BH012601",
             "gtNorm": "BH012601",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "BH012601",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
             "gt": "01007006",
-            "ext": "22000928",
+            "ext": "01007006",
             "gtNorm": "01007006",
-            "extNorm": "22000928",
-            "status": "mismatch",
+            "extNorm": "01007006",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "669500950",
-            "ext": "",
+            "ext": "669500950",
             "gtNorm": "669500950",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "669500950",
+            "status": "match",
             "spurious": false
           }
         }
@@ -373,13 +373,13 @@
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 4,
-      "mismatch": 6,
-      "ext_missing": 10,
+      "match": 10,
+      "mismatch": 7,
+      "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.2
+    "cellAccuracy": 0.5
   },
   "buckets": {
     "defects": [
@@ -424,14 +424,6 @@
         "reason": "char-level diff (sim=0.70)"
       },
       {
-        "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "100t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row1:quantity",
         "status": "ext_missing",
         "gtNorm": "5",
@@ -456,14 +448,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:manufacturingNo",
-        "status": "ext_missing",
-        "gtNorm": "BH012505B",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
         "location": "row1:itemCode",
         "status": "mismatch",
         "gtNorm": "22000928",
@@ -473,11 +457,11 @@
       },
       {
         "location": "row1:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "1669500950",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "669500950",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.95)"
       },
       {
         "location": "row2:itemName",
@@ -489,11 +473,11 @@
       },
       {
         "location": "row2:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "이하여백 30t 2",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row2:unitPrice",
@@ -510,44 +494,12 @@
         "extNorm": "14131",
         "bucket": "layout",
         "reason": "gt cell appears in column(s) ['unitPrice']"
-      },
-      {
-        "location": "row2:expiryDate",
-        "status": "ext_missing",
-        "gtNorm": "20290211",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:manufacturingNo",
-        "status": "ext_missing",
-        "gtNorm": "BH012601",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:itemCode",
-        "status": "mismatch",
-        "gtNorm": "01007006",
-        "extNorm": "22000928",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row2:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "669500950",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 9,
-      "structure": 9,
-      "layout": 2,
+      "recognition": 10,
+      "structure": 3,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

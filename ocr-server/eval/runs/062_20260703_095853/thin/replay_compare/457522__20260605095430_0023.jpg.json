@@ -176,18 +176,17 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 6,
-    "rowCountExt": 7,
+    "rowCountExt": 8,
     "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
       "2",
       "4",
       "5",
-      "6"
+      "6",
+      "8"
     ],
-    "gtOnlyRowIdx": [
-      "6"
-    ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
       "3",
       "7"
@@ -592,16 +591,15 @@
         }
       },
       {
-        "rowIndex": "6",
+        "rowIndex": "8",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "리피칸정20mg",
-            "ext": "",
+            "ext": "e101090(전문) 20100063손경주 리피칸정20m9 매 비 주문No",
             "gtNorm": "리피칸정20mg",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "e101090전문20100063손경주리피칸정20m9매비주문no",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
@@ -614,42 +612,42 @@
           },
           "spec": {
             "gt": "120T/B",
-            "ext": "",
+            "ext": "출 고 액 120T/B 20260601-21284",
             "gtNorm": "120t/b",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "출 고 액 120t/b 20260601-21284",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
             "gt": "15",
-            "ext": "",
+            "ext": "15",
             "gtNorm": "15",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "15",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "72235",
-            "ext": "",
+            "ext": "72,235",
             "gtNorm": "72235",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "72235",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "1083525",
-            "ext": "",
+            "ext": "1,083,525",
             "gtNorm": "1083525",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "1083525",
+            "status": "match",
             "spurious": false
           },
           "manufacturingNo": {
             "gt": "J041",
-            "ext": "",
+            "ext": "계 J041",
             "gtNorm": "J041",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "계J041",
+            "status": "mismatch",
             "spurious": false
           },
           "itemCode": {
@@ -673,13 +671,13 @@
     ],
     "cellCounts": {
       "scored": 55,
-      "match": 15,
-      "mismatch": 14,
-      "ext_missing": 26,
+      "match": 18,
+      "mismatch": 17,
+      "ext_missing": 20,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.2727272727272727
+    "cellAccuracy": 0.32727272727272727
   },
   "buckets": {
     "defects": [
@@ -746,14 +744,6 @@
         "extNorm": "50875경상남도김해시진례면테크노밸리로33",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.62)"
-      },
-      {
-        "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['6']"
       },
       {
         "location": "table",
@@ -1012,7 +1002,15 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row6:itemName",
+        "location": "row8:itemName",
+        "status": "mismatch",
+        "gtNorm": "리피칸정20mg",
+        "extNorm": "e101090전문20100063손경주리피칸정20m9매비주문no",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
+      },
+      {
+        "location": "row8:itemNameMaster",
         "status": "ext_missing",
         "gtNorm": "리피칸정20mg",
         "extNorm": "",
@@ -1020,55 +1018,23 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row6:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "리피칸정20mg",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row6:spec",
-        "status": "ext_missing",
+        "location": "row8:spec",
+        "status": "mismatch",
         "gtNorm": "120t/b",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "출 고 액 120t/b 20260601-21284",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
-        "location": "row6:quantity",
-        "status": "ext_missing",
-        "gtNorm": "15",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row6:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "72235",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row6:amount",
-        "status": "ext_missing",
-        "gtNorm": "1083525",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row6:manufacturingNo",
-        "status": "ext_missing",
+        "location": "row8:manufacturingNo",
+        "status": "mismatch",
         "gtNorm": "J041",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "계J041",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.89)"
       },
       {
-        "location": "row6:itemCode",
+        "location": "row8:itemCode",
         "status": "ext_missing",
         "gtNorm": "04002083",
         "extNorm": "",
@@ -1076,7 +1042,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row6:insuranceCode",
+        "location": "row8:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "65380138",
         "extNorm": "",
@@ -1085,8 +1051,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 19,
-      "structure": 31,
+      "recognition": 22,
+      "structure": 24,
       "layout": 0,
       "preprocessing": 0
     },

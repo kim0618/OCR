@@ -239,10 +239,10 @@
           },
           "unitPrice": {
             "gt": "104130",
-            "ext": "104130",
+            "ext": "",
             "gtNorm": "104130",
-            "extNorm": "104130",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "amount": {
@@ -349,10 +349,10 @@
           },
           "manufacturingNo": {
             "gt": "057726012",
-            "ext": "135640",
+            "ext": "",
             "gtNorm": "057726012",
-            "extNorm": "135640",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemCode": {
@@ -521,10 +521,10 @@
           },
           "manufacturingNo": {
             "gt": "058426061",
-            "ext": "232557",
+            "ext": "",
             "gtNorm": "058426061",
-            "extNorm": "232557",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemCode": {
@@ -634,13 +634,13 @@
     ],
     "cellCounts": {
       "scored": 50,
-      "match": 31,
-      "mismatch": 10,
-      "ext_missing": 9,
+      "match": 30,
+      "mismatch": 8,
+      "ext_missing": 12,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.62
+    "cellAccuracy": 0.6
   },
   "buckets": {
     "defects": [
@@ -701,6 +701,14 @@
         "reason": "value differs, low similarity"
       },
       {
+        "location": "row1:unitPrice",
+        "status": "ext_missing",
+        "gtNorm": "104130",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
         "location": "row1:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "039225171",
@@ -750,11 +758,11 @@
       },
       {
         "location": "row2:manufacturingNo",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "057726012",
-        "extNorm": "135640",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row2:itemCode",
@@ -817,16 +825,16 @@
         "status": "mismatch",
         "gtNorm": "232557",
         "extNorm": "77519",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['manufacturingNo']"
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row4:manufacturingNo",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "058426061",
-        "extNorm": "232557",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row5:spec",
@@ -854,9 +862,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 14,
-      "structure": 9,
-      "layout": 3,
+      "recognition": 13,
+      "structure": 12,
+      "layout": 2,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

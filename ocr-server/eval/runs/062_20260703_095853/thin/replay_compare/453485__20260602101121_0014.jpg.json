@@ -176,17 +176,18 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 5,
-    "rowCountExt": 6,
+    "rowCountExt": 7,
     "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
       "2",
       "3",
       "4",
-      "5"
+      "7"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
+      "5",
       "6"
     ],
     "rows": [
@@ -212,10 +213,10 @@
           },
           "spec": {
             "gt": "300T",
-            "ext": "",
+            "ext": "300T V",
             "gtNorm": "300t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "300t v",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -298,10 +299,10 @@
           },
           "spec": {
             "gt": "30T",
-            "ext": "",
+            "ext": "30T",
             "gtNorm": "30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -384,10 +385,10 @@
           },
           "spec": {
             "gt": "30T",
-            "ext": "",
+            "ext": "30T",
             "gtNorm": "30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -470,10 +471,10 @@
           },
           "spec": {
             "gt": "30T",
-            "ext": "",
+            "ext": "30T",
             "gtNorm": "30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -535,47 +536,47 @@
         }
       },
       {
-        "rowIndex": "5",
+        "rowIndex": "7",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "피오틴정15밀리그램 30T(전공정/영일제약)",
-            "ext": "",
+            "ext": "이 피오틴정15밀리그램30T(전공정/영일제약)",
             "gtNorm": "피오틴정15밀리그램30t전공정영일제약",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "이피오틴정15밀리그램30t전공정영일제약",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "피오틴정15mg",
-            "ext": "",
+            "ext": "피오틴정15mg",
             "gtNorm": "피오틴정15mg",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "피오틴정15mg",
+            "status": "match",
             "spurious": false
           },
           "spec": {
             "gt": "30T",
-            "ext": "",
+            "ext": "30T",
             "gtNorm": "30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
             "gt": "50",
-            "ext": "30T 50 14,553.00",
+            "ext": "14,553.00",
             "gtNorm": "50",
-            "extNorm": "30501455300",
+            "extNorm": "1455300",
             "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "14553",
-            "ext": "14,553",
+            "ext": "",
             "gtNorm": "14553",
-            "extNorm": "14553",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "amount": {
@@ -596,26 +597,26 @@
           },
           "manufacturingNo": {
             "gt": "25001A",
-            "ext": "727,650 25001A",
+            "ext": "25001A",
             "gtNorm": "25001A",
-            "extNorm": "72765025001A",
-            "status": "mismatch",
+            "extNorm": "25001A",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
             "gt": "14001713",
-            "ext": "",
+            "ext": "14001713",
             "gtNorm": "14001713",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "14001713",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "647301200",
-            "ext": "",
+            "ext": "7 6",
             "gtNorm": "647301200",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "76",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -623,13 +624,13 @@
     ],
     "cellCounts": {
       "scored": 50,
-      "match": 17,
-      "mismatch": 12,
-      "ext_missing": 21,
+      "match": 23,
+      "mismatch": 14,
+      "ext_missing": 13,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.34
+    "cellAccuracy": 0.46
   },
   "buckets": {
     "defects": [
@@ -679,7 +680,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['6']"
+        "reason": "extractor invented rows ['5', '6']"
       },
       {
         "location": "row1:itemName",
@@ -699,11 +700,11 @@
       },
       {
         "location": "row1:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "300t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "300t v",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "row1:quantity",
@@ -741,14 +742,6 @@
         "location": "row2:itemNameMaster",
         "status": "ext_missing",
         "gtNorm": "펜렉스정",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:spec",
-        "status": "ext_missing",
-        "gtNorm": "30t",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -802,14 +795,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row3:spec",
-        "status": "ext_missing",
-        "gtNorm": "30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row3:quantity",
         "status": "mismatch",
         "gtNorm": "10",
@@ -850,14 +835,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row4:spec",
-        "status": "ext_missing",
-        "gtNorm": "30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row4:quantity",
         "status": "mismatch",
         "gtNorm": "100",
@@ -890,65 +867,41 @@
         "reason": "char-level diff (sim=0.75)"
       },
       {
-        "location": "row5:itemName",
-        "status": "ext_missing",
+        "location": "row7:itemName",
+        "status": "mismatch",
         "gtNorm": "피오틴정15밀리그램30t전공정영일제약",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "이피오틴정15밀리그램30t전공정영일제약",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.98)"
       },
       {
-        "location": "row5:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "피오틴정15mg",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row5:spec",
-        "status": "ext_missing",
-        "gtNorm": "30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row5:quantity",
+        "location": "row7:quantity",
         "status": "mismatch",
         "gtNorm": "50",
-        "extNorm": "30501455300",
+        "extNorm": "1455300",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row5:manufacturingNo",
+        "location": "row7:unitPrice",
+        "status": "ext_missing",
+        "gtNorm": "14553",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row7:insuranceCode",
         "status": "mismatch",
-        "gtNorm": "25001A",
-        "extNorm": "72765025001A",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
-      },
-      {
-        "location": "row5:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "14001713",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row5:insuranceCode",
-        "status": "ext_missing",
         "gtNorm": "647301200",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "76",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       }
     ],
     "bucketTally": {
-      "recognition": 16,
-      "structure": 23,
+      "recognition": 18,
+      "structure": 15,
       "layout": 0,
       "preprocessing": 0
     },

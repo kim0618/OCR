@@ -176,16 +176,15 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 4,
-    "rowCountExt": 6,
+    "rowCountExt": 7,
     "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
       "6",
-      "5"
+      "5",
+      "7"
     ],
-    "gtOnlyRowIdx": [
-      "4"
-    ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
       "2",
       "3",
@@ -300,18 +299,18 @@
           },
           "quantity": {
             "gt": "20",
-            "ext": "4.320",
+            "ext": "20",
             "gtNorm": "20",
-            "extNorm": "4320",
-            "status": "mismatch",
+            "extNorm": "20",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "4320",
-            "ext": "20",
+            "ext": "4320",
             "gtNorm": "4320",
-            "extNorm": "20",
-            "status": "mismatch",
+            "extNorm": "4320",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -427,80 +426,79 @@
         }
       },
       {
-        "rowIndex": "4",
+        "rowIndex": "7",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "프라0.375mg [100PTP]",
-            "ext": "",
+            "ext": "7 ** 이하 여 백 * 프라펙솔서방정0.375mg [100PTP]",
             "gtNorm": "프라0375mg100ptp",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "7이하여백프라펙솔서방정0375mg100ptp",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "프라펙솔서방정0.375mg",
-            "ext": "",
+            "ext": "프라펙솔서방정0.375mg",
             "gtNorm": "프라펙솔서방정0.375mg",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "프라펙솔서방정0.375mg",
+            "status": "match",
             "spurious": false
           },
           "spec": {
             "gt": "100T",
-            "ext": "",
+            "ext": "100PTP",
             "gtNorm": "100t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "100ptp",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
             "gt": "5",
-            "ext": "",
+            "ext": "5",
             "gtNorm": "5",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "5",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "40764",
-            "ext": "",
+            "ext": "40,764",
             "gtNorm": "40764",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "40764",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "203820",
-            "ext": "",
+            "ext": "203820",
             "gtNorm": "203820",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "203820",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
             "gt": "20290204",
-            "ext": "",
+            "ext": "2029.02.04",
             "gtNorm": "20290204",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20290204",
+            "status": "match",
             "spurious": false
           },
           "manufacturingNo": {
             "gt": "050579",
-            "ext": "",
+            "ext": "050579",
             "gtNorm": "050579",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "050579",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
             "gt": "01007389",
-            "ext": "",
+            "ext": "01007389",
             "gtNorm": "01007389",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "01007389",
+            "status": "match",
             "spurious": false
           }
         }
@@ -508,13 +506,13 @@
     ],
     "cellCounts": {
       "scored": 36,
-      "match": 20,
+      "match": 29,
       "mismatch": 7,
-      "ext_missing": 9,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5555555555555556
+    "cellAccuracy": 0.8055555555555556
   },
   "buckets": {
     "defects": [
@@ -568,14 +566,6 @@
       },
       {
         "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['4']"
-      },
-      {
-        "location": "table",
         "status": "rows_extra",
         "gtNorm": "",
         "extNorm": "",
@@ -607,22 +597,6 @@
         "reason": "char-level diff (sim=0.94)"
       },
       {
-        "location": "row6:quantity",
-        "status": "mismatch",
-        "gtNorm": "20",
-        "extNorm": "4320",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['unitPrice']"
-      },
-      {
-        "location": "row6:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "4320",
-        "extNorm": "20",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['quantity']"
-      },
-      {
         "location": "row5:itemName",
         "status": "mismatch",
         "gtNorm": "프라075mg100ptp",
@@ -639,82 +613,26 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row4:itemName",
-        "status": "ext_missing",
+        "location": "row7:itemName",
+        "status": "mismatch",
         "gtNorm": "프라0375mg100ptp",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "7이하여백프라펙솔서방정0375mg100ptp",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.74)"
       },
       {
-        "location": "row4:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "프라펙솔서방정0.375mg",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:spec",
-        "status": "ext_missing",
+        "location": "row7:spec",
+        "status": "mismatch",
         "gtNorm": "100t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:quantity",
-        "status": "ext_missing",
-        "gtNorm": "5",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "40764",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:amount",
-        "status": "ext_missing",
-        "gtNorm": "203820",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:expiryDate",
-        "status": "ext_missing",
-        "gtNorm": "20290204",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:manufacturingNo",
-        "status": "ext_missing",
-        "gtNorm": "050579",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "01007389",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "100ptp",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.80)"
       }
     ],
     "bucketTally": {
-      "recognition": 9,
-      "structure": 13,
-      "layout": 2,
+      "recognition": 11,
+      "structure": 3,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

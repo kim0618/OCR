@@ -176,8 +176,8 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 4,
-    "rowCountExt": 4,
-    "rowCountMatch": true,
+    "rowCountExt": 5,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
       "2",
@@ -185,7 +185,9 @@
       "4"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "5"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -249,10 +251,10 @@
           },
           "manufacturingNo": {
             "gt": "26001",
-            "ext": "",
+            "ext": "20290112",
             "gtNorm": "26001",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20290112",
+            "status": "mismatch",
             "spurious": false
           },
           "itemCode": {
@@ -507,10 +509,10 @@
           },
           "manufacturingNo": {
             "gt": "26002",
-            "ext": "",
+            "ext": "20290202",
             "gtNorm": "26002",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20290202",
+            "status": "mismatch",
             "spurious": false
           },
           "itemCode": {
@@ -535,8 +537,8 @@
     "cellCounts": {
       "scored": 40,
       "match": 20,
-      "mismatch": 13,
-      "ext_missing": 7,
+      "mismatch": 15,
+      "ext_missing": 5,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -585,6 +587,14 @@
         "reason": "value differs, low similarity"
       },
       {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['5']"
+      },
+      {
         "location": "row1:spec",
         "status": "mismatch",
         "gtNorm": "100 t",
@@ -597,16 +607,16 @@
         "status": "ext_missing",
         "gtNorm": "20290112",
         "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['manufacturingNo']"
       },
       {
         "location": "row1:manufacturingNo",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "26001",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "20290112",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.62)"
       },
       {
         "location": "row1:insuranceCode",
@@ -725,16 +735,16 @@
         "status": "mismatch",
         "gtNorm": "20290202",
         "extNorm": "441600",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['manufacturingNo']"
       },
       {
         "location": "row4:manufacturingNo",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "26002",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "20290202",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row4:insuranceCode",
@@ -746,9 +756,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 14,
-      "structure": 7,
-      "layout": 4,
+      "recognition": 15,
+      "structure": 5,
+      "layout": 6,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

@@ -189,8 +189,8 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 10,
-    "rowCountExt": 10,
-    "rowCountMatch": true,
+    "rowCountExt": 11,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
       "2",
@@ -200,12 +200,13 @@
       "6",
       "7",
       "8",
-      "9"
+      "11"
     ],
     "gtOnlyRowIdx": [
       "10"
     ],
     "extOnlyRowIdx": [
+      "9",
       "10"
     ],
     "rows": [
@@ -834,36 +835,36 @@
         }
       },
       {
-        "rowIndex": "9",
+        "rowIndex": "11",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "깅코라민정 80mg 30정 (은 30정",
-            "ext": "김코라민정",
+            "ext": "(주)마더스 (주미디스 A-172-- A 김코라민정 80mg 30정(은 미라생시생정5g i0정(",
             "gtNorm": "깅코라민정80mg30정은30정",
-            "extNorm": "김코라민정",
+            "extNorm": "주마더스주미디스a172a김코라민정80mg30정은미라생시생정5gi0정",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "깅코라민정80mg",
-            "ext": "뮤코라민정",
+            "ext": "",
             "gtNorm": "깅코라민정80mg",
-            "extNorm": "뮤코라민정",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "spec": {
             "gt": "30T",
-            "ext": "김코라민정 80mg 30정(은 30정",
+            "ext": "30정 io0정",
             "gtNorm": "30t",
-            "extNorm": "김코라민정 80mg 30정(은 30정",
+            "extNorm": "30정 io0정",
             "status": "mismatch",
             "spurious": false
           },
           "quantity": {
             "gt": "20",
-            "ext": "V20",
+            "ext": "20",
             "gtNorm": "20",
             "extNorm": "20",
             "status": "match",
@@ -887,9 +888,9 @@
           },
           "expiryDate": {
             "gt": "20290319",
-            "ext": "99,900",
+            "ext": "508103",
             "gtNorm": "20290319",
-            "extNorm": "99900",
+            "extNorm": "508103",
             "status": "mismatch",
             "spurious": false
           },
@@ -903,10 +904,10 @@
           },
           "itemCode": {
             "gt": "05005862",
-            "ext": "8806706008812",
+            "ext": "",
             "gtNorm": "05005862",
-            "extNorm": "8806706008812",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           }
         }
@@ -994,8 +995,8 @@
     "cellCounts": {
       "scored": 90,
       "match": 36,
-      "mismatch": 36,
-      "ext_missing": 18,
+      "mismatch": 34,
+      "ext_missing": 20,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -1081,7 +1082,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['10']"
+        "reason": "extractor invented rows ['9', '10']"
       },
       {
         "location": "row1:spec",
@@ -1388,31 +1389,31 @@
         "reason": "char-level diff (sim=0.62)"
       },
       {
-        "location": "row9:itemName",
+        "location": "row11:itemName",
         "status": "mismatch",
         "gtNorm": "깅코라민정80mg30정은30정",
-        "extNorm": "김코라민정",
+        "extNorm": "주마더스주미디스a172a김코라민정80mg30정은미라생시생정5gi0정",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.53)"
       },
       {
-        "location": "row9:itemNameMaster",
-        "status": "mismatch",
+        "location": "row11:itemNameMaster",
+        "status": "ext_missing",
         "gtNorm": "깅코라민정80mg",
-        "extNorm": "뮤코라민정",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.57)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row9:spec",
+        "location": "row11:spec",
         "status": "mismatch",
         "gtNorm": "30t",
-        "extNorm": "김코라민정 80mg 30정(은 30정",
+        "extNorm": "30정 io0정",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row9:unitPrice",
+        "location": "row11:unitPrice",
         "status": "mismatch",
         "gtNorm": "4995",
         "extNorm": "499500",
@@ -1420,15 +1421,15 @@
         "reason": "char-level diff (sim=0.80)"
       },
       {
-        "location": "row9:expiryDate",
+        "location": "row11:expiryDate",
         "status": "mismatch",
         "gtNorm": "20290319",
-        "extNorm": "99900",
+        "extNorm": "508103",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row9:manufacturingNo",
+        "location": "row11:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "6001",
         "extNorm": "",
@@ -1436,12 +1437,12 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row9:itemCode",
-        "status": "mismatch",
+        "location": "row11:itemCode",
+        "status": "ext_missing",
         "gtNorm": "05005862",
-        "extNorm": "8806706008812",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row10:itemName",
@@ -1517,8 +1518,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 41,
-      "structure": 23,
+      "recognition": 39,
+      "structure": 25,
       "layout": 0,
       "preprocessing": 0
     },

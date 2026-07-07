@@ -163,7 +163,7 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 15,
-    "rowCountExt": 14,
+    "rowCountExt": 16,
     "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
@@ -173,6 +173,7 @@
       "5",
       "6",
       "7",
+      "15",
       "8",
       "9",
       "10",
@@ -181,10 +182,10 @@
       "13",
       "14"
     ],
-    "gtOnlyRowIdx": [
-      "8"
+    "gtOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "16"
     ],
-    "extOnlyRowIdx": [],
     "rows": [
       {
         "rowIndex": "1",
@@ -616,6 +617,68 @@
             "gtNorm": "04006952",
             "extNorm": "",
             "status": "ext_missing",
+            "spurious": false
+          }
+        }
+      },
+      {
+        "rowIndex": "15",
+        "rowMatch": false,
+        "cells": {
+          "itemName": {
+            "gt": "칼리나제정 300T",
+            "ext": "53 칼리나제정300T …",
+            "gtNorm": "칼리나제정300t",
+            "extNorm": "53칼리나제정300t",
+            "status": "mismatch",
+            "spurious": false
+          },
+          "itemNameMaster": {
+            "gt": "칼리나제정",
+            "ext": "칼리나제정",
+            "gtNorm": "칼리나제정",
+            "extNorm": "칼리나제정",
+            "status": "match",
+            "spurious": false
+          },
+          "spec": {
+            "gt": "300T",
+            "ext": "300T",
+            "gtNorm": "300t",
+            "extNorm": "300t",
+            "status": "match",
+            "spurious": false
+          },
+          "quantity": {
+            "gt": "3",
+            "ext": "3",
+            "gtNorm": "3",
+            "extNorm": "3",
+            "status": "match",
+            "spurious": false
+          },
+          "unitPrice": {
+            "gt": "51300",
+            "ext": "51,300",
+            "gtNorm": "51300",
+            "extNorm": "51300",
+            "status": "match",
+            "spurious": false
+          },
+          "amount": {
+            "gt": "153900",
+            "ext": "153,900",
+            "gtNorm": "153900",
+            "extNorm": "153900",
+            "status": "match",
+            "spurious": false
+          },
+          "itemCode": {
+            "gt": "04007097",
+            "ext": "04007097",
+            "gtNorm": "04007097",
+            "extNorm": "04007097",
+            "status": "match",
             "spurious": false
           }
         }
@@ -1053,80 +1116,17 @@
             "spurious": false
           }
         }
-      },
-      {
-        "rowIndex": "8",
-        "rowMatch": false,
-        "missingGtRow": true,
-        "cells": {
-          "itemName": {
-            "gt": "칼리나제정 300T",
-            "ext": "",
-            "gtNorm": "칼리나제정300t",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "itemNameMaster": {
-            "gt": "칼리나제정",
-            "ext": "",
-            "gtNorm": "칼리나제정",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "spec": {
-            "gt": "300T",
-            "ext": "",
-            "gtNorm": "300t",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "quantity": {
-            "gt": "3",
-            "ext": "",
-            "gtNorm": "3",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "unitPrice": {
-            "gt": "51300",
-            "ext": "",
-            "gtNorm": "51300",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "amount": {
-            "gt": "153900",
-            "ext": "",
-            "gtNorm": "153900",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "itemCode": {
-            "gt": "04007097",
-            "ext": "",
-            "gtNorm": "04007097",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          }
-        }
       }
     ],
     "cellCounts": {
       "scored": 105,
-      "match": 59,
-      "mismatch": 27,
-      "ext_missing": 19,
+      "match": 65,
+      "mismatch": 28,
+      "ext_missing": 12,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5619047619047619
+    "cellAccuracy": 0.6190476190476191
   },
   "buckets": {
     "defects": [
@@ -1180,11 +1180,11 @@
       },
       {
         "location": "table",
-        "status": "rows_missed",
+        "status": "rows_extra",
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor missed rows ['8']"
+        "reason": "extractor invented rows ['16']"
       },
       {
         "location": "row1:itemName",
@@ -1347,6 +1347,14 @@
         "reason": "gt cell absent in extracted row"
       },
       {
+        "location": "row15:itemName",
+        "status": "mismatch",
+        "gtNorm": "칼리나제정300t",
+        "extNorm": "53칼리나제정300t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.90)"
+      },
+      {
         "location": "row8:itemName",
         "status": "mismatch",
         "gtNorm": "콘드인정100t",
@@ -1497,67 +1505,11 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row8:itemName",
-        "status": "ext_missing",
-        "gtNorm": "칼리나제정300t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row8:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "칼리나제정",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row8:spec",
-        "status": "ext_missing",
-        "gtNorm": "300t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row8:quantity",
-        "status": "ext_missing",
-        "gtNorm": "3",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row8:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "51300",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row8:amount",
-        "status": "ext_missing",
-        "gtNorm": "153900",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row8:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "04007097",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 31,
-      "structure": 22,
+      "recognition": 32,
+      "structure": 15,
       "layout": 0,
       "preprocessing": 0
     },

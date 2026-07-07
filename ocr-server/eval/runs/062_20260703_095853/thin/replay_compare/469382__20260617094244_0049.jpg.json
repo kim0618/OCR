@@ -274,10 +274,10 @@
           },
           "spec": {
             "gt": "500 mL",
-            "ext": "IVESO500 500mL",
+            "ext": "",
             "gtNorm": "500 ml",
-            "extNorm": "iveso500 500ml",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "quantity": {
@@ -314,10 +314,10 @@
           },
           "manufacturingNo": {
             "gt": "2512005",
-            "ext": "2512005",
+            "ext": "",
             "gtNorm": "2512005",
-            "extNorm": "2512005",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemCode": {
@@ -333,13 +333,13 @@
     ],
     "cellCounts": {
       "scored": 18,
-      "match": 8,
-      "mismatch": 8,
-      "ext_missing": 2,
+      "match": 7,
+      "mismatch": 7,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4444444444444444
+    "cellAccuracy": 0.3888888888888889
   },
   "buckets": {
     "defects": [
@@ -425,11 +425,11 @@
       },
       {
         "location": "row2:spec",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "500 ml",
-        "extNorm": "iveso500 500ml",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.60)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row2:unitPrice",
@@ -448,6 +448,14 @@
         "reason": "char-level diff (sim=0.94)"
       },
       {
+        "location": "row2:manufacturingNo",
+        "status": "ext_missing",
+        "gtNorm": "2512005",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
         "location": "row2:itemCode",
         "status": "mismatch",
         "gtNorm": "8806703008228",
@@ -457,8 +465,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 10,
-      "structure": 3,
+      "recognition": 9,
+      "structure": 5,
       "layout": 1,
       "preprocessing": 0
     },

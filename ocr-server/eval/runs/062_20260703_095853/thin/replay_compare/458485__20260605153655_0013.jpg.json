@@ -176,8 +176,8 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 10,
-    "rowCountExt": 10,
-    "rowCountMatch": true,
+    "rowCountExt": 12,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
       "2",
@@ -186,12 +186,15 @@
       "5",
       "6",
       "7",
-      "8",
+      "12",
       "9",
       "10"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "8",
+      "11"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -796,31 +799,31 @@
         }
       },
       {
-        "rowIndex": "8",
+        "rowIndex": "12",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "에스토람정10mg",
-            "ext": "30정",
+            "ext": "리스펜정3mg 에스토람정10mg",
             "gtNorm": "에스토람정10mg",
-            "extNorm": "30정",
+            "extNorm": "리스펜정3mg에스토람정10mg",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "에스토람정10mg(명문바이오)",
-            "ext": "",
+            "ext": "리스펜정3mg",
             "gtNorm": "에스토람정10mg(명문바이오)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "리스펜정3mg",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
             "gt": "30정",
-            "ext": "30정",
+            "ext": "30정 60정",
             "gtNorm": "30정",
-            "extNorm": "30정",
-            "status": "match",
+            "extNorm": "30정 60정",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -833,9 +836,9 @@
           },
           "unitPrice": {
             "gt": "871650",
-            "ext": "8,716.50 43,58325002",
+            "ext": "43,58325002",
             "gtNorm": "871650",
-            "extNorm": "8716504358325002",
+            "extNorm": "4358325002",
             "status": "mismatch",
             "spurious": false
           },
@@ -849,34 +852,34 @@
           },
           "expiryDate": {
             "gt": "20280603",
-            "ext": "20280603",
+            "ext": "",
             "gtNorm": "20280603",
-            "extNorm": "20280603",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "manufacturingNo": {
             "gt": "25002",
-            "ext": "2028 06 03",
+            "ext": "2028.06.03 2028.10.29",
             "gtNorm": "25002",
-            "extNorm": "20280603",
+            "extNorm": "2028060320281029",
             "status": "mismatch",
             "spurious": false
           },
           "itemCode": {
             "gt": "12000332",
-            "ext": "",
+            "ext": "205246",
             "gtNorm": "12000332",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "205246",
+            "status": "mismatch",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "649804370",
-            "ext": "649804370",
+            "ext": "9 642802550 649804370 몇문제약",
             "gtNorm": "649804370",
-            "extNorm": "649804370",
-            "status": "match",
+            "extNorm": "9642802550649804370몇문제약",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -1056,13 +1059,13 @@
     ],
     "cellCounts": {
       "scored": 100,
-      "match": 38,
-      "mismatch": 55,
-      "ext_missing": 7,
+      "match": 35,
+      "mismatch": 59,
+      "ext_missing": 6,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.38
+    "cellAccuracy": 0.35
   },
   "buckets": {
     "defects": [
@@ -1121,6 +1124,14 @@
         "extNorm": "서울특별시구로구공원로8길24구로동",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
+      },
+      {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['8', '11']"
       },
       {
         "location": "row1:itemName",
@@ -1459,44 +1470,68 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row8:itemName",
+        "location": "row12:itemName",
         "status": "mismatch",
         "gtNorm": "에스토람정10mg",
-        "extNorm": "30정",
+        "extNorm": "리스펜정3mg에스토람정10mg",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.72)"
+      },
+      {
+        "location": "row12:itemNameMaster",
+        "status": "mismatch",
+        "gtNorm": "에스토람정10mg(명문바이오)",
+        "extNorm": "리스펜정3mg",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row8:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "에스토람정10mg(명문바이오)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "location": "row12:spec",
+        "status": "mismatch",
+        "gtNorm": "30정",
+        "extNorm": "30정 60정",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.60)"
       },
       {
-        "location": "row8:unitPrice",
+        "location": "row12:unitPrice",
         "status": "mismatch",
         "gtNorm": "871650",
-        "extNorm": "8716504358325002",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.55)"
-      },
-      {
-        "location": "row8:manufacturingNo",
-        "status": "mismatch",
-        "gtNorm": "25002",
-        "extNorm": "20280603",
+        "extNorm": "4358325002",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row8:itemCode",
+        "location": "row12:expiryDate",
         "status": "ext_missing",
-        "gtNorm": "12000332",
+        "gtNorm": "20280603",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row12:manufacturingNo",
+        "status": "mismatch",
+        "gtNorm": "25002",
+        "extNorm": "2028060320281029",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
+      },
+      {
+        "location": "row12:itemCode",
+        "status": "mismatch",
+        "gtNorm": "12000332",
+        "extNorm": "205246",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
+      },
+      {
+        "location": "row12:insuranceCode",
+        "status": "mismatch",
+        "gtNorm": "649804370",
+        "extNorm": "9642802550649804370몇문제약",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.56)"
       },
       {
         "location": "row9:itemName",
@@ -1620,7 +1655,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 60,
+      "recognition": 64,
       "structure": 9,
       "layout": 0,
       "preprocessing": 0

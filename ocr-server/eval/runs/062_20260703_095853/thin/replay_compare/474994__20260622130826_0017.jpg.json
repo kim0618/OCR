@@ -189,18 +189,17 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 6,
-    "rowCountExt": 5,
-    "rowCountMatch": false,
+    "rowCountExt": 6,
+    "rowCountMatch": true,
     "matchedRowIdx": [
       "1",
       "2",
       "3",
       "4",
-      "5"
-    ],
-    "gtOnlyRowIdx": [
+      "5",
       "6"
     ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [],
     "rows": [
       {
@@ -596,62 +595,61 @@
       {
         "rowIndex": "6",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "메모엠연질캡슐 90캡슐(콜",
-            "ext": "",
+            "ext": "(주)마더스 D-417-- 메모엠연질캡슬 90캡슬(콜 이 하 여백",
             "gtNorm": "메모엠연질캡슐90캡슐콜",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "주마더스d417메모엠연질캡슬90캡슬콜이하여백",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "메모엠연질캡슐",
-            "ext": "",
+            "ext": "메모엠연질캡슐",
             "gtNorm": "메모엠연질캡슐",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "메모엠연질캡슐",
+            "status": "match",
             "spurious": false
           },
           "spec": {
             "gt": "400mg/90캡슐",
-            "ext": "",
+            "ext": "400mg/90캡슬",
             "gtNorm": "400mg/90캡슐",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "400mg/90캡슬",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
             "gt": "60",
-            "ext": "",
+            "ext": "60",
             "gtNorm": "60",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "60",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "4050000",
-            "ext": "",
+            "ext": "40,500.00",
             "gtNorm": "4050000",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "4050000",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "2430000",
-            "ext": "",
+            "ext": "2,430,000",
             "gtNorm": "2430000",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "2430000",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
             "gt": "20290115",
-            "ext": "",
+            "ext": "6002 20290115",
             "gtNorm": "20290115",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "600220290115",
+            "status": "mismatch",
             "spurious": false
           },
           "manufacturingNo": {
@@ -664,10 +662,10 @@
           },
           "itemCode": {
             "gt": "22003644",
-            "ext": "",
+            "ext": "22003644",
             "gtNorm": "22003644",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "22003644",
+            "status": "match",
             "spurious": false
           }
         }
@@ -675,13 +673,13 @@
     ],
     "cellCounts": {
       "scored": 54,
-      "match": 15,
-      "mismatch": 17,
-      "ext_missing": 22,
+      "match": 20,
+      "mismatch": 20,
+      "ext_missing": 14,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.2777777777777778
+    "cellAccuracy": 0.37037037037037035
   },
   "buckets": {
     "defects": [
@@ -748,14 +746,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
-      },
-      {
-        "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['6']"
       },
       {
         "location": "row1:itemName",
@@ -999,59 +989,27 @@
       },
       {
         "location": "row6:itemName",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "메모엠연질캡슐90캡슐콜",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row6:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "메모엠연질캡슐",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "주마더스d417메모엠연질캡슬90캡슬콜이하여백",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.56)"
       },
       {
         "location": "row6:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "400mg/90캡슐",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row6:quantity",
-        "status": "ext_missing",
-        "gtNorm": "60",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row6:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "4050000",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row6:amount",
-        "status": "ext_missing",
-        "gtNorm": "2430000",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "400mg/90캡슬",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.90)"
       },
       {
         "location": "row6:expiryDate",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "20290115",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "600220290115",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "row6:manufacturingNo",
@@ -1060,19 +1018,11 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row6:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "22003644",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 21,
-      "structure": 25,
+      "recognition": 24,
+      "structure": 16,
       "layout": 2,
       "preprocessing": 0
     },

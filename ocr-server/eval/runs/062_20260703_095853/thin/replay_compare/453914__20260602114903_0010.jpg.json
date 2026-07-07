@@ -189,7 +189,7 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 8,
-    "rowCountExt": 9,
+    "rowCountExt": 10,
     "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
@@ -198,13 +198,14 @@
       "5",
       "6",
       "7",
-      "8"
+      "10"
     ],
     "gtOnlyRowIdx": [
       "2"
     ],
     "extOnlyRowIdx": [
       "2",
+      "8",
       "9"
     ],
     "rows": [
@@ -677,23 +678,23 @@
         }
       },
       {
-        "rowIndex": "8",
+        "rowIndex": "10",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "유크리드정250/80mg",
-            "ext": "",
+            "ext": "11 9 ∞ 10 유크리드정250/80mg",
             "gtNorm": "유크리드정25080mg",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "11910유크리드정25080mg",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "유크리드정250/80mg",
-            "ext": "",
+            "ext": "유크리드정250/80mg",
             "gtNorm": "유크리드정250/80mg",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "유크리드정250/80mg",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -738,18 +739,18 @@
           },
           "manufacturingNo": {
             "gt": "250012",
-            "ext": "2,226,780 250012",
+            "ext": "250012",
             "gtNorm": "250012",
-            "extNorm": "2226780250012",
-            "status": "mismatch",
+            "extNorm": "250012",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
             "gt": "8806445012828",
-            "ext": "UCTCOT",
+            "ext": "8806445012828",
             "gtNorm": "8806445012828",
-            "extNorm": "UCTCOT",
-            "status": "mismatch",
+            "extNorm": "8806445012828",
+            "status": "match",
             "spurious": false
           }
         }
@@ -836,13 +837,13 @@
     ],
     "cellCounts": {
       "scored": 72,
-      "match": 32,
-      "mismatch": 17,
-      "ext_missing": 23,
+      "match": 35,
+      "mismatch": 16,
+      "ext_missing": 21,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4444444444444444
+    "cellAccuracy": 0.4861111111111111
   },
   "buckets": {
     "defects": [
@@ -900,7 +901,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['2', '9']"
+        "reason": "extractor invented rows ['2', '8', '9']"
       },
       {
         "location": "row1:itemName",
@@ -1111,44 +1112,20 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row8:itemName",
-        "status": "ext_missing",
+        "location": "row10:itemName",
+        "status": "mismatch",
         "gtNorm": "유크리드정25080mg",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "11910유크리드정25080mg",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.83)"
       },
       {
-        "location": "row8:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "유크리드정250/80mg",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row8:spec",
+        "location": "row10:spec",
         "status": "mismatch",
         "gtNorm": "300tx250/80",
         "extNorm": "300tx250/8p",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.91)"
-      },
-      {
-        "location": "row8:manufacturingNo",
-        "status": "mismatch",
-        "gtNorm": "250012",
-        "extNorm": "2226780250012",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.63)"
-      },
-      {
-        "location": "row8:itemCode",
-        "status": "mismatch",
-        "gtNorm": "8806445012828",
-        "extNorm": "UCTCOT",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
       },
       {
         "location": "row2:itemName",
@@ -1224,8 +1201,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 20,
-      "structure": 27,
+      "recognition": 19,
+      "structure": 25,
       "layout": 0,
       "preprocessing": 0
     },

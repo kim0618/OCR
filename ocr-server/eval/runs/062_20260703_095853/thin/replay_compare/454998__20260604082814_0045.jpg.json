@@ -189,12 +189,13 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 15,
-    "rowCountExt": 14,
+    "rowCountExt": 16,
     "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
       "2",
       "3",
+      "15",
       "4",
       "5",
       "6",
@@ -207,10 +208,10 @@
       "13",
       "14"
     ],
-    "gtOnlyRowIdx": [
-      "4"
+    "gtOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "16"
     ],
-    "extOnlyRowIdx": [],
     "rows": [
       {
         "rowIndex": "1",
@@ -393,6 +394,68 @@
             "ext": "01011284",
             "gtNorm": "01011284",
             "extNorm": "01011284",
+            "status": "match",
+            "spurious": false
+          }
+        }
+      },
+      {
+        "rowIndex": "15",
+        "rowMatch": false,
+        "cells": {
+          "itemName": {
+            "gt": "아트라펜세미정 300T",
+            "ext": "0 4아트라펜세미정300T",
+            "gtNorm": "아트라펜세미정300t",
+            "extNorm": "04아트라펜세미정300t",
+            "status": "mismatch",
+            "spurious": false
+          },
+          "itemNameMaster": {
+            "gt": "아트라펜세미정(특정로트회수)",
+            "ext": "아트라펜세미정(특정로트회수)",
+            "gtNorm": "아트라펜세미정(특정로트회수)",
+            "extNorm": "아트라펜세미정(특정로트회수)",
+            "status": "match",
+            "spurious": false
+          },
+          "spec": {
+            "gt": "300T",
+            "ext": "300T",
+            "gtNorm": "300t",
+            "extNorm": "300t",
+            "status": "match",
+            "spurious": false
+          },
+          "quantity": {
+            "gt": "50",
+            "ext": "30,927",
+            "gtNorm": "50",
+            "extNorm": "30927",
+            "status": "mismatch",
+            "spurious": false
+          },
+          "unitPrice": {
+            "gt": "30927",
+            "ext": "50",
+            "gtNorm": "30927",
+            "extNorm": "50",
+            "status": "mismatch",
+            "spurious": false
+          },
+          "amount": {
+            "gt": "1546364",
+            "ext": "1,546,364",
+            "gtNorm": "1546364",
+            "extNorm": "1546364",
+            "status": "match",
+            "spurious": false
+          },
+          "itemCode": {
+            "gt": "22001831",
+            "ext": "22001831",
+            "gtNorm": "22001831",
+            "extNorm": "22001831",
             "status": "match",
             "spurious": false
           }
@@ -1079,80 +1142,17 @@
             "spurious": false
           }
         }
-      },
-      {
-        "rowIndex": "4",
-        "rowMatch": false,
-        "missingGtRow": true,
-        "cells": {
-          "itemName": {
-            "gt": "아트라펜세미정 300T",
-            "ext": "",
-            "gtNorm": "아트라펜세미정300t",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "itemNameMaster": {
-            "gt": "아트라펜세미정(특정로트회수)",
-            "ext": "",
-            "gtNorm": "아트라펜세미정(특정로트회수)",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "spec": {
-            "gt": "300T",
-            "ext": "",
-            "gtNorm": "300t",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "quantity": {
-            "gt": "50",
-            "ext": "",
-            "gtNorm": "50",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "unitPrice": {
-            "gt": "30927",
-            "ext": "",
-            "gtNorm": "30927",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "amount": {
-            "gt": "1546364",
-            "ext": "",
-            "gtNorm": "1546364",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "itemCode": {
-            "gt": "22001831",
-            "ext": "",
-            "gtNorm": "22001831",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          }
-        }
       }
     ],
     "cellCounts": {
       "scored": 105,
-      "match": 68,
-      "mismatch": 18,
-      "ext_missing": 19,
+      "match": 72,
+      "mismatch": 21,
+      "ext_missing": 12,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.6476190476190476
+    "cellAccuracy": 0.6857142857142857
   },
   "buckets": {
     "defects": [
@@ -1206,11 +1206,11 @@
       },
       {
         "location": "table",
-        "status": "rows_missed",
+        "status": "rows_extra",
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor missed rows ['4']"
+        "reason": "extractor invented rows ['16']"
       },
       {
         "location": "row1:itemName",
@@ -1243,6 +1243,30 @@
         "extNorm": "3아토에젯정1010밀리그램30tbtl",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.97)"
+      },
+      {
+        "location": "row15:itemName",
+        "status": "mismatch",
+        "gtNorm": "아트라펜세미정300t",
+        "extNorm": "04아트라펜세미정300t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.92)"
+      },
+      {
+        "location": "row15:quantity",
+        "status": "mismatch",
+        "gtNorm": "50",
+        "extNorm": "30927",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['unitPrice']"
+      },
+      {
+        "location": "row15:unitPrice",
+        "status": "mismatch",
+        "gtNorm": "30927",
+        "extNorm": "50",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['quantity']"
       },
       {
         "location": "row4:itemName",
@@ -1451,68 +1475,12 @@
         "extNorm": "15엑스디핀정580밀리그램28t",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.94)"
-      },
-      {
-        "location": "row4:itemName",
-        "status": "ext_missing",
-        "gtNorm": "아트라펜세미정300t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "아트라펜세미정(특정로트회수)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:spec",
-        "status": "ext_missing",
-        "gtNorm": "300t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:quantity",
-        "status": "ext_missing",
-        "gtNorm": "50",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "30927",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:amount",
-        "status": "ext_missing",
-        "gtNorm": "1546364",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "22001831",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 22,
-      "structure": 22,
-      "layout": 0,
+      "recognition": 23,
+      "structure": 15,
+      "layout": 2,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

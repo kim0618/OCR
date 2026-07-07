@@ -189,14 +189,15 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 2,
-    "rowCountExt": 5,
+    "rowCountExt": 6,
     "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
-      "2"
+      "6"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
+      "2",
       "3",
       "4",
       "5"
@@ -289,47 +290,47 @@
         }
       },
       {
-        "rowIndex": "2",
+        "rowIndex": "6",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "애드피온서방정150mg",
-            "ext": "2 657202910 애드피온서방정150mg 28T 10 9.918.16 99,182 AR16AA 2027.",
+            "ext": "애드피온서방정150mg [수}",
             "gtNorm": "애드피온서방정150mg",
-            "extNorm": "2657202910애드피온서방정150mg28t1099181699182ar16aa2027",
+            "extNorm": "애드피온서방정150mg수",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "애드피온서방정150mg",
-            "ext": "",
+            "ext": "애드피온서방정150mg",
             "gtNorm": "애드피온서방정150mg",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "애드피온서방정150mg",
+            "status": "match",
             "spurious": false
           },
           "spec": {
             "gt": "28T",
-            "ext": "[수} 파담화자 이하여백 상자자 28T",
+            "ext": "파담화자 이하여백 상자자 28T",
             "gtNorm": "28t",
-            "extNorm": "[수} 파담화자 이하여백 상자자 28t",
+            "extNorm": "파담화자 이하여백 상자자 28t",
             "status": "mismatch",
             "spurious": false
           },
           "quantity": {
             "gt": "10",
-            "ext": "909",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "909",
-            "status": "mismatch",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "991816",
-            "ext": "",
+            "ext": "9.918.16",
             "gtNorm": "991816",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "991816",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -342,7 +343,7 @@
           },
           "expiryDate": {
             "gt": "20270909",
-            "ext": "20270909",
+            "ext": "2027.09.09",
             "gtNorm": "20270909",
             "extNorm": "20270909",
             "status": "match",
@@ -358,18 +359,18 @@
           },
           "itemCode": {
             "gt": "16001748",
-            "ext": "",
+            "ext": "16001748",
             "gtNorm": "16001748",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "16001748",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "657202910",
-            "ext": "657202910",
+            "ext": "4 5 2 3 6 657202910",
             "gtNorm": "657202910",
-            "extNorm": "657202910",
-            "status": "match",
+            "extNorm": "45236657202910",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -377,13 +378,13 @@
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 8,
+      "match": 11,
       "mismatch": 5,
-      "ext_missing": 7,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4
+    "cellAccuracy": 0.55
   },
   "buckets": {
     "defects": [
@@ -433,7 +434,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['3', '4', '5']"
+        "reason": "extractor invented rows ['2', '3', '4', '5']"
       },
       {
         "location": "row1:itemName",
@@ -484,58 +485,34 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:itemName",
+        "location": "row6:itemName",
         "status": "mismatch",
         "gtNorm": "애드피온서방정150mg",
-        "extNorm": "2657202910애드피온서방정150mg28t1099181699182ar16aa2027",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "extNorm": "애드피온서방정150mg수",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemNameMaster']"
       },
       {
-        "location": "row2:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "애드피온서방정150mg",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:spec",
+        "location": "row6:spec",
         "status": "mismatch",
         "gtNorm": "28t",
-        "extNorm": "[수} 파담화자 이하여백 상자자 28t",
+        "extNorm": "파담화자 이하여백 상자자 28t",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row2:quantity",
+        "location": "row6:insuranceCode",
         "status": "mismatch",
-        "gtNorm": "10",
-        "extNorm": "909",
+        "gtNorm": "657202910",
+        "extNorm": "45236657202910",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row2:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "991816",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "16001748",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "reason": "char-level diff (sim=0.78)"
       }
     ],
     "bucketTally": {
-      "recognition": 8,
-      "structure": 10,
-      "layout": 0,
+      "recognition": 7,
+      "structure": 7,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

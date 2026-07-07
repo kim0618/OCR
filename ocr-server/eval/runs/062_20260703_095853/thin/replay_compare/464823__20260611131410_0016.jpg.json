@@ -163,8 +163,8 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 10,
-    "rowCountExt": 10,
-    "rowCountMatch": true,
+    "rowCountExt": 15,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
       "2",
@@ -178,7 +178,13 @@
       "10"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "11",
+      "12",
+      "13",
+      "14",
+      "15"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -718,10 +724,10 @@
           },
           "insuranceCode": {
             "gt": "665002490",
-            "ext": "",
+            "ext": "665002490",
             "gtNorm": "665002490",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "665002490",
+            "status": "match",
             "spurious": false
           }
         }
@@ -987,13 +993,13 @@
     ],
     "cellCounts": {
       "scored": 93,
-      "match": 23,
+      "match": 24,
       "mismatch": 25,
-      "ext_missing": 45,
+      "ext_missing": 44,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.24731182795698925
+    "cellAccuracy": 0.25806451612903225
   },
   "buckets": {
     "defects": [
@@ -1052,6 +1058,14 @@
         "extNorm": "인천광역시계양구벌말로573번길43층상명장남도김해시진례면테크도밸리로3312",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
+      },
+      {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['11', '12', '13', '14', '15']"
       },
       {
         "location": "row1:itemName",
@@ -1425,14 +1439,6 @@
         "location": "row7:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "EC0022810136650",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row7:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "665002490",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"

@@ -189,17 +189,20 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 5,
-    "rowCountExt": 5,
-    "rowCountMatch": true,
+    "rowCountExt": 7,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
       "2",
       "3",
-      "4",
+      "6",
       "5"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "4",
+      "7"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -436,31 +439,31 @@
         }
       },
       {
-        "rowIndex": "4",
+        "rowIndex": "6",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "[피엠에스리스페리돈정1mg 30T 패",
-            "ext": "",
+            "ext": "4 627600029 [피엠에스리스페리돈정1mg30T 파",
             "gtNorm": "피엠에스리스페리돈정1mg30t패",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "4627600029피엠에스리스페리돈정1mg30t파",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "피엠에스리스페리돈정1mg",
-            "ext": "",
+            "ext": "피엠에스리스페리돈정1mg",
             "gtNorm": "피엠에스리스페리돈정1mg",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "피엠에스리스페리돈정1mg",
+            "status": "match",
             "spurious": false
           },
           "spec": {
             "gt": "30T",
-            "ext": "30T",
+            "ext": "30T √10",
             "gtNorm": "30t",
-            "extNorm": "30t",
-            "status": "match",
+            "extNorm": "30t √10",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -473,42 +476,42 @@
           },
           "unitPrice": {
             "gt": "6939",
-            "ext": "√10 6,939",
+            "ext": "69,390",
             "gtNorm": "6939",
-            "extNorm": "106939",
+            "extNorm": "69390",
             "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "69390",
-            "ext": "69,390",
+            "ext": "",
             "gtNorm": "69390",
-            "extNorm": "69390",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "expiryDate": {
             "gt": "20270516",
-            "ext": "20270516",
+            "ext": "",
             "gtNorm": "20270516",
-            "extNorm": "20270516",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "manufacturingNo": {
             "gt": "662715",
-            "ext": "69,390 662715",
+            "ext": "662715 20270516",
             "gtNorm": "662715",
-            "extNorm": "69390662715",
+            "extNorm": "66271520270516",
             "status": "mismatch",
             "spurious": false
           },
           "itemCode": {
             "gt": "01002985",
-            "ext": "",
+            "ext": "01002985",
             "gtNorm": "01002985",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "01002985",
+            "status": "match",
             "spurious": false
           }
         }
@@ -594,13 +597,13 @@
     ],
     "cellCounts": {
       "scored": 45,
-      "match": 14,
-      "mismatch": 10,
-      "ext_missing": 21,
+      "match": 13,
+      "mismatch": 12,
+      "ext_missing": 20,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3111111111111111
+    "cellAccuracy": 0.28888888888888886
   },
   "buckets": {
     "defects": [
@@ -651,6 +654,14 @@
         "extNorm": "전북특별자치도전주시덕진구신복로1167필",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.83)"
+      },
+      {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['4', '7']"
       },
       {
         "location": "row1:itemName",
@@ -797,23 +808,23 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row4:itemName",
-        "status": "ext_missing",
+        "location": "row6:itemName",
+        "status": "mismatch",
         "gtNorm": "피엠에스리스페리돈정1mg30t패",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "4627600029피엠에스리스페리돈정1mg30t파",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.73)"
       },
       {
-        "location": "row4:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "피엠에스리스페리돈정1mg",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "location": "row6:spec",
+        "status": "mismatch",
+        "gtNorm": "30t",
+        "extNorm": "30t √10",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.60)"
       },
       {
-        "location": "row4:quantity",
+        "location": "row6:quantity",
         "status": "ext_missing",
         "gtNorm": "10",
         "extNorm": "",
@@ -821,28 +832,36 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row4:unitPrice",
+        "location": "row6:unitPrice",
         "status": "mismatch",
         "gtNorm": "6939",
-        "extNorm": "106939",
+        "extNorm": "69390",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.80)"
+        "reason": "char-level diff (sim=0.89)"
       },
       {
-        "location": "row4:manufacturingNo",
-        "status": "mismatch",
-        "gtNorm": "662715",
-        "extNorm": "69390662715",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.71)"
-      },
-      {
-        "location": "row4:itemCode",
+        "location": "row6:amount",
         "status": "ext_missing",
-        "gtNorm": "01002985",
+        "gtNorm": "69390",
+        "extNorm": "",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['unitPrice']"
+      },
+      {
+        "location": "row6:expiryDate",
+        "status": "ext_missing",
+        "gtNorm": "20270516",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row6:manufacturingNo",
+        "status": "mismatch",
+        "gtNorm": "662715",
+        "extNorm": "66271520270516",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.60)"
       },
       {
         "location": "row5:itemName",
@@ -902,9 +921,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 16,
-      "structure": 21,
-      "layout": 0,
+      "recognition": 18,
+      "structure": 20,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

@@ -176,7 +176,7 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 8,
-    "rowCountExt": 9,
+    "rowCountExt": 10,
     "rowCountMatch": false,
     "matchedRowIdx": [
       "8",
@@ -190,7 +190,8 @@
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "9"
+      "9",
+      "10"
     ],
     "rows": [
       {
@@ -223,18 +224,18 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "8.367",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "8367",
-            "status": "mismatch",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "8367",
-            "ext": "10",
+            "ext": "8367",
             "gtNorm": "8367",
-            "extNorm": "10",
-            "status": "mismatch",
+            "extNorm": "8367",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -333,10 +334,10 @@
           },
           "manufacturingNo": {
             "gt": "051091",
-            "ext": "050969",
+            "ext": "",
             "gtNorm": "051091",
-            "extNorm": "050969",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemCode": {
@@ -411,10 +412,10 @@
           },
           "manufacturingNo": {
             "gt": "049594",
-            "ext": "051091",
+            "ext": "049594",
             "gtNorm": "049594",
-            "extNorm": "051091",
-            "status": "mismatch",
+            "extNorm": "049594",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
@@ -489,10 +490,10 @@
           },
           "manufacturingNo": {
             "gt": "051132",
-            "ext": "049594",
+            "ext": "051132",
             "gtNorm": "051132",
-            "extNorm": "049594",
-            "status": "mismatch",
+            "extNorm": "051132",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
@@ -567,10 +568,10 @@
           },
           "manufacturingNo": {
             "gt": "049628",
-            "ext": "051132",
+            "ext": "049628",
             "gtNorm": "049628",
-            "extNorm": "051132",
-            "status": "mismatch",
+            "extNorm": "049628",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
@@ -645,10 +646,10 @@
           },
           "manufacturingNo": {
             "gt": "312210",
-            "ext": "049628",
+            "ext": "312210",
             "gtNorm": "312210",
-            "extNorm": "049628",
-            "status": "mismatch",
+            "extNorm": "312210",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
@@ -715,18 +716,18 @@
           },
           "expiryDate": {
             "gt": "20280424",
-            "ext": "2028.10.17",
+            "ext": "2028.04.24",
             "gtNorm": "20280424",
-            "extNorm": "20281017",
-            "status": "mismatch",
+            "extNorm": "20280424",
+            "status": "match",
             "spurious": false
           },
           "manufacturingNo": {
             "gt": "051028B",
-            "ext": "312210",
+            "ext": "051028B",
             "gtNorm": "051028B",
-            "extNorm": "312210",
-            "status": "mismatch",
+            "extNorm": "051028B",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
@@ -801,10 +802,10 @@
           },
           "manufacturingNo": {
             "gt": "050922",
-            "ext": "051028B",
+            "ext": "050922",
             "gtNorm": "050922",
-            "extNorm": "051028B",
-            "status": "mismatch",
+            "extNorm": "050922",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
@@ -820,13 +821,13 @@
     ],
     "cellCounts": {
       "scored": 72,
-      "match": 51,
-      "mismatch": 21,
-      "ext_missing": 0,
+      "match": 60,
+      "mismatch": 11,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.7083333333333334
+    "cellAccuracy": 0.8333333333333334
   },
   "buckets": {
     "defects": [
@@ -892,7 +893,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['9']"
+        "reason": "extractor invented rows ['9', '10']"
       },
       {
         "location": "row8:itemName",
@@ -901,22 +902,6 @@
         "extNorm": "1로비탄정5mg28ptp",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.96)"
-      },
-      {
-        "location": "row8:quantity",
-        "status": "mismatch",
-        "gtNorm": "10",
-        "extNorm": "8367",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['unitPrice']"
-      },
-      {
-        "location": "row8:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "8367",
-        "extNorm": "10",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['quantity']"
       },
       {
         "location": "row1:spec",
@@ -936,9 +921,9 @@
       },
       {
         "location": "row1:manufacturingNo",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "051091",
-        "extNorm": "050969",
+        "extNorm": "",
         "bucket": "layout",
         "reason": "gt cell appears in column(s) ['expiryDate']"
       },
@@ -959,28 +944,12 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row2:manufacturingNo",
-        "status": "mismatch",
-        "gtNorm": "049594",
-        "extNorm": "051091",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['expiryDate']"
-      },
-      {
         "location": "row3:expiryDate",
         "status": "mismatch",
         "gtNorm": "20290506",
         "extNorm": "051132",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row3:manufacturingNo",
-        "status": "mismatch",
-        "gtNorm": "051132",
-        "extNorm": "049594",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['expiryDate']"
       },
       {
         "location": "row4:expiryDate",
@@ -991,28 +960,12 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row4:manufacturingNo",
-        "status": "mismatch",
-        "gtNorm": "049628",
-        "extNorm": "051132",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['expiryDate']"
-      },
-      {
         "location": "row5:expiryDate",
         "status": "mismatch",
         "gtNorm": "20281017",
         "extNorm": "312210",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.57)"
-      },
-      {
-        "location": "row5:manufacturingNo",
-        "status": "mismatch",
-        "gtNorm": "312210",
-        "extNorm": "049628",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['expiryDate']"
       },
       {
         "location": "row6:itemName",
@@ -1031,42 +984,18 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row6:expiryDate",
-        "status": "mismatch",
-        "gtNorm": "20280424",
-        "extNorm": "20281017",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.62)"
-      },
-      {
-        "location": "row6:manufacturingNo",
-        "status": "mismatch",
-        "gtNorm": "051028B",
-        "extNorm": "312210",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
         "location": "row7:expiryDate",
         "status": "mismatch",
         "gtNorm": "20290324",
         "extNorm": "050922",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row7:manufacturingNo",
-        "status": "mismatch",
-        "gtNorm": "050922",
-        "extNorm": "051028B",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['expiryDate']"
       }
     ],
     "bucketTally": {
-      "recognition": 18,
+      "recognition": 16,
       "structure": 3,
-      "layout": 8,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

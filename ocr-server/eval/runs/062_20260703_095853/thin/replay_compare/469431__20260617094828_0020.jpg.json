@@ -176,18 +176,20 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 6,
-    "rowCountExt": 6,
-    "rowCountMatch": true,
+    "rowCountExt": 7,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
       "2",
       "3",
       "4",
       "5",
-      "6"
+      "7"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "6"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -540,30 +542,30 @@
         }
       },
       {
-        "rowIndex": "6",
+        "rowIndex": "7",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "네오스타정80/5mg",
-            "ext": "매 출",
+            "ext": "f303048 (전문) 네오스타정80/5mg 매 비 주 문 No 출",
             "gtNorm": "네오스타정805mg",
-            "extNorm": "매출",
+            "extNorm": "f303048전문네오스타정805mg매비주문no출",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "네오스타정80/5mg",
-            "ext": "매스(#15)",
+            "ext": "네오스타정80/5mg",
             "gtNorm": "네오스타정80/5mg",
-            "extNorm": "매스(#15)",
-            "status": "mismatch",
+            "extNorm": "네오스타정80/5mg",
+            "status": "match",
             "spurious": false
           },
           "spec": {
             "gt": "30T/P",
-            "ext": "매 출 30T/P 액",
+            "ext": "고 액 30T/P 20260615 - 11006",
             "gtNorm": "30t/p",
-            "extNorm": "매 출 30t/p 액",
+            "extNorm": "고 액 30t/p 20260615 - 11006",
             "status": "mismatch",
             "spurious": false
           },
@@ -593,10 +595,10 @@
           },
           "itemCode": {
             "gt": "01007698",
-            "ext": "65380535매 출수량 2141531 네오스타정80/5mg",
+            "ext": "01007698",
             "gtNorm": "01007698",
-            "extNorm": "65380535매출수량2141531네오스타정805MG",
-            "status": "mismatch",
+            "extNorm": "01007698",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -612,13 +614,13 @@
     ],
     "cellCounts": {
       "scored": 48,
-      "match": 21,
-      "mismatch": 10,
+      "match": 23,
+      "mismatch": 8,
       "ext_missing": 17,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4375
+    "cellAccuracy": 0.4791666666666667
   },
   "buckets": {
     "defects": [
@@ -677,6 +679,14 @@
         "extNorm": "08296서울특별시구로공원로8길24구로동",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.69)"
+      },
+      {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['6']"
       },
       {
         "location": "row1:itemName",
@@ -847,31 +857,23 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row6:itemName",
+        "location": "row7:itemName",
         "status": "mismatch",
         "gtNorm": "네오스타정805mg",
-        "extNorm": "매출",
+        "extNorm": "f303048전문네오스타정805mg매비주문no출",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.56)"
       },
       {
-        "location": "row6:itemNameMaster",
-        "status": "mismatch",
-        "gtNorm": "네오스타정80/5mg",
-        "extNorm": "매스(#15)",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row6:spec",
+        "location": "row7:spec",
         "status": "mismatch",
         "gtNorm": "30t/p",
-        "extNorm": "매 출 30t/p 액",
+        "extNorm": "고 액 30t/p 20260615 - 11006",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.62)"
+        "reason": "cell differs, low similarity"
       },
       {
-        "location": "row6:quantity",
+        "location": "row7:quantity",
         "status": "ext_missing",
         "gtNorm": "3",
         "extNorm": "",
@@ -879,15 +881,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row6:itemCode",
-        "status": "mismatch",
-        "gtNorm": "01007698",
-        "extNorm": "65380535매출수량2141531네오스타정805MG",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row6:insuranceCode",
+        "location": "row7:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "65380535",
         "extNorm": "",
@@ -896,8 +890,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 13,
-      "structure": 21,
+      "recognition": 11,
+      "structure": 22,
       "layout": 0,
       "preprocessing": 0
     },

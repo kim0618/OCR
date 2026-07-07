@@ -189,15 +189,14 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 3,
-    "rowCountExt": 3,
-    "rowCountMatch": true,
+    "rowCountExt": 4,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
-      "2"
+      "2",
+      "4"
     ],
-    "gtOnlyRowIdx": [
-      "3"
-    ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
       "3"
     ],
@@ -359,80 +358,79 @@
         }
       },
       {
-        "rowIndex": "3",
+        "rowIndex": "4",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "트라스트핑거플라스타",
-            "ext": "",
+            "ext": "6 5 4 7 8 3 트라스트핑거플라스타",
             "gtNorm": "트라스트핑거플라스타",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "654783트라스트핑거플라스타",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "트라스트핑거플라스타(SK)",
-            "ext": "",
+            "ext": "트라스트핑거플라스타(SK)",
             "gtNorm": "트라스트핑거플라스타(sk)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "트라스트핑거플라스타(sk)",
+            "status": "match",
             "spurious": false
           },
           "spec": {
             "gt": "30매",
-            "ext": "",
+            "ext": "30매H",
             "gtNorm": "30매",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30매h",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
             "gt": "1000",
-            "ext": "",
+            "ext": "2,500.00",
             "gtNorm": "1000",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "250000",
+            "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "2500",
-            "ext": "",
+            "ext": "1,000",
             "gtNorm": "2500",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "1000",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "0",
-            "ext": "",
+            "ext": "2,500.000",
             "gtNorm": "0",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "2500000",
+            "status": "mismatch",
             "spurious": false
           },
           "expiryDate": {
             "gt": "20290209",
-            "ext": "",
+            "ext": "20290209",
             "gtNorm": "20290209",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20290209",
+            "status": "match",
             "spurious": false
           },
           "manufacturingNo": {
             "gt": "0012602",
-            "ext": "",
+            "ext": "0012602",
             "gtNorm": "0012602",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "0012602",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
             "gt": "14002908",
-            "ext": "",
+            "ext": "14002908",
             "gtNorm": "14002908",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "14002908",
+            "status": "match",
             "spurious": false
           }
         }
@@ -440,13 +438,13 @@
     ],
     "cellCounts": {
       "scored": 27,
-      "match": 5,
-      "mismatch": 5,
-      "ext_missing": 17,
+      "match": 9,
+      "mismatch": 10,
+      "ext_missing": 8,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.18518518518518517
+    "cellAccuracy": 0.3333333333333333
   },
   "buckets": {
     "defects": [
@@ -505,14 +503,6 @@
         "extNorm": "경남김해시진례면테크노벨리로3312",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.84)"
-      },
-      {
-        "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['3']"
       },
       {
         "location": "table",
@@ -627,82 +617,50 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row3:itemName",
-        "status": "ext_missing",
+        "location": "row4:itemName",
+        "status": "mismatch",
         "gtNorm": "트라스트핑거플라스타",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "654783트라스트핑거플라스타",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.77)"
       },
       {
-        "location": "row3:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "트라스트핑거플라스타(sk)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:spec",
-        "status": "ext_missing",
+        "location": "row4:spec",
+        "status": "mismatch",
         "gtNorm": "30매",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "30매h",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.86)"
       },
       {
-        "location": "row3:quantity",
-        "status": "ext_missing",
+        "location": "row4:quantity",
+        "status": "mismatch",
         "gtNorm": "1000",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "250000",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['unitPrice']"
       },
       {
-        "location": "row3:unitPrice",
-        "status": "ext_missing",
+        "location": "row4:unitPrice",
+        "status": "mismatch",
         "gtNorm": "2500",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "1000",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.50)"
       },
       {
-        "location": "row3:amount",
-        "status": "ext_missing",
+        "location": "row4:amount",
+        "status": "mismatch",
         "gtNorm": "0",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:expiryDate",
-        "status": "ext_missing",
-        "gtNorm": "20290209",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:manufacturingNo",
-        "status": "ext_missing",
-        "gtNorm": "0012602",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "14002908",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "2500000",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       }
     ],
     "bucketTally": {
-      "recognition": 9,
-      "structure": 22,
-      "layout": 0,
+      "recognition": 13,
+      "structure": 12,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

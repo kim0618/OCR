@@ -189,16 +189,18 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 4,
-    "rowCountExt": 4,
-    "rowCountMatch": true,
+    "rowCountExt": 5,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
       "2",
       "3",
-      "4"
+      "5"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "4"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -262,10 +264,10 @@
           },
           "manufacturingNo": {
             "gt": "EPNS2402",
-            "ext": "",
+            "ext": "EPNS2402",
             "gtNorm": "EPNS2402",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "EPNS2402",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
@@ -434,10 +436,10 @@
           },
           "manufacturingNo": {
             "gt": "UNNT2605",
-            "ext": "",
+            "ext": "UNNT2605",
             "gtNorm": "UNNT2605",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "UNNT2605",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
@@ -459,7 +461,7 @@
         }
       },
       {
-        "rowIndex": "4",
+        "rowIndex": "5",
         "rowMatch": false,
         "cells": {
           "itemName": {
@@ -480,34 +482,34 @@
           },
           "spec": {
             "gt": "28T",
-            "ext": "28T",
+            "ext": "",
             "gtNorm": "28t",
-            "extNorm": "28t",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "quantity": {
             "gt": "5",
-            "ext": "",
+            "ext": "23,083",
             "gtNorm": "5",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "23083",
+            "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "23083",
-            "ext": "",
+            "ext": "28",
             "gtNorm": "23083",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "28",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "115415",
-            "ext": "",
+            "ext": "115,415",
             "gtNorm": "115415",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "115415",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -520,10 +522,10 @@
           },
           "manufacturingNo": {
             "gt": "US4T2401",
-            "ext": "",
+            "ext": "US4T2401 2027-05-12",
             "gtNorm": "US4T2401",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "US4T240120270512",
+            "status": "mismatch",
             "spurious": false
           },
           "itemCode": {
@@ -547,13 +549,13 @@
     ],
     "cellCounts": {
       "scored": 40,
-      "match": 13,
-      "mismatch": 3,
-      "ext_missing": 24,
+      "match": 15,
+      "mismatch": 6,
+      "ext_missing": 19,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.325
+    "cellAccuracy": 0.375
   },
   "buckets": {
     "defects": [
@@ -614,6 +616,14 @@
         "reason": "char-level diff (sim=0.76)"
       },
       {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['4']"
+      },
+      {
         "location": "row1:spec",
         "status": "ext_missing",
         "gtNorm": "1bt",
@@ -633,14 +643,6 @@
         "location": "row1:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20270725",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:manufacturingNo",
-        "status": "ext_missing",
-        "gtNorm": "EPNS2402",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -758,14 +760,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row3:manufacturingNo",
-        "status": "ext_missing",
-        "gtNorm": "UNNT2605",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row3:itemCode",
         "status": "mismatch",
         "gtNorm": "087112",
@@ -782,31 +776,31 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row4:quantity",
+        "location": "row5:spec",
         "status": "ext_missing",
+        "gtNorm": "28t",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row5:quantity",
+        "status": "mismatch",
         "gtNorm": "5",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "23083",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
-        "location": "row4:unitPrice",
-        "status": "ext_missing",
+        "location": "row5:unitPrice",
+        "status": "mismatch",
         "gtNorm": "23083",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "28",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['quantity']"
       },
       {
-        "location": "row4:amount",
-        "status": "ext_missing",
-        "gtNorm": "115415",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:expiryDate",
+        "location": "row5:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20270512",
         "extNorm": "",
@@ -814,15 +808,15 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row4:manufacturingNo",
-        "status": "ext_missing",
+        "location": "row5:manufacturingNo",
+        "status": "mismatch",
         "gtNorm": "US4T2401",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "US4T240120270512",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.67)"
       },
       {
-        "location": "row4:insuranceCode",
+        "location": "row5:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "US4T0028",
         "extNorm": "",
@@ -831,9 +825,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 10,
-      "structure": 24,
-      "layout": 0,
+      "recognition": 12,
+      "structure": 20,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

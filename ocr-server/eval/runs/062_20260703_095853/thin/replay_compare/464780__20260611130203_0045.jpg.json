@@ -189,12 +189,12 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 4,
-    "rowCountExt": 8,
+    "rowCountExt": 12,
     "rowCountMatch": false,
     "matchedRowIdx": [
       "2",
       "4",
-      "6",
+      "11",
       "8"
     ],
     "gtOnlyRowIdx": [],
@@ -202,7 +202,11 @@
       "1",
       "3",
       "5",
-      "7"
+      "6",
+      "7",
+      "9",
+      "10",
+      "12"
     ],
     "rows": [
       {
@@ -362,14 +366,14 @@
         }
       },
       {
-        "rowIndex": "6",
+        "rowIndex": "11",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "폴민시타서방정 100/1000mg 28TAB-1BOT 신일제약",
-            "ext": "폴민시타서방정100/1000mg 28TAB-1B0T 신일제약 13.543 67.715",
+            "ext": "3 폴민시타서방정100/1000mg 28TAB-1B0T 신일제약",
             "gtNorm": "폴민시타서방정1001000mg28tab1bot신일제약",
-            "extNorm": "폴민시타서방정1001000mg28tab1b0t신일제약1354367715",
+            "extNorm": "3폴민시타서방정1001000mg28tab1b0t신일제약",
             "status": "mismatch",
             "spurious": false
           },
@@ -383,34 +387,34 @@
           },
           "spec": {
             "gt": "28TAB-1BOT",
-            "ext": "",
+            "ext": "28TAB-1BOT",
             "gtNorm": "28tab-1bot",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "28tab-1bot",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
             "gt": "5",
-            "ext": "",
+            "ext": "13543",
             "gtNorm": "5",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "13543",
+            "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "13543",
-            "ext": "",
+            "ext": "5",
             "gtNorm": "13543",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "5",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "67715",
-            "ext": "",
+            "ext": "20280114",
             "gtNorm": "67715",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20280114",
+            "status": "mismatch",
             "spurious": false
           },
           "expiryDate": {
@@ -520,13 +524,13 @@
     ],
     "cellCounts": {
       "scored": 36,
-      "match": 12,
-      "mismatch": 8,
-      "ext_missing": 16,
+      "match": 13,
+      "mismatch": 11,
+      "ext_missing": 12,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3333333333333333
+    "cellAccuracy": 0.3611111111111111
   },
   "buckets": {
     "defects": [
@@ -584,7 +588,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '3', '5', '7']"
+        "reason": "extractor invented rows ['1', '3', '5', '6', '7', '9', '10', '12']"
       },
       {
         "location": "row2:itemName",
@@ -675,55 +679,47 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row6:itemName",
+        "location": "row11:itemName",
         "status": "mismatch",
         "gtNorm": "폴민시타서방정1001000mg28tab1bot신일제약",
-        "extNorm": "폴민시타서방정1001000mg28tab1b0t신일제약1354367715",
+        "extNorm": "3폴민시타서방정1001000mg28tab1b0t신일제약",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.82)"
+        "reason": "char-level diff (sim=0.95)"
       },
       {
-        "location": "row6:spec",
-        "status": "ext_missing",
-        "gtNorm": "28tab-1bot",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row6:quantity",
-        "status": "ext_missing",
+        "location": "row11:quantity",
+        "status": "mismatch",
         "gtNorm": "5",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "13543",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['unitPrice']"
       },
       {
-        "location": "row6:unitPrice",
-        "status": "ext_missing",
+        "location": "row11:unitPrice",
+        "status": "mismatch",
         "gtNorm": "13543",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "5",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['quantity']"
       },
       {
-        "location": "row6:amount",
-        "status": "ext_missing",
+        "location": "row11:amount",
+        "status": "mismatch",
         "gtNorm": "67715",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "20280114",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
-        "location": "row6:expiryDate",
+        "location": "row11:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20280114",
         "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['amount']"
       },
       {
-        "location": "row6:insuranceCode",
+        "location": "row11:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "1181016",
         "extNorm": "",
@@ -780,9 +776,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 13,
-      "structure": 17,
-      "layout": 1,
+      "recognition": 14,
+      "structure": 12,
+      "layout": 4,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

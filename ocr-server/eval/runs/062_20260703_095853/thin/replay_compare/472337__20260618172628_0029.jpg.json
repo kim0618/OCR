@@ -189,16 +189,15 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 4,
-    "rowCountExt": 4,
-    "rowCountMatch": true,
+    "rowCountExt": 5,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
       "2",
-      "3"
+      "3",
+      "5"
     ],
-    "gtOnlyRowIdx": [
-      "4"
-    ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
       "4"
     ],
@@ -438,24 +437,23 @@
         }
       },
       {
-        "rowIndex": "4",
+        "rowIndex": "5",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "화이트다파글립틴정 10/100mg/30T",
-            "ext": "",
+            "ext": "5 9 ∞: 10 11 12 14 15 6 13 7 4 환이트다파글립틴정10/100mg/30T 30정",
             "gtNorm": "화이트다파글립틴정10100mg30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "59101112141561374환이트다파글립틴정10100mg30t30정",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "화이트다파글립틴정10/100mg",
-            "ext": "",
+            "ext": "화이트다파글립틴정10/100mg",
             "gtNorm": "화이트다파글립틴정10/100mg",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "화이트다파글립틴정10/100mg",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -468,26 +466,26 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "",
+            "ext": "24,111",
             "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "24111",
+            "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "24111",
-            "ext": "",
+            "ext": "10",
             "gtNorm": "24111",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "219191",
-            "ext": "",
+            "ext": "219191",
             "gtNorm": "219191",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "219191",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -508,10 +506,10 @@
           },
           "itemCode": {
             "gt": "22005013",
-            "ext": "",
+            "ext": "22005013",
             "gtNorm": "22005013",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "22005013",
+            "status": "match",
             "spurious": false
           }
         }
@@ -519,13 +517,13 @@
     ],
     "cellCounts": {
       "scored": 36,
-      "match": 12,
-      "mismatch": 3,
-      "ext_missing": 21,
+      "match": 15,
+      "mismatch": 6,
+      "ext_missing": 15,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3333333333333333
+    "cellAccuracy": 0.4166666666666667
   },
   "buckets": {
     "defects": [
@@ -568,14 +566,6 @@
         "extNorm": "중손경기도화성시향남읍제약공단4",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
-      },
-      {
-        "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['4']"
       },
       {
         "location": "table",
@@ -706,23 +696,15 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row4:itemName",
-        "status": "ext_missing",
+        "location": "row5:itemName",
+        "status": "mismatch",
         "gtNorm": "화이트다파글립틴정10100mg30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "59101112141561374환이트다파글립틴정10100mg30t30정",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.62)"
       },
       {
-        "location": "row4:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "화이트다파글립틴정10/100mg",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:spec",
+        "location": "row5:spec",
         "status": "ext_missing",
         "gtNorm": "30정",
         "extNorm": "",
@@ -730,31 +712,23 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row4:quantity",
-        "status": "ext_missing",
+        "location": "row5:quantity",
+        "status": "mismatch",
         "gtNorm": "10",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "24111",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['unitPrice']"
       },
       {
-        "location": "row4:unitPrice",
-        "status": "ext_missing",
+        "location": "row5:unitPrice",
+        "status": "mismatch",
         "gtNorm": "24111",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "10",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['quantity']"
       },
       {
-        "location": "row4:amount",
-        "status": "ext_missing",
-        "gtNorm": "219191",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:expiryDate",
+        "location": "row5:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20281221",
         "extNorm": "",
@@ -762,26 +736,18 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row4:manufacturingNo",
+        "location": "row5:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "25001",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "22005013",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 7,
-      "structure": 24,
-      "layout": 0,
+      "recognition": 8,
+      "structure": 17,
+      "layout": 2,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

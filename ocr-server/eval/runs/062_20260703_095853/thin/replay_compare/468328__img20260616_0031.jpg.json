@@ -176,15 +176,17 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 3,
-    "rowCountExt": 3,
-    "rowCountMatch": true,
+    "rowCountExt": 4,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
       "2",
       "3"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "4"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -240,10 +242,10 @@
           },
           "expiryDate": {
             "gt": "20270610",
-            "ext": "20270610",
+            "ext": "",
             "gtNorm": "20270610",
-            "extNorm": "20270610",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "manufacturingNo": {
@@ -264,10 +266,10 @@
           },
           "insuranceCode": {
             "gt": "654700380",
-            "ext": "654700380",
+            "ext": "",
             "gtNorm": "654700380",
-            "extNorm": "654700380",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           }
         }
@@ -326,10 +328,10 @@
           },
           "expiryDate": {
             "gt": "20280909",
-            "ext": "20280909",
+            "ext": "",
             "gtNorm": "20280909",
-            "extNorm": "20280909",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "manufacturingNo": {
@@ -350,10 +352,10 @@
           },
           "insuranceCode": {
             "gt": "654700590",
-            "ext": "654700590",
+            "ext": "",
             "gtNorm": "654700590",
-            "extNorm": "654700590",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           }
         }
@@ -380,9 +382,9 @@
           },
           "spec": {
             "gt": "500 mL",
-            "ext": "4 6 3 5 케트라진액500mL 500mL",
+            "ext": "500mL",
             "gtNorm": "500 ml",
-            "extNorm": "4 6 3 5 케트라진액500ml 500ml",
+            "extNorm": "500ml",
             "status": "mismatch",
             "spurious": false
           },
@@ -447,13 +449,13 @@
     ],
     "cellCounts": {
       "scored": 30,
-      "match": 18,
+      "match": 14,
       "mismatch": 6,
-      "ext_missing": 6,
+      "ext_missing": 10,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.6
+    "cellAccuracy": 0.4666666666666667
   },
   "buckets": {
     "defects": [
@@ -490,6 +492,14 @@
         "reason": "char-level diff (sim=0.81)"
       },
       {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['4']"
+      },
+      {
         "location": "row1:unitPrice",
         "status": "ext_missing",
         "gtNorm": "11988",
@@ -506,9 +516,25 @@
         "reason": "char-level diff (sim=0.91)"
       },
       {
+        "location": "row1:expiryDate",
+        "status": "ext_missing",
+        "gtNorm": "20270610",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
         "location": "row1:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "X001",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row1:insuranceCode",
+        "status": "ext_missing",
+        "gtNorm": "654700380",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -546,6 +572,14 @@
         "reason": "cell differs, low similarity"
       },
       {
+        "location": "row2:expiryDate",
+        "status": "ext_missing",
+        "gtNorm": "20280909",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
         "location": "row2:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "Y001",
@@ -554,12 +588,20 @@
         "reason": "gt cell absent in extracted row"
       },
       {
+        "location": "row2:insuranceCode",
+        "status": "ext_missing",
+        "gtNorm": "654700590",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
         "location": "row3:spec",
         "status": "mismatch",
         "gtNorm": "500 ml",
-        "extNorm": "4 6 3 5 케트라진액500ml 500ml",
+        "extNorm": "500ml",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.91)"
       },
       {
         "location": "row3:quantity",
@@ -588,7 +630,7 @@
     ],
     "bucketTally": {
       "recognition": 10,
-      "structure": 4,
+      "structure": 9,
       "layout": 2,
       "preprocessing": 0
     },

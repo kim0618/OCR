@@ -189,14 +189,16 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 2,
-    "rowCountExt": 2,
-    "rowCountMatch": true,
+    "rowCountExt": 3,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
-      "2"
+      "3"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "2"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -252,18 +254,18 @@
           },
           "expiryDate": {
             "gt": "20290322",
-            "ext": "2029-03-22",
+            "ext": "",
             "gtNorm": "20290322",
-            "extNorm": "20290322",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "manufacturingNo": {
             "gt": "260028",
-            "ext": "26002B",
+            "ext": "",
             "gtNorm": "260028",
-            "extNorm": "26002B",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemCode": {
@@ -277,60 +279,60 @@
         }
       },
       {
-        "rowIndex": "2",
+        "rowIndex": "3",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "헤파콘캡슐 300C",
-            "ext": "헤파콘캡슬300C",
+            "ext": "2 3 5 4 6 L 헤파콘캡슬300C",
             "gtNorm": "헤파콘캡슐300c",
-            "extNorm": "헤파콘캡슬300c",
+            "extNorm": "23546l헤파콘캡슬300c",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "헤파콘캡슐",
-            "ext": "헤파콘캡슐",
+            "ext": "",
             "gtNorm": "헤파콘캡슐",
-            "extNorm": "헤파콘캡슐",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "spec": {
             "gt": "B00C",
-            "ext": "",
+            "ext": "B00C",
             "gtNorm": "b00c",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "b00c",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
             "gt": "5",
-            "ext": "",
-            "gtNorm": "5",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "unitPrice": {
-            "gt": "59670",
-            "ext": "",
-            "gtNorm": "59670",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "amount": {
-            "gt": "271227",
             "ext": "59,670",
-            "gtNorm": "271227",
+            "gtNorm": "5",
             "extNorm": "59670",
             "status": "mismatch",
             "spurious": false
           },
+          "unitPrice": {
+            "gt": "59670",
+            "ext": "5",
+            "gtNorm": "59670",
+            "extNorm": "5",
+            "status": "mismatch",
+            "spurious": false
+          },
+          "amount": {
+            "gt": "271227",
+            "ext": "271,227",
+            "gtNorm": "271227",
+            "extNorm": "271227",
+            "status": "match",
+            "spurious": false
+          },
           "expiryDate": {
             "gt": "20281216",
-            "ext": "2028-12-16",
+            "ext": "– 2028-12-16",
             "gtNorm": "20281216",
             "extNorm": "20281216",
             "status": "match",
@@ -338,18 +340,18 @@
           },
           "manufacturingNo": {
             "gt": "25001A",
-            "ext": "25001A",
+            "ext": "27,123 · 1 25001A",
             "gtNorm": "25001A",
-            "extNorm": "25001A",
-            "status": "match",
+            "extNorm": "27123125001A",
+            "status": "mismatch",
             "spurious": false
           },
           "itemCode": {
             "gt": "03001569",
-            "ext": "03001569",
+            "ext": "",
             "gtNorm": "03001569",
-            "extNorm": "03001569",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           }
         }
@@ -357,13 +359,13 @@
     ],
     "cellCounts": {
       "scored": 18,
-      "match": 7,
-      "mismatch": 5,
-      "ext_missing": 6,
+      "match": 5,
+      "mismatch": 6,
+      "ext_missing": 7,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3888888888888889
+    "cellAccuracy": 0.2777777777777778
   },
   "buckets": {
     "defects": [
@@ -398,6 +400,14 @@
         "extNorm": "전북전주시덕진구팔복동4가2231신복로1167",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.77)"
+      },
+      {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['2']"
       },
       {
         "location": "row1:itemName",
@@ -440,58 +450,74 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:manufacturingNo",
-        "status": "mismatch",
-        "gtNorm": "260028",
-        "extNorm": "26002B",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.83)"
+        "location": "row1:expiryDate",
+        "status": "ext_missing",
+        "gtNorm": "20290322",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:itemName",
+        "location": "row1:manufacturingNo",
+        "status": "ext_missing",
+        "gtNorm": "260028",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row3:itemName",
         "status": "mismatch",
         "gtNorm": "헤파콘캡슐300c",
-        "extNorm": "헤파콘캡슬300c",
+        "extNorm": "23546l헤파콘캡슬300c",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.89)"
+        "reason": "char-level diff (sim=0.67)"
       },
       {
-        "location": "row2:spec",
+        "location": "row3:itemNameMaster",
         "status": "ext_missing",
-        "gtNorm": "b00c",
+        "gtNorm": "헤파콘캡슐",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:quantity",
-        "status": "ext_missing",
-        "gtNorm": "5",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "59670",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
-      },
-      {
-        "location": "row2:amount",
+        "location": "row3:quantity",
         "status": "mismatch",
-        "gtNorm": "271227",
+        "gtNorm": "5",
         "extNorm": "59670",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['unitPrice']"
+      },
+      {
+        "location": "row3:unitPrice",
+        "status": "mismatch",
+        "gtNorm": "59670",
+        "extNorm": "5",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['quantity']"
+      },
+      {
+        "location": "row3:manufacturingNo",
+        "status": "mismatch",
+        "gtNorm": "25001A",
+        "extNorm": "27123125001A",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.67)"
+      },
+      {
+        "location": "row3:itemCode",
+        "status": "ext_missing",
+        "gtNorm": "03001569",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 8,
-      "structure": 6,
-      "layout": 1,
+      "recognition": 7,
+      "structure": 9,
+      "layout": 2,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

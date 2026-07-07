@@ -156,6 +156,7 @@ def compute_google_master(keys):
     # 통계: 전체 + 독립(순환제외). 순환 = war match_type이 우리가 쓴 방식과 같은 행.
     nm_ok = nm_tot = cd_ok = cd_tot = 0
     icd_ok = icd_tot = 0        # itemCode 독립(순환제외)
+    inm_ok = inm_tot = 0        # itemName 독립(순환제외)
     n_like = n_trg = n_rule = n_miss = 0
     # 거래처(공급자)/지점(공급받는자) 매칭 카운터: labelEn -> [ok, tot]
     party = {k: [0, 0] for k in ("supplierCompany", "supplierAddress",
@@ -203,8 +204,13 @@ def compute_google_master(keys):
             if gold_master:
                 nm_tot += 1
                 resolved = mc.get("nm") or raw
-                if _clean_nm(resolved) == _clean_nm(gold_master):
+                nm_match = _clean_nm(resolved) == _clean_nm(gold_master)
+                if nm_match:
                     nm_ok += 1
+                if not circ:                 # 독립(순환제외) 집계
+                    inm_tot += 1
+                    if nm_match:
+                        inm_ok += 1
             gold_code = r.get("itemCode")
             if gold_code:
                 cd_tot += 1
@@ -226,6 +232,8 @@ def compute_google_master(keys):
     det = {"nm_ok": nm_ok, "nm_tot": nm_tot, "cd_ok": cd_ok, "cd_tot": cd_tot,
            "icd_ok": icd_ok, "icd_tot": icd_tot,
            "icd_pct": (100.0 * icd_ok / icd_tot if icd_tot else None),
+           "inm_ok": inm_ok, "inm_tot": inm_tot,
+           "inm_pct": (100.0 * inm_ok / inm_tot if inm_tot else None),
            "n_rule": n_rule, "n_like": n_like, "n_trg": n_trg, "n_miss": n_miss,
            "party": {k: tuple(v) for k, v in party.items()},
            "cache_entries": len(mm)}
@@ -376,15 +384,33 @@ def _dual_html(full_html, noc_html):
     return f'<span class="v-full">{full_html}</span><span class="v-noc">{noc_html}</span>'
 
 
-def _render_panel(stage, active, item_pct, item_ok, item_tot, paddle, grule, gmaster) -> str:
+def _render_panel(stage, active, item_pct, item_ok, item_tot, paddle, grule, gmaster, mdet=None) -> str:
     grp_ko = {"head": "문서 헤더 (필드)", "row": "표 셀 (품목 행)"}
+
+    def _noc_item(lab):
+        """Master 단계 품명/itemCode의 순환제외(독립) 값. 없으면 None."""
+        if stage != "master" or not mdet:
+            return None
+        if lab == "itemName":
+            return mdet.get("inm_pct")
+        if lab == "itemCode":
+            return mdet.get("icd_pct")
+        return None
 
     def _agg(side, g, mode):
         pool = FIELDS if g == "all" else [t for t in FIELDS if t[1] == g]
         if mode == "nocirc":                       # 순환 pass-through(b==100.0) 제외
             pool = [t for t in pool if t[2] != 100.0]
-        vals = [v for v in (_stage_value(stage, side, lab, b, item_pct, paddle, grule, gmaster)
-                            for lab, gg, b in pool) if v is not None]
+        vals = []
+        for lab, gg, b in pool:
+            v = _stage_value(stage, side, lab, b, item_pct, paddle, grule, gmaster)
+            if v is None:
+                continue
+            if mode == "nocirc" and side == "google":   # 품명/itemCode는 독립값으로 대체
+                nv = _noc_item(lab)
+                if nv is not None:
+                    v = nv
+            vals.append(v)
         return (sum(vals) / len(vals)) if vals else None
 
     def _c(side, g, ko):
@@ -413,7 +439,14 @@ def _render_panel(stage, active, item_pct, item_ok, item_tot, paddle, grule, gma
             gcell = f'<b>{_pctcell(gv)}</b> <span class="muted">({item_ok:,}/{item_tot:,})</span>'
         elif circ_item:
             tip = "war 최종값과 일치율 — war가 같은 방식(learndata/LIKE/trigram)으로 맞춘 행은 부분순환"
-            gcell = f'<b>{_pctcell(gv)}</b> <span class="muted" title="{tip}">⚑</span>'
+            full_html = f'<b>{_pctcell(gv)}</b> <span class="muted" title="{tip}">⚑</span>'
+            nv = _noc_item(lab)                     # 순환제외(독립) 값
+            if nv is not None:
+                noc_tip = "순환 제외 — war가 우리와 다른 방식으로 맞춘 독립 행만"
+                noc_html = f'<b>{_pctcell(nv)}</b> <span class="muted" title="{noc_tip}">◆</span>'
+                gcell = _dual_html(full_html, noc_html)
+            else:
+                gcell = full_html
         elif circular:  # 흐리게 (실제 점수 아님)
             gcell = f'<span class="muted" title="GT가 구글값이라 자기비교(=GT)">{_pctcell(gv)}</span>'
         else:
@@ -442,7 +475,7 @@ def build_html(ndocs, item_pct, item_ok, item_tot, paddle, paddle_run, grule, gd
         f'<div class="tab{" active" if i == 0 else ""}" onclick="showTab({i})">{ko}</div>'
         for i, (st, ko) in enumerate(STAGES))
     panels = "".join(
-        _render_panel(st, i == 0, item_pct, item_ok, item_tot, paddle, grule, gmaster)
+        _render_panel(st, i == 0, item_pct, item_ok, item_tot, paddle, grule, gmaster, mdet)
         for i, (st, ko) in enumerate(STAGES))
     js = ("function showTab(i){"
           "document.querySelectorAll('.tab').forEach((t,j)=>t.classList.toggle('active',j===i));"
@@ -462,7 +495,9 @@ def build_html(ndocs, item_pct, item_ok, item_tot, paddle, paddle_run, grule, gd
         f'Master = 품목(learndata→LIKE→trigram) + 거래처(지점+사업자번호 정확일치) + 지점(brch_cd) — ocr.xml 충실재현</p>'
         f'<div class="tabbar">{tabs}</div>{panels}'
         f'<p class="note">· <b>⚑</b> = war 최종값과 일치율(품명·코드) — war가 같은 방식으로 맞춘 행은 부분순환. '
-        f'itemCode 독립(순환제외) = <b>{("%.1f%%" % mdet["icd_pct"]) if mdet.get("icd_pct") is not None else "-"}</b> '
+        f'<b>◆</b> = 순환 제외(독립 행): 품명 <b>{("%.1f%%" % mdet["inm_pct"]) if mdet.get("inm_pct") is not None else "-"}</b> '
+        f'({mdet.get("inm_ok",0):,}/{mdet.get("inm_tot",0):,}), '
+        f'itemCode <b>{("%.1f%%" % mdet["icd_pct"]) if mdet.get("icd_pct") is not None else "-"}</b> '
         f'({mdet.get("icd_ok",0):,}/{mdet.get("icd_tot",0):,}) · '
         f'<span class="muted">회색 100%</span> = GT가 구글값(순환) · 0% = war에 없음 → Paddle 돌리면 채워짐</p>'
         f'<script>{js}</script></body></html>')

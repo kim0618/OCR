@@ -150,7 +150,7 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 4,
-    "rowCountExt": 6,
+    "rowCountExt": 7,
     "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
@@ -161,7 +161,8 @@
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
       "3",
-      "4"
+      "4",
+      "7"
     ],
     "rows": [
       {
@@ -186,10 +187,10 @@
           },
           "spec": {
             "gt": "300G",
-            "ext": "",
+            "ext": "300G",
             "gtNorm": "300g",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "300g",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -264,10 +265,10 @@
           },
           "spec": {
             "gt": "28PTP",
-            "ext": "",
+            "ext": "28PTP",
             "gtNorm": "28ptp",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "28ptp",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -342,10 +343,10 @@
           },
           "spec": {
             "gt": "28정 PTP",
-            "ext": "",
+            "ext": "28정PTP",
             "gtNorm": "28정 ptp",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "28정ptp",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -420,10 +421,10 @@
           },
           "spec": {
             "gt": "1정PTP",
-            "ext": "",
+            "ext": "1정PTP",
             "gtNorm": "1정ptp",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "1정ptp",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -479,13 +480,13 @@
     ],
     "cellCounts": {
       "scored": 36,
-      "match": 21,
-      "mismatch": 4,
-      "ext_missing": 11,
+      "match": 24,
+      "mismatch": 5,
+      "ext_missing": 7,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5833333333333334
+    "cellAccuracy": 0.6666666666666666
   },
   "buckets": {
     "defects": [
@@ -551,15 +552,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['3', '4']"
-      },
-      {
-        "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "300g",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "reason": "extractor invented rows ['3', '4', '7']"
       },
       {
         "location": "row1:quantity",
@@ -584,14 +577,6 @@
         "extNorm": "티보리시정25mg티볼론28ptp",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.83)"
-      },
-      {
-        "location": "row2:spec",
-        "status": "ext_missing",
-        "gtNorm": "28ptp",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row2:quantity",
@@ -619,11 +604,11 @@
       },
       {
         "location": "row5:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "28정 ptp",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "28정ptp",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "row5:quantity",
@@ -650,14 +635,6 @@
         "reason": "gt cell appears in column(s) ['itemNameMaster']"
       },
       {
-        "location": "row6:spec",
-        "status": "ext_missing",
-        "gtNorm": "1정ptp",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row6:quantity",
         "status": "ext_missing",
         "gtNorm": "60",
@@ -675,8 +652,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 4,
-      "structure": 17,
+      "recognition": 5,
+      "structure": 13,
       "layout": 2,
       "preprocessing": 0
     },

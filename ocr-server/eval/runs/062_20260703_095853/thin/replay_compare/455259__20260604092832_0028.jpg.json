@@ -189,17 +189,21 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 4,
-    "rowCountExt": 3,
+    "rowCountExt": 6,
     "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
-      "2",
+      "5",
       "3"
     ],
     "gtOnlyRowIdx": [
       "4"
     ],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "2",
+      "4",
+      "6"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -288,54 +292,54 @@
         }
       },
       {
-        "rowIndex": "2",
+        "rowIndex": "5",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "베시케어 (5mg/10OT)",
-            "ext": "베시케Q",
+            "ext": "2 152914 베시케Q (5mg/100T)",
             "gtNorm": "베시케어5mg10ot",
-            "extNorm": "베시케q",
+            "extNorm": "2152914베시케q5mg100t",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "베시케어정5mg",
-            "ext": "베시케어정5mg(한국아스텔라스)(판매원변경)",
-            "gtNorm": "베시케어정5mg",
-            "extNorm": "베시케어정5mg(한국아스텔라스)(판매원변경)",
-            "status": "mismatch",
-            "spurious": false
-          },
-          "spec": {
-            "gt": "5mg/100T",
-            "ext": "5mg/100T",
-            "gtNorm": "5mg/100t",
-            "extNorm": "5mg/100t",
-            "status": "match",
-            "spurious": false
-          },
-          "quantity": {
-            "gt": "200",
-            "ext": "200",
-            "gtNorm": "200",
-            "extNorm": "200",
-            "status": "match",
-            "spurious": false
-          },
-          "unitPrice": {
-            "gt": "43923",
             "ext": "",
-            "gtNorm": "43923",
+            "gtNorm": "베시케어정5mg",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
           },
+          "spec": {
+            "gt": "5mg/100T",
+            "ext": "",
+            "gtNorm": "5mg/100t",
+            "extNorm": "",
+            "status": "ext_missing",
+            "spurious": false
+          },
+          "quantity": {
+            "gt": "200",
+            "ext": "43,923",
+            "gtNorm": "200",
+            "extNorm": "43923",
+            "status": "mismatch",
+            "spurious": false
+          },
+          "unitPrice": {
+            "gt": "43923",
+            "ext": "200",
+            "gtNorm": "43923",
+            "extNorm": "200",
+            "status": "mismatch",
+            "spurious": false
+          },
           "amount": {
             "gt": "8784680",
-            "ext": "43,923",
+            "ext": "15002",
             "gtNorm": "8784680",
-            "extNorm": "43923",
+            "extNorm": "15002",
             "status": "mismatch",
             "spurious": false
           },
@@ -349,18 +353,18 @@
           },
           "manufacturingNo": {
             "gt": "25J5002",
-            "ext": "",
+            "ext": "20280930",
             "gtNorm": "25J5002",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20280930",
+            "status": "mismatch",
             "spurious": false
           },
           "itemCode": {
             "gt": "8806772000710",
-            "ext": "12000948",
+            "ext": "",
             "gtNorm": "8806772000710",
-            "extNorm": "12000948",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "insuranceCode": {
@@ -549,13 +553,13 @@
     ],
     "cellCounts": {
       "scored": 40,
-      "match": 6,
-      "mismatch": 10,
-      "ext_missing": 24,
+      "match": 4,
+      "mismatch": 11,
+      "ext_missing": 25,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.15
+    "cellAccuracy": 0.1
   },
   "buckets": {
     "defects": [
@@ -624,6 +628,14 @@
         "reason": "extractor missed rows ['4']"
       },
       {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['2', '4', '6']"
+      },
+      {
         "location": "row1:itemNameMaster",
         "status": "mismatch",
         "gtNorm": "베타미가서방정50mg",
@@ -680,63 +692,79 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:itemName",
+        "location": "row5:itemName",
         "status": "mismatch",
         "gtNorm": "베시케어5mg10ot",
-        "extNorm": "베시케q",
+        "extNorm": "2152914베시케q5mg100t",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.62)"
       },
       {
-        "location": "row2:itemNameMaster",
-        "status": "mismatch",
-        "gtNorm": "베시케어정5mg",
-        "extNorm": "베시케어정5mg(한국아스텔라스)(판매원변경)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
-      },
-      {
-        "location": "row2:unitPrice",
+        "location": "row5:itemNameMaster",
         "status": "ext_missing",
-        "gtNorm": "43923",
+        "gtNorm": "베시케어정5mg",
         "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:amount",
+        "location": "row5:spec",
+        "status": "ext_missing",
+        "gtNorm": "5mg/100t",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row5:quantity",
+        "status": "mismatch",
+        "gtNorm": "200",
+        "extNorm": "43923",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['unitPrice']"
+      },
+      {
+        "location": "row5:unitPrice",
+        "status": "mismatch",
+        "gtNorm": "43923",
+        "extNorm": "200",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['quantity']"
+      },
+      {
+        "location": "row5:amount",
         "status": "mismatch",
         "gtNorm": "8784680",
-        "extNorm": "43923",
+        "extNorm": "15002",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row2:expiryDate",
+        "location": "row5:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20280930",
         "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['manufacturingNo']"
       },
       {
-        "location": "row2:manufacturingNo",
-        "status": "ext_missing",
+        "location": "row5:manufacturingNo",
+        "status": "mismatch",
         "gtNorm": "25J5002",
+        "extNorm": "20280930",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
+      },
+      {
+        "location": "row5:itemCode",
+        "status": "ext_missing",
+        "gtNorm": "8806772000710",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:itemCode",
-        "status": "mismatch",
-        "gtNorm": "8806772000710",
-        "extNorm": "12000948",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row2:insuranceCode",
+        "location": "row5:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "152914",
         "extNorm": "",
@@ -897,9 +925,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 15,
-      "structure": 26,
-      "layout": 1,
+      "recognition": 14,
+      "structure": 28,
+      "layout": 3,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

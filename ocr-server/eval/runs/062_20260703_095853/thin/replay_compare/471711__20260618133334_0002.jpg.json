@@ -189,10 +189,11 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 21,
-    "rowCountExt": 20,
-    "rowCountMatch": false,
+    "rowCountExt": 21,
+    "rowCountMatch": true,
     "matchedRowIdx": [
       "1",
+      "21",
       "2",
       "3",
       "4",
@@ -213,9 +214,7 @@
       "19",
       "20"
     ],
-    "gtOnlyRowIdx": [
-      "2"
-    ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [],
     "rows": [
       {
@@ -276,6 +275,68 @@
             "gtNorm": "01011034",
             "extNorm": "01011034",
             "status": "match",
+            "spurious": false
+          }
+        }
+      },
+      {
+        "rowIndex": "21",
+        "rowMatch": false,
+        "cells": {
+          "itemName": {
+            "gt": "트레노캡슐",
+            "ext": "2 . 레노캡슬",
+            "gtNorm": "트레노캡슐",
+            "extNorm": "2레노캡슬",
+            "status": "mismatch",
+            "spurious": false
+          },
+          "itemNameMaster": {
+            "gt": "트레노캡슐",
+            "ext": "레노말정(판매원변경)",
+            "gtNorm": "트레노캡슐",
+            "extNorm": "레노말정(판매원변경)",
+            "status": "mismatch",
+            "spurious": false
+          },
+          "spec": {
+            "gt": "90CAP/BTL",
+            "ext": "90CAP/BTL",
+            "gtNorm": "90cap/btl",
+            "extNorm": "90cap/btl",
+            "status": "match",
+            "spurious": false
+          },
+          "quantity": {
+            "gt": "20",
+            "ext": "28,739",
+            "gtNorm": "20",
+            "extNorm": "28739",
+            "status": "mismatch",
+            "spurious": false
+          },
+          "unitPrice": {
+            "gt": "28739",
+            "ext": "20",
+            "gtNorm": "28739",
+            "extNorm": "20",
+            "status": "mismatch",
+            "spurious": false
+          },
+          "amount": {
+            "gt": "574782",
+            "ext": "574,782",
+            "gtNorm": "574782",
+            "extNorm": "574782",
+            "status": "match",
+            "spurious": false
+          },
+          "itemCode": {
+            "gt": "14002510",
+            "ext": "118318",
+            "gtNorm": "14002510",
+            "extNorm": "118318",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -1457,80 +1518,17 @@
             "spurious": false
           }
         }
-      },
-      {
-        "rowIndex": "2",
-        "rowMatch": false,
-        "missingGtRow": true,
-        "cells": {
-          "itemName": {
-            "gt": "트레노캡슐",
-            "ext": "",
-            "gtNorm": "트레노캡슐",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "itemNameMaster": {
-            "gt": "트레노캡슐",
-            "ext": "",
-            "gtNorm": "트레노캡슐",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "spec": {
-            "gt": "90CAP/BTL",
-            "ext": "",
-            "gtNorm": "90cap/btl",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "quantity": {
-            "gt": "20",
-            "ext": "",
-            "gtNorm": "20",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "unitPrice": {
-            "gt": "28739",
-            "ext": "",
-            "gtNorm": "28739",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "amount": {
-            "gt": "574782",
-            "ext": "",
-            "gtNorm": "574782",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "itemCode": {
-            "gt": "14002510",
-            "ext": "",
-            "gtNorm": "14002510",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          }
-        }
       }
     ],
     "cellCounts": {
       "scored": 147,
-      "match": 118,
-      "mismatch": 22,
-      "ext_missing": 7,
+      "match": 120,
+      "mismatch": 27,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.8027210884353742
+    "cellAccuracy": 0.8163265306122449
   },
   "buckets": {
     "defects": [
@@ -1583,20 +1581,52 @@
         "reason": "char-level diff (sim=0.90)"
       },
       {
-        "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['2']"
-      },
-      {
         "location": "row1:spec",
         "status": "mismatch",
         "gtNorm": "90t/btl",
         "extNorm": "9ot/btl",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.86)"
+      },
+      {
+        "location": "row21:itemName",
+        "status": "mismatch",
+        "gtNorm": "트레노캡슐",
+        "extNorm": "2레노캡슬",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.60)"
+      },
+      {
+        "location": "row21:itemNameMaster",
+        "status": "mismatch",
+        "gtNorm": "트레노캡슐",
+        "extNorm": "레노말정(판매원변경)",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
+      },
+      {
+        "location": "row21:quantity",
+        "status": "mismatch",
+        "gtNorm": "20",
+        "extNorm": "28739",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['unitPrice']"
+      },
+      {
+        "location": "row21:unitPrice",
+        "status": "mismatch",
+        "gtNorm": "28739",
+        "extNorm": "20",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['quantity']"
+      },
+      {
+        "location": "row21:itemCode",
+        "status": "mismatch",
+        "gtNorm": "14002510",
+        "extNorm": "118318",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row2:spec",
@@ -1765,68 +1795,12 @@
         "extNorm": "21디에잔정",
         "bucket": "layout",
         "reason": "gt cell appears in column(s) ['itemNameMaster']"
-      },
-      {
-        "location": "row2:itemName",
-        "status": "ext_missing",
-        "gtNorm": "트레노캡슐",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "트레노캡슐",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:spec",
-        "status": "ext_missing",
-        "gtNorm": "90cap/btl",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:quantity",
-        "status": "ext_missing",
-        "gtNorm": "20",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "28739",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:amount",
-        "status": "ext_missing",
-        "gtNorm": "574782",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "14002510",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 20,
-      "structure": 10,
-      "layout": 6,
+      "recognition": 23,
+      "structure": 2,
+      "layout": 8,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

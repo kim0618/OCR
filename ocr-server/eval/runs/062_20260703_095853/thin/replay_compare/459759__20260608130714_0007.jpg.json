@@ -176,16 +176,18 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 4,
-    "rowCountExt": 4,
-    "rowCountMatch": true,
+    "rowCountExt": 5,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
       "2",
-      "3",
+      "5",
       "4"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "3"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -360,12 +362,12 @@
         }
       },
       {
-        "rowIndex": "3",
+        "rowIndex": "5",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "푸로스타정5mg(P)",
-            "ext": "푸로스타정5mg(P",
+            "ext": "푸로스타정5mg(P)",
             "gtNorm": "푸로스타정5mgp",
             "extNorm": "푸로스타정5mgp",
             "status": "match",
@@ -373,42 +375,42 @@
           },
           "itemNameMaster": {
             "gt": "푸로스타정",
-            "ext": "암로스타정5mg",
+            "ext": "크로스타정5mg(규격변경)",
             "gtNorm": "푸로스타정",
-            "extNorm": "암로스타정5mg",
+            "extNorm": "크로스타정5mg(규격변경)",
             "status": "mismatch",
             "spurious": false
           },
           "spec": {
             "gt": "30정",
-            "ext": "",
+            "ext": "30정",
             "gtNorm": "30정",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30정",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
             "gt": "3",
-            "ext": "2,502",
+            "ext": "",
             "gtNorm": "3",
-            "extNorm": "2502",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "unitPrice": {
             "gt": "13140",
-            "ext": "",
+            "ext": "13.140.00",
             "gtNorm": "13140",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "1314000",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "39420",
-            "ext": "",
+            "ext": "39420",
             "gtNorm": "39420",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "39420",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -421,26 +423,26 @@
           },
           "manufacturingNo": {
             "gt": "2502",
-            "ext": "",
+            "ext": "2502",
             "gtNorm": "2502",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "2502",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
             "gt": "085425",
-            "ext": "8806400028925",
+            "ext": "07001139",
             "gtNorm": "085425",
-            "extNorm": "8806400028925",
+            "extNorm": "07001139",
             "status": "mismatch",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "661901860",
-            "ext": "661901860",
+            "ext": "3 661901860",
             "gtNorm": "661901860",
-            "extNorm": "661901860",
-            "status": "match",
+            "extNorm": "3661901860",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -499,10 +501,10 @@
           },
           "expiryDate": {
             "gt": "20290126",
-            "ext": "2029.01.26",
+            "ext": "",
             "gtNorm": "20290126",
-            "extNorm": "20290126",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "manufacturingNo": {
@@ -523,10 +525,10 @@
           },
           "insuranceCode": {
             "gt": "642000930",
-            "ext": "642000939",
+            "ext": "",
             "gtNorm": "642000930",
-            "extNorm": "642000939",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           }
         }
@@ -534,13 +536,13 @@
     ],
     "cellCounts": {
       "scored": 40,
-      "match": 19,
+      "match": 20,
       "mismatch": 7,
-      "ext_missing": 14,
+      "ext_missing": 13,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.475
+    "cellAccuracy": 0.5
   },
   "buckets": {
     "defects": [
@@ -575,6 +577,14 @@
         "extNorm": "광주광역시동구제봉로200대인동",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.90)"
+      },
+      {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['3']"
       },
       {
         "location": "row1:itemName",
@@ -649,60 +659,44 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row3:itemNameMaster",
+        "location": "row5:itemNameMaster",
         "status": "mismatch",
         "gtNorm": "푸로스타정",
-        "extNorm": "암로스타정5mg",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.62)"
-      },
-      {
-        "location": "row3:spec",
-        "status": "ext_missing",
-        "gtNorm": "30정",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:quantity",
-        "status": "mismatch",
-        "gtNorm": "3",
-        "extNorm": "2502",
+        "extNorm": "크로스타정5mg(규격변경)",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row3:unitPrice",
+        "location": "row5:quantity",
         "status": "ext_missing",
+        "gtNorm": "3",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row5:unitPrice",
+        "status": "mismatch",
         "gtNorm": "13140",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "1314000",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.83)"
       },
       {
-        "location": "row3:amount",
-        "status": "ext_missing",
-        "gtNorm": "39420",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:manufacturingNo",
-        "status": "ext_missing",
-        "gtNorm": "2502",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['quantity']"
-      },
-      {
-        "location": "row3:itemCode",
+        "location": "row5:itemCode",
         "status": "mismatch",
         "gtNorm": "085425",
-        "extNorm": "8806400028925",
+        "extNorm": "07001139",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
+      },
+      {
+        "location": "row5:insuranceCode",
+        "status": "mismatch",
+        "gtNorm": "661901860",
+        "extNorm": "3661901860",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.95)"
       },
       {
         "location": "row4:spec",
@@ -729,6 +723,14 @@
         "reason": "gt cell absent in extracted row"
       },
       {
+        "location": "row4:expiryDate",
+        "status": "ext_missing",
+        "gtNorm": "20290126",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
         "location": "row4:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "26001",
@@ -738,17 +740,17 @@
       },
       {
         "location": "row4:insuranceCode",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "642000930",
-        "extNorm": "642000939",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.89)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
       "recognition": 10,
-      "structure": 13,
-      "layout": 2,
+      "structure": 14,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

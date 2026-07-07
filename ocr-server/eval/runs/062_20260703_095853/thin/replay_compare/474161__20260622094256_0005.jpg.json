@@ -189,18 +189,20 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 4,
-    "rowCountExt": 6,
+    "rowCountExt": 8,
     "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
       "2",
-      "3",
+      "7",
       "4"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
+      "3",
       "5",
-      "6"
+      "6",
+      "8"
     ],
     "rows": [
       {
@@ -376,22 +378,22 @@
         }
       },
       {
-        "rowIndex": "3",
+        "rowIndex": "7",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "마디핀정 (마니디핀염산염)",
-            "ext": "20mg/30정",
+            "ext": "마디핀정(마니디핀염산염)",
             "gtNorm": "마디핀정마니디핀염산염",
-            "extNorm": "20mg30정",
-            "status": "mismatch",
+            "extNorm": "마디핀정마니디핀염산염",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "마디핀정10mg(반품불가)",
-            "ext": "올딥정5/20mg",
+            "ext": "마디핀정20mg(판매원변경)",
             "gtNorm": "마디핀정10mg(반품불가)",
-            "extNorm": "올딥정5/20mg",
+            "extNorm": "마디핀정20mg(판매원변경)",
             "status": "mismatch",
             "spurious": false
           },
@@ -405,17 +407,17 @@
           },
           "quantity": {
             "gt": "30",
-            "ext": "V30",
+            "ext": "19921",
             "gtNorm": "30",
-            "extNorm": "30",
-            "status": "match",
+            "extNorm": "19921",
+            "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "0",
-            "ext": "19.921",
+            "ext": "30",
             "gtNorm": "0",
-            "extNorm": "19921",
+            "extNorm": "30",
             "status": "mismatch",
             "spurious": false
           },
@@ -437,25 +439,25 @@
           },
           "manufacturingNo": {
             "gt": "MD225A3B",
-            "ext": "597,618 MD225A3B",
+            "ext": "MD225A3B",
             "gtNorm": "MD225A3B",
-            "extNorm": "597618MD225A3B",
-            "status": "mismatch",
+            "extNorm": "MD225A3B",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
             "gt": "01009719",
-            "ext": "MD225A3B",
+            "ext": "510008",
             "gtNorm": "01009719",
-            "extNorm": "MD225A3B",
+            "extNorm": "510008",
             "status": "mismatch",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "640000320",
-            "ext": "3 640000320",
+            "ext": "3 640000320 이노엔() 에이치케이",
             "gtNorm": "640000320",
-            "extNorm": "3640000320",
+            "extNorm": "3640000320이노엔에이치케이",
             "status": "mismatch",
             "spurious": false
           }
@@ -550,13 +552,13 @@
     ],
     "cellCounts": {
       "scored": 40,
-      "match": 13,
-      "mismatch": 27,
+      "match": 14,
+      "mismatch": 26,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.325
+    "cellAccuracy": 0.35
   },
   "buckets": {
     "defects": [
@@ -598,7 +600,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['5', '6']"
+        "reason": "extractor invented rows ['3', '5', '6', '8']"
       },
       {
         "location": "row1:itemName",
@@ -721,52 +723,44 @@
         "reason": "char-level diff (sim=0.95)"
       },
       {
-        "location": "row3:itemName",
-        "status": "mismatch",
-        "gtNorm": "마디핀정마니디핀염산염",
-        "extNorm": "20mg30정",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row3:itemNameMaster",
+        "location": "row7:itemNameMaster",
         "status": "mismatch",
         "gtNorm": "마디핀정10mg(반품불가)",
-        "extNorm": "올딥정5/20mg",
+        "extNorm": "마디핀정20mg(판매원변경)",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.62)"
       },
       {
-        "location": "row3:unitPrice",
+        "location": "row7:quantity",
+        "status": "mismatch",
+        "gtNorm": "30",
+        "extNorm": "19921",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['unitPrice']"
+      },
+      {
+        "location": "row7:unitPrice",
         "status": "mismatch",
         "gtNorm": "0",
-        "extNorm": "19921",
+        "extNorm": "30",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.67)"
       },
       {
-        "location": "row3:manufacturingNo",
-        "status": "mismatch",
-        "gtNorm": "MD225A3B",
-        "extNorm": "597618MD225A3B",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
-        "location": "row3:itemCode",
+        "location": "row7:itemCode",
         "status": "mismatch",
         "gtNorm": "01009719",
-        "extNorm": "MD225A3B",
+        "extNorm": "510008",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row3:insuranceCode",
+        "location": "row7:insuranceCode",
         "status": "mismatch",
         "gtNorm": "640000320",
-        "extNorm": "3640000320",
+        "extNorm": "3640000320이노엔에이치케이",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.95)"
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "row4:itemName",
@@ -818,7 +812,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 26,
+      "recognition": 25,
       "structure": 3,
       "layout": 3,
       "preprocessing": 0

@@ -193,11 +193,11 @@
     "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
-      "2"
+      "4"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "4",
+      "2",
       "4",
       "5"
     ],
@@ -281,14 +281,14 @@
         }
       },
       {
-        "rowIndex": "2",
+        "rowIndex": "4",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "자낙스정0.5mg[30T]",
-            "ext": "2 자낙스정0.5mg[30T] 3OT",
+            "ext": "4 2 3 5 * 이하 여백* 자낙스정0.5mg[30T]",
             "gtNorm": "자낙스정05mg30t",
-            "extNorm": "2자낙스정05mg30t3ot",
+            "extNorm": "4235이하여백자낙스정05mg30t",
             "status": "mismatch",
             "spurious": false
           },
@@ -310,18 +310,18 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "4145",
-            "ext": "",
+            "ext": "4145",
             "gtNorm": "4145",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "4145",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -334,7 +334,7 @@
           },
           "expiryDate": {
             "gt": "20280603",
-            "ext": "20280603",
+            "ext": "2028.06.03",
             "gtNorm": "20280603",
             "extNorm": "20280603",
             "status": "match",
@@ -361,13 +361,13 @@
     ],
     "cellCounts": {
       "scored": 18,
-      "match": 7,
+      "match": 9,
       "mismatch": 4,
-      "ext_missing": 7,
+      "ext_missing": 5,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3888888888888889
+    "cellAccuracy": 0.5
   },
   "buckets": {
     "defects": [
@@ -441,7 +441,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['4', '4', '5']"
+        "reason": "extractor invented rows ['2', '4', '5']"
       },
       {
         "location": "row1:itemName",
@@ -500,41 +500,25 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row2:itemName",
+        "location": "row4:itemName",
         "status": "mismatch",
         "gtNorm": "자낙스정05mg30t",
-        "extNorm": "2자낙스정05mg30t3ot",
+        "extNorm": "4235이하여백자낙스정05mg30t",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.85)"
+        "reason": "char-level diff (sim=0.73)"
       },
       {
-        "location": "row2:spec",
+        "location": "row4:spec",
         "status": "mismatch",
         "gtNorm": "30t",
         "extNorm": "3ot",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.67)"
-      },
-      {
-        "location": "row2:quantity",
-        "status": "ext_missing",
-        "gtNorm": "10",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "4145",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
       "recognition": 8,
-      "structure": 12,
+      "structure": 10,
       "layout": 0,
       "preprocessing": 0
     },

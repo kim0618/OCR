@@ -176,7 +176,7 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 10,
-    "rowCountExt": 22,
+    "rowCountExt": 28,
     "rowCountMatch": false,
     "matchedRowIdx": [
       "3",
@@ -188,7 +188,7 @@
       "15",
       "17",
       "19",
-      "21"
+      "28"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
@@ -203,7 +203,13 @@
       "16",
       "18",
       "20",
-      "22"
+      "21",
+      "22",
+      "23",
+      "24",
+      "25",
+      "26",
+      "27"
     ],
     "rows": [
       {
@@ -909,23 +915,23 @@
         }
       },
       {
-        "rowIndex": "21",
+        "rowIndex": "28",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "제로코푸시럽",
-            "ext": "",
+            "ext": "제로코푸시럽",
             "gtNorm": "제로코푸시럽",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "제로코푸시럽",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "제로코푸시럽(한외)",
-            "ext": "",
+            "ext": "제로코푸시럽(한외)",
             "gtNorm": "제로코푸시럽(한외)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "제로코푸시럽(한외)",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -938,26 +944,26 @@
           },
           "quantity": {
             "gt": "120",
-            "ext": "4 120",
+            "ext": "3,800.00",
             "gtNorm": "120",
-            "extNorm": "4120",
+            "extNorm": "380000",
             "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "3800",
-            "ext": "3,800.00 456,000",
+            "ext": "120",
             "gtNorm": "3800",
-            "extNorm": "380000456000",
+            "extNorm": "120",
             "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "456000",
-            "ext": "456,000",
+            "ext": "20270108",
             "gtNorm": "456000",
-            "extNorm": "456000",
-            "status": "match",
+            "extNorm": "20270108",
+            "status": "mismatch",
             "spurious": false
           },
           "expiryDate": {
@@ -978,10 +984,10 @@
           },
           "itemCode": {
             "gt": "16002430",
-            "ext": "12T3Q1",
+            "ext": "16002430",
             "gtNorm": "16002430",
-            "extNorm": "12T3Q1",
-            "status": "mismatch",
+            "extNorm": "16002430",
+            "status": "match",
             "spurious": false
           }
         }
@@ -989,13 +995,13 @@
     ],
     "cellCounts": {
       "scored": 90,
-      "match": 25,
+      "match": 27,
       "mismatch": 36,
-      "ext_missing": 29,
+      "ext_missing": 27,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.2777777777777778
+    "cellAccuracy": 0.3
   },
   "buckets": {
     "defects": [
@@ -1069,7 +1075,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '2', '4', '6', '8', '10', '12', '14', '16', '18', '20', '22']"
+        "reason": "extractor invented rows ['1', '2', '4', '6', '8', '10', '12', '14', '16', '18', '20', '21', '22', '23', '24', '25', '26', '27']"
       },
       {
         "location": "row3:itemName",
@@ -1528,23 +1534,7 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row21:itemName",
-        "status": "ext_missing",
-        "gtNorm": "제로코푸시럽",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row21:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "제로코푸시럽(한외)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row21:spec",
+        "location": "row28:spec",
         "status": "mismatch",
         "gtNorm": "20p/bo",
         "extNorm": "20p/b0",
@@ -1552,50 +1542,50 @@
         "reason": "char-level diff (sim=0.83)"
       },
       {
-        "location": "row21:quantity",
+        "location": "row28:quantity",
         "status": "mismatch",
         "gtNorm": "120",
-        "extNorm": "4120",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.86)"
+        "extNorm": "380000",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['unitPrice']"
       },
       {
-        "location": "row21:unitPrice",
+        "location": "row28:unitPrice",
         "status": "mismatch",
         "gtNorm": "3800",
-        "extNorm": "380000456000",
+        "extNorm": "120",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
+        "reason": "cell differs, low similarity"
       },
       {
-        "location": "row21:expiryDate",
+        "location": "row28:amount",
+        "status": "mismatch",
+        "gtNorm": "456000",
+        "extNorm": "20270108",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
+      },
+      {
+        "location": "row28:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20270108",
         "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['amount']"
       },
       {
-        "location": "row21:manufacturingNo",
+        "location": "row28:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "12T3Q1",
         "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
-        "location": "row21:itemCode",
-        "status": "mismatch",
-        "gtNorm": "16002430",
-        "extNorm": "12T3Q1",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 43,
-      "structure": 26,
-      "layout": 5,
+      "recognition": 42,
+      "structure": 24,
+      "layout": 6,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

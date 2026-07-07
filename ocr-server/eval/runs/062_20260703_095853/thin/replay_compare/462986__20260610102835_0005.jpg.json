@@ -189,7 +189,7 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 10,
-    "rowCountExt": 12,
+    "rowCountExt": 15,
     "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
@@ -198,7 +198,7 @@
       "6",
       "7",
       "8",
-      "9",
+      "14",
       "10",
       "11",
       "12"
@@ -206,7 +206,10 @@
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
       "2",
-      "5"
+      "5",
+      "9",
+      "13",
+      "15"
     ],
     "rows": [
       {
@@ -726,14 +729,14 @@
         }
       },
       {
-        "rowIndex": "9",
+        "rowIndex": "14",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "히알산점안액0.15% 6mL",
-            "ext": "히알산점안액3.15%6mL 1128 S",
+            "ext": "히알산점안액3.15%6mL S",
             "gtNorm": "히알산점안액0156ml",
-            "extNorm": "히알산점안액3156ml1128s",
+            "extNorm": "히알산점안액3156mls",
             "status": "mismatch",
             "spurious": false
           },
@@ -755,18 +758,18 @@
           },
           "quantity": {
             "gt": "100",
-            "ext": "6ml√100",
+            "ext": "2,938",
             "gtNorm": "100",
-            "extNorm": "6100",
+            "extNorm": "2938",
             "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "2938",
-            "ext": "2,938",
+            "ext": "100",
             "gtNorm": "2938",
-            "extNorm": "2938",
-            "status": "match",
+            "extNorm": "100",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
@@ -779,10 +782,10 @@
           },
           "expiryDate": {
             "gt": "20281102",
-            "ext": "20281102",
+            "ext": "",
             "gtNorm": "20281102",
-            "extNorm": "20281102",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "manufacturingNo": {
@@ -795,18 +798,18 @@
           },
           "itemCode": {
             "gt": "01009485",
-            "ext": "11567",
+            "ext": "01009485",
             "gtNorm": "01009485",
-            "extNorm": "11567",
-            "status": "mismatch",
+            "extNorm": "01009485",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "649605491",
-            "ext": "649605491",
+            "ext": "649605491 20281102/ 25010",
             "gtNorm": "649605491",
-            "extNorm": "649605491",
-            "status": "match",
+            "extNorm": "6496054912028110225010",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -1072,13 +1075,13 @@
     ],
     "cellCounts": {
       "scored": 100,
-      "match": 57,
-      "mismatch": 25,
-      "ext_missing": 18,
+      "match": 55,
+      "mismatch": 26,
+      "ext_missing": 19,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.57
+    "cellAccuracy": 0.55
   },
   "buckets": {
     "defects": [
@@ -1136,7 +1139,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['2', '5']"
+        "reason": "extractor invented rows ['2', '5', '9', '13', '15']"
       },
       {
         "location": "row1:spec",
@@ -1339,15 +1342,15 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row9:itemName",
+        "location": "row14:itemName",
         "status": "mismatch",
         "gtNorm": "히알산점안액0156ml",
-        "extNorm": "히알산점안액3156ml1128s",
+        "extNorm": "히알산점안액3156mls",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.76)"
+        "reason": "char-level diff (sim=0.88)"
       },
       {
-        "location": "row9:spec",
+        "location": "row14:spec",
         "status": "ext_missing",
         "gtNorm": "6ml",
         "extNorm": "",
@@ -1355,15 +1358,31 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row9:quantity",
+        "location": "row14:quantity",
         "status": "mismatch",
         "gtNorm": "100",
-        "extNorm": "6100",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.86)"
+        "extNorm": "2938",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['unitPrice']"
       },
       {
-        "location": "row9:manufacturingNo",
+        "location": "row14:unitPrice",
+        "status": "mismatch",
+        "gtNorm": "2938",
+        "extNorm": "100",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['quantity']"
+      },
+      {
+        "location": "row14:expiryDate",
+        "status": "ext_missing",
+        "gtNorm": "20281102",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row14:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "25010",
         "extNorm": "",
@@ -1371,12 +1390,12 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row9:itemCode",
+        "location": "row14:insuranceCode",
         "status": "mismatch",
-        "gtNorm": "01009485",
-        "extNorm": "11567",
+        "gtNorm": "649605491",
+        "extNorm": "6496054912028110225010",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.58)"
       },
       {
         "location": "row10:itemName",
@@ -1484,9 +1503,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 30,
-      "structure": 19,
-      "layout": 1,
+      "recognition": 29,
+      "structure": 20,
+      "layout": 3,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

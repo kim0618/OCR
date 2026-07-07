@@ -189,15 +189,17 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 3,
-    "rowCountExt": 3,
-    "rowCountMatch": true,
+    "rowCountExt": 4,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
       "2",
-      "3"
+      "4"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "3"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -221,10 +223,10 @@
           },
           "spec": {
             "gt": "500T",
-            "ext": "500T",
+            "ext": "",
             "gtNorm": "500t",
-            "extNorm": "500t",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "quantity": {
@@ -277,10 +279,10 @@
           },
           "insuranceCode": {
             "gt": "653002990",
-            "ext": "653002990",
+            "ext": "",
             "gtNorm": "653002990",
-            "extNorm": "653002990",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           }
         }
@@ -363,23 +365,23 @@
           },
           "insuranceCode": {
             "gt": "653006950",
-            "ext": "653006950",
+            "ext": "",
             "gtNorm": "653006950",
-            "extNorm": "653006950",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           }
         }
       },
       {
-        "rowIndex": "3",
+        "rowIndex": "4",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "파마시메티콘액(20P(스틱) x 10mL)",
-            "ext": "파마시메티콘액(20P(스틱",
+            "ext": "파마시메티콘액(20P(스틱) × 10mL)",
             "gtNorm": "파마시메티콘액20p스틱x10ml",
-            "extNorm": "파마시메티콘액20p스틱",
+            "extNorm": "파마시메티콘액20p스틱10ml",
             "status": "mismatch",
             "spurious": false
           },
@@ -393,42 +395,42 @@
           },
           "spec": {
             "gt": "200M",
-            "ext": "× 10mL",
+            "ext": "200M",
             "gtNorm": "200m",
-            "extNorm": "× 10ml",
-            "status": "mismatch",
+            "extNorm": "200m",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
             "gt": "36",
-            "ext": "",
+            "ext": "4,500",
             "gtNorm": "36",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "4500",
+            "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "4500",
-            "ext": "",
+            "ext": "36",
             "gtNorm": "4500",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "36",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "162000",
-            "ext": "",
+            "ext": "26008",
             "gtNorm": "162000",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "26008",
+            "status": "mismatch",
             "spurious": false
           },
           "expiryDate": {
             "gt": "20290413",
-            "ext": "20290413",
+            "ext": "",
             "gtNorm": "20290413",
-            "extNorm": "20290413",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "manufacturingNo": {
@@ -449,10 +451,10 @@
           },
           "insuranceCode": {
             "gt": "653005273",
-            "ext": "653005273",
+            "ext": "3 653005273 112,3",
             "gtNorm": "653005273",
-            "extNorm": "653005273",
-            "status": "match",
+            "extNorm": "36530052731123",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -460,13 +462,13 @@
     ],
     "cellCounts": {
       "scored": 30,
-      "match": 15,
-      "mismatch": 2,
-      "ext_missing": 13,
+      "match": 11,
+      "mismatch": 5,
+      "ext_missing": 14,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5
+    "cellAccuracy": 0.36666666666666664
   },
   "buckets": {
     "defects": [
@@ -503,6 +505,22 @@
         "reason": "value differs, low similarity"
       },
       {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['3']"
+      },
+      {
+        "location": "row1:spec",
+        "status": "ext_missing",
+        "gtNorm": "500t",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
         "location": "row1:quantity",
         "status": "ext_missing",
         "gtNorm": "40",
@@ -530,6 +548,14 @@
         "location": "row1:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "26010",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row1:insuranceCode",
+        "status": "ext_missing",
+        "gtNorm": "653002990",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -575,58 +601,74 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row3:itemName",
+        "location": "row2:insuranceCode",
+        "status": "ext_missing",
+        "gtNorm": "653006950",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row4:itemName",
         "status": "mismatch",
         "gtNorm": "파마시메티콘액20p스틱x10ml",
-        "extNorm": "파마시메티콘액20p스틱",
+        "extNorm": "파마시메티콘액20p스틱10ml",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.83)"
+        "reason": "char-level diff (sim=0.97)"
       },
       {
-        "location": "row3:spec",
+        "location": "row4:quantity",
         "status": "mismatch",
-        "gtNorm": "200m",
-        "extNorm": "× 10ml",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row3:quantity",
-        "status": "ext_missing",
         "gtNorm": "36",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "4500",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['unitPrice']"
       },
       {
-        "location": "row3:unitPrice",
-        "status": "ext_missing",
+        "location": "row4:unitPrice",
+        "status": "mismatch",
         "gtNorm": "4500",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "36",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['quantity']"
       },
       {
-        "location": "row3:amount",
-        "status": "ext_missing",
+        "location": "row4:amount",
+        "status": "mismatch",
         "gtNorm": "162000",
+        "extNorm": "26008",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.55)"
+      },
+      {
+        "location": "row4:expiryDate",
+        "status": "ext_missing",
+        "gtNorm": "20290413",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row3:manufacturingNo",
+        "location": "row4:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "26008",
         "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['amount']"
+      },
+      {
+        "location": "row4:insuranceCode",
+        "status": "mismatch",
+        "gtNorm": "653005273",
+        "extNorm": "36530052731123",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.78)"
       }
     ],
     "bucketTally": {
-      "recognition": 6,
-      "structure": 13,
-      "layout": 0,
+      "recognition": 7,
+      "structure": 14,
+      "layout": 3,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

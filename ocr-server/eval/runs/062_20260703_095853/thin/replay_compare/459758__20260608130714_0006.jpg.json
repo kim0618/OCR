@@ -189,36 +189,38 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 5,
-    "rowCountExt": 5,
-    "rowCountMatch": true,
+    "rowCountExt": 6,
+    "rowCountMatch": false,
     "matchedRowIdx": [
-      "1",
+      "6",
       "2",
       "3",
       "4",
       "5"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "1"
+    ],
     "rows": [
       {
-        "rowIndex": "1",
+        "rowIndex": "6",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "로디엔셋정40/2.5/12.5mg",
-            "ext": "",
+            "ext": "엑스프람정5mg 멀타핀정7.5mg 브론패스정300mg 로디엔셋정40/2.5/12.5mg",
             "gtNorm": "로디엔셋정4025125mg",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "엑스프람정5mg멀타핀정75mg브론패스정300mg로디엔셋정4025125mg",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "로디엔셋정40/2.5/12.5mg(특정로트회수)",
-            "ext": "",
+            "ext": "로디엔셋정40/2.5/12.5mg(특정로트회수)",
             "gtNorm": "로디엔셋정40/2.5/12.5mg(특정로트회수)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "로디엔셋정40/2.5/12.5mg(특정로트회수)",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -231,15 +233,15 @@
           },
           "quantity": {
             "gt": "0",
-            "ext": "",
+            "ext": "300",
             "gtNorm": "0",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "300",
+            "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "1890240",
-            "ext": "√518,902.40",
+            "ext": "518,902.40",
             "gtNorm": "1890240",
             "extNorm": "51890240",
             "status": "mismatch",
@@ -255,34 +257,34 @@
           },
           "expiryDate": {
             "gt": "20271118",
-            "ext": "2027.11.18",
+            "ext": "2027.11.18 2029.01.25 2029.03.10 2028.01.19",
             "gtNorm": "20271118",
-            "extNorm": "20271118",
-            "status": "match",
+            "extNorm": "20271118202901252029031020280119",
+            "status": "mismatch",
             "spurious": false
           },
           "manufacturingNo": {
             "gt": "401",
-            "ext": "94,512 40YN01",
+            "ext": "372,240 26001 66,334 26004 483,120 6Uz302 94,512 40YN01.",
             "gtNorm": "401",
-            "extNorm": "9451240YN01",
+            "extNorm": "3722402600166334260044831206UZ3029451240YN01",
             "status": "mismatch",
             "spurious": false
           },
           "itemCode": {
             "gt": "01014323",
-            "ext": "",
+            "ext": "01014323",
             "gtNorm": "01014323",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "01014323",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "645307320",
-            "ext": "645307320",
+            "ext": "7 3 2 642004140 645307320 642003110 645306530 현대약품( 출림제약( 현대약품( 한림제약(",
             "gtNorm": "645307320",
-            "extNorm": "645307320",
-            "status": "match",
+            "extNorm": "732642004140645307320642003110645306530현대약품출림제약현대약품한림제약",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -635,8 +637,8 @@
     "cellCounts": {
       "scored": 50,
       "match": 12,
-      "mismatch": 14,
-      "ext_missing": 24,
+      "mismatch": 18,
+      "ext_missing": 20,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -677,23 +679,23 @@
         "reason": "char-level diff (sim=0.90)"
       },
       {
-        "location": "row1:itemName",
-        "status": "ext_missing",
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['1']"
+      },
+      {
+        "location": "row6:itemName",
+        "status": "mismatch",
         "gtNorm": "로디엔셋정4025125mg",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "엑스프람정5mg멀타핀정75mg브론패스정300mg로디엔셋정4025125mg",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.52)"
       },
       {
-        "location": "row1:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "로디엔셋정40/2.5/12.5mg(특정로트회수)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:spec",
+        "location": "row6:spec",
         "status": "ext_missing",
         "gtNorm": "30정",
         "extNorm": "",
@@ -701,15 +703,15 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:quantity",
-        "status": "ext_missing",
+        "location": "row6:quantity",
+        "status": "mismatch",
         "gtNorm": "0",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "300",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.50)"
       },
       {
-        "location": "row1:unitPrice",
+        "location": "row6:unitPrice",
         "status": "mismatch",
         "gtNorm": "1890240",
         "extNorm": "51890240",
@@ -717,20 +719,28 @@
         "reason": "char-level diff (sim=0.93)"
       },
       {
-        "location": "row1:manufacturingNo",
+        "location": "row6:expiryDate",
         "status": "mismatch",
-        "gtNorm": "401",
-        "extNorm": "9451240YN01",
+        "gtNorm": "20271118",
+        "extNorm": "20271118202901252029031020280119",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row1:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "01014323",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "location": "row6:manufacturingNo",
+        "status": "mismatch",
+        "gtNorm": "401",
+        "extNorm": "3722402600166334260044831206UZ3029451240YN01",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
+      },
+      {
+        "location": "row6:insuranceCode",
+        "status": "mismatch",
+        "gtNorm": "645307320",
+        "extNorm": "732642004140645307320642003110645306530현대약품출림제약현대약품한림제약",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row2:itemName",
@@ -982,8 +992,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 18,
-      "structure": 23,
+      "recognition": 22,
+      "structure": 20,
       "layout": 1,
       "preprocessing": 0
     },

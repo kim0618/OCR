@@ -189,14 +189,13 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 2,
-    "rowCountExt": 2,
-    "rowCountMatch": true,
+    "rowCountExt": 3,
+    "rowCountMatch": false,
     "matchedRowIdx": [
-      "2"
+      "2",
+      "3"
     ],
-    "gtOnlyRowIdx": [
-      "2"
-    ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
       "1"
     ],
@@ -280,80 +279,79 @@
         }
       },
       {
-        "rowIndex": "2",
+        "rowIndex": "3",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "휴글리아엠정50/850밀리그램(시타글립틴, 메트포르민) (대화제약(주), 30T)",
-            "ext": "",
+            "ext": "휴글리아엠정50/850밀리그램(시타글립틴 메트포르민)(대화제약(주, 30T)",
             "gtNorm": "휴글리아엠정50850밀리그램시타글립틴메트포르민대화제약주30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "휴글리아엠정50850밀리그램시타글립틴메트포르민대화제약주30t",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "휴글리아엠정50/850mg",
-            "ext": "",
+            "ext": "휴글리아엠정50/850mg",
             "gtNorm": "휴글리아엠정50/850mg",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "휴글리아엠정50/850mg",
+            "status": "match",
             "spurious": false
           },
           "spec": {
             "gt": "/30Tab.",
-            "ext": "",
+            "ext": "/30Tab.",
             "gtNorm": "/30tab.",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "/30tab.",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
             "gt": "20",
-            "ext": "",
+            "ext": "10,462",
             "gtNorm": "20",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10462",
+            "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "0",
-            "ext": "",
+            "ext": "20",
             "gtNorm": "0",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "209244",
-            "ext": "",
+            "ext": "209,244",
             "gtNorm": "209244",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "209244",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
             "gt": "20280401",
-            "ext": "",
+            "ext": "(2028.04.01)",
             "gtNorm": "20280401",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20280401",
+            "status": "match",
             "spurious": false
           },
           "manufacturingNo": {
             "gt": "6001A",
-            "ext": "",
+            "ext": "6001A",
             "gtNorm": "6001A",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "6001A",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
             "gt": "22005093",
-            "ext": "",
+            "ext": "22005093",
             "gtNorm": "22005093",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "22005093",
+            "status": "match",
             "spurious": false
           }
         }
@@ -361,13 +359,13 @@
     ],
     "cellCounts": {
       "scored": 18,
-      "match": 8,
-      "mismatch": 1,
-      "ext_missing": 9,
+      "match": 15,
+      "mismatch": 3,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4444444444444444
+    "cellAccuracy": 0.8333333333333334
   },
   "buckets": {
     "defects": [
@@ -421,14 +419,6 @@
       },
       {
         "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['2']"
-      },
-      {
-        "location": "table",
         "status": "rows_extra",
         "gtNorm": "",
         "extNorm": "",
@@ -444,82 +434,26 @@
         "reason": "char-level diff (sim=0.88)"
       },
       {
-        "location": "row2:itemName",
-        "status": "ext_missing",
-        "gtNorm": "휴글리아엠정50850밀리그램시타글립틴메트포르민대화제약주30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "휴글리아엠정50/850mg",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:spec",
-        "status": "ext_missing",
-        "gtNorm": "/30tab.",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:quantity",
-        "status": "ext_missing",
+        "location": "row3:quantity",
+        "status": "mismatch",
         "gtNorm": "20",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "10462",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['unitPrice']"
       },
       {
-        "location": "row2:unitPrice",
-        "status": "ext_missing",
+        "location": "row3:unitPrice",
+        "status": "mismatch",
         "gtNorm": "0",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:amount",
-        "status": "ext_missing",
-        "gtNorm": "209244",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:expiryDate",
-        "status": "ext_missing",
-        "gtNorm": "20280401",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:manufacturingNo",
-        "status": "ext_missing",
-        "gtNorm": "6001A",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "22005093",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "20",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.67)"
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 13,
-      "layout": 0,
+      "recognition": 6,
+      "structure": 3,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

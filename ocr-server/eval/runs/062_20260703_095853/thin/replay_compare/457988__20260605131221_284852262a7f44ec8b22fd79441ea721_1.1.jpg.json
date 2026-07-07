@@ -163,14 +163,15 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 2,
-    "rowCountExt": 3,
+    "rowCountExt": 4,
     "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
-      "2"
+      "4"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
+      "2",
       "3"
     ],
     "rows": [
@@ -253,15 +254,15 @@
         }
       },
       {
-        "rowIndex": "2",
+        "rowIndex": "4",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "바이겔크림",
-            "ext": "",
+            "ext": "3 5 7 2 4 6 바이겔크림",
             "gtNorm": "바이겔크림",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "357246바이겔크림",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
@@ -282,18 +283,18 @@
           },
           "quantity": {
             "gt": "76",
-            "ext": "",
+            "ext": "76",
             "gtNorm": "76",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "76",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "511340",
-            "ext": "V76 5,113.40",
+            "ext": "5,113.40",
             "gtNorm": "511340",
-            "extNorm": "76511340",
-            "status": "mismatch",
+            "extNorm": "511340",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -314,18 +315,18 @@
           },
           "manufacturingNo": {
             "gt": "A26015",
-            "ext": "388,618 A26015",
+            "ext": "A26015",
             "gtNorm": "A26015",
-            "extNorm": "388618A26015",
-            "status": "mismatch",
+            "extNorm": "A26015",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
             "gt": "01009056",
-            "ext": "A26015",
+            "ext": "",
             "gtNorm": "01009056",
-            "extNorm": "A26015",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           }
         }
@@ -333,13 +334,13 @@
     ],
     "cellCounts": {
       "scored": 18,
-      "match": 6,
-      "mismatch": 6,
-      "ext_missing": 6,
+      "match": 9,
+      "mismatch": 4,
+      "ext_missing": 5,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3333333333333333
+    "cellAccuracy": 0.5
   },
   "buckets": {
     "defects": [
@@ -397,7 +398,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['3']"
+        "reason": "extractor invented rows ['2', '3']"
       },
       {
         "location": "row1:itemName",
@@ -448,15 +449,15 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row2:itemName",
-        "status": "ext_missing",
+        "location": "row4:itemName",
+        "status": "mismatch",
         "gtNorm": "바이겔크림",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "357246바이겔크림",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.62)"
       },
       {
-        "location": "row2:itemNameMaster",
+        "location": "row4:itemNameMaster",
         "status": "ext_missing",
         "gtNorm": "바이겔크림105g(튜브)",
         "extNorm": "",
@@ -464,42 +465,18 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:quantity",
+        "location": "row4:itemCode",
         "status": "ext_missing",
-        "gtNorm": "76",
+        "gtNorm": "01009056",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "511340",
-        "extNorm": "76511340",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.86)"
-      },
-      {
-        "location": "row2:manufacturingNo",
-        "status": "mismatch",
-        "gtNorm": "A26015",
-        "extNorm": "388618A26015",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
-        "location": "row2:itemCode",
-        "status": "mismatch",
-        "gtNorm": "01009056",
-        "extNorm": "A26015",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
       }
     ],
     "bucketTally": {
-      "recognition": 9,
-      "structure": 9,
-      "layout": 1,
+      "recognition": 8,
+      "structure": 8,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

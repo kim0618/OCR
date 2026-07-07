@@ -210,10 +210,10 @@
           },
           "spec": {
             "gt": "25mg/100T",
-            "ext": "",
+            "ext": "25mg/100T",
             "gtNorm": "25mg/100t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "25mg/100t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -296,10 +296,10 @@
           },
           "spec": {
             "gt": "50mg/100T(PTP) 60",
-            "ext": "",
+            "ext": "5Omg/100T(PTP60",
             "gtNorm": "50mg/100t(ptp) 60",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "5omg/100t(ptp60",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -366,34 +366,34 @@
         "cells": {
           "itemName": {
             "gt": "(신)이무테라정",
-            "ext": "",
+            "ext": "50mg/100T(병) 이하",
             "gtNorm": "신이무테라정",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "50mg100t병이하",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "이무테라정50mg(병)(반품불가)",
-            "ext": "",
+            "ext": "포시타엠서방정5/50/1000mg",
             "gtNorm": "이무테라정50mg(병)(반품불가)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "포시타엠서방정5/50/1000mg",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
             "gt": "50mg/100T(병)",
-            "ext": "",
+            "ext": "50mg/100T(병) 이하",
             "gtNorm": "50mg/100t(병)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "50mg/100t(병) 이하",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
             "gt": "50",
-            "ext": "",
+            "ext": "50",
             "gtNorm": "50",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "50",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -430,10 +430,10 @@
           },
           "itemCode": {
             "gt": "04004604",
-            "ext": "",
+            "ext": "22005733",
             "gtNorm": "04004604",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "22005733",
+            "status": "mismatch",
             "spurious": false
           },
           "insuranceCode": {
@@ -449,13 +449,13 @@
     ],
     "cellCounts": {
       "scored": 30,
-      "match": 10,
-      "mismatch": 7,
-      "ext_missing": 13,
+      "match": 12,
+      "mismatch": 12,
+      "ext_missing": 6,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3333333333333333
+    "cellAccuracy": 0.4
   },
   "buckets": {
     "defects": [
@@ -524,14 +524,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "25mg/100t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row1:quantity",
         "status": "mismatch",
         "gtNorm": "20",
@@ -581,11 +573,11 @@
       },
       {
         "location": "row2:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "50mg/100t(ptp) 60",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "5omg/100t(ptp60",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.88)"
       },
       {
         "location": "row2:quantity",
@@ -613,35 +605,27 @@
       },
       {
         "location": "row3:itemName",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "신이무테라정",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "50mg100t병이하",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row3:itemNameMaster",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "이무테라정50mg(병)(반품불가)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "포시타엠서방정5/50/1000mg",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row3:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "50mg/100t(병)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:quantity",
-        "status": "ext_missing",
-        "gtNorm": "50",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "50mg/100t(병) 이하",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.89)"
       },
       {
         "location": "row3:manufacturingNo",
@@ -653,11 +637,11 @@
       },
       {
         "location": "row3:itemCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "04004604",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "22005733",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row3:insuranceCode",
@@ -669,8 +653,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 12,
-      "structure": 14,
+      "recognition": 17,
+      "structure": 7,
       "layout": 0,
       "preprocessing": 0
     },

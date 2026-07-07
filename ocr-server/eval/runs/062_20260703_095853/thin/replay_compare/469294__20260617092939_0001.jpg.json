@@ -176,15 +176,14 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 3,
-    "rowCountExt": 3,
-    "rowCountMatch": true,
+    "rowCountExt": 4,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
-      "2"
+      "2",
+      "4"
     ],
-    "gtOnlyRowIdx": [
-      "3"
-    ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
       "3"
     ],
@@ -211,10 +210,10 @@
           },
           "spec": {
             "gt": "35g",
-            "ext": "",
+            "ext": "35g",
             "gtNorm": "35g",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "35g",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -346,32 +345,31 @@
         }
       },
       {
-        "rowIndex": "3",
+        "rowIndex": "4",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "트라스트핑거플라스타",
-            "ext": "",
+            "ext": "3 4 6 8 9 5 7 트라스트핑거플라스타",
             "gtNorm": "트라스트핑거플라스타",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "3468957트라스트핑거플라스타",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "트라스트핑거플라스타(SK)",
-            "ext": "",
+            "ext": "트라스트핑거플라스타(SK)",
             "gtNorm": "트라스트핑거플라스타(sk)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "트라스트핑거플라스타(sk)",
+            "status": "match",
             "spurious": false
           },
           "spec": {
             "gt": "30매",
-            "ext": "",
+            "ext": "30매H",
             "gtNorm": "30매",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30매h",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -384,42 +382,42 @@
           },
           "unitPrice": {
             "gt": "2500",
-            "ext": "",
+            "ext": "2.500.00",
             "gtNorm": "2500",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "250000",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "1250000",
-            "ext": "",
+            "ext": "1,250,000",
             "gtNorm": "1250000",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "1250000",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
             "gt": "20290209",
-            "ext": "",
+            "ext": "20290209",
             "gtNorm": "20290209",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20290209",
+            "status": "match",
             "spurious": false
           },
           "manufacturingNo": {
             "gt": "0012602",
-            "ext": "",
+            "ext": "0012602",
             "gtNorm": "0012602",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "0012602",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
             "gt": "14002908",
-            "ext": "",
+            "ext": "14002908",
             "gtNorm": "14002908",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "14002908",
+            "status": "match",
             "spurious": false
           }
         }
@@ -427,13 +425,13 @@
     ],
     "cellCounts": {
       "scored": 27,
-      "match": 4,
-      "mismatch": 4,
-      "ext_missing": 19,
+      "match": 10,
+      "mismatch": 7,
+      "ext_missing": 10,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.14814814814814814
+    "cellAccuracy": 0.37037037037037035
   },
   "buckets": {
     "defects": [
@@ -487,14 +485,6 @@
       },
       {
         "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['3']"
-      },
-      {
-        "location": "table",
         "status": "rows_extra",
         "gtNorm": "",
         "extNorm": "",
@@ -513,14 +503,6 @@
         "location": "row1:itemNameMaster",
         "status": "ext_missing",
         "gtNorm": "아몰지에이크림35g",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "35g",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -614,31 +596,23 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row3:itemName",
-        "status": "ext_missing",
+        "location": "row4:itemName",
+        "status": "mismatch",
         "gtNorm": "트라스트핑거플라스타",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "3468957트라스트핑거플라스타",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.74)"
       },
       {
-        "location": "row3:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "트라스트핑거플라스타(sk)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:spec",
-        "status": "ext_missing",
+        "location": "row4:spec",
+        "status": "mismatch",
         "gtNorm": "30매",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "30매h",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.86)"
       },
       {
-        "location": "row3:quantity",
+        "location": "row4:quantity",
         "status": "ext_missing",
         "gtNorm": "500",
         "extNorm": "",
@@ -646,49 +620,17 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row3:unitPrice",
-        "status": "ext_missing",
+        "location": "row4:unitPrice",
+        "status": "mismatch",
         "gtNorm": "2500",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:amount",
-        "status": "ext_missing",
-        "gtNorm": "1250000",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:expiryDate",
-        "status": "ext_missing",
-        "gtNorm": "20290209",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:manufacturingNo",
-        "status": "ext_missing",
-        "gtNorm": "0012602",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "14002908",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "250000",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.80)"
       }
     ],
     "bucketTally": {
-      "recognition": 8,
-      "structure": 23,
+      "recognition": 11,
+      "structure": 13,
       "layout": 0,
       "preprocessing": 0
     },

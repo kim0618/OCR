@@ -189,7 +189,7 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 24,
-    "rowCountExt": 31,
+    "rowCountExt": 35,
     "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
@@ -214,11 +214,10 @@
       "27",
       "28",
       "30",
-      "31"
+      "31",
+      "35"
     ],
-    "gtOnlyRowIdx": [
-      "24"
-    ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
       "2",
       "9",
@@ -227,7 +226,10 @@
       "19",
       "21",
       "26",
-      "29"
+      "29",
+      "32",
+      "33",
+      "34"
     ],
     "rows": [
       {
@@ -2209,24 +2211,23 @@
         }
       },
       {
-        "rowIndex": "24",
+        "rowIndex": "35",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "아나콕스캡슐200MG 30C(병)",
-            "ext": "",
+            "ext": "아나콕스캡슬200MG 30C(병)",
             "gtNorm": "아나콕스캡슐200mg30c병",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "아나콕스캡슬200mg30c병",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "아나콕스캡슐200mg",
-            "ext": "",
+            "ext": "아나콕스캡슐200mg",
             "gtNorm": "아나콕스캡슐200mg",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "아나콕스캡슐200mg",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -2239,26 +2240,26 @@
           },
           "quantity": {
             "gt": "30",
-            "ext": "",
+            "ext": "12,359",
             "gtNorm": "30",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "12359",
+            "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "12359",
-            "ext": "",
+            "ext": "30",
             "gtNorm": "12359",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "337080",
-            "ext": "",
+            "ext": "337,080",
             "gtNorm": "337080",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "337080",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -2279,18 +2280,18 @@
           },
           "itemCode": {
             "gt": "16001266",
-            "ext": "",
+            "ext": "16001266",
             "gtNorm": "16001266",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "16001266",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "654004520",
-            "ext": "",
+            "ext": "654004520 20281204/ C002520",
             "gtNorm": "654004520",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "65400452020281204C002520",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -2298,13 +2299,13 @@
     ],
     "cellCounts": {
       "scored": 240,
-      "match": 132,
-      "mismatch": 48,
-      "ext_missing": 60,
+      "match": 135,
+      "mismatch": 52,
+      "ext_missing": 53,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.55
+    "cellAccuracy": 0.5625
   },
   "buckets": {
     "defects": [
@@ -2382,19 +2383,11 @@
       },
       {
         "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['24']"
-      },
-      {
-        "location": "table",
         "status": "rows_extra",
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['2', '9', '14', '16', '19', '21', '26', '29']"
+        "reason": "extractor invented rows ['2', '9', '14', '16', '19', '21', '26', '29', '32', '33', '34']"
       },
       {
         "location": "row1:itemName",
@@ -3181,23 +3174,15 @@
         "reason": "char-level diff (sim=0.57)"
       },
       {
-        "location": "row24:itemName",
-        "status": "ext_missing",
+        "location": "row35:itemName",
+        "status": "mismatch",
         "gtNorm": "아나콕스캡슐200mg30c병",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "아나콕스캡슬200mg30c병",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.93)"
       },
       {
-        "location": "row24:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "아나콕스캡슐200mg",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row24:spec",
+        "location": "row35:spec",
         "status": "ext_missing",
         "gtNorm": "30c",
         "extNorm": "",
@@ -3205,31 +3190,23 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row24:quantity",
-        "status": "ext_missing",
+        "location": "row35:quantity",
+        "status": "mismatch",
         "gtNorm": "30",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "12359",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['unitPrice']"
       },
       {
-        "location": "row24:unitPrice",
-        "status": "ext_missing",
+        "location": "row35:unitPrice",
+        "status": "mismatch",
         "gtNorm": "12359",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "30",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['quantity']"
       },
       {
-        "location": "row24:amount",
-        "status": "ext_missing",
-        "gtNorm": "337080",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row24:expiryDate",
+        "location": "row35:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20281204",
         "extNorm": "",
@@ -3237,7 +3214,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row24:manufacturingNo",
+        "location": "row35:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "C002520",
         "extNorm": "",
@@ -3245,26 +3222,18 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row24:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "16001266",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row24:insuranceCode",
-        "status": "ext_missing",
+        "location": "row35:insuranceCode",
+        "status": "mismatch",
         "gtNorm": "654004520",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "65400452020281204C002520",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.55)"
       }
     ],
     "bucketTally": {
-      "recognition": 52,
-      "structure": 67,
-      "layout": 0,
+      "recognition": 54,
+      "structure": 59,
+      "layout": 2,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

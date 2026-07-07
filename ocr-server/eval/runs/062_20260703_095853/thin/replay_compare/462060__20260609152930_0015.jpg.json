@@ -189,13 +189,15 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 1,
-    "rowCountExt": 1,
-    "rowCountMatch": true,
+    "rowCountExt": 2,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "2"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -251,18 +253,18 @@
           },
           "expiryDate": {
             "gt": "20271231",
-            "ext": "",
+            "ext": "2027-12-31",
             "gtNorm": "20271231",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20271231",
+            "status": "match",
             "spurious": false
           },
           "manufacturingNo": {
             "gt": "6F898A",
-            "ext": "",
+            "ext": "6F898A",
             "gtNorm": "6F898A",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "6F898A",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
@@ -278,13 +280,13 @@
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 5,
+      "match": 7,
       "mismatch": 2,
-      "ext_missing": 2,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5555555555555556
+    "cellAccuracy": 0.7777777777777778
   },
   "buckets": {
     "defects": [
@@ -353,6 +355,14 @@
         "reason": "value differs, low similarity"
       },
       {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['2']"
+      },
+      {
         "location": "row1:itemName",
         "status": "mismatch",
         "gtNorm": "애피드라주솔로스타3mlx58806520005929",
@@ -367,27 +377,11 @@
         "extNorm": "√280",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row1:expiryDate",
-        "status": "ext_missing",
-        "gtNorm": "20271231",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:manufacturingNo",
-        "status": "ext_missing",
-        "gtNorm": "6F898A",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
       "recognition": 6,
-      "structure": 6,
+      "structure": 5,
       "layout": 0,
       "preprocessing": 0
     },

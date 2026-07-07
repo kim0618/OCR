@@ -189,18 +189,20 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 6,
-    "rowCountExt": 6,
-    "rowCountMatch": true,
+    "rowCountExt": 7,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
       "2",
       "3",
       "4",
       "5",
-      "6"
+      "7"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "6"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -318,10 +320,10 @@
           },
           "quantity": {
             "gt": "1",
-            "ext": "",
+            "ext": "1",
             "gtNorm": "1",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "1",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -576,10 +578,10 @@
           },
           "quantity": {
             "gt": "1",
-            "ext": "",
+            "ext": "1",
             "gtNorm": "1",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "1",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -633,23 +635,23 @@
         }
       },
       {
-        "rowIndex": "6",
+        "rowIndex": "7",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "엑스원정5/80mg(B)",
-            "ext": "",
+            "ext": "엑스원정5/80mg(B) 0",
             "gtNorm": "엑스원정580mgb",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "엑스원정580mgb0",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "엑스원정5/80mg(병)",
-            "ext": "",
+            "ext": "엑스원정5/80mg(병)",
             "gtNorm": "엑스원정5/80mg(병)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "엑스원정5/80mg(병)",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -662,10 +664,10 @@
           },
           "quantity": {
             "gt": "9",
-            "ext": "",
+            "ext": "9",
             "gtNorm": "9",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "9",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -702,17 +704,17 @@
           },
           "itemCode": {
             "gt": "16002739",
-            "ext": "AV825B8",
+            "ext": "16002739",
             "gtNorm": "16002739",
-            "extNorm": "AV825B8",
-            "status": "mismatch",
+            "extNorm": "16002739",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "640006590",
-            "ext": "6 640006590",
+            "ext": "7 ∞ 6 9 10 640006590 이노엔(주) 에이치케이",
             "gtNorm": "640006590",
-            "extNorm": "6640006590",
+            "extNorm": "76910640006590이노엔주에이치케이",
             "status": "mismatch",
             "spurious": false
           }
@@ -721,13 +723,13 @@
     ],
     "cellCounts": {
       "scored": 60,
-      "match": 18,
+      "match": 23,
       "mismatch": 15,
-      "ext_missing": 27,
+      "ext_missing": 22,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3
+    "cellAccuracy": 0.38333333333333336
   },
   "buckets": {
     "defects": [
@@ -762,6 +764,14 @@
         "extNorm": "전북전주시덕진구팔복동4가2231",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.62)"
+      },
+      {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['6']"
       },
       {
         "location": "row1:itemName",
@@ -823,14 +833,6 @@
         "location": "row2:spec",
         "status": "ext_missing",
         "gtNorm": "500정",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:quantity",
-        "status": "ext_missing",
-        "gtNorm": "1",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -1004,14 +1006,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row5:quantity",
-        "status": "ext_missing",
-        "gtNorm": "1",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row5:unitPrice",
         "status": "mismatch",
         "gtNorm": "19764",
@@ -1036,23 +1030,15 @@
         "reason": "char-level diff (sim=0.84)"
       },
       {
-        "location": "row6:itemName",
-        "status": "ext_missing",
+        "location": "row7:itemName",
+        "status": "mismatch",
         "gtNorm": "엑스원정580mgb",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "엑스원정580mgb0",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.95)"
       },
       {
-        "location": "row6:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "엑스원정5/80mg(병)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row6:spec",
+        "location": "row7:spec",
         "status": "ext_missing",
         "gtNorm": "30정",
         "extNorm": "",
@@ -1060,15 +1046,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row6:quantity",
-        "status": "ext_missing",
-        "gtNorm": "9",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row6:unitPrice",
+        "location": "row7:unitPrice",
         "status": "mismatch",
         "gtNorm": "19764",
         "extNorm": "1976400",
@@ -1076,34 +1054,26 @@
         "reason": "char-level diff (sim=0.83)"
       },
       {
-        "location": "row6:manufacturingNo",
+        "location": "row7:manufacturingNo",
         "status": "mismatch",
         "gtNorm": "AV825B8",
         "extNorm": "177876AV825B8",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
-        "location": "row6:itemCode",
-        "status": "mismatch",
-        "gtNorm": "16002739",
-        "extNorm": "AV825B8",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.70)"
       },
       {
-        "location": "row6:insuranceCode",
+        "location": "row7:insuranceCode",
         "status": "mismatch",
         "gtNorm": "640006590",
-        "extNorm": "6640006590",
+        "extNorm": "76910640006590이노엔주에이치케이",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.95)"
+        "reason": "char-level diff (sim=0.56)"
       }
     ],
     "bucketTally": {
-      "recognition": 16,
-      "structure": 27,
-      "layout": 3,
+      "recognition": 17,
+      "structure": 23,
+      "layout": 2,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

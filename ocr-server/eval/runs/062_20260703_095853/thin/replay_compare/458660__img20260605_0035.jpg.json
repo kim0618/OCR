@@ -176,15 +176,16 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 2,
-    "rowCountExt": 5,
+    "rowCountExt": 6,
     "rowCountMatch": false,
     "matchedRowIdx": [
       "2",
-      "3"
+      "6"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
       "1",
+      "3",
       "4",
       "6"
     ],
@@ -251,10 +252,10 @@
           },
           "manufacturingNo": {
             "gt": "02825",
-            "ext": "",
+            "ext": "02825",
             "gtNorm": "02825",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "02825",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
@@ -268,23 +269,23 @@
         }
       },
       {
-        "rowIndex": "3",
+        "rowIndex": "6",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "디쓰리베이스액 솔루션 25,000IU/2.5mL 1EA",
-            "ext": "",
+            "ext": "4 5 √ 3000001041 디쓰리베이스액 솔루션25,00이IU/2.5mL 1EA",
             "gtNorm": "디쓰리베이스액솔루션25000iu25ml1ea",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "453000001041디쓰리베이스액솔루션2500이iu25ml1ea",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "디3베이스경구솔루션25000IU/2.5mL",
-            "ext": "",
+            "ext": "디3베이스경구솔루션25000IU/2.5mL",
             "gtNorm": "디3베이스경구솔루션25000iu/2.5ml",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "디3베이스경구솔루션25000iu/2.5ml",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -297,18 +298,18 @@
           },
           "quantity": {
             "gt": "30",
-            "ext": "",
+            "ext": "12,090",
             "gtNorm": "30",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "12090",
+            "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "12090",
-            "ext": "12,090",
+            "ext": "30000",
             "gtNorm": "12090",
-            "extNorm": "12090",
-            "status": "match",
+            "extNorm": "30000",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
@@ -321,7 +322,7 @@
           },
           "expiryDate": {
             "gt": "20270430",
-            "ext": "20270430",
+            "ext": "2027-04-30",
             "gtNorm": "20270430",
             "extNorm": "20270430",
             "status": "match",
@@ -329,18 +330,18 @@
           },
           "manufacturingNo": {
             "gt": "51925",
-            "ext": "",
+            "ext": "51925",
             "gtNorm": "51925",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "51925",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
             "gt": "01005982",
-            "ext": "",
+            "ext": "01005982",
             "gtNorm": "01005982",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "01005982",
+            "status": "match",
             "spurious": false
           }
         }
@@ -348,13 +349,13 @@
     ],
     "cellCounts": {
       "scored": 18,
-      "match": 6,
-      "mismatch": 0,
-      "ext_missing": 12,
+      "match": 9,
+      "mismatch": 3,
+      "ext_missing": 6,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3333333333333333
+    "cellAccuracy": 0.5
   },
   "buckets": {
     "defects": [
@@ -404,7 +405,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '4', '6']"
+        "reason": "extractor invented rows ['1', '3', '4', '6']"
       },
       {
         "location": "row2:itemName",
@@ -439,14 +440,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:manufacturingNo",
-        "status": "ext_missing",
-        "gtNorm": "02825",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row2:itemCode",
         "status": "ext_missing",
         "gtNorm": "01005983",
@@ -455,23 +448,15 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row3:itemName",
-        "status": "ext_missing",
+        "location": "row6:itemName",
+        "status": "mismatch",
         "gtNorm": "디쓰리베이스액솔루션25000iu25ml1ea",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "453000001041디쓰리베이스액솔루션2500이iu25ml1ea",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.77)"
       },
       {
-        "location": "row3:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "디3베이스경구솔루션25000iu/2.5ml",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:spec",
+        "location": "row6:spec",
         "status": "ext_missing",
         "gtNorm": "1ea",
         "extNorm": "",
@@ -479,34 +464,26 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row3:quantity",
-        "status": "ext_missing",
+        "location": "row6:quantity",
+        "status": "mismatch",
         "gtNorm": "30",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "12090",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
-        "location": "row3:manufacturingNo",
-        "status": "ext_missing",
-        "gtNorm": "51925",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "01005982",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "location": "row6:unitPrice",
+        "status": "mismatch",
+        "gtNorm": "12090",
+        "extNorm": "30000",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['quantity']"
       }
     ],
     "bucketTally": {
-      "recognition": 4,
-      "structure": 14,
-      "layout": 0,
+      "recognition": 6,
+      "structure": 8,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

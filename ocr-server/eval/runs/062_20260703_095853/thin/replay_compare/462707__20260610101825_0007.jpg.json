@@ -176,14 +176,14 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 15,
-    "rowCountExt": 15,
-    "rowCountMatch": true,
+    "rowCountExt": 17,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
       "2",
       "3",
       "4",
-      "5",
+      "16",
       "6",
       "7",
       "8",
@@ -196,7 +196,10 @@
       "15"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "5",
+      "17"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -511,23 +514,23 @@
         }
       },
       {
-        "rowIndex": "5",
+        "rowIndex": "16",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "탐스케어서방정 0.4밀리그램",
-            "ext": "탐스케어서방정0.4밀리그램",
+            "ext": "20 탐스케어서방정0.4밀리그램",
             "gtNorm": "탐스케어서방정04밀리그램",
-            "extNorm": "탐스케어서방정04밀리그램",
-            "status": "match",
+            "extNorm": "20탐스케어서방정04밀리그램",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "탐스케어서방정0.4mg(라이트팜텍)",
-            "ext": "탐스케어서방정0.4mg(라이트팜텍)",
+            "ext": "탐스케어서방정0.2mg(더유)",
             "gtNorm": "탐스케어서방정0.4mg(라이트팜텍)",
-            "extNorm": "탐스케어서방정0.4mg(라이트팜텍)",
-            "status": "match",
+            "extNorm": "탐스케어서방정0.2mg(더유)",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
@@ -540,26 +543,26 @@
           },
           "quantity": {
             "gt": "60",
-            "ext": "20",
+            "ext": "18,225",
             "gtNorm": "60",
-            "extNorm": "20",
+            "extNorm": "18225",
             "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "18225",
-            "ext": "5002",
+            "ext": "60",
             "gtNorm": "18225",
-            "extNorm": "5002",
+            "extNorm": "60",
             "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "994091",
-            "ext": "18,225",
+            "ext": "994,091",
             "gtNorm": "994091",
-            "extNorm": "18225",
-            "status": "mismatch",
+            "extNorm": "994091",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -572,18 +575,18 @@
           },
           "manufacturingNo": {
             "gt": "5002",
-            "ext": "",
+            "ext": "5002",
             "gtNorm": "5002",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "5002",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
             "gt": "05004049",
-            "ext": "05004049",
+            "ext": "22002626",
             "gtNorm": "05004049",
-            "extNorm": "05004049",
-            "status": "match",
+            "extNorm": "22002626",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -1292,7 +1295,7 @@
       },
       {
         "rowIndex": "15",
-        "rowMatch": true,
+        "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "모더페시아정1mg",
@@ -1352,10 +1355,10 @@
           },
           "manufacturingNo": {
             "gt": "25002",
-            "ext": "25002",
+            "ext": "",
             "gtNorm": "25002",
-            "extNorm": "25002",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemCode": {
@@ -1371,13 +1374,13 @@
     ],
     "cellCounts": {
       "scored": 135,
-      "match": 117,
-      "mismatch": 17,
+      "match": 115,
+      "mismatch": 19,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.8666666666666667
+    "cellAccuracy": 0.8518518518518519
   },
   "buckets": {
     "defects": [
@@ -1454,6 +1457,14 @@
         "reason": "value differs, low similarity"
       },
       {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['5', '17']"
+      },
+      {
         "location": "row3:itemName",
         "status": "mismatch",
         "gtNorm": "히트졸정",
@@ -1486,36 +1497,44 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row5:quantity",
+        "location": "row16:itemName",
+        "status": "mismatch",
+        "gtNorm": "탐스케어서방정04밀리그램",
+        "extNorm": "20탐스케어서방정04밀리그램",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.93)"
+      },
+      {
+        "location": "row16:itemNameMaster",
+        "status": "mismatch",
+        "gtNorm": "탐스케어서방정0.4mg(라이트팜텍)",
+        "extNorm": "탐스케어서방정0.2mg(더유)",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.74)"
+      },
+      {
+        "location": "row16:quantity",
         "status": "mismatch",
         "gtNorm": "60",
-        "extNorm": "20",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
-      },
-      {
-        "location": "row5:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "18225",
-        "extNorm": "5002",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
-      },
-      {
-        "location": "row5:amount",
-        "status": "mismatch",
-        "gtNorm": "994091",
         "extNorm": "18225",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row5:manufacturingNo",
-        "status": "ext_missing",
-        "gtNorm": "5002",
-        "extNorm": "",
         "bucket": "layout",
         "reason": "gt cell appears in column(s) ['unitPrice']"
+      },
+      {
+        "location": "row16:unitPrice",
+        "status": "mismatch",
+        "gtNorm": "18225",
+        "extNorm": "60",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['quantity']"
+      },
+      {
+        "location": "row16:itemCode",
+        "status": "mismatch",
+        "gtNorm": "05004049",
+        "extNorm": "22002626",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row10:itemName",
@@ -1596,11 +1615,19 @@
         "extNorm": "25008B",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.83)"
+      },
+      {
+        "location": "row15:manufacturingNo",
+        "status": "ext_missing",
+        "gtNorm": "25002",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 20,
-      "structure": 3,
+      "recognition": 21,
+      "structure": 5,
       "layout": 4,
       "preprocessing": 0
     },

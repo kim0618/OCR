@@ -211,10 +211,10 @@
           },
           "spec": {
             "gt": "30T(병)",
-            "ext": "1 삼성)도네페질정5mg 30T(병)",
+            "ext": "30T(병)",
             "gtNorm": "30t(병)",
-            "extNorm": "1 삼성)도네페질정5mg 30t(병)",
-            "status": "mismatch",
+            "extNorm": "30t(병)",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -297,10 +297,10 @@
           },
           "spec": {
             "gt": "30T(병)",
-            "ext": "2 26 이노엔)비바코정10mg(12ea) 30T(병)",
+            "ext": "30T(병)",
             "gtNorm": "30t(병)",
-            "extNorm": "2 26 이노엔)비바코정10mg(12ea) 30t(병)",
-            "status": "mismatch",
+            "extNorm": "30t(병)",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -383,10 +383,10 @@
           },
           "spec": {
             "gt": "100T(병)",
-            "ext": "3 20 한독$)아리셉트정5mg(18ea) 100T(병)",
+            "ext": "100T(병)",
             "gtNorm": "100t(병)",
-            "extNorm": "3 20 한독$)아리셉트정5mg(18ea) 100t(병)",
-            "status": "mismatch",
+            "extNorm": "100t(병)",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -469,10 +469,10 @@
           },
           "spec": {
             "gt": "5ml",
-            "ext": "",
+            "ext": "5m1",
             "gtNorm": "5ml",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "5m1",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -509,10 +509,10 @@
           },
           "manufacturingNo": {
             "gt": "25015",
-            "ext": "",
+            "ext": "25015",
             "gtNorm": "25015",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "25015",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
@@ -525,10 +525,10 @@
           },
           "insuranceCode": {
             "gt": "651201881",
-            "ext": "",
+            "ext": "651201881",
             "gtNorm": "651201881",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "651201881",
+            "status": "match",
             "spurious": false
           }
         }
@@ -536,13 +536,13 @@
     ],
     "cellCounts": {
       "scored": 40,
-      "match": 13,
-      "mismatch": 14,
-      "ext_missing": 13,
+      "match": 18,
+      "mismatch": 12,
+      "ext_missing": 10,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.325
+    "cellAccuracy": 0.45
   },
   "buckets": {
     "defects": [
@@ -635,14 +635,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:spec",
-        "status": "mismatch",
-        "gtNorm": "30t(병)",
-        "extNorm": "1 삼성)도네페질정5mg 30t(병)",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
         "location": "row1:quantity",
         "status": "mismatch",
         "gtNorm": "10",
@@ -699,14 +691,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:spec",
-        "status": "mismatch",
-        "gtNorm": "30t(병)",
-        "extNorm": "2 26 이노엔)비바코정10mg(12ea) 30t(병)",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
         "location": "row2:quantity",
         "status": "mismatch",
         "gtNorm": "10",
@@ -747,14 +731,6 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row3:spec",
-        "status": "mismatch",
-        "gtNorm": "100t(병)",
-        "extNorm": "3 20 한독$)아리셉트정5mg(18ea) 100t(병)",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
         "location": "row3:quantity",
         "status": "mismatch",
         "gtNorm": "10",
@@ -788,11 +764,11 @@
       },
       {
         "location": "row5:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "5ml",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "5m1",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "row5:quantity",
@@ -811,33 +787,17 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row5:manufacturingNo",
-        "status": "ext_missing",
-        "gtNorm": "25015",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row5:itemCode",
         "status": "ext_missing",
         "gtNorm": "8806512018814",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row5:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "651201881",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 19,
-      "structure": 17,
+      "recognition": 17,
+      "structure": 14,
       "layout": 0,
       "preprocessing": 0
     },

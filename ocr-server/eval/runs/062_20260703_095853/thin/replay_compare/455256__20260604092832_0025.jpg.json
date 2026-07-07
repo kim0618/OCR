@@ -189,14 +189,15 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 2,
-    "rowCountExt": 4,
+    "rowCountExt": 5,
     "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
-      "2"
+      "5"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
+      "2",
       "4",
       "5"
     ],
@@ -288,23 +289,23 @@
         }
       },
       {
-        "rowIndex": "2",
+        "rowIndex": "5",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "카이닉스3점안액 0.5ml",
-            "ext": "",
+            "ext": "44 X 카이닉스3점안액0.5ml 이하여백 3Z",
             "gtNorm": "카이닉스3점안액05ml",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "44x카이닉스3점안액05ml이하여백3z",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "카이닉스3점안액",
-            "ext": "",
+            "ext": "카이닉스3점안액",
             "gtNorm": "카이닉스3점안액",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "카이닉스3점안액",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -317,18 +318,18 @@
           },
           "quantity": {
             "gt": "132",
-            "ext": "",
+            "ext": "132",
             "gtNorm": "132",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "132",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "19152",
-            "ext": "60관 132 19,152 2,528,064",
+            "ext": "19,152",
             "gtNorm": "19152",
-            "extNorm": "60132191522528064",
-            "status": "mismatch",
+            "extNorm": "19152",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -349,7 +350,7 @@
           },
           "manufacturingNo": {
             "gt": "EQB538",
-            "ext": "EQB538",
+            "ext": "EQB538 -",
             "gtNorm": "EQB538",
             "extNorm": "EQB538",
             "status": "match",
@@ -357,17 +358,17 @@
           },
           "itemCode": {
             "gt": "01009768",
-            "ext": "EQB538",
+            "ext": "01009768",
             "gtNorm": "01009768",
-            "extNorm": "EQB538",
-            "status": "mismatch",
+            "extNorm": "01009768",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "670607941",
-            "ext": "2 670607941한국알콘",
+            "ext": "2 45 6 3 4 670607941한국알콘(",
             "gtNorm": "670607941",
-            "extNorm": "2670607941한국알콘",
+            "extNorm": "245634670607941한국알콘",
             "status": "mismatch",
             "spurious": false
           }
@@ -376,13 +377,13 @@
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 5,
-      "mismatch": 7,
-      "ext_missing": 8,
+      "match": 9,
+      "mismatch": 6,
+      "ext_missing": 5,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.25
+    "cellAccuracy": 0.45
   },
   "buckets": {
     "defects": [
@@ -432,7 +433,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['4', '5']"
+        "reason": "extractor invented rows ['2', '4', '5']"
       },
       {
         "location": "row1:itemName",
@@ -499,23 +500,15 @@
         "reason": "char-level diff (sim=0.78)"
       },
       {
-        "location": "row2:itemName",
-        "status": "ext_missing",
+        "location": "row5:itemName",
+        "status": "mismatch",
         "gtNorm": "카이닉스3점안액05ml",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "44x카이닉스3점안액05ml이하여백3z",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.73)"
       },
       {
-        "location": "row2:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "카이닉스3점안액",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:spec",
+        "location": "row5:spec",
         "status": "ext_missing",
         "gtNorm": "60관",
         "extNorm": "",
@@ -523,41 +516,17 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:quantity",
-        "status": "ext_missing",
-        "gtNorm": "132",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "19152",
-        "extNorm": "60132191522528064",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row2:itemCode",
-        "status": "mismatch",
-        "gtNorm": "01009768",
-        "extNorm": "EQB538",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row2:insuranceCode",
+        "location": "row5:insuranceCode",
         "status": "mismatch",
         "gtNorm": "670607941",
-        "extNorm": "2670607941한국알콘",
+        "extNorm": "245634670607941한국알콘",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.78)"
+        "reason": "char-level diff (sim=0.64)"
       }
     ],
     "bucketTally": {
-      "recognition": 11,
-      "structure": 9,
+      "recognition": 10,
+      "structure": 6,
       "layout": 1,
       "preprocessing": 0
     },

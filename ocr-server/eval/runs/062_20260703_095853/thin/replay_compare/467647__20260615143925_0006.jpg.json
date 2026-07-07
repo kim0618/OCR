@@ -189,16 +189,17 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 4,
-    "rowCountExt": 5,
+    "rowCountExt": 6,
     "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
       "2",
       "3",
-      "4"
+      "6"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
+      "4",
       "5"
     ],
     "rows": [
@@ -437,71 +438,71 @@
         }
       },
       {
-        "rowIndex": "4",
+        "rowIndex": "6",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "레보발사정2.5/160밀리그램 30T",
-            "ext": "",
+            "ext": "8 9 5 6 4 7 레보발사정2.5/160밀리그램30T",
             "gtNorm": "레보발사정25160밀리그램30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "895647레보발사정25160밀리그램30t",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "레보발사정2.5/160mg(특정로트회수)",
-            "ext": "",
+            "ext": "레보발사정2.5/160mg(특정로트회수)",
             "gtNorm": "레보발사정2.5/160mg(특정로트회수)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "레보발사정2.5/160mg(특정로트회수)",
+            "status": "match",
             "spurious": false
           },
           "spec": {
             "gt": "30T",
-            "ext": "",
+            "ext": "30T",
             "gtNorm": "30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
             "gt": "10",
-            "ext": "30T 10",
+            "ext": "24,275",
             "gtNorm": "10",
-            "extNorm": "3010",
+            "extNorm": "24275",
             "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "24275",
-            "ext": "24,275",
+            "ext": "10",
             "gtNorm": "24275",
-            "extNorm": "24275",
-            "status": "match",
+            "extNorm": "10",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "242750",
-            "ext": "242,750",
+            "ext": "04",
             "gtNorm": "242750",
-            "extNorm": "242750",
-            "status": "match",
+            "extNorm": "04",
+            "status": "mismatch",
             "spurious": false
           },
           "expiryDate": {
             "gt": "20271204",
-            "ext": "20271204",
+            "ext": "",
             "gtNorm": "20271204",
-            "extNorm": "20271204",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemCode": {
             "gt": "22001912",
-            "ext": "",
+            "ext": "22001912",
             "gtNorm": "22001912",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "22001912",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -518,8 +519,8 @@
     "cellCounts": {
       "scored": 36,
       "match": 11,
-      "mismatch": 5,
-      "ext_missing": 20,
+      "mismatch": 8,
+      "ext_missing": 17,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -589,7 +590,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['5']"
+        "reason": "extractor invented rows ['4', '5']"
       },
       {
         "location": "row1:itemName",
@@ -744,47 +745,47 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row4:itemName",
-        "status": "ext_missing",
+        "location": "row6:itemName",
+        "status": "mismatch",
         "gtNorm": "레보발사정25160밀리그램30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "895647레보발사정25160밀리그램30t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.85)"
       },
       {
-        "location": "row4:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "레보발사정2.5/160mg(특정로트회수)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:spec",
-        "status": "ext_missing",
-        "gtNorm": "30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:quantity",
+        "location": "row6:quantity",
         "status": "mismatch",
         "gtNorm": "10",
-        "extNorm": "3010",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
+        "extNorm": "24275",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['unitPrice']"
       },
       {
-        "location": "row4:itemCode",
+        "location": "row6:unitPrice",
+        "status": "mismatch",
+        "gtNorm": "24275",
+        "extNorm": "10",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['quantity']"
+      },
+      {
+        "location": "row6:amount",
+        "status": "mismatch",
+        "gtNorm": "242750",
+        "extNorm": "04",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
+      },
+      {
+        "location": "row6:expiryDate",
         "status": "ext_missing",
-        "gtNorm": "22001912",
+        "gtNorm": "20271204",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row4:insuranceCode",
+        "location": "row6:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "25005",
         "extNorm": "",
@@ -793,9 +794,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 9,
-      "structure": 24,
-      "layout": 0,
+      "recognition": 10,
+      "structure": 21,
+      "layout": 2,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

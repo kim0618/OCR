@@ -176,14 +176,16 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 2,
-    "rowCountExt": 2,
-    "rowCountMatch": true,
+    "rowCountExt": 3,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
-      "2"
+      "3"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "2"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -247,10 +249,10 @@
           },
           "manufacturingNo": {
             "gt": "MYFC012",
-            "ext": "MYFCO",
+            "ext": "",
             "gtNorm": "MYFC012",
-            "extNorm": "MYFCO",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemCode": {
@@ -264,14 +266,14 @@
         }
       },
       {
-        "rowIndex": "2",
+        "rowIndex": "3",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "셀벡스캡슐 50mg",
-            "ext": "셀벡스캡슬50mg",
+            "ext": "셀벡스캡슬50mg 계",
             "gtNorm": "셀벡스캡슐50mg",
-            "extNorm": "셀벡스캡슬50mg",
+            "extNorm": "셀벡스캡슬50mg계",
             "status": "mismatch",
             "spurious": false
           },
@@ -285,50 +287,50 @@
           },
           "spec": {
             "gt": "500C",
-            "ext": "셀벡스캡슬50mg 계 500C 265",
+            "ext": "500C 265",
             "gtNorm": "500c",
-            "extNorm": "셀벡스캡슬50mg 계 500c 265",
+            "extNorm": "500c 265",
             "status": "mismatch",
             "spurious": false
           },
           "quantity": {
             "gt": "5",
-            "ext": "5",
+            "ext": "",
             "gtNorm": "5",
-            "extNorm": "5",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "unitPrice": {
             "gt": "36490",
-            "ext": "182,450",
+            "ext": "36,490",
             "gtNorm": "36490",
-            "extNorm": "182450",
-            "status": "mismatch",
+            "extNorm": "36490",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "182450",
-            "ext": "36,490",
+            "ext": "182,450",
             "gtNorm": "182450",
-            "extNorm": "36490",
-            "status": "mismatch",
+            "extNorm": "182450",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
             "gt": "20280903",
-            "ext": "",
+            "ext": "18,245 28-09-03",
             "gtNorm": "20280903",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "18245280903",
+            "status": "mismatch",
             "spurious": false
           },
           "manufacturingNo": {
             "gt": "25019",
-            "ext": "",
+            "ext": "250.19",
             "gtNorm": "25019",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "25019",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
@@ -344,13 +346,13 @@
     ],
     "cellCounts": {
       "scored": 18,
-      "match": 7,
-      "mismatch": 8,
+      "match": 9,
+      "mismatch": 6,
       "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3888888888888889
+    "cellAccuracy": 0.5
   },
   "buckets": {
     "defects": [
@@ -411,6 +413,14 @@
         "reason": "char-level diff (sim=0.81)"
       },
       {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['2']"
+      },
+      {
         "location": "row1:quantity",
         "status": "mismatch",
         "gtNorm": "10",
@@ -444,65 +454,49 @@
       },
       {
         "location": "row1:manufacturingNo",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "MYFC012",
-        "extNorm": "MYFCO",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row3:itemName",
+        "status": "mismatch",
+        "gtNorm": "셀벡스캡슐50mg",
+        "extNorm": "셀벡스캡슬50mg계",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.84)"
+      },
+      {
+        "location": "row3:spec",
+        "status": "mismatch",
+        "gtNorm": "500c",
+        "extNorm": "500c 265",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.67)"
       },
       {
-        "location": "row2:itemName",
-        "status": "mismatch",
-        "gtNorm": "셀벡스캡슐50mg",
-        "extNorm": "셀벡스캡슬50mg",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.89)"
-      },
-      {
-        "location": "row2:spec",
-        "status": "mismatch",
-        "gtNorm": "500c",
-        "extNorm": "셀벡스캡슬50mg 계 500c 265",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row2:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "36490",
-        "extNorm": "182450",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
-      },
-      {
-        "location": "row2:amount",
-        "status": "mismatch",
-        "gtNorm": "182450",
-        "extNorm": "36490",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['unitPrice']"
-      },
-      {
-        "location": "row2:expiryDate",
+        "location": "row3:quantity",
         "status": "ext_missing",
+        "gtNorm": "5",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row3:expiryDate",
+        "status": "mismatch",
         "gtNorm": "20280903",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:manufacturingNo",
-        "status": "ext_missing",
-        "gtNorm": "25019",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "18245280903",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.74)"
       }
     ],
     "bucketTally": {
       "recognition": 8,
-      "structure": 6,
-      "layout": 4,
+      "structure": 7,
+      "layout": 2,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

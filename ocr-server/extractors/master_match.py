@@ -117,6 +117,7 @@ class MasterMatcher:
         self._units: list[str] = []
         self._pyojuns: list[str] = []
         self._bohums: list[str] = []
+        self._nmcleans: list[str] = []   # war fn_get_item_name_clean+공백strip (LIKE 단계용)
         self._tlens: list[int] = []
         self._index: dict[str, list[int]] = {}
         for cd, e in item_dict.items():
@@ -124,7 +125,8 @@ class MasterMatcher:
             nm = e.get("nm") or ""
             if not nm:
                 continue
-            tri = trigrams(clean_item_name(nm))
+            nmc = clean_item_name(nm)
+            tri = trigrams(nmc)
             if not tri:
                 continue
             i = len(self._cds)
@@ -134,6 +136,7 @@ class MasterMatcher:
             self._units.append(e.get("unit") or "")
             self._pyojuns.append(e.get("pyojun") or "")
             self._bohums.append(e.get("bohum") or "")
+            self._nmcleans.append(nmc)
             self._tlens.append(len(tri))
             for t in tri:
                 self._index.setdefault(t, []).append(i)
@@ -162,15 +165,21 @@ class MasterMatcher:
         """→ {itemCode, itemNameMaster, sim} | None (floor 미달/무후보).
 
         랭킹(V3, 벤치 실측): 유사도 DESC → 규격 dose점수(일치>정보없음>모순) → |bp1−단가|.
-        단가 결측 시 amount/quantity 역산으로 대체."""
+        단가 결측 시 amount/quantity 역산으로 대체.
+
+        NOTE: war 캐스케이드의 LIKE 단계(clean 부분포함 우선)는 062 실측에서 순손해
+        (-0.05pp)라 미채택. 이유: 벤치의 +0.9pp 는 dose 없는 순수 trigram 대비였고,
+        우리는 이미 규격 dose tiebreak 로 trigram 을 강화해 LIKE 의 이점(규격 구분)을
+        흡수함 → LIKE 우선이 오히려 dose 정답을 동명이품으로 덮음. learndata 도 키
+        불일치(적중 7.8%)로 후순위. (측정 근거: eval/data/invoice_war/_cascade_increment.sql)"""
         cands = self.top_candidates(name, 30)
         if not cands:
             return None
         if price is None:
-            q = re.sub(r"[^0-9]", "", str(quantity or ""))
+            qd = re.sub(r"[^0-9]", "", str(quantity or ""))
             a = parse_price(amount)
-            if q and a:
-                qi = int(q)
+            if qd and a:
+                qi = int(qd)
                 if qi > 0 and a > 0:
                     price = round(a / qi)
         q_dose = dose_tokens(f"{name} {spec or ''}")
