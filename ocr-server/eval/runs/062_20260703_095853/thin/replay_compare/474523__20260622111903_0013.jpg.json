@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "아주약품(주)",
-        "ext": "아주약품",
-        "gtNorm": "아주약품(주)",
+        "ext": "아주약품(주)",
+        "gtNorm": "아주약품",
         "extNorm": "아주약품",
-        "type": "text",
-        "status": "mismatch",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "경기 평택시 산단로121번길 23 (모곡동)",
-        "ext": "",
+        "ext": "경기 평택시 산단로121번길 23 (모곡동)",
         "gtNorm": "경기평택시산단로121번길23모곡동",
-        "extNorm": "",
+        "extNorm": "경기평택시산단로121번길23모곡동",
         "type": "address",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영등포지점",
         "ext": "백제약품(주)영등포지점",
-        "gtNorm": "백제약품 (주) 영등포지점",
-        "extNorm": "백제약품(주)영등포지점",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품영등포지점",
+        "extNorm": "백제약품영등포지점",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 4,
-      "mismatch": 5,
-      "ext_missing": 3,
+      "match": 7,
+      "mismatch": 3,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 4,
+      "matched": 7,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 3
+      "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.3333333333333333
+    "fieldAccuracy": 0.5833333333333334
   },
   "table": {
     "alignMode": "content",
@@ -2224,14 +2224,6 @@
         "reason": "gt value present at ['field:discountAmount']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "아주약품(주)",
-        "extNorm": "아주약품",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.73)"
-      },
-      {
         "location": "field:taxType",
         "status": "mismatch",
         "gtNorm": "면세",
@@ -2240,28 +2232,12 @@
         "reason": "char-level diff (sim=0.50)"
       },
       {
-        "location": "field:supplierAddress",
-        "status": "ext_missing",
-        "gtNorm": "경기평택시산단로121번길23모곡동",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
-      },
-      {
         "location": "field:supplyAmount",
         "status": "mismatch",
         "gtNorm": "0",
         "extNorm": "900256",
         "bucket": "structure",
         "reason": "gt value present at ['field:discountAmount']"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영등포지점",
-        "extNorm": "백제약품(주)영등포지점",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -3097,8 +3073,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 50,
-      "structure": 59,
+      "recognition": 48,
+      "structure": 58,
       "layout": 2,
       "preprocessing": 0
     },
@@ -3118,6 +3094,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.25
+    "fieldMissRate": 0.167
   }
 }

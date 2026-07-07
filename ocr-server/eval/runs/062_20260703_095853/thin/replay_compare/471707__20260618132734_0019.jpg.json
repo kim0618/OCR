@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "한국프라임제약(주)봉동",
-        "ext": "한국프라임제약(주)봉동",
-        "gtNorm": "한국프라임제약(주)봉동",
-        "extNorm": "한국프라임제약(주)봉동",
-        "type": "text",
-        "status": "match",
+        "ext": "한국프라임",
+        "gtNorm": "한국프라임제약봉동",
+        "extNorm": "한국프라임",
+        "type": "company",
+        "status": "mismatch",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울 영등포구 선유로9길 10 (문래동6가) 901호",
-        "ext": "전북완주군봉동읍완주산단9로100(한국프라임제약",
+        "ext": "전북 완주군 봉동읍 완주산단9로 100",
         "gtNorm": "서울영등포구선유로9길10문래동6가901호",
-        "extNorm": "전북완주군봉동읍완주산단9로100한국프라임제약",
+        "extNorm": "전북완주군봉동읍완주산단9로100",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)북부물류센터",
         "ext": "백제약품(주)",
-        "gtNorm": "백제약품(주)북부물류센터",
-        "extNorm": "백제약품(주)",
-        "type": "text",
+        "gtNorm": "백제약품북부물류센터",
+        "extNorm": "백제약품",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 7,
-      "mismatch": 3,
+      "match": 6,
+      "mismatch": 4,
       "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 7,
+      "matched": 6,
       "extNotAttempted": 0,
       "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.5833333333333334
+    "fieldAccuracy": 0.5
   },
   "table": {
     "alignMode": "content",
@@ -281,10 +281,18 @@
         "reason": "gt value not found anywhere in extraction"
       },
       {
+        "location": "field:supplierCompany",
+        "status": "mismatch",
+        "gtNorm": "한국프라임제약봉동",
+        "extNorm": "한국프라임",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.71)"
+      },
+      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울영등포구선유로9길10문래동6가901호",
-        "extNorm": "전북완주군봉동읍완주산단9로100한국프라임제약",
+        "extNorm": "전북완주군봉동읍완주산단9로100",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -299,10 +307,10 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)북부물류센터",
-        "extNorm": "백제약품(주)",
+        "gtNorm": "백제약품북부물류센터",
+        "extNorm": "백제약품",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.70)"
+        "reason": "char-level diff (sim=0.57)"
       },
       {
         "location": "field:buyerAddress",
@@ -346,7 +354,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 6,
+      "recognition": 7,
       "structure": 2,
       "layout": 1,
       "preprocessing": 0

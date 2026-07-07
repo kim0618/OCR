@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "더블유사이언스(주)",
-        "ext": "용)",
-        "gtNorm": "더블유사이언스(주)",
-        "extNorm": "용)",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "더블유사이언스",
+        "gtNorm": "더블유사이언스",
+        "extNorm": "더블유사이언스",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "경기 성남시 수정구 달래내로 46 (시흥동)",
-        "ext": "경기도 성남시 수정구",
+        "ext": "경기 성남시 수정구 달래내로 46 (시흥동) 307호",
         "gtNorm": "경기성남시수정구달래내로46시흥동",
-        "extNorm": "경기도성남시수정구",
+        "extNorm": "경기성남시수정구달래내로46시흥동307호",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 광주지점",
         "ext": "",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "",
-        "type": "text",
+        "type": "company",
         "status": "ext_missing",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 5,
-      "mismatch": 5,
+      "match": 6,
+      "mismatch": 4,
       "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 5,
+      "matched": 6,
       "extNotAttempted": 0,
       "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.4166666666666667
+    "fieldAccuracy": 0.5
   },
   "table": {
     "alignMode": "content",
@@ -1105,20 +1105,12 @@
         "reason": "char-level diff (sim=0.92)"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "더블유사이언스(주)",
-        "extNorm": "용)",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기성남시수정구달래내로46시흥동",
-        "extNorm": "경기도성남시수정구",
+        "extNorm": "경기성남시수정구달래내로46시흥동307호",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.62)"
+        "reason": "char-level diff (sim=0.89)"
       },
       {
         "location": "field:supplyAmount",
@@ -1131,7 +1123,7 @@
       {
         "location": "field:buyerCompany",
         "status": "ext_missing",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
@@ -1858,7 +1850,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 10,
+      "recognition": 9,
       "structure": 86,
       "layout": 0,
       "preprocessing": 0

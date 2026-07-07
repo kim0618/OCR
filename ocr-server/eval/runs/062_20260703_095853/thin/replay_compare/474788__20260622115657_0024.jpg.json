@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "모던팜",
-        "ext": "주)모던팜",
+        "ext": "모던팜",
         "gtNorm": "모던팜",
-        "extNorm": "주)모던팜",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "모던팜",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울 성동구 천호대로 440 (용답동) 4층 401호",
-        "ext": "",
+        "ext": "서울 성동구 천호대로 440 (용답동) 4층 401호(용답동, 인원빌딩)",
         "gtNorm": "서울성동구천호대로440용답동4층401호",
-        "extNorm": "",
+        "extNorm": "서울성동구천호대로440용답동4층401호용답동인원빌딩",
         "type": "address",
-        "status": "ext_missing",
+        "status": "mismatch",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)평택물류센터",
         "ext": "호백제약품평택",
-        "gtNorm": "백제약품(주)평택물류센터",
+        "gtNorm": "백제약품평택물류센터",
         "extNorm": "호백제약품평택",
-        "type": "text",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 5,
+      "match": 6,
       "mismatch": 3,
-      "ext_missing": 4,
+      "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 5,
+      "matched": 6,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 4
+      "extAttemptedMiss": 3
     },
-    "fieldAccuracy": 0.4166666666666667
+    "fieldAccuracy": 0.5
   },
   "table": {
     "alignMode": "content",
@@ -1020,20 +1020,12 @@
         "reason": "gt value present at ['field:supplyAmount']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "모던팜",
-        "extNorm": "주)모던팜",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.75)"
-      },
-      {
         "location": "field:supplierAddress",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "서울성동구천호대로440용답동4층401호",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "extNorm": "서울성동구천호대로440용답동4층401호용답동인원빌딩",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.86)"
       },
       {
         "location": "field:supplyAmount",
@@ -1046,10 +1038,10 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)평택물류센터",
+        "gtNorm": "백제약품평택물류센터",
         "extNorm": "호백제약품평택",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.60)"
+        "reason": "char-level diff (sim=0.71)"
       },
       {
         "location": "field:buyerAddress",
@@ -1758,7 +1750,7 @@
     ],
     "bucketTally": {
       "recognition": 7,
-      "structure": 87,
+      "structure": 86,
       "layout": 0,
       "preprocessing": 0
     },
@@ -1778,6 +1770,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.333
+    "fieldMissRate": 0.25
   }
 }

@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "에이프로젠바이오로직스",
-        "ext": "",
+        "ext": "에이프로젠바이오로직스",
         "gtNorm": "에이프로젠바이오로직스",
-        "extNorm": "",
-        "type": "text",
-        "status": "ext_missing",
+        "extNorm": "에이프로젠바이오로직스",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울 송파구 오금로19길 6 (방이동) 301호",
-        "ext": "바이오로직스",
+        "ext": "서울 송파구 백제고분로 480 (방이동) 4층",
         "gtNorm": "서울송파구오금로19길6방이동301호",
-        "extNorm": "바이오로직스",
+        "extNorm": "서울송파구백제고분로480방이동4층",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)동부물류센터",
         "ext": "백제약품(주)영등포지점",
-        "gtNorm": "백제약품(주)동부물류센터",
-        "extNorm": "백제약품(주)영등포지점",
-        "type": "text",
+        "gtNorm": "백제약품동부물류센터",
+        "extNorm": "백제약품영등포지점",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
+      "match": 9,
       "mismatch": 3,
-      "ext_missing": 1,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 9,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -766,28 +766,20 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "ext_missing",
-        "gtNorm": "에이프로젠바이오로직스",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울송파구오금로19길6방이동301호",
-        "extNorm": "바이오로직스",
+        "extNorm": "서울송파구백제고분로480방이동4층",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)동부물류센터",
-        "extNorm": "백제약품(주)영등포지점",
+        "gtNorm": "백제약품동부물류센터",
+        "extNorm": "백제약품영등포지점",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.56)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -1080,7 +1072,7 @@
     ],
     "bucketTally": {
       "recognition": 14,
-      "structure": 18,
+      "structure": 17,
       "layout": 7,
       "preprocessing": 0
     },
@@ -1100,6 +1092,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

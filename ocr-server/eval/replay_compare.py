@@ -59,6 +59,7 @@ from extractors.invoice_statement_free import (  # noqa: E402
 )
 from extractors.invoice_statement import extract_invoice_statement_fields  # noqa: E402
 from extractors.master_match import fill_master_match as _fill_master  # noqa: E402
+from extractors.master_match import fill_party_match as _fill_party  # noqa: E402
 
 # ②G4 마스터 매칭 포함 여부. False(--no-master-match)로 돌리면 Rule 단계(매칭 전) 사이드카가
 # 나온다 — baseline_matrix가 Rule=replay_compare_rule / Master=replay_compare로 단계 분리.
@@ -134,6 +135,12 @@ def replay_dispatch(snap: dict) -> tuple[dict, str]:
     if MASTER_MATCH and isinstance(df, dict) and df.get("tableRows"):
         try:
             df["tableRows"], _ = _fill_master(df["tableRows"])
+        except Exception:
+            pass
+    # mirror main.py join-point ④거래처/지점 매칭 (사업자번호 앵커/지점 trigram)
+    if isinstance(df, dict):
+        try:
+            df, _ = _fill_party(df)
         except Exception:
             pass
     # mirror main.py scalar defaults (taxType/discountAmount)

@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "테라젠이텍스",
-        "ext": "보관용)",
+        "ext": "테라젠이텍스",
         "gtNorm": "테라젠이텍스",
-        "extNorm": "보관용)",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "테라젠이텍스",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "경기 안산시 단원구 산단로68번길 58 (초지동)",
-        "ext": "경기도안산시단원구 산단로68번길 58(초",
+        "ext": "경기 안산시 단원구 산단로68번길 58 (초지동)",
         "gtNorm": "경기안산시단원구산단로68번길58초지동",
-        "extNorm": "경기도안산시단원구산단로68번길58초",
+        "extNorm": "경기안산시단원구산단로68번길58초지동",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영등포지점",
         "ext": "백제약품(주)영등포지점",
-        "gtNorm": "백제약품 (주) 영등포지점",
-        "extNorm": "백제약품(주)영등포지점",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품영등포지점",
+        "extNorm": "백제약품영등포지점",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 7,
-      "mismatch": 4,
+      "match": 10,
+      "mismatch": 1,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 7,
+      "matched": 10,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.5833333333333334
+    "fieldAccuracy": 0.8333333333333334
   },
   "table": {
     "alignMode": "content",
@@ -840,36 +840,12 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "테라젠이텍스",
-        "extNorm": "보관용)",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "경기안산시단원구산단로68번길58초지동",
-        "extNorm": "경기도안산시단원구산단로68번길58초",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
-      },
-      {
         "location": "field:supplyAmount",
         "status": "ext_missing",
         "gtNorm": "20182044",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영등포지점",
-        "extNorm": "백제약품(주)영등포지점",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -921,7 +897,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 6,
+      "recognition": 3,
       "structure": 1,
       "layout": 3,
       "preprocessing": 0

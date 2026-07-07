@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "티알엔",
-        "ext": "주)티알엔",
+        "ext": "티알엔",
         "gtNorm": "티알엔",
-        "extNorm": "주)티알엔",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "티알엔",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "경기 평택시 오성면 오성산단1로 131 한국초저온냉동C동 6층 복산나이스팜",
-        "ext": "소경기도남양주시미금로14,3층301호(다신",
+        "ext": "경기 남양주시 미금로 14 (다산동) 3층 301호",
         "gtNorm": "경기평택시오성면오성산단1로131한국초저온냉동c동6층복산나이스팜",
-        "extNorm": "소경기도남양주시미금로143층301호다신",
+        "extNorm": "경기남양주시미금로14다산동3층301호",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 제주지점",
         "ext": "균격수량단가금액자제조회사",
-        "gtNorm": "백제약품 (주) 제주지점",
+        "gtNorm": "백제약품제주지점",
         "extNorm": "균격수량단가금액자제조회사",
-        "type": "text",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
-      "mismatch": 4,
+      "match": 9,
+      "mismatch": 3,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 9,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -388,25 +388,17 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "티알엔",
-        "extNorm": "주)티알엔",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.75)"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기평택시오성면오성산단1로131한국초저온냉동c동6층복산나이스팜",
-        "extNorm": "소경기도남양주시미금로143층301호다신",
+        "extNorm": "경기남양주시미금로14다산동3층301호",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 제주지점",
+        "gtNorm": "백제약품제주지점",
         "extNorm": "균격수량단가금액자제조회사",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
@@ -565,7 +557,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 6,
+      "recognition": 5,
       "structure": 16,
       "layout": 0,
       "preprocessing": 0

@@ -73,11 +73,11 @@
       },
       "supplierCompany": {
         "gt": "뉴신팜",
-        "ext": "의약품외",
+        "ext": "뉴신팜",
         "gtNorm": "뉴신팜",
-        "extNorm": "의약품외",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "뉴신팜",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -99,9 +99,9 @@
       },
       "supplierAddress": {
         "gt": "경기 김포시 고촌읍 아라육로57번길 46",
-        "ext": "대전광역시 중구보문로235",
+        "ext": "경기 김포시 고촌읍 아라육로57번길 46 1층",
         "gtNorm": "경기김포시고촌읍아라육로57번길46",
-        "extNorm": "대전광역시중구보문로235",
+        "extNorm": "경기김포시고촌읍아라육로57번길461층",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -126,9 +126,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 대전지점",
         "ext": "주)뉴신팜",
-        "gtNorm": "백제약품 (주) 대전지점",
-        "extNorm": "주)뉴신팜",
-        "type": "text",
+        "gtNorm": "백제약품대전지점",
+        "extNorm": "주뉴신팜",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -154,8 +154,8 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 7,
-      "mismatch": 4,
+      "match": 8,
+      "mismatch": 3,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 7,
+      "matched": 8,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6363636363636364
+    "fieldAccuracy": 0.7272727272727273
   },
   "table": {
     "alignMode": "content",
@@ -1937,26 +1937,18 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "뉴신팜",
-        "extNorm": "의약품외",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기김포시고촌읍아라육로57번길46",
-        "extNorm": "대전광역시중구보문로235",
+        "extNorm": "경기김포시고촌읍아라육로57번길461층",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.95)"
       },
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 대전지점",
-        "extNorm": "주)뉴신팜",
+        "gtNorm": "백제약품대전지점",
+        "extNorm": "주뉴신팜",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -2642,7 +2634,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 31,
+      "recognition": 30,
       "structure": 57,
       "layout": 0,
       "preprocessing": 0

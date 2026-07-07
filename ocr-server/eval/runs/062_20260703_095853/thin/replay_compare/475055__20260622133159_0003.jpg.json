@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "구주제약(주)",
-        "ext": "양약의약품외품",
-        "gtNorm": "구주제약(주)",
-        "extNorm": "양약의약품외품",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "구주제약(전)",
+        "gtNorm": "구주제약",
+        "extNorm": "구주제약",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "경기도 화성시 정남면 덕절제기길 5",
-        "ext": "서울 영등포구버드나루로 50(영등포동2가,리버",
+        "ext": "경기도 화성시 정남면 덕절제기길 5",
         "gtNorm": "경기도화성시정남면덕절제기길5",
-        "extNorm": "서울영등포구버드나루로50영등포동2가리버",
+        "extNorm": "경기도화성시정남면덕절제기길5",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 광주지점",
         "ext": "백제약품",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "백제약품",
-        "type": "text",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
-      "mismatch": 4,
+      "match": 10,
+      "mismatch": 2,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 10,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.8333333333333334
   },
   "table": {
     "alignMode": "content",
@@ -995,28 +995,12 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "구주제약(주)",
-        "extNorm": "양약의약품외품",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "경기도화성시정남면덕절제기길5",
-        "extNorm": "서울영등포구버드나루로50영등포동2가리버",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "백제약품",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "field:buyerAddress",
@@ -1524,7 +1508,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 9,
+      "recognition": 7,
       "structure": 55,
       "layout": 2,
       "preprocessing": 0

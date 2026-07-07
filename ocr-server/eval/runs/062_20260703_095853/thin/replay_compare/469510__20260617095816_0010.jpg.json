@@ -87,10 +87,10 @@
       "supplierCompany": {
         "gt": "동국제약(전)",
         "ext": "동국제약(주)",
-        "gtNorm": "동국제약(전)",
-        "extNorm": "동국제약(주)",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "동국제약",
+        "extNorm": "동국제약",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영남본부",
         "ext": "백제약품(주)영남본부",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품영남본부",
+        "extNorm": "백제약품영남본부",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 3,
-      "mismatch": 8,
+      "match": 5,
+      "mismatch": 6,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 3,
+      "matched": 5,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.25
+    "fieldAccuracy": 0.4166666666666667
   },
   "table": {
     "alignMode": "content",
@@ -694,14 +694,6 @@
         "reason": "gt value not found anywhere in extraction"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "동국제약(전)",
-        "extNorm": "동국제약(주)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.86)"
-      },
-      {
         "location": "field:taxType",
         "status": "mismatch",
         "gtNorm": "면세",
@@ -724,14 +716,6 @@
         "extNorm": "216390",
         "bucket": "structure",
         "reason": "gt value present at ['field:discountAmount']"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -919,7 +903,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 17,
+      "recognition": 15,
       "structure": 14,
       "layout": 0,
       "preprocessing": 0

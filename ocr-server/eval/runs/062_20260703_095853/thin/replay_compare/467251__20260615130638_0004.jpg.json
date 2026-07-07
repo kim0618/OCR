@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "에이블팜스리테일",
-        "ext": "보관용)",
+        "ext": "에이블팜스리테일",
         "gtNorm": "에이블팜스리테일",
-        "extNorm": "보관용)",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "에이블팜스리테일",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울 관악구 관악로24길 63 (봉천동) 502호",
-        "ext": "선울특별시 관약구관약로24길 63, 5층(봉천",
+        "ext": "서울 관악구 관악로24길 63 (봉천동) 502호",
         "gtNorm": "서울관악구관악로24길63봉천동502호",
-        "extNorm": "선울특별시관약구관약로24길635층봉천",
+        "extNorm": "서울관악구관악로24길63봉천동502호",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 전주지점",
         "ext": "백제약품(주)전주지점",
-        "gtNorm": "백제약품 (주) 전주지점",
-        "extNorm": "백제약품(주)전주지점",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품전주지점",
+        "extNorm": "백제약품전주지점",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 7,
-      "mismatch": 4,
+      "match": 10,
+      "mismatch": 1,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 7,
+      "matched": 10,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.5833333333333334
+    "fieldAccuracy": 0.8333333333333334
   },
   "table": {
     "alignMode": "content",
@@ -1086,36 +1086,12 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "에이블팜스리테일",
-        "extNorm": "보관용)",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "서울관악구관악로24길63봉천동502호",
-        "extNorm": "선울특별시관약구관약로24길635층봉천",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.60)"
-      },
-      {
         "location": "field:supplyAmount",
         "status": "ext_missing",
         "gtNorm": "3081393",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 전주지점",
-        "extNorm": "백제약품(주)전주지점",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -1527,7 +1503,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 22,
+      "recognition": 19,
       "structure": 33,
       "layout": 0,
       "preprocessing": 0

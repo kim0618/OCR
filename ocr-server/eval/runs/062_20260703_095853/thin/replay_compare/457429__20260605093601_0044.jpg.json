@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "네오메디팜",
-        "ext": "주)네오메디팜",
+        "ext": "네오메디팜",
         "gtNorm": "네오메디팜",
-        "extNorm": "주)네오메디팜",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "네오메디팜",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울 동대문구 장한로17길 13-2 (장안동) 5층",
-        "ext": "서울시동대문구 장한로17길 13-2, 5층,4층3층.지하 공원로8길24(구로동",
+        "ext": "서울시 동대문구 장안동 378-2 6층 물류지하",
         "gtNorm": "서울동대문구장한로17길132장안동5층",
-        "extNorm": "서울시동대문구장한로17길1325층4층3층지하공원로8길24구로동",
+        "extNorm": "서울시동대문구장안동37826층물류지하",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)평택물류센터",
         "ext": "백제약품(주)영등포지점",
-        "gtNorm": "백제약품(주)평택물류센터",
-        "extNorm": "백제약품(주)영등포지점",
-        "type": "text",
+        "gtNorm": "백제약품평택물류센터",
+        "extNorm": "백제약품영등포지점",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 5,
-      "mismatch": 6,
+      "match": 6,
+      "mismatch": 5,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 5,
+      "matched": 6,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.4166666666666667
+    "fieldAccuracy": 0.5
   },
   "table": {
     "alignMode": "content",
@@ -1100,20 +1100,12 @@
         "reason": "value differs, low similarity"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "네오메디팜",
-        "extNorm": "주)네오메디팜",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.83)"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울동대문구장한로17길132장안동5층",
-        "extNorm": "서울시동대문구장한로17길1325층4층3층지하공원로8길24구로동",
+        "extNorm": "서울시동대문구장안동37826층물류지하",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.63)"
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "field:supplyAmount",
@@ -1126,10 +1118,10 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)평택물류센터",
-        "extNorm": "백제약품(주)영등포지점",
+        "gtNorm": "백제약품평택물류센터",
+        "extNorm": "백제약품영등포지점",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.56)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -1709,7 +1701,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 18,
+      "recognition": 17,
       "structure": 54,
       "layout": 6,
       "preprocessing": 0

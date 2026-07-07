@@ -86,10 +86,10 @@
       },
       "supplierCompany": {
         "gt": "한국휴텍스제약",
-        "ext": "한국휴텍스제약(주)",
+        "ext": "한국휴텍스",
         "gtNorm": "한국휴텍스제약",
-        "extNorm": "한국휴텍스제약(주)",
-        "type": "text",
+        "extNorm": "한국휴텍스",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "경기 화성시 삼성1로 344-2 (반월동 101-1)",
-        "ext": "",
+        "ext": "서울특별시 관악구 난곡로 332, 송산빌딩 302호 (신림동)",
         "gtNorm": "경기화성시삼성1로3442반월동1011",
-        "extNorm": "",
+        "extNorm": "서울특별시관악구난곡로332송산빌딩302호신림동",
         "type": "address",
-        "status": "ext_missing",
+        "status": "mismatch",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)동부물류센터",
         "ext": "백제약품(주)영등포지점",
-        "gtNorm": "백제약품(주)동부물류센터",
-        "extNorm": "백제약품(주)영등포지점",
-        "type": "text",
+        "gtNorm": "백제약품동부물류센터",
+        "extNorm": "백제약품영등포지점",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 4,
-      "mismatch": 6,
-      "ext_missing": 2,
+      "mismatch": 7,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,7 +182,7 @@
       "gtPresent": 12,
       "matched": 4,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 1
     },
     "fieldAccuracy": 0.3333333333333333
   },
@@ -2091,9 +2091,9 @@
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "한국휴텍스제약",
-        "extNorm": "한국휴텍스제약(주)",
+        "extNorm": "한국휴텍스",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.82)"
+        "reason": "char-level diff (sim=0.83)"
       },
       {
         "location": "field:taxType",
@@ -2105,11 +2105,11 @@
       },
       {
         "location": "field:supplierAddress",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "경기화성시삼성1로3442반월동1011",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "extNorm": "서울특별시관악구난곡로332송산빌딩302호신림동",
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplyAmount",
@@ -2122,10 +2122,10 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)동부물류센터",
-        "extNorm": "백제약품(주)영등포지점",
+        "gtNorm": "백제약품동부물류센터",
+        "extNorm": "백제약품영등포지점",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.56)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -3561,8 +3561,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 27,
-      "structure": 129,
+      "recognition": 28,
+      "structure": 128,
       "layout": 30,
       "preprocessing": 0
     },
@@ -3582,6 +3582,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.167
+    "fieldMissRate": 0.083
   }
 }

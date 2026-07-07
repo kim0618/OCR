@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "씨엠지제약",
-        "ext": "주)CMG제약",
+        "ext": "씨엠지제약",
         "gtNorm": "씨엠지제약",
-        "extNorm": "주)cmg제약",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "씨엠지제약",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울 강남구 학동로 170 (논현동) 3층 306호(논현동, 베터라이프빌딩)",
-        "ext": "서울특별시 강남구 학동로 170.3층 306호(논현동, 배터라이프빌딩",
+        "ext": "서울 강남구 도산대로66길 14 (청담동,B01호)",
         "gtNorm": "서울강남구학동로170논현동3층306호논현동베터라이프빌딩",
-        "extNorm": "서울특별시강남구학동로1703층306호논현동배터라이프빌딩",
+        "extNorm": "서울강남구도산대로66길14청담동b01호",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)평택물류센터",
         "ext": "백제약품영등포지점(N",
-        "gtNorm": "백제약품(주)평택물류센터",
-        "extNorm": "백제약품영등포지점(n",
-        "type": "text",
+        "gtNorm": "백제약품평택물류센터",
+        "extNorm": "백제약품영등포지점n",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
-      "mismatch": 4,
+      "match": 9,
+      "mismatch": 3,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 9,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -368,26 +368,18 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
+        "location": "field:supplierAddress",
         "status": "mismatch",
-        "gtNorm": "씨엠지제약",
-        "extNorm": "주)cmg제약",
+        "gtNorm": "서울강남구학동로170논현동3층306호논현동베터라이프빌딩",
+        "extNorm": "서울강남구도산대로66길14청담동b01호",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
       {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "서울강남구학동로170논현동3층306호논현동베터라이프빌딩",
-        "extNorm": "서울특별시강남구학동로1703층306호논현동배터라이프빌딩",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.87)"
-      },
-      {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)평택물류센터",
-        "extNorm": "백제약품영등포지점(n",
+        "gtNorm": "백제약품평택물류센터",
+        "extNorm": "백제약품영등포지점n",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -441,7 +433,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 6,
+      "recognition": 5,
       "structure": 2,
       "layout": 1,
       "preprocessing": 0

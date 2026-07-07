@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "녹십자",
-        "ext": "주)녹십자",
+        "ext": "녹십자(전)",
         "gtNorm": "녹십자",
-        "extNorm": "주)녹십자",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "녹십자",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "경기도 용인시 기흥구 이현로30번길 107 (보정동)",
-        "ext": "경기도 용인시 기홍구 이현로 30번길107 목암BLDG",
+        "ext": "충청북도 청주시 청원구 오창읍 과학산업2로 586",
         "gtNorm": "경기도용인시기흥구이현로30번길107보정동",
-        "extNorm": "경기도용인시기홍구이현로30번길107목암bldg",
+        "extNorm": "충청북도청주시청원구오창읍과학산업2로586",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)북부물류센터",
         "ext": "백제약품영등포지",
-        "gtNorm": "백제약품(주)북부물류센터",
+        "gtNorm": "백제약품북부물류센터",
         "extNorm": "백제약품영등포지",
-        "type": "text",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 4,
-      "mismatch": 7,
+      "match": 5,
+      "mismatch": 6,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 4,
+      "matched": 5,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.3333333333333333
+    "fieldAccuracy": 0.4166666666666667
   },
   "table": {
     "alignMode": "content",
@@ -954,14 +954,6 @@
         "reason": "gt value present at ['field:discountAmount']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "녹십자",
-        "extNorm": "주)녹십자",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.75)"
-      },
-      {
         "location": "field:taxType",
         "status": "mismatch",
         "gtNorm": "면세",
@@ -973,9 +965,9 @@
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기도용인시기흥구이현로30번길107보정동",
-        "extNorm": "경기도용인시기홍구이현로30번길107목암bldg",
+        "extNorm": "충청북도청주시청원구오창읍과학산업2로586",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.77)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplyAmount",
@@ -988,7 +980,7 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)북부물류센터",
+        "gtNorm": "백제약품북부물류센터",
         "extNorm": "백제약품영등포지",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
@@ -1531,7 +1523,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 22,
+      "recognition": 21,
       "structure": 45,
       "layout": 7,
       "preprocessing": 0

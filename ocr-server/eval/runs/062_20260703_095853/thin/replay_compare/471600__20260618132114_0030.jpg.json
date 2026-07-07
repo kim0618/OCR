@@ -60,11 +60,11 @@
       },
       "supplierCompany": {
         "gt": "휴비스트제약",
-        "ext": "주)휴비스트제약",
+        "ext": "휴비스트제약",
         "gtNorm": "휴비스트제약",
-        "extNorm": "주)휴비스트제약",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "휴비스트제약",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -86,9 +86,9 @@
       },
       "supplierAddress": {
         "gt": "대전광역시 대덕구  신일서로 104번지 46길(신일동)",
-        "ext": "덕진구신복로116-7(팔복동4가",
+        "ext": "서울 금천구 가산디지털1로 169 (가산동)",
         "gtNorm": "대전광역시대덕구신일서로104번지46길신일동",
-        "extNorm": "덕진구신복로1167팔복동4가",
+        "extNorm": "서울금천구가산디지털1로169가산동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -113,10 +113,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 전주지점",
         "ext": "백제약품(주)전주지점",
-        "gtNorm": "백제약품 (주) 전주지점",
-        "extNorm": "백제약품(주)전주지점",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품전주지점",
+        "extNorm": "백제약품전주지점",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -141,8 +141,8 @@
     "profile": "thin",
     "counts": {
       "scored": 10,
-      "match": 2,
-      "mismatch": 7,
+      "match": 4,
+      "mismatch": 5,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -154,11 +154,11 @@
     },
     "coverage": {
       "gtPresent": 10,
-      "matched": 2,
+      "matched": 4,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.2
+    "fieldAccuracy": 0.4
   },
   "table": {
     "alignMode": "content",
@@ -994,14 +994,6 @@
         "reason": "gt value present at ['field:discountAmount']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "휴비스트제약",
-        "extNorm": "주)휴비스트제약",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.86)"
-      },
-      {
         "location": "field:taxType",
         "status": "mismatch",
         "gtNorm": "면세",
@@ -1013,7 +1005,7 @@
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "대전광역시대덕구신일서로104번지46길신일동",
-        "extNorm": "덕진구신복로1167팔복동4가",
+        "extNorm": "서울금천구가산디지털1로169가산동",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -1024,14 +1016,6 @@
         "extNorm": "2877210",
         "bucket": "structure",
         "reason": "gt value present at ['field:discountAmount']"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 전주지점",
-        "extNorm": "백제약품(주)전주지점",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -1699,7 +1683,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 21,
+      "recognition": 19,
       "structure": 64,
       "layout": 5,
       "preprocessing": 0

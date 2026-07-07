@@ -86,10 +86,10 @@
       },
       "supplierCompany": {
         "gt": "건일제약",
-        "ext": "건일제약(주)",
+        "ext": "(종료)건일제약(주)",
         "gtNorm": "건일제약",
-        "extNorm": "건일제약(주)",
-        "type": "text",
+        "extNorm": "종료건일제약",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "충청남도 천안시 서북구 직산읍 거리막길 33",
-        "ext": "",
+        "ext": "충청남도 천안시 서북구 직산읍 거리막길 33",
         "gtNorm": "충청남도천안시서북구직산읍거리막길33",
-        "extNorm": "",
+        "extNorm": "충청남도천안시서북구직산읍거리막길33",
         "type": "address",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 원주지점",
         "ext": "백제약품(주)",
-        "gtNorm": "백제약품 (주) 원주지점",
-        "extNorm": "백제약품(주)",
-        "type": "text",
+        "gtNorm": "백제약품원주지점",
+        "extNorm": "백제약품",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 7,
+      "match": 8,
       "mismatch": 2,
-      "ext_missing": 3,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 7,
+      "matched": 8,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 3
+      "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.5833333333333334
+    "fieldAccuracy": 0.6666666666666666
   },
   "table": {
     "alignMode": "content",
@@ -294,25 +294,17 @@
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "건일제약",
-        "extNorm": "건일제약(주)",
+        "extNorm": "종료건일제약",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.73)"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "ext_missing",
-        "gtNorm": "충청남도천안시서북구직산읍거리막길33",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 원주지점",
-        "extNorm": "백제약품(주)",
+        "gtNorm": "백제약품원주지점",
+        "extNorm": "백제약품",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.70)"
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "field:buyerAddress",
@@ -373,7 +365,7 @@
     ],
     "bucketTally": {
       "recognition": 4,
-      "structure": 6,
+      "structure": 5,
       "layout": 1,
       "preprocessing": 0
     },
@@ -393,6 +385,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.25
+    "fieldMissRate": 0.167
   }
 }

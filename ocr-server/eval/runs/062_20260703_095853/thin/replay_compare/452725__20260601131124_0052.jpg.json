@@ -86,10 +86,10 @@
       },
       "supplierCompany": {
         "gt": "킵스바이오파마(구.한국글로벌제약)",
-        "ext": "보관용)",
-        "gtNorm": "킵스바이오파마(구.한국글로벌제약)",
-        "extNorm": "보관용)",
-        "type": "text",
+        "ext": "킵스바이오파마(발주)",
+        "gtNorm": "킵스바이오파마구한국글로벌제약",
+        "extNorm": "킵스바이오파마발주",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "경기 화성시 동탄산단10길 52 (방교동)",
-        "ext": "충남 서천군 종천면 종천공단길 32번길",
+        "ext": "충청남도 서천군 종천면 종천공단길32번길 26",
         "gtNorm": "경기화성시동탄산단10길52방교동",
-        "extNorm": "충남서천군종천면종천공단길32번길",
+        "extNorm": "충청남도서천군종천면종천공단길32번길26",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 전주지점",
         "ext": "백제약품(주)전주지점",
-        "gtNorm": "백제약품 (주) 전주지점",
-        "extNorm": "백제약품(주)전주지점",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품전주지점",
+        "extNorm": "백제약품전주지점",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 5,
-      "mismatch": 6,
+      "match": 6,
+      "mismatch": 5,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 5,
+      "matched": 6,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.4166666666666667
+    "fieldAccuracy": 0.5
   },
   "table": {
     "alignMode": "content",
@@ -489,16 +489,16 @@
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
-        "gtNorm": "킵스바이오파마(구.한국글로벌제약)",
-        "extNorm": "보관용)",
+        "gtNorm": "킵스바이오파마구한국글로벌제약",
+        "extNorm": "킵스바이오파마발주",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.58)"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기화성시동탄산단10길52방교동",
-        "extNorm": "충남서천군종천면종천공단길32번길",
+        "extNorm": "충청남도서천군종천면종천공단길32번길26",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -509,14 +509,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value present at ['field:taxAmount']"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 전주지점",
-        "extNorm": "백제약품(주)전주지점",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -704,7 +696,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 14,
+      "recognition": 13,
       "structure": 10,
       "layout": 5,
       "preprocessing": 0

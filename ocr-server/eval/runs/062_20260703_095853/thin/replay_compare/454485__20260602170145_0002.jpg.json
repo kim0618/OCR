@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "경동제약(전문)",
-        "ext": "경동제약(주)",
-        "gtNorm": "경동제약(전문)",
-        "extNorm": "경동제약(주)",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "경동제약(전문)",
+        "gtNorm": "경동제약전문",
+        "extNorm": "경동제약전문",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "경기도 화성시 양감면 제약단지로 224-3",
-        "ext": "082-96) 서울특별시 구로구 공원로8길24",
+        "ext": "경기도 화성시 양감면 제약단지로 224-3",
         "gtNorm": "경기도화성시양감면제약단지로2243",
-        "extNorm": "08296서울특별시구로구공원로8길24",
+        "extNorm": "경기도화성시양감면제약단지로2243",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)동부물류센터",
         "ext": "백제약품(주)영등포지점",
-        "gtNorm": "백제약품(주)동부물류센터",
-        "extNorm": "백제약품(주)영등포지점",
-        "type": "text",
+        "gtNorm": "백제약품동부물류센터",
+        "extNorm": "백제약품영등포지점",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 4,
-      "mismatch": 8,
+      "match": 6,
+      "mismatch": 6,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 4,
+      "matched": 6,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.3333333333333333
+    "fieldAccuracy": 0.5
   },
   "table": {
     "alignMode": "content",
@@ -1826,28 +1826,12 @@
         "reason": "gt value present at ['field:discountAmount']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "경동제약(전문)",
-        "extNorm": "경동제약(주)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.80)"
-      },
-      {
         "location": "field:taxType",
         "status": "mismatch",
         "gtNorm": "면세",
         "extNorm": "과세",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.50)"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "경기도화성시양감면제약단지로2243",
-        "extNorm": "08296서울특별시구로구공원로8길24",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplyAmount",
@@ -1860,10 +1844,10 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)동부물류센터",
-        "extNorm": "백제약품(주)영등포지점",
+        "gtNorm": "백제약품동부물류센터",
+        "extNorm": "백제약품영등포지점",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.56)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -2947,7 +2931,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 31,
+      "recognition": 29,
       "structure": 95,
       "layout": 16,
       "preprocessing": 0

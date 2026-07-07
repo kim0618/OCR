@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "한림눈건강",
-        "ext": "",
+        "ext": "종근당(전)",
         "gtNorm": "한림눈건강",
-        "extNorm": "",
-        "type": "text",
-        "status": "ext_missing",
+        "extNorm": "종근당",
+        "type": "company",
+        "status": "mismatch",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "경기 용인시 처인구 영문로 2-27 (유방동)",
-        "ext": "성겨읍 망향로797-4",
+        "ext": "서울 서대문구 충정로 8",
         "gtNorm": "경기용인시처인구영문로227유방동",
-        "extNorm": "성겨읍망향로7974",
+        "extNorm": "서울서대문구충정로8",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 광주지점",
         "ext": "주)종",
-        "gtNorm": "백제약품 (주) 광주지점",
-        "extNorm": "주)종",
-        "type": "text",
+        "gtNorm": "백제약품광주지점",
+        "extNorm": "주종",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 8,
-      "mismatch": 3,
-      "ext_missing": 1,
+      "mismatch": 4,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,7 +182,7 @@
       "gtPresent": 12,
       "matched": 8,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
     "fieldAccuracy": 0.6666666666666666
   },
@@ -290,25 +290,25 @@
     "defects": [
       {
         "location": "field:supplierCompany",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "한림눈건강",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "extNorm": "종근당",
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기용인시처인구영문로227유방동",
-        "extNorm": "성겨읍망향로7974",
+        "extNorm": "서울서대문구충정로8",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 광주지점",
-        "extNorm": "주)종",
+        "gtNorm": "백제약품광주지점",
+        "extNorm": "주종",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -386,8 +386,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 7,
-      "structure": 5,
+      "recognition": 8,
+      "structure": 4,
       "layout": 0,
       "preprocessing": 0
     },
@@ -407,6 +407,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

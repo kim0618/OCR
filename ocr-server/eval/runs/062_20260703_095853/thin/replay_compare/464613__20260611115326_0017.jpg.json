@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "앱토크롬(구.에이피헬스케어)",
-        "ext": "",
-        "gtNorm": "앱토크롬(구.에이피헬스케어)",
-        "extNorm": "",
-        "type": "text",
-        "status": "ext_missing",
+        "ext": "앱토크롬(구.에이피헬스케어)",
+        "gtNorm": "앱토크롬구에이피헬스케어",
+        "extNorm": "앱토크롬구에이피헬스케어",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 강남구 테헤란로32길26(역삼동,청송빌딩)",
-        "ext": "경기도 화성시만세구양감면두머리길",
+        "ext": "서울특별시 강남구 테헤란로32길26(역삼동,청송빌딩)",
         "gtNorm": "서울특별시강남구테헤란로32길26역삼동청송빌딩",
-        "extNorm": "경기도화성시만세구양감면두머리길",
+        "extNorm": "서울특별시강남구테헤란로32길26역삼동청송빌딩",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 전주지점",
         "ext": "백제약품(주)전주지점",
-        "gtNorm": "백제약품 (주) 전주지점",
-        "extNorm": "백제약품(주)전주지점",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품전주지점",
+        "extNorm": "백제약품전주지점",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
-      "mismatch": 3,
-      "ext_missing": 1,
+      "match": 11,
+      "mismatch": 1,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 11,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.9166666666666666
   },
   "table": {
     "alignMode": "content",
@@ -370,30 +370,6 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "ext_missing",
-        "gtNorm": "앱토크롬(구.에이피헬스케어)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "서울특별시강남구테헤란로32길26역삼동청송빌딩",
-        "extNorm": "경기도화성시만세구양감면두머리길",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 전주지점",
-        "extNorm": "백제약품(주)전주지점",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
-      },
-      {
         "location": "field:buyerAddress",
         "status": "mismatch",
         "gtNorm": "전북전주시덕진구신복로1167",
@@ -515,8 +491,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 7,
-      "structure": 9,
+      "recognition": 5,
+      "structure": 8,
       "layout": 2,
       "preprocessing": 0
     },
@@ -536,6 +512,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

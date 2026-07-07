@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "유한양행(전문)",
-        "ext": "",
-        "gtNorm": "유한양행(전문)",
-        "extNorm": "",
-        "type": "text",
-        "status": "ext_missing",
+        "ext": "백제약품(주)영등포지점",
+        "gtNorm": "유한양행전문",
+        "extNorm": "백제약품영등포지점",
+        "type": "company",
+        "status": "mismatch",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울 동작구 노량진로 74 (대방동)",
-        "ext": "08296서울특별시 구로구 공원로8길24",
+        "ext": "서울 구로구 공원로8길 24",
         "gtNorm": "서울동작구노량진로74대방동",
-        "extNorm": "08296서울특별시구로구공원로8길24",
+        "extNorm": "서울구로구공원로8길24",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)북부물류센터",
         "ext": "백제약품(주)영등포지점",
-        "gtNorm": "백제약품(주)북부물류센터",
-        "extNorm": "백제약품(주)영등포지점",
-        "type": "text",
+        "gtNorm": "백제약품북부물류센터",
+        "extNorm": "백제약품영등포지점",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 7,
-      "mismatch": 4,
-      "ext_missing": 1,
+      "mismatch": 5,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,7 +182,7 @@
       "gtPresent": 12,
       "matched": 7,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
     "fieldAccuracy": 0.5833333333333334
   },
@@ -298,27 +298,27 @@
       },
       {
         "location": "field:supplierCompany",
-        "status": "ext_missing",
-        "gtNorm": "유한양행(전문)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "status": "mismatch",
+        "gtNorm": "유한양행전문",
+        "extNorm": "백제약품영등포지점",
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울동작구노량진로74대방동",
-        "extNorm": "08296서울특별시구로구공원로8길24",
+        "extNorm": "서울구로구공원로8길24",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)북부물류센터",
-        "extNorm": "백제약품(주)영등포지점",
+        "gtNorm": "백제약품북부물류센터",
+        "extNorm": "백제약품영등포지점",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.56)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -378,8 +378,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 6,
+      "recognition": 6,
+      "structure": 5,
       "layout": 0,
       "preprocessing": 0
     },
@@ -399,6 +399,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

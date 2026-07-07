@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "베네스트(주)",
-        "ext": "주식회사 베네스트",
-        "gtNorm": "베네스트(주)",
-        "extNorm": "주식회사 베네스트",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "베네스트(주)",
+        "gtNorm": "베네스트",
+        "extNorm": "베네스트",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "전남 나주시 배멧2길43 2층 201호",
-        "ext": "전남 나주시 배멘2길 43,201호(빛가람동, 금화타워",
+        "ext": "전남 나주시 배멧2길43 2층 201호",
         "gtNorm": "전남나주시배멧2길432층201호",
-        "extNorm": "전남나주시배멘2길43201호빛가람동금화타워",
+        "extNorm": "전남나주시배멧2길432층201호",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 광주지점",
         "ext": "제조회사",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "제조회사",
-        "type": "text",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 6,
-      "mismatch": 6,
+      "match": 8,
+      "mismatch": 4,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 6,
+      "matched": 8,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.5
+    "fieldAccuracy": 0.6666666666666666
   },
   "table": {
     "alignMode": "content",
@@ -396,22 +396,6 @@
         "reason": "gt value present at ['field:discountAmount']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "베네스트(주)",
-        "extNorm": "주식회사 베네스트",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "전남나주시배멧2길432층201호",
-        "extNorm": "전남나주시배멘2길43201호빛가람동금화타워",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.70)"
-      },
-      {
         "location": "field:supplyAmount",
         "status": "mismatch",
         "gtNorm": "334544",
@@ -422,7 +406,7 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "제조회사",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
@@ -613,7 +597,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 4,
+      "recognition": 2,
       "structure": 24,
       "layout": 0,
       "preprocessing": 0

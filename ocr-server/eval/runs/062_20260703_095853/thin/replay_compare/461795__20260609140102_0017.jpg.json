@@ -88,9 +88,9 @@
         "gt": "영풍제약",
         "ext": "영풍제약(주)",
         "gtNorm": "영풍제약",
-        "extNorm": "영풍제약(주)",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "영풍제약",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "인천광역시 남동구 함박뫼로 333 (남촌동)",
-        "ext": "경상남도김해시 진례면테크노밸리로33",
+        "ext": "인천광역시 남동구 함박뫼로 333 (남촌동)",
         "gtNorm": "인천광역시남동구함박뫼로333남촌동",
-        "extNorm": "경상남도김해시진례면테크노밸리로33",
+        "extNorm": "인천광역시남동구함박뫼로333남촌동",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영남본부",
         "ext": "백제약품(주)영남본부",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품영남본부",
+        "extNorm": "백제약품영남본부",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 5,
-      "mismatch": 6,
+      "match": 8,
+      "mismatch": 3,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 5,
+      "matched": 8,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.4166666666666667
+    "fieldAccuracy": 0.6666666666666666
   },
   "table": {
     "alignMode": "content",
@@ -606,36 +606,12 @@
         "reason": "gt value not found anywhere in extraction"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "영풍제약",
-        "extNorm": "영풍제약(주)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.73)"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "인천광역시남동구함박뫼로333남촌동",
-        "extNorm": "경상남도김해시진례면테크노밸리로33",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplyAmount",
         "status": "mismatch",
         "gtNorm": "868437",
         "extNorm": "14553",
         "bucket": "structure",
         "reason": "gt value present at ['field:totalAmount']"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -911,7 +887,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 18,
+      "recognition": 15,
       "structure": 14,
       "layout": 8,
       "preprocessing": 0

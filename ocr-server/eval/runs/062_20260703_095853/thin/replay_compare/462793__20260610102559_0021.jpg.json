@@ -73,11 +73,11 @@
       },
       "supplierCompany": {
         "gt": "초당약품(전)",
-        "ext": "초당약품공업",
-        "gtNorm": "초당약품(전)",
-        "extNorm": "초당약품공업",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "초당약품(전)",
+        "gtNorm": "초당약품",
+        "extNorm": "초당약품",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -99,9 +99,9 @@
       },
       "supplierAddress": {
         "gt": "경기도 안산시 단원구 별망로 381 (목내동)",
-        "ext": "(사업장)서울시금천구디지털로9길",
+        "ext": "서울 구로구 공원로 75(구로동)",
         "gtNorm": "경기도안산시단원구별망로381목내동",
-        "extNorm": "사업장서울시금천구디지털로9길",
+        "extNorm": "서울구로구공원로75구로동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -126,10 +126,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영남본부",
         "ext": "백제약품(주)영남본부",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품영남본부",
+        "extNorm": "백제약품영남본부",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -154,8 +154,8 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 5,
-      "mismatch": 4,
+      "match": 7,
+      "mismatch": 2,
       "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 5,
+      "matched": 7,
       "extNotAttempted": 0,
       "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.45454545454545453
+    "fieldAccuracy": 0.6363636363636364
   },
   "table": {
     "alignMode": "content",
@@ -288,18 +288,10 @@
         "reason": "gt value not found anywhere in extraction"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "초당약품(전)",
-        "extNorm": "초당약품공업",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.62)"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기도안산시단원구별망로381목내동",
-        "extNorm": "사업장서울시금천구디지털로9길",
+        "extNorm": "서울구로구공원로75구로동",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -310,14 +302,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -417,7 +401,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 4,
+      "recognition": 2,
       "structure": 13,
       "layout": 0,
       "preprocessing": 0

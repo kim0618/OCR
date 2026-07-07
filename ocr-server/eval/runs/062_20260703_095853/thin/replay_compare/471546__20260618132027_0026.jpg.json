@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "신풍제약",
-        "ext": "",
+        "ext": "신풍제약",
         "gtNorm": "신풍제약",
-        "extNorm": "",
-        "type": "text",
-        "status": "ext_missing",
+        "extNorm": "신풍제약",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "경기도 안산시 단원구 원시로 7 (목내동)",
-        "ext": "경기도안산시단원구원시로7",
+        "ext": "경기도 안산시 단원구 원시로 7 (목내동)",
         "gtNorm": "경기도안산시단원구원시로7목내동",
-        "extNorm": "경기도안산시단원구원시로7",
+        "extNorm": "경기도안산시단원구원시로7목내동",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영남본부",
         "ext": "백제약품(주)영남본부",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품영남본부",
+        "extNorm": "백제약품영남본부",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
-      "mismatch": 3,
-      "ext_missing": 1,
+      "match": 11,
+      "mismatch": 1,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 11,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.9166666666666666
   },
   "table": {
     "alignMode": "content",
@@ -291,30 +291,6 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "ext_missing",
-        "gtNorm": "신풍제약",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "경기도안산시단원구원시로7목내동",
-        "extNorm": "경기도안산시단원구원시로7",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.90)"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
-      },
-      {
         "location": "field:buyerAddress",
         "status": "mismatch",
         "gtNorm": "경남김해시진례면김해테크노벨리로3312백제약품주",
@@ -356,8 +332,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 4,
-      "structure": 4,
+      "recognition": 2,
+      "structure": 3,
       "layout": 0,
       "preprocessing": 0
     },
@@ -377,6 +353,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

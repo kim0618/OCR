@@ -86,10 +86,10 @@
       },
       "supplierCompany": {
         "gt": "아주약품 ",
-        "ext": "아주약품",
+        "ext": "아주약품(주)",
         "gtNorm": "아주약품",
         "extNorm": "아주약품",
-        "type": "text",
+        "type": "company",
         "status": "match",
         "edited": false,
         "difficult": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 구로구 경인로 600 (신도림동)",
-        "ext": "",
+        "ext": "경기 평택시 산단로121번길 23 (모곡동)",
         "gtNorm": "서울특별시구로구경인로600신도림동",
-        "extNorm": "",
+        "extNorm": "경기평택시산단로121번길23모곡동",
         "type": "address",
-        "status": "ext_missing",
+        "status": "mismatch",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 제주지점",
         "ext": "의약품",
-        "gtNorm": "백제약품 (주) 제주지점",
+        "gtNorm": "백제약품제주지점",
         "extNorm": "의약품",
-        "type": "text",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 8,
-      "mismatch": 3,
-      "ext_missing": 1,
+      "mismatch": 4,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,7 +182,7 @@
       "gtPresent": 12,
       "matched": 8,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
     "fieldAccuracy": 0.6666666666666666
   },
@@ -659,16 +659,16 @@
       },
       {
         "location": "field:supplierAddress",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "서울특별시구로구경인로600신도림동",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "extNorm": "경기평택시산단로121번길23모곡동",
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 제주지점",
+        "gtNorm": "백제약품제주지점",
         "extNorm": "의약품",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
@@ -1003,8 +1003,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 16,
-      "structure": 20,
+      "recognition": 17,
+      "structure": 19,
       "layout": 8,
       "preprocessing": 0
     },
@@ -1024,6 +1024,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

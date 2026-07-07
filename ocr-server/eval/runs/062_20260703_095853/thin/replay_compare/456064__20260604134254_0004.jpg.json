@@ -73,11 +73,11 @@
       },
       "supplierCompany": {
         "gt": "에스케이플라즈마",
-        "ext": "",
+        "ext": "에스케이플라즈마",
         "gtNorm": "에스케이플라즈마",
-        "extNorm": "",
-        "type": "text",
-        "status": "ext_missing",
+        "extNorm": "에스케이플라즈마",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -99,11 +99,11 @@
       },
       "supplierAddress": {
         "gt": "경기도 성남시 분당구 판교로 310 (삼평동)",
-        "ext": "",
+        "ext": "경기 성남시 분당구 판교로 310 (삼평동)",
         "gtNorm": "경기도성남시분당구판교로310삼평동",
-        "extNorm": "",
+        "extNorm": "경기성남시분당구판교로310삼평동",
         "type": "address",
-        "status": "ext_missing",
+        "status": "mismatch",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -126,9 +126,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 제주지점",
         "ext": "",
-        "gtNorm": "백제약품 (주) 제주지점",
+        "gtNorm": "백제약품제주지점",
         "extNorm": "",
-        "type": "text",
+        "type": "company",
         "status": "ext_missing",
         "edited": false,
         "difficult": false,
@@ -154,9 +154,9 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 7,
-      "mismatch": 1,
-      "ext_missing": 3,
+      "match": 8,
+      "mismatch": 2,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 7,
+      "matched": 8,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 3
+      "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.6363636363636364
+    "fieldAccuracy": 0.7272727272727273
   },
   "table": {
     "alignMode": "content",
@@ -276,25 +276,17 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "ext_missing",
-        "gtNorm": "에스케이플라즈마",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
-      },
-      {
         "location": "field:supplierAddress",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "경기도성남시분당구판교로310삼평동",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "extNorm": "경기성남시분당구판교로310삼평동",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.97)"
       },
       {
         "location": "field:buyerCompany",
         "status": "ext_missing",
-        "gtNorm": "백제약품 (주) 제주지점",
+        "gtNorm": "백제약품제주지점",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
@@ -357,8 +349,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 2,
-      "structure": 8,
+      "recognition": 3,
+      "structure": 6,
       "layout": 0,
       "preprocessing": 0
     },
@@ -378,6 +370,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.273
+    "fieldMissRate": 0.091
   }
 }

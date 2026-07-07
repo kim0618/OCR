@@ -86,10 +86,10 @@
       },
       "supplierCompany": {
         "gt": "한국프라임제약(통합)",
-        "ext": "보관용)",
-        "gtNorm": "한국프라임제약(통합)",
-        "extNorm": "보관용)",
-        "type": "text",
+        "ext": "한국프라임제약",
+        "gtNorm": "한국프라임제약통합",
+        "extNorm": "한국프라임제약",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "대전 유성구 테크노2로 187 (용산동) 522호",
-        "ext": "광주광역시 동구 중앙로 211(대인동",
+        "ext": "전라북도 완주군 봉동읍 완주산단9로 100",
         "gtNorm": "대전유성구테크노2로187용산동522호",
-        "extNorm": "광주광역시동구중앙로211대인동",
+        "extNorm": "전라북도완주군봉동읍완주산단9로100",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 원주지점",
         "ext": "백제약품(주)원주지점",
-        "gtNorm": "백제약품 (주) 원주지점",
-        "extNorm": "백제약품(주)원주지점",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품원주지점",
+        "extNorm": "백제약품원주지점",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 6,
-      "mismatch": 4,
+      "match": 7,
+      "mismatch": 3,
       "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 6,
+      "matched": 7,
       "extNotAttempted": 0,
       "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.5
+    "fieldAccuracy": 0.5833333333333334
   },
   "table": {
     "alignMode": "content",
@@ -283,16 +283,16 @@
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
-        "gtNorm": "한국프라임제약(통합)",
-        "extNorm": "보관용)",
+        "gtNorm": "한국프라임제약통합",
+        "extNorm": "한국프라임제약",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.88)"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "대전유성구테크노2로187용산동522호",
-        "extNorm": "광주광역시동구중앙로211대인동",
+        "extNorm": "전라북도완주군봉동읍완주산단9로100",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -303,14 +303,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value present at ['row1:amount']"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 원주지점",
-        "extNorm": "백제약품(주)원주지점",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -346,7 +338,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
+      "recognition": 4,
       "structure": 4,
       "layout": 0,
       "preprocessing": 0

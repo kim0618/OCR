@@ -60,11 +60,11 @@
       },
       "supplierCompany": {
         "gt": "팜베이",
-        "ext": "주식회사 팜베이",
+        "ext": "팜베이",
         "gtNorm": "팜베이",
-        "extNorm": "주식회사 팜베이",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "팜베이",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -86,11 +86,11 @@
       },
       "supplierAddress": {
         "gt": "서울 송파구 법원로11길 11 (문정동) A동 15층 1506호",
-        "ext": "싫(문정동",
+        "ext": "서울 송파구 법원로11길 11 (문정동) A동 15층 1506호",
         "gtNorm": "서울송파구법원로11길11문정동a동15층1506호",
-        "extNorm": "싫문정동",
+        "extNorm": "서울송파구법원로11길11문정동a동15층1506호",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -113,9 +113,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)평택물류센터",
         "ext": "백제약품(주)",
-        "gtNorm": "백제약품(주)평택물류센터",
-        "extNorm": "백제약품(주)",
-        "type": "text",
+        "gtNorm": "백제약품평택물류센터",
+        "extNorm": "백제약품",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -141,8 +141,8 @@
     "profile": "thin",
     "counts": {
       "scored": 10,
-      "match": 3,
-      "mismatch": 7,
+      "match": 5,
+      "mismatch": 5,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -154,11 +154,11 @@
     },
     "coverage": {
       "gtPresent": 10,
-      "matched": 3,
+      "matched": 5,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.3
+    "fieldAccuracy": 0.5
   },
   "table": {
     "alignMode": "content",
@@ -1075,22 +1075,6 @@
         "reason": "ext value is gt's ['row8:unitPrice']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "팜베이",
-        "extNorm": "주식회사 팜베이",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.55)"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "서울송파구법원로11길11문정동a동15층1506호",
-        "extNorm": "싫문정동",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplyAmount",
         "status": "mismatch",
         "gtNorm": "23505974",
@@ -1101,10 +1085,10 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)평택물류센터",
-        "extNorm": "백제약품(주)",
+        "gtNorm": "백제약품평택물류센터",
+        "extNorm": "백제약품",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.70)"
+        "reason": "char-level diff (sim=0.57)"
       },
       {
         "location": "field:buyerAddress",
@@ -1508,7 +1492,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 15,
+      "recognition": 13,
       "structure": 40,
       "layout": 1,
       "preprocessing": 0

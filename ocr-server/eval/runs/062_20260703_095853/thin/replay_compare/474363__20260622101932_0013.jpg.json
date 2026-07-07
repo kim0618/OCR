@@ -73,11 +73,11 @@
       },
       "supplierCompany": {
         "gt": "온라인팜(전)",
-        "ext": "",
-        "gtNorm": "온라인팜(전)",
-        "extNorm": "",
-        "type": "text",
-        "status": "ext_missing",
+        "ext": "온라인팜(전)",
+        "gtNorm": "온라인팜",
+        "extNorm": "온라인팜",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -99,7 +99,7 @@
       },
       "supplierAddress": {
         "gt": "경기도 화성시 팔탄면 무하로 214",
-        "ext": "경기도 화성시 팔탄면 무하로214",
+        "ext": "경기도 화성시 팔탄면 무하로 214",
         "gtNorm": "경기도화성시팔탄면무하로214",
         "extNorm": "경기도화성시팔탄면무하로214",
         "type": "address",
@@ -126,10 +126,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영남본부",
         "ext": "백제약품(주)영남본부",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품영남본부",
+        "extNorm": "백제약품영남본부",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -154,9 +154,9 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 4,
-      "mismatch": 5,
-      "ext_missing": 2,
+      "match": 6,
+      "mismatch": 4,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 4,
+      "matched": 6,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.36363636363636365
+    "fieldAccuracy": 0.5454545454545454
   },
   "table": {
     "alignMode": "content",
@@ -379,28 +379,12 @@
         "reason": "ext value is gt's ['row2:unitPrice']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "ext_missing",
-        "gtNorm": "온라인팜(전)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
-      },
-      {
         "location": "field:supplyAmount",
         "status": "ext_missing",
         "gtNorm": "610362",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -564,8 +548,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 3,
-      "structure": 23,
+      "recognition": 2,
+      "structure": 22,
       "layout": 0,
       "preprocessing": 0
     },
@@ -585,6 +569,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.182
+    "fieldMissRate": 0.091
   }
 }

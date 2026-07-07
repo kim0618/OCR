@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "일화",
-        "ext": "주)일화",
+        "ext": "일화(전)",
         "gtNorm": "일화",
-        "extNorm": "주)일화",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "일화",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "경기 구리시 안골로56번길 25 (수택동)",
-        "ext": "강원도춘천시 동내면거두단지2길55",
+        "ext": "경기도 구리시 안골로56번길 25 (수택동)",
         "gtNorm": "경기구리시안골로56번길25수택동",
-        "extNorm": "강원도춘천시동내면거두단지2길55",
+        "extNorm": "경기도구리시안골로56번길25수택동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 제주지점",
         "ext": "",
-        "gtNorm": "백제약품 (주) 제주지점",
+        "gtNorm": "백제약품제주지점",
         "extNorm": "",
-        "type": "text",
+        "type": "company",
         "status": "ext_missing",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 5,
-      "mismatch": 6,
+      "match": 6,
+      "mismatch": 5,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 5,
+      "matched": 6,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.4166666666666667
+    "fieldAccuracy": 0.5
   },
   "table": {
     "alignMode": "content",
@@ -781,20 +781,12 @@
         "reason": "ext value is gt's ['field:totalAmount']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "일화",
-        "extNorm": "주)일화",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기구리시안골로56번길25수택동",
-        "extNorm": "강원도춘천시동내면거두단지2길55",
+        "extNorm": "경기도구리시안골로56번길25수택동",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.97)"
       },
       {
         "location": "field:supplyAmount",
@@ -807,7 +799,7 @@
       {
         "location": "field:buyerCompany",
         "status": "ext_missing",
-        "gtNorm": "백제약품 (주) 제주지점",
+        "gtNorm": "백제약품제주지점",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
@@ -1230,7 +1222,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 32,
+      "recognition": 31,
       "structure": 26,
       "layout": 0,
       "preprocessing": 0

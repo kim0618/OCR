@@ -73,10 +73,10 @@
       },
       "supplierCompany": {
         "gt": "온라인팜(전)",
-        "ext": "투식회사",
-        "gtNorm": "온라인팜(전)",
-        "extNorm": "투식회사",
-        "type": "text",
+        "ext": "백제약품(주)영남본부",
+        "gtNorm": "온라인팜",
+        "extNorm": "백제약품영남본부",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": true,
@@ -99,9 +99,9 @@
       },
       "supplierAddress": {
         "gt": "경기도 화성시 팔탄면 무하로 214",
-        "ext": "경기도 화성시팔탄면 무하로214 경상남도 김해시 진례면테크노밸리",
+        "ext": "경남 김해시 진례면 김해테크노벨리로 33-12 백제약품(주)영남본부",
         "gtNorm": "경기도화성시팔탄면무하로214",
-        "extNorm": "경기도화성시팔탄면무하로214경상남도김해시진례면테크노밸리",
+        "extNorm": "경남김해시진례면김해테크노벨리로3312백제약품주영남본부",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -126,10 +126,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영남본부",
         "ext": "백제약품(주)영남본부",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품영남본부",
+        "extNorm": "백제약품영남본부",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -154,8 +154,8 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 1,
-      "mismatch": 8,
+      "match": 2,
+      "mismatch": 7,
       "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 1,
+      "matched": 2,
       "extNotAttempted": 0,
       "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.09090909090909091
+    "fieldAccuracy": 0.18181818181818182
   },
   "table": {
     "alignMode": "content",
@@ -391,18 +391,18 @@
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
-        "gtNorm": "온라인팜(전)",
-        "extNorm": "투식회사",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "gtNorm": "온라인팜",
+        "extNorm": "백제약품영남본부",
+        "bucket": "structure",
+        "reason": "ext value is gt's ['field:buyerCompany']"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기도화성시팔탄면무하로214",
-        "extNorm": "경기도화성시팔탄면무하로214경상남도김해시진례면테크노밸리",
+        "extNorm": "경남김해시진례면김해테크노벨리로3312백제약품주영남본부",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplyAmount",
@@ -411,14 +411,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -566,8 +558,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 6,
-      "structure": 21,
+      "recognition": 4,
+      "structure": 22,
       "layout": 0,
       "preprocessing": 0
     },

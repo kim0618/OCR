@@ -86,10 +86,10 @@
       },
       "supplierCompany": {
         "gt": "보령(주)(통합)",
-        "ext": "주)보령",
-        "gtNorm": "보령(주)(통합)",
-        "extNorm": "주)보령",
-        "type": "text",
+        "ext": "보령제약(전)",
+        "gtNorm": "보령통합",
+        "extNorm": "보령제약",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울 종로구 창경궁로 136 (원남동,)",
-        "ext": "서울시종로구 창경궁로136",
+        "ext": "경기도 안산시 단원구 능안로 107 (신길동)",
         "gtNorm": "서울종로구창경궁로136원남동",
-        "extNorm": "서울시종로구창경궁로136",
+        "extNorm": "경기도안산시단원구능안로107신길동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 원주지점",
         "ext": "백제약품(주)원주지점",
-        "gtNorm": "백제약품 (주) 원주지점",
-        "extNorm": "백제약품(주)원주지점",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품원주지점",
+        "extNorm": "백제약품원주지점",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 4,
-      "mismatch": 6,
+      "match": 5,
+      "mismatch": 5,
       "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 4,
+      "matched": 5,
       "extNotAttempted": 0,
       "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.3333333333333333
+    "fieldAccuracy": 0.4166666666666667
   },
   "table": {
     "alignMode": "content",
@@ -1104,10 +1104,10 @@
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
-        "gtNorm": "보령(주)(통합)",
-        "extNorm": "주)보령",
+        "gtNorm": "보령통합",
+        "extNorm": "보령제약",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "field:taxType",
@@ -1121,9 +1121,9 @@
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울종로구창경궁로136원남동",
-        "extNorm": "서울시종로구창경궁로136",
+        "extNorm": "경기도안산시단원구능안로107신길동",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.86)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplyAmount",
@@ -1132,14 +1132,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value present at ['field:discountAmount']"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 원주지점",
-        "extNorm": "백제약품(주)원주지점",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -1815,7 +1807,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 19,
+      "recognition": 18,
       "structure": 71,
       "layout": 1,
       "preprocessing": 0

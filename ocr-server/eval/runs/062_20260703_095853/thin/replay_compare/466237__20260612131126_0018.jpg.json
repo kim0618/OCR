@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "바이넥스(전)",
-        "ext": "",
-        "gtNorm": "바이넥스(전)",
-        "extNorm": "",
-        "type": "text",
-        "status": "ext_missing",
+        "ext": "종근당(전)",
+        "gtNorm": "바이넥스",
+        "extNorm": "종근당",
+        "type": "company",
+        "status": "mismatch",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "광주광역시 북구 중흥로 153-14 (중흥동 696-7)",
-        "ext": "충남 천안시 서록",
+        "ext": "서울 서대문구 충정로 8",
         "gtNorm": "광주광역시북구중흥로15314중흥동6967",
-        "extNorm": "충남천안시서록",
+        "extNorm": "서울서대문구충정로8",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 광주지점",
         "ext": "",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "",
-        "type": "text",
+        "type": "company",
         "status": "ext_missing",
         "edited": false,
         "difficult": false,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 4,
-      "mismatch": 3,
-      "ext_missing": 5,
+      "mismatch": 4,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,7 +182,7 @@
       "gtPresent": 12,
       "matched": 4,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 5
+      "extAttemptedMiss": 4
     },
     "fieldAccuracy": 0.3333333333333333
   },
@@ -317,17 +317,17 @@
       },
       {
         "location": "field:supplierCompany",
-        "status": "ext_missing",
-        "gtNorm": "바이넥스(전)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "status": "mismatch",
+        "gtNorm": "바이넥스",
+        "extNorm": "종근당",
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "광주광역시북구중흥로15314중흥동6967",
-        "extNorm": "충남천안시서록",
+        "extNorm": "서울서대문구충정로8",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -342,7 +342,7 @@
       {
         "location": "field:buyerCompany",
         "status": "ext_missing",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
@@ -413,8 +413,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 6,
-      "structure": 9,
+      "recognition": 7,
+      "structure": 8,
       "layout": 0,
       "preprocessing": 0
     },
@@ -434,6 +434,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.417
+    "fieldMissRate": 0.333
   }
 }

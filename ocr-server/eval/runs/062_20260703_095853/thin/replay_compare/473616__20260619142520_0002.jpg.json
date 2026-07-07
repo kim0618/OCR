@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "티알엔",
-        "ext": "주)티알엔",
+        "ext": "티알엔",
         "gtNorm": "티알엔",
-        "extNorm": "주)티알엔",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "티알엔",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "경기 남양주시 미금로 14 (다산동) 3층 301호",
-        "ext": "경기도 남양주시미금로 14,3층301호(다선",
+        "ext": "경기 남양주시 미금로 14 (다산동) 3층 301호",
         "gtNorm": "경기남양주시미금로14다산동3층301호",
-        "extNorm": "경기도남양주시미금로143층301호다선",
+        "extNorm": "경기남양주시미금로14다산동3층301호",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)북부물류센터",
         "ext": "백제약품(주)영등포지",
-        "gtNorm": "백제약품(주)북부물류센터",
-        "extNorm": "백제약품(주)영등포지",
-        "type": "text",
+        "gtNorm": "백제약품북부물류센터",
+        "extNorm": "백제약품영등포지",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 4,
-      "mismatch": 8,
+      "match": 6,
+      "mismatch": 6,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 4,
+      "matched": 6,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.3333333333333333
+    "fieldAccuracy": 0.5
   },
   "table": {
     "alignMode": "content",
@@ -305,28 +305,12 @@
         "reason": "gt value present at ['field:discountAmount']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "티알엔",
-        "extNorm": "주)티알엔",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.75)"
-      },
-      {
         "location": "field:taxType",
         "status": "mismatch",
         "gtNorm": "면세",
         "extNorm": "과세",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.50)"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "경기남양주시미금로14다산동3층301호",
-        "extNorm": "경기도남양주시미금로143층301호다선",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.85)"
       },
       {
         "location": "field:supplyAmount",
@@ -339,10 +323,10 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)북부물류센터",
-        "extNorm": "백제약품(주)영등포지",
+        "gtNorm": "백제약품북부물류센터",
+        "extNorm": "백제약품영등포지",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.58)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -410,7 +394,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 7,
+      "recognition": 5,
       "structure": 8,
       "layout": 0,
       "preprocessing": 0

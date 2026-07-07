@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "조일팜",
-        "ext": "주)조일잠",
+        "ext": "조일팜",
         "gtNorm": "조일팜",
-        "extNorm": "주)조일잠",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "조일팜",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울 동대문구 한천로 215 (전농동) 4층",
-        "ext": "서울 동대문구한천로215 전농동)4층(전농동",
+        "ext": "서울 동대문구 한천로 215 (전농동) 4층",
         "gtNorm": "서울동대문구한천로215전농동4층",
-        "extNorm": "서울동대문구한천로215전농동4층전농동",
+        "extNorm": "서울동대문구한천로215전농동4층",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)북부물류센터",
         "ext": "백제약품(주)",
-        "gtNorm": "백제약품(주)북부물류센터",
-        "extNorm": "백제약품(주)",
-        "type": "text",
+        "gtNorm": "백제약품북부물류센터",
+        "extNorm": "백제약품",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
-      "mismatch": 4,
+      "match": 10,
+      "mismatch": 2,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 10,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.8333333333333334
   },
   "table": {
     "alignMode": "content",
@@ -904,28 +904,12 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "조일팜",
-        "extNorm": "주)조일잠",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "서울동대문구한천로215전농동4층",
-        "extNorm": "서울동대문구한천로215전농동4층전농동",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
-      },
-      {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)북부물류센터",
-        "extNorm": "백제약품(주)",
+        "gtNorm": "백제약품북부물류센터",
+        "extNorm": "백제약품",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.70)"
+        "reason": "char-level diff (sim=0.57)"
       },
       {
         "location": "field:buyerAddress",
@@ -1313,7 +1297,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 30,
+      "recognition": 28,
       "structure": 19,
       "layout": 2,
       "preprocessing": 0

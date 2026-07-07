@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "종근당(전문)",
-        "ext": "",
-        "gtNorm": "종근당(전문)",
-        "extNorm": "",
-        "type": "text",
-        "status": "ext_missing",
+        "ext": "종근당(전)",
+        "gtNorm": "종근당전문",
+        "extNorm": "종근당",
+        "type": "company",
+        "status": "mismatch",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -126,10 +126,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 원주지점",
         "ext": "백제약품(주)원주지점",
-        "gtNorm": "백제약품 (주) 원주지점",
-        "extNorm": "백제약품(주)원주지점",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품원주지점",
+        "extNorm": "백제약품원주지점",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -154,9 +154,9 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 4,
+      "match": 5,
       "mismatch": 4,
-      "ext_missing": 3,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 4,
+      "matched": 5,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 3
+      "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.36363636363636365
+    "fieldAccuracy": 0.45454545454545453
   },
   "table": {
     "alignMode": "content",
@@ -303,11 +303,11 @@
       },
       {
         "location": "field:supplierCompany",
-        "status": "ext_missing",
-        "gtNorm": "종근당(전문)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "status": "mismatch",
+        "gtNorm": "종근당전문",
+        "extNorm": "종근당",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.75)"
       },
       {
         "location": "field:supplyAmount",
@@ -316,14 +316,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 원주지점",
-        "extNorm": "백제약품(주)원주지점",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -400,7 +392,7 @@
     ],
     "bucketTally": {
       "recognition": 6,
-      "structure": 9,
+      "structure": 8,
       "layout": 0,
       "preprocessing": 0
     },
@@ -420,6 +412,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.273
+    "fieldMissRate": 0.182
   }
 }

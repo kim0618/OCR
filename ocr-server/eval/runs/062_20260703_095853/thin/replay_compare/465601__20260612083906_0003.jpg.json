@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "글락소(전문)",
-        "ext": "주)글락소스미스클라인",
-        "gtNorm": "글락소(전문)",
-        "extNorm": "주)글락소스미스클라인",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "글락소(전문)",
+        "gtNorm": "글락소전문",
+        "extNorm": "글락소전문",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 용산구 한강대로 92, LS용산타워 9층 (한강로2가)",
-        "ext": "리디거구나알렉세이",
+        "ext": "서울특별시 용산구 한강대로 92, LS용산타워 9층 (한강로2가)",
         "gtNorm": "서울특별시용산구한강대로92ls용산타워9층한강로2가",
-        "extNorm": "리디거구나알렉세이",
+        "extNorm": "서울특별시용산구한강대로92ls용산타워9층한강로2가",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)북부물류센터",
         "ext": "백제약품(주)영등포저점",
-        "gtNorm": "백제약품(주)북부물류센터",
-        "extNorm": "백제약품(주)영등포저점",
-        "type": "text",
+        "gtNorm": "백제약품북부물류센터",
+        "extNorm": "백제약품영등포저점",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 7,
-      "mismatch": 5,
+      "match": 9,
+      "mismatch": 3,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 7,
+      "matched": 9,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.5833333333333334
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -299,28 +299,12 @@
         "reason": "char-level diff (sim=0.88)"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "글락소(전문)",
-        "extNorm": "주)글락소스미스클라인",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "서울특별시용산구한강대로92ls용산타워9층한강로2가",
-        "extNorm": "리디거구나알렉세이",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)북부물류센터",
-        "extNorm": "백제약품(주)영등포저점",
+        "gtNorm": "백제약품북부물류센터",
+        "extNorm": "백제약품영등포저점",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.56)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -396,7 +380,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 7,
+      "recognition": 5,
       "structure": 6,
       "layout": 0,
       "preprocessing": 0

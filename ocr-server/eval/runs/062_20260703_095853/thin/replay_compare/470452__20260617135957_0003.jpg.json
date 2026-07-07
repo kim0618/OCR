@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "종근당(전문)",
-        "ext": "",
-        "gtNorm": "종근당(전문)",
-        "extNorm": "",
-        "type": "text",
-        "status": "ext_missing",
+        "ext": "종근당(전)",
+        "gtNorm": "종근당전문",
+        "extNorm": "종근당",
+        "type": "company",
+        "status": "mismatch",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울 서대문구 충정로3가 종근당빌딩 (충정로 8)",
-        "ext": "충남 천인시 서축",
+        "ext": "서울 서대문구 충정로 8",
         "gtNorm": "서울서대문구충정로3가종근당빌딩충정로8",
-        "extNorm": "충남천인시서축",
+        "extNorm": "서울서대문구충정로8",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영등포지점",
         "ext": "백제약품(주)영등포지점",
-        "gtNorm": "백제약품 (주) 영등포지점",
-        "extNorm": "백제약품(주)영등포지점",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품영등포지점",
+        "extNorm": "백제약품영등포지점",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 5,
+      "match": 6,
       "mismatch": 5,
-      "ext_missing": 2,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 5,
+      "matched": 6,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.4166666666666667
+    "fieldAccuracy": 0.5
   },
   "table": {
     "alignMode": "content",
@@ -306,19 +306,19 @@
       },
       {
         "location": "field:supplierCompany",
-        "status": "ext_missing",
-        "gtNorm": "종근당(전문)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "status": "mismatch",
+        "gtNorm": "종근당전문",
+        "extNorm": "종근당",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.75)"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울서대문구충정로3가종근당빌딩충정로8",
-        "extNorm": "충남천인시서축",
+        "extNorm": "서울서대문구충정로8",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "field:supplyAmount",
@@ -327,14 +327,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value present at ['field:totalAmount']"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영등포지점",
-        "extNorm": "백제약품(주)영등포지점",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -403,7 +395,7 @@
     ],
     "bucketTally": {
       "recognition": 8,
-      "structure": 5,
+      "structure": 4,
       "layout": 1,
       "preprocessing": 0
     },
@@ -423,6 +415,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.167
+    "fieldMissRate": 0.083
   }
 }

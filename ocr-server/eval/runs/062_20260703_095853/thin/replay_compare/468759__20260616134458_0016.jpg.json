@@ -60,11 +60,11 @@
       },
       "supplierCompany": {
         "gt": "한림MS(전)",
-        "ext": "",
-        "gtNorm": "한림ms(전)",
-        "extNorm": "",
-        "type": "text",
-        "status": "ext_missing",
+        "ext": "삼진제약(전)",
+        "gtNorm": "한림ms",
+        "extNorm": "삼진제약",
+        "type": "company",
+        "status": "mismatch",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -86,9 +86,9 @@
       },
       "supplierAddress": {
         "gt": "경기도 용인시 처인구 영문로 2-27 (유방동)",
-        "ext": "61427 광주광역시 동구제봉로200",
+        "ext": "서울 마포구 와우산로 121 (서교동)",
         "gtNorm": "경기도용인시처인구영문로227유방동",
-        "extNorm": "61427광주광역시동구제봉로200",
+        "extNorm": "서울마포구와우산로121서교동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -113,9 +113,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 광주지점",
         "ext": "",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "",
-        "type": "text",
+        "type": "company",
         "status": "ext_missing",
         "edited": false,
         "difficult": false,
@@ -142,8 +142,8 @@
     "counts": {
       "scored": 10,
       "match": 6,
-      "mismatch": 2,
-      "ext_missing": 2,
+      "mismatch": 3,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -156,7 +156,7 @@
       "gtPresent": 10,
       "matched": 6,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 1
     },
     "fieldAccuracy": 0.6
   },
@@ -264,24 +264,24 @@
     "defects": [
       {
         "location": "field:supplierCompany",
-        "status": "ext_missing",
-        "gtNorm": "한림ms(전)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "status": "mismatch",
+        "gtNorm": "한림ms",
+        "extNorm": "삼진제약",
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기도용인시처인구영문로227유방동",
-        "extNorm": "61427광주광역시동구제봉로200",
+        "extNorm": "서울마포구와우산로121서교동",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerCompany",
         "status": "ext_missing",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
@@ -344,8 +344,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 4,
-      "structure": 6,
+      "recognition": 5,
+      "structure": 5,
       "layout": 0,
       "preprocessing": 0
     },
@@ -365,6 +365,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.2
+    "fieldMissRate": 0.1
   }
 }

@@ -60,11 +60,11 @@
       },
       "supplierCompany": {
         "gt": "대화제약(주)",
-        "ext": "",
-        "gtNorm": "대화제약(주)",
-        "extNorm": "",
-        "type": "text",
-        "status": "ext_missing",
+        "ext": "삼진제약(전)",
+        "gtNorm": "대화제약",
+        "extNorm": "삼진제약",
+        "type": "company",
+        "status": "mismatch",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -86,9 +86,9 @@
       },
       "supplierAddress": {
         "gt": "경기 시흥시 정왕동 시화공단1라603",
-        "ext": "백제약품(주)광주",
+        "ext": "서울 마포구 와우산로 121 (서교동)",
         "gtNorm": "경기시흥시정왕동시화공단1라603",
-        "extNorm": "백제약품주광주",
+        "extNorm": "서울마포구와우산로121서교동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -113,9 +113,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 광주지점",
         "ext": "대화제약(주)",
-        "gtNorm": "백제약품 (주) 광주지점",
-        "extNorm": "대화제약(주)",
-        "type": "text",
+        "gtNorm": "백제약품광주지점",
+        "extNorm": "대화제약",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -142,8 +142,8 @@
     "counts": {
       "scored": 10,
       "match": 5,
-      "mismatch": 4,
-      "ext_missing": 1,
+      "mismatch": 5,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -156,7 +156,7 @@
       "gtPresent": 10,
       "matched": 5,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
     "fieldAccuracy": 0.5
   },
@@ -1231,9 +1231,9 @@
       },
       {
         "location": "field:supplierCompany",
-        "status": "ext_missing",
-        "gtNorm": "대화제약(주)",
-        "extNorm": "",
+        "status": "mismatch",
+        "gtNorm": "대화제약",
+        "extNorm": "삼진제약",
         "bucket": "structure",
         "reason": "gt value present at ['field:buyerCompany']"
       },
@@ -1241,17 +1241,17 @@
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기시흥시정왕동시화공단1라603",
-        "extNorm": "백제약품주광주",
+        "extNorm": "서울마포구와우산로121서교동",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 광주지점",
-        "extNorm": "대화제약(주)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
+        "gtNorm": "백제약품광주지점",
+        "extNorm": "대화제약",
+        "bucket": "structure",
+        "reason": "ext value is gt's ['field:supplierCompany']"
       },
       {
         "location": "field:buyerAddress",
@@ -2007,8 +2007,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 23,
-      "structure": 73,
+      "recognition": 22,
+      "structure": 74,
       "layout": 2,
       "preprocessing": 0
     },
@@ -2028,6 +2028,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.1
+    "fieldMissRate": 0.0
   }
 }

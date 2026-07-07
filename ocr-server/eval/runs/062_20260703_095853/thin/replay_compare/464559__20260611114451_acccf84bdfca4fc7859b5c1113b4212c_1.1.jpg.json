@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "파로스(헤파코엔)",
-        "ext": "종목의약품",
-        "gtNorm": "파로스(헤파코엔)",
-        "extNorm": "종목의약품",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "파로스(헤파코엔)",
+        "gtNorm": "파로스헤파코엔",
+        "extNorm": "파로스헤파코엔",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "강원 원주시 우러리길 10 (단구동) 3층 301호",
-        "ext": "강원특별자치도원주시우러리길10,3층30",
+        "ext": "강원 원주시 우러리길 10 (단구동) 3층 301호",
         "gtNorm": "강원원주시우러리길10단구동3층301호",
-        "extNorm": "강원특별자치도원주시우러리길103층30",
+        "extNorm": "강원원주시우러리길10단구동3층301호",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 원주지점",
         "ext": "주)백제약품원주지점",
-        "gtNorm": "백제약품 (주) 원주지점",
-        "extNorm": "주)백제약품원주지점",
-        "type": "text",
+        "gtNorm": "백제약품원주지점",
+        "extNorm": "주백제약품원주지점",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
-      "mismatch": 4,
+      "match": 10,
+      "mismatch": 2,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 10,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.8333333333333334
   },
   "table": {
     "alignMode": "content",
@@ -291,28 +291,12 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "파로스(헤파코엔)",
-        "extNorm": "종목의약품",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "강원원주시우러리길10단구동3층301호",
-        "extNorm": "강원특별자치도원주시우러리길103층30",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.75)"
-      },
-      {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 원주지점",
-        "extNorm": "주)백제약품원주지점",
+        "gtNorm": "백제약품원주지점",
+        "extNorm": "주백제약품원주지점",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.70)"
+        "reason": "char-level diff (sim=0.94)"
       },
       {
         "location": "field:buyerAddress",
@@ -388,7 +372,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 7,
+      "recognition": 5,
       "structure": 5,
       "layout": 0,
       "preprocessing": 0

@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "에이블팜스리테일",
-        "ext": "에이블팜스리테일(주)",
+        "ext": "에이블팜스리테일",
         "gtNorm": "에이블팜스리테일",
-        "extNorm": "에이블팜스리테일(주)",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "에이블팜스리테일",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울 관악구 관악로24길 63 (봉천동) 502호",
-        "ext": "서울특별시 관악구 관악로24길 63, 5층(봉천",
+        "ext": "서울 관악구 관악로24길 63 (봉천동) 502호",
         "gtNorm": "서울관악구관악로24길63봉천동502호",
-        "extNorm": "서울특별시관악구관악로24길635층봉천",
+        "extNorm": "서울관악구관악로24길63봉천동502호",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 대전지점",
         "ext": "양약동물약품",
-        "gtNorm": "백제약품 (주) 대전지점",
+        "gtNorm": "백제약품대전지점",
         "extNorm": "양약동물약품",
-        "type": "text",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 7,
-      "mismatch": 5,
+      "match": 9,
+      "mismatch": 3,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 7,
+      "matched": 9,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.5833333333333334
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -396,25 +396,9 @@
         "reason": "gt value present at ['field:supplierBizNumber']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "에이블팜스리테일",
-        "extNorm": "에이블팜스리테일(주)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.84)"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "서울관악구관악로24길63봉천동502호",
-        "extNorm": "서울특별시관악구관악로24길635층봉천",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.75)"
-      },
-      {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 대전지점",
+        "gtNorm": "백제약품대전지점",
         "extNorm": "양약동물약품",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
@@ -597,7 +581,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 9,
+      "recognition": 7,
       "structure": 17,
       "layout": 0,
       "preprocessing": 0

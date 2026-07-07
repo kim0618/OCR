@@ -74,9 +74,9 @@
       "supplierCompany": {
         "gt": "셀트리온제약(전)",
         "ext": "",
-        "gtNorm": "셀트리온제약(전)",
+        "gtNorm": "셀트리온제약",
         "extNorm": "",
-        "type": "text",
+        "type": "company",
         "status": "ext_missing",
         "edited": false,
         "difficult": true,
@@ -126,9 +126,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 광주지점",
         "ext": "",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "",
-        "type": "text",
+        "type": "company",
         "status": "ext_missing",
         "edited": false,
         "difficult": false,
@@ -286,18 +286,18 @@
       {
         "location": "field:supplierCompany",
         "status": "ext_missing",
-        "gtNorm": "셀트리온제약(전)",
+        "gtNorm": "셀트리온제약",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "reason": "gt value present at ['field:supplierAddress']"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "충청북도청주시청원구오창읍2산단로82",
         "extNorm": "셀트리온제약",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "bucket": "structure",
+        "reason": "ext value is gt's ['field:supplierCompany']"
       },
       {
         "location": "field:supplyAmount",
@@ -310,7 +310,7 @@
       {
         "location": "field:buyerCompany",
         "status": "ext_missing",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
@@ -381,8 +381,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 3,
-      "structure": 8,
+      "recognition": 2,
+      "structure": 9,
       "layout": 2,
       "preprocessing": 0
     },

@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "온라인팜(전)(한미)",
-        "ext": "",
-        "gtNorm": "온라인팜(전)(한미)",
-        "extNorm": "",
-        "type": "text",
-        "status": "ext_missing",
+        "ext": "온라인팜(전)",
+        "gtNorm": "온라인팜한미",
+        "extNorm": "온라인팜",
+        "type": "company",
+        "status": "mismatch",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,7 +112,7 @@
       },
       "supplierAddress": {
         "gt": "경기도 화성시 팔탄면 무하로 214",
-        "ext": "경기도화성시팔탄면 무하로214",
+        "ext": "경기도 화성시 팔탄면 무하로 214",
         "gtNorm": "경기도화성시팔탄면무하로214",
         "extNorm": "경기도화성시팔탄면무하로214",
         "type": "address",
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 대전지점",
         "ext": "",
-        "gtNorm": "백제약품 (주) 대전지점",
+        "gtNorm": "백제약품대전지점",
         "extNorm": "",
-        "type": "text",
+        "type": "company",
         "status": "ext_missing",
         "edited": false,
         "difficult": false,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 6,
-      "mismatch": 4,
-      "ext_missing": 2,
+      "mismatch": 5,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,7 +182,7 @@
       "gtPresent": 12,
       "matched": 6,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 1
     },
     "fieldAccuracy": 0.5
   },
@@ -656,16 +656,16 @@
       },
       {
         "location": "field:supplierCompany",
-        "status": "ext_missing",
-        "gtNorm": "온라인팜(전)(한미)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "status": "mismatch",
+        "gtNorm": "온라인팜한미",
+        "extNorm": "온라인팜",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "field:buyerCompany",
         "status": "ext_missing",
-        "gtNorm": "백제약품 (주) 대전지점",
+        "gtNorm": "백제약품대전지점",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
@@ -1072,8 +1072,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 3,
-      "structure": 52,
+      "recognition": 4,
+      "structure": 51,
       "layout": 0,
       "preprocessing": 0
     },
@@ -1093,6 +1093,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.167
+    "fieldMissRate": 0.083
   }
 }

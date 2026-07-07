@@ -73,10 +73,10 @@
       },
       "supplierCompany": {
         "gt": "앱토크롬",
-        "ext": "주)앱토크롬",
+        "ext": "앱토크롬(구.에이피헬스케어)",
         "gtNorm": "앱토크롬",
-        "extNorm": "주)앱토크롬",
-        "type": "text",
+        "extNorm": "앱토크롬구에이피헬스케어",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": true,
@@ -99,9 +99,9 @@
       },
       "supplierAddress": {
         "gt": "경기 화성시 양감면 두머리길 18 301호(방이동)",
-        "ext": "경기도화성시 만세구양감면두머리길계8",
+        "ext": "서울특별시 강남구 테헤란로32길26(역삼동,청송빌딩)",
         "gtNorm": "경기화성시양감면두머리길18301호방이동",
-        "extNorm": "경기도화성시만세구양감면두머리길계8",
+        "extNorm": "서울특별시강남구테헤란로32길26역삼동청송빌딩",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -126,10 +126,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영남본부",
         "ext": "백제약품(주)영남본부",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품영남본부",
+        "extNorm": "백제약품영남본부",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -154,8 +154,8 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 5,
-      "mismatch": 5,
+      "match": 6,
+      "mismatch": 4,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 5,
+      "matched": 6,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.45454545454545453
+    "fieldAccuracy": 0.5454545454545454
   },
   "table": {
     "alignMode": "content",
@@ -773,17 +773,17 @@
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "앱토크롬",
-        "extNorm": "주)앱토크롬",
+        "extNorm": "앱토크롬구에이피헬스케어",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.80)"
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기화성시양감면두머리길18301호방이동",
-        "extNorm": "경기도화성시만세구양감면두머리길계8",
+        "extNorm": "서울특별시강남구테헤란로32길26역삼동청송빌딩",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplyAmount",
@@ -792,14 +792,6 @@
         "extNorm": "343636",
         "bucket": "structure",
         "reason": "ext value is gt's ['row1:amount']"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -1251,7 +1243,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 12,
+      "recognition": 11,
       "structure": 49,
       "layout": 0,
       "preprocessing": 0

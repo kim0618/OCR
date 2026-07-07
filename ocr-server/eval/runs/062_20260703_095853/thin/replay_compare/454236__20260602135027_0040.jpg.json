@@ -86,10 +86,10 @@
       },
       "supplierCompany": {
         "gt": "이든파마(전문)",
-        "ext": "주)이까마",
-        "gtNorm": "이든파마(전문)",
-        "extNorm": "주)이까마",
-        "type": "text",
+        "ext": "이든파마",
+        "gtNorm": "이든파마전문",
+        "extNorm": "이든파마",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "경기도 평택시 오성면 오성산단1로 131 C동 6층 이든파마앞",
-        "ext": "전라북도 전주시 덕진구 신복로116 충청북도진천군 문농다리로1149",
+        "ext": "서울 서초구 양재천로19길 36 (양재동) 2층 - 이든파마 영업지원부",
         "gtNorm": "경기도평택시오성면오성산단1로131c동6층이든파마앞",
-        "extNorm": "전라북도전주시덕진구신복로116충청북도진천군문농다리로1149",
+        "extNorm": "서울서초구양재천로19길36양재동2층이든파마영업지원부",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 전주지점",
         "ext": "백제약품(주)전주지점",
-        "gtNorm": "백제약품 (주) 전주지점",
-        "extNorm": "백제약품(주)전주지점",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품전주지점",
+        "extNorm": "백제약품전주지점",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
-      "mismatch": 3,
+      "match": 9,
+      "mismatch": 2,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 9,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -531,26 +531,18 @@
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
-        "gtNorm": "이든파마(전문)",
-        "extNorm": "주)이까마",
+        "gtNorm": "이든파마전문",
+        "extNorm": "이든파마",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기도평택시오성면오성산단1로131c동6층이든파마앞",
-        "extNorm": "전라북도전주시덕진구신복로116충청북도진천군문농다리로1149",
+        "extNorm": "서울서초구양재천로19길36양재동2층이든파마영업지원부",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 전주지점",
-        "extNorm": "백제약품(주)전주지점",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -858,7 +850,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 3,
+      "recognition": 2,
       "structure": 38,
       "layout": 0,
       "preprocessing": 0

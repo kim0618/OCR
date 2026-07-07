@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "케이피더마",
-        "ext": "주)케이피더마",
+        "ext": "케이피더마",
         "gtNorm": "케이피더마",
-        "extNorm": "주)케이피더마",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "케이피더마",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울 동대문구 답십리로 243 (장안동) 지하 1층",
-        "ext": "서울 동대문구 답십리로 243 (장안동",
+        "ext": "서울시 동대문구 답십리로 243 지하1층",
         "gtNorm": "서울동대문구답십리로243장안동지하1층",
-        "extNorm": "서울동대문구답십리로243장안동",
+        "extNorm": "서울시동대문구답십리로243지하1층",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 광주지점",
         "ext": "백제약품(주)",
-        "gtNorm": "백제약품 (주) 광주지점",
-        "extNorm": "백제약품(주)",
-        "type": "text",
+        "gtNorm": "백제약품광주지점",
+        "extNorm": "백제약품",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
-      "mismatch": 4,
+      "match": 9,
+      "mismatch": 3,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 9,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -301,28 +301,20 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "케이피더마",
-        "extNorm": "주)케이피더마",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.83)"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울동대문구답십리로243장안동지하1층",
-        "extNorm": "서울동대문구답십리로243장안동",
+        "extNorm": "서울시동대문구답십리로243지하1층",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.89)"
       },
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 광주지점",
-        "extNorm": "백제약품(주)",
+        "gtNorm": "백제약품광주지점",
+        "extNorm": "백제약품",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.70)"
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "field:buyerAddress",
@@ -430,7 +422,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 4,
+      "recognition": 3,
       "structure": 12,
       "layout": 0,
       "preprocessing": 0

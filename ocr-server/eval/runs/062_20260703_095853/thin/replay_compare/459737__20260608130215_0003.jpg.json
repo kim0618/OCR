@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "삼성제약(CSO)",
-        "ext": "백제약품(주)북부물류센터",
-        "gtNorm": "삼성제약(cso)",
-        "extNorm": "백제약품(주)북부물류센터",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "삼성제약(CSO)",
+        "gtNorm": "삼성제약cso",
+        "extNorm": "삼성제약cso",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "경기 화성시 향남읍 제약공단2길 35",
-        "ext": "경기도 파주시 광탄면 장지산로127(용미리",
+        "ext": "경기 화성시 향남읍 제약공단2길 35",
         "gtNorm": "경기화성시향남읍제약공단2길35",
-        "extNorm": "경기도파주시광탄면장지산로127용미리",
+        "extNorm": "경기화성시향남읍제약공단2길35",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)북부물류센터",
         "ext": "담당지점경감유통ETC",
-        "gtNorm": "백제약품(주)북부물류센터",
+        "gtNorm": "백제약품북부물류센터",
         "extNorm": "담당지점경감유통etc",
-        "type": "text",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 7,
-      "mismatch": 4,
+      "match": 9,
+      "mismatch": 2,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 7,
+      "matched": 9,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.5833333333333334
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -804,28 +804,12 @@
         "reason": "gt value not found anywhere in extraction"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "삼성제약(cso)",
-        "extNorm": "백제약품(주)북부물류센터",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['field:buyerCompany']"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "경기화성시향남읍제약공단2길35",
-        "extNorm": "경기도파주시광탄면장지산로127용미리",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)북부물류센터",
+        "gtNorm": "백제약품북부물류센터",
         "extNorm": "담당지점경감유통etc",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:supplierCompany']"
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -894,7 +878,7 @@
     ],
     "bucketTally": {
       "recognition": 6,
-      "structure": 5,
+      "structure": 3,
       "layout": 1,
       "preprocessing": 0
     },

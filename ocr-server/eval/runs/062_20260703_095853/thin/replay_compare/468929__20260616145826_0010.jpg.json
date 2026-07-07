@@ -87,10 +87,10 @@
       "supplierCompany": {
         "gt": "환인제약(전)",
         "ext": "환인제약(주)",
-        "gtNorm": "환인제약(전)",
-        "extNorm": "환인제약(주)",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "환인제약",
+        "extNorm": "환인제약",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "경기도 안성시 공단로 50 (신소현동)",
-        "ext": "서울특별시송파구법원로6길11",
+        "ext": "서울시 송파구 법원로6길 11 환인빌딩 8~11층",
         "gtNorm": "경기도안성시공단로50신소현동",
-        "extNorm": "서울특별시송파구법원로6길11",
+        "extNorm": "서울시송파구법원로6길11환인빌딩811층",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 광주지점",
         "ext": "",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "",
-        "type": "text",
+        "type": "company",
         "status": "ext_missing",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
-      "mismatch": 3,
+      "match": 9,
+      "mismatch": 2,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 9,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -999,25 +999,17 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "환인제약(전)",
-        "extNorm": "환인제약(주)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.86)"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기도안성시공단로50신소현동",
-        "extNorm": "서울특별시송파구법원로6길11",
+        "extNorm": "서울시송파구법원로6길11환인빌딩811층",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerCompany",
         "status": "ext_missing",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
@@ -1424,7 +1416,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 26,
+      "recognition": 25,
       "structure": 25,
       "layout": 2,
       "preprocessing": 0

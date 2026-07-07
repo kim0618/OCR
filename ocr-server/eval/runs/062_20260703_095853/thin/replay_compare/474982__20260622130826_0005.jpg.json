@@ -73,11 +73,11 @@
       },
       "supplierCompany": {
         "gt": "지오영(서대문구)",
-        "ext": "주)지오영(서대문구",
-        "gtNorm": "지오영(서대문구)",
-        "extNorm": "주)지오영(서대문구",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "지오영(서대문구)",
+        "gtNorm": "지오영서대문구",
+        "extNorm": "지오영서대문구",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -99,11 +99,11 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 영등포구 선유로 9 (문래동5가)",
-        "ext": "서울특별시서대문구 성산로321(연희동",
+        "ext": "서울특별시 영등포구 선유로 9 (문래동5가)",
         "gtNorm": "서울특별시영등포구선유로9문래동5가",
-        "extNorm": "서울특별시서대문구성산로321연희동",
+        "extNorm": "서울특별시영등포구선유로9문래동5가",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -126,9 +126,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 전주지점",
         "ext": "전주)백제약품",
-        "gtNorm": "백제약품 (주) 전주지점",
-        "extNorm": "전주)백제약품",
-        "type": "text",
+        "gtNorm": "백제약품전주지점",
+        "extNorm": "전주백제약품",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -154,8 +154,8 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 4,
-      "mismatch": 6,
+      "match": 6,
+      "mismatch": 4,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 4,
+      "matched": 6,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.36363636363636365
+    "fieldAccuracy": 0.5454545454545454
   },
   "table": {
     "alignMode": "content",
@@ -303,22 +303,6 @@
         "reason": "gt value not found anywhere in extraction"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "지오영(서대문구)",
-        "extNorm": "주)지오영(서대문구",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.84)"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "서울특별시영등포구선유로9문래동5가",
-        "extNorm": "서울특별시서대문구성산로321연희동",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplyAmount",
         "status": "mismatch",
         "gtNorm": "1628149",
@@ -329,10 +313,10 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 전주지점",
-        "extNorm": "전주)백제약품",
+        "gtNorm": "백제약품전주지점",
+        "extNorm": "전주백제약품",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.57)"
       },
       {
         "location": "field:buyerAddress",
@@ -392,7 +376,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 6,
+      "recognition": 4,
       "structure": 7,
       "layout": 0,
       "preprocessing": 0

@@ -60,11 +60,11 @@
       },
       "supplierCompany": {
         "gt": "삼일제약(전문)",
-        "ext": "삼일제약주식회사",
-        "gtNorm": "삼일제약(전문)",
-        "extNorm": "삼일제약주식회사",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "삼일제약(전문)",
+        "gtNorm": "삼일제약전문",
+        "extNorm": "삼일제약전문",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -113,9 +113,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 전주지점",
         "ext": "백제약품",
-        "gtNorm": "백제약품 (주) 전주지점",
+        "gtNorm": "백제약품전주지점",
         "extNorm": "백제약품",
-        "type": "text",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -141,8 +141,8 @@
     "profile": "thin",
     "counts": {
       "scored": 10,
-      "match": 5,
-      "mismatch": 5,
+      "match": 6,
+      "mismatch": 4,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -154,11 +154,11 @@
     },
     "coverage": {
       "gtPresent": 10,
-      "matched": 5,
+      "matched": 6,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.5
+    "fieldAccuracy": 0.6
   },
   "table": {
     "alignMode": "content",
@@ -826,14 +826,6 @@
         "reason": "gt value present at ['field:supplyAmount']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "삼일제약(전문)",
-        "extNorm": "삼일제약주식회사",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
-      },
-      {
         "location": "field:supplyAmount",
         "status": "mismatch",
         "gtNorm": "2714463",
@@ -844,10 +836,10 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 전주지점",
+        "gtNorm": "백제약품전주지점",
         "extNorm": "백제약품",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "field:buyerAddress",
@@ -955,7 +947,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 10,
+      "recognition": 9,
       "structure": 5,
       "layout": 2,
       "preprocessing": 0

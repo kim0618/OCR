@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "한국아스텔라스제약(전)",
-        "ext": "1022071백제약품(주배송",
-        "gtNorm": "한국아스텔라스제약(전)",
-        "extNorm": "1022071백제약품(주배송",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "한국아스텔라스제약",
+        "gtNorm": "한국아스텔라스제약",
+        "extNorm": "한국아스텔라스제약",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울 강남구 학동로 401 (청담동) 금하빌딩 6층",
-        "ext": "서울 강남구 테헤란로 521 파르나스탄워 7층",
+        "ext": "서울 강남구 학동로 401 (청담동)",
         "gtNorm": "서울강남구학동로401청담동금하빌딩6층",
-        "extNorm": "서울강남구테헤란로521파르나스탄워7층",
+        "extNorm": "서울강남구학동로401청담동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 광주지점",
         "ext": "백제약품(주)광준",
-        "gtNorm": "백제약품 (주) 광주지점",
-        "extNorm": "백제약품(주)광준",
-        "type": "text",
+        "gtNorm": "백제약품광주지점",
+        "extNorm": "백제약품광준",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 5,
-      "mismatch": 6,
+      "match": 6,
+      "mismatch": 5,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 5,
+      "matched": 6,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.4166666666666667
+    "fieldAccuracy": 0.5
   },
   "table": {
     "alignMode": "content",
@@ -580,20 +580,12 @@
         "reason": "gt value not found anywhere in extraction"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "한국아스텔라스제약(전)",
-        "extNorm": "1022071백제약품(주배송",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울강남구학동로401청담동금하빌딩6층",
-        "extNorm": "서울강남구테헤란로521파르나스탄워7층",
+        "extNorm": "서울강남구학동로401청담동",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.82)"
       },
       {
         "location": "field:supplyAmount",
@@ -606,10 +598,10 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 광주지점",
-        "extNorm": "백제약품(주)광준",
+        "gtNorm": "백제약품광주지점",
+        "extNorm": "백제약품광준",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.73)"
+        "reason": "char-level diff (sim=0.71)"
       },
       {
         "location": "field:buyerAddress",
@@ -925,7 +917,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 14,
+      "recognition": 13,
       "structure": 28,
       "layout": 3,
       "preprocessing": 0

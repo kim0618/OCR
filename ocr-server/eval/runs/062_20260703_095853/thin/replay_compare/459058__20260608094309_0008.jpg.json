@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "준성홀딩스",
-        "ext": "주)준성홀딩스",
+        "ext": "준성홀딩스",
         "gtNorm": "준성홀딩스",
-        "extNorm": "주)준성홀딩스",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "준성홀딩스",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "경기 성남시 중원구 갈마치로 215 (상대원동) 에이동 104호(상대원동, 금강펜테리움IT타워)",
-        "ext": "경기 하남시 동남로424번길27 감일동",
+        "ext": "경기 성남시 중원구 갈마치로 215 (상대원동) 에이동 104호(상대원동, 금강펜테리움IT타워)",
         "gtNorm": "경기성남시중원구갈마치로215상대원동에이동104호상대원동금강펜테리움it타워",
-        "extNorm": "경기하남시동남로424번길27감일동",
+        "extNorm": "경기성남시중원구갈마치로215상대원동에이동104호상대원동금강펜테리움it타워",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)북부물류센터",
         "ext": "백제약품(주)",
-        "gtNorm": "백제약품(주)북부물류센터",
-        "extNorm": "백제약품(주)",
-        "type": "text",
+        "gtNorm": "백제약품북부물류센터",
+        "extNorm": "백제약품",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 4,
-      "mismatch": 7,
+      "match": 6,
+      "mismatch": 5,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 4,
+      "matched": 6,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.3333333333333333
+    "fieldAccuracy": 0.5
   },
   "table": {
     "alignMode": "content",
@@ -667,28 +667,12 @@
         "reason": "gt value present at ['field:discountAmount']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "준성홀딩스",
-        "extNorm": "주)준성홀딩스",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.83)"
-      },
-      {
         "location": "field:taxType",
         "status": "mismatch",
         "gtNorm": "면세",
         "extNorm": "과세",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.50)"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "경기성남시중원구갈마치로215상대원동에이동104호상대원동금강펜테리움it타워",
-        "extNorm": "경기하남시동남로424번길27감일동",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplyAmount",
@@ -701,10 +685,10 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)북부물류센터",
-        "extNorm": "백제약품(주)",
+        "gtNorm": "백제약품북부물류센터",
+        "extNorm": "백제약품",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.70)"
+        "reason": "char-level diff (sim=0.57)"
       },
       {
         "location": "field:buyerAddress",
@@ -1052,7 +1036,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 14,
+      "recognition": 12,
       "structure": 33,
       "layout": 3,
       "preprocessing": 0

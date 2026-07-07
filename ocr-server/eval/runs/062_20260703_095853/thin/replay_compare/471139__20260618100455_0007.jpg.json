@@ -86,10 +86,10 @@
       },
       "supplierCompany": {
         "gt": "대원제약(일반)",
-        "ext": "주식회사 성명",
-        "gtNorm": "대원제약(일반)",
-        "extNorm": "주식회사 성명",
-        "type": "text",
+        "ext": "대원제약",
+        "gtNorm": "대원제약일반",
+        "extNorm": "대원제약",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "경기도 화성시 향남읍 제약공단1길 24",
-        "ext": "충북 진천군 광혜원면 용소2길",
+        "ext": "경기도 화성시 향남읍 제약공단1길 24",
         "gtNorm": "경기도화성시향남읍제약공단1길24",
-        "extNorm": "충북진천군광혜원면용소2길",
+        "extNorm": "경기도화성시향남읍제약공단1길24",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)동부물류센터",
         "ext": "백제약품(주)영등포지점",
-        "gtNorm": "백제약품(주)동부물류센터",
-        "extNorm": "백제약품(주)영등포지점",
-        "type": "text",
+        "gtNorm": "백제약품동부물류센터",
+        "extNorm": "백제약품영등포지점",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 7,
-      "mismatch": 5,
+      "match": 8,
+      "mismatch": 4,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 7,
+      "matched": 8,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.5833333333333334
+    "fieldAccuracy": 0.6666666666666666
   },
   "table": {
     "alignMode": "content",
@@ -563,18 +563,10 @@
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
-        "gtNorm": "대원제약(일반)",
-        "extNorm": "주식회사 성명",
+        "gtNorm": "대원제약일반",
+        "extNorm": "대원제약",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "경기도화성시향남읍제약공단1길24",
-        "extNorm": "충북진천군광혜원면용소2길",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "field:supplyAmount",
@@ -587,10 +579,10 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)동부물류센터",
-        "extNorm": "백제약품(주)영등포지점",
+        "gtNorm": "백제약품동부물류센터",
+        "extNorm": "백제약품영등포지점",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.56)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -810,7 +802,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 10,
+      "recognition": 9,
       "structure": 16,
       "layout": 5,
       "preprocessing": 0

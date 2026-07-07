@@ -73,11 +73,11 @@
       },
       "supplierCompany": {
         "gt": "율산약품",
-        "ext": "율산약품(유",
+        "ext": "율산약품",
         "gtNorm": "율산약품",
-        "extNorm": "율산약품(유",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "율산약품",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -99,9 +99,9 @@
       },
       "supplierAddress": {
         "gt": "전북 전주시 덕진구 구총목로 5,지하층(인후동1가)",
-        "ext": "전라북도 전주시덕진구 아중로121, 202호(마하발당는",
+        "ext": "전북 전주시 덕진구 아중로 121 (인후동1가) 202호",
         "gtNorm": "전북전주시덕진구구총목로5지하층인후동1가",
-        "extNorm": "전라북도전주시덕진구아중로121202호마하발당는",
+        "extNorm": "전북전주시덕진구아중로121인후동1가202호",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -126,9 +126,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)평택물류센터",
         "ext": "백제약품(주)",
-        "gtNorm": "백제약품(주)평택물류센터",
-        "extNorm": "백제약품(주)",
-        "type": "text",
+        "gtNorm": "백제약품평택물류센터",
+        "extNorm": "백제약품",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -154,8 +154,8 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 4,
-      "mismatch": 6,
+      "match": 5,
+      "mismatch": 5,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 4,
+      "matched": 5,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.36363636363636365
+    "fieldAccuracy": 0.45454545454545453
   },
   "table": {
     "alignMode": "content",
@@ -1086,20 +1086,12 @@
         "reason": "gt value present at ['field:supplyAmount']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "율산약품",
-        "extNorm": "율산약품(유",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.80)"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "전북전주시덕진구구총목로5지하층인후동1가",
-        "extNorm": "전라북도전주시덕진구아중로121202호마하발당는",
+        "extNorm": "전북전주시덕진구아중로121인후동1가202호",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.64)"
       },
       {
         "location": "field:supplyAmount",
@@ -1112,10 +1104,10 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)평택물류센터",
-        "extNorm": "백제약품(주)",
+        "gtNorm": "백제약품평택물류센터",
+        "extNorm": "백제약품",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.70)"
+        "reason": "char-level diff (sim=0.57)"
       },
       {
         "location": "field:buyerAddress",
@@ -1655,7 +1647,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 64,
+      "recognition": 63,
       "structure": 9,
       "layout": 0,
       "preprocessing": 0

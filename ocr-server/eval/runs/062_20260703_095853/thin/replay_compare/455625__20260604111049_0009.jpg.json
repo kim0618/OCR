@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "쥴릭파마코리아(주)",
-        "ext": "줄릭파마코리아(주)",
-        "gtNorm": "쥴릭파마코리아(주)",
-        "extNorm": "줄릭파마코리아(주)",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "쥴릭파마코리아(주)",
+        "gtNorm": "쥴릭파마코리아",
+        "extNorm": "쥴릭파마코리아",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 용산구 한강대로92 3층(한강로2가,엘에스용산타워)",
-        "ext": "경기도 화정지장지로46,(장지동",
+        "ext": "서울특별시 용산구 한강대로92 3층(한강로2가,엘에스용산타워)",
         "gtNorm": "서울특별시용산구한강대로923층한강로2가엘에스용산타워",
-        "extNorm": "경기도화정지장지로46장지동",
+        "extNorm": "서울특별시용산구한강대로923층한강로2가엘에스용산타워",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 전주지점",
         "ext": "백제약품(전주",
-        "gtNorm": "백제약품 (주) 전주지점",
-        "extNorm": "백제약품(전주",
-        "type": "text",
+        "gtNorm": "백제약품전주지점",
+        "extNorm": "백제약품전주",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 7,
-      "mismatch": 5,
+      "match": 9,
+      "mismatch": 3,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 7,
+      "matched": 9,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.5833333333333334
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -831,28 +831,12 @@
         "reason": "ext value is gt's ['row5:insuranceCode']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "쥴릭파마코리아(주)",
-        "extNorm": "줄릭파마코리아(주)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.90)"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "서울특별시용산구한강대로923층한강로2가엘에스용산타워",
-        "extNorm": "경기도화정지장지로46장지동",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 전주지점",
-        "extNorm": "백제약품(전주",
+        "gtNorm": "백제약품전주지점",
+        "extNorm": "백제약품전주",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.70)"
+        "reason": "char-level diff (sim=0.86)"
       },
       {
         "location": "field:buyerAddress",
@@ -1200,7 +1184,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 28,
+      "recognition": 26,
       "structure": 19,
       "layout": 0,
       "preprocessing": 0

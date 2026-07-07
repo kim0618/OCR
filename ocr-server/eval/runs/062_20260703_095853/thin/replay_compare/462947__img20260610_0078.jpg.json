@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "팜월드",
-        "ext": "주)잠월.드",
+        "ext": "팜월드",
         "gtNorm": "팜월드",
-        "extNorm": "주)잠월.드",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "팜월드",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "경기 의왕시 부곡중앙남4길 17 (삼동)",
-        "ext": "대전광역시 중구보문로235",
+        "ext": "경기 의왕시 부곡중앙남4길 17 (삼동) 4층",
         "gtNorm": "경기의왕시부곡중앙남4길17삼동",
-        "extNorm": "대전광역시중구보문로235",
+        "extNorm": "경기의왕시부곡중앙남4길17삼동4층",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 대전지점",
         "ext": "의약품외",
-        "gtNorm": "백제약품 (주) 대전지점",
+        "gtNorm": "백제약품대전지점",
         "extNorm": "의약품외",
-        "type": "text",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 5,
-      "mismatch": 6,
+      "match": 6,
+      "mismatch": 5,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 5,
+      "matched": 6,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.4166666666666667
+    "fieldAccuracy": 0.5
   },
   "table": {
     "alignMode": "content",
@@ -800,20 +800,12 @@
         "reason": "ext value is gt's ['field:totalAmount']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "팜월드",
-        "extNorm": "주)잠월.드",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기의왕시부곡중앙남4길17삼동",
-        "extNorm": "대전광역시중구보문로235",
+        "extNorm": "경기의왕시부곡중앙남4길17삼동4층",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.94)"
       },
       {
         "location": "field:supplyAmount",
@@ -826,7 +818,7 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 대전지점",
+        "gtNorm": "백제약품대전지점",
         "extNorm": "의약품외",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
@@ -1113,7 +1105,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 23,
+      "recognition": 22,
       "structure": 18,
       "layout": 0,
       "preprocessing": 0

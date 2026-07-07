@@ -86,10 +86,10 @@
       },
       "supplierCompany": {
         "gt": "메디젠바이오파마/(아이큐어)",
-        "ext": "보관용)",
-        "gtNorm": "메디젠바이오파마/(아이큐어)",
-        "extNorm": "보관용)",
-        "type": "text",
+        "ext": "메디젠바이오파마",
+        "gtNorm": "메디젠바이오파마아이큐어",
+        "extNorm": "메디젠바이오파마",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "경기 김포시 김포한강9로 95 (구래동) 3층 301-V52호",
-        "ext": "강원득별자치도 원주시 오성마을길 61-11층(판부",
+        "ext": "경기 김포시 김포한강9로 95 (구래동) 3층 301-V52호",
         "gtNorm": "경기김포시김포한강9로95구래동3층301v52호",
-        "extNorm": "강원득별자치도원주시오성마을길6111층판부",
+        "extNorm": "경기김포시김포한강9로95구래동3층301v52호",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 원주지점",
         "ext": "백제약품(주)원주지점",
-        "gtNorm": "백제약품 (주) 원주지점",
-        "extNorm": "백제약품(주)원주지점",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품원주지점",
+        "extNorm": "백제약품원주지점",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 7,
-      "mismatch": 4,
+      "match": 9,
+      "mismatch": 2,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 7,
+      "matched": 9,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.5833333333333334
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -299,18 +299,10 @@
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
-        "gtNorm": "메디젠바이오파마/(아이큐어)",
-        "extNorm": "보관용)",
+        "gtNorm": "메디젠바이오파마아이큐어",
+        "extNorm": "메디젠바이오파마",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "경기김포시김포한강9로95구래동3층301v52호",
-        "extNorm": "강원득별자치도원주시오성마을길6111층판부",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "field:supplyAmount",
@@ -319,14 +311,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 원주지점",
-        "extNorm": "백제약품(주)원주지점",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -378,7 +362,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 6,
+      "recognition": 4,
       "structure": 4,
       "layout": 0,
       "preprocessing": 0

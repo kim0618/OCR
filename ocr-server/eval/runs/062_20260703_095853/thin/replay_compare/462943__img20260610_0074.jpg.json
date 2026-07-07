@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "한국유니온제약",
-        "ext": "한국유니온제약(주)",
+        "ext": "한국유니온제약",
         "gtNorm": "한국유니온제약",
-        "extNorm": "한국유니온제약(주)",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "한국유니온제약",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "강원도 원주시 문막읍 문막공단길 246",
-        "ext": "강원도원주시문막읍문막공단길247",
+        "ext": "강원특별자치도 원주시 문막읍 문막공단길 246 1층",
         "gtNorm": "강원도원주시문막읍문막공단길246",
-        "extNorm": "강원도원주시문막읍문막공단길247",
+        "extNorm": "강원특별자치도원주시문막읍문막공단길2461층",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 대전지점",
         "ext": "",
-        "gtNorm": "백제약품 (주) 대전지점",
+        "gtNorm": "백제약품대전지점",
         "extNorm": "",
-        "type": "text",
+        "type": "company",
         "status": "ext_missing",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
-      "mismatch": 3,
+      "match": 9,
+      "mismatch": 2,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 9,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -609,25 +609,17 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "한국유니온제약",
-        "extNorm": "한국유니온제약(주)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.82)"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "강원도원주시문막읍문막공단길246",
-        "extNorm": "강원도원주시문막읍문막공단길247",
+        "extNorm": "강원특별자치도원주시문막읍문막공단길2461층",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.94)"
+        "reason": "char-level diff (sim=0.85)"
       },
       {
         "location": "field:buyerCompany",
         "status": "ext_missing",
-        "gtNorm": "백제약품 (주) 대전지점",
+        "gtNorm": "백제약품대전지점",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
@@ -914,7 +906,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 15,
+      "recognition": 14,
       "structure": 19,
       "layout": 4,
       "preprocessing": 0

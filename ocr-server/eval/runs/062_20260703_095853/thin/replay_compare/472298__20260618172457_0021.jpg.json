@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "종근당(전문)",
-        "ext": "",
-        "gtNorm": "종근당(전문)",
-        "extNorm": "",
-        "type": "text",
-        "status": "ext_missing",
+        "ext": "셀트리온제약(딜라트렌)",
+        "gtNorm": "종근당전문",
+        "extNorm": "셀트리온제약딜라트렌",
+        "type": "company",
+        "status": "mismatch",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -126,9 +126,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 원주지점",
         "ext": "백제약품(주)영등포지점",
-        "gtNorm": "백제약품 (주) 원주지점",
-        "extNorm": "백제약품(주)영등포지점",
-        "type": "text",
+        "gtNorm": "백제약품원주지점",
+        "extNorm": "백제약품영등포지점",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -155,8 +155,8 @@
     "counts": {
       "scored": 11,
       "match": 6,
-      "mismatch": 3,
-      "ext_missing": 2,
+      "mismatch": 4,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -169,7 +169,7 @@
       "gtPresent": 11,
       "matched": 6,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 1
     },
     "fieldAccuracy": 0.5454545454545454
   },
@@ -556,11 +556,11 @@
       },
       {
         "location": "field:supplierCompany",
-        "status": "ext_missing",
-        "gtNorm": "종근당(전문)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "status": "mismatch",
+        "gtNorm": "종근당전문",
+        "extNorm": "셀트리온제약딜라트렌",
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplyAmount",
@@ -573,10 +573,10 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 원주지점",
-        "extNorm": "백제약품(주)영등포지점",
+        "gtNorm": "백제약품원주지점",
+        "extNorm": "백제약품영등포지점",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.72)"
+        "reason": "char-level diff (sim=0.71)"
       },
       {
         "location": "field:buyerAddress",
@@ -860,8 +860,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 13,
-      "structure": 18,
+      "recognition": 14,
+      "structure": 17,
       "layout": 8,
       "preprocessing": 0
     },
@@ -881,6 +881,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.182
+    "fieldMissRate": 0.091
   }
 }

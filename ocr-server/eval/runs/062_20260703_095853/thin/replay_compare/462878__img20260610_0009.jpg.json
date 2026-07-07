@@ -73,11 +73,11 @@
       },
       "supplierCompany": {
         "gt": "일동제약(전문)",
-        "ext": "일동제약(주)",
-        "gtNorm": "일동제약(전문)",
-        "extNorm": "일동제약(주)",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "일동제약(전문)",
+        "gtNorm": "일동제약전문",
+        "extNorm": "일동제약전문",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -99,9 +99,9 @@
       },
       "supplierAddress": {
         "gt": "경기 안성시 공단1로 25 (신건지동)",
-        "ext": "경기도 안성시 공단1로2",
+        "ext": "서울특별시 서초구 바우뫼로27길 2 (양재동)",
         "gtNorm": "경기안성시공단1로25신건지동",
-        "extNorm": "경기도안성시공단1로2",
+        "extNorm": "서울특별시서초구바우뫼로27길2양재동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -126,9 +126,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 대전지점",
         "ext": "",
-        "gtNorm": "백제약품 (주) 대전지점",
+        "gtNorm": "백제약품대전지점",
         "extNorm": "",
-        "type": "text",
+        "type": "company",
         "status": "ext_missing",
         "edited": false,
         "difficult": false,
@@ -154,8 +154,8 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 7,
-      "mismatch": 3,
+      "match": 8,
+      "mismatch": 2,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 7,
+      "matched": 8,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.6363636363636364
+    "fieldAccuracy": 0.7272727272727273
   },
   "table": {
     "alignMode": "content",
@@ -554,25 +554,17 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "일동제약(전문)",
-        "extNorm": "일동제약(주)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.80)"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기안성시공단1로25신건지동",
-        "extNorm": "경기도안성시공단1로2",
+        "extNorm": "서울특별시서초구바우뫼로27길2양재동",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.77)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerCompany",
         "status": "ext_missing",
-        "gtNorm": "백제약품 (주) 대전지점",
+        "gtNorm": "백제약품대전지점",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
@@ -811,7 +803,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 16,
+      "recognition": 15,
       "structure": 14,
       "layout": 2,
       "preprocessing": 0

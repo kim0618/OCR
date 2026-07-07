@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "유진약품(씨티씨)",
-        "ext": "",
-        "gtNorm": "유진약품(씨티씨)",
-        "extNorm": "",
-        "type": "text",
-        "status": "ext_missing",
+        "ext": "종근당(전)",
+        "gtNorm": "유진약품씨티씨",
+        "extNorm": "종근당",
+        "type": "company",
+        "status": "mismatch",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "광주광역시 북구 신임로31번길 10(신안동)",
-        "ext": "충남 천인시서록 성거읍 망향로797-48",
+        "ext": "서울 서대문구 충정로 8",
         "gtNorm": "광주광역시북구신임로31번길10신안동",
-        "extNorm": "충남천인시서록성거읍망향로79748",
+        "extNorm": "서울서대문구충정로8",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 광주지점",
         "ext": "",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "",
-        "type": "text",
+        "type": "company",
         "status": "ext_missing",
         "edited": false,
         "difficult": false,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 7,
-      "mismatch": 3,
-      "ext_missing": 2,
+      "mismatch": 4,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,7 +182,7 @@
       "gtPresent": 12,
       "matched": 7,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 1
     },
     "fieldAccuracy": 0.5833333333333334
   },
@@ -301,24 +301,24 @@
       },
       {
         "location": "field:supplierCompany",
-        "status": "ext_missing",
-        "gtNorm": "유진약품(씨티씨)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "status": "mismatch",
+        "gtNorm": "유진약품씨티씨",
+        "extNorm": "종근당",
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "광주광역시북구신임로31번길10신안동",
-        "extNorm": "충남천인시서록성거읍망향로79748",
+        "extNorm": "서울서대문구충정로8",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerCompany",
         "status": "ext_missing",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
@@ -421,8 +421,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 3,
-      "structure": 13,
+      "recognition": 4,
+      "structure": 12,
       "layout": 0,
       "preprocessing": 0
     },
@@ -442,6 +442,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.167
+    "fieldMissRate": 0.083
   }
 }

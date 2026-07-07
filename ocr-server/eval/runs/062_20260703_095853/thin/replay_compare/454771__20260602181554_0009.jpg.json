@@ -73,11 +73,11 @@
       },
       "supplierCompany": {
         "gt": "동아에스티(주)서울지점-(전문)",
-        "ext": "동아에스티(주)",
-        "gtNorm": "동아에스티(주)서울지점-(전문)",
-        "extNorm": "동아에스티(주)",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "동아에스티(주)서울지점-(전문)",
+        "gtNorm": "동아에스티서울지점전문",
+        "extNorm": "동아에스티서울지점전문",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -113,9 +113,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)북부물류센터",
         "ext": "백제약품(주)영등포지점",
-        "gtNorm": "백제약품(주)북부물류센터",
-        "extNorm": "백제약품(주)영등포지점",
-        "type": "text",
+        "gtNorm": "백제약품북부물류센터",
+        "extNorm": "백제약품영등포지점",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -141,8 +141,8 @@
     "profile": "thin",
     "counts": {
       "scored": 10,
-      "match": 7,
-      "mismatch": 3,
+      "match": 8,
+      "mismatch": 2,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -154,11 +154,11 @@
     },
     "coverage": {
       "gtPresent": 10,
-      "matched": 7,
+      "matched": 8,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.7
+    "fieldAccuracy": 0.8
   },
   "table": {
     "alignMode": "content",
@@ -265,20 +265,12 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "동아에스티(주)서울지점-(전문)",
-        "extNorm": "동아에스티(주)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.64)"
-      },
-      {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)북부물류센터",
-        "extNorm": "백제약품(주)영등포지점",
+        "gtNorm": "백제약품북부물류센터",
+        "extNorm": "백제약품영등포지점",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.56)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -346,7 +338,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 6,
+      "recognition": 5,
       "structure": 3,
       "layout": 1,
       "preprocessing": 0

@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "종근당(전)",
-        "ext": "주)종",
-        "gtNorm": "종근당(전)",
-        "extNorm": "주)종",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "종근당(전)",
+        "gtNorm": "종근당",
+        "extNorm": "종근당",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울 서대문구 충정로 8",
-        "ext": "성거읍망향로797-48",
+        "ext": "서울 서대문구 충정로 8",
         "gtNorm": "서울서대문구충정로8",
-        "extNorm": "성거읍망향로79748",
+        "extNorm": "서울서대문구충정로8",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영남본부",
         "ext": "백제약품(주)영남본부",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품영남본부",
+        "extNorm": "백제약품영남본부",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 5,
-      "mismatch": 7,
+      "match": 8,
+      "mismatch": 4,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 5,
+      "matched": 8,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.4166666666666667
+    "fieldAccuracy": 0.6666666666666666
   },
   "table": {
     "alignMode": "content",
@@ -312,36 +312,12 @@
         "reason": "char-level diff (sim=0.62)"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "종근당(전)",
-        "extNorm": "주)종",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "서울서대문구충정로8",
-        "extNorm": "성거읍망향로79748",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplyAmount",
         "status": "mismatch",
         "gtNorm": "1389717",
         "extNorm": "1544130",
         "bucket": "structure",
         "reason": "ext value is gt's ['field:totalAmount', 'row1:amount']"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -441,7 +417,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
+      "recognition": 2,
       "structure": 13,
       "layout": 0,
       "preprocessing": 0

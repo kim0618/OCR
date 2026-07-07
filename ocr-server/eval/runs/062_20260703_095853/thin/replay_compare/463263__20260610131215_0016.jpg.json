@@ -86,10 +86,10 @@
       },
       "supplierCompany": {
         "gt": "안국약품(조대)",
-        "ext": "용)",
-        "gtNorm": "안국약품(조대)",
-        "extNorm": "용)",
-        "type": "text",
+        "ext": "안국약품(일반)",
+        "gtNorm": "안국약품조대",
+        "extNorm": "안국약품일반",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "경기도 화성시 향남읍 제약공단1길 40",
-        "ext": "",
+        "ext": "서울 영등포구 대림동 994-3",
         "gtNorm": "경기도화성시향남읍제약공단1길40",
-        "extNorm": "",
+        "extNorm": "서울영등포구대림동9943",
         "type": "address",
-        "status": "ext_missing",
+        "status": "mismatch",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 광주지점",
         "ext": "국약품",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "국약품",
-        "type": "text",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 7,
-      "mismatch": 4,
-      "ext_missing": 1,
+      "mismatch": 5,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,7 +182,7 @@
       "gtPresent": 12,
       "matched": 7,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
     "fieldAccuracy": 0.5833333333333334
   },
@@ -688,18 +688,18 @@
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
-        "gtNorm": "안국약품(조대)",
-        "extNorm": "용)",
+        "gtNorm": "안국약품조대",
+        "extNorm": "안국약품일반",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "field:supplierAddress",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "경기도화성시향남읍제약공단1길40",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "extNorm": "서울영등포구대림동9943",
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplyAmount",
@@ -712,18 +712,18 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "국약품",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "bucket": "structure",
+        "reason": "gt value present at ['field:buyerAddress']"
       },
       {
         "location": "field:buyerAddress",
         "status": "mismatch",
         "gtNorm": "광주광역시동구제봉로200",
         "extNorm": "백제약품광주지점",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "bucket": "structure",
+        "reason": "ext value is gt's ['field:buyerCompany']"
       },
       {
         "location": "table",
@@ -919,8 +919,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 11,
-      "structure": 16,
+      "recognition": 10,
+      "structure": 17,
       "layout": 2,
       "preprocessing": 0
     },
@@ -940,6 +940,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

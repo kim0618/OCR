@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "화이트생명과학(전)",
-        "ext": "",
-        "gtNorm": "화이트생명과학(전)",
-        "extNorm": "",
-        "type": "text",
-        "status": "ext_missing",
+        "ext": "백제약품(주)대전지점",
+        "gtNorm": "화이트생명과학",
+        "extNorm": "백제약품대전지점",
+        "type": "company",
+        "status": "mismatch",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울 강남구 도산대로 532 (청담동) 인희빌딩4층",
-        "ext": "경기도화성시향남읍제약공단",
+        "ext": "대전광역시 중구 보문로 235 (대흥동)",
         "gtNorm": "서울강남구도산대로532청담동인희빌딩4층",
-        "extNorm": "경기도화성시향남읍제약공단",
+        "extNorm": "대전광역시중구보문로235대흥동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 대전지점",
         "ext": "주)화이트생명과학",
-        "gtNorm": "백제약품 (주) 대전지점",
-        "extNorm": "주)화이트생명과학",
-        "type": "text",
+        "gtNorm": "백제약품대전지점",
+        "extNorm": "주화이트생명과학",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 3,
-      "mismatch": 8,
-      "ext_missing": 1,
+      "mismatch": 9,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,7 +182,7 @@
       "gtPresent": 12,
       "matched": 3,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
     "fieldAccuracy": 0.25
   },
@@ -1420,11 +1420,11 @@
       },
       {
         "location": "field:supplierCompany",
-        "status": "ext_missing",
-        "gtNorm": "화이트생명과학(전)",
-        "extNorm": "",
+        "status": "mismatch",
+        "gtNorm": "화이트생명과학",
+        "extNorm": "백제약품대전지점",
         "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "reason": "ext value is gt's ['field:buyerCompany']"
       },
       {
         "location": "field:taxType",
@@ -1438,7 +1438,7 @@
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울강남구도산대로532청담동인희빌딩4층",
-        "extNorm": "경기도화성시향남읍제약공단",
+        "extNorm": "대전광역시중구보문로235대흥동",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -1453,10 +1453,10 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 대전지점",
-        "extNorm": "주)화이트생명과학",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "gtNorm": "백제약품대전지점",
+        "extNorm": "주화이트생명과학",
+        "bucket": "structure",
+        "reason": "gt value present at ['field:supplierCompany']"
       },
       {
         "location": "field:buyerAddress",
@@ -2228,8 +2228,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 42,
-      "structure": 62,
+      "recognition": 41,
+      "structure": 63,
       "layout": 0,
       "preprocessing": 0
     },
@@ -2249,6 +2249,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

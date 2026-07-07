@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "한가람약품(알콘)",
-        "ext": "보관용)",
-        "gtNorm": "한가람약품(알콘)",
-        "extNorm": "보관용)",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "한가람약품(알콘)",
+        "gtNorm": "한가람약품알콘",
+        "extNorm": "한가람약품알콘",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 서대문구 증가로 40, 한가람빌딩 1층 (연희동)",
-        "ext": "서울특별시 서대문구 증가로 40",
+        "ext": "서울특별시 서대문구 증가로 40 (연희동)",
         "gtNorm": "서울특별시서대문구증가로40한가람빌딩1층연희동",
-        "extNorm": "서울특별시서대문구증가로40",
+        "extNorm": "서울특별시서대문구증가로40연희동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영등포지점",
         "ext": "백제약품(주)영등포지점",
-        "gtNorm": "백제약품 (주) 영등포지점",
-        "extNorm": "백제약품(주)영등포지점",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품영등포지점",
+        "extNorm": "백제약품영등포지점",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 5,
-      "mismatch": 5,
+      "match": 7,
+      "mismatch": 3,
       "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 5,
+      "matched": 7,
       "extNotAttempted": 0,
       "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.4166666666666667
+    "fieldAccuracy": 0.5833333333333334
   },
   "table": {
     "alignMode": "content",
@@ -487,20 +487,12 @@
         "reason": "gt value not found anywhere in extraction"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "한가람약품(알콘)",
-        "extNorm": "보관용)",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울특별시서대문구증가로40한가람빌딩1층연희동",
-        "extNorm": "서울특별시서대문구증가로40",
+        "extNorm": "서울특별시서대문구증가로40연희동",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.74)"
+        "reason": "char-level diff (sim=0.83)"
       },
       {
         "location": "field:supplyAmount",
@@ -509,14 +501,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영등포지점",
-        "extNorm": "백제약품(주)영등포지점",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -568,7 +552,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 9,
+      "recognition": 7,
       "structure": 3,
       "layout": 0,
       "preprocessing": 0

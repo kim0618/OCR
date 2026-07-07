@@ -60,11 +60,11 @@
       },
       "supplierCompany": {
         "gt": "메디카코리아(전)",
-        "ext": "",
-        "gtNorm": "메디카코리아(전)",
-        "extNorm": "",
-        "type": "text",
-        "status": "ext_missing",
+        "ext": "종근당(전)",
+        "gtNorm": "메디카코리아",
+        "extNorm": "종근당",
+        "type": "company",
+        "status": "mismatch",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -86,9 +86,9 @@
       },
       "supplierAddress": {
         "gt": "서울 서초구 명달로 9, 방배빌딩 2층 (방배동)",
-        "ext": "충남 천안시 서록",
+        "ext": "서울 서대문구 충정로 8",
         "gtNorm": "서울서초구명달로9방배빌딩2층방배동",
-        "extNorm": "충남천안시서록",
+        "extNorm": "서울서대문구충정로8",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -113,9 +113,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 광주지점",
         "ext": "",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "",
-        "type": "text",
+        "type": "company",
         "status": "ext_missing",
         "edited": false,
         "difficult": false,
@@ -142,8 +142,8 @@
     "counts": {
       "scored": 10,
       "match": 2,
-      "mismatch": 6,
-      "ext_missing": 2,
+      "mismatch": 7,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -156,7 +156,7 @@
       "gtPresent": 10,
       "matched": 2,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 1
     },
     "fieldAccuracy": 0.2
   },
@@ -609,17 +609,17 @@
       },
       {
         "location": "field:supplierCompany",
-        "status": "ext_missing",
-        "gtNorm": "메디카코리아(전)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "status": "mismatch",
+        "gtNorm": "메디카코리아",
+        "extNorm": "종근당",
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울서초구명달로9방배빌딩2층방배동",
-        "extNorm": "충남천안시서록",
+        "extNorm": "서울서대문구충정로8",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -634,7 +634,7 @@
       {
         "location": "field:buyerCompany",
         "status": "ext_missing",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
@@ -1017,8 +1017,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 11,
-      "structure": 43,
+      "recognition": 12,
+      "structure": 42,
       "layout": 0,
       "preprocessing": 0
     },
@@ -1038,6 +1038,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.2
+    "fieldMissRate": 0.1
   }
 }

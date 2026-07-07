@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "서진팜",
-        "ext": "주)서진땀",
+        "ext": "서진팜",
         "gtNorm": "서진팜",
-        "extNorm": "주)서진땀",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "서진팜",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "경기 김포시 고촌읍 아라육로 80 207호",
-        "ext": "경기도김포시 고촌읍아라육로80.2층",
+        "ext": "경기 김포시 고촌읍 아라육로 80 207호",
         "gtNorm": "경기김포시고촌읍아라육로80207호",
-        "extNorm": "경기도김포시고촌읍아라육로802층",
+        "extNorm": "경기김포시고촌읍아라육로80207호",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)동부물류센터",
         "ext": "백제약품",
-        "gtNorm": "백제약품(주)동부물류센터",
+        "gtNorm": "백제약품동부물류센터",
         "extNorm": "백제약품",
-        "type": "text",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 7,
-      "mismatch": 5,
+      "match": 9,
+      "mismatch": 3,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 7,
+      "matched": 9,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.5833333333333334
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -1106,28 +1106,12 @@
         "reason": "gt value present at ['field:supplierBizNumber']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "서진팜",
-        "extNorm": "주)서진땀",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "경기김포시고촌읍아라육로80207호",
-        "extNorm": "경기도김포시고촌읍아라육로802층",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.86)"
-      },
-      {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)동부물류센터",
+        "gtNorm": "백제약품동부물류센터",
         "extNorm": "백제약품",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.57)"
       },
       {
         "location": "field:buyerAddress",
@@ -1931,7 +1915,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 12,
+      "recognition": 10,
       "structure": 92,
       "layout": 0,
       "preprocessing": 0

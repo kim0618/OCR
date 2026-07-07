@@ -73,10 +73,10 @@
       },
       "supplierCompany": {
         "gt": "명인제약(일반)",
-        "ext": "보관용]",
-        "gtNorm": "명인제약(일반)",
-        "extNorm": "보관용]",
-        "type": "text",
+        "ext": "명인제약(전)",
+        "gtNorm": "명인제약일반",
+        "extNorm": "명인제약",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": true,
@@ -99,11 +99,11 @@
       },
       "supplierAddress": {
         "gt": "경기도 화성시 팔탄면 노하길 361-12",
-        "ext": "경기도화성시만세구팔탄면노하길361-12",
+        "ext": "경기도 화성시 팔탄면 노하길 361-12",
         "gtNorm": "경기도화성시팔탄면노하길36112",
-        "extNorm": "경기도화성시만세구팔탄면노하길36112",
+        "extNorm": "경기도화성시팔탄면노하길36112",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -126,9 +126,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)북부물류센터",
         "ext": "백제약품(주)영등포지점",
-        "gtNorm": "백제약품(주)북부물류센터",
-        "extNorm": "백제약품(주)영등포지점",
-        "type": "text",
+        "gtNorm": "백제약품북부물류센터",
+        "extNorm": "백제약품영등포지점",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -154,8 +154,8 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 4,
-      "mismatch": 5,
+      "match": 5,
+      "mismatch": 4,
       "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 4,
+      "matched": 5,
       "extNotAttempted": 0,
       "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.36363636363636365
+    "fieldAccuracy": 0.45454545454545453
   },
   "table": {
     "alignMode": "content",
@@ -373,18 +373,10 @@
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
-        "gtNorm": "명인제약(일반)",
-        "extNorm": "보관용]",
+        "gtNorm": "명인제약일반",
+        "extNorm": "명인제약",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "경기도화성시팔탄면노하길36112",
-        "extNorm": "경기도화성시만세구팔탄면노하길36112",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
+        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "field:supplyAmount",
@@ -397,10 +389,10 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)북부물류센터",
-        "extNorm": "백제약품(주)영등포지점",
+        "gtNorm": "백제약품북부물류센터",
+        "extNorm": "백제약품영등포지점",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.56)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -492,7 +484,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 11,
+      "recognition": 10,
       "structure": 2,
       "layout": 4,
       "preprocessing": 0

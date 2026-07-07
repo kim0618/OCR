@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "온라인팜(주)(전문)",
-        "ext": "",
-        "gtNorm": "온라인팜(주)(전문)",
-        "extNorm": "",
-        "type": "text",
-        "status": "ext_missing",
+        "ext": "한국오가논",
+        "gtNorm": "온라인팜전문",
+        "extNorm": "한국오가논",
+        "type": "company",
+        "status": "mismatch",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "경기도 화성시 팔탄면 부하로 214",
-        "ext": "서울록별시 종로구 종로1갈50(중",
+        "ext": "서울 종로구 종로1길 50 (중학동) 4층 더케이트윈타워",
         "gtNorm": "경기도화성시팔탄면부하로214",
-        "extNorm": "서울록별시종로구종로1갈50중",
+        "extNorm": "서울종로구종로1길50중학동4층더케이트윈타워",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 전주지점",
         "ext": "백제약(주)",
-        "gtNorm": "백제약품 (주) 전주지점",
-        "extNorm": "백제약(주)",
-        "type": "text",
+        "gtNorm": "백제약품전주지점",
+        "extNorm": "백제약",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 1,
-      "mismatch": 8,
-      "ext_missing": 3,
+      "mismatch": 9,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,7 +182,7 @@
       "gtPresent": 12,
       "matched": 1,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 3
+      "extAttemptedMiss": 2
     },
     "fieldAccuracy": 0.08333333333333333
   },
@@ -1556,11 +1556,11 @@
       },
       {
         "location": "field:supplierCompany",
-        "status": "ext_missing",
-        "gtNorm": "온라인팜(주)(전문)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "status": "mismatch",
+        "gtNorm": "온라인팜전문",
+        "extNorm": "한국오가논",
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:taxType",
@@ -1574,7 +1574,7 @@
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기도화성시팔탄면부하로214",
-        "extNorm": "서울록별시종로구종로1갈50중",
+        "extNorm": "서울종로구종로1길50중학동4층더케이트윈타워",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -1589,10 +1589,10 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 전주지점",
-        "extNorm": "백제약(주)",
+        "gtNorm": "백제약품전주지점",
+        "extNorm": "백제약",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.63)"
+        "reason": "char-level diff (sim=0.55)"
       },
       {
         "location": "field:buyerAddress",
@@ -2076,8 +2076,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 45,
-      "structure": 14,
+      "recognition": 46,
+      "structure": 13,
       "layout": 11,
       "preprocessing": 0
     },
@@ -2097,6 +2097,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.25
+    "fieldMissRate": 0.167
   }
 }

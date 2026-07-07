@@ -86,10 +86,10 @@
       },
       "supplierCompany": {
         "gt": "하나제약(주)(정읍.보령아산병원)",
-        "ext": "보관용",
-        "gtNorm": "하나제약(주)(정읍.보령아산병원)",
-        "extNorm": "보관용",
-        "type": "text",
+        "ext": "하나제약",
+        "gtNorm": "하나제약정읍보령아산병원",
+        "extNorm": "하나제약",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "경기 화성시 향남읍 제약단지로 13-39",
-        "ext": "사업경경기도화성시향남읍제약공단3길",
+        "ext": "경기도 화성시 향남읍 제약단지로 13-39",
         "gtNorm": "경기화성시향남읍제약단지로1339",
-        "extNorm": "사업경경기도화성시향남읍제약공단3길",
+        "extNorm": "경기도화성시향남읍제약단지로1339",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 전주지점",
         "ext": "백제약품(주)전주지점",
-        "gtNorm": "백제약품 (주) 전주지점",
-        "extNorm": "백제약품(주)전주지점",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품전주지점",
+        "extNorm": "백제약품전주지점",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 6,
-      "mismatch": 5,
+      "match": 7,
+      "mismatch": 4,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 6,
+      "matched": 7,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.5
+    "fieldAccuracy": 0.5833333333333334
   },
   "table": {
     "alignMode": "content",
@@ -1102,18 +1102,18 @@
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
-        "gtNorm": "하나제약(주)(정읍.보령아산병원)",
-        "extNorm": "보관용",
+        "gtNorm": "하나제약정읍보령아산병원",
+        "extNorm": "하나제약",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기화성시향남읍제약단지로1339",
-        "extNorm": "사업경경기도화성시향남읍제약공단3길",
+        "extNorm": "경기도화성시향남읍제약단지로1339",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.69)"
+        "reason": "char-level diff (sim=0.97)"
       },
       {
         "location": "field:supplyAmount",
@@ -1122,14 +1122,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 전주지점",
-        "extNorm": "백제약품(주)전주지점",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -1917,7 +1909,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 6,
+      "recognition": 5,
       "structure": 96,
       "layout": 1,
       "preprocessing": 0

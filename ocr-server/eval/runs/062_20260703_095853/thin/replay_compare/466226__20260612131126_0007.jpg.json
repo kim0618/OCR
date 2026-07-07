@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "마더스제약(주)",
-        "ext": "보관용)",
-        "gtNorm": "마더스제약(주)",
-        "extNorm": "보관용)",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "마더스제약",
+        "gtNorm": "마더스제약",
+        "extNorm": "마더스제약",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울 동작구 보라매로5길 51, 501호 (신대방동, 롯데타워)",
-        "ext": "서울시동작구 보라매로5길 51,501호(신대",
+        "ext": "충남 아산시 선장면 서부남로 319 마더스제약 반품실 T)041-424-8511",
         "gtNorm": "서울동작구보라매로5길51501호신대방동롯데타워",
-        "extNorm": "서울시동작구보라매로5길51501호신대",
+        "extNorm": "충남아산시선장면서부남로319마더스제약반품실t0414248511",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 광주지점",
         "ext": "제조회사",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "제조회사",
-        "type": "text",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 7,
-      "mismatch": 4,
+      "match": 8,
+      "mismatch": 3,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 7,
+      "matched": 8,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.5833333333333334
+    "fieldAccuracy": 0.6666666666666666
   },
   "table": {
     "alignMode": "content",
@@ -297,25 +297,17 @@
         "reason": "gt value not found anywhere in extraction"
       },
       {
-        "location": "field:supplierCompany",
+        "location": "field:supplierAddress",
         "status": "mismatch",
-        "gtNorm": "마더스제약(주)",
-        "extNorm": "보관용)",
+        "gtNorm": "서울동작구보라매로5길51501호신대방동롯데타워",
+        "extNorm": "충남아산시선장면서부남로319마더스제약반품실t0414248511",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
       {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "서울동작구보라매로5길51501호신대방동롯데타워",
-        "extNorm": "서울시동작구보라매로5길51501호신대",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.84)"
-      },
-      {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "제조회사",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
@@ -378,7 +370,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 6,
+      "recognition": 5,
       "structure": 5,
       "layout": 0,
       "preprocessing": 0

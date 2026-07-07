@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "준성홀딩스",
-        "ext": "주)준성홀딩스",
+        "ext": "준성홀딩스",
         "gtNorm": "준성홀딩스",
-        "extNorm": "주)준성홀딩스",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "준성홀딩스",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "경기 하남시 동남로424번길 27 (감일동)",
-        "ext": "김기 하남시 동님로424번길27 김일동",
+        "ext": "경기 성남시 중원구 갈마치로 215 (상대원동) 에이동 104호(상대원동, 금강펜테리움IT타워)",
         "gtNorm": "경기하남시동남로424번길27감일동",
-        "extNorm": "김기하남시동님로424번길27김일동",
+        "extNorm": "경기성남시중원구갈마치로215상대원동에이동104호상대원동금강펜테리움it타워",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영남본부",
         "ext": "백제약품영남본부",
-        "gtNorm": "백제약품 (주) 영남본부",
+        "gtNorm": "백제약품영남본부",
         "extNorm": "백제약품영남본부",
-        "type": "text",
-        "status": "mismatch",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 4,
-      "mismatch": 6,
+      "match": 6,
+      "mismatch": 4,
       "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 4,
+      "matched": 6,
       "extNotAttempted": 0,
       "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.3333333333333333
+    "fieldAccuracy": 0.5
   },
   "table": {
     "alignMode": "content",
@@ -1110,14 +1110,6 @@
         "reason": "gt value present at ['field:discountAmount']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "준성홀딩스",
-        "extNorm": "주)준성홀딩스",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.83)"
-      },
-      {
         "location": "field:taxType",
         "status": "mismatch",
         "gtNorm": "면세",
@@ -1129,9 +1121,9 @@
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기하남시동남로424번길27감일동",
-        "extNorm": "김기하남시동님로424번길27김일동",
+        "extNorm": "경기성남시중원구갈마치로215상대원동에이동104호상대원동금강펜테리움it타워",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.83)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplyAmount",
@@ -1140,14 +1132,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value present at ['field:discountAmount']"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품영남본부",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.76)"
       },
       {
         "location": "field:buyerAddress",
@@ -1831,7 +1815,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 16,
+      "recognition": 14,
       "structure": 76,
       "layout": 0,
       "preprocessing": 0

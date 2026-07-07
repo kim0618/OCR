@@ -73,11 +73,11 @@
       },
       "supplierCompany": {
         "gt": "퍼슨헬스케어",
-        "ext": "주식회사 퍼슨헬스케어",
+        "ext": "퍼슨헬스케어",
         "gtNorm": "퍼슨헬스케어",
-        "extNorm": "주식회사 퍼슨헬스케어",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "퍼슨헬스케어",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -99,9 +99,9 @@
       },
       "supplierAddress": {
         "gt": "서울 금천구 두산로 70 (독산동) A동 2403호",
-        "ext": "서울시 금천구두산로70, A동24층2403호(현대지식신업센터",
+        "ext": "서울 금천구 두산로 70 (독산동) A동 24층 2403호",
         "gtNorm": "서울금천구두산로70독산동a동2403호",
-        "extNorm": "서울시금천구두산로70a동24층2403호현대지식신업센터",
+        "extNorm": "서울금천구두산로70독산동a동24층2403호",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -126,9 +126,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 전주지점",
         "ext": "백제약품(전주",
-        "gtNorm": "백제약품 (주) 전주지점",
-        "extNorm": "백제약품(전주",
-        "type": "text",
+        "gtNorm": "백제약품전주지점",
+        "extNorm": "백제약품전주",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -154,8 +154,8 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 5,
-      "mismatch": 5,
+      "match": 6,
+      "mismatch": 4,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 5,
+      "matched": 6,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.45454545454545453
+    "fieldAccuracy": 0.5454545454545454
   },
   "table": {
     "alignMode": "content",
@@ -374,28 +374,20 @@
         "reason": "gt value not found anywhere in extraction"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "퍼슨헬스케어",
-        "extNorm": "주식회사 퍼슨헬스케어",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.71)"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울금천구두산로70독산동a동2403호",
-        "extNorm": "서울시금천구두산로70a동24층2403호현대지식신업센터",
+        "extNorm": "서울금천구두산로70독산동a동24층2403호",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.69)"
+        "reason": "char-level diff (sim=0.93)"
       },
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 전주지점",
-        "extNorm": "백제약품(전주",
+        "gtNorm": "백제약품전주지점",
+        "extNorm": "백제약품전주",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.70)"
+        "reason": "char-level diff (sim=0.86)"
       },
       {
         "location": "field:buyerAddress",
@@ -455,7 +447,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 7,
+      "recognition": 6,
       "structure": 5,
       "layout": 0,
       "preprocessing": 0

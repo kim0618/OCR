@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "명인제약(전)",
-        "ext": "명인제약(주)",
-        "gtNorm": "명인제약(전)",
-        "extNorm": "명인제약(주)",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "명인제약(전)",
+        "gtNorm": "명인제약",
+        "extNorm": "명인제약",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "경기도 화성시 팔탄면 노하길 361-12",
-        "ext": "경기도 화성시만세구팔탄면 노하길361-12",
+        "ext": "경기도 화성시 팔탄면 노하길 361-12",
         "gtNorm": "경기도화성시팔탄면노하길36112",
-        "extNorm": "경기도화성시만세구팔탄면노하길36112",
+        "extNorm": "경기도화성시팔탄면노하길36112",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 광주지점",
         "ext": "",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "",
-        "type": "text",
+        "type": "company",
         "status": "ext_missing",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 9,
-      "mismatch": 2,
+      "match": 11,
+      "mismatch": 0,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 9,
+      "matched": 11,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.75
+    "fieldAccuracy": 0.9166666666666666
   },
   "table": {
     "alignMode": "content",
@@ -560,25 +560,9 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "명인제약(전)",
-        "extNorm": "명인제약(주)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.86)"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "경기도화성시팔탄면노하길36112",
-        "extNorm": "경기도화성시만세구팔탄면노하길36112",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
-      },
-      {
         "location": "field:buyerCompany",
         "status": "ext_missing",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
@@ -673,7 +657,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 12,
+      "recognition": 10,
       "structure": 2,
       "layout": 0,
       "preprocessing": 0

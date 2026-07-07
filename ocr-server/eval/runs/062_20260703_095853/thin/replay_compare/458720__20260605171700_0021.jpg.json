@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "동주팜",
-        "ext": "주)동주팜",
+        "ext": "동주팜",
         "gtNorm": "동주팜",
-        "extNorm": "주)동주팜",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "동주팜",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울 강남구 언주로 546, 4층 402호 (역삼동, 가영빌딩)",
-        "ext": "서울특별시 강남구 언주로 546, 4층 402호 역삼동",
+        "ext": "서울 강남구 언주로 546, 4층 402호 (역삼동, 가영빌딩)",
         "gtNorm": "서울강남구언주로5464층402호역삼동가영빌딩",
-        "extNorm": "서울특별시강남구언주로5464층402호역삼동",
+        "extNorm": "서울강남구언주로5464층402호역삼동가영빌딩",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)평택물류센터",
         "ext": "의약품",
-        "gtNorm": "백제약품(주)평택물류센터",
+        "gtNorm": "백제약품평택물류센터",
         "extNorm": "의약품",
-        "type": "text",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
-      "mismatch": 4,
+      "match": 10,
+      "mismatch": 2,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 10,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.8333333333333334
   },
   "table": {
     "alignMode": "content",
@@ -1084,25 +1084,9 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "동주팜",
-        "extNorm": "주)동주팜",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.75)"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "서울강남구언주로5464층402호역삼동가영빌딩",
-        "extNorm": "서울특별시강남구언주로5464층402호역삼동",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.85)"
-      },
-      {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)평택물류센터",
+        "gtNorm": "백제약품평택물류센터",
         "extNorm": "의약품",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
@@ -1653,7 +1637,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 30,
+      "recognition": 28,
       "structure": 38,
       "layout": 3,
       "preprocessing": 0

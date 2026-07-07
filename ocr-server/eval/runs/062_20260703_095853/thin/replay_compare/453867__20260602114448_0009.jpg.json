@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "제일헬스사이언스",
-        "ext": "제일헬스사이언스(주)",
+        "ext": "제일헬스사이언스",
         "gtNorm": "제일헬스사이언스",
-        "extNorm": "제일헬스사이언스(주)",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "제일헬스사이언스",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울 서초구 사평대로 343, 7층 (반포동)",
-        "ext": "서울특별시 서초구 사평대로 343, 7층(반포동",
+        "ext": "서울 서초구 사평대로 343, 7층 (반포동)",
         "gtNorm": "서울서초구사평대로3437층반포동",
-        "extNorm": "서울특별시서초구사평대로3437층반포동",
+        "extNorm": "서울서초구사평대로3437층반포동",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)평택물류센터",
         "ext": "백제약품(주)영등포지정",
-        "gtNorm": "백제약품(주)평택물류센터",
-        "extNorm": "백제약품(주)영등포지정",
-        "type": "text",
+        "gtNorm": "백제약품평택물류센터",
+        "extNorm": "백제약품영등포지정",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
-      "mismatch": 4,
+      "match": 10,
+      "mismatch": 2,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 10,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.8333333333333334
   },
   "table": {
     "alignMode": "content",
@@ -285,28 +285,12 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "제일헬스사이언스",
-        "extNorm": "제일헬스사이언스(주)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.84)"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "서울서초구사평대로3437층반포동",
-        "extNorm": "서울특별시서초구사평대로3437층반포동",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
-      },
-      {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)평택물류센터",
-        "extNorm": "백제약품(주)영등포지정",
+        "gtNorm": "백제약품평택물류센터",
+        "extNorm": "백제약품영등포지정",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.56)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -342,7 +326,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 4,
+      "recognition": 2,
       "structure": 3,
       "layout": 0,
       "preprocessing": 0

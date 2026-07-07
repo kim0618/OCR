@@ -74,9 +74,9 @@
       "supplierCompany": {
         "gt": "태극제약(전)",
         "ext": "",
-        "gtNorm": "태극제약(전)",
+        "gtNorm": "태극제약",
         "extNorm": "",
-        "type": "text",
+        "type": "company",
         "status": "ext_missing",
         "edited": false,
         "difficult": true,
@@ -126,9 +126,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 광주지점",
         "ext": "태극제약주식회사",
-        "gtNorm": "백제약품 (주) 광주지점",
-        "extNorm": "태극제약주식회사",
-        "type": "text",
+        "gtNorm": "백제약품광주지점",
+        "extNorm": "태극제약",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -593,10 +593,10 @@
       {
         "location": "field:supplierCompany",
         "status": "ext_missing",
-        "gtNorm": "태극제약(전)",
+        "gtNorm": "태극제약",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "reason": "gt value present at ['field:buyerCompany']"
       },
       {
         "location": "field:supplierAddress",
@@ -609,10 +609,10 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 광주지점",
-        "extNorm": "태극제약주식회사",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "gtNorm": "백제약품광주지점",
+        "extNorm": "태극제약",
+        "bucket": "structure",
+        "reason": "ext value is gt's ['field:supplierCompany']"
       },
       {
         "location": "field:buyerAddress",
@@ -768,8 +768,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 9,
-      "structure": 11,
+      "recognition": 8,
+      "structure": 12,
       "layout": 4,
       "preprocessing": 0
     },

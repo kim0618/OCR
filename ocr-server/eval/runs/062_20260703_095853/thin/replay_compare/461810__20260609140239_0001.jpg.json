@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "일동제약 (전문)",
-        "ext": "",
-        "gtNorm": "일동제약 (전문)",
-        "extNorm": "",
-        "type": "text",
-        "status": "ext_missing",
+        "ext": "일양약품 (전문)",
+        "gtNorm": "일동제약전문",
+        "extNorm": "일양약품전문",
+        "type": "company",
+        "status": "mismatch",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "경기도 안성시 공단1로 25 (신건지동)",
-        "ext": "경기도 안성시 공단1로",
+        "ext": "경기도 용인시 기흥구 하갈로 110 (하갈동)",
         "gtNorm": "경기도안성시공단1로25신건지동",
-        "extNorm": "경기도안성시공단1로",
+        "extNorm": "경기도용인시기흥구하갈로110하갈동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 제주지점",
         "ext": "일동제약(주)",
-        "gtNorm": "백제약품 (주) 제주지점",
-        "extNorm": "일동제약(주)",
-        "type": "text",
+        "gtNorm": "백제약품제주지점",
+        "extNorm": "일동제약",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 3,
-      "mismatch": 8,
-      "ext_missing": 1,
+      "mismatch": 9,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,7 +182,7 @@
       "gtPresent": 12,
       "matched": 3,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
     "fieldAccuracy": 0.25
   },
@@ -451,19 +451,19 @@
       },
       {
         "location": "field:supplierCompany",
-        "status": "ext_missing",
-        "gtNorm": "일동제약 (전문)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "status": "mismatch",
+        "gtNorm": "일동제약전문",
+        "extNorm": "일양약품전문",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기도안성시공단1로25신건지동",
-        "extNorm": "경기도안성시공단1로",
+        "extNorm": "경기도용인시기흥구하갈로110하갈동",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.77)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplyAmount",
@@ -476,10 +476,10 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 제주지점",
-        "extNorm": "일동제약(주)",
+        "gtNorm": "백제약품제주지점",
+        "extNorm": "일동제약",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -579,8 +579,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 11,
-      "structure": 9,
+      "recognition": 12,
+      "structure": 8,
       "layout": 0,
       "preprocessing": 0
     },
@@ -600,6 +600,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

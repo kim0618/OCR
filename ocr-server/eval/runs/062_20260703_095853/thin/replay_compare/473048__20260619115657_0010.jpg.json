@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "일동제약(전문)",
-        "ext": "일동제약(주)",
-        "gtNorm": "일동제약(전문)",
-        "extNorm": "일동제약(주)",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "일동제약(전문)",
+        "gtNorm": "일동제약전문",
+        "extNorm": "일동제약전문",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 서초구 바우뫼로27길 2 (양재동)",
-        "ext": "경기도 안성시 공단1로",
+        "ext": "서울특별시 서초구 바우뫼로27길 2 (양재동)",
         "gtNorm": "서울특별시서초구바우뫼로27길2양재동",
-        "extNorm": "경기도안성시공단1로",
+        "extNorm": "서울특별시서초구바우뫼로27길2양재동",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영등포지점",
         "ext": "백제약품(주)영등포",
-        "gtNorm": "백제약품 (주) 영등포지점",
-        "extNorm": "백제약품(주)영등포",
-        "type": "text",
+        "gtNorm": "백제약품영등포지점",
+        "extNorm": "백제약품영등포",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 3,
-      "mismatch": 7,
+      "match": 5,
+      "mismatch": 5,
       "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 3,
+      "matched": 5,
       "extNotAttempted": 0,
       "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.25
+    "fieldAccuracy": 0.4166666666666667
   },
   "table": {
     "alignMode": "content",
@@ -1114,22 +1114,6 @@
         "reason": "char-level diff (sim=0.59)"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "일동제약(전문)",
-        "extNorm": "일동제약(주)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.80)"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "서울특별시서초구바우뫼로27길2양재동",
-        "extNorm": "경기도안성시공단1로",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplyAmount",
         "status": "ext_missing",
         "gtNorm": "9654700",
@@ -1140,10 +1124,10 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영등포지점",
-        "extNorm": "백제약품(주)영등포",
+        "gtNorm": "백제약품영등포지점",
+        "extNorm": "백제약품영등포",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.83)"
+        "reason": "char-level diff (sim=0.88)"
       },
       {
         "location": "field:buyerAddress",
@@ -1531,7 +1515,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 30,
+      "recognition": 28,
       "structure": 21,
       "layout": 5,
       "preprocessing": 0

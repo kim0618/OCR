@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "녹십자웰빙",
-        "ext": "주)녹십자웰빙",
+        "ext": "녹십자웰빙",
         "gtNorm": "녹십자웰빙",
-        "extNorm": "주)녹십자웰빙",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "녹십자웰빙",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울 영등포구 여의대로 108 (여의도동) 33층(여의도동, 파크원타워2)",
-        "ext": "서울특별시 성동구 왕십리로(행당동, 서울더싶) 2414중",
+        "ext": "서울 영등포구 여의대로 108 (여의도동) 33층(여의도동, 파크원타워2)",
         "gtNorm": "서울영등포구여의대로108여의도동33층여의도동파크원타워2",
-        "extNorm": "서울특별시성동구왕십리로행당동서울더싶2414중",
+        "extNorm": "서울영등포구여의대로108여의도동33층여의도동파크원타워2",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)동부물류센터",
         "ext": "백제약품영등포지점",
-        "gtNorm": "백제약품(주)동부물류센터",
+        "gtNorm": "백제약품동부물류센터",
         "extNorm": "백제약품영등포지점",
-        "type": "text",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 7,
-      "mismatch": 4,
+      "match": 9,
+      "mismatch": 2,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 7,
+      "matched": 9,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.5833333333333334
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -289,22 +289,6 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "녹십자웰빙",
-        "extNorm": "주)녹십자웰빙",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.83)"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "서울영등포구여의대로108여의도동33층여의도동파크원타워2",
-        "extNorm": "서울특별시성동구왕십리로행당동서울더싶2414중",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplyAmount",
         "status": "ext_missing",
         "gtNorm": "1264680",
@@ -315,7 +299,7 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)동부물류센터",
+        "gtNorm": "백제약품동부물류센터",
         "extNorm": "백제약품영등포지점",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
@@ -354,7 +338,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
+      "recognition": 3,
       "structure": 3,
       "layout": 0,
       "preprocessing": 0

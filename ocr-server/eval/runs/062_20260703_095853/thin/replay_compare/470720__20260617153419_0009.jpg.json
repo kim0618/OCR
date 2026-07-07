@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "디알파마",
-        "ext": "주)디알파마",
+        "ext": "디알파마",
         "gtNorm": "디알파마",
-        "extNorm": "주)디알파마",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "디알파마",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "경기 시흥시 월곶고잔3길 58 (월곶동) 2층",
-        "ext": "경기도 시흥시 월곳고잔3길",
+        "ext": "경기 시흥시 월곶고잔3길 58 (월곶동) 2층",
         "gtNorm": "경기시흥시월곶고잔3길58월곶동2층",
-        "extNorm": "경기도시흥시월곳고잔3길",
+        "extNorm": "경기시흥시월곶고잔3길58월곶동2층",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)평택물류센터",
         "ext": "백제약품(주)영등포지점",
-        "gtNorm": "백제약품(주)평택물류센터",
-        "extNorm": "백제약품(주)영등포지점",
-        "type": "text",
+        "gtNorm": "백제약품평택물류센터",
+        "extNorm": "백제약품영등포지점",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 4,
-      "mismatch": 8,
+      "match": 6,
+      "mismatch": 6,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 4,
+      "matched": 6,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.3333333333333333
+    "fieldAccuracy": 0.5
   },
   "table": {
     "alignMode": "content",
@@ -1018,28 +1018,12 @@
         "reason": "gt value present at ['field:discountAmount']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "디알파마",
-        "extNorm": "주)디알파마",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.80)"
-      },
-      {
         "location": "field:taxType",
         "status": "mismatch",
         "gtNorm": "면세",
         "extNorm": "과세",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.50)"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "경기시흥시월곶고잔3길58월곶동2층",
-        "extNorm": "경기도시흥시월곳고잔3길",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "field:supplyAmount",
@@ -1052,10 +1036,10 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)평택물류센터",
-        "extNorm": "백제약품(주)영등포지점",
+        "gtNorm": "백제약품평택물류센터",
+        "extNorm": "백제약품영등포지점",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.56)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -1451,7 +1435,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 30,
+      "recognition": 28,
       "structure": 22,
       "layout": 4,
       "preprocessing": 0

@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "대원제약",
-        "ext": "대원제약주식회사",
+        "ext": "대원제약",
         "gtNorm": "대원제약",
-        "extNorm": "대원제약주식회사",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "대원제약",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "경기도 화성시 향남읍 제약공단1길 24",
-        "ext": "경기도 화성시 향남읍 제약공단1 경기도파주시광탄면 장지산로127(용미리)1~2층",
+        "ext": "경기도 화성시 향남읍 제약공단1길 24",
         "gtNorm": "경기도화성시향남읍제약공단1길24",
-        "extNorm": "경기도화성시향남읍제약공단1경기도파주시광탄면장지산로127용미리12층",
+        "extNorm": "경기도화성시향남읍제약공단1길24",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)북부물류센터",
         "ext": "백제약품(주)영등포지정",
-        "gtNorm": "백제약품(주)북부물류센터",
-        "extNorm": "백제약품(주)영등포지정",
-        "type": "text",
+        "gtNorm": "백제약품북부물류센터",
+        "extNorm": "백제약품영등포지정",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 7,
-      "mismatch": 4,
+      "match": 9,
+      "mismatch": 2,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 7,
+      "matched": 9,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.5833333333333334
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -303,28 +303,12 @@
         "reason": "gt value not found anywhere in extraction"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "대원제약",
-        "extNorm": "대원제약주식회사",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "경기도화성시향남읍제약공단1길24",
-        "extNorm": "경기도화성시향남읍제약공단1경기도파주시광탄면장지산로127용미리12층",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.57)"
-      },
-      {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)북부물류센터",
-        "extNorm": "백제약품(주)영등포지정",
+        "gtNorm": "백제약품북부물류센터",
+        "extNorm": "백제약품영등포지정",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.56)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -400,7 +384,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 9,
+      "recognition": 7,
       "structure": 4,
       "layout": 0,
       "preprocessing": 0

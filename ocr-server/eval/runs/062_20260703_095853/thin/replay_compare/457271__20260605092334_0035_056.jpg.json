@@ -73,10 +73,10 @@
       },
       "supplierCompany": {
         "gt": "광동제약 (전문)",
-        "ext": "용)",
-        "gtNorm": "광동제약 (전문)",
-        "extNorm": "용)",
-        "type": "text",
+        "ext": "일양약품 (전문)",
+        "gtNorm": "광동제약전문",
+        "extNorm": "일양약품전문",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": true,
@@ -99,11 +99,11 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 강남구 테헤란로 501, 경암B 5층 (삼성동)",
-        "ext": "",
+        "ext": "경기도 용인시 기흥구 하갈로 110 (하갈동)",
         "gtNorm": "서울특별시강남구테헤란로501경암b5층삼성동",
-        "extNorm": "",
+        "extNorm": "경기도용인시기흥구하갈로110하갈동",
         "type": "address",
-        "status": "ext_missing",
+        "status": "mismatch",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -126,9 +126,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 제주지점",
         "ext": "",
-        "gtNorm": "백제약품 (주) 제주지점",
+        "gtNorm": "백제약품제주지점",
         "extNorm": "",
-        "type": "text",
+        "type": "company",
         "status": "ext_missing",
         "edited": false,
         "difficult": false,
@@ -155,8 +155,8 @@
     "counts": {
       "scored": 11,
       "match": 3,
-      "mismatch": 3,
-      "ext_missing": 5,
+      "mismatch": 4,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -169,7 +169,7 @@
       "gtPresent": 11,
       "matched": 3,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 5
+      "extAttemptedMiss": 4
     },
     "fieldAccuracy": 0.2727272727272727
   },
@@ -294,10 +294,10 @@
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
-        "gtNorm": "광동제약 (전문)",
-        "extNorm": "용)",
+        "gtNorm": "광동제약전문",
+        "extNorm": "일양약품전문",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "field:taxType",
@@ -309,11 +309,11 @@
       },
       {
         "location": "field:supplierAddress",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "서울특별시강남구테헤란로501경암b5층삼성동",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "extNorm": "경기도용인시기흥구하갈로110하갈동",
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplyAmount",
@@ -326,7 +326,7 @@
       {
         "location": "field:buyerCompany",
         "status": "ext_missing",
-        "gtNorm": "백제약품 (주) 제주지점",
+        "gtNorm": "백제약품제주지점",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
@@ -373,8 +373,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 4,
-      "structure": 8,
+      "recognition": 5,
+      "structure": 7,
       "layout": 0,
       "preprocessing": 0
     },
@@ -394,6 +394,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.455
+    "fieldMissRate": 0.364
   }
 }

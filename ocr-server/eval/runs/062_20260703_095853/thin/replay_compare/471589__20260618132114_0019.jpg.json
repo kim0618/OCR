@@ -86,10 +86,10 @@
       },
       "supplierCompany": {
         "gt": "영진약품(주)(전문)",
-        "ext": "용)",
-        "gtNorm": "영진약품(주)(전문)",
-        "extNorm": "용)",
-        "type": "text",
+        "ext": "영진약품(일반)",
+        "gtNorm": "영진약품전문",
+        "extNorm": "영진약품일반",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "경기도 화성시 남양읍 무하로 66",
-        "ext": "경기도 화성시 만세구남양읍 무하로66",
+        "ext": "서울특별시 강동구 양재대로 1534 (길동)",
         "gtNorm": "경기도화성시남양읍무하로66",
-        "extNorm": "경기도화성시만세구남양읍무하로66",
+        "extNorm": "서울특별시강동구양재대로1534길동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 전주지점",
         "ext": "백제약품(주)전주지점",
-        "gtNorm": "백제약품 (주) 전주지점",
-        "extNorm": "백제약품(주)전주지점",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품전주지점",
+        "extNorm": "백제약품전주지점",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 6,
-      "mismatch": 5,
+      "match": 7,
+      "mismatch": 4,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 6,
+      "matched": 7,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.5
+    "fieldAccuracy": 0.5833333333333334
   },
   "table": {
     "alignMode": "content",
@@ -864,26 +864,18 @@
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
-        "gtNorm": "영진약품(주)(전문)",
-        "extNorm": "용)",
+        "gtNorm": "영진약품전문",
+        "extNorm": "영진약품일반",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기도화성시남양읍무하로66",
-        "extNorm": "경기도화성시만세구남양읍무하로66",
+        "extNorm": "서울특별시강동구양재대로1534길동",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.90)"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 전주지점",
-        "extNorm": "백제약품(주)전주지점",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -1239,7 +1231,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 16,
+      "recognition": 15,
       "structure": 33,
       "layout": 0,
       "preprocessing": 0

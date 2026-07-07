@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "지에스팜(장안동)",
-        "ext": "주)지에스팜",
-        "gtNorm": "지에스팜(장안동)",
-        "extNorm": "주)지에스팜",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "지에스팜(장안동)",
+        "gtNorm": "지에스팜장안동",
+        "extNorm": "지에스팜장안동",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울 동대문구 장한로17길 13-2 (장안동) 6층 604호",
-        "ext": "서울시 동대문구 장한로17길 13-2,604호(장인",
+        "ext": "서울 동대문구 장한로17길 13-2 (장안동) 6층 604호",
         "gtNorm": "서울동대문구장한로17길132장안동6층604호",
-        "extNorm": "서울시동대문구장한로17길132604호장인",
+        "extNorm": "서울동대문구장한로17길132장안동6층604호",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영등포지점",
         "ext": "백제약품(주)영등포지점",
-        "gtNorm": "백제약품 (주) 영등포지점",
-        "extNorm": "백제약품(주)영등포지점",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품영등포지점",
+        "extNorm": "백제약품영등포지점",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 5,
-      "mismatch": 5,
+      "match": 8,
+      "mismatch": 2,
       "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 5,
+      "matched": 8,
       "extNotAttempted": 0,
       "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.4166666666666667
+    "fieldAccuracy": 0.6666666666666666
   },
   "table": {
     "alignMode": "content",
@@ -1088,36 +1088,12 @@
         "reason": "gt value not found anywhere in extraction"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "지에스팜(장안동)",
-        "extNorm": "주)지에스팜",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.53)"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "서울동대문구장한로17길132장안동6층604호",
-        "extNorm": "서울시동대문구장한로17길132604호장인",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.83)"
-      },
-      {
         "location": "field:supplyAmount",
         "status": "ext_missing",
         "gtNorm": "12224829",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영등포지점",
-        "extNorm": "백제약품(주)영등포지점",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -1601,7 +1577,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 25,
+      "recognition": 22,
       "structure": 38,
       "layout": 3,
       "preprocessing": 0

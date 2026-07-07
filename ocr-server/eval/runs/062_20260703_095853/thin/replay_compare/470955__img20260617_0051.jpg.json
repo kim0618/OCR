@@ -86,10 +86,10 @@
       },
       "supplierCompany": {
         "gt": "오츠카제약(병-충)",
-        "ext": "한국오츠카제약(주)",
-        "gtNorm": "오츠카제약(병-충)",
-        "extNorm": "한국오츠카제약(주)",
-        "type": "text",
+        "ext": "한국오츠카제약(전문)",
+        "gtNorm": "오츠카제약병충",
+        "extNorm": "한국오츠카제약전문",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 강남구 역삼로 226 (역삼동)",
-        "ext": "서울특별시강남구역삼로226 역삼동",
+        "ext": "서울특별시 강남구 강남대로 362 (역삼동)",
         "gtNorm": "서울특별시강남구역삼로226역삼동",
-        "extNorm": "서울특별시강남구역삼로226역삼동",
+        "extNorm": "서울특별시강남구강남대로362역삼동",
         "type": "address",
-        "status": "match",
+        "status": "mismatch",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 대전지점",
         "ext": "의약품",
-        "gtNorm": "백제약품 (주) 대전지점",
+        "gtNorm": "백제약품대전지점",
         "extNorm": "의약품",
-        "type": "text",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 9,
-      "mismatch": 3,
+      "match": 8,
+      "mismatch": 4,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 9,
+      "matched": 8,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.75
+    "fieldAccuracy": 0.6666666666666666
   },
   "table": {
     "alignMode": "content",
@@ -607,15 +607,23 @@
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
-        "gtNorm": "오츠카제약(병-충)",
-        "extNorm": "한국오츠카제약(주)",
+        "gtNorm": "오츠카제약병충",
+        "extNorm": "한국오츠카제약전문",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.70)"
+        "reason": "char-level diff (sim=0.62)"
+      },
+      {
+        "location": "field:supplierAddress",
+        "status": "mismatch",
+        "gtNorm": "서울특별시강남구역삼로226역삼동",
+        "extNorm": "서울특별시강남구강남대로362역삼동",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.74)"
       },
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 대전지점",
+        "gtNorm": "백제약품대전지점",
         "extNorm": "의약품",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
@@ -790,7 +798,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 13,
+      "recognition": 14,
       "structure": 6,
       "layout": 4,
       "preprocessing": 0

@@ -73,11 +73,11 @@
       },
       "supplierCompany": {
         "gt": "한국메딕스",
-        "ext": "주)한국메릭스",
+        "ext": "한국메딕스",
         "gtNorm": "한국메딕스",
-        "extNorm": "주)한국메릭스",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "한국메딕스",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -99,9 +99,9 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 영등포구 선유로 9 2층 (문래동5가 유니온빌딩)",
-        "ext": "305(구로통",
+        "ext": "서울 영등포구 선유로 9, 2층(문래동5가,유니온빌딩)",
         "gtNorm": "서울특별시영등포구선유로92층문래동5가유니온빌딩",
-        "extNorm": "305구로통",
+        "extNorm": "서울영등포구선유로92층문래동5가유니온빌딩",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -126,9 +126,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 대전지점",
         "ext": "의약품",
-        "gtNorm": "백제약품 (주) 대전지점",
+        "gtNorm": "백제약품대전지점",
         "extNorm": "의약품",
-        "type": "text",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -154,8 +154,8 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 7,
-      "mismatch": 4,
+      "match": 8,
+      "mismatch": 3,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 7,
+      "matched": 8,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6363636363636364
+    "fieldAccuracy": 0.7272727272727273
   },
   "table": {
     "alignMode": "content",
@@ -287,25 +287,17 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "한국메딕스",
-        "extNorm": "주)한국메릭스",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울특별시영등포구선유로92층문래동5가유니온빌딩",
-        "extNorm": "305구로통",
+        "extNorm": "서울영등포구선유로92층문래동5가유니온빌딩",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.94)"
       },
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 대전지점",
+        "gtNorm": "백제약품대전지점",
         "extNorm": "의약품",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
@@ -416,7 +408,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 4,
+      "recognition": 3,
       "structure": 12,
       "layout": 0,
       "preprocessing": 0

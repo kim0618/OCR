@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "삼진제약(전)",
-        "ext": "(법인명)",
-        "gtNorm": "삼진제약(전)",
-        "extNorm": "(법인명)",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "삼진제약(전)",
+        "gtNorm": "삼진제약",
+        "extNorm": "삼진제약",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울 마포구 와우산로 121 (서교동)",
-        "ext": "서울특별시 마포구 와우산로 121(서교동",
+        "ext": "서울 마포구 와우산로 121 (서교동)",
         "gtNorm": "서울마포구와우산로121서교동",
-        "extNorm": "서울특별시마포구와우산로121서교동",
+        "extNorm": "서울마포구와우산로121서교동",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 광주지점",
         "ext": "삼진제약주식회사",
-        "gtNorm": "백제약품 (주) 광주지점",
-        "extNorm": "삼진제약주식회사",
-        "type": "text",
+        "gtNorm": "백제약품광주지점",
+        "extNorm": "삼진제약",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 5,
-      "mismatch": 6,
+      "match": 7,
+      "mismatch": 4,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 5,
+      "matched": 7,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.4166666666666667
+    "fieldAccuracy": 0.5833333333333334
   },
   "table": {
     "alignMode": "content",
@@ -305,22 +305,6 @@
         "reason": "gt value present at ['field:supplierBizNumber']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "삼진제약(전)",
-        "extNorm": "(법인명)",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "서울마포구와우산로121서교동",
-        "extNorm": "서울특별시마포구와우산로121서교동",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.91)"
-      },
-      {
         "location": "field:supplyAmount",
         "status": "ext_missing",
         "gtNorm": "1390527",
@@ -331,10 +315,10 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 광주지점",
-        "extNorm": "삼진제약주식회사",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "gtNorm": "백제약품광주지점",
+        "extNorm": "삼진제약",
+        "bucket": "structure",
+        "reason": "ext value is gt's ['field:supplierCompany']"
       },
       {
         "location": "field:buyerAddress",
@@ -378,8 +362,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 6,
+      "recognition": 2,
+      "structure": 7,
       "layout": 0,
       "preprocessing": 0
     },

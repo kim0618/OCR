@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "폴라리스피에이씨",
-        "ext": "종목의약품",
+        "ext": "폴라리스피에이씨",
         "gtNorm": "폴라리스피에이씨",
-        "extNorm": "종목의약품",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "폴라리스피에이씨",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울 서초구 바우뫼로43길 46 (양재동) 401호",
-        "ext": "폴라리스피에이씨",
+        "ext": "서울 서초구 바우뫼로43길 46 (양재동) 401호",
         "gtNorm": "서울서초구바우뫼로43길46양재동401호",
-        "extNorm": "폴라리스피에이씨",
+        "extNorm": "서울서초구바우뫼로43길46양재동401호",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)평택물류센터",
         "ext": "백제약품(주)영등포지첨",
-        "gtNorm": "백제약품(주)평택물류센터",
-        "extNorm": "백제약품(주)영등포지첨",
-        "type": "text",
+        "gtNorm": "백제약품평택물류센터",
+        "extNorm": "백제약품영등포지첨",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
-      "mismatch": 4,
+      "match": 10,
+      "mismatch": 2,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 10,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.8333333333333334
   },
   "table": {
     "alignMode": "content",
@@ -563,28 +563,12 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "폴라리스피에이씨",
-        "extNorm": "종목의약품",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:supplierAddress']"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "서울서초구바우뫼로43길46양재동401호",
-        "extNorm": "폴라리스피에이씨",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['field:supplierCompany']"
-      },
-      {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)평택물류센터",
-        "extNorm": "백제약품(주)영등포지첨",
+        "gtNorm": "백제약품평택물류센터",
+        "extNorm": "백제약품영등포지첨",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.56)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -813,7 +797,7 @@
     ],
     "bucketTally": {
       "recognition": 25,
-      "structure": 3,
+      "structure": 1,
       "layout": 3,
       "preprocessing": 0
     },

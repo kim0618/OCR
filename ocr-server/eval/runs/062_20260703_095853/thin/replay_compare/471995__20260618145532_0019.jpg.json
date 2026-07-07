@@ -86,10 +86,10 @@
       },
       "supplierCompany": {
         "gt": "삼일제약(전)",
-        "ext": "용)",
-        "gtNorm": "삼일제약(전)",
-        "extNorm": "용)",
-        "type": "text",
+        "ext": "백제약품(주)영남본부",
+        "gtNorm": "삼일제약",
+        "extNorm": "백제약품영남본부",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "경기도 안산시 단원구 산단로 216 (원시동)",
-        "ext": "경기도 안산시 단원구 산단로 216(원시동",
+        "ext": "경남 김해시 진례면 김해테크노벨리로 33-12 백제약품(주)영남본부",
         "gtNorm": "경기도안산시단원구산단로216원시동",
-        "extNorm": "경기도안산시단원구산단로216원시동",
+        "extNorm": "경남김해시진례면김해테크노벨리로3312백제약품주영남본부",
         "type": "address",
-        "status": "match",
+        "status": "mismatch",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영남본부",
         "ext": "백제약품(주)영남본",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본",
-        "type": "text",
+        "gtNorm": "백제약품영남본부",
+        "extNorm": "백제약품영남본",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 5,
-      "mismatch": 5,
+      "match": 4,
+      "mismatch": 6,
       "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 5,
+      "matched": 4,
       "extNotAttempted": 0,
       "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.4166666666666667
+    "fieldAccuracy": 0.3333333333333333
   },
   "table": {
     "alignMode": "content",
@@ -791,8 +791,16 @@
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
-        "gtNorm": "삼일제약(전)",
-        "extNorm": "용)",
+        "gtNorm": "삼일제약",
+        "extNorm": "백제약품영남본부",
+        "bucket": "structure",
+        "reason": "ext value is gt's ['field:buyerCompany']"
+      },
+      {
+        "location": "field:supplierAddress",
+        "status": "mismatch",
+        "gtNorm": "경기도안산시단원구산단로216원시동",
+        "extNorm": "경남김해시진례면김해테크노벨리로3312백제약품주영남본부",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -807,10 +815,10 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.87)"
+        "gtNorm": "백제약품영남본부",
+        "extNorm": "백제약품영남본",
+        "bucket": "structure",
+        "reason": "gt value present at ['field:supplierCompany']"
       },
       {
         "location": "field:buyerAddress",
@@ -926,8 +934,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 15,
-      "structure": 5,
+      "recognition": 14,
+      "structure": 7,
       "layout": 0,
       "preprocessing": 0
     },

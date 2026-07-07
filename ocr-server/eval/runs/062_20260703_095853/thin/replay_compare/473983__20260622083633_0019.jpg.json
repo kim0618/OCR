@@ -86,10 +86,10 @@
       },
       "supplierCompany": {
         "gt": "라이징팜/(파비스제약)",
-        "ext": "주)라이징팜",
-        "gtNorm": "라이징팜/(파비스제약)",
-        "extNorm": "주)라이징팜",
-        "type": "text",
+        "ext": "라이징팜",
+        "gtNorm": "라이징팜파비스제약",
+        "extNorm": "라이징팜",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 강남구 논현로28길 41 2층 라이징팜 (도곡동)",
-        "ext": "서울특별사강남구 논현로28길41, 잠(도곡동",
+        "ext": "서울 강남구 논현로28길 41(도곡동)",
         "gtNorm": "서울특별시강남구논현로28길412층라이징팜도곡동",
-        "extNorm": "서울특별사강남구논현로28길41잠도곡동",
+        "extNorm": "서울강남구논현로28길41도곡동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 원주지점",
         "ext": "백제약품(주)원주지점",
-        "gtNorm": "백제약품 (주) 원주지점",
-        "extNorm": "백제약품(주)원주지점",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품원주지점",
+        "extNorm": "백제약품원주지점",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
-      "mismatch": 4,
+      "match": 9,
+      "mismatch": 3,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 9,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -1058,26 +1058,18 @@
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
-        "gtNorm": "라이징팜/(파비스제약)",
-        "extNorm": "주)라이징팜",
+        "gtNorm": "라이징팜파비스제약",
+        "extNorm": "라이징팜",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.62)"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울특별시강남구논현로28길412층라이징팜도곡동",
-        "extNorm": "서울특별사강남구논현로28길41잠도곡동",
+        "extNorm": "서울강남구논현로28길41도곡동",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.80)"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 원주지점",
-        "extNorm": "백제약품(주)원주지점",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
+        "reason": "char-level diff (sim=0.78)"
       },
       {
         "location": "field:buyerAddress",
@@ -1433,7 +1425,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 28,
+      "recognition": 27,
       "structure": 13,
       "layout": 6,
       "preprocessing": 0

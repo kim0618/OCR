@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "삼남제약(전)",
-        "ext": "보관용)",
-        "gtNorm": "삼남제약(전)",
-        "extNorm": "보관용)",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "삼남제약(주)",
+        "gtNorm": "삼남제약",
+        "extNorm": "삼남제약",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "충남 금산군 금산읍 상1리 99-1",
-        "ext": "충청남도 금산군 금산읍 인삼로",
+        "ext": "00050",
         "gtNorm": "충남금산군금산읍상1리991",
-        "extNorm": "충청남도금산군금산읍인삼로",
+        "extNorm": "00050",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 광주지점",
         "ext": "의약품",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "의약품",
-        "type": "text",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 7,
-      "mismatch": 4,
+      "match": 8,
+      "mismatch": 3,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 7,
+      "matched": 8,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.5833333333333334
+    "fieldAccuracy": 0.6666666666666666
   },
   "table": {
     "alignMode": "content",
@@ -392,20 +392,12 @@
         "reason": "gt value present at ['field:discountAmount']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "삼남제약(전)",
-        "extNorm": "보관용)",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "충남금산군금산읍상1리991",
-        "extNorm": "충청남도금산군금산읍인삼로",
+        "extNorm": "00050",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.59)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplyAmount",
@@ -418,7 +410,7 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "의약품",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
@@ -513,7 +505,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 9,
+      "recognition": 8,
       "structure": 5,
       "layout": 2,
       "preprocessing": 0

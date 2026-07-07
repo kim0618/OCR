@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "건일바이오팜",
-        "ext": "건일바이오팜(주)",
+        "ext": "건일바이오팜",
         "gtNorm": "건일바이오팜",
-        "extNorm": "건일바이오팜(주)",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "건일바이오팜",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "충남 천안시 서북구 직산읍 거리막길 33",
-        "ext": "",
+        "ext": "충남 천안시 서북구 직산읍 거리막길 33",
         "gtNorm": "충남천안시서북구직산읍거리막길33",
-        "extNorm": "",
+        "extNorm": "충남천안시서북구직산읍거리막길33",
         "type": "address",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)동부물류센터",
         "ext": "주)휴온스",
-        "gtNorm": "백제약품(주)동부물류센터",
-        "extNorm": "주)휴온스",
-        "type": "text",
+        "gtNorm": "백제약품동부물류센터",
+        "extNorm": "주휴온스",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 6,
-      "mismatch": 4,
-      "ext_missing": 2,
+      "match": 8,
+      "mismatch": 3,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 6,
+      "matched": 8,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.5
+    "fieldAccuracy": 0.6666666666666666
   },
   "table": {
     "alignMode": "content",
@@ -489,26 +489,10 @@
         "reason": "char-level diff (sim=0.83)"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "건일바이오팜",
-        "extNorm": "건일바이오팜(주)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.80)"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "ext_missing",
-        "gtNorm": "충남천안시서북구직산읍거리막길33",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
-      },
-      {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)동부물류센터",
-        "extNorm": "주)휴온스",
+        "gtNorm": "백제약품동부물류센터",
+        "extNorm": "주휴온스",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -618,8 +602,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 12,
-      "structure": 6,
+      "recognition": 11,
+      "structure": 5,
       "layout": 0,
       "preprocessing": 0
     },
@@ -639,6 +623,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.167
+    "fieldMissRate": 0.083
   }
 }

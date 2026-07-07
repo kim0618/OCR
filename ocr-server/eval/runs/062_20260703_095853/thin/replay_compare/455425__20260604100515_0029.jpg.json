@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "동국제약(전)",
-        "ext": "동국제약(주)",
-        "gtNorm": "동국제약(전)",
-        "extNorm": "동국제약(주)",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "동국제약(전)",
+        "gtNorm": "동국제약",
+        "extNorm": "동국제약",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울 강남구 영동대로 715 (청담동)",
-        "ext": "충북 진천군 광혜원면 용소2길33-19",
+        "ext": "서울 강남구 영동대로 715 (청담동)",
         "gtNorm": "서울강남구영동대로715청담동",
-        "extNorm": "충북진천군광혜원면용소2길3319",
+        "extNorm": "서울강남구영동대로715청담동",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영남본부",
         "ext": "백제약품(주)영남본부",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품영남본부",
+        "extNorm": "백제약품영남본부",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 4,
-      "mismatch": 8,
+      "match": 7,
+      "mismatch": 5,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 4,
+      "matched": 7,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.3333333333333333
+    "fieldAccuracy": 0.5833333333333334
   },
   "table": {
     "alignMode": "content",
@@ -647,14 +647,6 @@
         "reason": "gt value present at ['field:discountAmount']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "동국제약(전)",
-        "extNorm": "동국제약(주)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.86)"
-      },
-      {
         "location": "field:taxType",
         "status": "mismatch",
         "gtNorm": "면세",
@@ -663,28 +655,12 @@
         "reason": "char-level diff (sim=0.50)"
       },
       {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "서울강남구영동대로715청담동",
-        "extNorm": "충북진천군광혜원면용소2길3319",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplyAmount",
         "status": "mismatch",
         "gtNorm": "0",
         "extNorm": "546480",
         "bucket": "structure",
         "reason": "gt value present at ['field:discountAmount']"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -848,7 +824,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
+      "recognition": 2,
       "structure": 22,
       "layout": 0,
       "preprocessing": 0

@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "종근당(MSD)",
-        "ext": "",
-        "gtNorm": "종근당(msd)",
-        "extNorm": "",
-        "type": "text",
-        "status": "ext_missing",
+        "ext": "종근당(전)",
+        "gtNorm": "종근당msd",
+        "extNorm": "종근당",
+        "type": "company",
+        "status": "mismatch",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -126,9 +126,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 원주지점",
         "ext": "백제약품(주)원주지정",
-        "gtNorm": "백제약품 (주) 원주지점",
-        "extNorm": "백제약품(주)원주지정",
-        "type": "text",
+        "gtNorm": "백제약품원주지점",
+        "extNorm": "백제약품원주지정",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -155,8 +155,8 @@
     "counts": {
       "scored": 11,
       "match": 5,
-      "mismatch": 5,
-      "ext_missing": 1,
+      "mismatch": 6,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -169,7 +169,7 @@
       "gtPresent": 11,
       "matched": 5,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
     "fieldAccuracy": 0.45454545454545453
   },
@@ -298,11 +298,11 @@
       },
       {
         "location": "field:supplierCompany",
-        "status": "ext_missing",
-        "gtNorm": "종근당(msd)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "status": "mismatch",
+        "gtNorm": "종근당msd",
+        "extNorm": "종근당",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "field:supplyAmount",
@@ -315,10 +315,10 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 원주지점",
-        "extNorm": "백제약품(주)원주지정",
+        "gtNorm": "백제약품원주지점",
+        "extNorm": "백제약품원주지정",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.83)"
+        "reason": "char-level diff (sim=0.88)"
       },
       {
         "location": "field:buyerAddress",
@@ -418,8 +418,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 4,
-      "structure": 13,
+      "recognition": 5,
+      "structure": 12,
       "layout": 0,
       "preprocessing": 0
     },
@@ -439,6 +439,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.091
+    "fieldMissRate": 0.0
   }
 }

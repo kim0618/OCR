@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "대한약품(일)",
-        "ext": "대회약품공업주식회시",
-        "gtNorm": "대한약품(일)",
-        "extNorm": "대회약품공업주식회시",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "대한약품(일)",
+        "gtNorm": "대한약품일",
+        "extNorm": "대한약품일",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 영등포구 선유로45길 3 (양평동4가)",
-        "ext": "생리식염-신형백",
+        "ext": "서울특별시 영등포구 선유로45길 3 (양평동4가)",
         "gtNorm": "서울특별시영등포구선유로45길3양평동4가",
-        "extNorm": "생리식염신형백",
+        "extNorm": "서울특별시영등포구선유로45길3양평동4가",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영남본부",
         "ext": "백제약품(주)영남본부",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품영남본부",
+        "extNorm": "백제약품영남본부",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 5,
-      "mismatch": 5,
+      "match": 8,
+      "mismatch": 2,
       "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 5,
+      "matched": 8,
       "extNotAttempted": 0,
       "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.4166666666666667
+    "fieldAccuracy": 0.6666666666666666
   },
   "table": {
     "alignMode": "content",
@@ -305,36 +305,12 @@
         "reason": "gt value not found anywhere in extraction"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "대한약품(일)",
-        "extNorm": "대회약품공업주식회시",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "서울특별시영등포구선유로45길3양평동4가",
-        "extNorm": "생리식염신형백",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['row1:itemName']"
-      },
-      {
         "location": "field:supplyAmount",
         "status": "ext_missing",
         "gtNorm": "26381",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -402,8 +378,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 7,
+      "recognition": 3,
+      "structure": 6,
       "layout": 2,
       "preprocessing": 0
     },

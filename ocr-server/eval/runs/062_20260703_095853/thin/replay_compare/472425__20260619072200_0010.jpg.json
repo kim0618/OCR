@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "종근당(MSD)",
-        "ext": "",
-        "gtNorm": "종근당(msd)",
-        "extNorm": "",
-        "type": "text",
-        "status": "ext_missing",
+        "ext": "종근당(전)",
+        "gtNorm": "종근당msd",
+        "extNorm": "종근당",
+        "type": "company",
+        "status": "mismatch",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울 서대문구 충정로3가 종근당빌딩 (충정로 8)",
-        "ext": "핀번호08296 서울특별시 구로구 공원로8길 24",
+        "ext": "서울 서대문구 충정로 8",
         "gtNorm": "서울서대문구충정로3가종근당빌딩충정로8",
-        "extNorm": "핀번호08296서울특별시구로구공원로8길24",
+        "extNorm": "서울서대문구충정로8",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)평택물류센터",
         "ext": "백제약품(주)영등포지점",
-        "gtNorm": "백제약품(주)평택물류센터",
-        "extNorm": "백제약품(주)영등포지점",
-        "type": "text",
+        "gtNorm": "백제약품평택물류센터",
+        "extNorm": "백제약품영등포지점",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 5,
-      "mismatch": 6,
-      "ext_missing": 1,
+      "mismatch": 7,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,7 +182,7 @@
       "gtPresent": 12,
       "matched": 5,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
     "fieldAccuracy": 0.4166666666666667
   },
@@ -310,19 +310,19 @@
       },
       {
         "location": "field:supplierCompany",
-        "status": "ext_missing",
-        "gtNorm": "종근당(msd)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "status": "mismatch",
+        "gtNorm": "종근당msd",
+        "extNorm": "종근당",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울서대문구충정로3가종근당빌딩충정로8",
-        "extNorm": "핀번호08296서울특별시구로구공원로8길24",
+        "extNorm": "서울서대문구충정로8",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "field:supplyAmount",
@@ -335,10 +335,10 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)평택물류센터",
-        "extNorm": "백제약품(주)영등포지점",
+        "gtNorm": "백제약품평택물류센터",
+        "extNorm": "백제약품영등포지점",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.56)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -414,8 +414,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 8,
-      "structure": 6,
+      "recognition": 9,
+      "structure": 5,
       "layout": 1,
       "preprocessing": 0
     },
@@ -435,6 +435,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

@@ -73,10 +73,10 @@
       },
       "supplierCompany": {
         "gt": "에이치에이써플라이(전 해암약품)",
-        "ext": "의약품",
-        "gtNorm": "에이치에이써플라이(전 해암약품)",
-        "extNorm": "의약품",
-        "type": "text",
+        "ext": "에이치에이써플라이",
+        "gtNorm": "에이치에이써플라이전해암약품",
+        "extNorm": "에이치에이써플라이",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": true,
@@ -99,11 +99,11 @@
       },
       "supplierAddress": {
         "gt": "서울 송파구 마천로 315 (마천동, 현대그린빌) B1층 108호",
-        "ext": "서 송파구 이천로315 B1층108호(현대그리",
+        "ext": "서울 송파구 마천로 315 (마천동, 현대그린빌) B1층 108호",
         "gtNorm": "서울송파구마천로315마천동현대그린빌b1층108호",
-        "extNorm": "서송파구이천로315b1층108호현대그리",
+        "extNorm": "서울송파구마천로315마천동현대그린빌b1층108호",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -126,9 +126,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 광주지점",
         "ext": "",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "",
-        "type": "text",
+        "type": "company",
         "status": "ext_missing",
         "edited": false,
         "difficult": false,
@@ -154,8 +154,8 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 4,
-      "mismatch": 6,
+      "match": 5,
+      "mismatch": 5,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 4,
+      "matched": 5,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.36363636363636365
+    "fieldAccuracy": 0.45454545454545453
   },
   "table": {
     "alignMode": "content",
@@ -396,18 +396,10 @@
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
-        "gtNorm": "에이치에이써플라이(전 해암약품)",
-        "extNorm": "의약품",
+        "gtNorm": "에이치에이써플라이전해암약품",
+        "extNorm": "에이치에이써플라이",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "서울송파구마천로315마천동현대그린빌b1층108호",
-        "extNorm": "서송파구이천로315b1층108호현대그리",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.68)"
+        "reason": "char-level diff (sim=0.78)"
       },
       {
         "location": "field:supplyAmount",
@@ -420,7 +412,7 @@
       {
         "location": "field:buyerCompany",
         "status": "ext_missing",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
@@ -555,7 +547,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 9,
+      "recognition": 8,
       "structure": 13,
       "layout": 0,
       "preprocessing": 0

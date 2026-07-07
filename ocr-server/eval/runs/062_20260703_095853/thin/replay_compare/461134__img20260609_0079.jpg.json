@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "명인제약(전)",
-        "ext": "명인제약(주)",
-        "gtNorm": "명인제약(전)",
-        "extNorm": "명인제약(주)",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "명인제약(전)",
+        "gtNorm": "명인제약",
+        "extNorm": "명인제약",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "대전 유성구 지족로148번길 43 (지족동) 허브빌딩 3층",
-        "ext": "경기도화성시 만세구팔탄면노하길361-12",
+        "ext": "경기도 화성시 팔탄면 노하길 361-12",
         "gtNorm": "대전유성구지족로148번길43지족동허브빌딩3층",
-        "extNorm": "경기도화성시만세구팔탄면노하길36112",
+        "extNorm": "경기도화성시팔탄면노하길36112",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 대전지점",
         "ext": "",
-        "gtNorm": "백제약품 (주) 대전지점",
+        "gtNorm": "백제약품대전지점",
         "extNorm": "",
-        "type": "text",
+        "type": "company",
         "status": "ext_missing",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 4,
-      "mismatch": 7,
+      "match": 5,
+      "mismatch": 6,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 4,
+      "matched": 5,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.3333333333333333
+    "fieldAccuracy": 0.4166666666666667
   },
   "table": {
     "alignMode": "content",
@@ -1879,14 +1879,6 @@
         "reason": "gt value present at ['field:discountAmount']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "명인제약(전)",
-        "extNorm": "명인제약(주)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.86)"
-      },
-      {
         "location": "field:taxType",
         "status": "mismatch",
         "gtNorm": "면세",
@@ -1898,7 +1890,7 @@
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "대전유성구지족로148번길43지족동허브빌딩3층",
-        "extNorm": "경기도화성시만세구팔탄면노하길36112",
+        "extNorm": "경기도화성시팔탄면노하길36112",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -1913,7 +1905,7 @@
       {
         "location": "field:buyerCompany",
         "status": "ext_missing",
-        "gtNorm": "백제약품 (주) 대전지점",
+        "gtNorm": "백제약품대전지점",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
@@ -2128,7 +2120,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 26,
+      "recognition": 25,
       "structure": 4,
       "layout": 3,
       "preprocessing": 0

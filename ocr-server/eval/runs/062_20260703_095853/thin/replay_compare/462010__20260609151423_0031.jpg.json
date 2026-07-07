@@ -73,11 +73,11 @@
       },
       "supplierCompany": {
         "gt": "오스템임플란트",
-        "ext": "오스템임플란트(주)",
+        "ext": "오스템임플란트",
         "gtNorm": "오스템임플란트",
-        "extNorm": "오스템임플란트(주)",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "오스템임플란트",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -99,11 +99,11 @@
       },
       "supplierAddress": {
         "gt": "서울 금천구 가산디지털2로 123(가산동, 월드메르디앙 벤처센터2차8층)",
-        "ext": "07789서울시강서구마곡중앙12로3",
+        "ext": "서울 금천구 가산디지털2로 123(가산동, 월드메르디앙 벤처센터2차8층)",
         "gtNorm": "서울금천구가산디지털2로123가산동월드메르디앙벤처센터2차8층",
-        "extNorm": "07789서울시강서구마곡중앙12로3",
+        "extNorm": "서울금천구가산디지털2로123가산동월드메르디앙벤처센터2차8층",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -126,9 +126,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)평택물류센터",
         "ext": "백제약품(주)영등포지점",
-        "gtNorm": "백제약품(주)평택물류센터",
-        "extNorm": "백제약품(주)영등포지점",
-        "type": "text",
+        "gtNorm": "백제약품평택물류센터",
+        "extNorm": "백제약품영등포지점",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -154,8 +154,8 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 2,
-      "mismatch": 8,
+      "match": 4,
+      "mismatch": 6,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 2,
+      "matched": 4,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.18181818181818182
+    "fieldAccuracy": 0.36363636363636365
   },
   "table": {
     "alignMode": "content",
@@ -1042,28 +1042,12 @@
         "reason": "char-level diff (sim=0.88)"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "오스템임플란트",
-        "extNorm": "오스템임플란트(주)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.82)"
-      },
-      {
         "location": "field:taxType",
         "status": "mismatch",
         "gtNorm": "면세",
         "extNorm": "과세",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.50)"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "서울금천구가산디지털2로123가산동월드메르디앙벤처센터2차8층",
-        "extNorm": "07789서울시강서구마곡중앙12로3",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplyAmount",
@@ -1076,10 +1060,10 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)평택물류센터",
-        "extNorm": "백제약품(주)영등포지점",
+        "gtNorm": "백제약품평택물류센터",
+        "extNorm": "백제약품영등포지점",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.56)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -1475,7 +1459,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 25,
+      "recognition": 23,
       "structure": 32,
       "layout": 0,
       "preprocessing": 0

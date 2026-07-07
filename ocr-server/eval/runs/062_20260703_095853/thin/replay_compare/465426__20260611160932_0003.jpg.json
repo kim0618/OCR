@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "이에스팜(매입)",
-        "ext": "의약품의료",
-        "gtNorm": "이에스팜(매입)",
-        "extNorm": "의약품의료",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "이에스팜(매입)",
+        "gtNorm": "이에스팜매입",
+        "extNorm": "이에스팜매입",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "전북 정읍시 신태인읍 연정길16",
-        "ext": "정붉특별자치도정읍시 연정길16, 1(신태",
+        "ext": "전북 정읍시 신태인읍 연정길16",
         "gtNorm": "전북정읍시신태인읍연정길16",
-        "extNorm": "정붉특별자치도정읍시연정길161신태",
+        "extNorm": "전북정읍시신태인읍연정길16",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 전주지점",
         "ext": "백제약품(주)",
-        "gtNorm": "백제약품 (주) 전주지점",
-        "extNorm": "백제약품(주)",
-        "type": "text",
+        "gtNorm": "백제약품전주지점",
+        "extNorm": "백제약품",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 5,
-      "mismatch": 5,
+      "match": 7,
+      "mismatch": 3,
       "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 5,
+      "matched": 7,
       "extNotAttempted": 0,
       "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.4166666666666667
+    "fieldAccuracy": 0.5833333333333334
   },
   "table": {
     "alignMode": "content",
@@ -317,22 +317,6 @@
         "reason": "gt value present at ['field:supplyAmount']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "이에스팜(매입)",
-        "extNorm": "의약품의료",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "전북정읍시신태인읍연정길16",
-        "extNorm": "정붉특별자치도정읍시연정길161신태",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
-      },
-      {
         "location": "field:supplyAmount",
         "status": "mismatch",
         "gtNorm": "253724",
@@ -343,10 +327,10 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 전주지점",
-        "extNorm": "백제약품(주)",
+        "gtNorm": "백제약품전주지점",
+        "extNorm": "백제약품",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.70)"
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "field:buyerAddress",
@@ -454,7 +438,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
+      "recognition": 3,
       "structure": 14,
       "layout": 0,
       "preprocessing": 0

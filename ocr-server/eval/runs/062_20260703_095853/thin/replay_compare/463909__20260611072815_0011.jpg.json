@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "비씨월드제약",
-        "ext": "주)비씨월드제약",
+        "ext": "비씨월드제약",
         "gtNorm": "비씨월드제약",
-        "extNorm": "주)비씨월드제약",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "비씨월드제약",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,7 +112,7 @@
       },
       "supplierAddress": {
         "gt": "경기도 여주시 가남읍 여주남로 872-23",
-        "ext": "경기도 여주시가남읍 여주남로872-23",
+        "ext": "경기도 여주시 가남읍 여주남로 872-23",
         "gtNorm": "경기도여주시가남읍여주남로87223",
         "extNorm": "경기도여주시가남읍여주남로87223",
         "type": "address",
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)평택물류센터",
         "ext": "백제약품(주)영등포지정",
-        "gtNorm": "백제약품(주)평택물류센터",
-        "extNorm": "백제약품(주)영등포지정",
-        "type": "text",
+        "gtNorm": "백제약품평택물류센터",
+        "extNorm": "백제약품영등포지정",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 9,
-      "mismatch": 3,
+      "match": 10,
+      "mismatch": 2,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 9,
+      "matched": 10,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.75
+    "fieldAccuracy": 0.8333333333333334
   },
   "table": {
     "alignMode": "content",
@@ -605,20 +605,12 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "비씨월드제약",
-        "extNorm": "주)비씨월드제약",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.86)"
-      },
-      {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)평택물류센터",
-        "extNorm": "백제약품(주)영등포지정",
+        "gtNorm": "백제약품평택물류센터",
+        "extNorm": "백제약품영등포지정",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.56)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -854,7 +846,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 7,
+      "recognition": 6,
       "structure": 18,
       "layout": 6,
       "preprocessing": 0

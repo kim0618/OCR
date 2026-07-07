@@ -86,10 +86,10 @@
       },
       "supplierCompany": {
         "gt": "영진약품(전)",
-        "ext": "용)",
-        "gtNorm": "영진약품(전)",
-        "extNorm": "용)",
-        "type": "text",
+        "ext": "영진약품(일반)",
+        "gtNorm": "영진약품",
+        "extNorm": "영진약품일반",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 강동구 천호대로 1057, 2층 (천호동)",
-        "ext": "경기도화성시만세구남양읍무하로66이기수",
+        "ext": "서울특별시 강동구 양재대로 1534 (길동)",
         "gtNorm": "서울특별시강동구천호대로10572층천호동",
-        "extNorm": "경기도화성시만세구남양읍무하로66이기수",
+        "extNorm": "서울특별시강동구양재대로1534길동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영남본부",
         "ext": "백제약품(주)영남본부",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품영남본부",
+        "extNorm": "백제약품영남본부",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 5,
-      "mismatch": 4,
+      "match": 6,
+      "mismatch": 3,
       "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 5,
+      "matched": 6,
       "extNotAttempted": 0,
       "extAttemptedMiss": 3
     },
-    "fieldAccuracy": 0.4166666666666667
+    "fieldAccuracy": 0.5
   },
   "table": {
     "alignMode": "content",
@@ -931,18 +931,18 @@
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
-        "gtNorm": "영진약품(전)",
-        "extNorm": "용)",
+        "gtNorm": "영진약품",
+        "extNorm": "영진약품일반",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울특별시강동구천호대로10572층천호동",
-        "extNorm": "경기도화성시만세구남양읍무하로66이기수",
+        "extNorm": "서울특별시강동구양재대로1534길동",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "field:supplyAmount",
@@ -951,14 +951,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -1570,7 +1562,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 6,
+      "recognition": 5,
       "structure": 76,
       "layout": 0,
       "preprocessing": 0

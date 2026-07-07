@@ -73,11 +73,11 @@
       },
       "supplierCompany": {
         "gt": "서울제약(전문)",
-        "ext": "",
-        "gtNorm": "서울제약(전문)",
-        "extNorm": "",
-        "type": "text",
-        "status": "ext_missing",
+        "ext": "서울제약(전문)",
+        "gtNorm": "서울제약전문",
+        "extNorm": "서울제약전문",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -113,9 +113,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)평택물류센터",
         "ext": "2.우리회사에서는전자세금계산서발행시EMai과휴대폰문",
-        "gtNorm": "백제약품(주)평택물류센터",
-        "extNorm": "2.우리회사에서는전자세금계산서발행시emai과휴대폰문",
-        "type": "text",
+        "gtNorm": "백제약품평택물류센터",
+        "extNorm": "2우리회사에서는전자세금계산서발행시emai과휴대폰문",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -141,9 +141,9 @@
     "profile": "thin",
     "counts": {
       "scored": 10,
-      "match": 3,
+      "match": 4,
       "mismatch": 6,
-      "ext_missing": 1,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -154,11 +154,11 @@
     },
     "coverage": {
       "gtPresent": 10,
-      "matched": 3,
+      "matched": 4,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.3
+    "fieldAccuracy": 0.4
   },
   "table": {
     "alignMode": "content",
@@ -1083,18 +1083,10 @@
         "reason": "char-level diff (sim=0.62)"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "ext_missing",
-        "gtNorm": "서울제약(전문)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
-      },
-      {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)평택물류센터",
-        "extNorm": "2.우리회사에서는전자세금계산서발행시emai과휴대폰문",
+        "gtNorm": "백제약품평택물류센터",
+        "extNorm": "2우리회사에서는전자세금계산서발행시emai과휴대폰문",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -1661,7 +1653,7 @@
     ],
     "bucketTally": {
       "recognition": 17,
-      "structure": 59,
+      "structure": 58,
       "layout": 0,
       "preprocessing": 0
     },
@@ -1681,6 +1673,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.1
+    "fieldMissRate": 0.0
   }
 }

@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "로하스메디",
-        "ext": "주식회사 로하스메디",
+        "ext": "로하스메디(주)",
         "gtNorm": "로하스메디",
-        "extNorm": "주식회사 로하스메디",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "로하스메디",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "경기 화성시 송산면 송산포도로 369-30 로하스메디 물류센터",
-        "ext": "충남 아산시배방읍희망로46번길45",
+        "ext": "경기 화성시 송산면 송산포도로 369-30 1,2,3층",
         "gtNorm": "경기화성시송산면송산포도로36930로하스메디물류센터",
-        "extNorm": "충남아산시배방읍희망로46번길45",
+        "extNorm": "경기화성시송산면송산포도로36930123층",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 대전지점",
         "ext": "양약의약품",
-        "gtNorm": "백제약품 (주) 대전지점",
+        "gtNorm": "백제약품대전지점",
         "extNorm": "양약의약품",
-        "type": "text",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
-      "mismatch": 4,
+      "match": 9,
+      "mismatch": 3,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 9,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -291,25 +291,17 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "로하스메디",
-        "extNorm": "주식회사 로하스메디",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기화성시송산면송산포도로36930로하스메디물류센터",
-        "extNorm": "충남아산시배방읍희망로46번길45",
+        "extNorm": "경기화성시송산면송산포도로36930123층",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.73)"
       },
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 대전지점",
+        "gtNorm": "백제약품대전지점",
         "extNorm": "양약의약품",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
@@ -380,7 +372,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 8,
+      "recognition": 7,
       "structure": 3,
       "layout": 0,
       "preprocessing": 0

@@ -73,11 +73,11 @@
       },
       "supplierCompany": {
         "gt": "한국유나이티드제약",
-        "ext": "",
+        "ext": "삼진제약(전)",
         "gtNorm": "한국유나이티드제약",
-        "extNorm": "",
-        "type": "text",
-        "status": "ext_missing",
+        "extNorm": "삼진제약",
+        "type": "company",
+        "status": "mismatch",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -99,9 +99,9 @@
       },
       "supplierAddress": {
         "gt": "세종특별자치시  전동면 노장공단길 25-23",
-        "ext": "광주광역시 동구 제봉로 200, (대인동",
+        "ext": "서울 마포구 와우산로 121 (서교동)",
         "gtNorm": "세종특별자치시전동면노장공단길2523",
-        "extNorm": "광주광역시동구제봉로200대인동",
+        "extNorm": "서울마포구와우산로121서교동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -126,9 +126,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 광주지점",
         "ext": "",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "",
-        "type": "text",
+        "type": "company",
         "status": "ext_missing",
         "edited": false,
         "difficult": false,
@@ -155,8 +155,8 @@
     "counts": {
       "scored": 11,
       "match": 2,
-      "mismatch": 4,
-      "ext_missing": 5,
+      "mismatch": 5,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -169,7 +169,7 @@
       "gtPresent": 11,
       "matched": 2,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 5
+      "extAttemptedMiss": 4
     },
     "fieldAccuracy": 0.18181818181818182
   },
@@ -491,17 +491,17 @@
       },
       {
         "location": "field:supplierCompany",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "한국유나이티드제약",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "extNorm": "삼진제약",
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "세종특별자치시전동면노장공단길2523",
-        "extNorm": "광주광역시동구제봉로200대인동",
+        "extNorm": "서울마포구와우산로121서교동",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -516,7 +516,7 @@
       {
         "location": "field:buyerCompany",
         "status": "ext_missing",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
@@ -611,8 +611,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 6,
-      "structure": 12,
+      "recognition": 7,
+      "structure": 11,
       "layout": 1,
       "preprocessing": 0
     },
@@ -632,6 +632,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.455
+    "fieldMissRate": 0.364
   }
 }

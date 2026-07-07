@@ -86,10 +86,10 @@
       },
       "supplierCompany": {
         "gt": "일양약품(일반)",
-        "ext": "일양약품",
-        "gtNorm": "일양약품(일반)",
+        "ext": "일양약품(전)",
+        "gtNorm": "일양약품일반",
         "extNorm": "일양약품",
-        "type": "text",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "경기도 용인시 기흥구 하갈로 110 (하갈동)",
-        "ext": "하갈로110(하갈동",
+        "ext": "경기도 용인시 기흥구 하갈로 110 (하갈동)",
         "gtNorm": "경기도용인시기흥구하갈로110하갈동",
-        "extNorm": "하갈로110하갈동",
+        "extNorm": "경기도용인시기흥구하갈로110하갈동",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)동부물류센터",
         "ext": "백제약품(주)영등포지점",
-        "gtNorm": "백제약품(주)동부물류센터",
-        "extNorm": "백제약품(주)영등포지점",
-        "type": "text",
+        "gtNorm": "백제약품동부물류센터",
+        "extNorm": "백제약품영등포지점",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
-      "mismatch": 4,
+      "match": 9,
+      "mismatch": 3,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 9,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -594,26 +594,18 @@
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
-        "gtNorm": "일양약품(일반)",
+        "gtNorm": "일양약품일반",
         "extNorm": "일양약품",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "경기도용인시기흥구하갈로110하갈동",
-        "extNorm": "하갈로110하갈동",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
+        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)동부물류센터",
-        "extNorm": "백제약품(주)영등포지점",
+        "gtNorm": "백제약품동부물류센터",
+        "extNorm": "백제약품영등포지점",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.56)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -825,7 +817,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 10,
+      "recognition": 9,
       "structure": 19,
       "layout": 0,
       "preprocessing": 0

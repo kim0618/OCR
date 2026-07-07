@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "그린제약",
-        "ext": "",
+        "ext": "백제약품(주)대전지점",
         "gtNorm": "그린제약",
-        "extNorm": "",
-        "type": "text",
-        "status": "ext_missing",
+        "extNorm": "백제약품대전지점",
+        "type": "company",
+        "status": "mismatch",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "충북 진천군 문백면 농다리로 1098",
-        "ext": "대전광역시중구보문로235(대홍동 음성군금왕읍금왕테크노2길42(봉꼭리",
+        "ext": "대전광역시 중구 보문로 235 (대흥동)",
         "gtNorm": "충북진천군문백면농다리로1098",
-        "extNorm": "대전광역시중구보문로235대홍동음성군금왕읍금왕테크노2길42봉꼭리",
+        "extNorm": "대전광역시중구보문로235대흥동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 대전지점",
         "ext": "",
-        "gtNorm": "백제약품 (주) 대전지점",
+        "gtNorm": "백제약품대전지점",
         "extNorm": "",
-        "type": "text",
+        "type": "company",
         "status": "ext_missing",
         "edited": false,
         "difficult": false,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 3,
-      "mismatch": 3,
-      "ext_missing": 6,
+      "mismatch": 4,
+      "ext_missing": 5,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,7 +182,7 @@
       "gtPresent": 12,
       "matched": 3,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 6
+      "extAttemptedMiss": 5
     },
     "fieldAccuracy": 0.25
   },
@@ -369,17 +369,17 @@
       },
       {
         "location": "field:supplierCompany",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "그린제약",
-        "extNorm": "",
+        "extNorm": "백제약품대전지점",
         "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "reason": "ext value is gt's ['field:buyerCompany']"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "충북진천군문백면농다리로1098",
-        "extNorm": "대전광역시중구보문로235대홍동음성군금왕읍금왕테크노2길42봉꼭리",
+        "extNorm": "대전광역시중구보문로235대흥동",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -394,10 +394,10 @@
       {
         "location": "field:buyerCompany",
         "status": "ext_missing",
-        "gtNorm": "백제약품 (주) 대전지점",
+        "gtNorm": "백제약품대전지점",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "reason": "gt value present at ['field:supplierCompany']"
       },
       {
         "location": "field:buyerAddress",
@@ -478,6 +478,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.5
+    "fieldMissRate": 0.417
   }
 }

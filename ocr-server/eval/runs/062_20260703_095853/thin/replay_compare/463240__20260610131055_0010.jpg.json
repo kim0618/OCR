@@ -60,11 +60,11 @@
       },
       "supplierCompany": {
         "gt": "알보젠코리아",
-        "ext": "알보젠코리아주식회사",
+        "ext": "알보젠코리아",
         "gtNorm": "알보젠코리아",
-        "extNorm": "알보젠코리아주식회사",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "알보젠코리아",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -86,9 +86,9 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 영등포구 국제금융로 10, 13층동(여의도동, 서울국제금융센터 투 아이에프씨)",
-        "ext": "서울특별시서초구서초대로4115층(서초동",
+        "ext": "서울특별시 영등포구 국제금융로 10 13층동",
         "gtNorm": "서울특별시영등포구국제금융로1013층동여의도동서울국제금융센터투아이에프씨",
-        "extNorm": "서울특별시서초구서초대로4115층서초동",
+        "extNorm": "서울특별시영등포구국제금융로1013층동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -113,9 +113,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 제주지점",
         "ext": "",
-        "gtNorm": "백제약품 (주) 제주지점",
+        "gtNorm": "백제약품제주지점",
         "extNorm": "",
-        "type": "text",
+        "type": "company",
         "status": "ext_missing",
         "edited": false,
         "difficult": false,
@@ -141,8 +141,8 @@
     "profile": "thin",
     "counts": {
       "scored": 10,
-      "match": 6,
-      "mismatch": 3,
+      "match": 7,
+      "mismatch": 2,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -154,11 +154,11 @@
     },
     "coverage": {
       "gtPresent": 10,
-      "matched": 6,
+      "matched": 7,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.6
+    "fieldAccuracy": 0.7
   },
   "table": {
     "alignMode": "content",
@@ -825,25 +825,17 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "알보젠코리아",
-        "extNorm": "알보젠코리아주식회사",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.75)"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울특별시영등포구국제금융로1013층동여의도동서울국제금융센터투아이에프씨",
-        "extNorm": "서울특별시서초구서초대로4115층서초동",
+        "extNorm": "서울특별시영등포구국제금융로1013층동",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.69)"
       },
       {
         "location": "field:buyerCompany",
         "status": "ext_missing",
-        "gtNorm": "백제약품 (주) 제주지점",
+        "gtNorm": "백제약품제주지점",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
@@ -1178,7 +1170,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 14,
+      "recognition": 13,
       "structure": 24,
       "layout": 6,
       "preprocessing": 0

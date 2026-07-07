@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "한국노바티스",
-        "ext": "노바티스코리야(주)",
+        "ext": "한국노바티스",
         "gtNorm": "한국노바티스",
-        "extNorm": "노바티스코리야(주)",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "한국노바티스",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 중구 통일로 10, 연세세브란스빌딩 18층 (남대문로5가)",
-        "ext": "서울시영등포구 국제금융로10",
+        "ext": "서울특별시 중구 통일로 10, 연세세브란스빌딩 18층 (남대문로5가)",
         "gtNorm": "서울특별시중구통일로10연세세브란스빌딩18층남대문로5가",
-        "extNorm": "서울시영등포구국제금융로10",
+        "extNorm": "서울특별시중구통일로10연세세브란스빌딩18층남대문로5가",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영남본부",
         "ext": "백제약품(주)영남본부",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품영남본부",
+        "extNorm": "백제약품영남본부",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 4,
-      "mismatch": 5,
+      "match": 7,
+      "mismatch": 2,
       "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 4,
+      "matched": 7,
       "extNotAttempted": 0,
       "extAttemptedMiss": 3
     },
-    "fieldAccuracy": 0.3333333333333333
+    "fieldAccuracy": 0.5833333333333334
   },
   "table": {
     "alignMode": "content",
@@ -1426,14 +1426,6 @@
         "reason": "gt value present at ['field:discountAmount']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "한국노바티스",
-        "extNorm": "노바티스코리야(주)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
-      },
-      {
         "location": "field:taxType",
         "status": "mismatch",
         "gtNorm": "면세",
@@ -1442,28 +1434,12 @@
         "reason": "char-level diff (sim=0.50)"
       },
       {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "서울특별시중구통일로10연세세브란스빌딩18층남대문로5가",
-        "extNorm": "서울시영등포구국제금융로10",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplyAmount",
         "status": "ext_missing",
         "gtNorm": "0",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value present at ['field:discountAmount']"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -2307,7 +2283,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 41,
+      "recognition": 38,
       "structure": 71,
       "layout": 0,
       "preprocessing": 0

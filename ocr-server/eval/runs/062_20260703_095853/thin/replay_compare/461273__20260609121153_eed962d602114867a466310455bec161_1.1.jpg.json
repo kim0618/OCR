@@ -86,10 +86,10 @@
       },
       "supplierCompany": {
         "gt": "이연제약(주)(전문)",
-        "ext": "이연제약(주)",
-        "gtNorm": "이연제약(주)(전문)",
-        "extNorm": "이연제약(주)",
-        "type": "text",
+        "ext": "이연제약",
+        "gtNorm": "이연제약전문",
+        "extNorm": "이연제약",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "충북 진천군 덕산면 한천리 6-5",
-        "ext": "충북진천군덕산읍한삼로69-10",
+        "ext": "서울특별시 용산구 서빙고로91나길 43 (동빙고동)",
         "gtNorm": "충북진천군덕산면한천리65",
-        "extNorm": "충북진천군덕산읍한삼로6910",
+        "extNorm": "서울특별시용산구서빙고로91나길43동빙고동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 전주지점",
         "ext": "백제약품(주)전주지점",
-        "gtNorm": "백제약품 (주) 전주지점",
-        "extNorm": "백제약품(주)전주지점",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품전주지점",
+        "extNorm": "백제약품전주지점",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 6,
-      "mismatch": 6,
+      "match": 7,
+      "mismatch": 5,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 6,
+      "matched": 7,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.5
+    "fieldAccuracy": 0.5833333333333334
   },
   "table": {
     "alignMode": "content",
@@ -1101,26 +1101,18 @@
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
-        "gtNorm": "이연제약(주)(전문)",
-        "extNorm": "이연제약(주)",
+        "gtNorm": "이연제약전문",
+        "extNorm": "이연제약",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.78)"
+        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "충북진천군덕산면한천리65",
-        "extNorm": "충북진천군덕산읍한삼로6910",
+        "extNorm": "서울특별시용산구서빙고로91나길43동빙고동",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.64)"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 전주지점",
-        "extNorm": "백제약품(주)전주지점",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -1468,7 +1460,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 37,
+      "recognition": 36,
       "structure": 10,
       "layout": 1,
       "preprocessing": 0

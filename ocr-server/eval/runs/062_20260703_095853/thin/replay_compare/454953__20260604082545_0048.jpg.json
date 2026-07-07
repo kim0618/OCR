@@ -73,11 +73,11 @@
       },
       "supplierCompany": {
         "gt": "세종약품(주)",
-        "ext": "의약품외",
-        "gtNorm": "세종약품(주)",
-        "extNorm": "의약품외",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "세종약품",
+        "gtNorm": "세종약품",
+        "extNorm": "세종약품",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -99,9 +99,9 @@
       },
       "supplierAddress": {
         "gt": "부산시 기장군 일광읍 해송2로 17 일광빌딩 5,6,7층",
-        "ext": "부산시기장군일광읍해송2로",
+        "ext": "부산 기장군 일광읍 해송2로 17 일광빌딩 5,6,7층 \u001a5층사무실 6층창고\u001a",
         "gtNorm": "부산시기장군일광읍해송2로17일광빌딩567층",
-        "extNorm": "부산시기장군일광읍해송2로",
+        "extNorm": "부산기장군일광읍해송2로17일광빌딩567층5층사무실6층창고",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -126,9 +126,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 광주지점",
         "ext": "풍림무약(주)",
-        "gtNorm": "백제약품 (주) 광주지점",
-        "extNorm": "풍림무약(주)",
-        "type": "text",
+        "gtNorm": "백제약품광주지점",
+        "extNorm": "풍림무약",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -154,8 +154,8 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 5,
-      "mismatch": 6,
+      "match": 6,
+      "mismatch": 5,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 5,
+      "matched": 6,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.45454545454545453
+    "fieldAccuracy": 0.5454545454545454
   },
   "table": {
     "alignMode": "content",
@@ -645,20 +645,12 @@
         "reason": "ext value is gt's ['row1:insuranceCode']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "세종약품(주)",
-        "extNorm": "의약품외",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "부산시기장군일광읍해송2로17일광빌딩567층",
-        "extNorm": "부산시기장군일광읍해송2로",
+        "extNorm": "부산기장군일광읍해송2로17일광빌딩567층5층사무실6층창고",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.72)"
+        "reason": "char-level diff (sim=0.81)"
       },
       {
         "location": "field:supplyAmount",
@@ -671,8 +663,8 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 광주지점",
-        "extNorm": "풍림무약(주)",
+        "gtNorm": "백제약품광주지점",
+        "extNorm": "풍림무약",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -1006,7 +998,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 11,
+      "recognition": 10,
       "structure": 35,
       "layout": 0,
       "preprocessing": 0

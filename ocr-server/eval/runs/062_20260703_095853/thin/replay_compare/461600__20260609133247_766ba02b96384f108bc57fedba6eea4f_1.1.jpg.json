@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "뉴신팜",
-        "ext": "1069800488주식회사",
+        "ext": "뉴신팜",
         "gtNorm": "뉴신팜",
-        "extNorm": "1069800488주식회사",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "뉴신팜",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "경기 김포시 고촌읍 아라육로57번길 46",
-        "ext": "전라북도전주시덕진구신복로116-7",
+        "ext": "경기 김포시 고촌읍 아라육로57번길 46 1층",
         "gtNorm": "경기김포시고촌읍아라육로57번길46",
-        "extNorm": "전라북도전주시덕진구신복로1167",
+        "extNorm": "경기김포시고촌읍아라육로57번길461층",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 전주지점",
         "ext": "백제약품(주)전주지정",
-        "gtNorm": "백제약품 (주) 전주지점",
-        "extNorm": "백제약품(주)전주지정",
-        "type": "text",
+        "gtNorm": "백제약품전주지점",
+        "extNorm": "백제약품전주지정",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
-      "mismatch": 4,
+      "match": 9,
+      "mismatch": 3,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 9,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -1768,28 +1768,20 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "뉴신팜",
-        "extNorm": "1069800488주식회사",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기김포시고촌읍아라육로57번길46",
-        "extNorm": "전라북도전주시덕진구신복로1167",
+        "extNorm": "경기김포시고촌읍아라육로57번길461층",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.95)"
       },
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 전주지점",
-        "extNorm": "백제약품(주)전주지정",
+        "gtNorm": "백제약품전주지점",
+        "extNorm": "백제약품전주지정",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.83)"
+        "reason": "char-level diff (sim=0.88)"
       },
       {
         "location": "field:buyerAddress",
@@ -2665,7 +2657,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 55,
+      "recognition": 54,
       "structure": 57,
       "layout": 0,
       "preprocessing": 0

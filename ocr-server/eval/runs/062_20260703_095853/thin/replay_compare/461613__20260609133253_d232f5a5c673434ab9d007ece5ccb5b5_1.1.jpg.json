@@ -86,10 +86,10 @@
       },
       "supplierCompany": {
         "gt": "삼진제약(주)(전문)",
-        "ext": "(법인명)",
-        "gtNorm": "삼진제약(주)(전문)",
-        "extNorm": "(법인명)",
-        "type": "text",
+        "ext": "삼성제약(주)(전문)",
+        "gtNorm": "삼진제약전문",
+        "extNorm": "삼성제약전문",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "경기도 화성시 향남읍 제약공단1길 52",
-        "ext": "경기도화성시향남읍제약공단1길52",
+        "ext": "경기도 화성시 향남읍 제약공단2길 35",
         "gtNorm": "경기도화성시향남읍제약공단1길52",
-        "extNorm": "경기도화성시향남읍제약공단1길52",
+        "extNorm": "경기도화성시향남읍제약공단2길35",
         "type": "address",
-        "status": "match",
+        "status": "mismatch",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 전주지점",
         "ext": "삼진제약주식회사",
-        "gtNorm": "백제약품 (주) 전주지점",
-        "extNorm": "삼진제약주식회사",
-        "type": "text",
+        "gtNorm": "백제약품전주지점",
+        "extNorm": "삼진제약",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 6,
-      "mismatch": 4,
+      "match": 5,
+      "mismatch": 5,
       "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 6,
+      "matched": 5,
       "extNotAttempted": 0,
       "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.5
+    "fieldAccuracy": 0.4166666666666667
   },
   "table": {
     "alignMode": "content",
@@ -307,10 +307,18 @@
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
-        "gtNorm": "삼진제약(주)(전문)",
-        "extNorm": "(법인명)",
+        "gtNorm": "삼진제약전문",
+        "extNorm": "삼성제약전문",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.83)"
+      },
+      {
+        "location": "field:supplierAddress",
+        "status": "mismatch",
+        "gtNorm": "경기도화성시향남읍제약공단1길52",
+        "extNorm": "경기도화성시향남읍제약공단2길35",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.88)"
       },
       {
         "location": "field:supplyAmount",
@@ -323,8 +331,8 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 전주지점",
-        "extNorm": "삼진제약주식회사",
+        "gtNorm": "백제약품전주지점",
+        "extNorm": "삼진제약",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -370,7 +378,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 4,
+      "recognition": 5,
       "structure": 6,
       "layout": 0,
       "preprocessing": 0

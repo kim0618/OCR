@@ -60,11 +60,11 @@
       },
       "supplierCompany": {
         "gt": "환인제약(전)",
-        "ext": "",
-        "gtNorm": "환인제약(전)",
-        "extNorm": "",
-        "type": "text",
-        "status": "ext_missing",
+        "ext": "종근당(전)",
+        "gtNorm": "환인제약",
+        "extNorm": "종근당",
+        "type": "company",
+        "status": "mismatch",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -86,9 +86,9 @@
       },
       "supplierAddress": {
         "gt": "경기도 안성시 공단로 50 (신소현동)",
-        "ext": "거래명세서는 영수증 대용으로 사용 할 수 없습니다",
+        "ext": "서울 서대문구 충정로 8",
         "gtNorm": "경기도안성시공단로50신소현동",
-        "extNorm": "거래명세서는영수증대용으로사용할수없습니다",
+        "extNorm": "서울서대문구충정로8",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -113,9 +113,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 광주지점",
         "ext": "",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "",
-        "type": "text",
+        "type": "company",
         "status": "ext_missing",
         "edited": false,
         "difficult": false,
@@ -142,8 +142,8 @@
     "counts": {
       "scored": 10,
       "match": 3,
-      "mismatch": 2,
-      "ext_missing": 5,
+      "mismatch": 3,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -156,7 +156,7 @@
       "gtPresent": 10,
       "matched": 3,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 5
+      "extAttemptedMiss": 4
     },
     "fieldAccuracy": 0.3
   },
@@ -283,17 +283,17 @@
       },
       {
         "location": "field:supplierCompany",
-        "status": "ext_missing",
-        "gtNorm": "환인제약(전)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "status": "mismatch",
+        "gtNorm": "환인제약",
+        "extNorm": "종근당",
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기도안성시공단로50신소현동",
-        "extNorm": "거래명세서는영수증대용으로사용할수없습니다",
+        "extNorm": "서울서대문구충정로8",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -308,7 +308,7 @@
       {
         "location": "field:buyerCompany",
         "status": "ext_missing",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
@@ -411,8 +411,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 2,
-      "structure": 16,
+      "recognition": 3,
+      "structure": 15,
       "layout": 0,
       "preprocessing": 0
     },
@@ -432,6 +432,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.5
+    "fieldMissRate": 0.4
   }
 }

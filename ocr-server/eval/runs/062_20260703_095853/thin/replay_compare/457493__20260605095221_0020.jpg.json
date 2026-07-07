@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "(주)로이스팜",
-        "ext": "보관용)",
-        "gtNorm": "(주)로이스팜",
-        "extNorm": "보관용)",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "(주)로이스팜",
+        "gtNorm": "로이스팜",
+        "extNorm": "로이스팜",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울 동대문구 장한로10길 9 (장안동) 1층,4층(물류창고)",
-        "ext": "서울특별시동대문구 장한로10길9, 2층(장안",
+        "ext": "서울 동대문구 장한로10길 9 (장안동) 1층,4층(물류창고)",
         "gtNorm": "서울동대문구장한로10길9장안동1층4층물류창고",
-        "extNorm": "서울특별시동대문구장한로10길92층장안",
+        "extNorm": "서울동대문구장한로10길9장안동1층4층물류창고",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영남본부",
         "ext": "백제약품(주)영남본부",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품영남본부",
+        "extNorm": "백제약품영남본부",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 6,
-      "mismatch": 5,
+      "match": 9,
+      "mismatch": 2,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 6,
+      "matched": 9,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.5
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -1092,36 +1092,12 @@
         "reason": "ext value is gt's ['row5:unitPrice']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "(주)로이스팜",
-        "extNorm": "보관용)",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "서울동대문구장한로10길9장안동1층4층물류창고",
-        "extNorm": "서울특별시동대문구장한로10길92층장안",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.68)"
-      },
-      {
         "location": "field:supplyAmount",
         "status": "ext_missing",
         "gtNorm": "7976477",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -1717,7 +1693,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 29,
+      "recognition": 26,
       "structure": 45,
       "layout": 5,
       "preprocessing": 0

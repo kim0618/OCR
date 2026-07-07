@@ -86,10 +86,10 @@
       },
       "supplierCompany": {
         "gt": "영진약품(주)(전문)",
-        "ext": "용)",
-        "gtNorm": "영진약품(주)(전문)",
-        "extNorm": "용)",
-        "type": "text",
+        "ext": "삼성제약(주)(전문)",
+        "gtNorm": "영진약품전문",
+        "extNorm": "삼성제약전문",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "경기도 화성시 남양읍 무하로 66",
-        "ext": "경기도회성시 만세구남양읍무하로66",
+        "ext": "경기도 화성시 향남읍 제약공단2길 35",
         "gtNorm": "경기도화성시남양읍무하로66",
-        "extNorm": "경기도회성시만세구남양읍무하로66",
+        "extNorm": "경기도화성시향남읍제약공단2길35",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 전주지점",
         "ext": "백제약품(주)전주지점",
-        "gtNorm": "백제약품 (주) 전주지점",
-        "extNorm": "백제약품(주)전주지점",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품전주지점",
+        "extNorm": "백제약품전주지점",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 3,
-      "mismatch": 6,
+      "match": 4,
+      "mismatch": 5,
       "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 3,
+      "matched": 4,
       "extNotAttempted": 0,
       "extAttemptedMiss": 3
     },
-    "fieldAccuracy": 0.25
+    "fieldAccuracy": 0.3333333333333333
   },
   "table": {
     "alignMode": "content",
@@ -878,18 +878,18 @@
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
-        "gtNorm": "영진약품(주)(전문)",
-        "extNorm": "용)",
+        "gtNorm": "영진약품전문",
+        "extNorm": "삼성제약전문",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기도화성시남양읍무하로66",
-        "extNorm": "경기도회성시만세구남양읍무하로66",
+        "extNorm": "경기도화성시향남읍제약공단2길35",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.84)"
+        "reason": "char-level diff (sim=0.52)"
       },
       {
         "location": "field:supplyAmount",
@@ -898,14 +898,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 전주지점",
-        "extNorm": "백제약품(주)전주지점",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -1325,7 +1317,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 27,
+      "recognition": 26,
       "structure": 29,
       "layout": 4,
       "preprocessing": 0

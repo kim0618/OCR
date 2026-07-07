@@ -61,9 +61,9 @@
       "supplierCompany": {
         "gt": "엘지화학(주)",
         "ext": "",
-        "gtNorm": "엘지화학(주)",
+        "gtNorm": "엘지화학",
         "extNorm": "",
-        "type": "text",
+        "type": "company",
         "status": "ext_missing",
         "edited": false,
         "difficult": true,
@@ -113,10 +113,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 원주지점",
         "ext": "백제약품(주)원주지점",
-        "gtNorm": "백제약품 (주) 원주지점",
-        "extNorm": "백제약품(주)원주지점",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품원주지점",
+        "extNorm": "백제약품원주지점",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -141,8 +141,8 @@
     "profile": "thin",
     "counts": {
       "scored": 10,
-      "match": 2,
-      "mismatch": 6,
+      "match": 3,
+      "mismatch": 5,
       "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
@@ -154,11 +154,11 @@
     },
     "coverage": {
       "gtPresent": 10,
-      "matched": 2,
+      "matched": 3,
       "extNotAttempted": 0,
       "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.2
+    "fieldAccuracy": 0.3
   },
   "table": {
     "alignMode": "content",
@@ -365,7 +365,7 @@
       {
         "location": "field:supplierCompany",
         "status": "ext_missing",
-        "gtNorm": "엘지화학(주)",
+        "gtNorm": "엘지화학",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
@@ -393,14 +393,6 @@
         "extNorm": "201300",
         "bucket": "structure",
         "reason": "ext value is gt's ['row1:amount']"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 원주지점",
-        "extNorm": "백제약품(주)원주지점",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -556,7 +548,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 7,
+      "recognition": 6,
       "structure": 16,
       "layout": 3,
       "preprocessing": 0

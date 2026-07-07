@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "보령제약(전)",
-        "ext": "주)보령",
-        "gtNorm": "보령제약(전)",
-        "extNorm": "주)보령",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "보령제약(전)",
+        "gtNorm": "보령제약",
+        "extNorm": "보령제약",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "경기도 안산시 단원구 능안로 107 (신길동)",
-        "ext": "서울치종로구창경궁로136",
+        "ext": "경기도 안산시 단원구 능안로 107 (신길동)",
         "gtNorm": "경기도안산시단원구능안로107신길동",
-        "extNorm": "서울치종로구창경궁로136",
+        "extNorm": "경기도안산시단원구능안로107신길동",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영남본부",
         "ext": "백제약품(주)영남본부",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품영남본부",
+        "extNorm": "백제약품영남본부",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 4,
-      "mismatch": 6,
+      "match": 7,
+      "mismatch": 3,
       "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 4,
+      "matched": 7,
       "extNotAttempted": 0,
       "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.3333333333333333
+    "fieldAccuracy": 0.5833333333333334
   },
   "table": {
     "alignMode": "content",
@@ -1095,14 +1095,6 @@
         "reason": "gt value present at ['field:discountAmount']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "보령제약(전)",
-        "extNorm": "주)보령",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:taxType",
         "status": "mismatch",
         "gtNorm": "면세",
@@ -1111,28 +1103,12 @@
         "reason": "char-level diff (sim=0.50)"
       },
       {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "경기도안산시단원구능안로107신길동",
-        "extNorm": "서울치종로구창경궁로136",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplyAmount",
         "status": "ext_missing",
         "gtNorm": "0",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value present at ['field:discountAmount']"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -1912,7 +1888,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 24,
+      "recognition": 21,
       "structure": 79,
       "layout": 1,
       "preprocessing": 0

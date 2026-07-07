@@ -73,11 +73,11 @@
       },
       "supplierCompany": {
         "gt": "지에스팜",
-        "ext": "주)지에스팜",
+        "ext": "지에스팜(주)",
         "gtNorm": "지에스팜",
-        "extNorm": "주)지에스팜",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "지에스팜",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -99,9 +99,9 @@
       },
       "supplierAddress": {
         "gt": "경기 안양시 동안구 엘에스로 42 (호계동) 401",
-        "ext": "경기도안양시 동안구엘에스로42,401호(호계동,경륨니",
+        "ext": "경기도 안양시 동안구 흥안대로 436 (평촌동)",
         "gtNorm": "경기안양시동안구엘에스로42호계동401",
-        "extNorm": "경기도안양시동안구엘에스로42401호호계동경륨니",
+        "extNorm": "경기도안양시동안구흥안대로436평촌동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -126,9 +126,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영남본부",
         "ext": "백제약품",
-        "gtNorm": "백제약품 (주) 영남본부",
+        "gtNorm": "백제약품영남본부",
         "extNorm": "백제약품",
-        "type": "text",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -154,8 +154,8 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 5,
-      "mismatch": 6,
+      "match": 6,
+      "mismatch": 5,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 5,
+      "matched": 6,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.45454545454545453
+    "fieldAccuracy": 0.5454545454545454
   },
   "table": {
     "alignMode": "content",
@@ -382,20 +382,12 @@
         "reason": "gt value present at ['field:discountAmount']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "지에스팜",
-        "extNorm": "주)지에스팜",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.80)"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기안양시동안구엘에스로42호계동401",
-        "extNorm": "경기도안양시동안구엘에스로42401호호계동경륨니",
+        "extNorm": "경기도안양시동안구흥안대로436평촌동",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.76)"
+        "reason": "char-level diff (sim=0.56)"
       },
       {
         "location": "field:supplyAmount",
@@ -408,10 +400,10 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영남본부",
+        "gtNorm": "백제약품영남본부",
         "extNorm": "백제약품",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "field:buyerAddress",
@@ -511,7 +503,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 10,
+      "recognition": 9,
       "structure": 7,
       "layout": 0,
       "preprocessing": 0

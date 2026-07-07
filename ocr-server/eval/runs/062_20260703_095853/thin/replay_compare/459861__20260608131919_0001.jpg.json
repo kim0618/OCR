@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "성산팜(건강메디칼)",
-        "ext": "주식회사 성산팜",
-        "gtNorm": "성산팜(건강메디칼)",
-        "extNorm": "주식회사 성산팜",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "성산팜(건강메디칼)",
+        "gtNorm": "성산팜건강메디칼",
+        "extNorm": "성산팜건강메디칼",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "부산 해운대구 명장로 67번길 50 효성의약품 2층",
-        "ext": "부산광역시 해운대구 삼어로 55(반여동,",
+        "ext": "부산 해운대구 명장로 67번길 50 효성의약품 2층",
         "gtNorm": "부산해운대구명장로67번길50효성의약품2층",
-        "extNorm": "부산광역시해운대구삼어로55반여동",
+        "extNorm": "부산해운대구명장로67번길50효성의약품2층",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영남본부",
         "ext": "백제약품",
-        "gtNorm": "백제약품 (주) 영남본부",
+        "gtNorm": "백제약품영남본부",
         "extNorm": "백제약품",
-        "type": "text",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
-      "mismatch": 4,
+      "match": 10,
+      "mismatch": 2,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 10,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.8333333333333334
   },
   "table": {
     "alignMode": "content",
@@ -387,28 +387,12 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "성산팜(건강메디칼)",
-        "extNorm": "주식회사 성산팜",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "부산해운대구명장로67번길50효성의약품2층",
-        "extNorm": "부산광역시해운대구삼어로55반여동",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영남본부",
+        "gtNorm": "백제약품영남본부",
         "extNorm": "백제약품",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "field:buyerAddress",
@@ -492,7 +476,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 8,
+      "recognition": 6,
       "structure": 5,
       "layout": 0,
       "preprocessing": 0

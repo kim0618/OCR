@@ -87,9 +87,9 @@
       "supplierCompany": {
         "gt": "환인제약(주)",
         "ext": "환인제약(주)",
-        "gtNorm": "환인제약(주)",
-        "extNorm": "환인제약(주)",
-        "type": "text",
+        "gtNorm": "환인제약",
+        "extNorm": "환인제약",
+        "type": "company",
         "status": "match",
         "edited": false,
         "difficult": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울시 송파구 법원로6길 11 환인빌딩 8~11층",
-        "ext": "서울특별시송파구법원로6길11",
+        "ext": "서울시 송파구 법원로6길 11 환인빌딩 8~11층",
         "gtNorm": "서울시송파구법원로6길11환인빌딩811층",
-        "extNorm": "서울특별시송파구법원로6길11",
+        "extNorm": "서울시송파구법원로6길11환인빌딩811층",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)평택물류센터",
         "ext": "백제약품(주)영등포지",
-        "gtNorm": "백제약품(주)평택물류센터",
-        "extNorm": "백제약품(주)영등포지",
-        "type": "text",
+        "gtNorm": "백제약품평택물류센터",
+        "extNorm": "백제약품영등포지",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 6,
-      "mismatch": 6,
+      "match": 7,
+      "mismatch": 5,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 6,
+      "matched": 7,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.5
+    "fieldAccuracy": 0.5833333333333334
   },
   "table": {
     "alignMode": "content",
@@ -574,14 +574,6 @@
         "reason": "ext value is gt's ['row1:amount']"
       },
       {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "서울시송파구법원로6길11환인빌딩811층",
-        "extNorm": "서울특별시송파구법원로6길11",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.72)"
-      },
-      {
         "location": "field:supplyAmount",
         "status": "mismatch",
         "gtNorm": "424681",
@@ -592,10 +584,10 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)평택물류센터",
-        "extNorm": "백제약품(주)영등포지",
+        "gtNorm": "백제약품평택물류센터",
+        "extNorm": "백제약품영등포지",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.58)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -687,7 +679,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 13,
+      "recognition": 12,
       "structure": 3,
       "layout": 0,
       "preprocessing": 0

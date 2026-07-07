@@ -86,10 +86,10 @@
       },
       "supplierCompany": {
         "gt": "국제약품공업(주)(전문)",
-        "ext": "국제약품(주)",
-        "gtNorm": "국제약품공업(주)(전문)",
-        "extNorm": "국제약품(주)",
-        "type": "text",
+        "ext": "국제약품",
+        "gtNorm": "국제약품공업전문",
+        "extNorm": "국제약품",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "경기도 안산시 단원구 산성로 47 (초지동)",
-        "ext": "",
+        "ext": "경기도 안산시 단원구 산성로 47 (초지동)",
         "gtNorm": "경기도안산시단원구산성로47초지동",
-        "extNorm": "",
+        "extNorm": "경기도안산시단원구산성로47초지동",
         "type": "address",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 전주지점",
         "ext": "백제약품(주)",
-        "gtNorm": "백제약품 (주) 전주지점",
-        "extNorm": "백제약품(주)",
-        "type": "text",
+        "gtNorm": "백제약품전주지점",
+        "extNorm": "백제약품",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
+      "match": 9,
       "mismatch": 2,
-      "ext_missing": 2,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 9,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -1005,26 +1005,18 @@
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
-        "gtNorm": "국제약품공업(주)(전문)",
-        "extNorm": "국제약품(주)",
+        "gtNorm": "국제약품공업전문",
+        "extNorm": "국제약품",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.70)"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "ext_missing",
-        "gtNorm": "경기도안산시단원구산성로47초지동",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 전주지점",
-        "extNorm": "백제약품(주)",
+        "gtNorm": "백제약품전주지점",
+        "extNorm": "백제약품",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.70)"
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "field:buyerAddress",
@@ -1621,7 +1613,7 @@
     ],
     "bucketTally": {
       "recognition": 25,
-      "structure": 44,
+      "structure": 43,
       "layout": 8,
       "preprocessing": 0
     },
@@ -1641,6 +1633,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.167
+    "fieldMissRate": 0.083
   }
 }

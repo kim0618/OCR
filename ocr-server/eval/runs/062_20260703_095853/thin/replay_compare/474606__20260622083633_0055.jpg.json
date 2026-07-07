@@ -73,10 +73,10 @@
       },
       "supplierCompany": {
         "gt": "파마킹",
-        "ext": "양약화공약품",
+        "ext": "파마킹(전문)",
         "gtNorm": "파마킹",
-        "extNorm": "양약화공약품",
-        "type": "text",
+        "extNorm": "파마킹전문",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": true,
@@ -99,9 +99,9 @@
       },
       "supplierAddress": {
         "gt": "경기 성남시 수정구 성남대로 1526 (복정동), JS빌딩",
-        "ext": "충북음성군 감곡면행군이갈",
+        "ext": "경기도 성남시 수정구 수정로306번길 4 (신흥동)",
         "gtNorm": "경기성남시수정구성남대로1526복정동js빌딩",
-        "extNorm": "충북음성군감곡면행군이갈",
+        "extNorm": "경기도성남시수정구수정로306번길4신흥동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -126,10 +126,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 원주지점",
         "ext": "백제약품(주)원주지점",
-        "gtNorm": "백제약품 (주) 원주지점",
-        "extNorm": "백제약품(주)원주지점",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품원주지점",
+        "extNorm": "백제약품원주지점",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -154,8 +154,8 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 4,
-      "mismatch": 6,
+      "match": 5,
+      "mismatch": 5,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 4,
+      "matched": 5,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.36363636363636365
+    "fieldAccuracy": 0.45454545454545453
   },
   "table": {
     "alignMode": "content",
@@ -342,17 +342,17 @@
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "파마킹",
-        "extNorm": "양약화공약품",
+        "extNorm": "파마킹전문",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.75)"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기성남시수정구성남대로1526복정동js빌딩",
-        "extNorm": "충북음성군감곡면행군이갈",
+        "extNorm": "경기도성남시수정구수정로306번길4신흥동",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "field:supplyAmount",
@@ -361,14 +361,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 원주지점",
-        "extNorm": "백제약품(주)원주지점",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -460,7 +452,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 10,
+      "recognition": 9,
       "structure": 6,
       "layout": 1,
       "preprocessing": 0

@@ -74,7 +74,7 @@ from extractors.invoice_statement_free import (
     split_merged_item_name,
     recover_shifted_item_name,
 )
-from extractors.master_match import fill_master_match
+from extractors.master_match import fill_master_match, fill_party_match
 from utils.regex_patterns import (
     _PHONE_RE,
     _ADDR_START_RE, _NEXT_LABEL_RE, _FIELD_NOISE_RE,
@@ -3566,6 +3566,16 @@ async def ocr_extract(
                         extract_debug["masterMatchFill"] = _mm_dbg
             except Exception as _mm_e:
                 print(f"[master_match_fill] failed (response unaffected): {_mm_e}")
+            # ④거래처/지점 매칭: 공급자=사업자번호 앵커→거래처 마스터, 공급받는자=지점
+            # trigram. 앵커 정확할 때만 상호/주소를 마스터 정식값으로 교체(사전에 없는
+            # 문서는 자동 미적용). war Master 필드 84.5~100%의 실체를 재현.
+            try:
+                if isinstance(document_fields, dict):
+                    document_fields, _pm_dbg = fill_party_match(document_fields)
+                    if _pm_dbg.get("supplier") or _pm_dbg.get("buyer"):
+                        extract_debug["partyMatchFill"] = _pm_dbg
+            except Exception as _pm_e:
+                print(f"[party_match_fill] failed (response unaffected): {_pm_e}")
             # emit war-GT scalar columns the parser leaves empty (taxType/discountAmount)
             try:
                 document_fields, _scalar_dbg = fill_scalar_defaults(document_fields)

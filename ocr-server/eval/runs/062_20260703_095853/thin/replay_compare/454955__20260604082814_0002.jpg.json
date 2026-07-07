@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "씨엠지제약(전)",
-        "ext": "보관용)",
-        "gtNorm": "씨엠지제약(전)",
-        "extNorm": "보관용)",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "씨엠지제약",
+        "gtNorm": "씨엠지제약",
+        "extNorm": "씨엠지제약",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "경기도 시흥시 비둘기공원7길 64 (대야동)",
-        "ext": "서울득별시 강남구 학동로 170, 3층 306호(논현동,배터라이프빌딩",
+        "ext": "서울 강남구 도산대로66길 14 (청담동,B01호)",
         "gtNorm": "경기도시흥시비둘기공원7길64대야동",
-        "extNorm": "서울득별시강남구학동로1703층306호논현동배터라이프빌딩",
+        "extNorm": "서울강남구도산대로66길14청담동b01호",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 광주지점",
         "ext": "",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "",
-        "type": "text",
+        "type": "company",
         "status": "ext_missing",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
-      "mismatch": 3,
+      "match": 9,
+      "mismatch": 2,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 9,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -763,25 +763,17 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "씨엠지제약(전)",
-        "extNorm": "보관용)",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기도시흥시비둘기공원7길64대야동",
-        "extNorm": "서울득별시강남구학동로1703층306호논현동배터라이프빌딩",
+        "extNorm": "서울강남구도산대로66길14청담동b01호",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerCompany",
         "status": "ext_missing",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
@@ -916,7 +908,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 13,
+      "recognition": 12,
       "structure": 2,
       "layout": 4,
       "preprocessing": 0

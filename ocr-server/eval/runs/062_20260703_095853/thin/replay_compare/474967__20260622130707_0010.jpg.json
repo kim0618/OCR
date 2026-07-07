@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "아이젠파마코리아(주)",
-        "ext": "주)아이젠파마코리아",
-        "gtNorm": "아이젠파마코리아(주)",
-        "extNorm": "주)아이젠파마코리아",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "아이젠파마코리아",
+        "gtNorm": "아이젠파마코리아",
+        "extNorm": "아이젠파마코리아",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울 마포구 마포대로 163, 14층 (공덕동)",
-        "ext": "서울 마포구 마포대로 163, 5층(공덕동, 서울",
+        "ext": "서울 마포구 마포대로 163 (공덕동) 14층",
         "gtNorm": "서울마포구마포대로16314층공덕동",
-        "extNorm": "서울마포구마포대로1635층공덕동서울",
+        "extNorm": "서울마포구마포대로163공덕동14층",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 광주지점",
         "ext": "양약동물의약품",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "양약동물의약품",
-        "type": "text",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
-      "mismatch": 4,
+      "match": 9,
+      "mismatch": 3,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 9,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -386,25 +386,17 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "아이젠파마코리아(주)",
-        "extNorm": "주)아이젠파마코리아",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.76)"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울마포구마포대로16314층공덕동",
-        "extNorm": "서울마포구마포대로1635층공덕동서울",
+        "extNorm": "서울마포구마포대로163공덕동14층",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.86)"
+        "reason": "char-level diff (sim=0.83)"
       },
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "양약동물의약품",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
@@ -467,7 +459,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 9,
+      "recognition": 8,
       "structure": 1,
       "layout": 0,
       "preprocessing": 0

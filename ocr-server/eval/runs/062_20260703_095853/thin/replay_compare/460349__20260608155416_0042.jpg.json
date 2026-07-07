@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "디알팜",
-        "ext": "주)디알팜",
+        "ext": "디알팜",
         "gtNorm": "디알팜",
-        "extNorm": "주)디알팜",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "디알팜",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "부산시 부산진구 부전로 102-5",
-        "ext": "부산광역시 부산진구 부천로102-5(부천동을",
+        "ext": "부산시 부산진구 부전로 102-5",
         "gtNorm": "부산시부산진구부전로1025",
-        "extNorm": "부산광역시부산진구부천로1025부천동을",
+        "extNorm": "부산시부산진구부전로1025",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영남본부",
         "ext": "백제약품(주)영남본부",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품영남본부",
+        "extNorm": "백제약품영남본부",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 5,
-      "mismatch": 7,
+      "match": 8,
+      "mismatch": 4,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 5,
+      "matched": 8,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.4166666666666667
+    "fieldAccuracy": 0.6666666666666666
   },
   "table": {
     "alignMode": "content",
@@ -843,36 +843,12 @@
         "reason": "gt value present at ['field:discountAmount']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "디알팜",
-        "extNorm": "주)디알팜",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.75)"
-      },
-      {
         "location": "field:taxType",
         "status": "mismatch",
         "gtNorm": "면세",
         "extNorm": "과세",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.50)"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "부산시부산진구부전로1025",
-        "extNorm": "부산광역시부산진구부천로1025부천동을",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.76)"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -1268,7 +1244,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 27,
+      "recognition": 24,
       "structure": 28,
       "layout": 0,
       "preprocessing": 0

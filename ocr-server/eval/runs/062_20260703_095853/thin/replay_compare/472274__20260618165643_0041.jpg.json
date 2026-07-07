@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "한독약품(전문)",
-        "ext": "",
-        "gtNorm": "한독약품(전문)",
-        "extNorm": "",
-        "type": "text",
-        "status": "ext_missing",
+        "ext": "한독(전)",
+        "gtNorm": "한독약품전문",
+        "extNorm": "한독",
+        "type": "company",
+        "status": "mismatch",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 강남구 테헤란로 132 (역삼동)",
-        "ext": "서울시강남구테헤란로132(역삼동",
+        "ext": "서울 강남구 테헤란로 132(역삼동)",
         "gtNorm": "서울특별시강남구테헤란로132역삼동",
-        "extNorm": "서울시강남구테헤란로132역삼동",
+        "extNorm": "서울강남구테헤란로132역삼동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)북부물류센터",
         "ext": "백제약품(주)영동포지점",
-        "gtNorm": "백제약품(주)북부물류센터",
-        "extNorm": "백제약품(주)영동포지점",
-        "type": "text",
+        "gtNorm": "백제약품북부물류센터",
+        "extNorm": "백제약품영동포지점",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 8,
-      "mismatch": 3,
-      "ext_missing": 1,
+      "mismatch": 4,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,7 +182,7 @@
       "gtPresent": 12,
       "matched": 8,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
     "fieldAccuracy": 0.6666666666666666
   },
@@ -474,27 +474,27 @@
     "defects": [
       {
         "location": "field:supplierCompany",
-        "status": "ext_missing",
-        "gtNorm": "한독약품(전문)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "status": "mismatch",
+        "gtNorm": "한독약품전문",
+        "extNorm": "한독",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울특별시강남구테헤란로132역삼동",
-        "extNorm": "서울시강남구테헤란로132역삼동",
+        "extNorm": "서울강남구테헤란로132역삼동",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.94)"
+        "reason": "char-level diff (sim=0.91)"
       },
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)북부물류센터",
-        "extNorm": "백제약품(주)영동포지점",
+        "gtNorm": "백제약품북부물류센터",
+        "extNorm": "백제약품영동포지점",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.56)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -682,8 +682,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 9,
-      "structure": 17,
+      "recognition": 10,
+      "structure": 16,
       "layout": 0,
       "preprocessing": 0
     },
@@ -703,6 +703,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

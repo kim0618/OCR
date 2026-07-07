@@ -86,10 +86,10 @@
       },
       "supplierCompany": {
         "gt": "한림MS(주)(전문)",
-        "ext": "주)한림M5",
-        "gtNorm": "한림ms(주)(전문)",
-        "extNorm": "주)한림m5",
-        "type": "text",
+        "ext": "한림MS(주)",
+        "gtNorm": "한림ms전문",
+        "extNorm": "한림ms",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "경기 용인시 처인구 영문로 2-27",
-        "ext": "경기도용인시처인구포곡읍영문로62",
+        "ext": "경기도 용인시 처인구 영문로 2-27 (유방동)",
         "gtNorm": "경기용인시처인구영문로227",
-        "extNorm": "경기도용인시처인구포곡읍영문로62",
+        "extNorm": "경기도용인시처인구영문로227유방동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 전주지점",
         "ext": "백제약품(주)전주지점",
-        "gtNorm": "백제약품 (주) 전주지점",
-        "extNorm": "백제약품(주)전주지점",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품전주지점",
+        "extNorm": "백제약품전주지점",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 6,
-      "mismatch": 6,
+      "match": 7,
+      "mismatch": 5,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 6,
+      "matched": 7,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.5
+    "fieldAccuracy": 0.5833333333333334
   },
   "table": {
     "alignMode": "content",
@@ -580,26 +580,18 @@
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
-        "gtNorm": "한림ms(주)(전문)",
-        "extNorm": "주)한림m5",
+        "gtNorm": "한림ms전문",
+        "extNorm": "한림ms",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기용인시처인구영문로227",
-        "extNorm": "경기도용인시처인구포곡읍영문로62",
+        "extNorm": "경기도용인시처인구영문로227유방동",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.77)"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 전주지점",
-        "extNorm": "백제약품(주)전주지점",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
+        "reason": "char-level diff (sim=0.88)"
       },
       {
         "location": "field:buyerAddress",
@@ -659,7 +651,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 9,
+      "recognition": 8,
       "structure": 3,
       "layout": 0,
       "preprocessing": 0

@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "미래팜",
-        "ext": "미래팜(유)매입",
+        "ext": "미래팜",
         "gtNorm": "미래팜",
-        "extNorm": "미래팜(유)매입",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "미래팜",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울 동대문구 장한로 119 (장안동, 장안삼성쉐르빌) 2층 217~218호 (장안동, 장안삼성쉐르빌)",
-        "ext": "호(삼성쉐르빌)(장안동",
+        "ext": "서울 동대문구 장한로 119 (장안동, 장안삼성쉐르빌) 217-218호",
         "gtNorm": "서울동대문구장한로119장안동장안삼성쉐르빌2층217218호장안동장안삼성쉐르빌",
-        "extNorm": "호삼성쉐르빌장안동",
+        "extNorm": "서울동대문구장한로119장안동장안삼성쉐르빌217218호",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)동부물류센터",
         "ext": "백제약품(주)영등포지점",
-        "gtNorm": "백제약품(주)동부물류센터",
-        "extNorm": "백제약품(주)영등포지점",
-        "type": "text",
+        "gtNorm": "백제약품동부물류센터",
+        "extNorm": "백제약품영등포지점",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 7,
-      "mismatch": 5,
+      "match": 8,
+      "mismatch": 4,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 7,
+      "matched": 8,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.5833333333333334
+    "fieldAccuracy": 0.6666666666666666
   },
   "table": {
     "alignMode": "content",
@@ -397,28 +397,20 @@
         "reason": "char-level diff (sim=0.62)"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "미래팜",
-        "extNorm": "미래팜(유)매입",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.55)"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울동대문구장한로119장안동장안삼성쉐르빌2층217218호장안동장안삼성쉐르빌",
-        "extNorm": "호삼성쉐르빌장안동",
+        "extNorm": "서울동대문구장한로119장안동장안삼성쉐르빌217218호",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.83)"
       },
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)동부물류센터",
-        "extNorm": "백제약품(주)영등포지점",
+        "gtNorm": "백제약품동부물류센터",
+        "extNorm": "백제약품영등포지점",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.56)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -582,7 +574,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 9,
+      "recognition": 8,
       "structure": 15,
       "layout": 0,
       "preprocessing": 0

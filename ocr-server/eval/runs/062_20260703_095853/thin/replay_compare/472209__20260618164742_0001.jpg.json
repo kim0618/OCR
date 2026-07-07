@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "이상팜",
-        "ext": "주)이상팜",
+        "ext": "이상팜",
         "gtNorm": "이상팜",
-        "extNorm": "주)이상팜",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "이상팜",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울 강남구 선릉로127길 6 (논현동) 5층",
-        "ext": "서울특별시 강남구 선릉로127길 6, 5층",
+        "ext": "경기 김포시 고촌읍 아라육로57번길 46 A동 2층",
         "gtNorm": "서울강남구선릉로127길6논현동5층",
-        "extNorm": "서울특별시강남구선릉로127길65층",
+        "extNorm": "경기김포시고촌읍아라육로57번길46a동2층",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영등포지점",
         "ext": "백제약품(주)영등포지점",
-        "gtNorm": "백제약품 (주) 영등포지점",
-        "extNorm": "백제약품(주)영등포지점",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품영등포지점",
+        "extNorm": "백제약품영등포지점",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
-      "mismatch": 4,
+      "match": 10,
+      "mismatch": 2,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 10,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.8333333333333334
   },
   "table": {
     "alignMode": "content",
@@ -568,28 +568,12 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "이상팜",
-        "extNorm": "주)이상팜",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.75)"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울강남구선릉로127길6논현동5층",
-        "extNorm": "서울특별시강남구선릉로127길65층",
+        "extNorm": "경기김포시고촌읍아라육로57번길46a동2층",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.83)"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영등포지점",
-        "extNorm": "백제약품(주)영등포지점",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -937,7 +921,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 4,
+      "recognition": 2,
       "structure": 42,
       "layout": 0,
       "preprocessing": 0

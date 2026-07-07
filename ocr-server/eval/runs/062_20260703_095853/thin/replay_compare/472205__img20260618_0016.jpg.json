@@ -86,10 +86,10 @@
       },
       "supplierCompany": {
         "gt": "안국약품(전문)",
-        "ext": "용)",
-        "gtNorm": "안국약품(전문)",
-        "extNorm": "용)",
-        "type": "text",
+        "ext": "안국약품(일반)",
+        "gtNorm": "안국약품전문",
+        "extNorm": "안국약품일반",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": true,
@@ -126,9 +126,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 대전지점",
         "ext": "",
-        "gtNorm": "백제약품 (주) 대전지점",
+        "gtNorm": "백제약품대전지점",
         "extNorm": "",
-        "type": "text",
+        "type": "company",
         "status": "ext_missing",
         "edited": false,
         "difficult": false,
@@ -918,10 +918,10 @@
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
-        "gtNorm": "안국약품(전문)",
-        "extNorm": "용)",
+        "gtNorm": "안국약품전문",
+        "extNorm": "안국약품일반",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "field:supplyAmount",
@@ -934,18 +934,18 @@
       {
         "location": "field:buyerCompany",
         "status": "ext_missing",
-        "gtNorm": "백제약품 (주) 대전지점",
+        "gtNorm": "백제약품대전지점",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "reason": "gt value present at ['field:buyerAddress']"
       },
       {
         "location": "field:buyerAddress",
         "status": "mismatch",
         "gtNorm": "대전시중구보문로235",
         "extNorm": "백제약품대전지점",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "bucket": "structure",
+        "reason": "ext value is gt's ['field:buyerCompany']"
       },
       {
         "location": "row1:itemName",
@@ -1141,8 +1141,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 13,
-      "structure": 15,
+      "recognition": 12,
+      "structure": 16,
       "layout": 1,
       "preprocessing": 0
     },

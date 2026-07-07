@@ -86,10 +86,10 @@
       },
       "supplierCompany": {
         "gt": "진양제약(전)",
-        "ext": "의약품외",
-        "gtNorm": "진양제약(전)",
-        "extNorm": "의약품외",
-        "type": "text",
+        "ext": "진양제약(전문)(주)",
+        "gtNorm": "진양제약",
+        "extNorm": "진양제약전문",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "경기도 안산시 단원구 별망로 627 (초지동)",
-        "ext": "강원도 원주시 지정면 신평로34",
+        "ext": "경기도 안산시 단원구 별망로 627 (초지동)",
         "gtNorm": "경기도안산시단원구별망로627초지동",
-        "extNorm": "강원도원주시지정면신평로34",
+        "extNorm": "경기도안산시단원구별망로627초지동",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영남본부",
         "ext": "백제약품(주)영남본부",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품영남본부",
+        "extNorm": "백제약품영남본부",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 4,
-      "mismatch": 7,
+      "match": 6,
+      "mismatch": 5,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 4,
+      "matched": 6,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.3333333333333333
+    "fieldAccuracy": 0.5
   },
   "table": {
     "alignMode": "content",
@@ -1321,10 +1321,10 @@
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
-        "gtNorm": "진양제약(전)",
-        "extNorm": "의약품외",
+        "gtNorm": "진양제약",
+        "extNorm": "진양제약전문",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "field:taxType",
@@ -1335,28 +1335,12 @@
         "reason": "char-level diff (sim=0.50)"
       },
       {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "경기도안산시단원구별망로627초지동",
-        "extNorm": "강원도원주시지정면신평로34",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplyAmount",
         "status": "mismatch",
         "gtNorm": "0",
         "extNorm": "2191746",
         "bucket": "structure",
         "reason": "gt value present at ['field:discountAmount']"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -1624,7 +1608,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 30,
+      "recognition": 28,
       "structure": 8,
       "layout": 2,
       "preprocessing": 0

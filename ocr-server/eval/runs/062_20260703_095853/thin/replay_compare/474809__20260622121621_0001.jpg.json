@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "명문제약",
-        "ext": "명문제약(주)",
+        "ext": "명문제약(전)",
         "gtNorm": "명문제약",
-        "extNorm": "명문제약(주)",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "명문제약",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 강남구 봉은사로 476 (삼성동)",
-        "ext": "경기도 화성시 향남읍 제약공단",
+        "ext": "경기 화성시 만세구 향남읍 제약공단2길 26",
         "gtNorm": "서울특별시강남구봉은사로476삼성동",
-        "extNorm": "경기도화성시향남읍제약공단",
+        "extNorm": "경기화성시만세구향남읍제약공단2길26",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)북부물류센터",
         "ext": "백제약품(주)영등포",
-        "gtNorm": "백제약품(주)북부물류센터",
-        "extNorm": "백제약품(주)영등포",
-        "type": "text",
+        "gtNorm": "백제약품북부물류센터",
+        "extNorm": "백제약품영등포",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
-      "mismatch": 4,
+      "match": 9,
+      "mismatch": 3,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 9,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -300,28 +300,20 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "명문제약",
-        "extNorm": "명문제약(주)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.73)"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울특별시강남구봉은사로476삼성동",
-        "extNorm": "경기도화성시향남읍제약공단",
+        "extNorm": "경기화성시만세구향남읍제약공단2길26",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)북부물류센터",
-        "extNorm": "백제약품(주)영등포",
+        "gtNorm": "백제약품북부물류센터",
+        "extNorm": "백제약품영등포",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.61)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -405,7 +397,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 8,
+      "recognition": 7,
       "structure": 4,
       "layout": 1,
       "preprocessing": 0

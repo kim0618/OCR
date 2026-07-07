@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "에이블팜스리테일",
-        "ext": "에이블팜스리테일(주)",
+        "ext": "에이블팜스리테일",
         "gtNorm": "에이블팜스리테일",
-        "extNorm": "에이블팜스리테일(주)",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "에이블팜스리테일",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울 관악구 관악로24길 63, 502호 (봉천동)",
-        "ext": "서울특별시관약구관악로24길63,5층(봉천",
+        "ext": "서울 관악구 관악로24길 63 (봉천동) 502호",
         "gtNorm": "서울관악구관악로24길63502호봉천동",
-        "extNorm": "서울특별시관약구관악로24길635층봉천",
+        "extNorm": "서울관악구관악로24길63봉천동502호",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)동부물류센터",
         "ext": "백제약품(주)",
-        "gtNorm": "백제약품(주)동부물류센터",
-        "extNorm": "백제약품(주)",
-        "type": "text",
+        "gtNorm": "백제약품동부물류센터",
+        "extNorm": "백제약품",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 4,
-      "mismatch": 8,
+      "match": 5,
+      "mismatch": 7,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 4,
+      "matched": 5,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.3333333333333333
+    "fieldAccuracy": 0.4166666666666667
   },
   "table": {
     "alignMode": "content",
@@ -1088,14 +1088,6 @@
         "reason": "gt value present at ['field:discountAmount']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "에이블팜스리테일",
-        "extNorm": "에이블팜스리테일(주)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.84)"
-      },
-      {
         "location": "field:taxType",
         "status": "mismatch",
         "gtNorm": "면세",
@@ -1107,9 +1099,9 @@
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울관악구관악로24길63502호봉천동",
-        "extNorm": "서울특별시관약구관악로24길635층봉천",
+        "extNorm": "서울관악구관악로24길63봉천동502호",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.75)"
+        "reason": "char-level diff (sim=0.85)"
       },
       {
         "location": "field:supplyAmount",
@@ -1122,10 +1114,10 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)동부물류센터",
-        "extNorm": "백제약품(주)",
+        "gtNorm": "백제약품동부물류센터",
+        "extNorm": "백제약품",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.70)"
+        "reason": "char-level diff (sim=0.57)"
       },
       {
         "location": "field:buyerAddress",
@@ -1617,7 +1609,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 30,
+      "recognition": 29,
       "structure": 36,
       "layout": 2,
       "preprocessing": 0

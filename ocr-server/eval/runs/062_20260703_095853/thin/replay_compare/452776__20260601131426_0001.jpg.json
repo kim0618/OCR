@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "팜베이",
-        "ext": "주식회사 팜베이",
+        "ext": "팜베이",
         "gtNorm": "팜베이",
-        "extNorm": "주식회사 팜베이",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "팜베이",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울 송파구 법원로11길 11 (문정동) A동 15층 1506호",
-        "ext": "\\(문정동",
+        "ext": "서울 송파구 법원로11길 11 (문정동) A동 15층 1506호",
         "gtNorm": "서울송파구법원로11길11문정동a동15층1506호",
-        "extNorm": "문정동",
+        "extNorm": "서울송파구법원로11길11문정동a동15층1506호",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영남본부",
         "ext": "백제약품(주)영남본부",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품영남본부",
+        "extNorm": "백제약품영남본부",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 5,
-      "mismatch": 6,
+      "match": 8,
+      "mismatch": 3,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 5,
+      "matched": 8,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.4166666666666667
+    "fieldAccuracy": 0.6666666666666666
   },
   "table": {
     "alignMode": "content",
@@ -1099,36 +1099,12 @@
         "reason": "gt value present at ['field:supplyAmount']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "팜베이",
-        "extNorm": "주식회사 팜베이",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.55)"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "서울송파구법원로11길11문정동a동15층1506호",
-        "extNorm": "문정동",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplyAmount",
         "status": "mismatch",
         "gtNorm": "42029443",
         "extNorm": "4202950",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.67)"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -1620,7 +1596,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 31,
+      "recognition": 28,
       "structure": 32,
       "layout": 4,
       "preprocessing": 0

@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "고려제약(전)",
-        "ext": "고려제약(주)",
-        "gtNorm": "고려제약(전)",
-        "extNorm": "고려제약(주)",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "고려제약(전)",
+        "gtNorm": "고려제약",
+        "extNorm": "고려제약",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "경기도 이천시 신둔면 원적로 69-10",
-        "ext": "경기도 이천시신둔면원책로69-10",
+        "ext": "경기 이천시 신둔면 수광1리 386",
         "gtNorm": "경기도이천시신둔면원적로6910",
-        "extNorm": "경기도이천시신둔면원책로6910",
+        "extNorm": "경기이천시신둔면수광1리386",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 광주지점",
         "ext": "",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "",
-        "type": "text",
+        "type": "company",
         "status": "ext_missing",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 5,
-      "mismatch": 4,
+      "match": 6,
+      "mismatch": 3,
       "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 5,
+      "matched": 6,
       "extNotAttempted": 0,
       "extAttemptedMiss": 3
     },
-    "fieldAccuracy": 0.4166666666666667
+    "fieldAccuracy": 0.5
   },
   "table": {
     "alignMode": "content",
@@ -305,20 +305,12 @@
         "reason": "gt value not found anywhere in extraction"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "고려제약(전)",
-        "extNorm": "고려제약(주)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.86)"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기도이천시신둔면원적로6910",
-        "extNorm": "경기도이천시신둔면원책로6910",
+        "extNorm": "경기이천시신둔면수광1리386",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.94)"
+        "reason": "char-level diff (sim=0.58)"
       },
       {
         "location": "field:supplyAmount",
@@ -331,7 +323,7 @@
       {
         "location": "field:buyerCompany",
         "status": "ext_missing",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
@@ -386,7 +378,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 6,
+      "recognition": 5,
       "structure": 6,
       "layout": 0,
       "preprocessing": 0

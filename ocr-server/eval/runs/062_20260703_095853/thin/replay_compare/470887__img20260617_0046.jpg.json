@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "대화제약(주)",
-        "ext": "",
-        "gtNorm": "대화제약(주)",
-        "extNorm": "",
-        "type": "text",
-        "status": "ext_missing",
+        "ext": "백제약품(주)대전지점",
+        "gtNorm": "대화제약",
+        "extNorm": "백제약품대전지점",
+        "type": "company",
+        "status": "mismatch",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "경기 시흥시 정왕동 시화공단 1라 603",
-        "ext": "대전광역시 중구 보문로",
+        "ext": "대전광역시 중구 보문로 235 (대흥동)",
         "gtNorm": "경기시흥시정왕동시화공단1라603",
-        "extNorm": "대전광역시중구보문로",
+        "extNorm": "대전광역시중구보문로235대흥동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 대전지점",
         "ext": "대화제약(주)",
-        "gtNorm": "백제약품 (주) 대전지점",
-        "extNorm": "대화제약(주)",
-        "type": "text",
+        "gtNorm": "백제약품대전지점",
+        "extNorm": "대화제약",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 5,
-      "mismatch": 5,
-      "ext_missing": 2,
+      "mismatch": 6,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,7 +182,7 @@
       "gtPresent": 12,
       "matched": 5,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 1
     },
     "fieldAccuracy": 0.4166666666666667
   },
@@ -317,9 +317,9 @@
       },
       {
         "location": "field:supplierCompany",
-        "status": "ext_missing",
-        "gtNorm": "대화제약(주)",
-        "extNorm": "",
+        "status": "mismatch",
+        "gtNorm": "대화제약",
+        "extNorm": "백제약품대전지점",
         "bucket": "structure",
         "reason": "gt value present at ['field:buyerCompany']"
       },
@@ -327,17 +327,17 @@
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기시흥시정왕동시화공단1라603",
-        "extNorm": "대전광역시중구보문로",
+        "extNorm": "대전광역시중구보문로235대흥동",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 대전지점",
-        "extNorm": "대화제약(주)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
+        "gtNorm": "백제약품대전지점",
+        "extNorm": "대화제약",
+        "bucket": "structure",
+        "reason": "gt value present at ['field:supplierCompany']"
       },
       {
         "location": "field:buyerAddress",
@@ -437,8 +437,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 4,
-      "structure": 14,
+      "recognition": 3,
+      "structure": 15,
       "layout": 0,
       "preprocessing": 0
     },
@@ -458,6 +458,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.167
+    "fieldMissRate": 0.083
   }
 }

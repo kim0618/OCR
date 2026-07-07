@@ -15,8 +15,8 @@ import unicodedata
 
 # --- field key -> type -------------------------------------------------------
 FIELD_TYPE = {
-    "supplierCompany": "text", "supplierRepresentative": "text", "supplierAddress": "address",
-    "buyerCompany": "text", "buyerRepresentative": "text", "buyerAddress": "address",
+    "supplierCompany": "company", "supplierRepresentative": "text", "supplierAddress": "address",
+    "buyerCompany": "company", "buyerRepresentative": "text", "buyerAddress": "address",
     "supplierBizNumber": "bizno", "buyerBizNumber": "bizno",
     "issueDate": "date",
     "supplyAmount": "amount", "taxAmount": "amount",
@@ -119,10 +119,25 @@ def norm_index(v) -> str:
     return str(int(s)) if s else ""
 
 
+# 법인격/구분 표기(사람이 같은 회사로 보는 차이): '㈜','주식회사','(주)','(전)' 등.
+# 회사명 본문 글자는 건드리지 않고 이 표기만 중립화 → 마스터 정식명('부광약품(전)')과
+# GT raw('부광약품(주)')·raw 읽기('대한약품' vs 마스터 '대한약품(주)')를 동일 취급.
+_CORP_WORD = re.compile(r"㈜|주식회사|유한회사|합자회사|합명회사|의료법인|재단법인|사단법인|학교법인")
+_CORP_PAREN = re.compile(r"\((?:주|전|유|재|사|합|자|명|본|지|국|영|의|학)\)")
+
+
+def norm_company(v) -> str:
+    s = unicodedata.normalize("NFC", _s(v))
+    s = _CORP_WORD.sub("", s)
+    s = _CORP_PAREN.sub("", s)
+    s = _NON_ALNUM.sub("", s)   # 나머지 공백/구두점/잔여 괄호 제거 (norm_name/address 와 동일)
+    return s.casefold()
+
+
 _NORMALIZERS = {
     "text": norm_text, "amount": norm_amount, "qty": norm_qty,
     "bizno": norm_bizno, "date": norm_date, "code": norm_code, "index": norm_index,
-    "address": norm_address, "name": norm_name,
+    "address": norm_address, "name": norm_name, "company": norm_company,
 }
 
 

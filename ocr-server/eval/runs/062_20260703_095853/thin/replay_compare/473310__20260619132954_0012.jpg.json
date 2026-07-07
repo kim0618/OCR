@@ -86,10 +86,10 @@
       },
       "supplierCompany": {
         "gt": "대웅제약(ETC)",
-        "ext": "인란",
-        "gtNorm": "대웅제약(etc)",
-        "extNorm": "인란",
-        "type": "text",
+        "ext": "대웅제약(전)",
+        "gtNorm": "대웅제약etc",
+        "extNorm": "대웅제약",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "경기도 화성시 향남읍 제약공단4길 35-14",
-        "ext": "경기도 화성시 만세구향남읍제약공단4길35",
+        "ext": "경기 화성시 향남읍 제약공단4길 35-14 향남제약공단",
         "gtNorm": "경기도화성시향남읍제약공단4길3514",
-        "extNorm": "경기도화성시만세구향남읍제약공단4길35",
+        "extNorm": "경기화성시향남읍제약공단4길3514향남제약공단",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 원주지점",
         "ext": "백제약품(주)원주지점",
-        "gtNorm": "백제약품 (주) 원주지점",
-        "extNorm": "백제약품(주)원주지점",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품원주지점",
+        "extNorm": "백제약품원주지점",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 5,
-      "mismatch": 7,
+      "match": 6,
+      "mismatch": 6,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 5,
+      "matched": 6,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.4166666666666667
+    "fieldAccuracy": 0.5
   },
   "table": {
     "alignMode": "content",
@@ -554,18 +554,18 @@
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
-        "gtNorm": "대웅제약(etc)",
-        "extNorm": "인란",
+        "gtNorm": "대웅제약etc",
+        "extNorm": "대웅제약",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.73)"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기도화성시향남읍제약공단4길3514",
-        "extNorm": "경기도화성시만세구향남읍제약공단4길35",
+        "extNorm": "경기화성시향남읍제약공단4길3514향남제약공단",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.87)"
+        "reason": "char-level diff (sim=0.84)"
       },
       {
         "location": "field:supplyAmount",
@@ -574,14 +574,6 @@
         "extNorm": "39324805",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 원주지점",
-        "extNorm": "백제약품(주)원주지점",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -713,7 +705,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 10,
+      "recognition": 9,
       "structure": 12,
       "layout": 0,
       "preprocessing": 0

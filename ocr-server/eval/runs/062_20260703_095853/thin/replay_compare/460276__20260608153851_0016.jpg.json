@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "한국오가논",
-        "ext": "",
+        "ext": "한국오가논",
         "gtNorm": "한국오가논",
-        "extNorm": "",
-        "type": "text",
-        "status": "ext_missing",
+        "extNorm": "한국오가논",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울 종로구 종로1길 50 (중학동) 4층 더케이트윈타워",
-        "ext": "서울특별시 종로구 종로1갈50(중",
+        "ext": "서울 종로구 종로1길 50 (중학동) 4층 더케이트윈타워",
         "gtNorm": "서울종로구종로1길50중학동4층더케이트윈타워",
-        "extNorm": "서울특별시종로구종로1갈50중",
+        "extNorm": "서울종로구종로1길50중학동4층더케이트윈타워",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영등포지점",
         "ext": "백제약품(주)",
-        "gtNorm": "백제약품 (주) 영등포지점",
-        "extNorm": "백제약품(주)",
-        "type": "text",
+        "gtNorm": "백제약품영등포지점",
+        "extNorm": "백제약품",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
-      "mismatch": 3,
-      "ext_missing": 1,
+      "match": 10,
+      "mismatch": 2,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 10,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.8333333333333334
   },
   "table": {
     "alignMode": "content",
@@ -906,28 +906,12 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "ext_missing",
-        "gtNorm": "한국오가논",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "서울종로구종로1길50중학동4층더케이트윈타워",
-        "extNorm": "서울특별시종로구종로1갈50중",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.58)"
-      },
-      {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영등포지점",
-        "extNorm": "백제약품(주)",
+        "gtNorm": "백제약품영등포지점",
+        "extNorm": "백제약품",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
+        "reason": "char-level diff (sim=0.62)"
       },
       {
         "location": "field:buyerAddress",
@@ -1139,8 +1123,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 20,
-      "structure": 6,
+      "recognition": 19,
+      "structure": 5,
       "layout": 3,
       "preprocessing": 0
     },
@@ -1160,6 +1144,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

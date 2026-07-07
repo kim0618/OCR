@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "바이오스마트약품(전)",
-        "ext": "바이오스마트약품주식회사",
-        "gtNorm": "바이오스마트약품(전)",
-        "extNorm": "바이오스마트약품주식회사",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "바이오스마트약품(전)",
+        "gtNorm": "바이오스마트약품",
+        "extNorm": "바이오스마트약품",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "경기 여주시 가남읍 연삼로 284",
-        "ext": "강동훈(0",
+        "ext": "경기 여주시 가남읍 연삼로 284",
         "gtNorm": "경기여주시가남읍연삼로284",
-        "extNorm": "강동훈0",
+        "extNorm": "경기여주시가남읍연삼로284",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영남본부",
         "ext": "백제약품(영남본부",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(영남본부",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품영남본부",
+        "extNorm": "백제약품영남본부",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 6,
-      "mismatch": 4,
+      "match": 9,
+      "mismatch": 1,
       "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 6,
+      "matched": 9,
       "extNotAttempted": 0,
       "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.5
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -1097,36 +1097,12 @@
         "reason": "gt value not found anywhere in extraction"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "바이오스마트약품(전)",
-        "extNorm": "바이오스마트약품주식회사",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.70)"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "경기여주시가남읍연삼로284",
-        "extNorm": "강동훈0",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplyAmount",
         "status": "mismatch",
         "gtNorm": "17054105",
         "extNorm": "4471445",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(영남본부",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.82)"
       },
       {
         "location": "field:buyerAddress",
@@ -1506,7 +1482,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 20,
+      "recognition": 17,
       "structure": 25,
       "layout": 7,
       "preprocessing": 0

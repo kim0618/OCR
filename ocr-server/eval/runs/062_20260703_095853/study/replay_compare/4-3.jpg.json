@@ -21,11 +21,11 @@
       },
       "supplierCompany": {
         "gt": "주식회사엘비아브노바",
-        "ext": "",
-        "gtNorm": "주식회사엘비아브노바",
-        "extNorm": "",
-        "type": "text",
-        "status": "ext_missing",
+        "ext": "엘비아브노바(주)",
+        "gtNorm": "엘비아브노바",
+        "extNorm": "엘비아브노바",
+        "type": "company",
+        "status": "match",
         "edited": true,
         "difficult": true,
         "extAttempted": true,
@@ -34,9 +34,9 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 영등포구 당산로41길 11,301호 302호(당산동4가,SK V1센터)",
-        "ext": "서울특법시영등요구당산토41길11,301 302(당산동4가.SK(V1센터",
+        "ext": "서울시 영등포구 당산로41길 11 SK V1 Center 301호",
         "gtNorm": "서울특별시영등포구당산로41길11301호302호당산동4가skv1센터",
-        "extNorm": "서울특법시영등요구당산토41길11301302당산동4가skv1센터",
+        "extNorm": "서울시영등포구당산로41길11skv1center301호",
         "type": "address",
         "status": "mismatch",
         "edited": true,
@@ -74,9 +74,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)영등포지점",
         "ext": "백제학통(주)영풍표지",
-        "gtNorm": "백제약품(주)영등포지점",
-        "extNorm": "백제학통(주)영풍표지",
-        "type": "text",
+        "gtNorm": "백제약품영등포지점",
+        "extNorm": "백제학통영풍표지",
+        "type": "company",
         "status": "mismatch",
         "edited": true,
         "difficult": true,
@@ -180,24 +180,24 @@
     "profile": "rich",
     "counts": {
       "scored": 12,
-      "match": 8,
+      "match": 9,
       "mismatch": 3,
-      "ext_missing": 1,
+      "ext_missing": 0,
       "gt_empty": 1,
       "spurious": 0
     },
     "editedCounts": {
-      "match": 1,
+      "match": 2,
       "mismatch": 3,
-      "ext_missing": 1
+      "ext_missing": 0
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 9,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "rowIndex",
@@ -294,28 +294,20 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "ext_missing",
-        "gtNorm": "주식회사엘비아브노바",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울특별시영등포구당산로41길11301호302호당산동4가skv1센터",
-        "extNorm": "서울특법시영등요구당산토41길11301302당산동4가skv1센터",
+        "extNorm": "서울시영등포구당산로41길11skv1center301호",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.89)"
+        "reason": "char-level diff (sim=0.58)"
       },
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)영등포지점",
-        "extNorm": "백제학통(주)영풍표지",
+        "gtNorm": "백제약품영등포지점",
+        "extNorm": "백제학통영풍표지",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.61)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -360,7 +352,7 @@
     ],
     "bucketTally": {
       "recognition": 5,
-      "structure": 3,
+      "structure": 2,
       "layout": 0,
       "preprocessing": 0
     },
@@ -380,6 +372,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

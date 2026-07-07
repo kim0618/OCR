@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "이든파마",
-        "ext": "주)이든파마",
+        "ext": "이든파마",
         "gtNorm": "이든파마",
-        "extNorm": "주)이든파마",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "이든파마",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "충북 진천군 문백면 농다리로 1149",
-        "ext": "충청북도진천군 문백면농다리로1149",
+        "ext": "서울 서초구 양재천로19길 36 (양재동) 2층 - 이든파마 영업지원부",
         "gtNorm": "충북진천군문백면농다리로1149",
-        "extNorm": "충청북도진천군문백면농다리로1149",
+        "extNorm": "서울서초구양재천로19길36양재동2층이든파마영업지원부",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 제주지점",
         "ext": "로나펜정(주)이든파마",
-        "gtNorm": "백제약품 (주) 제주지점",
-        "extNorm": "로나펜정(주)이든파마",
-        "type": "text",
+        "gtNorm": "백제약품제주지점",
+        "extNorm": "로나펜정이든파마",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 4,
-      "mismatch": 8,
+      "match": 5,
+      "mismatch": 7,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 4,
+      "matched": 5,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.3333333333333333
+    "fieldAccuracy": 0.4166666666666667
   },
   "table": {
     "alignMode": "content",
@@ -712,14 +712,6 @@
         "reason": "gt value present at ['field:discountAmount']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "이든파마",
-        "extNorm": "주)이든파마",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.80)"
-      },
-      {
         "location": "field:taxType",
         "status": "mismatch",
         "gtNorm": "면세",
@@ -731,9 +723,9 @@
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "충북진천군문백면농다리로1149",
-        "extNorm": "충청북도진천군문백면농다리로1149",
+        "extNorm": "서울서초구양재천로19길36양재동2층이든파마영업지원부",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.94)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplyAmount",
@@ -746,10 +738,10 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 제주지점",
-        "extNorm": "로나펜정(주)이든파마",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "gtNorm": "백제약품제주지점",
+        "extNorm": "로나펜정이든파마",
+        "bucket": "structure",
+        "reason": "ext value is gt's ['row1:itemName']"
       },
       {
         "location": "field:buyerAddress",
@@ -1209,8 +1201,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 59,
+      "recognition": 3,
+      "structure": 60,
       "layout": 0,
       "preprocessing": 0
     },

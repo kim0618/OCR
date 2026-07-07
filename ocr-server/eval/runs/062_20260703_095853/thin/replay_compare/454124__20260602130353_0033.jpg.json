@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "대동유통",
-        "ext": "주식회사 대동유통",
+        "ext": "대동유통",
         "gtNorm": "대동유통",
-        "extNorm": "주식회사 대동유통",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "대동유통",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "경기 김포시 고촌읍 아라육로 80 223-1호",
-        "ext": "경기도김포시아라육로80,214호(고촌읍",
+        "ext": "경기 김포시 고촌읍 아라육로 80 214호(WJ물류센터)",
         "gtNorm": "경기김포시고촌읍아라육로802231호",
-        "extNorm": "경기도김포시아라육로80214호고촌읍",
+        "extNorm": "경기김포시고촌읍아라육로80214호wj물류센터",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영남본부",
         "ext": "백제약품(주)영남본부",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품영남본부",
+        "extNorm": "백제약품영남본부",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
-      "mismatch": 4,
+      "match": 10,
+      "mismatch": 2,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 10,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.8333333333333334
   },
   "table": {
     "alignMode": "content",
@@ -556,28 +556,12 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "대동유통",
-        "extNorm": "주식회사 대동유통",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.62)"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기김포시고촌읍아라육로802231호",
-        "extNorm": "경기도김포시아라육로80214호고촌읍",
+        "extNorm": "경기김포시고촌읍아라육로80214호wj물류센터",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.74)"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
+        "reason": "char-level diff (sim=0.79)"
       },
       {
         "location": "field:buyerAddress",
@@ -773,7 +757,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 10,
+      "recognition": 8,
       "structure": 17,
       "layout": 0,
       "preprocessing": 0

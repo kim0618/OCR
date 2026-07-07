@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "네오메디팜",
-        "ext": "주)네오메디팜",
+        "ext": "네오메디팜",
         "gtNorm": "네오메디팜",
-        "extNorm": "주)네오메디팜",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "네오메디팜",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울시 동대문구 장안동 378-2 6층 물류지하",
-        "ext": "서울시 동대문구 장한로17길 13-2, 5층,4층3층지하",
+        "ext": "서울시 동대문구 장안동 378-2 6층 물류지하",
         "gtNorm": "서울시동대문구장안동37826층물류지하",
-        "extNorm": "서울시동대문구장한로17길1325층4층3층지하",
+        "extNorm": "서울시동대문구장안동37826층물류지하",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 대전지점",
         "ext": "",
-        "gtNorm": "백제약품 (주) 대전지점",
+        "gtNorm": "백제약품대전지점",
         "extNorm": "",
-        "type": "text",
+        "type": "company",
         "status": "ext_missing",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 6,
-      "mismatch": 4,
+      "match": 8,
+      "mismatch": 2,
       "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 6,
+      "matched": 8,
       "extNotAttempted": 0,
       "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.5
+    "fieldAccuracy": 0.6666666666666666
   },
   "table": {
     "alignMode": "content",
@@ -1090,22 +1090,6 @@
         "reason": "ext value is gt's ['row6:insuranceCode']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "네오메디팜",
-        "extNorm": "주)네오메디팜",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.83)"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "서울시동대문구장안동37826층물류지하",
-        "extNorm": "서울시동대문구장한로17길1325층4층3층지하",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.59)"
-      },
-      {
         "location": "field:supplyAmount",
         "status": "ext_missing",
         "gtNorm": "1735896",
@@ -1116,7 +1100,7 @@
       {
         "location": "field:buyerCompany",
         "status": "ext_missing",
-        "gtNorm": "백제약품 (주) 대전지점",
+        "gtNorm": "백제약품대전지점",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
@@ -1795,7 +1779,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 18,
+      "recognition": 16,
       "structure": 71,
       "layout": 0,
       "preprocessing": 0

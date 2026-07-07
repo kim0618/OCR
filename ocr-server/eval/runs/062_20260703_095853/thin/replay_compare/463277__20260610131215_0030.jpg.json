@@ -73,11 +73,11 @@
       },
       "supplierCompany": {
         "gt": "한국신약(주)",
-        "ext": "",
-        "gtNorm": "한국신약(주)",
-        "extNorm": "",
-        "type": "text",
-        "status": "ext_missing",
+        "ext": "삼진제약(전)",
+        "gtNorm": "한국신약",
+        "extNorm": "삼진제약",
+        "type": "company",
+        "status": "mismatch",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -99,9 +99,9 @@
       },
       "supplierAddress": {
         "gt": "충청남도 논산시 양촌면 중산길 39-83",
-        "ext": "광주시 동구 제봉로 200(대인동 충남 논산시양촌면 중산길",
+        "ext": "서울 마포구 와우산로 121 (서교동)",
         "gtNorm": "충청남도논산시양촌면중산길3983",
-        "extNorm": "광주시동구제봉로200대인동충남논산시양촌면중산길",
+        "extNorm": "서울마포구와우산로121서교동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -126,9 +126,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 광주지점",
         "ext": "주)한국신약",
-        "gtNorm": "백제약품 (주) 광주지점",
-        "extNorm": "주)한국신약",
-        "type": "text",
+        "gtNorm": "백제약품광주지점",
+        "extNorm": "주한국신약",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -155,8 +155,8 @@
     "counts": {
       "scored": 11,
       "match": 5,
-      "mismatch": 3,
-      "ext_missing": 3,
+      "mismatch": 4,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -169,7 +169,7 @@
       "gtPresent": 11,
       "matched": 5,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 3
+      "extAttemptedMiss": 2
     },
     "fieldAccuracy": 0.45454545454545453
   },
@@ -293,25 +293,25 @@
       },
       {
         "location": "field:supplierCompany",
-        "status": "ext_missing",
-        "gtNorm": "한국신약(주)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "status": "mismatch",
+        "gtNorm": "한국신약",
+        "extNorm": "삼진제약",
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "충청남도논산시양촌면중산길3983",
-        "extNorm": "광주시동구제봉로200대인동충남논산시양촌면중산길",
+        "extNorm": "서울마포구와우산로121서교동",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.52)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 광주지점",
-        "extNorm": "주)한국신약",
+        "gtNorm": "백제약품광주지점",
+        "extNorm": "주한국신약",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -389,8 +389,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 6,
-      "structure": 8,
+      "recognition": 7,
+      "structure": 7,
       "layout": 0,
       "preprocessing": 0
     },
@@ -410,6 +410,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.273
+    "fieldMissRate": 0.182
   }
 }

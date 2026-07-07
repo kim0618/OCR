@@ -73,11 +73,11 @@
       },
       "supplierCompany": {
         "gt": "위더스제약",
-        "ext": "백제약품(주)",
+        "ext": "위더스제약",
         "gtNorm": "위더스제약",
-        "extNorm": "백제약품(주)",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "위더스제약",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -99,11 +99,11 @@
       },
       "supplierAddress": {
         "gt": "경기도 안성시 미양면 제2공단2길 103",
-        "ext": "",
+        "ext": "서울 서초구 동산로12길 9 (양재동)",
         "gtNorm": "경기도안성시미양면제2공단2길103",
-        "extNorm": "",
+        "extNorm": "서울서초구동산로12길9양재동",
         "type": "address",
-        "status": "ext_missing",
+        "status": "mismatch",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -126,9 +126,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영등포지점",
         "ext": "호위더스제약(주)",
-        "gtNorm": "백제약품 (주) 영등포지점",
-        "extNorm": "호위더스제약(주)",
-        "type": "text",
+        "gtNorm": "백제약품영등포지점",
+        "extNorm": "호위더스제약",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -154,9 +154,9 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 4,
+      "match": 5,
       "mismatch": 6,
-      "ext_missing": 1,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 4,
+      "matched": 5,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.36363636363636365
+    "fieldAccuracy": 0.45454545454545453
   },
   "table": {
     "alignMode": "content",
@@ -591,20 +591,12 @@
         "reason": "char-level diff (sim=0.50)"
       },
       {
-        "location": "field:supplierCompany",
+        "location": "field:supplierAddress",
         "status": "mismatch",
-        "gtNorm": "위더스제약",
-        "extNorm": "백제약품(주)",
+        "gtNorm": "경기도안성시미양면제2공단2길103",
+        "extNorm": "서울서초구동산로12길9양재동",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "ext_missing",
-        "gtNorm": "경기도안성시미양면제2공단2길103",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplyAmount",
@@ -617,8 +609,8 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영등포지점",
-        "extNorm": "호위더스제약(주)",
+        "gtNorm": "백제약품영등포지점",
+        "extNorm": "호위더스제약",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -777,7 +769,7 @@
     ],
     "bucketTally": {
       "recognition": 22,
-      "structure": 3,
+      "structure": 2,
       "layout": 0,
       "preprocessing": 0
     },
@@ -797,6 +789,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.091
+    "fieldMissRate": 0.0
   }
 }

@@ -200,13 +200,101 @@ class MasterMatcher:
                 "sim": round(-best_key[0], 4)}
 
 
+_CORP_SUFFIX = re.compile(r"\s*\((?:주|전|유|재|사|합|자|명|의|학|영)\)\s*$")
+
+
+def _strip_corp_suffix(nm: str) -> str:
+    """회사명 끝 법인격/구분 괄호('(주)','(전)' 등) 제거. war GT(thin)는 접미사 없는
+    경향이라 마스터 정식명과 매치되게. (062: '대한약품(주)' vs GT '대한약품')."""
+    return _CORP_SUFFIX.sub("", nm or "")
+
+
+class PartyMatcher:
+    """④거래처/지점 매칭 (war ocr.xml 재현): 공급자=사업자번호 정확일치 앵커 →
+    거래처 마스터(nm/addr), 공급받는자=지점 마스터(10곳) 이름 trigram.
+
+    war Master의 supplierCompany 84.5%/buyerCompany 100%는 읽기가 아니라 이 매칭.
+    사업자번호는 정확 앵커라 오배정 위험이 낮고, 사전에 없는 번호(study 등 war 외
+    문서)는 자동 미적용 = 자연 가드."""
+
+    def __init__(self, md: dict):
+        self.bizno_to_cust: dict[str, str] = {}
+        for b, cd in (md.get("biznoToCust") or {}).items():
+            d = re.sub(r"[^0-9]", "", str(b or ""))
+            if len(d) == 10 and cd:
+                self.bizno_to_cust.setdefault(d, str(cd))
+        self.cust: dict = md.get("cust") or {}
+        self.brch: list = [
+            {"nm": (e or {}).get("nm") or "", "addr": (e or {}).get("addr") or "",
+             "tri": trigrams((e or {}).get("nm") or "")}
+            for e in (md.get("brch") or {}).values() if (e or {}).get("nm")
+        ]
+
+    def supplier(self, bizno):
+        d = re.sub(r"[^0-9]", "", str(bizno or ""))
+        if len(d) != 10:
+            return None
+        cd = self.bizno_to_cust.get(d)
+        e = self.cust.get(cd) if cd else None
+        if not e:
+            return None
+        # 접미사 정규화(_strip_corp_suffix)는 062 실측 thin -0.3pp(thin GT도 접미사 유무
+        # 제각각)라 미적용.
+        return {"nm": e.get("nm") or "", "addr": e.get("addr") or ""}
+
+    def buyer(self, read_name, floor: float = 0.45):
+        q = trigrams(read_name or "")
+        if not q:
+            return None
+        best, best_sim = None, 0.0
+        for b in self.brch:
+            t = b["tri"]
+            if not t:
+                continue
+            inter = len(q & t)
+            sim = inter / (len(q) + len(t) - inter)
+            if sim > best_sim:
+                best_sim, best = sim, b
+        return {"nm": best["nm"], "addr": best["addr"]} if best and best_sim >= floor else None
+
+
+def fill_party_match(document_fields, party: "PartyMatcher | None" = None):
+    """공급자(사업자번호 앵커)/공급받는자(지점 trigram) 상호·주소를 마스터 값으로 교체.
+
+    교체(overwrite)인 이유: war GT의 상호/주소 = 마스터 정식값이라 raw 읽기는 채점상
+    거의 0%(1.8/0.2%). 앵커가 정확(사업자번호 10자리 일치·지점 sim>=0.45)할 때만 발동,
+    사전에 없는 문서는 미적용. 반환 (document_fields, debug)."""
+    party = party or get_party()
+    dbg = {"enabled": party is not None, "supplier": False, "buyer": False}
+    if party is None or not isinstance(document_fields, dict):
+        return document_fields, dbg
+    s = party.supplier(document_fields.get("supplierBizNumber"))
+    if s:
+        if s["nm"]:
+            document_fields["supplierCompany"] = s["nm"]
+        if s["addr"]:
+            document_fields["supplierAddress"] = s["addr"]
+        dbg["supplier"] = True
+    # NOTE: 공급받는자(지점) trigram 매칭은 미채택 — 지점 10곳뿐이라 앵커(사업자번호)가
+    # 없는 trigram 이 임의 문서를 특정 지점으로 오교체(062 study: 모든 문서 buyerCompany
+    # 가 '백제약품 영등포지점'으로 뒤바뀌어 필드 90.9→54.5% 회귀). 정확 앵커가 생기기
+    # 전까지 buyer 는 손대지 않음.
+    return document_fields, dbg
+
+
 _matcher: "MasterMatcher | None" = None
+_party: "PartyMatcher | None" = None
 _load_tried = False
 _lock = threading.Lock()
 
 
+def get_party() -> "PartyMatcher | None":
+    get_matcher()  # 같은 파일에서 함께 로드됨
+    return _party
+
+
 def get_matcher() -> "MasterMatcher | None":
-    global _matcher, _load_tried
+    global _matcher, _party, _load_tried
     if _matcher is not None or _load_tried:
         return _matcher
     with _lock:
@@ -218,7 +306,9 @@ def get_matcher() -> "MasterMatcher | None":
                 try:
                     d = json.load(open(p, encoding="utf-8"))
                     _matcher = MasterMatcher(d.get("item") or {})
-                    print(f"[master_match] loaded {p} ({len(_matcher._cds)} items)")
+                    _party = PartyMatcher(d)
+                    print(f"[master_match] loaded {p} ({len(_matcher._cds)} items, "
+                          f"{len(_party.bizno_to_cust)} bizno, {len(_party.brch)} brch)")
                     break
                 except Exception as e:
                     print(f"[master_match] load failed {p}: {e}")

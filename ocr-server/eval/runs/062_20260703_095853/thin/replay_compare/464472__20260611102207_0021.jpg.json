@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "명인제약(전)",
-        "ext": "명인제약(주)",
-        "gtNorm": "명인제약(전)",
-        "extNorm": "명인제약(주)",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "명인제약(전)",
+        "gtNorm": "명인제약",
+        "extNorm": "명인제약",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "경기도 화성시 팔탄면 노하길 361-12",
-        "ext": "경기도 화성시만세구팔탄면 노하길361-12 마약류 구입보고는 (P00000030-마약류제조업) 으로 보고해 주십시요",
+        "ext": "경기도 화성시 팔탄면 노하길 361-12",
         "gtNorm": "경기도화성시팔탄면노하길36112",
-        "extNorm": "경기도화성시만세구팔탄면노하길36112마약류구입보고는p00000030마약류제조업으로보고해주십시요",
+        "extNorm": "경기도화성시팔탄면노하길36112",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영남본부",
         "ext": "백제약품(주)영남본부",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품영남본부",
+        "extNorm": "백제약품영남본부",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 5,
-      "mismatch": 7,
+      "match": 8,
+      "mismatch": 4,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 5,
+      "matched": 8,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.4166666666666667
+    "fieldAccuracy": 0.6666666666666666
   },
   "table": {
     "alignMode": "content",
@@ -1011,36 +1011,12 @@
         "reason": "ext value is gt's ['row1:unitPrice']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "명인제약(전)",
-        "extNorm": "명인제약(주)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.86)"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "경기도화성시팔탄면노하길36112",
-        "extNorm": "경기도화성시만세구팔탄면노하길36112마약류구입보고는p00000030마약류제조업으로보고해주십시요",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplyAmount",
         "status": "mismatch",
         "gtNorm": "758212",
         "extNorm": "246730",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -1204,7 +1180,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 22,
+      "recognition": 19,
       "structure": 4,
       "layout": 0,
       "preprocessing": 0

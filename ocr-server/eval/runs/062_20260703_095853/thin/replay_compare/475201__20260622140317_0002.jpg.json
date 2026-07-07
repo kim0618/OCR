@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "메디카코리아(주)",
-        "ext": "주)메디카코리아성명",
-        "gtNorm": "메디카코리아(주)",
-        "extNorm": "주)메디카코리아성명",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "메디카코리아(주)",
+        "gtNorm": "메디카코리아",
+        "extNorm": "메디카코리아",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울 서초구 명달로 9 ,  2층 (방배동, 방배빌딩)",
-        "ext": "서울통별시서초구명달로9",
+        "ext": "서울 서초구 명달로 9 (방배동) 2층",
         "gtNorm": "서울서초구명달로92층방배동방배빌딩",
-        "extNorm": "서울통별시서초구명달로9",
+        "extNorm": "서울서초구명달로9방배동2층",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영등포지점",
         "ext": "백제약품(주)영등포지정",
-        "gtNorm": "백제약품 (주) 영등포지점",
-        "extNorm": "백제약품(주)영등포지정",
-        "type": "text",
+        "gtNorm": "백제약품영등포지점",
+        "extNorm": "백제약품영등포지정",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 6,
-      "mismatch": 6,
+      "match": 7,
+      "mismatch": 5,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 6,
+      "matched": 7,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.5
+    "fieldAccuracy": 0.5833333333333334
   },
   "table": {
     "alignMode": "content",
@@ -2244,28 +2244,20 @@
         "reason": "char-level diff (sim=0.86)"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "메디카코리아(주)",
-        "extNorm": "주)메디카코리아성명",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.63)"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울서초구명달로92층방배동방배빌딩",
-        "extNorm": "서울통별시서초구명달로9",
+        "extNorm": "서울서초구명달로9방배동2층",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.60)"
+        "reason": "char-level diff (sim=0.75)"
       },
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영등포지점",
-        "extNorm": "백제약품(주)영등포지정",
+        "gtNorm": "백제약품영등포지점",
+        "extNorm": "백제약품영등포지정",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.85)"
+        "reason": "char-level diff (sim=0.89)"
       },
       {
         "location": "field:buyerAddress",
@@ -4085,7 +4077,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 6,
+      "recognition": 5,
       "structure": 226,
       "layout": 0,
       "preprocessing": 0

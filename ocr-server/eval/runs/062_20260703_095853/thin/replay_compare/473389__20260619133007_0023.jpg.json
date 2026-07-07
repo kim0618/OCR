@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "한국유나이티드제약",
-        "ext": "",
+        "ext": "한국유나이티드",
         "gtNorm": "한국유나이티드제약",
-        "extNorm": "",
-        "type": "text",
-        "status": "ext_missing",
+        "extNorm": "한국유나이티드",
+        "type": "company",
+        "status": "mismatch",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 강남구 논현로121길 22 (논현동)",
-        "ext": "관리번호:10231202606180045",
+        "ext": "세종특별자치시  전동면 노장공단길 25-23",
         "gtNorm": "서울특별시강남구논현로121길22논현동",
-        "extNorm": "관리번호10231202606180045",
+        "extNorm": "세종특별자치시전동면노장공단길2523",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)평택물류센터",
         "ext": "백제약품(주)영등포지점",
-        "gtNorm": "백제약품(주)평택물류센터",
-        "extNorm": "백제약품(주)영등포지점",
-        "type": "text",
+        "gtNorm": "백제약품평택물류센터",
+        "extNorm": "백제약품영등포지점",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 4,
-      "mismatch": 5,
-      "ext_missing": 3,
+      "mismatch": 6,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,7 +182,7 @@
       "gtPresent": 12,
       "matched": 4,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 3
+      "extAttemptedMiss": 2
     },
     "fieldAccuracy": 0.3333333333333333
   },
@@ -1101,11 +1101,11 @@
       },
       {
         "location": "field:supplierCompany",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "한국유나이티드제약",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "extNorm": "한국유나이티드",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.88)"
       },
       {
         "location": "field:taxType",
@@ -1119,7 +1119,7 @@
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울특별시강남구논현로121길22논현동",
-        "extNorm": "관리번호10231202606180045",
+        "extNorm": "세종특별자치시전동면노장공단길2523",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -1134,10 +1134,10 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)평택물류센터",
-        "extNorm": "백제약품(주)영등포지점",
+        "gtNorm": "백제약품평택물류센터",
+        "extNorm": "백제약품영등포지점",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.56)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -1573,8 +1573,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 24,
-      "structure": 35,
+      "recognition": 25,
+      "structure": 34,
       "layout": 2,
       "preprocessing": 0
     },
@@ -1594,6 +1594,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.25
+    "fieldMissRate": 0.167
   }
 }

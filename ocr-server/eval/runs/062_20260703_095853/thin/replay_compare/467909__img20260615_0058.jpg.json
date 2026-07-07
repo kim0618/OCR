@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "휴비스트제약",
-        "ext": "보관용)",
+        "ext": "휴비스트제약",
         "gtNorm": "휴비스트제약",
-        "extNorm": "보관용)",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "휴비스트제약",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울시 금천구 가신디지털1로 168(가신동) 우림라이온스탤리 A동 1209호",
-        "ext": "대전광역시중구 대홍동 대전광역시중구 보문로 23 5(대흥동",
+        "ext": "서울 금천구 가산디지털1로 169 (가산동)",
         "gtNorm": "서울시금천구가신디지털1로168가신동우림라이온스탤리a동1209호",
-        "extNorm": "대전광역시중구대홍동대전광역시중구보문로235대흥동",
+        "extNorm": "서울금천구가산디지털1로169가산동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 대전지점",
         "ext": "양약동물약품",
-        "gtNorm": "백제약품 (주) 대전지점",
+        "gtNorm": "백제약품대전지점",
         "extNorm": "양약동물약품",
-        "type": "text",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 4,
-      "mismatch": 6,
+      "match": 5,
+      "mismatch": 5,
       "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 4,
+      "matched": 5,
       "extNotAttempted": 0,
       "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.3333333333333333
+    "fieldAccuracy": 0.4166666666666667
   },
   "table": {
     "alignMode": "content",
@@ -1088,14 +1088,6 @@
         "reason": "gt value present at ['field:discountAmount']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "휴비스트제약",
-        "extNorm": "보관용)",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:taxType",
         "status": "mismatch",
         "gtNorm": "면세",
@@ -1107,9 +1099,9 @@
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울시금천구가신디지털1로168가신동우림라이온스탤리a동1209호",
-        "extNorm": "대전광역시중구대홍동대전광역시중구보문로235대흥동",
+        "extNorm": "서울금천구가산디지털1로169가산동",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.58)"
       },
       {
         "location": "field:supplyAmount",
@@ -1122,7 +1114,7 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 대전지점",
+        "gtNorm": "백제약품대전지점",
         "extNorm": "양약동물약품",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
@@ -1849,7 +1841,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 11,
+      "recognition": 10,
       "structure": 86,
       "layout": 0,
       "preprocessing": 0

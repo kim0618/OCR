@@ -73,10 +73,10 @@
       },
       "supplierCompany": {
         "gt": "동화약품(TKD)",
-        "ext": "통화약품(주)",
-        "gtNorm": "동화약품(tkd)",
-        "extNorm": "통화약품(주)",
-        "type": "text",
+        "ext": "동화약품(전)",
+        "gtNorm": "동화약품tkd",
+        "extNorm": "동화약품",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": true,
@@ -99,9 +99,9 @@
       },
       "supplierAddress": {
         "gt": "서울 중구 남대문로9길 24 (다동) 6층~8층 (다동)",
-        "ext": "충북 충주시 충주산단1로167(용탄동",
+        "ext": "서울특별시 중구 남대문로9길 24, 6~8층(다동)",
         "gtNorm": "서울중구남대문로9길24다동6층8층다동",
-        "extNorm": "충북충주시충주산단1로167용탄동",
+        "extNorm": "서울특별시중구남대문로9길2468층다동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -126,10 +126,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 원주지점",
         "ext": "백제약품(주)원주지점",
-        "gtNorm": "백제약품 (주) 원주지점",
-        "extNorm": "백제약품(주)원주지점",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품원주지점",
+        "extNorm": "백제약품원주지점",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -154,8 +154,8 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 7,
-      "mismatch": 4,
+      "match": 8,
+      "mismatch": 3,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 7,
+      "matched": 8,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6363636363636364
+    "fieldAccuracy": 0.7272727272727273
   },
   "table": {
     "alignMode": "content",
@@ -359,26 +359,18 @@
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
-        "gtNorm": "동화약품(tkd)",
-        "extNorm": "통화약품(주)",
+        "gtNorm": "동화약품tkd",
+        "extNorm": "동화약품",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.62)"
+        "reason": "char-level diff (sim=0.73)"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울중구남대문로9길24다동6층8층다동",
-        "extNorm": "충북충주시충주산단1로167용탄동",
+        "extNorm": "서울특별시중구남대문로9길2468층다동",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 원주지점",
-        "extNorm": "백제약품(주)원주지점",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
+        "reason": "char-level diff (sim=0.85)"
       },
       {
         "location": "field:buyerAddress",
@@ -526,7 +518,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 9,
+      "recognition": 8,
       "structure": 12,
       "layout": 0,
       "preprocessing": 0

@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "한국휴텍스",
-        "ext": "한국휴텍스제약(주)",
+        "ext": "한국휴텍스",
         "gtNorm": "한국휴텍스",
-        "extNorm": "한국휴텍스제약(주)",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "한국휴텍스",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 관악구 난곡로 332, 송산빌딩 302호 (신림동)",
-        "ext": "",
+        "ext": "서울특별시 관악구 난곡로 332, 송산빌딩 302호 (신림동)",
         "gtNorm": "서울특별시관악구난곡로332송산빌딩302호신림동",
-        "extNorm": "",
+        "extNorm": "서울특별시관악구난곡로332송산빌딩302호신림동",
         "type": "address",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영남본부",
         "ext": "백제약품(주)영남본부",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품영남본부",
+        "extNorm": "백제약품영남본부",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 4,
-      "mismatch": 6,
-      "ext_missing": 2,
+      "match": 7,
+      "mismatch": 4,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 4,
+      "matched": 7,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.3333333333333333
+    "fieldAccuracy": 0.5833333333333334
   },
   "table": {
     "alignMode": "content",
@@ -2066,14 +2066,6 @@
         "reason": "gt value present at ['field:discountAmount']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "한국휴텍스",
-        "extNorm": "한국휴텍스제약(주)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
-      },
-      {
         "location": "field:taxType",
         "status": "mismatch",
         "gtNorm": "면세",
@@ -2082,28 +2074,12 @@
         "reason": "char-level diff (sim=0.50)"
       },
       {
-        "location": "field:supplierAddress",
-        "status": "ext_missing",
-        "gtNorm": "서울특별시관악구난곡로332송산빌딩302호신림동",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
-      },
-      {
         "location": "field:supplyAmount",
         "status": "mismatch",
         "gtNorm": "0",
         "extNorm": "382500",
         "bucket": "structure",
         "reason": "gt value present at ['field:discountAmount']"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -2811,8 +2787,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 36,
-      "structure": 47,
+      "recognition": 34,
+      "structure": 46,
       "layout": 12,
       "preprocessing": 0
     },
@@ -2832,6 +2808,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.167
+    "fieldMissRate": 0.083
   }
 }

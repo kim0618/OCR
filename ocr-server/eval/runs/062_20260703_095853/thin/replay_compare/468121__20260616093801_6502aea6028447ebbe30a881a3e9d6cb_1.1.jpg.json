@@ -62,9 +62,9 @@
         "gt": "신신제약",
         "ext": "신신제약(주)",
         "gtNorm": "신신제약",
-        "extNorm": "신신제약(주)",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "신신제약",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -86,9 +86,9 @@
       },
       "supplierAddress": {
         "gt": "세종특별자치시 소정면 소정산단동로 9 신신제약",
-        "ext": "제주시 우령4길45(외도일동",
+        "ext": "경기도 안산시 단원구 범지기로141번길 90 (원시동)",
         "gtNorm": "세종특별자치시소정면소정산단동로9신신제약",
-        "extNorm": "제주시우령4길45외도일동",
+        "extNorm": "경기도안산시단원구범지기로141번길90원시동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -113,9 +113,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 제주지점",
         "ext": "",
-        "gtNorm": "백제약품 (주) 제주지점",
+        "gtNorm": "백제약품제주지점",
         "extNorm": "",
-        "type": "text",
+        "type": "company",
         "status": "ext_missing",
         "edited": false,
         "difficult": false,
@@ -141,8 +141,8 @@
     "profile": "thin",
     "counts": {
       "scored": 10,
-      "match": 6,
-      "mismatch": 3,
+      "match": 7,
+      "mismatch": 2,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -154,11 +154,11 @@
     },
     "coverage": {
       "gtPresent": 10,
-      "matched": 6,
+      "matched": 7,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.6
+    "fieldAccuracy": 0.7
   },
   "table": {
     "alignMode": "content",
@@ -250,25 +250,17 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "신신제약",
-        "extNorm": "신신제약(주)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.73)"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "세종특별자치시소정면소정산단동로9신신제약",
-        "extNorm": "제주시우령4길45외도일동",
+        "extNorm": "경기도안산시단원구범지기로141번길90원시동",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerCompany",
         "status": "ext_missing",
-        "gtNorm": "백제약품 (주) 제주지점",
+        "gtNorm": "백제약품제주지점",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
@@ -355,7 +347,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 3,
+      "recognition": 2,
       "structure": 10,
       "layout": 0,
       "preprocessing": 0

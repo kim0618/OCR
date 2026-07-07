@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "라이트팜텍(주)",
-        "ext": "주)라이트팜텍",
-        "gtNorm": "라이트팜텍(주)",
-        "extNorm": "주)라이트팜텍",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "라이트팜텍",
+        "gtNorm": "라이트팜텍",
+        "extNorm": "라이트팜텍",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 구로구 디지털로31길 41, 811호(구로동, 이앤씨벤처드림타워6차)",
-        "ext": "$(구로동",
+        "ext": "경기도 화성시 봉담읍 왕림2길 42, 25 (라이트팜텍 물류창고) 이찬희주임님 010-2239-7765",
         "gtNorm": "서울특별시구로구디지털로31길41811호구로동이앤씨벤처드림타워6차",
-        "extNorm": "구로동",
+        "extNorm": "경기도화성시봉담읍왕림2길4225라이트팜텍물류창고이찬희주임님01022397765",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 광주지점",
         "ext": "의약품외",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "의약품외",
-        "type": "text",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
-      "mismatch": 4,
+      "match": 9,
+      "mismatch": 3,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 9,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -735,25 +735,17 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "라이트팜텍(주)",
-        "extNorm": "주)라이트팜텍",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울특별시구로구디지털로31길41811호구로동이앤씨벤처드림타워6차",
-        "extNorm": "구로동",
+        "extNorm": "경기도화성시봉담읍왕림2길4225라이트팜텍물류창고이찬희주임님01022397765",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "의약품외",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
@@ -1112,7 +1104,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 18,
+      "recognition": 17,
       "structure": 25,
       "layout": 4,
       "preprocessing": 0

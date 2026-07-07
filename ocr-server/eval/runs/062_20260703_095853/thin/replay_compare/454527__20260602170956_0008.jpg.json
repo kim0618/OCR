@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "선우팜",
-        "ext": "주)선우팜",
+        "ext": "선우팜",
         "gtNorm": "선우팜",
-        "extNorm": "주)선우팜",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "선우팜",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "경기 군포시 공단로 133 (당동) 5층",
-        "ext": "경기도 군포시 공단로 133 (당동",
+        "ext": "경기 군포시 공단로 133 (당동) 5층",
         "gtNorm": "경기군포시공단로133당동5층",
-        "extNorm": "경기도군포시공단로133당동",
+        "extNorm": "경기군포시공단로133당동5층",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영등포지점",
         "ext": "백제약품(주)",
-        "gtNorm": "백제약품 (주) 영등포지점",
-        "extNorm": "백제약품(주)",
-        "type": "text",
+        "gtNorm": "백제약품영등포지점",
+        "extNorm": "백제약품",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 4,
-      "mismatch": 6,
+      "match": 6,
+      "mismatch": 4,
       "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 4,
+      "matched": 6,
       "extNotAttempted": 0,
       "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.3333333333333333
+    "fieldAccuracy": 0.5
   },
   "table": {
     "alignMode": "content",
@@ -1278,28 +1278,12 @@
         "reason": "gt value present at ['field:discountAmount']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "선우팜",
-        "extNorm": "주)선우팜",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.75)"
-      },
-      {
         "location": "field:taxType",
         "status": "mismatch",
         "gtNorm": "면세",
         "extNorm": "과세",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.50)"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "경기군포시공단로133당동5층",
-        "extNorm": "경기도군포시공단로133당동",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.90)"
       },
       {
         "location": "field:supplyAmount",
@@ -1312,10 +1296,10 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영등포지점",
-        "extNorm": "백제약품(주)",
+        "gtNorm": "백제약품영등포지점",
+        "extNorm": "백제약품",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
+        "reason": "char-level diff (sim=0.62)"
       },
       {
         "location": "field:buyerAddress",
@@ -1959,7 +1943,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 47,
+      "recognition": 45,
       "structure": 25,
       "layout": 15,
       "preprocessing": 0

@@ -86,10 +86,10 @@
       },
       "supplierCompany": {
         "gt": "백제에치칼약품2(주)",
-        "ext": "백제약품(주)영등포지점",
-        "gtNorm": "백제에치칼약품2(주)",
-        "extNorm": "백제약품(주)영등포지점",
-        "type": "text",
+        "ext": "백제에치칼약품(엘지)",
+        "gtNorm": "백제에치칼약품2",
+        "extNorm": "백제에치칼약품엘지",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 구로구 공원로8길 24 (구로동)",
-        "ext": "헥사에딘액0.12%(클로르핵시딘글루콘",
+        "ext": "서울 구로구 구로5동 44",
         "gtNorm": "서울특별시구로구공원로8길24구로동",
-        "extNorm": "헥사에딘액012클로르핵시딘글루콘",
+        "extNorm": "서울구로구구로5동44",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영등포지점",
         "ext": "백제약품(주)영등포지점",
-        "gtNorm": "백제약품 (주) 영등포지점",
-        "extNorm": "백제약품(주)영등포지점",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품영등포지점",
+        "extNorm": "백제약품영등포지점",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 5,
-      "mismatch": 5,
+      "match": 6,
+      "mismatch": 4,
       "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 5,
+      "matched": 6,
       "extNotAttempted": 0,
       "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.4166666666666667
+    "fieldAccuracy": 0.5
   },
   "table": {
     "alignMode": "content",
@@ -406,16 +406,16 @@
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
-        "gtNorm": "백제에치칼약품2(주)",
-        "extNorm": "백제약품(주)영등포지점",
+        "gtNorm": "백제에치칼약품2",
+        "extNorm": "백제에치칼약품엘지",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.61)"
+        "reason": "char-level diff (sim=0.82)"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울특별시구로구공원로8길24구로동",
-        "extNorm": "헥사에딘액012클로르핵시딘글루콘",
+        "extNorm": "서울구로구구로5동44",
         "bucket": "structure",
         "reason": "gt value present at ['field:buyerAddress']"
       },
@@ -426,14 +426,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영등포지점",
-        "extNorm": "백제약품(주)영등포지점",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -621,7 +613,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 4,
+      "recognition": 3,
       "structure": 25,
       "layout": 0,
       "preprocessing": 0

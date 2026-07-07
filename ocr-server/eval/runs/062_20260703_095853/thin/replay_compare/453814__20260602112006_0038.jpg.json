@@ -73,11 +73,11 @@
       },
       "supplierCompany": {
         "gt": "종근당 (전문)",
-        "ext": "",
-        "gtNorm": "종근당 (전문)",
-        "extNorm": "",
-        "type": "text",
-        "status": "ext_missing",
+        "ext": "종근당(전)",
+        "gtNorm": "종근당전문",
+        "extNorm": "종근당",
+        "type": "company",
+        "status": "mismatch",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -99,9 +99,9 @@
       },
       "supplierAddress": {
         "gt": "충청남도 천안시 서북구 성거읍 망향로 797-48",
-        "ext": "충남 천안시",
+        "ext": "서울 서대문구 충정로 8",
         "gtNorm": "충청남도천안시서북구성거읍망향로79748",
-        "extNorm": "충남천안시",
+        "extNorm": "서울서대문구충정로8",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -126,9 +126,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 제주지점",
         "ext": "",
-        "gtNorm": "백제약품 (주) 제주지점",
+        "gtNorm": "백제약품제주지점",
         "extNorm": "",
-        "type": "text",
+        "type": "company",
         "status": "ext_missing",
         "edited": false,
         "difficult": false,
@@ -155,8 +155,8 @@
     "counts": {
       "scored": 11,
       "match": 3,
-      "mismatch": 4,
-      "ext_missing": 4,
+      "mismatch": 5,
+      "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -169,7 +169,7 @@
       "gtPresent": 11,
       "matched": 3,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 4
+      "extAttemptedMiss": 3
     },
     "fieldAccuracy": 0.2727272727272727
   },
@@ -382,17 +382,17 @@
       },
       {
         "location": "field:supplierCompany",
-        "status": "ext_missing",
-        "gtNorm": "종근당 (전문)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "status": "mismatch",
+        "gtNorm": "종근당전문",
+        "extNorm": "종근당",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.75)"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "충청남도천안시서북구성거읍망향로79748",
-        "extNorm": "충남천안시",
+        "extNorm": "서울서대문구충정로8",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -407,7 +407,7 @@
       {
         "location": "field:buyerCompany",
         "status": "ext_missing",
-        "gtNorm": "백제약품 (주) 제주지점",
+        "gtNorm": "백제약품제주지점",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
@@ -526,8 +526,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 7,
-      "structure": 14,
+      "recognition": 8,
+      "structure": 13,
       "layout": 0,
       "preprocessing": 0
     },
@@ -547,6 +547,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.364
+    "fieldMissRate": 0.273
   }
 }

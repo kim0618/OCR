@@ -73,11 +73,11 @@
       },
       "supplierCompany": {
         "gt": "휴온스(전)",
-        "ext": "보관용",
-        "gtNorm": "휴온스(전)",
-        "extNorm": "보관용",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "휴온스(전)",
+        "gtNorm": "휴온스",
+        "extNorm": "휴온스",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -99,11 +99,11 @@
       },
       "supplierAddress": {
         "gt": "경기 성남시 분당구 판교로253, c-902호 (삼평동,이노밸리)",
-        "ext": "경기도성남시 창업로17A동 휴온스글로별 사옥",
+        "ext": "경기 성남시 분당구 판교로253, c-902호 (삼평동,이노밸리)",
         "gtNorm": "경기성남시분당구판교로253c902호삼평동이노밸리",
-        "extNorm": "경기도성남시창업로17a동휴온스글로별사옥",
+        "extNorm": "경기성남시분당구판교로253c902호삼평동이노밸리",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -126,10 +126,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영남본부",
         "ext": "백제약품영남본부",
-        "gtNorm": "백제약품 (주) 영남본부",
+        "gtNorm": "백제약품영남본부",
         "extNorm": "백제약품영남본부",
-        "type": "text",
-        "status": "mismatch",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -154,8 +154,8 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 5,
-      "mismatch": 5,
+      "match": 8,
+      "mismatch": 2,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 5,
+      "matched": 8,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.45454545454545453
+    "fieldAccuracy": 0.7272727272727273
   },
   "table": {
     "alignMode": "content",
@@ -1515,36 +1515,12 @@
         "reason": "ext value is gt's ['field:totalAmount']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "휴온스(전)",
-        "extNorm": "보관용",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "경기성남시분당구판교로253c902호삼평동이노밸리",
-        "extNorm": "경기도성남시창업로17a동휴온스글로별사옥",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplyAmount",
         "status": "ext_missing",
         "gtNorm": "53465486",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품영남본부",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.76)"
       },
       {
         "location": "field:buyerAddress",
@@ -2004,7 +1980,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 13,
+      "recognition": 10,
       "structure": 35,
       "layout": 14,
       "preprocessing": 0

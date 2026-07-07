@@ -73,11 +73,11 @@
       },
       "supplierCompany": {
         "gt": "한국애보트(전)",
-        "ext": "",
-        "gtNorm": "한국애보트(전)",
-        "extNorm": "",
-        "type": "text",
-        "status": "ext_missing",
+        "ext": "한국애보트(주)",
+        "gtNorm": "한국애보트",
+        "extNorm": "한국애보트",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -99,9 +99,9 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 강남구 영동대로 421, 삼탄빌딩 6층 및 7층 (대치동)",
-        "ext": "광주광역시동구대인동312-16",
+        "ext": "서울특별시 강남구 영동대로 421, 삼탄빌딩 7층 (대치동)",
         "gtNorm": "서울특별시강남구영동대로421삼탄빌딩6층및7층대치동",
-        "extNorm": "광주광역시동구대인동31216",
+        "extNorm": "서울특별시강남구영동대로421삼탄빌딩7층대치동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -126,9 +126,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 광주지점",
         "ext": "",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "",
-        "type": "text",
+        "type": "company",
         "status": "ext_missing",
         "edited": false,
         "difficult": false,
@@ -154,9 +154,9 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 3,
+      "match": 4,
       "mismatch": 4,
-      "ext_missing": 4,
+      "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 3,
+      "matched": 4,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 4
+      "extAttemptedMiss": 3
     },
-    "fieldAccuracy": 0.2727272727272727
+    "fieldAccuracy": 0.36363636363636365
   },
   "table": {
     "alignMode": "content",
@@ -869,14 +869,6 @@
         "reason": "gt value present at ['field:discountAmount']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "ext_missing",
-        "gtNorm": "한국애보트(전)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
-      },
-      {
         "location": "field:taxType",
         "status": "mismatch",
         "gtNorm": "면세",
@@ -888,9 +880,9 @@
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울특별시강남구영동대로421삼탄빌딩6층및7층대치동",
-        "extNorm": "광주광역시동구대인동31216",
+        "extNorm": "서울특별시강남구영동대로421삼탄빌딩7층대치동",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.94)"
       },
       {
         "location": "field:supplyAmount",
@@ -903,7 +895,7 @@
       {
         "location": "field:buyerCompany",
         "status": "ext_missing",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
@@ -1479,7 +1471,7 @@
     ],
     "bucketTally": {
       "recognition": 7,
-      "structure": 71,
+      "structure": 70,
       "layout": 0,
       "preprocessing": 0
     },
@@ -1499,6 +1491,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.364
+    "fieldMissRate": 0.273
   }
 }

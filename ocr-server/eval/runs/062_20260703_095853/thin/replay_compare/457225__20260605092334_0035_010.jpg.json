@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "한국프라임제약",
-        "ext": "한국프라임제약(주)",
+        "ext": "한국프라임제약",
         "gtNorm": "한국프라임제약",
-        "extNorm": "한국프라임제약(주)",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "한국프라임제약",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "전라북도 완주군 봉동읍 완주산단9로 100",
-        "ext": "광주광역시 동구 중앙로211(대인동",
+        "ext": "전라북도 완주군 봉동읍 완주산단9로 100",
         "gtNorm": "전라북도완주군봉동읍완주산단9로100",
-        "extNorm": "광주광역시동구중앙로211대인동",
+        "extNorm": "전라북도완주군봉동읍완주산단9로100",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 제주지점",
         "ext": "",
-        "gtNorm": "백제약품 (주) 제주지점",
+        "gtNorm": "백제약품제주지점",
         "extNorm": "",
-        "type": "text",
+        "type": "company",
         "status": "ext_missing",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
-      "mismatch": 3,
+      "match": 10,
+      "mismatch": 1,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 10,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.8333333333333334
   },
   "table": {
     "alignMode": "content",
@@ -280,25 +280,9 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "한국프라임제약",
-        "extNorm": "한국프라임제약(주)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.82)"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "전라북도완주군봉동읍완주산단9로100",
-        "extNorm": "광주광역시동구중앙로211대인동",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:buyerCompany",
         "status": "ext_missing",
-        "gtNorm": "백제약품 (주) 제주지점",
+        "gtNorm": "백제약품제주지점",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
@@ -353,7 +337,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
+      "recognition": 3,
       "structure": 4,
       "layout": 0,
       "preprocessing": 0

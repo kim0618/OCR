@@ -21,10 +21,10 @@
       },
       "supplierCompany": {
         "gt": "부광약품(주)",
-        "ext": "부광약품(주)",
-        "gtNorm": "부광약품(주)",
-        "extNorm": "부광약품(주)",
-        "type": "text",
+        "ext": "부광약품(전)",
+        "gtNorm": "부광약품",
+        "extNorm": "부광약품",
+        "type": "company",
         "status": "match",
         "edited": false,
         "difficult": false,
@@ -34,11 +34,11 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 동작구 상도로7",
-        "ext": "서울특별시 동작구상도로7",
+        "ext": "서울 동작구 상도로 7 (대방동)",
         "gtNorm": "서울특별시동작구상도로7",
-        "extNorm": "서울특별시동작구상도로7",
+        "extNorm": "서울동작구상도로7대방동",
         "type": "address",
-        "status": "match",
+        "status": "mismatch",
         "edited": true,
         "difficult": true,
         "extAttempted": true,
@@ -74,9 +74,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)영등포지점",
         "ext": "백제약품(주)영등포지점",
-        "gtNorm": "백제약품(주)영등포지점",
-        "extNorm": "백제약품(주)영등포지점",
-        "type": "text",
+        "gtNorm": "백제약품영등포지점",
+        "extNorm": "백제약품영등포지점",
+        "type": "company",
         "status": "match",
         "edited": false,
         "difficult": false,
@@ -180,24 +180,24 @@
     "profile": "rich",
     "counts": {
       "scored": 11,
-      "match": 10,
-      "mismatch": 1,
+      "match": 9,
+      "mismatch": 2,
       "ext_missing": 0,
       "gt_empty": 2,
       "spurious": 1
     },
     "editedCounts": {
-      "match": 3,
-      "mismatch": 1,
+      "match": 2,
+      "mismatch": 2,
       "ext_missing": 0
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 10,
+      "matched": 9,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.9090909090909091
+    "fieldAccuracy": 0.8181818181818182
   },
   "table": {
     "alignMode": "rowIndex",
@@ -2211,6 +2211,14 @@
   "buckets": {
     "defects": [
       {
+        "location": "field:supplierAddress",
+        "status": "mismatch",
+        "gtNorm": "서울특별시동작구상도로7",
+        "extNorm": "서울동작구상도로7대방동",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.75)"
+      },
+      {
         "location": "field:supplierRepresentative",
         "status": "mismatch",
         "gtNorm": "lee woo hyun",
@@ -2388,7 +2396,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 21,
+      "recognition": 22,
       "structure": 1,
       "layout": 0,
       "preprocessing": 0

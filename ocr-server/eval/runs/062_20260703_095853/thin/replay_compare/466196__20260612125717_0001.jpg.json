@@ -60,11 +60,11 @@
       },
       "supplierCompany": {
         "gt": "태준제약",
-        "ext": "주)태준제약",
+        "ext": "태준제약",
         "gtNorm": "태준제약",
-        "extNorm": "주)태준제약",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "태준제약",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -86,11 +86,11 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 용산구 대사관로31길 8 (한남동)",
-        "ext": "서울시 용산구 대사관로31길8",
+        "ext": "서울특별시 용산구 대사관로31길 8 (한남동)",
         "gtNorm": "서울특별시용산구대사관로31길8한남동",
-        "extNorm": "서울시용산구대사관로31길8",
+        "extNorm": "서울특별시용산구대사관로31길8한남동",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -113,9 +113,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)북부물류센터",
         "ext": "제약품(주)영등포지점",
-        "gtNorm": "백제약품(주)북부물류센터",
-        "extNorm": "제약품(주)영등포지점",
-        "type": "text",
+        "gtNorm": "백제약품북부물류센터",
+        "extNorm": "제약품영등포지점",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -141,8 +141,8 @@
     "profile": "thin",
     "counts": {
       "scored": 10,
-      "match": 6,
-      "mismatch": 4,
+      "match": 8,
+      "mismatch": 2,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -154,11 +154,11 @@
     },
     "coverage": {
       "gtPresent": 10,
-      "matched": 6,
+      "matched": 8,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6
+    "fieldAccuracy": 0.8
   },
   "table": {
     "alignMode": "content",
@@ -263,28 +263,12 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "태준제약",
-        "extNorm": "주)태준제약",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.80)"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "서울특별시용산구대사관로31길8한남동",
-        "extNorm": "서울시용산구대사관로31길8",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.85)"
-      },
-      {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)북부물류센터",
-        "extNorm": "제약품(주)영등포지점",
+        "gtNorm": "백제약품북부물류센터",
+        "extNorm": "제약품영등포지점",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -320,7 +304,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 4,
+      "recognition": 2,
       "structure": 2,
       "layout": 1,
       "preprocessing": 0

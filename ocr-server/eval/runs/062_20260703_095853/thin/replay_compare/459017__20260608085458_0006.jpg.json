@@ -73,11 +73,11 @@
       },
       "supplierCompany": {
         "gt": "건일바이오팜",
-        "ext": "주)휴온스",
+        "ext": "건일바이오팜",
         "gtNorm": "건일바이오팜",
-        "extNorm": "주)휴온스",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "건일바이오팜",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -99,11 +99,11 @@
       },
       "supplierAddress": {
         "gt": "충남 천안시 서북구 직산읍 거리막길 33",
-        "ext": "충청남돈,첨앙시서북구거리막길33,건일바",
+        "ext": "충남 천안시 서북구 직산읍 거리막길 33",
         "gtNorm": "충남천안시서북구직산읍거리막길33",
-        "extNorm": "충청남돈첨앙시서북구거리막길33건일바",
+        "extNorm": "충남천안시서북구직산읍거리막길33",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -126,9 +126,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)동부물류센터",
         "ext": "건일바이오팜(주)",
-        "gtNorm": "백제약품(주)동부물류센터",
-        "extNorm": "건일바이오팜(주)",
-        "type": "text",
+        "gtNorm": "백제약품동부물류센터",
+        "extNorm": "건일바이오팜",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -154,8 +154,8 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 5,
-      "mismatch": 6,
+      "match": 7,
+      "mismatch": 4,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 5,
+      "matched": 7,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.45454545454545453
+    "fieldAccuracy": 0.6363636363636364
   },
   "table": {
     "alignMode": "content",
@@ -1087,28 +1087,12 @@
         "reason": "char-level diff (sim=0.67)"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "건일바이오팜",
-        "extNorm": "주)휴온스",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "충남천안시서북구직산읍거리막길33",
-        "extNorm": "충청남돈첨앙시서북구거리막길33건일바",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
-      },
-      {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)동부물류센터",
-        "extNorm": "건일바이오팜(주)",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "gtNorm": "백제약품동부물류센터",
+        "extNorm": "건일바이오팜",
+        "bucket": "structure",
+        "reason": "ext value is gt's ['field:supplierCompany']"
       },
       {
         "location": "field:buyerAddress",
@@ -1640,8 +1624,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 25,
-      "structure": 41,
+      "recognition": 22,
+      "structure": 42,
       "layout": 5,
       "preprocessing": 0
     },

@@ -87,9 +87,9 @@
       "supplierCompany": {
         "gt": "동아제약(일)",
         "ext": "백제약품(주)영남본부",
-        "gtNorm": "동아제약(일)",
-        "extNorm": "백제약품(주)영남본부",
-        "type": "text",
+        "gtNorm": "동아제약일",
+        "extNorm": "백제약품영남본부",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울 동대문구 무학로25길 16",
-        "ext": "서부산(2411",
+        "ext": "경남 김해시 진례면 김해테크노벨리로 33-12 백제약품(주)영남본부",
         "gtNorm": "서울동대문구무학로25길16",
-        "extNorm": "서부산2411",
+        "extNorm": "경남김해시진례면김해테크노벨리로3312백제약품주영남본부",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영남본부",
         "ext": "경상남도김해시진레면테크노벨리로3312(고모리)백제약품영남본부",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "경상남도김해시진레면테크노벨리로3312(고모리)백제약품영남본부",
-        "type": "text",
+        "gtNorm": "백제약품영남본부",
+        "extNorm": "경상남도김해시진레면테크노벨리로3312고모리백제약품영남본부",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -417,16 +417,16 @@
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
-        "gtNorm": "동아제약(일)",
-        "extNorm": "백제약품(주)영남본부",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "gtNorm": "동아제약일",
+        "extNorm": "백제약품영남본부",
+        "bucket": "structure",
+        "reason": "ext value is gt's ['field:buyerCompany']"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울동대문구무학로25길16",
-        "extNorm": "서부산2411",
+        "extNorm": "경남김해시진례면김해테크노벨리로3312백제약품주영남본부",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -441,10 +441,10 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "경상남도김해시진레면테크노벨리로3312(고모리)백제약품영남본부",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "gtNorm": "백제약품영남본부",
+        "extNorm": "경상남도김해시진레면테크노벨리로3312고모리백제약품영남본부",
+        "bucket": "structure",
+        "reason": "gt value present at ['field:supplierCompany']"
       },
       {
         "location": "field:buyerAddress",
@@ -536,8 +536,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 14,
-      "structure": 3,
+      "recognition": 12,
+      "structure": 5,
       "layout": 0,
       "preprocessing": 0
     },

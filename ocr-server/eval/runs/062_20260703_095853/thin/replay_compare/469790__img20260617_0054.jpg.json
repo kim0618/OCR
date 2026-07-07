@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "보령바이오파마",
-        "ext": "주)보령바이오파마",
+        "ext": "보령바이오파마(주)",
         "gtNorm": "보령바이오파마",
-        "extNorm": "주)보령바이오파마",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "보령바이오파마",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 종로구 창경궁로 136(원남동)",
-        "ext": "충청북도 진천군 광혜원면사동길",
+        "ext": "충북 진천군 광혜원면 250-3",
         "gtNorm": "서울특별시종로구창경궁로136원남동",
-        "extNorm": "충청북도진천군광혜원면사동길",
+        "extNorm": "충북진천군광혜원면2503",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 대전지점",
         "ext": "",
-        "gtNorm": "백제약품 (주) 대전지점",
+        "gtNorm": "백제약품대전지점",
         "extNorm": "",
-        "type": "text",
+        "type": "company",
         "status": "ext_missing",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
-      "mismatch": 3,
+      "match": 9,
+      "mismatch": 2,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 9,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -291,25 +291,17 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "보령바이오파마",
-        "extNorm": "주)보령바이오파마",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.88)"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울특별시종로구창경궁로136원남동",
-        "extNorm": "충청북도진천군광혜원면사동길",
+        "extNorm": "충북진천군광혜원면2503",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerCompany",
         "status": "ext_missing",
-        "gtNorm": "백제약품 (주) 대전지점",
+        "gtNorm": "백제약품대전지점",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
@@ -372,7 +364,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 3,
+      "recognition": 2,
       "structure": 7,
       "layout": 0,
       "preprocessing": 0

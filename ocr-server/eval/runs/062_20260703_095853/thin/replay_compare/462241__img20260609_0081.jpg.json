@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "한림MS(주)",
-        "ext": "주)한림M5",
-        "gtNorm": "한림ms(주)",
-        "extNorm": "주)한림m5",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "한림MS(주)",
+        "gtNorm": "한림ms",
+        "extNorm": "한림ms",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "경기도 용인시 처인구 영문로 2-27 (유방동)",
-        "ext": "경기도용인시처인구포곡읍영문로62",
+        "ext": "경기도 용인시 처인구 영문로 2-27 (유방동)",
         "gtNorm": "경기도용인시처인구영문로227유방동",
-        "extNorm": "경기도용인시처인구포곡읍영문로62",
+        "extNorm": "경기도용인시처인구영문로227유방동",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 대전지점",
         "ext": "",
-        "gtNorm": "백제약품 (주) 대전지점",
+        "gtNorm": "백제약품대전지점",
         "extNorm": "",
-        "type": "text",
+        "type": "company",
         "status": "ext_missing",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
-      "mismatch": 3,
+      "match": 10,
+      "mismatch": 1,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 10,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.8333333333333334
   },
   "table": {
     "alignMode": "content",
@@ -388,25 +388,9 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "한림ms(주)",
-        "extNorm": "주)한림m5",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "경기도용인시처인구영문로227유방동",
-        "extNorm": "경기도용인시처인구포곡읍영문로62",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.74)"
-      },
-      {
         "location": "field:buyerCompany",
         "status": "ext_missing",
-        "gtNorm": "백제약품 (주) 대전지점",
+        "gtNorm": "백제약품대전지점",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
@@ -445,7 +429,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
+      "recognition": 3,
       "structure": 2,
       "layout": 0,
       "preprocessing": 0

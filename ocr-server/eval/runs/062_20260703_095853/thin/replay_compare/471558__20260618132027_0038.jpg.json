@@ -73,11 +73,11 @@
       },
       "supplierCompany": {
         "gt": "라이징팜",
-        "ext": "주)라이징팜",
+        "ext": "라이징팜",
         "gtNorm": "라이징팜",
-        "extNorm": "주)라이징팜",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "라이징팜",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -99,9 +99,9 @@
       },
       "supplierAddress": {
         "gt": "서울 강남구 논현로 (도곡동,) 28길 41",
-        "ext": "팔(도곡동",
+        "ext": "서울 강남구 논현로28길 41(도곡동)",
         "gtNorm": "서울강남구논현로도곡동28길41",
-        "extNorm": "팔도곡동",
+        "extNorm": "서울강남구논현로28길41도곡동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -126,10 +126,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영남본부",
         "ext": "백제약품(주)영남본부",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품영남본부",
+        "extNorm": "백제약품영남본부",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -154,8 +154,8 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 4,
-      "mismatch": 5,
+      "match": 6,
+      "mismatch": 3,
       "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 4,
+      "matched": 6,
       "extNotAttempted": 0,
       "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.36363636363636365
+    "fieldAccuracy": 0.5454545454545454
   },
   "table": {
     "alignMode": "content",
@@ -466,34 +466,18 @@
         "reason": "gt value present at ['field:supplyAmount']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "라이징팜",
-        "extNorm": "주)라이징팜",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.80)"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울강남구논현로도곡동28길41",
-        "extNorm": "팔도곡동",
+        "extNorm": "서울강남구논현로28길41도곡동",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.81)"
       },
       {
         "location": "field:supplyAmount",
         "status": "mismatch",
         "gtNorm": "7132612",
         "extNorm": "713261",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.92)"
       },
@@ -651,7 +635,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 13,
+      "recognition": 11,
       "structure": 12,
       "layout": 0,
       "preprocessing": 0

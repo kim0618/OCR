@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "일양약품(전문)",
-        "ext": "",
-        "gtNorm": "일양약품(전문)",
-        "extNorm": "",
-        "type": "text",
-        "status": "ext_missing",
+        "ext": "일양약품(전)",
+        "gtNorm": "일양약품전문",
+        "extNorm": "일양약품",
+        "type": "company",
+        "status": "mismatch",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,7 +112,7 @@
       },
       "supplierAddress": {
         "gt": "경기도 용인시 기흥구 하갈로 110 (하갈동)",
-        "ext": "경기도 용인시 기흥구 하갈로 110(하갈동",
+        "ext": "경기도 용인시 기흥구 하갈로 110 (하갈동)",
         "gtNorm": "경기도용인시기흥구하갈로110하갈동",
         "extNorm": "경기도용인시기흥구하갈로110하갈동",
         "type": "address",
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 전주지점",
         "ext": "",
-        "gtNorm": "백제약품 (주) 전주지점",
+        "gtNorm": "백제약품전주지점",
         "extNorm": "",
-        "type": "text",
+        "type": "company",
         "status": "ext_missing",
         "edited": false,
         "difficult": false,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 6,
-      "mismatch": 1,
-      "ext_missing": 5,
+      "mismatch": 2,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,7 +182,7 @@
       "gtPresent": 12,
       "matched": 6,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 5
+      "extAttemptedMiss": 4
     },
     "fieldAccuracy": 0.5
   },
@@ -298,11 +298,11 @@
       },
       {
         "location": "field:supplierCompany",
-        "status": "ext_missing",
-        "gtNorm": "일양약품(전문)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "status": "mismatch",
+        "gtNorm": "일양약품전문",
+        "extNorm": "일양약품",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "field:supplyAmount",
@@ -315,7 +315,7 @@
       {
         "location": "field:buyerCompany",
         "status": "ext_missing",
-        "gtNorm": "백제약품 (주) 전주지점",
+        "gtNorm": "백제약품전주지점",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
@@ -370,8 +370,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 2,
-      "structure": 9,
+      "recognition": 3,
+      "structure": 8,
       "layout": 0,
       "preprocessing": 0
     },
@@ -391,6 +391,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.417
+    "fieldMissRate": 0.333
   }
 }

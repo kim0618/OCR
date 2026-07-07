@@ -86,10 +86,10 @@
       },
       "supplierCompany": {
         "gt": "아주약품(주)(전문)",
-        "ext": "아주약품",
-        "gtNorm": "아주약품(주)(전문)",
+        "ext": "아주약품(주)",
+        "gtNorm": "아주약품전문",
         "extNorm": "아주약품",
-        "type": "text",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 구로구 경인로 600 (신도림동)",
-        "ext": "",
+        "ext": "경기 평택시 산단로121번길 23 (모곡동)",
         "gtNorm": "서울특별시구로구경인로600신도림동",
-        "extNorm": "",
+        "extNorm": "경기평택시산단로121번길23모곡동",
         "type": "address",
-        "status": "ext_missing",
+        "status": "mismatch",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 전주지점",
         "ext": "의약품",
-        "gtNorm": "백제약품 (주) 전주지점",
+        "gtNorm": "백제약품전주지점",
         "extNorm": "의약품",
-        "type": "text",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 3,
-      "mismatch": 6,
-      "ext_missing": 3,
+      "mismatch": 7,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,7 +182,7 @@
       "gtPresent": 12,
       "matched": 3,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 3
+      "extAttemptedMiss": 2
     },
     "fieldAccuracy": 0.25
   },
@@ -2328,10 +2328,10 @@
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
-        "gtNorm": "아주약품(주)(전문)",
+        "gtNorm": "아주약품전문",
         "extNorm": "아주약품",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.53)"
+        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "field:taxType",
@@ -2343,11 +2343,11 @@
       },
       {
         "location": "field:supplierAddress",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "서울특별시구로구경인로600신도림동",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "extNorm": "경기평택시산단로121번길23모곡동",
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplyAmount",
@@ -2360,7 +2360,7 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 전주지점",
+        "gtNorm": "백제약품전주지점",
         "extNorm": "의약품",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
@@ -3207,8 +3207,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 58,
-      "structure": 55,
+      "recognition": 59,
+      "structure": 54,
       "layout": 0,
       "preprocessing": 0
     },
@@ -3228,6 +3228,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.25
+    "fieldMissRate": 0.167
   }
 }

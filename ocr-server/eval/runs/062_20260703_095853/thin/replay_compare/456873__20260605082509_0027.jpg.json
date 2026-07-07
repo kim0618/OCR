@@ -87,10 +87,10 @@
       "supplierCompany": {
         "gt": "영풍제약(전)",
         "ext": "영풍제약(주)",
-        "gtNorm": "영풍제약(전)",
-        "extNorm": "영풍제약(주)",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "영풍제약",
+        "extNorm": "영풍제약",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "인천광역시 남동구 함박뫼로 333 (남촌동)",
-        "ext": "인천광역시 남동구 함박외로 333 [남촌동, 14블력9롯트",
+        "ext": "인천광역시 남동구 함박뫼로 333 (남촌동)",
         "gtNorm": "인천광역시남동구함박뫼로333남촌동",
-        "extNorm": "인천광역시남동구함박외로333남촌동14블력9롯트",
+        "extNorm": "인천광역시남동구함박뫼로333남촌동",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 광주지점",
         "ext": "",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "",
-        "type": "text",
+        "type": "company",
         "status": "ext_missing",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
-      "mismatch": 3,
+      "match": 10,
+      "mismatch": 1,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 10,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.8333333333333334
   },
   "table": {
     "alignMode": "content",
@@ -527,25 +527,9 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "영풍제약(전)",
-        "extNorm": "영풍제약(주)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.86)"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "인천광역시남동구함박뫼로333남촌동",
-        "extNorm": "인천광역시남동구함박외로333남촌동14블력9롯트",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.79)"
-      },
-      {
         "location": "field:buyerCompany",
         "status": "ext_missing",
-        "gtNorm": "백제약품 (주) 광주지점",
+        "gtNorm": "백제약품광주지점",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
@@ -760,7 +744,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 9,
+      "recognition": 7,
       "structure": 19,
       "layout": 1,
       "preprocessing": 0

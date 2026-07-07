@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "한독(전)",
-        "ext": "주식회사 한독",
-        "gtNorm": "한독(전)",
-        "extNorm": "주식회사 한독",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "한독(전)",
+        "gtNorm": "한독",
+        "extNorm": "한독",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울 강남구 테헤란로 132(역삼동)",
-        "ext": "서울시강담구 테헤란로 132(역삼동",
+        "ext": "서울 강남구 테헤란로 132(역삼동)",
         "gtNorm": "서울강남구테헤란로132역삼동",
-        "extNorm": "서울시강담구테헤란로132역삼동",
+        "extNorm": "서울강남구테헤란로132역삼동",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영남본부",
         "ext": "백제약품영남본부",
-        "gtNorm": "백제약품 (주) 영남본부",
+        "gtNorm": "백제약품영남본부",
         "extNorm": "백제약품영남본부",
-        "type": "text",
-        "status": "mismatch",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 4,
-      "mismatch": 5,
+      "match": 7,
+      "mismatch": 2,
       "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 4,
+      "matched": 7,
       "extNotAttempted": 0,
       "extAttemptedMiss": 3
     },
-    "fieldAccuracy": 0.3333333333333333
+    "fieldAccuracy": 0.5833333333333334
   },
   "table": {
     "alignMode": "content",
@@ -1411,14 +1411,6 @@
         "reason": "gt value present at ['field:discountAmount']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "한독(전)",
-        "extNorm": "주식회사 한독",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:taxType",
         "status": "mismatch",
         "gtNorm": "면세",
@@ -1427,28 +1419,12 @@
         "reason": "char-level diff (sim=0.50)"
       },
       {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "서울강남구테헤란로132역삼동",
-        "extNorm": "서울시강담구테헤란로132역삼동",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.90)"
-      },
-      {
         "location": "field:supplyAmount",
         "status": "ext_missing",
         "gtNorm": "0",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value present at ['field:discountAmount']"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품영남본부",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.76)"
       },
       {
         "location": "field:buyerAddress",
@@ -1636,7 +1612,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 27,
+      "recognition": 24,
       "structure": 3,
       "layout": 0,
       "preprocessing": 0

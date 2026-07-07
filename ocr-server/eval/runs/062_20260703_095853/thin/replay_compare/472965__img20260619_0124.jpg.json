@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "동아제약(주)중부지점",
-        "ext": "",
-        "gtNorm": "동아제약(주)중부지점",
-        "extNorm": "",
-        "type": "text",
-        "status": "ext_missing",
+        "ext": "동아제약(주)서울지점-(일반)",
+        "gtNorm": "동아제약중부지점",
+        "extNorm": "동아제약서울지점일반",
+        "type": "company",
+        "status": "mismatch",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "대전광역시 중구 어덕마을로 18(용두동)",
-        "ext": "동대전(2611",
+        "ext": "서울 동대문구 용두동 252",
         "gtNorm": "대전광역시중구어덕마을로18용두동",
-        "extNorm": "동대전2611",
+        "extNorm": "서울동대문구용두동252",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 대전지점",
         "ext": "",
-        "gtNorm": "백제약품 (주) 대전지점",
+        "gtNorm": "백제약품대전지점",
         "extNorm": "",
-        "type": "text",
+        "type": "company",
         "status": "ext_missing",
         "edited": false,
         "difficult": false,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 5,
-      "mismatch": 3,
-      "ext_missing": 4,
+      "mismatch": 4,
+      "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,7 +182,7 @@
       "gtPresent": 12,
       "matched": 5,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 4
+      "extAttemptedMiss": 3
     },
     "fieldAccuracy": 0.4166666666666667
   },
@@ -609,17 +609,17 @@
       },
       {
         "location": "field:supplierCompany",
-        "status": "ext_missing",
-        "gtNorm": "동아제약(주)중부지점",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "status": "mismatch",
+        "gtNorm": "동아제약중부지점",
+        "extNorm": "동아제약서울지점일반",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "대전광역시중구어덕마을로18용두동",
-        "extNorm": "동대전2611",
+        "extNorm": "서울동대문구용두동252",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -634,7 +634,7 @@
       {
         "location": "field:buyerCompany",
         "status": "ext_missing",
-        "gtNorm": "백제약품 (주) 대전지점",
+        "gtNorm": "백제약품대전지점",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
@@ -921,8 +921,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 27,
-      "structure": 14,
+      "recognition": 28,
+      "structure": 13,
       "layout": 0,
       "preprocessing": 0
     },
@@ -942,6 +942,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.333
+    "fieldMissRate": 0.25
   }
 }

@@ -73,11 +73,11 @@
       },
       "supplierCompany": {
         "gt": "일양약품(전문)",
-        "ext": "",
-        "gtNorm": "일양약품(전문)",
-        "extNorm": "",
-        "type": "text",
-        "status": "ext_missing",
+        "ext": "일양약품(전)",
+        "gtNorm": "일양약품전문",
+        "extNorm": "일양약품",
+        "type": "company",
+        "status": "mismatch",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -113,9 +113,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)평택물류센터",
         "ext": "",
-        "gtNorm": "백제약품(주)평택물류센터",
+        "gtNorm": "백제약품평택물류센터",
         "extNorm": "",
-        "type": "text",
+        "type": "company",
         "status": "ext_missing",
         "edited": false,
         "difficult": false,
@@ -142,8 +142,8 @@
     "counts": {
       "scored": 10,
       "match": 4,
-      "mismatch": 1,
-      "ext_missing": 5,
+      "mismatch": 2,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -156,7 +156,7 @@
       "gtPresent": 10,
       "matched": 4,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 5
+      "extAttemptedMiss": 4
     },
     "fieldAccuracy": 0.4
   },
@@ -579,11 +579,11 @@
       },
       {
         "location": "field:supplierCompany",
-        "status": "ext_missing",
-        "gtNorm": "일양약품(전문)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "status": "mismatch",
+        "gtNorm": "일양약품전문",
+        "extNorm": "일양약품",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "field:supplyAmount",
@@ -596,7 +596,7 @@
       {
         "location": "field:buyerCompany",
         "status": "ext_missing",
-        "gtNorm": "백제약품(주)평택물류센터",
+        "gtNorm": "백제약품평택물류센터",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
@@ -691,8 +691,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 11,
+      "recognition": 6,
+      "structure": 10,
       "layout": 0,
       "preprocessing": 0
     },
@@ -712,6 +712,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.5
+    "fieldMissRate": 0.4
   }
 }

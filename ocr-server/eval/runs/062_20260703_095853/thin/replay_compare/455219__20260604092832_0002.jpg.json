@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "영일제약(전)",
-        "ext": "",
-        "gtNorm": "영일제약(전)",
-        "extNorm": "",
-        "type": "text",
-        "status": "ext_missing",
+        "ext": "삼진제약(전)",
+        "gtNorm": "영일제약",
+        "extNorm": "삼진제약",
+        "type": "company",
+        "status": "mismatch",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "충청북도 진천군 진천읍 문화12길 6-1",
-        "ext": "광주광역시 동구 제몽로 200(대인동 신성회(광주 도",
+        "ext": "서울 마포구 와우산로 121 (서교동)",
         "gtNorm": "충청북도진천군진천읍문화12길61",
-        "extNorm": "광주광역시동구제몽로200대인동신성회광주도",
+        "extNorm": "서울마포구와우산로121서교동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 광주지점",
         "ext": "영일제약주식회사",
-        "gtNorm": "백제약품 (주) 광주지점",
-        "extNorm": "영일제약주식회사",
-        "type": "text",
+        "gtNorm": "백제약품광주지점",
+        "extNorm": "영일제약",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 4,
-      "mismatch": 5,
-      "ext_missing": 3,
+      "mismatch": 6,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,7 +182,7 @@
       "gtPresent": 12,
       "matched": 4,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 3
+      "extAttemptedMiss": 2
     },
     "fieldAccuracy": 0.3333333333333333
   },
@@ -452,17 +452,17 @@
       },
       {
         "location": "field:supplierCompany",
-        "status": "ext_missing",
-        "gtNorm": "영일제약(전)",
-        "extNorm": "",
+        "status": "mismatch",
+        "gtNorm": "영일제약",
+        "extNorm": "삼진제약",
         "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "reason": "gt value present at ['field:buyerCompany']"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "충청북도진천군진천읍문화12길61",
-        "extNorm": "광주광역시동구제몽로200대인동신성회광주도",
+        "extNorm": "서울마포구와우산로121서교동",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -477,10 +477,10 @@
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품 (주) 광주지점",
-        "extNorm": "영일제약주식회사",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "gtNorm": "백제약품광주지점",
+        "extNorm": "영일제약",
+        "bucket": "structure",
+        "reason": "ext value is gt's ['field:supplierCompany']"
       },
       {
         "location": "field:buyerAddress",
@@ -644,8 +644,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 14,
-      "structure": 10,
+      "recognition": 13,
+      "structure": 11,
       "layout": 3,
       "preprocessing": 0
     },
@@ -665,6 +665,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.25
+    "fieldMissRate": 0.167
   }
 }

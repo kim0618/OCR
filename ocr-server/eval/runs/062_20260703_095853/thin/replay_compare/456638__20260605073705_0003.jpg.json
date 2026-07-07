@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "제이에스팜(주)",
-        "ext": "주)제이에스팜",
-        "gtNorm": "제이에스팜(주)",
-        "extNorm": "주)제이에스팜",
-        "type": "text",
-        "status": "mismatch",
+        "ext": "제이에스팜(전)",
+        "gtNorm": "제이에스팜",
+        "extNorm": "제이에스팜",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 은평구 은평터널로 134, 부영빌딩 4층 (신사동)",
-        "ext": "서울시 은평구 은평터널로134(신사동,부영빌딩",
+        "ext": "서울특별시 은평구 은평터널로 134, 부영빌딩 4층 (신사동)",
         "gtNorm": "서울특별시은평구은평터널로134부영빌딩4층신사동",
-        "extNorm": "서울시은평구은평터널로134신사동부영빌딩",
+        "extNorm": "서울특별시은평구은평터널로134부영빌딩4층신사동",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,9 +139,9 @@
       "buyerCompany": {
         "gt": "백제약품(주)평택물류센터",
         "ext": "백제약품(주)영등포지점성명",
-        "gtNorm": "백제약품(주)평택물류센터",
-        "extNorm": "백제약품(주)영등포지점성명",
-        "type": "text",
+        "gtNorm": "백제약품평택물류센터",
+        "extNorm": "백제약품영등포지점성명",
+        "type": "company",
         "status": "mismatch",
         "edited": false,
         "difficult": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 7,
-      "mismatch": 5,
+      "match": 9,
+      "mismatch": 3,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 7,
+      "matched": 9,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.5833333333333334
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -568,28 +568,12 @@
         "reason": "value differs, low similarity"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "제이에스팜(주)",
-        "extNorm": "주)제이에스팜",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "서울특별시은평구은평터널로134부영빌딩4층신사동",
-        "extNorm": "서울시은평구은평터널로134신사동부영빌딩",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.78)"
-      },
-      {
         "location": "field:buyerCompany",
         "status": "mismatch",
-        "gtNorm": "백제약품(주)평택물류센터",
-        "extNorm": "백제약품(주)영등포지점성명",
+        "gtNorm": "백제약품평택물류센터",
+        "extNorm": "백제약품영등포지점성명",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.52)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -793,7 +777,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 18,
+      "recognition": 16,
       "structure": 10,
       "layout": 1,
       "preprocessing": 0

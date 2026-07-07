@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "에스지메디언스",
-        "ext": "주)에스지메타언스",
+        "ext": "에스지메디언스",
         "gtNorm": "에스지메디언스",
-        "extNorm": "주)에스지메타언스",
-        "type": "text",
-        "status": "mismatch",
+        "extNorm": "에스지메디언스",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "부산 사상구 학감대로 238-32 (감전동) 4층",
-        "ext": "부산사상구 사상로182",
+        "ext": "부산 사상구 학감대로 238-32 (감전동) 4층",
         "gtNorm": "부산사상구학감대로23832감전동4층",
-        "extNorm": "부산사상구사상로182",
+        "extNorm": "부산사상구학감대로23832감전동4층",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -139,10 +139,10 @@
       "buyerCompany": {
         "gt": "백제약품 (주) 영남본부",
         "ext": "백제약품(주)영남본부",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "type": "text",
-        "status": "mismatch",
+        "gtNorm": "백제약품영남본부",
+        "extNorm": "백제약품영남본부",
+        "type": "company",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 5,
-      "mismatch": 5,
+      "match": 8,
+      "mismatch": 2,
       "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 5,
+      "matched": 8,
       "extNotAttempted": 0,
       "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.4166666666666667
+    "fieldAccuracy": 0.6666666666666666
   },
   "table": {
     "alignMode": "content",
@@ -308,36 +308,12 @@
         "reason": "gt value not found anywhere in extraction"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "에스지메디언스",
-        "extNorm": "주)에스지메타언스",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.75)"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "부산사상구학감대로23832감전동4층",
-        "extNorm": "부산사상구사상로182",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplyAmount",
         "status": "ext_missing",
         "gtNorm": "4042874",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
-      },
-      {
-        "location": "field:buyerCompany",
-        "status": "mismatch",
-        "gtNorm": "백제약품 (주) 영남본부",
-        "extNorm": "백제약품(주)영남본부",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerAddress",
@@ -437,7 +413,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
+      "recognition": 2,
       "structure": 13,
       "layout": 0,
       "preprocessing": 0
