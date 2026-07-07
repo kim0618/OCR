@@ -1,0 +1,59 @@
+# PP-OCRv5 mobile Korean rec — fine-tune config (PaddleX 3.x).
+#
+# Served model = korean_PP-OCRv5_mobile_rec  (main.py:1135, PaddleOCR 3.4.1 / PaddleX 3.4.3).
+# This REPLACES the old v4-style `config_rec_finetune.yml`, which targeted the classic
+# PaddleOCR `tools/train.py` + hand-written Architecture/Backbone/Head/Loss. That flow does
+# NOT apply to this stack: on PaddleX 3.x the architecture is resolved from `Global.model`,
+# so you MUST NOT hand-specify it. Official base copied from (verbatim, then re-pathed):
+#   .venv/Lib/site-packages/paddlex/configs/modules/text_recognition/korean_PP-OCRv5_mobile_rec.yaml
+#
+# Prereq on the GPU box (this is the "training repo we don't have yet" from RECIPE step 0):
+#   paddlex --install PaddleOCR        # pulls the training plugin/code
+#
+# Run (from ocr-server/):
+#   1) validate dataset layout FIRST — PaddleX wants a dataset_dir, not a loose train.txt:
+#   python -m paddlex --config eval/finetune/config_ppocrv5_rec_finetune.yaml -o Global.mode=check_dataset
+#   2) fine-tune:
+#   python -m paddlex --config eval/finetune/config_ppocrv5_rec_finetune.yaml -o Global.mode=train
+#   3) evaluate on held-out test, then export to an inference dir the server can load.
+#
+# GATE (unchanged, RECIPE step 5): keep the new weights ONLY if domain test-acc ↑ AND the
+# BASELINE_LOCK set does not regress (no forgetting). The corpus is smoke-scale today
+# (train 226/val 28/test 28) — this config is READY but the DATA is not; run for real only
+# after the corpus grows to thousands + a real held-out test.
+
+Global:
+  model: korean_PP-OCRv5_mobile_rec
+  mode: train                       # override per step: check_dataset / train / evaluate / export
+  dataset_dir: eval/finetune_corpus # = corpus root (run from ocr-server/). build_paddlex_dataset.py
+                                    # puts train.txt/val.txt/test.txt + dict.txt here; crops resolve
+                                    # via crops[_correct]/<hash>.jpg relative to this dir. Verify with
+                                    # mode=check_dataset before training.
+  device: gpu:0
+  output: eval/finetune/output
+
+CheckDataset:
+  convert:
+    enable: False
+    src_dataset_type: null
+  split:
+    enable: False
+    train_percent: null
+    val_percent: null
+
+Train:
+  epochs_iters: 20
+  batch_size: 8
+  learning_rate: 0.0005             # fine-tune = below the official 0.001 from-base; tune on val acc
+  pretrain_weight_path: https://paddle-model-ecology.bj.bcebos.com/paddlex/official_pretrained_model/korean_PP-OCRv5_mobile_rec_pretrained.pdparams
+  resume_path: null
+  log_interval: 20
+  eval_interval: 1
+  save_interval: 1
+
+Evaluate:
+  weight_path: "eval/finetune/output/best_accuracy/best_accuracy.pdparams"
+  log_interval: 1
+
+Export:
+  weight_path: "eval/finetune/output/best_accuracy/best_accuracy.pdparams"
