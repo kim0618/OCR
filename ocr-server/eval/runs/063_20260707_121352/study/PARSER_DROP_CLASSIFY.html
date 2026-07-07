@@ -1,0 +1,133 @@
+<!doctype html><html lang='ko'><head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width,initial-scale=1'>
+<title>Parser-drop 요약 - 063_20260707_121352/study</title><style>
+
+:root{--bg:#f6f8fa;--card:#ffffff;--line:#d0d7de;--fg:#1f2328;--muted:#59636e;
+--up:#1a7f37;--down:#cf222e;--warn:#9a6700;--link:#0969da}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+font-family:'Segoe UI','Malgun Gothic','Apple SD Gothic Neo',system-ui,sans-serif;
+font-size:14px;line-height:1.55;padding:clamp(14px,2.5vw,32px)}
+a{color:var(--link);text-decoration:none;font-weight:500}
+a:hover{text-decoration:underline}
+h1{font-size:20px;margin:0}
+.head{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;max-width:1600px;margin:0 auto 6px}
+.gen{color:var(--muted);font-size:12.5px;white-space:nowrap}
+.note{color:var(--muted);font-size:12.5px;max-width:1600px;margin:4px auto}
+.note.warn{color:var(--warn)}
+section{background:var(--card);border:1px solid var(--line);border-radius:10px;
+padding:16px 18px;margin:18px auto;max-width:1600px;overflow-x:auto;box-shadow:0 1px 2px rgba(27,31,36,.04)}
+h2{font-size:16px;margin:0 0 10px}
+h3{font-size:13.5px;margin:14px 0 6px}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--muted);font-weight:600;font-size:12.5px;border-bottom:2px solid var(--line)}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:#f6f8fa}
+code{background:#eff1f3;border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:12.5px}
+.up{color:var(--up);font-weight:600}
+.down{color:var(--down);font-weight:600}
+.muted{color:var(--muted)}
+.bup{color:var(--down);font-weight:700}
+.latest{margin-top:12px;padding:9px 12px;border-radius:8px;border:1px solid var(--line);font-size:13px}
+.latest.ok{background:#e9f7ec;border-color:#a7e0b5}
+.latest.warn{background:#fff8e6;border-color:#f0d99a}
+.latest.bad{background:#ffeef0;border-color:#f5b0b8}
+.legend{color:var(--muted);font-size:12px;margin-top:6px}
+.note .row{margin:3px 0}
+.btn{display:inline-block;padding:5px 12px;border-radius:6px;background:var(--link);
+color:#fff;font-weight:600;font-size:12.5px;text-decoration:none;border:1px solid var(--link)}
+.btn:hover{background:#0860ca;text-decoration:none}
+/* SUMMARY 표: 텍스트=왼쪽, 숫자=오른쪽(기본), 검증/상세=가운데 */
+table.sumtable td:nth-child(2),table.sumtable th:nth-child(2){text-align:left}
+table.sumtable td:nth-child(6),table.sumtable th:nth-child(6),
+table.sumtable td:nth-child(7),table.sumtable th:nth-child(7){text-align:center}
+@media (max-width:640px){body{font-size:13px}h1{font-size:18px}th,td{padding:6px 8px}
+.head{flex-direction:column;gap:2px}section{padding:14px}}
+
+table.sortable th:hover{color:var(--fg)}.acc-lo{background:#ffeef0}.acc-mid{background:#fff8e6}.acc-ok{background:#e9f7ec}.free{color:var(--link);font-weight:600}.fallback{color:var(--warn);font-weight:600}.kpis{display:flex;flex-wrap:wrap;gap:10px;max-width:1600px;margin:0 auto}.kpi{flex:1;min-width:130px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 16px;box-shadow:0 1px 2px rgba(27,31,36,.04)}.kpi .lab{color:var(--muted);font-size:12px}.kpi b{font-size:24px;display:block;margin:2px 0}.kpi .sub{color:var(--muted);font-size:11.5px}
+</style></head><body>
+<div class='head'><h1>Parser-drop 요약 <span class='muted' style='font-size:14px'>(063_20260707_121352/study)</span></h1><div class='gen'>생성 2026-07-07 12:15 · AWS run 기준 (수정 전)</div></div>
+<div class='note'><div class='row'><b>parser-drop</b> = GT 값이 OCR 출력엔 있는데 파서가 떨군 것 <b>(회수 가능)</b> · <b>recognition</b> = OCR이 글자 자체를 못 읽음(OCR 바운드, 파서 대상 아님)</div><div class='row'><b>패턴</b> — <b>누락(drop)</b>: 칸 통째 누락 · <b>오배치(mislocate)</b>: 값이 엉뚱한 컬럼에 배치 · <b>오선택(wrongpick)</b>: 정답 라인 있는데 다른 걸 선택</div><div class='row'><b>추출경로</b> — <b class='free'>free</b>(비정형 룰 파서) / <b class='fallback'>fallback</b>(레퍼런스 보조, free 게이트 탈락 시)</div></div>
+<div class='kpis'><div class='kpi'><div class='lab'>전체 필드</div><b>77.0%</b><div class='sub'>188/244</div></div><div class='kpi'><div class='lab'>전체 셀</div><b>89.8%</b><div class='sub'>956/1064</div></div><div class='kpi'><div class='lab'>결함</div><b>164</b><div class='sub'>불일치+누락</div></div><div class='kpi'><div class='lab'>parser-drop</div><b>11</b><div class='sub'>OCR 읽음 · 회수가능 7%</div></div><div class='kpi'><div class='lab'>ambiguous_fuzzy</div><b>0</b><div class='sub'>fuzzy-only · pending</div></div><div class='kpi'><div class='lab'>recognition</div><b>153</b><div class='sub'>OCR 바운드</div></div></div>
+<section><h2>추출경로별 parser-drop <span class='muted'>(우선순위 축)</span></h2><table class='sortable'><thead><tr><th>경로</th><th data-num='1'>누락(drop)</th><th data-num='1'>오배치(mislocate)</th><th data-num='1'>오선택(wrongpick)</th><th data-num='1'>합계</th></tr></thead><tbody>
+<tr><td><b class='fallback'>fallback</b></td><td data-v='2'>2</td><td data-v='1'>1</td><td data-v='2'>2</td><td data-v='5'><b>5</b></td></tr>
+<tr><td><b class='free'>free</b></td><td data-v='0'>0</td><td data-v='1'>1</td><td data-v='5'>5</td><td data-v='6'><b>6</b></td></tr>
+</tbody></table></section>
+<section><h2>샘플별 점수 <span class='muted'>(약한 순 · 컬럼 클릭=정렬)</span></h2><table class='sortable'><thead><tr><th>이미지</th><th>구분</th><th>추출경로</th><th data-num='1'>필드 정확도</th><th data-num='1'>셀 정확도</th></tr></thead><tbody>
+<tr><td>3-2.jpg</td><td>변주</td><td><span class='fallback'>fallback</span></td><td data-v='0.5000' class='acc-mid'>50.0%</td><td data-v='0.3750' class='acc-lo'>37.5%</td></tr>
+<tr><td>3-1.jpg</td><td>변주</td><td><span class='fallback'>fallback</span></td><td data-v='0.5833' class='acc-mid'>58.3%</td><td data-v='0.7500' class='acc-mid'>75.0%</td></tr>
+<tr><td>3-3.jpg</td><td>변주</td><td><span class='fallback'>fallback</span></td><td data-v='0.5833' class='acc-mid'>58.3%</td><td data-v='0.7500' class='acc-mid'>75.0%</td></tr>
+<tr><td>3.pdf</td><td>정상</td><td><span class='fallback'>fallback</span></td><td data-v='0.5833' class='acc-mid'>58.3%</td><td data-v='0.7500' class='acc-mid'>75.0%</td></tr>
+<tr><td>5-1.jpg</td><td>변주</td><td><span class='free'>free</span></td><td data-v='0.6667' class='acc-mid'>66.7%</td><td data-v='0.9333' class='acc-ok'>93.3%</td></tr>
+<tr><td>4-1.jpg</td><td>변주</td><td><span class='fallback'>fallback</span></td><td data-v='0.7500' class='acc-mid'>75.0%</td><td data-v='0.8000' class='acc-ok'>80.0%</td></tr>
+<tr><td>4-2.jpg</td><td>변주</td><td><span class='fallback'>fallback</span></td><td data-v='0.7500' class='acc-mid'>75.0%</td><td data-v='0.6000' class='acc-mid'>60.0%</td></tr>
+<tr><td>4-3.jpg</td><td>변주</td><td><span class='fallback'>fallback</span></td><td data-v='0.7500' class='acc-mid'>75.0%</td><td data-v='0.2000' class='acc-lo'>20.0%</td></tr>
+<tr><td>4.pdf</td><td>정상</td><td><span class='fallback'>fallback</span></td><td data-v='0.7500' class='acc-mid'>75.0%</td><td data-v='0.6000' class='acc-mid'>60.0%</td></tr>
+<tr><td>7-1.jpg</td><td>변주</td><td><span class='fallback'>fallback</span></td><td data-v='0.7778' class='acc-mid'>77.8%</td><td data-v='1.0000' class='acc-ok'>100.0%</td></tr>
+<tr><td>7-3.jpg</td><td>변주</td><td><span class='fallback'>fallback</span></td><td data-v='0.7778' class='acc-mid'>77.8%</td><td data-v='1.0000' class='acc-ok'>100.0%</td></tr>
+<tr><td>1-1.jpg</td><td>변주</td><td><span class='free'>free</span></td><td data-v='0.8182' class='acc-ok'>81.8%</td><td data-v='0.8918' class='acc-ok'>89.2%</td></tr>
+<tr><td>1-2.jpg</td><td>변주</td><td><span class='free'>free</span></td><td data-v='0.8182' class='acc-ok'>81.8%</td><td data-v='0.8918' class='acc-ok'>89.2%</td></tr>
+<tr><td>1-3.jpg</td><td>변주</td><td><span class='free'>free</span></td><td data-v='0.8182' class='acc-ok'>81.8%</td><td data-v='0.8814' class='acc-ok'>88.1%</td></tr>
+<tr><td>1.jpg</td><td>정상</td><td><span class='free'>free</span></td><td data-v='0.8182' class='acc-ok'>81.8%</td><td data-v='0.9175' class='acc-ok'>91.8%</td></tr>
+<tr><td>5-2.jpg</td><td>변주</td><td><span class='free'>free</span></td><td data-v='0.8333' class='acc-ok'>83.3%</td><td data-v='0.9667' class='acc-ok'>96.7%</td></tr>
+<tr><td>5-3.jpg</td><td>변주</td><td><span class='free'>free</span></td><td data-v='0.8333' class='acc-ok'>83.3%</td><td data-v='0.9000' class='acc-ok'>90.0%</td></tr>
+<tr><td>7-2.jpg</td><td>변주</td><td><span class='fallback'>fallback</span></td><td data-v='0.8889' class='acc-ok'>88.9%</td><td data-v='1.0000' class='acc-ok'>100.0%</td></tr>
+<tr><td>7.pdf</td><td>정상</td><td><span class='fallback'>fallback</span></td><td data-v='0.8889' class='acc-ok'>88.9%</td><td data-v='1.0000' class='acc-ok'>100.0%</td></tr>
+<tr><td>5.pdf</td><td>정상</td><td><span class='free'>free</span></td><td data-v='0.9167' class='acc-ok'>91.7%</td><td data-v='1.0000' class='acc-ok'>100.0%</td></tr>
+<tr><td>6-1.jpg</td><td>변주</td><td><span class='fallback'>fallback</span></td><td data-v='1.0000' class='acc-ok'>100.0%</td><td data-v='0.9615' class='acc-ok'>96.2%</td></tr>
+<tr><td>6-2.jpg</td><td>변주</td><td><span class='fallback'>fallback</span></td><td data-v='1.0000' class='acc-ok'>100.0%</td><td data-v='1.0000' class='acc-ok'>100.0%</td></tr>
+<tr><td>6-3.jpg</td><td>변주</td><td><span class='fallback'>fallback</span></td><td data-v='1.0000' class='acc-ok'>100.0%</td><td data-v='1.0000' class='acc-ok'>100.0%</td></tr>
+<tr><td>6.pdf</td><td>정상</td><td><span class='fallback'>fallback</span></td><td data-v='1.0000' class='acc-ok'>100.0%</td><td data-v='1.0000' class='acc-ok'>100.0%</td></tr>
+</tbody></table></section>
+<section><h2>컬럼 × 패턴 — 전체 <span class='muted'>(n=11 · 클릭=정렬)</span></h2><table class='sortable'><thead><tr><th>컬럼</th><th data-num='1'>누락(drop)</th><th data-num='1'>오배치(mislocate)</th><th data-num='1'>오선택(wrongpick)</th><th data-num='1'>합계</th></tr></thead><tbody>
+<tr><td><b>공급자 주소</b> <span class='muted' style='font-size:12px'>(supplierAddress)</span></td><td data-v='0'>0</td><td data-v='0'>0</td><td data-v='4'>4</td><td data-v='4'><b>4</b></td></tr>
+<tr><td><b>공급받는자 대표자</b> <span class='muted' style='font-size:12px'>(buyerRepresentative)</span></td><td data-v='0'>0</td><td data-v='1'>1</td><td data-v='1'>1</td><td data-v='2'><b>2</b></td></tr>
+<tr><td><b>품명</b> <span class='muted' style='font-size:12px'>(itemName)</span></td><td data-v='0'>0</td><td data-v='0'>0</td><td data-v='1'>1</td><td data-v='1'><b>1</b></td></tr>
+<tr><td><b>품목코드</b> <span class='muted' style='font-size:12px'>(productCode)</span></td><td data-v='1'>1</td><td data-v='0'>0</td><td data-v='0'>0</td><td data-v='1'><b>1</b></td></tr>
+<tr><td><b>수량</b> <span class='muted' style='font-size:12px'>(quantity)</span></td><td data-v='0'>0</td><td data-v='0'>0</td><td data-v='1'>1</td><td data-v='1'><b>1</b></td></tr>
+<tr><td><b>단가</b> <span class='muted' style='font-size:12px'>(unitPrice)</span></td><td data-v='1'>1</td><td data-v='0'>0</td><td data-v='0'>0</td><td data-v='1'><b>1</b></td></tr>
+<tr><td><b>금액</b> <span class='muted' style='font-size:12px'>(amount)</span></td><td data-v='0'>0</td><td data-v='1'>1</td><td data-v='0'>0</td><td data-v='1'><b>1</b></td></tr>
+</tbody></table></section>
+<section><h2>컬럼 × 패턴 — 정상 원본 <span class='muted'>(n=2 · 클릭=정렬)</span></h2><table class='sortable'><thead><tr><th>컬럼</th><th data-num='1'>누락(drop)</th><th data-num='1'>오배치(mislocate)</th><th data-num='1'>오선택(wrongpick)</th><th data-num='1'>합계</th></tr></thead><tbody>
+<tr><td><b>공급자 주소</b> <span class='muted' style='font-size:12px'>(supplierAddress)</span></td><td data-v='0'>0</td><td data-v='0'>0</td><td data-v='1'>1</td><td data-v='1'><b>1</b></td></tr>
+<tr><td><b>품명</b> <span class='muted' style='font-size:12px'>(itemName)</span></td><td data-v='0'>0</td><td data-v='0'>0</td><td data-v='1'>1</td><td data-v='1'><b>1</b></td></tr>
+</tbody></table></section>
+<section><h2>컬럼 × 패턴 — 변주(각도) <span class='muted'>(n=9 · 클릭=정렬)</span></h2><table class='sortable'><thead><tr><th>컬럼</th><th data-num='1'>누락(drop)</th><th data-num='1'>오배치(mislocate)</th><th data-num='1'>오선택(wrongpick)</th><th data-num='1'>합계</th></tr></thead><tbody>
+<tr><td><b>공급자 주소</b> <span class='muted' style='font-size:12px'>(supplierAddress)</span></td><td data-v='0'>0</td><td data-v='0'>0</td><td data-v='3'>3</td><td data-v='3'><b>3</b></td></tr>
+<tr><td><b>공급받는자 대표자</b> <span class='muted' style='font-size:12px'>(buyerRepresentative)</span></td><td data-v='0'>0</td><td data-v='1'>1</td><td data-v='1'>1</td><td data-v='2'><b>2</b></td></tr>
+<tr><td><b>품목코드</b> <span class='muted' style='font-size:12px'>(productCode)</span></td><td data-v='1'>1</td><td data-v='0'>0</td><td data-v='0'>0</td><td data-v='1'><b>1</b></td></tr>
+<tr><td><b>수량</b> <span class='muted' style='font-size:12px'>(quantity)</span></td><td data-v='0'>0</td><td data-v='0'>0</td><td data-v='1'>1</td><td data-v='1'><b>1</b></td></tr>
+<tr><td><b>단가</b> <span class='muted' style='font-size:12px'>(unitPrice)</span></td><td data-v='1'>1</td><td data-v='0'>0</td><td data-v='0'>0</td><td data-v='1'><b>1</b></td></tr>
+<tr><td><b>금액</b> <span class='muted' style='font-size:12px'>(amount)</span></td><td data-v='0'>0</td><td data-v='1'>1</td><td data-v='0'>0</td><td data-v='1'><b>1</b></td></tr>
+</tbody></table></section>
+<section><h2>ambiguous_fuzzy <span class='muted'>(fuzzy-only · pending row/bbox proof)</span></h2><table class='sortable'><thead><tr><th>column</th><th data-num='1'>count</th></tr></thead><tbody>
+</tbody></table></section>
+<section><h2>recognition <span class='muted'>(OCR 바운드 · 파서 대상 아님)</span></h2><table class='sortable'><thead><tr><th>컬럼</th><th data-num='1'>건수</th></tr></thead><tbody>
+<tr><td><b>품명</b> <span class='muted' style='font-size:12px'>(itemName)</span></td><td data-v='77'>77</td></tr>
+<tr><td><b>규격</b> <span class='muted' style='font-size:12px'>(spec)</span></td><td data-v='18'>18</td></tr>
+<tr><td><b>공급받는자 주소</b> <span class='muted' style='font-size:12px'>(buyerAddress)</span></td><td data-v='14'>14</td></tr>
+<tr><td><b>공급자 주소</b> <span class='muted' style='font-size:12px'>(supplierAddress)</span></td><td data-v='12'>12</td></tr>
+<tr><td><b>공급자 대표자</b> <span class='muted' style='font-size:12px'>(supplierRepresentative)</span></td><td data-v='11'>11</td></tr>
+<tr><td><b>공급받는자 상호</b> <span class='muted' style='font-size:12px'>(buyerCompany)</span></td><td data-v='8'>8</td></tr>
+<tr><td><b>LOT번호</b> <span class='muted' style='font-size:12px'>(lotNo)</span></td><td data-v='5'>5</td></tr>
+<tr><td><b>공급자 사업자번호</b> <span class='muted' style='font-size:12px'>(supplierBizNumber)</span></td><td data-v='4'>4</td></tr>
+<tr><td><b>품목코드</b> <span class='muted' style='font-size:12px'>(productCode)</span></td><td data-v='2'>2</td></tr>
+<tr><td><b>공급받는자 사업자번호</b> <span class='muted' style='font-size:12px'>(buyerBizNumber)</span></td><td data-v='1'>1</td></tr>
+<tr><td><b>수량</b> <span class='muted' style='font-size:12px'>(quantity)</span></td><td data-v='1'>1</td></tr>
+</tbody></table></section>
+<section><h2>전처리 진단 <span class='muted'>(recognition = OCR 바운드 결함; 전처리 실패가 여기로 나타남)</span></h2><div class='note'><div class='row'>각 표 = 전처리 조건 버킷별 <b>셀 정확도</b>·<b>recognition율</b>(결함/채점셀). <b>Δ</b> = baseline 대비 recognition율 차이(<b>+면 그 조건이 깎는 중</b> → 서버 전처리에서 고칠 후보). <span class='muted'>텔레메트리 보유 24/24 샘플</span></div></div><h3 style='margin:14px 0 6px'>방향(orientation) <span class='muted' style='font-size:12px;font-weight:400'>margin 낮음+적용=오회전 위험(페이지 통째 깨짐)</span></h3><table class='sortable'><thead><tr><th>조건</th><th data-num='1'>샘플수</th><th data-num='1'>셀 정확도</th><th data-num='1'>recognition율</th><th data-num='1'>Δ vs baseline</th><th data-num='1'>평균 orient margin</th></tr></thead><tbody><tr><td><b>270° 적용</b></td><td data-v='3'>3</td><td data-v='0.8205' class='acc-ok'>82.1%</td><td data-v='0.3333'>33.3%</td><td data-v='0.1927'><b style='color:#cf222e'>+19.3pp</b></td><td data-v='10.5'>10.5</td></tr><tr><td><b>180° 적용</b></td><td data-v='6'>6</td><td data-v='0.8983' class='acc-ok'>89.8%</td><td data-v='0.1441'>14.4%</td><td data-v='0.0035'><b style='color:inherit'>+0.3pp</b></td><td data-v='11.9'>11.9</td></tr><tr><td><b>미적용(0°)</b></td><td data-v='11'>11</td><td data-v='0.9010' class='acc-ok'>90.1%</td><td data-v='0.1406'>14.1%</td><td data-v='0.0000'>—</td><td data-v='29.4'>29.4</td></tr><tr><td><b>90° 적용</b></td><td data-v='4'>4</td><td data-v='0.9049' class='acc-ok'>90.5%</td><td data-v='0.1232'>12.3%</td><td data-v='-0.0174'><b style='color:#1a7f37'>-1.7pp</b></td><td data-v='16.8'>16.8</td></tr></tbody></table><h3 style='margin:14px 0 6px'>기울기(deskew) <span class='muted' style='font-size:12px;font-weight:400'>guard-revert=과적용 가드 작동</span></h3><table class='sortable'><thead><tr><th>조건</th><th data-num='1'>샘플수</th><th data-num='1'>셀 정확도</th><th data-num='1'>recognition율</th><th data-num='1'>Δ vs baseline</th></tr></thead><tbody><tr><td><b>guard-revert</b></td><td data-v='1'>1</td><td data-v='0.6000' class='acc-mid'>60.0%</td><td data-v='1.0000'>100.0%</td><td data-v='0.8602'><b style='color:#cf222e'>+86.0pp</b></td></tr><tr><td><b>미적용</b></td><td data-v='23'>23</td><td data-v='0.8999' class='acc-ok'>90.0%</td><td data-v='0.1398'>14.0%</td><td data-v='0.0000'>—</td></tr></tbody></table><h3 style='margin:14px 0 6px'>문서검출(warp) <span class='muted' style='font-size:12px;font-weight:400'>영역% 낮음/강제warp=크롭 위험</span></h3><table class='sortable'><thead><tr><th>조건</th><th data-num='1'>샘플수</th><th data-num='1'>셀 정확도</th><th data-num='1'>recognition율</th><th data-num='1'>Δ vs baseline</th></tr></thead><tbody><tr><td><b>forcedWarpOnSkip</b></td><td data-v='12'>12</td><td data-v='0.9123' class='acc-ok'>91.2%</td><td data-v='0.1507'>15.1%</td><td data-v='0.0252'><b style='color:#cf222e'>+2.5pp</b></td></tr><tr><td><b>영역50–90%</b></td><td data-v='17'>17</td><td data-v='0.8903' class='acc-ok'>89.0%</td><td data-v='0.1501'>15.0%</td><td data-v='0.0246'><b style='color:#cf222e'>+2.5pp</b></td></tr><tr><td><b>영역≥90%</b></td><td data-v='7'>7</td><td data-v='0.9225' class='acc-ok'>92.3%</td><td data-v='0.1255'>12.5%</td><td data-v='0.0000'>—</td></tr></tbody></table></section>
+<script>
+document.querySelectorAll('table.sortable').forEach(t=>{
+ t.querySelectorAll('th').forEach((th,i)=>{th.style.cursor='pointer';th.title='클릭=정렬';
+  th.addEventListener('click',()=>{const tb=t.tBodies[0];const rows=[...tb.rows];
+   const num=th.dataset.num==='1';const asc=th.dataset.asc!=='1';
+   t.querySelectorAll('th').forEach(o=>o.dataset.asc='');th.dataset.asc=asc?'1':'0';
+   rows.sort((a,b)=>{let x=a.cells[i].dataset.v??a.cells[i].textContent,
+     y=b.cells[i].dataset.v??b.cells[i].textContent;
+    if(num){x=parseFloat(x)||0;y=parseFloat(y)||0;return asc?x-y:y-x;}
+    return asc?(''+x).localeCompare(y):(''+y).localeCompare(x);});
+   rows.forEach(r=>tb.appendChild(r));});});});
+</script>
+</body></html>
