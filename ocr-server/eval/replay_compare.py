@@ -56,6 +56,8 @@ from extractors.invoice_statement_free import (  # noqa: E402
     salvage_blob_amount as _salvage_blob_amount,
     split_merged_item_name as _split_merged_item_name,
     recover_shifted_item_name as _recover_shifted_item_name,
+    adopt_missing_item_names as _adopt_item_names,
+    synthesize_missing_rows as _synth_rows,
 )
 from extractors.invoice_statement import extract_invoice_statement_fields  # noqa: E402
 from extractors.master_match import fill_master_match as _fill_master  # noqa: E402
@@ -129,6 +131,18 @@ def replay_dispatch(snap: dict) -> tuple[dict, str]:
     if isinstance(df, dict) and df.get("tableRows"):
         try:
             df["tableRows"], _ = _recover_shifted_item_name(df["tableRows"])
+        except Exception:
+            pass
+    # mirror main.py join-point 품명입양 (itemName 빈 행 ← y-밴드 미소비 품명전용 라인)
+    if isinstance(df, dict) and df.get("tableRows"):
+        try:
+            df["tableRows"], _ = _adopt_item_names(df["tableRows"], lines)
+        except Exception:
+            pass
+    # mirror main.py join-point 행신설 (미소비 품명라인+콤마금액 y-밴드 쌍, 3중 게이트)
+    if isinstance(df, dict) and df.get("tableRows"):
+        try:
+            df["tableRows"], _ = _synth_rows(df["tableRows"], lines)
         except Exception:
             pass
     # mirror main.py join-point 마스터 자동매칭 (itemNameMaster/itemCode 빈칸 채움, ②G4)

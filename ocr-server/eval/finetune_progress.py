@@ -38,10 +38,11 @@ def main() -> int:
             ep, tot_ep, step = int(m.group(1)), int(m.group(2)), int(m.group(3))
             loss, acc, eta = _f(RE_LOSS, line), _f(RE_ACC, line), _f(RE_ETA, line)
             if ipe:
-                overall = step               # global_step 은 이미 누적(전 epoch 통틀어). 더하면 이중계산
-                total = tot_ep * ipe
-                pct = 100.0 * overall / total if total else 0.0
-                print(f"[{overall:>8,}/{total:<8,} {pct:4.1f}%] ep {ep}/{tot_ep}  "
+                # global_step 은 누적 → epoch 내 진행으로 환산해 "ep별 카운터/%" 로 표시
+                in_ep = step - (ep - 1) * ipe
+                ep_pct = 100.0 * in_ep / ipe if ipe else 0.0
+                all_pct = 100.0 * step / (tot_ep * ipe)
+                print(f"[ep {ep}/{tot_ep}  {in_ep:>6,}/{ipe:<6,} {ep_pct:5.1f}%  (전체 {all_pct:4.1f}%)]  "
                       f"loss {loss}  acc {acc}  eta {eta}")
             else:
                 print(f"[ep {ep}/{tot_ep} step {step:>6}]  loss {loss}  acc {acc}  eta {eta}")

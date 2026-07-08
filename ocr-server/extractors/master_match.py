@@ -37,11 +37,47 @@ _WORD = re.compile(r"[^\W_]+", re.UNICODE)
 _PAREN = re.compile(r"\(.*\)")          # greedy: 첫 '(' ~ 마지막 ')' (war 함수와 동일)
 _NUM = re.compile(r"\d[\d,]*(?:\.\d+)?")
 
+# 쿼리 프리클린용 junk 토큰 판별 (eval/item_name_clean.py 'strip' 승자 레시피 이식).
+_Q_HANGUL = re.compile(r"[가-힣]")
+_Q_MONEY = re.compile(r"^\d{1,3}(?:,\d{3})+(?:\.\d+)?$|^\d+\.\d{2}$")
+_Q_DATE = re.compile(r"(?:19|20)\d{2}[./-]?\d{1,2}[./-]?\d{1,2}|\b\d{2}[./-]\d{2}[./-]\d{2,4}\b")
+_Q_PTP = re.compile(r"(?:ptp)+$", re.I)
+_Q_O2ZERO = re.compile(r"(?<=\d)[Oo]|[Oo](?=\d)")
+# 용량/규격 토큰: junk로 오인 제거 금지 (dose 구별신호 보존).
+_Q_DOSEISH = re.compile(
+    r"\d\s*(?:mg|mcg|㎍|㎎|g|㎖|ml|l|iu|%|밀리그람|밀리그램|미리그람|미리그램|밀리리터|그람"
+    r"|정|캡슐|캅셀|캡|t|c|v|정제|포|병|앰플|바이알)", re.I)
+_Q_DOSECOMBO = re.compile(r"^\d+(?:\.\d+)?(?:/\d+(?:\.\d+)?)+", re.I)
+
+
+def _q_is_doseish(tok: str) -> bool:
+    to = _Q_O2ZERO.sub("0", tok)
+    return bool(_Q_DOSEISH.search(to) or _Q_DOSECOMBO.match(to))
+
+
+def _q_is_junk(tok: str) -> bool:
+    """이름과 무관한 오염 토큰(금액/날짜/코드/lot/순수숫자). 한글·용량 토큰은 junk 아님."""
+    if _Q_HANGUL.search(tok):
+        return False
+    if _Q_MONEY.match(tok) or _Q_DATE.fullmatch(tok):
+        return True
+    t = tok.strip(".,/")
+    if not t:
+        return True
+    if t.isdigit() and len(t) >= 3:                     # 코드/바코드/행번호
+        return True
+    if re.search(r"\d", t) and re.fullmatch(r"[A-Za-z0-9./\\$₩-]+", t) and len(t) >= 4:
+        return True                                      # lot/코드(영숫자, 한글X, 숫자포함)
+    return False
+
 # 랭킹 tiebreak용 규격 토큰 (V3, match_rank_bench 실측 code +2.5pp @floor0.2)
+# V4: '밀리그램/미리그램'(램) 별칭 추가 — 기존엔 '밀리그람'(람)만 있어 송장 표기
+# '20밀리그램'의 용량이 안 잡혀 dose 가드가 무력화(에소메졸 20mg→10mg 오픽류).
 _DOSE = re.compile(
     r"(\d+(?:\.\d+)?(?:/\d+(?:\.\d+)?)*)\s*"
-    r"(mg|mcg|㎍|㎎|g|㎖|ml|l|iu|%|단위|밀리그람|미리그람|밀리리터|그람)", re.I)
+    r"(mg|mcg|㎍|㎎|g|㎖|ml|l|iu|%|단위|밀리그람|미리그람|밀리그램|미리그램|밀리리터|그람)", re.I)
 _UNIT_ALIAS = {"㎍": "mcg", "㎎": "mg", "㎖": "ml", "밀리그람": "mg", "미리그람": "mg",
+               "밀리그램": "mg", "미리그램": "mg",
                "밀리리터": "ml", "그람": "g", "단위": "iu"}
 _PACK = re.compile(r"(\d+)\s*(t|c|v|정|캡슐|캅셀|포|병|앰플|amp|vial|바이알|매|개)", re.I)
 
@@ -66,6 +102,27 @@ def _jac(a, b):
     return len(a & b) / len(a | b)
 
 
+_PAREN_TOK = re.compile(r"\(([^)]*)\)")
+
+
+def paren_tokens(s) -> set:
+    """괄호 안 토큰 집합(공백제거·대문자). 접미사 형제 SKU 구분용 — (병)/(PTP)/(한외)…"""
+    return {re.sub(r"\s+", "", t).upper() for t in _PAREN_TOK.findall(str(s or ""))
+            if re.sub(r"\s+", "", t)}
+
+
+def _sfx_score(qp: set, cp: set) -> int:
+    """쿼리 괄호토큰 ↔ 후보 괄호토큰 힌트일치 수. 부분포함 양방향 허용
+    ('(30T*1병)' ↔ '(병)' 매칭). exact-only면 병기형 힌트를 놓침(V4 실측)."""
+    s = 0
+    for ct in cp:
+        for qt in qp:
+            if qt == ct or (len(qt) >= 2 and qt in ct) or (len(ct) >= 2 and ct in qt):
+                s += 1
+                break
+    return s
+
+
 def dose_score(q_dose, q_pack, cand_nm, cand_unit):
     """규격 합치 0~1, None=정보없음(중립). dose 우선, pack 보조(2:1 가중)."""
     d = _jac(q_dose, dose_tokens(cand_nm))
@@ -85,6 +142,37 @@ def clean_item_name(s: str) -> str:
     if "(" in s and ")" in s:
         s = _PAREN.sub("", s, count=1)
     return s.replace(" ", "")
+
+
+def clean_query_name(name: str) -> str:
+    """매칭 쿼리 전용 프리클린 — 파서 출력·사전(clean_item_name)은 불변.
+
+    fallback 파서가 품명 앞에 끌어온 바코드/사업자·상품코드(숫자 5+자리)·행번호
+    (숫자 1~3자리) 토큰과 말미 '//n' 아티팩트가 trigram 을 오염시켜, 사전에 있는
+    정식명이 top30 후보에도 못 드는 실패(063 전수분해 B버킷 779행)를 만든다.
+    선두 노이즈 토큰만 걷어내고 한글 약품토큰부터 보존한다.
+
+    선두 노이즈뿐 아니라 이름 중간·끝의 junk(날짜/lot/금액/코드)까지 제거한다
+    (eval/item_name_clean.py 'strip' 승자 레시피 이식 — psql 7416 실측 top1 +2.3pp).
+    행-blob 읽기('라코르정120/12.5mg30T 2F001 2029.02.03 50 19,809')에서 큰 차이.
+    괄호/공백 구조는 보존해 하류 랭킹(괄호 접미사·dose tiebreak)이 살아있게 한다.
+
+    063 격리실측(동일 match, price=unitPrice): 선두만(구판) 대비 master +96 / 회귀 27
+    (용량 토큰 보호로 dose 신호 유지, O→0 포함이 순이익). 전체 junk면 원문 유지."""
+    s = str(name or "").strip()
+    s = re.sub(r"//\s*\d*\s*$", "", s)           # 말미 '//1' 류 아티팩트
+    s = re.sub(r"^\s*\d{1,3}\s+", "", s)         # 선행 행번호
+    toks = []
+    for t in s.split():
+        if _q_is_doseish(t):                      # 용량/규격은 보존
+            toks.append(t)
+            continue
+        if _q_is_junk(t):                         # 금액/날짜/lot/코드/바코드 제거
+            continue
+        toks.append(t)
+    s = _Q_PTP.sub("", " ".join(toks).strip())   # 말미 PTP
+    s = _Q_O2ZERO.sub("0", s)                     # 숫자 인접 O→0
+    return s or (name or "").strip()
 
 
 def trigrams(s: str) -> frozenset:
@@ -164,7 +252,12 @@ class MasterMatcher:
               spec: str = "", quantity=None, amount=None):
         """→ {itemCode, itemNameMaster, sim} | None (floor 미달/무후보).
 
-        랭킹(V3, 벤치 실측): 유사도 DESC → 규격 dose점수(일치>정보없음>모순) → |bp1−단가|.
+        랭킹(V4c+V4d, 063 전수 실측 V4c +183/회귀24 · V4d 가격구제 +117/회귀0):
+        유사도 DESC → 규격 dose점수
+        (일치>정보없음>모순) → 괄호 접미사 힌트일치(쿼리에 (PTP)/(병)류 있으면 해당
+        형제 SKU 우선) → |bp1−단가| → 잉여 괄호토큰 최소·이름길이(힌트·단가 둘 다
+        없을 때 base 변형 우선). 형제 SKU는 clean명이 동일해 sim/dose가 동률이라
+        기존 V3은 price가 임의로 깨며 오픽(랭킹분해 F버킷 653행의 주 패턴).
         단가 결측 시 amount/quantity 역산으로 대체.
 
         NOTE: war 캐스케이드의 LIKE 단계(clean 부분포함 우선)는 062 실측에서 순손해
@@ -184,16 +277,31 @@ class MasterMatcher:
                     price = round(a / qi)
         q_dose = dose_tokens(f"{name} {spec or ''}")
         q_pack = pack_tokens(f"{spec or ''} {quantity or ''}")
+        q_paren = paren_tokens(name) | paren_tokens(spec or "")
         best_i, best_key = -1, None
+        low_i, low_key, low_sim = -1, None, 0.0  # V4d: floor 미달 최선(가격구제 판정용)
         for sim, i in cands:
-            if sim < floor:
-                break  # sim DESC 정렬이라 이후 전부 미달
             ds = dose_score(q_dose, q_pack, self._nms[i], self._units[i])
             dkey = 0.0 if ds is None else (-1.0 if ds == 0 else ds)
+            cp = paren_tokens(self._nms[i])
+            sfx = _sfx_score(q_paren, cp)
             pd = abs(self._bp1s[i] - price) if price is not None else float("inf")
-            key = (-sim, -dkey, pd)
+            key = (-sim, -dkey, -sfx, pd, len(cp) - sfx, len(self._nms[i]))
+            if sim < floor:
+                if low_key is None or key < low_key:
+                    low_key, low_i, low_sim = key, i, sim
+                continue
             if best_key is None or key < best_key:
                 best_key, best_i = key, i
+        # V4d 가격구제(엄격): floor 미달로 전부 탈락했을 때, 미달 구간의 '키 기준 최선'
+        # 후보가 송장 단가와 보험단가(bp1) 1% 이내로 일치하면 배정. 부분집합에서 다시
+        # 고르는 루즈 변형(+151/오배정 73, 정밀도 67%)은 기각 — 최선 후보 자체의 가격
+        # 일치만 인정해야 측정 정밀도가 유지된다(063 실측 +117/오배정 15, 88.6% ≥ 시스템
+        # 평균 86.5%). sim>=0.05 는 잔반 후보 배제 가드.
+        if (best_i < 0 and low_i >= 0 and low_sim >= 0.05
+                and price is not None and price > 0
+                and abs(self._bp1s[low_i] - price) <= price * 0.01):
+            best_i, best_key = low_i, low_key
         if best_i < 0:
             return None
         return {"itemCode": self._cds[best_i], "itemNameMaster": self._nms[best_i],
@@ -334,7 +442,7 @@ def fill_master_match(rows: list, matcher: "MasterMatcher | None" = None):
             continue
         if str(r.get("itemNameMaster") or "").strip() and str(r.get("itemCode") or "").strip():
             continue
-        m = matcher.match(name, parse_price(r.get("unitPrice")),
+        m = matcher.match(clean_query_name(name), parse_price(r.get("unitPrice")),
                           spec=str(r.get("spec") or ""), quantity=r.get("quantity"),
                           amount=r.get("amount"))
         if m is None:

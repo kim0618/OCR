@@ -4460,9 +4460,19 @@ def append_missing_ha_rows(
         ):
             continue
         amt = _ha_amount_key(ha)
-        # 중복 가드 ①: 이름이 기존 행 텍스트에 있으면(부분포함 양방향) 확실 중복
+        # 중복 가드 ①: 이름이 기존 행 텍스트에 있으면(부분포함 양방향) 기본 스킵.
+        # 단, 같은 품목이 로트/유효기한별로 여러 행인 '진짜 중복행'이 있다(063 실측
+        # gtOnly 잔여 최대 부류 619행). amount 가 고유하고 수량×단가=금액 산술이
+        # 맞으면 실재 행 증거로 보고 허용. 산술게이트 없이 amount 고유만으론 OCR
+        # 숫자오독 파편이 통과(정크 +1098, 기각) — 게이트 후 217행·cell +881·
+        # mismatch +32 (063 전수시뮬).
         if any(nm in t or (len(t) >= 4 and t in nm) for t in exist_texts if t):
-            continue
+            q_ = _ha_fnum(ha.get("quantity"))
+            u_ = _ha_fnum(ha.get("unitPrice"))
+            a_ = _ha_fnum(ha.get("amount"))
+            if not (amt and amt not in exist_amts
+                    and q_ and u_ and a_ and abs(q_ * u_ - a_) <= 1):
+                continue
         # 중복 가드 ②: 같은 amount 가 이미 표에 있으면 같은 행 → 금지 (amount 는 고유)
         if amt and amt in exist_amts:
             continue
@@ -4483,6 +4493,214 @@ def append_missing_ha_rows(
             exist_amts.add(amt)
         next_idx += 1
         dbg["appended"] += 1
+    dbg["reason"] = "ok"
+    return table_rows, dbg
+
+
+# ─── 품명입양(adopt): 행은 있는데 itemName 만 빈 행 복구 ───────────────────────
+# 근거(063 전수실측): matched-row 품명빈칸 1,049 중 OCR가 품명을 읽은 행 695 —
+# 대부분 품명이 '별도 OCR 라인'으로 존재하는데 행 조립 때 숫자행에 안 붙은 것.
+# 행의 amount/unitPrice 숫자를 y-앵커로 같은 밴드의 미소비 품명전용 라인을 입양.
+# strict 가드(약품형태소 필수 + 회사/요약 라인 배제)로 후보 920 · 정답 849
+# (정밀도 92.3%) · master 동반회수 +770 · name-exact +427. 가드를 느슨하게 하면
+# 회사명 라인이 y-최근접을 이겨 정밀도 79%로 추락(기각).
+_ADOPT_HANGUL_RE = re.compile(r"[가-힣]{2,}")
+_ADOPT_BIGNUM_RE = re.compile(r"\d{4,}")
+_ADOPT_SUMMARY_RE = re.compile(r"(합계|소계|총|공급|부가세|사업자|주소|전화|팩스|페이지|발행|일자)")
+_ADOPT_COMPANY_RE = re.compile(
+    r"^[\d\s()주식회사\-·.,]*[가-힣A-Za-z]*(제약|약품|팜|파마|바이오|MS|메디|헬스|유통|상사|약국)[\s()주]*$")
+_ADOPT_DRUG_RE = re.compile(
+    r"(정|캡슐|캅셀|캡슬|액|시럽|크림|겔|연고|로션|스프레이|패취|패치|점안|주사|산|환|과립"
+    r"|시트|밴드|캔디|드롭|츄|정제|필름|좌제|백|병)")
+
+
+def _adopt_name_line_ok(text: str) -> bool:
+    t = (text or "").strip()
+    if not _ADOPT_HANGUL_RE.search(t):
+        return False
+    if _ADOPT_BIGNUM_RE.search(t):  # 금액/코드 섞인 라인은 품명전용 아님
+        return False
+    if _ADOPT_SUMMARY_RE.search(t):
+        return False
+    if _ADOPT_COMPANY_RE.match(t):
+        return False
+    if not _ADOPT_DRUG_RE.search(t):
+        return False
+    return True
+
+
+def adopt_missing_item_names(
+    table_rows: Any, ocr_lines_raw: Any,
+) -> tuple[Any, dict[str, Any]]:
+    """itemName 빈 행에 같은 y-밴드의 미소비 품명전용 OCR 라인을 입양(빈칸만, 추가·수정 없음).
+
+    fill_master_match 앞에서 호출해야 입양된 품명이 마스터 매칭을 탄다.
+    앵커=행 amount(없으면 unitPrice) 숫자가 포함된 첫 OCR 라인의 y-중심,
+    밴드=라인높이×1.2(최소 14px). 한 라인은 한 행에만 입양(소비 추적)."""
+    dbg: dict[str, Any] = {"adopted": 0, "reason": ""}
+    if not isinstance(table_rows, list) or not table_rows:
+        return table_rows, dbg
+    lines: list[tuple[float, float, str]] = []
+    for ln in (ocr_lines_raw or []):
+        try:
+            pts, txt = ln[0], str(ln[1] or "")
+            ys = [float(p[1]) for p in pts]
+        except Exception:
+            continue
+        if not ys:
+            continue
+        lines.append((sum(ys) / len(ys), max(max(ys) - min(ys), 1.0), txt))
+    if not lines:
+        dbg["reason"] = "no_lines"
+        return table_rows, dbg
+
+    def _digits(s: Any) -> str:
+        return re.sub(r"\D", "", str(s or ""))
+
+    def _n(s: Any) -> str:
+        return re.sub(r"[^\w가-힣]", "", str(s or "").lower())
+
+    used = {_n(r.get("itemName")) for r in table_rows
+            if isinstance(r, dict) and str(r.get("itemName") or "").strip()}
+    used.discard("")
+    for row in table_rows:
+        if not isinstance(row, dict) or str(row.get("itemName") or "").strip():
+            continue
+        amt = _digits(row.get("amount")) or _digits(row.get("unitPrice"))
+        if len(amt) < 3:
+            continue
+        anchor = None
+        for cy, lh, txt in lines:
+            if amt in _digits(txt):
+                anchor = (cy, lh)
+                break
+        if anchor is None:
+            continue
+        ay, ah = anchor
+        band = max(ah * 1.2, 14.0)
+        best = None
+        for cy, lh, txt in lines:
+            if abs(cy - ay) > band or not _adopt_name_line_ok(txt):
+                continue
+            n = _n(txt)
+            if not n or n in used:
+                continue
+            dy = abs(cy - ay)
+            if best is None or dy < best[0]:
+                best = (dy, txt.strip(), n)
+        if best is None:
+            continue
+        row["itemName"] = best[1]
+        used.add(best[2])
+        dbg["adopted"] += 1
+    dbg["reason"] = "ok"
+    return table_rows, dbg
+
+
+# ─── 행신설(synth): GT행이 통째로 안 만들어진 gtOnly 부류 복구 ────────────────
+# 근거(063 전수실측): 4패치 후에도 gtOnly 2,214행 중 76%(1,675)는 OCR가 품명을
+# 읽음 — 파서가 행을 아예 못 만든 것. 미소비 품명전용 라인 + 같은 y-밴드의
+# 미소비 콤마-금액 라인이 공존하면 (itemName, amount) 행을 신설한다(헤더 불요).
+# 게이트 3중(전수 스윕으로 확정): ①품명이 master 사전에 sim>=0.35로 매칭(비약품
+# 라인 차단) ②기존 품명과 fuzzy 0.8 중복 배제(도플갱어 차단) ③콤마-금액만(코드/
+# 수량/날짜 오인 차단). 무게이트 신설=7,379행 중 정크 6,269(기각) → 3중 게이트=
+# 신설 844 · GT정렬 485(57%) · 정크 +359 · cell +1,173 · master +438.
+_SYNTH_MONEY_RE = re.compile(r"\d{1,3}(?:,\d{3})+")
+_SYNTH_SIM_FLOOR = 0.35
+
+
+def synthesize_missing_rows(
+    table_rows: Any, ocr_lines_raw: Any,
+) -> tuple[Any, dict[str, Any]]:
+    """미소비 품명라인+콤마금액 y-밴드 쌍으로 누락 품목행을 신설(추가만, 기존 불변).
+
+    adopt_missing_item_names 뒤·fill_master_match 앞에서 호출 — 입양이 품명라인을
+    먼저 소비하고, 신설 행이 마스터 매칭을 탄다. master_dict 없으면 자동 비활성."""
+    dbg: dict[str, Any] = {"synthesized": 0, "reason": ""}
+    if not isinstance(table_rows, list):
+        return table_rows, dbg
+    try:
+        from extractors.master_match import get_matcher, clean_query_name
+        matcher = get_matcher()
+    except Exception:
+        matcher = None
+    if matcher is None:
+        dbg["reason"] = "no_matcher"
+        return table_rows, dbg
+    import difflib
+    lines: list[tuple[float, float, str]] = []
+    for ln in (ocr_lines_raw or []):
+        try:
+            pts, txt = ln[0], str(ln[1] or "")
+            ys = [float(p[1]) for p in pts]
+        except Exception:
+            continue
+        if not ys:
+            continue
+        lines.append((sum(ys) / len(ys), max(max(ys) - min(ys), 1.0), txt))
+    if not lines:
+        dbg["reason"] = "no_lines"
+        return table_rows, dbg
+
+    def _digits(s: Any) -> str:
+        return re.sub(r"\D", "", str(s or ""))
+
+    def _n(s: Any) -> str:
+        return re.sub(r"[^\w가-힣]", "", str(s or "").lower())
+
+    exist_names = [_n(r.get("itemName")) for r in table_rows
+                   if isinstance(r, dict) and str(r.get("itemName") or "").strip()]
+    used_names = set(exist_names)
+    used_names.discard("")
+    used_amts: set[str] = set()
+    for r in table_rows:
+        if not isinstance(r, dict):
+            continue
+        for k in ("amount", "unitPrice", "supplyAmount", "totalAmount"):
+            d = _digits(r.get(k))
+            if len(d) >= 3:
+                used_amts.add(d)
+    used_money_lines: set[int] = set()
+    next_idx = len(table_rows) + 1
+    for idx, (cy, lh, txt) in enumerate(lines):
+        if not _adopt_name_line_ok(txt):
+            continue
+        n = _n(txt)
+        if not n or n in used_names:
+            continue
+        if any(difflib.SequenceMatcher(None, n, e).ratio() >= 0.8 for e in exist_names if e):
+            continue
+        try:
+            cands = matcher.top_candidates(clean_query_name(txt), 1)
+        except Exception:
+            continue
+        if not cands or cands[0][0] < _SYNTH_SIM_FLOOR:
+            continue
+        band = max(lh * 1.2, 14.0)
+        money = None
+        for j, (cy2, _lh2, txt2) in enumerate(lines):
+            if j == idx or j in used_money_lines or abs(cy2 - cy) > band:
+                continue
+            for v in _SYNTH_MONEY_RE.findall(txt2):
+                dd = _digits(v)
+                if len(dd) >= 4 and dd not in used_amts:
+                    money = (j, v)
+                    break
+            if money:
+                break
+        if money is None:
+            continue
+        used_money_lines.add(money[0])
+        used_names.add(n)
+        exist_names.append(n)
+        used_amts.add(_digits(money[1]))
+        table_rows.append({
+            "rowIndex": str(next_idx), "itemName": txt.strip(), "spec": "",
+            "quantity": "", "unitPrice": "", "amount": money[1],
+            "_source": "invoice_statement_free_row_synth",
+        })
+        next_idx += 1
+        dbg["synthesized"] += 1
     dbg["reason"] = "ok"
     return table_rows, dbg
 

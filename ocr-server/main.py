@@ -73,6 +73,8 @@ from extractors.invoice_statement_free import (
     salvage_blob_amount,
     split_merged_item_name,
     recover_shifted_item_name,
+    adopt_missing_item_names,
+    synthesize_missing_rows,
 )
 from extractors.master_match import fill_master_match, fill_party_match
 from utils.regex_patterns import (
@@ -1129,10 +1131,20 @@ def get_ocr_engine():
     if _ocr_engine is None:
         import os
         from paddleocr import PaddleOCR
+        # rec = 파인튜닝 가중치 우선(run-finetune.sh 가 best 를 이 경로에 export),
+        # 없으면 공식 korean_PP-OCRv5_mobile_rec. 상대경로라 로컬/AWS 공용,
+        # 파인튜닝 루프는 export 갱신 + 서버 재기동만으로 반영(main.py 재수정 불필요).
+        _ft_rec_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                   "eval", "finetune", "output", "best_accuracy", "inference")
+        _rec_kw = ({"text_recognition_model_dir": _ft_rec_dir,
+                    "text_recognition_model_name": "korean_PP-OCRv5_mobile_rec"}
+                   if os.path.isfile(os.path.join(_ft_rec_dir, "inference.yml"))
+                   else {"text_recognition_model_name": "korean_PP-OCRv5_mobile_rec"})
+        print(f"[ocr] rec = {'FINETUNED ' + _ft_rec_dir if 'text_recognition_model_dir' in _rec_kw else 'official korean_PP-OCRv5_mobile_rec'}")
         _ocr_engine = PaddleOCR(
             lang="korean",
             text_detection_model_name=RT.DET_MODEL,
-            text_recognition_model_name="korean_PP-OCRv5_mobile_rec",
+            **_rec_kw,
             device=RT.DEVICE,
             use_textline_orientation=getattr(RT, "TEXTLINE_ORIENTATION", False),  # 줄단위 180° 교정.
             # 문서단위 orientation(P1)이 못 잡는 줄별 뒤집힘 보정. CPU 속도로 OFF, GPU 게이트.
@@ -3555,6 +3567,28 @@ async def ocr_extract(
                         extract_debug["shiftedItemNameRecover"] = _rec_dbg
             except Exception as _rc_e:
                 print(f"[shifted_item_name_recover] failed (response unaffected): {_rc_e}")
+            # Path-agnostic 품명입양: itemName 만 빈 행에 같은 y-밴드의 미소비 품명전용
+            # OCR 라인을 입양(빈칸만). 마스터 매칭 앞이어야 입양 품명이 매칭을 탄다.
+            try:
+                if isinstance(document_fields, dict) and document_fields.get("tableRows"):
+                    _ad_rows, _ad_dbg = adopt_missing_item_names(
+                        document_fields["tableRows"], ocr_lines_raw)
+                    document_fields["tableRows"] = _ad_rows
+                    if _ad_dbg.get("adopted"):
+                        extract_debug["itemNameAdopt"] = _ad_dbg
+            except Exception as _ad_e:
+                print(f"[item_name_adopt] failed (response unaffected): {_ad_e}")
+            # Path-agnostic 행신설: 미소비 품명라인+콤마금액 y-밴드 쌍으로 누락 품목행
+            # 추가(3중 게이트: master sim>=0.35 + fuzzy 중복배제 + 콤마금액만).
+            try:
+                if isinstance(document_fields, dict) and document_fields.get("tableRows"):
+                    _sy_rows, _sy_dbg = synthesize_missing_rows(
+                        document_fields["tableRows"], ocr_lines_raw)
+                    document_fields["tableRows"] = _sy_rows
+                    if _sy_dbg.get("synthesized"):
+                        extract_debug["rowSynth"] = _sy_dbg
+            except Exception as _sy_e:
+                print(f"[row_synth] failed (response unaffected): {_sy_e}")
             # Path-agnostic 마스터 자동매칭(②G4): itemName 있는 행의 itemNameMaster/itemCode
             # 빈칸을 정적 master_dict trigram 매칭(clean+유사도+가격 tiebreak, floor 게이트)으로
             # 채움. 빈칸만이라 읽힌 값 보존, master_dict.json 없으면 자동 비활성.
