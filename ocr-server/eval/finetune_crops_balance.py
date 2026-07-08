@@ -8,9 +8,13 @@ so a training run can choose the mix ratio:
   eval/finetune_corpus/crops_correct/<hash>.jpg
   eval/finetune_corpus/labels_correct.txt
 
-Only cells/fields that MATCHED GT are used — so the label is GT-verified, never
-the OCR output itself (using OCR text as truth would be circular and could train
-on errors). Reuses the SAME box-localization + crop-cutting as the failure path.
+Only cells/fields that MATCHED GT are used. LABEL = the OCR box text itself
+(2026-07-08 변경): match 로 GT-검증된 크롭에 한해 OCR 원문이 곧 정답이며, **인쇄
+포맷(콤마·대시·공백)을 보존한 유일한 소스**다 — war GT 는 원문조차 콤마가 없어
+(684000), gtNorm 라벨은 모델에게 '구분자 벗기기'를 가르쳐 파이프라인을 붕괴시킴
+(v1~v3 실측: 돈 콤마 스트립 → 064 amount 급락, 짧은수량 삭제). 무검증 OCR 텍스트를
+라벨로 쓰는 순환은 여전히 금지 — match 검증된 것만 이 경로에 들어온다.
+Reuses the SAME box-localization + crop-cutting as the failure path.
 
 Capped per image (DEFAULT_CAP) so the balance pool stays bounded/representative
 rather than swallowing every correct cell at scale. Checker-safe sidecar.
@@ -71,7 +75,12 @@ def correct_entries(src: str, cmp: dict, snap: dict | None, cap: int) -> list[di
         box = _cropready(gtn, vtype, boxes)
         if not box:
             continue
-        out.append({"src": src, "location": loc, "column": col, "gt": gtn,
+        text = (box.get("text") or "").strip()
+        if not text:
+            continue
+        # 라벨 = OCR 원문(인쇄형). gtNorm 은 검증에 이미 쓰였고 라벨로는 독(모듈 주석).
+        out.append({"src": src, "location": loc, "column": col, "gt": text,
+                    "gtNorm": gtn, "labelForm": "raw",
                     "ocrBox": box, "imageSize": img_size})
         if len(out) >= cap:
             break
