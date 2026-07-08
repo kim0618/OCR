@@ -174,6 +174,10 @@ def build_ledger(src: str, cmp: dict, snap: dict | None, image_path: str | None)
             g = P._collapse_digits(d["gtNorm"])
             k = P._collapse_digits(box["text"])
             crop_ready = len(g) >= 2 and (g in k or k in g)
+        # 라벨 = 원문 GT(인쇄형 보존: 대소문자·슬래시·공백·괄호). 정규화형(gtNorm)을
+        # 라벨로 쓰면 모델이 '읽기'가 아니라 '정규화(구분자 벗기기)'를 학습 — v1/v2 실측
+        # (콤마 스트립 → 파서 돈인식 붕괴, 짧은수량 삭제). gtNorm 은 박스 매칭에만 사용.
+        raw = (d.get("gtRaw") or "").strip()
         entries.append({
             "src": src,
             "clean": d["clean"],
@@ -183,7 +187,8 @@ def build_ledger(src: str, cmp: dict, snap: dict | None, image_path: str | None)
             "class": d["class"],
             "pattern": d["pattern"],
             "status": d["status"],
-            "gt": d["gtNorm"],                  # the would-be training label
+            "gt": raw or d["gtNorm"],           # the would-be training label (원문 우선)
+            "labelForm": "raw" if raw else "norm",  # build_dataset 게이트가 raw 만 채택
             "ext": d["extNorm"],                # what the parser emitted
             "cropReady": crop_ready,                 # trust flag: confident localization
             "matchRatio": ratio,

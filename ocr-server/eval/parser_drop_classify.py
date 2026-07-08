@@ -319,7 +319,7 @@ def classify_sample(src: str, cmp: dict, snap: dict | None) -> list[dict]:
     ext_idx = _ext_value_locations(fields, table)
     out: list[dict] = []
 
-    def emit(loc, col, vtype, status, gtn, extn, yband=None):
+    def emit(loc, col, vtype, status, gtn, extn, yband=None, gtr=None):
         present = how = None
         if snap is not None:
             present, how = _present_in_ocr(gtn, vtype, hay)
@@ -366,19 +366,21 @@ def classify_sample(src: str, cmp: dict, snap: dict | None) -> list[dict]:
         out.append({
             "src": src, "clean": src in CLEAN, "location": loc, "column": col,
             "vtype": vtype, "status": status, "gtNorm": gtn, "extNorm": extn,
+            "gtRaw": gtr,   # 원문 GT(정규화 전) — 파인튜닝 라벨용(인쇄형 보존)
             "class": cls, "pattern": pattern, "ocrHow": how,
         })
 
     for label, info in fields["perField"].items():
         if info["status"] in ("mismatch", "ext_missing"):
             emit(f"field:{label}", label, _field_type(label), info["status"],
-                 info["gtNorm"], info["extNorm"])
+                 info["gtNorm"], info["extNorm"], gtr=info.get("gt"))
     for row in table["rows"]:
         yband = _row_yband(row, tokens_xy) if tokens_xy else None
         for ck, cell in row["cells"].items():
             if cell["status"] in ("mismatch", "ext_missing"):
                 emit(f"row{row['rowIndex']}:{ck}", ck, _cell_type(ck),
-                     cell["status"], cell["gtNorm"], cell["extNorm"], yband=yband)
+                     cell["status"], cell["gtNorm"], cell["extNorm"], yband=yband,
+                     gtr=cell.get("gt"))
     return out
 
 
