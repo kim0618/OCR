@@ -38,7 +38,7 @@ def main() -> int:
             ep, tot_ep, step = int(m.group(1)), int(m.group(2)), int(m.group(3))
             loss, acc, eta = _f(RE_LOSS, line), _f(RE_ACC, line), _f(RE_ETA, line)
             if ipe:
-                overall = (ep - 1) * ipe + step
+                overall = step               # global_step 은 이미 누적(전 epoch 통틀어). 더하면 이중계산
                 total = tot_ep * ipe
                 pct = 100.0 * overall / total if total else 0.0
                 print(f"[{overall:>8,}/{total:<8,} {pct:4.1f}%] ep {ep}/{tot_ep}  "
