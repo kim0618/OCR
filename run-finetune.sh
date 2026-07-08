@@ -30,7 +30,9 @@ DRV=eval/finetune/paddlex_train.py
   echo "[3/6] 데이터셋 검증 (게이트)"
   python "$DRV" -c "$CFG" -o Global.mode=check_dataset
   echo "[4/6] 학습"
-  python "$DRV" -c "$CFG" -o Global.mode=train
+  # 학습 출력을 진행 정리기로 통과 → 왼쪽에 '전체 대비 진행/​%' 카운터로 깔끔하게.
+  # (에러·다운로드·평가결과 줄은 그대로 통과하니 문제 생기면 그대로 보임)
+  python "$DRV" -c "$CFG" -o Global.mode=train 2>&1 | python eval/finetune_progress.py
   echo "[5/6] export (서버가 읽는 inference 형식으로 변환)"
   python "$DRV" -c "$CFG" -o Global.mode=export
   echo "[6/6] 인식 비교 리포트 (base vs 파인튜닝, held-out test 크롭 직접)"

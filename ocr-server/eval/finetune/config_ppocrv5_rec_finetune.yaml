@@ -42,9 +42,9 @@ CheckDataset:
     val_percent: null
 
 Train:
-  epochs_iters: 20
-  batch_size: 8
-  learning_rate: 0.0005             # fine-tune = below the official 0.001 from-base; tune on val acc
+  epochs_iters: 8                   # fine-tune 은 몇 epoch 이면 충분(20은 과함). 더 필요하면 올림
+  batch_size: 64                    # T4(16GB)에서 rec 크롭(48x320) 여유. GPU 활용률 ↑ = 훨씬 빠름 (OOM 시 32)
+  learning_rate: 0.001              # 배치 8→64 로 키웠으니 lr 도 상향(0.0005→0.001)
   pretrain_weight_path: https://paddle-model-ecology.bj.bcebos.com/paddlex/official_pretrained_model/korean_PP-OCRv5_mobile_rec_pretrained.pdparams
   resume_path: null
   log_interval: 20
