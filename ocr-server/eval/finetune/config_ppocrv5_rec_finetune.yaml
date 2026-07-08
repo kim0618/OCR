@@ -42,7 +42,8 @@ CheckDataset:
     val_percent: null
 
 Train:
-  epochs_iters: 8                   # fine-tune 은 몇 epoch 이면 충분(20은 과함). 더 필요하면 올림
+  epochs_iters: 6                   # 실측: 1차 run 수렴=epoch3(val 0.336), 4~5 미갱신 → 수렴점+여유2.
+                                    # corpus 커져 수렴 늦어지면(마지막까지 best 갱신) 다시 올릴 것
   batch_size: 64                    # T4(16GB)에서 rec 크롭(48x320) 여유. GPU 활용률 ↑ = 훨씬 빠름 (OOM 시 32)
   learning_rate: 0.0001             # ★ 파인튜닝은 작은 lr! 0.001 은 과격해서 pretrained 를 망가뜨림
                                     #   (val acc 하락 = 확인됨). warmup 도 줄여야(repo_apis korean config)

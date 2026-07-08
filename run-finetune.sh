@@ -19,7 +19,10 @@ DRV=eval/finetune/paddlex_train.py
 {
   echo "==================== 파인튜닝 시작 [$(date +'%F %T')] ===================="
   echo "[1/6] corpus -> rec 리스트 재빌드 (최신 크롭 반영)"
-  python eval/build_dataset.py --balance-ratio 1.0
+  # 표적=품명만 (1차 run 판독: 전컬럼 학습은 숫자 콤마/대시 벗기기(포맷팅)만 배워 파이프라인 이득 0,
+  # 심지어 파서 돈-콤마 의존과 충돌 위험). min-match 0.7 = 크롭에 안 보이는 정식명 라벨(rewrite) 컷.
+  # balance(정답 크롭)는 전컬럼 유지 -> 숫자 읽기 망각 방지 앵커.
+  python eval/build_dataset.py --balance-ratio 1.0 --columns itemName --min-match 0.7
   echo "[2/6] PaddleX 레이아웃 (dict.txt + 루트 리스트, 중첩 정리)"
   python eval/build_paddlex_dataset.py
   # PaddleX get_dataset_root 는 **/train.txt 가 정확히 1개여야 함. build_paddlex_dataset

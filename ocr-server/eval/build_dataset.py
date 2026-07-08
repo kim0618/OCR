@@ -47,10 +47,43 @@ def _split(items: list, val: float, test: float, seed: int):
     return (items[n_test + n_val:], items[n_test:n_test + n_val], items[:n_test])  # train, val, test
 
 
+def _column_filter(fails: dict, columns: set, min_match: float | None) -> dict:
+    """failure 크롭을 ledger 의 column/matchRatio 로 제한.
+
+    크롭 파일명 = sha1(crop_key) 라 ledger.jsonl 엔트리에서 역산 가능(finetune_crops 와
+    동일 해시). columns 로 학습 표적(예: itemName)만 남기고, min_match 로 '크롭에 안
+    보이는 정식명 라벨'(rewrite 학습 유발, 1차 run char-sim 하락 원인)을 컷.
+    """
+    import json
+    from finetune_crops import crop_name
+    from finetune_ledger import CORPUS_PATH
+    allowed = set()
+    for ln in open(CORPUS_PATH, encoding="utf-8"):
+        ln = ln.strip()
+        if not ln:
+            continue
+        try:
+            e = json.loads(ln)
+        except json.JSONDecodeError:
+            continue
+        if columns and e.get("column") not in columns:
+            continue
+        if min_match is not None and (e.get("matchRatio") or 0) < min_match:
+            continue
+        allowed.add("crops/" + crop_name(e))
+    return {p: gt for p, gt in fails.items() if p in allowed}
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--balance-ratio", type=float, default=1.0,
                     help="balance crops per failure crop (1.0 = equal; 0 = failures only)")
+    ap.add_argument("--columns", default=None,
+                    help="failure 크롭을 이 컬럼들로 제한 (콤마구분, 예: itemName). "
+                         "balance(정답 크롭)는 그대로 둬 숫자·타컬럼 망각 방지 앵커로 유지")
+    ap.add_argument("--min-match", type=float, default=None,
+                    help="failure 크롭 matchRatio 하한(예: 0.7) — 크롭에 없는 텍스트를 "
+                         "라벨로 주는 rewrite 학습 차단")
     ap.add_argument("--val", type=float, default=0.1)
     ap.add_argument("--test", type=float, default=0.1)
     ap.add_argument("--seed", type=int, default=20260622)
@@ -58,6 +91,12 @@ def main() -> int:
 
     fails = load_labels(FAIL_LABELS)            # {rel_path: gt}
     bals = load_labels(BAL_LABELS)
+    if args.columns or args.min_match is not None:
+        cols = set(c.strip() for c in (args.columns or "").split(",") if c.strip())
+        n0 = len(fails)
+        fails = _column_filter(fails, cols, args.min_match)
+        print(f"[build_dataset] column/match filter: failure {n0:,} -> {len(fails):,} "
+              f"(columns={sorted(cols) or 'all'}, min_match={args.min_match})")
     if not fails and not bals:
         print(f"no labels in {CORPUS_DIR} (run finetune_crops[_balance] first)"); return 2
 
