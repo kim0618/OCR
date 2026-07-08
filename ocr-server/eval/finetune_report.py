@@ -46,7 +46,11 @@ def load_test():
 def find_ft_inference():
     hits = glob.glob(os.path.join(HERE, "finetune", "output", "**", "inference"), recursive=True)
     hits = [h for h in hits if os.path.isfile(os.path.join(h, "inference.yml"))]
-    return hits[0] if hits else None
+    if not hits:
+        return None
+    # best_accuracy 를 최우선 (latest 는 마지막 epoch = best 가 아닐 수 있음)
+    best = [h for h in hits if "best_accuracy" in h]
+    return (best or hits)[0]
 
 
 def predict_all(model, paths, batch=64):
@@ -93,7 +97,9 @@ def main() -> int:
     base = create_model(BASE_MODEL)
     base_pred = predict_all(base, paths)
     print(f"[report] fine-tuned = {ft_dir}")
-    ft = create_model(ft_dir)
+    # create_model 시그니처 = (model_name, model_dir): 이름은 그대로, 가중치 디렉터리만 교체.
+    # (경로만 넘기면 model_name 자리로 들어가 'Model name mismatch' — 실측 에러)
+    ft = create_model(BASE_MODEL, ft_dir)
     ft_pred = predict_all(ft, paths)
 
     def acc(preds):
