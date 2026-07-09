@@ -20,11 +20,14 @@ import json
 import os
 import re
 import threading
+import unicodedata
 from typing import Any
 
 # G3 스윕 실측(0~0.5): floor↑ = 배정중 정확도↑/coverage↓/spurious↓.
 # 0.20 = coverage 85.9 / match_acc 82.8 / spurious 39.1 균형점(잠정 — G3 확정 대상).
-MATCH_SIM_FLOOR = 0.20
+# V5 jamo-trigram 스케일 재보정: 자모 gram은 음절보다 sim이 높게 나와 floor 상향.
+# 063 스윕 실측: 0.25=+384(최적) / 0.30=+279 / 0.35=+75 / 0.40=-216.
+MATCH_SIM_FLOOR = 0.25
 
 _DICT_CANDIDATES = (
     # AWS 배포 위치(ocr-server/ 루트) 우선, 로컬 개발은 eval 데이터 폴더
@@ -176,9 +179,17 @@ def clean_query_name(name: str) -> str:
 
 
 def trigrams(s: str) -> frozenset:
-    """pg_trgm 등가 trigram 집합."""
+    """자모(jamo)-분해 trigram 집합 (V5).
+
+    기존 pg_trgm 등가(음절 단위)는 OCR 한글자 오류(캡슬↔캡슐, 트르티저↔트르티전)에
+    trigram 3개가 통째로 날아가 후보권 밖으로 밀림 — 063 전수분해 B버킷(사전엔
+    있는데 top30밖) 802행의 주원인. NFD 자모 분해 후 gram하면 한 자모 차이는
+    소량 손실이라 오류 내성이 구조적으로 높다.
+    063 전면교체 실측(floor 0.25): master +384 (gain 474/reg 90), B버킷 top30
+    도달 23%→. 주의: psql pg_trgm 벤치(match_parity_check)와는 이제 비등가."""
     out = set()
-    for w in _WORD.findall((s or "").lower()):
+    s = unicodedata.normalize("NFD", s or "")
+    for w in _WORD.findall(s.lower()):
         p = "  " + w + " "
         for i in range(len(p) - 2):
             out.add(p[i:i + 3])

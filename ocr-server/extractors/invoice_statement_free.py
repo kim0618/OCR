@@ -4606,7 +4606,8 @@ def adopt_missing_item_names(
 # 수량/날짜 오인 차단). 무게이트 신설=7,379행 중 정크 6,269(기각) → 3중 게이트=
 # 신설 844 · GT정렬 485(57%) · 정크 +359 · cell +1,173 · master +438.
 _SYNTH_MONEY_RE = re.compile(r"\d{1,3}(?:,\d{3})+")
-_SYNTH_SIM_FLOOR = 0.35
+# V5 jamo-trigram 스케일 재보정: 음절 0.35 ≈ 자모 0.45 (floor 등가비 ~1.25).
+_SYNTH_SIM_FLOOR = 0.45
 
 
 def synthesize_missing_rows(
