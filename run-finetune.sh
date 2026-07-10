@@ -19,12 +19,15 @@ DRV=eval/finetune/paddlex_train.py
 {
   echo "==================== 파인튜닝 시작 [$(date +'%F %T')] ===================="
   echo "[1/6] corpus -> rec 리스트 재빌드 (최신 크롭 반영)"
-  # 표적=품명만+원문라벨 (v1/v2 실측: 정규화 라벨은 '구분자 벗기기'를 가르쳐 파이프라인 붕괴).
-  # raw-only = 원문 GT 라벨 엔트리만(재수확 후 적립분) / hangul-min 2 = 숫자·날짜 크롭 배제
-  # (war GT 원문조차 돈엔 콤마가 없어 숫자는 어떤 GT 라벨로도 인쇄형 복원 불가).
-  # balance(정답 크롭=base 읽은 원문 그대로)는 전컬럼 유지 -> 숫자·포맷 망각 방지 앵커.
-  python eval/build_dataset.py --balance-ratio 1.0 --columns itemName --min-match 0.7 \
-      --hangul-min 2 --raw-only
+  # ★전 필드 인쇄형 학습 (2026-07-09, 10만장 설계):
+  #  - failure(품목만+원문라벨): 인식이 약한 품목의 약점 보강 (숫자 failure 는 GT 정규화라
+  #    콤마-붕괴 유발 → 제외 유지: --columns itemName --hangul-min 2 --raw-only)
+  #  - balance(전 필드 GT-검증 인쇄형): 숫자·날짜·품목의 '인쇄형 정답'을 대량 학습 → 전 필드
+  #    인식이 올라감(cap 160/img 로 이미지당 대부분 셀 수확). balance-ratio 3 = 전필드 주도.
+  #  - max-train: 10만장 규모면 balance 수백만 → 학습시간 관리. 지금(6천장)은 0(무제한).
+  #    10만장 때 예: --max-train 400000 (failure 우선 보존 + balance 축소)
+  python eval/build_dataset.py --balance-ratio 3.0 --max-train 0 \
+      --columns itemName --min-match 0.7 --hangul-min 2 --raw-only
   # [label-gate] 출력 확인: 공백/슬래시/대문자 보존율이 0%대면 학습 중단하고 라벨부터 볼 것
   echo "[2/6] PaddleX 레이아웃 (dict.txt + 루트 리스트, 중첩 정리)"
   python eval/build_paddlex_dataset.py

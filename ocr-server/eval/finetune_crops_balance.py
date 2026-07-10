@@ -39,7 +39,11 @@ from finetune_crops import cut_crops, load_labels, write_labels  # noqa: E402
 
 CROPS_CORRECT_DIR = os.path.join(CORPUS_DIR, "crops_correct")
 LABELS_CORRECT_PATH = os.path.join(CORPUS_DIR, "labels_correct.txt")
-DEFAULT_CAP = 30  # max correct crops per image (bound the balance pool)
+# 전 필드 인쇄형 학습(2026-07-09): balance = GT-검증된 '우리 읽음(인쇄형)' 크롭이 곧
+# 전 필드(숫자·날짜·품목) 인쇄형 라벨 소스. 상한을 30→160 으로 올려 이미지당 대부분의
+# 정답 셀을 담는다(문서당 ~160셀). 이걸 학습 주 데이터로 써서 전 필드 인식을 올림
+# (품목 failure 는 그 위에 약점 보강). 라벨=인쇄형이라 v4 콤마-붕괴 없음.
+DEFAULT_CAP = 160
 
 
 def _cropready(gtn: str, vtype: str, boxes: list[dict]) -> dict | None:

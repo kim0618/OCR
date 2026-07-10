@@ -112,6 +112,9 @@ def main() -> int:
                          "한글 품명만 남기고 숫자는 balance(인쇄 포맷 보존)로만 노출")
     ap.add_argument("--raw-only", action="store_true",
                     help="labelForm=raw(원문 GT 라벨) 엔트리만 학습 — 정규화 라벨 구세대 적립분 배제")
+    ap.add_argument("--max-train", type=int, default=0,
+                    help="총 학습 크롭 상한(0=무제한). 10만장 규모에서 balance 가 수백만이 되므로 "
+                         "학습시간 관리용. failure(품목)는 우선 보존하고 balance 를 줄여 맞춤")
     ap.add_argument("--val", type=float, default=0.1)
     ap.add_argument("--test", type=float, default=0.1)
     ap.add_argument("--seed", type=int, default=20260622)
@@ -143,6 +146,14 @@ def main() -> int:
     if 0 <= want_bal < len(bal_items):
         random.Random(args.seed).shuffle(bal_items)
         bal_items = bal_items[:want_bal]
+
+    # 총량 상한(10만장 규모): failure(품목 약점)는 우선 보존, balance 를 줄여 상한 맞춤.
+    if args.max_train and len(fail_items) + len(bal_items) > args.max_train:
+        keep_bal = max(0, args.max_train - len(fail_items))
+        random.Random(args.seed + 1).shuffle(bal_items)
+        bal_items = bal_items[:keep_bal]
+        print(f"[build_dataset] max-train {args.max_train:,}: failure {len(fail_items):,} 보존 + "
+              f"balance {len(bal_items):,}")
 
     combined = fail_items + bal_items            # rel paths are distinct (separate dirs)
     tr, va, te = _split(combined, args.val, args.test, args.seed)
