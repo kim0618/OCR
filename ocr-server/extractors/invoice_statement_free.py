@@ -1438,6 +1438,81 @@ def _get_buyer_branch_biznos() -> "frozenset[str]":
     return _BUYER_BRANCH_CACHE
 
 
+_KNOWN_SUPPLIER_CACHE: "frozenset[str] | None" = None
+
+
+def _get_known_supplier_biznos() -> "frozenset[str]":
+    """master_dict itembuycust 키 = 거래이력 있는 공급자 bizno 셋(평가월 제외 빌드).
+    무구분자 후보 검증용(바코드 등 우연한 10자리 배제)."""
+    global _KNOWN_SUPPLIER_CACHE
+    if _KNOWN_SUPPLIER_CACHE is not None:
+        return _KNOWN_SUPPLIER_CACHE
+    biznos: set[str] = set()
+    here = os.path.dirname(os.path.abspath(__file__))
+    for path in (os.path.join(here, "..", "master_dict.json"),
+                 os.path.join(here, "..", "eval", "data", "invoice_war", "master_dict.json")):
+        try:
+            with open(path, encoding="utf-8") as fh:
+                md = json.load(fh)
+            for k in (md.get("itembuycust") or {}):
+                d = re.sub(r"\D", "", str(k))
+                if len(d) == 10:
+                    biznos.add(d)
+            if biznos:
+                break
+        except Exception:
+            continue
+    _KNOWN_SUPPLIER_CACHE = frozenset(biznos)
+    return _KNOWN_SUPPLIER_CACHE
+
+
+_BIZNO_REGNAME_CACHE: "dict[str, str] | None" = None
+
+
+def _bizno_registered_name(bizno: str) -> str:
+    """bizno → 등록 거래처명(master_dict biznoToCust→cust). 폴백픽 상호-일치 검증용."""
+    global _BIZNO_REGNAME_CACHE
+    if _BIZNO_REGNAME_CACHE is None:
+        m: dict[str, str] = {}
+        here = os.path.dirname(os.path.abspath(__file__))
+        for path in (os.path.join(here, "..", "master_dict.json"),
+                     os.path.join(here, "..", "eval", "data", "invoice_war", "master_dict.json")):
+            try:
+                with open(path, encoding="utf-8") as fh:
+                    md = json.load(fh)
+                cust = md.get("cust") or {}
+                for bz, cd in (md.get("biznoToCust") or {}).items():
+                    d = re.sub(r"\D", "", str(bz))
+                    nm = (cust.get(str(cd)) or {}).get("nm") or ""
+                    if len(d) == 10 and nm:
+                        m[d] = nm
+                if m:
+                    break
+            except Exception:
+                continue
+        _BIZNO_REGNAME_CACHE = m
+    return _BIZNO_REGNAME_CACHE.get(re.sub(r"\D", "", str(bizno or "")), "")
+
+
+def _company_name_sim(a: str, b: str) -> float:
+    """상호 jamo-trigram 유사도(0~1). trigrams는 master_match 재사용(지연 import)."""
+    from .master_match import trigrams
+    ta, tb = trigrams(a), trigrams(b)
+    if not ta or not tb:
+        return 0.0
+    inter = len(ta & tb)
+    return inter / (len(ta) + len(tb) - inter)
+
+
+def _bizno_checksum_ok(b: str) -> bool:
+    """사업자등록번호 체크섬(가중 1,3,7,1,3,7,1,3,5 + 9번째*5//10). 무구분자 후보 가드."""
+    if len(b) != 10 or not b.isdigit():
+        return False
+    w = (1, 3, 7, 1, 3, 7, 1, 3, 5)
+    s = sum(int(b[i]) * w[i] for i in range(9)) + (int(b[8]) * 5) // 10
+    return (10 - s % 10) % 10 == int(b[9])
+
+
 def _bizno_canon(text: str) -> str:
     t = str(text or "").translate(_BIZNO_LETTER_MAP)
     t = _BIZNO_UNIDASH_RE.sub("-", t)
@@ -1504,13 +1579,38 @@ def refine_supplier_bizno(
     excl |= branch                                    # 공급받는자(백제 지점) 배제
     cur_bad = ((not cur) or (cur in excl)
                or (cur and not any(c[0] == cur and c[1] for c in cands)))
-    if cur_bad and sep:
+    if cur_bad:
         # 배제 후 비면 sep 전체(지점 포함)로 폴백하지 말고, 최소한 지점만은 계속
-        # 배제한 후보로. 그래도 없으면 그때만 sep 전체.
+        # 배제한 후보로.
         pool = [c for c in sep if c[0] not in excl]
         if not pool:
-            pool = [c for c in sep if c[0] not in branch] or sep
-        newv = pool[0][0]
+            pool = [c for c in sep if c[0] not in branch]
+        newv = pool[0][0] if pool else ""
+        comp = str(document_fields.get("supplierCompany") or "")
+        if not newv and sep:
+            # 지점 sep 폴백(전부 지점뿐인 sep = 지점간거래 가능성): 무조건 강행하면 study
+            # 3계열처럼 '문서의 유일한 번호=공급받는자 번호'를 supplier로 오채움하고
+            # PartyMatcher가 상호까지 오염(065 실측 오채움 65/진짜 20). 등록명-추출상호
+            # 일치(sim>=0.3)할 때만 발화. ★무구분자 rescue보다 먼저: 지점간거래 진짜
+            # (GT=지점 bizno) 문서에서 ns가 엉뚱한 known 공급자를 선픽하는 회귀 6 방지.
+            # comp는 refine 시점 원시 추출값이라 빈칸 다수 → 빈칸=반박근거 없음=통과.
+            # 등록명(rn0)은 필수(검증 불가면 강행 안 함). study 3계열은 comp='예일선'
+            # vs 등록명 sim 0.08이라 계속 차단됨.
+            cand0 = sep[0][0]
+            rn0 = _bizno_registered_name(cand0)
+            if rn0 and (not comp or _company_name_sim(comp, rn0) >= 0.3):
+                newv = cand0
+        if not newv:
+            # ★무구분자 폴백(065 실측 +26/break0): sep 후보가 없거나 지점폴백 탈락 시,
+            # 무구분자 10자리를 3중 가드(체크섬+거래이력 known셋+유일)로 검증해 채택.
+            # 가드 완화(known 제거)는 +20/-4로 열세 — 바코드류 우연 10자리 오인 방지.
+            # 상호일치 게이트는 ns엔 미적용(065 실측 −18: 표기차/OCR변형으로 진짜 fix가
+            # sim<0.3에 걸림). 지점간거래 오픽 방지는 위 지점폴백 선순위로 해결.
+            known = _get_known_supplier_biznos()
+            ns = {c[0] for c in cands if not c[1]
+                  if c[0] not in excl and _bizno_checksum_ok(c[0]) and c[0] in known}
+            if len(ns) == 1:
+                newv = next(iter(ns))
         if newv and newv != cur:
             document_fields["supplierBizNumber"] = f"{newv[:3]}-{newv[3:5]}-{newv[5:]}"
             dbg = {"refined": 1, "from": cur, "to": newv}
@@ -1538,16 +1638,24 @@ def refine_buyer_bizno(
     branch = _get_buyer_branch_biznos()
     if not branch:
         return document_fields, dbg
-    sep = [c for c in _bizno_candidates_ocr(ocr_lines_raw) if c[1]]
+    cands = _bizno_candidates_ocr(ocr_lines_raw)
+    sep = [c for c in cands if c[1]]
     is_cand = cur and any(c[0] == cur for c in sep)
     cur_bad = (not cur) or (cur and not is_cand)       # 빈칸 or 후보에 없음만
     if cur_bad and cur not in branch:
         baekje = [c[0] for c in sep if c[0] in branch and c[0] != supplier]
-        if baekje:
-            newv = baekje[0]
-            if newv and newv != cur:
-                document_fields["buyerBizNumber"] = f"{newv[:3]}-{newv[3:5]}-{newv[5:]}"
-                dbg = {"refined": 1, "from": cur, "to": newv}
+        newv = baekje[0] if baekje else ""
+        if not newv:
+            # ★무구분자 폴백(065 실측 +102/break0): sep에 백제후보 없을 때, 무구분자
+            # 10자리를 branch셋 멤버십+체크섬+유일로 검증해 채택. branch셋 자체가
+            # 강한 검증기라 supplier쪽보다 회수 큼(GT의 무구분자-only 443 중 유일 105).
+            ns = {c[0] for c in cands if not c[1]
+                  if c[0] in branch and c[0] != supplier and _bizno_checksum_ok(c[0])}
+            if len(ns) == 1:
+                newv = next(iter(ns))
+        if newv and newv != cur:
+            document_fields["buyerBizNumber"] = f"{newv[:3]}-{newv[3:5]}-{newv[5:]}"
+            dbg = {"refined": 1, "from": cur, "to": newv}
     return document_fields, dbg
 
 
