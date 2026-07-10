@@ -60,9 +60,9 @@
       },
       "supplierBizNumber": {
         "gt": "6038107005",
-        "ext": "260-52-80027",
+        "ext": "113-85-04425",
         "gtNorm": "6038107005",
-        "extNorm": "2605280027",
+        "extNorm": "1138504425",
         "type": "bizno",
         "status": "mismatch",
         "edited": false,
@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "바이넥스",
-        "ext": "",
+        "ext": "백제약품(주)영등포지점",
         "gtNorm": "바이넥스",
-        "extNorm": "",
+        "extNorm": "백제약품영등포지점",
         "type": "company",
-        "status": "ext_missing",
+        "status": "mismatch",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "부산광역시 사하구 다대로 368-3 (장림동)",
-        "ext": "부산광역시사하구다대로368-3 (장림동",
+        "ext": "서울 구로구 공원로8길 24",
         "gtNorm": "부산광역시사하구다대로3683장림동",
-        "extNorm": "부산광역시사하구다대로3683장림동",
+        "extNorm": "서울구로구공원로8길24",
         "type": "address",
-        "status": "match",
+        "status": "mismatch",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 6,
-      "mismatch": 4,
-      "ext_missing": 2,
+      "match": 5,
+      "mismatch": 6,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 6,
+      "matched": 5,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.5
+    "fieldAccuracy": 0.4166666666666667
   },
   "table": {
     "alignMode": "content",
@@ -866,17 +866,25 @@
         "location": "field:supplierBizNumber",
         "status": "mismatch",
         "gtNorm": "6038107005",
-        "extNorm": "2605280027",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
+        "extNorm": "1138504425",
+        "bucket": "structure",
+        "reason": "ext value is gt's ['field:buyerBizNumber']"
       },
       {
         "location": "field:supplierCompany",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "바이넥스",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "extNorm": "백제약품영등포지점",
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
+      },
+      {
+        "location": "field:supplierAddress",
+        "status": "mismatch",
+        "gtNorm": "부산광역시사하구다대로3683장림동",
+        "extNorm": "서울구로구공원로8길24",
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerCompany",
@@ -1208,7 +1216,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 29,
+      "recognition": 30,
       "structure": 16,
       "layout": 0,
       "preprocessing": 0
@@ -1229,6 +1237,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.167
+    "fieldMissRate": 0.083
   }
 }

@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "2158151094",
-        "ext": "305-85-00993",
+        "ext": "215-81-51094",
         "gtNorm": "2158151094",
-        "extNorm": "3058500993",
+        "extNorm": "2158151094",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "씨티씨바이오",
-        "ext": "백제약품(주)대전지점",
+        "ext": "씨티씨바이오",
         "gtNorm": "씨티씨바이오",
-        "extNorm": "백제약품대전지점",
+        "extNorm": "씨티씨바이오",
         "type": "company",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "경기 화성시 동탄구 동탄첨단산업1로 27 (영천동) A동 901호",
-        "ext": "대전광역시 중구 보문로 235 (대흥동)",
+        "ext": "경기 화성시 동탄첨단산업1로 27 (영천동) A동 901호(영천동,금강펜테리움 IX타워)",
         "gtNorm": "경기화성시동탄구동탄첨단산업1로27영천동a동901호",
-        "extNorm": "대전광역시중구보문로235대흥동",
+        "extNorm": "경기화성시동탄첨단산업1로27영천동a동901호영천동금강펜테리움ix타워",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 5,
-      "mismatch": 7,
+      "match": 7,
+      "mismatch": 5,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 5,
+      "matched": 7,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.4166666666666667
+    "fieldAccuracy": 0.5833333333333334
   },
   "table": {
     "alignMode": "content",
@@ -862,36 +862,20 @@
         "reason": "char-level diff (sim=0.80)"
       },
       {
-        "location": "field:supplierBizNumber",
-        "status": "mismatch",
-        "gtNorm": "2158151094",
-        "extNorm": "3058500993",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:buyerBizNumber']"
-      },
-      {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "씨티씨바이오",
-        "extNorm": "백제약품대전지점",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['field:buyerCompany']"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기화성시동탄구동탄첨단산업1로27영천동a동901호",
-        "extNorm": "대전광역시중구보문로235대흥동",
+        "extNorm": "경기화성시동탄첨단산업1로27영천동a동901호영천동금강펜테리움ix타워",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.75)"
       },
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
         "gtNorm": "백제약품대전지점",
         "extNorm": "주씨티씨바이오",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:supplierCompany']"
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -1223,8 +1207,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 25,
-      "structure": 16,
+      "recognition": 26,
+      "structure": 13,
       "layout": 6,
       "preprocessing": 0
     },

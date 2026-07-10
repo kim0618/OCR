@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "2208843940",
-        "ext": "408-85-00180",
+        "ext": "220-88-43940",
         "gtNorm": "2208843940",
-        "extNorm": "4088500180",
+        "extNorm": "2208843940",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "화이트생명과학",
-        "ext": "삼진제약(전)",
+        "ext": "화이트생명과학",
         "gtNorm": "화이트생명과학",
-        "extNorm": "삼진제약",
+        "extNorm": "화이트생명과학",
         "type": "company",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "경기도 남양주시 오남읍 진건오남로 797번길 11 206호",
-        "ext": "서울 마포구 와우산로 121 (서교동)",
+        "ext": "경기 남양주시 진건오남로 (오남읍,) 797번길 11  206호",
         "gtNorm": "경기도남양주시오남읍진건오남로797번길11206호",
-        "extNorm": "서울마포구와우산로121서교동",
+        "extNorm": "경기남양주시진건오남로오남읍797번길11206호",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 4,
-      "mismatch": 8,
+      "match": 6,
+      "mismatch": 6,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 4,
+      "matched": 6,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.3333333333333333
+    "fieldAccuracy": 0.5
   },
   "table": {
     "alignMode": "content",
@@ -1095,28 +1095,12 @@
         "reason": "ext value is gt's ['field:totalAmount']"
       },
       {
-        "location": "field:supplierBizNumber",
-        "status": "mismatch",
-        "gtNorm": "2208843940",
-        "extNorm": "4088500180",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:buyerBizNumber']"
-      },
-      {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "화이트생명과학",
-        "extNorm": "삼진제약",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기도남양주시오남읍진건오남로797번길11206호",
-        "extNorm": "서울마포구와우산로121서교동",
+        "extNorm": "경기남양주시진건오남로오남읍797번길11206호",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.86)"
       },
       {
         "location": "field:supplyAmount",
@@ -1568,8 +1552,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 40,
-      "structure": 21,
+      "recognition": 39,
+      "structure": 20,
       "layout": 0,
       "preprocessing": 0
     },

@@ -47,11 +47,11 @@
       },
       "supplierBizNumber": {
         "gt": "1248730363",
-        "ext": "305-85-00993",
+        "ext": "124-87-30363",
         "gtNorm": "1248730363",
-        "extNorm": "3058500993",
+        "extNorm": "1248730363",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -73,9 +73,9 @@
       },
       "supplierCompany": {
         "gt": "온라인팜(전)(한미)",
-        "ext": "백제약품(주)대전지점",
+        "ext": "온라인팜(전)",
         "gtNorm": "온라인팜한미",
-        "extNorm": "백제약품대전지점",
+        "extNorm": "온라인팜",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -99,11 +99,11 @@
       },
       "supplierAddress": {
         "gt": "경기도 화성시 팔탄면 무하로 214",
-        "ext": "대전광역시 중구 보문로 235 (대흥동)",
+        "ext": "경기도 화성시 팔탄면 무하로 214",
         "gtNorm": "경기도화성시팔탄면무하로214",
-        "extNorm": "대전광역시중구보문로235대흥동",
+        "extNorm": "경기도화성시팔탄면무하로214",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -154,8 +154,8 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 2,
-      "mismatch": 6,
+      "match": 4,
+      "mismatch": 4,
       "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 2,
+      "matched": 4,
       "extNotAttempted": 0,
       "extAttemptedMiss": 3
     },
-    "fieldAccuracy": 0.18181818181818182
+    "fieldAccuracy": 0.36363636363636365
   },
   "table": {
     "alignMode": "content",
@@ -284,28 +284,12 @@
         "reason": "gt value present at ['row1:amount']"
       },
       {
-        "location": "field:supplierBizNumber",
-        "status": "mismatch",
-        "gtNorm": "1248730363",
-        "extNorm": "3058500993",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['field:buyerBizNumber']"
-      },
-      {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "온라인팜한미",
-        "extNorm": "백제약품대전지점",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['field:buyerCompany']"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "경기도화성시팔탄면무하로214",
-        "extNorm": "대전광역시중구보문로235대흥동",
+        "extNorm": "온라인팜",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "field:supplyAmount",
@@ -321,7 +305,7 @@
         "gtNorm": "백제약품대전지점",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "gt value present at ['field:supplierCompany']"
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:buyerAddress",
@@ -382,7 +366,7 @@
     ],
     "bucketTally": {
       "recognition": 6,
-      "structure": 9,
+      "structure": 7,
       "layout": 0,
       "preprocessing": 0
     },

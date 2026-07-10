@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "2158121950",
-        "ext": "",
+        "ext": "408-85-00180",
         "gtNorm": "2158121950",
-        "extNorm": "",
+        "extNorm": "4088500180",
         "type": "bizno",
-        "status": "ext_missing",
+        "status": "mismatch",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "알보젠코리아",
-        "ext": "알보젠코리아주식회사",
+        "ext": "삼진제약(전)",
         "gtNorm": "알보젠코리아",
-        "extNorm": "알보젠코리아",
+        "extNorm": "삼진제약",
         "type": "company",
-        "status": "match",
+        "status": "mismatch",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "충청남도 공주시 정안면 정안농공단지길 55-8",
-        "ext": "서울특별시서초구서초대로4115층(서초동",
+        "ext": "서울 마포구 와우산로 121 (서교동)",
         "gtNorm": "충청남도공주시정안면정안농공단지길558",
-        "extNorm": "서울특별시서초구서초대로4115층서초동",
+        "extNorm": "서울마포구와우산로121서교동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 5,
-      "mismatch": 3,
-      "ext_missing": 4,
+      "match": 4,
+      "mismatch": 5,
+      "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 5,
+      "matched": 4,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 4
+      "extAttemptedMiss": 3
     },
-    "fieldAccuracy": 0.4166666666666667
+    "fieldAccuracy": 0.3333333333333333
   },
   "table": {
     "alignMode": "content",
@@ -510,17 +510,25 @@
       },
       {
         "location": "field:supplierBizNumber",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "2158121950",
-        "extNorm": "",
+        "extNorm": "4088500180",
         "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "reason": "ext value is gt's ['field:buyerBizNumber']"
+      },
+      {
+        "location": "field:supplierCompany",
+        "status": "mismatch",
+        "gtNorm": "알보젠코리아",
+        "extNorm": "삼진제약",
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "충청남도공주시정안면정안농공단지길558",
-        "extNorm": "서울특별시서초구서초대로4115층서초동",
+        "extNorm": "서울마포구와우산로121서교동",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -726,7 +734,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 13,
+      "recognition": 14,
       "structure": 11,
       "layout": 5,
       "preprocessing": 0
@@ -747,6 +755,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.333
+    "fieldMissRate": 0.25
   }
 }

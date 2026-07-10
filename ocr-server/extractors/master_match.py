@@ -207,8 +207,13 @@ def parse_price(v: Any):
         return None
 
 
+# itembuycust rescue floor: 거래처 구매이력(작은 셋)이라 전역 floor(0.25)보다 낮게 안전.
+# 065 실측(빈칸-only): 0.15=master+63/spurious0, 0.10=+66(오채움↑). 0.15 채택.
+IBC_RESCUE_FLOOR = 0.15
+
+
 class MasterMatcher:
-    def __init__(self, item_dict: dict):
+    def __init__(self, item_dict: dict, itembuycust: dict | None = None):
         # entries: (item_cd, item_nm, bp1, unit, pyojun, bohum, trigram 크기) / 역색인: trigram -> [idx]
         self._cds: list[str] = []
         self._nms: list[str] = []
@@ -219,6 +224,8 @@ class MasterMatcher:
         self._nmcleans: list[str] = []   # war fn_get_item_name_clean+공백strip (LIKE 단계용)
         self._tlens: list[int] = []
         self._index: dict[str, list[int]] = {}
+        self._cd2i: dict[str, int] = {}
+        self._itri_cache: dict[int, frozenset] = {}
         for cd, e in item_dict.items():
             e = e or {}
             nm = e.get("nm") or ""
@@ -237,8 +244,48 @@ class MasterMatcher:
             self._bohums.append(e.get("bohum") or "")
             self._nmcleans.append(nmc)
             self._tlens.append(len(tri))
+            self._cd2i.setdefault(cd, i)
             for t in tri:
                 self._index.setdefault(t, []).append(i)
+        # itembuycust: 공급자 bizno -> {matcher index} (구매이력 품목)
+        self._ibc: dict[str, set[int]] = {}
+        for bz, cds in (itembuycust or {}).items():
+            b = re.sub(r"\D", "", str(bz or ""))
+            if len(b) != 10:
+                continue
+            idxs = {self._cd2i[c] for c in (cds or []) if c in self._cd2i}
+            if idxs:
+                self._ibc[b] = idxs
+
+    def _itri(self, i: int) -> frozenset:
+        t = self._itri_cache.get(i)
+        if t is None:
+            t = trigrams(self._nmcleans[i])
+            self._itri_cache[i] = t
+        return t
+
+    def itembuycust_rescue(self, name: str, bizno: str, floor: float = IBC_RESCUE_FLOOR):
+        """공급자 bizno의 구매이력 품목집합 안에서 jamo 최선 매칭(작은 셋→낮은 floor).
+        → {itemCode, itemNameMaster, sim} | None. 빈칸 rescue 전용."""
+        b = re.sub(r"\D", "", str(bizno or ""))
+        idxs = self._ibc.get(b)
+        if not idxs:
+            return None
+        q = trigrams(clean_item_name(clean_query_name(name)))
+        if not q:
+            return None
+        best_i, best = -1, 0.0
+        for i in idxs:
+            tt = self._itri(i)
+            inter = len(q & tt)
+            u = len(q) + len(tt) - inter
+            s = inter / u if u else 0.0
+            if s > best:
+                best, best_i = s, i
+        if best_i < 0 or best < floor:
+            return None
+        return {"itemCode": self._cds[best_i], "itemNameMaster": self._nms[best_i],
+                "sim": round(best, 4)}
 
     def top_candidates(self, name: str, k: int = 30):
         """유사도 상위 k 후보 → [(sim, idx)] sim DESC. 랭킹(tiebreak) 실험/재정렬용."""
@@ -424,7 +471,7 @@ def get_matcher() -> "MasterMatcher | None":
             if os.path.isfile(p):
                 try:
                     d = json.load(open(p, encoding="utf-8"))
-                    _matcher = MasterMatcher(d.get("item") or {})
+                    _matcher = MasterMatcher(d.get("item") or {}, d.get("itembuycust"))
                     _party = PartyMatcher(d)
                     print(f"[master_match] loaded {p} ({len(_matcher._cds)} items, "
                           f"{len(_party.bizno_to_cust)} bizno, {len(_party.brch)} brch)")
@@ -435,16 +482,20 @@ def get_matcher() -> "MasterMatcher | None":
         return _matcher
 
 
-def fill_master_match(rows: list, matcher: "MasterMatcher | None" = None):
+def fill_master_match(rows: list, matcher: "MasterMatcher | None" = None,
+                      supplier_bizno: str | None = None):
     """itemName 있는 행의 itemNameMaster/itemCode 빈칸을 매칭 결과로 채움.
 
     빈칸만(파서가 읽은 값 절대 보존) + floor 미달은 미배정 → spurious 통제.
+    supplier_bizno 주면: 전역매칭 미달로 빈칸 남은 행을 itembuycust(그 거래처 구매
+    이력)에서 낮은 floor로 rescue(작은 셋이라 안전). 065 실측 +63 master/spurious0.
     반환 (rows, debug) — 시블링 룰(fill_pharma_columns 등)과 동일 계약.
     """
     matcher = matcher or get_matcher()
-    dbg: dict[str, Any] = {"enabled": matcher is not None, "filled": 0, "belowFloor": 0}
+    dbg: dict[str, Any] = {"enabled": matcher is not None, "filled": 0, "belowFloor": 0, "ibcFilled": 0}
     if matcher is None or not rows:
         return rows, dbg
+    bz = re.sub(r"\D", "", str(supplier_bizno or ""))
     for r in rows:
         if not isinstance(r, dict):
             continue
@@ -457,8 +508,13 @@ def fill_master_match(rows: list, matcher: "MasterMatcher | None" = None):
                           spec=str(r.get("spec") or ""), quantity=r.get("quantity"),
                           amount=r.get("amount"))
         if m is None:
-            dbg["belowFloor"] += 1
-            continue
+            # itembuycust rescue: 거래처 구매이력 셋에서 낮은 floor로 재시도(빈칸만)
+            if len(bz) == 10:
+                m = matcher.itembuycust_rescue(name, bz)
+            if m is None:
+                dbg["belowFloor"] += 1
+                continue
+            dbg["ibcFilled"] += 1
         if not str(r.get("itemNameMaster") or "").strip():
             r["itemNameMaster"] = m["itemNameMaster"]
         if not str(r.get("itemCode") or "").strip():

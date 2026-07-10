@@ -75,6 +75,8 @@ from extractors.invoice_statement_free import (
     recover_shifted_item_name,
     adopt_missing_item_names,
     synthesize_missing_rows,
+    refine_supplier_bizno,
+    refine_buyer_bizno,
 )
 from extractors.master_match import fill_master_match, fill_party_match
 from utils.regex_patterns import (
@@ -3589,12 +3591,26 @@ async def ocr_extract(
                         extract_debug["rowSynth"] = _sy_dbg
             except Exception as _sy_e:
                 print(f"[row_synth] failed (response unaffected): {_sy_e}")
+            # Path-agnostic 공급자/공급받는자 사업자번호 재선택: OCR 넓힌추출 + 보수적
+            # 재선택. ★마스터매칭 앞이어야 교정된 supplier bizno가 itembuycust 앵커로 쓰인다.
+            try:
+                if isinstance(document_fields, dict):
+                    document_fields, _rb_dbg = refine_supplier_bizno(document_fields, ocr_lines_raw)
+                    if _rb_dbg.get("refined"):
+                        extract_debug["supplierBiznoRefine"] = _rb_dbg
+                    document_fields, _rbb_dbg = refine_buyer_bizno(document_fields, ocr_lines_raw)
+                    if _rbb_dbg.get("refined"):
+                        extract_debug["buyerBiznoRefine"] = _rbb_dbg
+            except Exception as _rb_e:
+                print(f"[bizno_refine] failed (response unaffected): {_rb_e}")
             # Path-agnostic 마스터 자동매칭(②G4): itemName 있는 행의 itemNameMaster/itemCode
-            # 빈칸을 정적 master_dict trigram 매칭(clean+유사도+가격 tiebreak, floor 게이트)으로
-            # 채움. 빈칸만이라 읽힌 값 보존, master_dict.json 없으면 자동 비활성.
+            # 빈칸을 정적 master_dict trigram 매칭으로 채움. 미달 빈칸은 supplier bizno의
+            # itembuycust(구매이력) 낮은 floor rescue. 빈칸만이라 읽힌 값 보존.
             try:
                 if isinstance(document_fields, dict) and document_fields.get("tableRows"):
-                    _mm_rows, _mm_dbg = fill_master_match(document_fields["tableRows"])
+                    _mm_rows, _mm_dbg = fill_master_match(
+                        document_fields["tableRows"],
+                        supplier_bizno=document_fields.get("supplierBizNumber"))
                     document_fields["tableRows"] = _mm_rows
                     if _mm_dbg.get("filled"):
                         extract_debug["masterMatchFill"] = _mm_dbg

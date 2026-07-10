@@ -58,6 +58,8 @@ from extractors.invoice_statement_free import (  # noqa: E402
     recover_shifted_item_name as _recover_shifted_item_name,
     adopt_missing_item_names as _adopt_item_names,
     synthesize_missing_rows as _synth_rows,
+    refine_supplier_bizno as _refine_sup_bizno,
+    refine_buyer_bizno as _refine_buy_bizno,
 )
 from extractors.invoice_statement import extract_invoice_statement_fields  # noqa: E402
 from extractors.master_match import fill_master_match as _fill_master  # noqa: E402
@@ -145,10 +147,18 @@ def replay_dispatch(snap: dict) -> tuple[dict, str]:
             df["tableRows"], _ = _synth_rows(df["tableRows"], lines)
         except Exception:
             pass
-    # mirror main.py join-point 마스터 자동매칭 (itemNameMaster/itemCode 빈칸 채움, ②G4)
+    # mirror main.py join-point 사업자번호 재선택 (마스터매칭 앞 — itembuycust 앵커)
+    if isinstance(df, dict):
+        try:
+            df, _ = _refine_sup_bizno(df, lines)
+            df, _ = _refine_buy_bizno(df, lines)
+        except Exception:
+            pass
+    # mirror main.py join-point 마스터 자동매칭 (빈칸 채움 + itembuycust rescue, ②G4)
     if MASTER_MATCH and isinstance(df, dict) and df.get("tableRows"):
         try:
-            df["tableRows"], _ = _fill_master(df["tableRows"])
+            df["tableRows"], _ = _fill_master(
+                df["tableRows"], supplier_bizno=df.get("supplierBizNumber"))
         except Exception:
             pass
     # mirror main.py join-point ④거래처/지점 매칭 (사업자번호 앵커/지점 trigram)

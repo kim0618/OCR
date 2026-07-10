@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import bisect
 from copy import deepcopy
+import json
 import math
 import os
 import re
@@ -1383,6 +1384,171 @@ def _find_business_numbers(text: str) -> list[str]:
     for raw in re.findall(r"(?<!\d)\d{10}(?!\d)", normalized):
         candidates.append(f"{raw[:3]}-{raw[3:5]}-{raw[5:]}")
     return _unique_preserve_order(candidates)
+
+
+# ─── 공급자 사업자번호 재선택(P1): 넓힌 추출 + 보수적 재선택 ──────────────────
+# 근거(065 전수분해, 실패 458건): GT bizno가 OCR에 ①정상 260 ②구분자깨짐(en-dash
+# 등) 84 ③토큰분할('4 6 2-8 8') 28 로 존재하나 후보추출/선택이 놓침. free 는
+# 하이픈만 매칭(_find_business_numbers)해 en-dash·공백형을 통째 놓치고 [0](주문번호
+# 등)을 픽. 넓힌 추출(unicode dash 통일 + 숫자간 공백제거 + 글자오인 O/I/l/S/B→숫자)
+# 로 GT 후보화율 74.7→89.7%, 보수적 재선택(현재값이 빈칸/구분자없음/buyer와 동일일
+# 때만 교체, 구분자형 중 buyer≠ 첫 후보)로 065 실측 gain 121/reg 9 = +112 → 80.9%.
+_BIZNO_UNIDASH_RE = re.compile(r"[‐‑‒–—―=~]")
+_BIZNO_LETTER_MAP = str.maketrans("OIlSBoisb", "011588015")
+# 구분자 다중/혼합·점·콜론 허용('106 -81' 이중, '101-.85' 점, '108-8:6' 콜론).
+# 그룹내 공백·점·콜론은 canon서 제거('12 4'→'124', '1.01'→'101').
+_BIZNO_BROAD_RE = re.compile(r"(?<!\d)(\d{3})[-.\s:]{0,3}(\d{2})[-.\s:]{0,3}(\d{5})(?!\d)")
+_BIZNO_SEP_RE = re.compile(r"\d{3}[-.\s:]{1,3}\d{2}[-.\s:]{1,3}\d{5}")
+# 공급받는자(백제 지점)측 사업자번호 집합 — 공급자 bizno 선택 시 배제용.
+# ★하드코딩 아님: master_dict.json['buyerBranchBiznos'](build_master.sql 역할우세 유도)
+# 에서 로드 → 지점 증가 시 dict 재빌드로 자동 반영. dict에 키 없으면(구 dict) eval
+# 사이드카(_buyer_role_set.csv) 폴백, 그것도 없으면 빈 집합(무영향).
+_BUYER_BRANCH_CACHE: "frozenset[str] | None" = None
+
+
+def _get_buyer_branch_biznos() -> "frozenset[str]":
+    global _BUYER_BRANCH_CACHE
+    if _BUYER_BRANCH_CACHE is not None:
+        return _BUYER_BRANCH_CACHE
+    biznos: set[str] = set()
+    here = os.path.dirname(os.path.abspath(__file__))
+    for path in (os.path.join(here, "..", "master_dict.json"),
+                 os.path.join(here, "..", "eval", "data", "invoice_war", "master_dict.json")):
+        try:
+            with open(path, encoding="utf-8") as fh:
+                md = json.load(fh)
+            for v in (md.get("buyerBranchBiznos") or []):
+                d = re.sub(r"\D", "", str(v))
+                if len(d) == 10:
+                    biznos.add(d)
+            if biznos:
+                break
+        except Exception:
+            continue
+    if not biznos:   # eval 폴백(dict에 키 없는 구 버전)
+        try:
+            import csv as _csv
+            sc = os.path.join(here, "..", "eval", "data", "invoice_war", "_buyer_role_set.csv")
+            for row in _csv.reader(open(sc, encoding="utf-8")):
+                if row and len(row[0]) == 10:
+                    biznos.add(row[0])
+        except Exception:
+            pass
+    _BUYER_BRANCH_CACHE = frozenset(biznos)
+    return _BUYER_BRANCH_CACHE
+
+
+def _bizno_canon(text: str) -> str:
+    t = str(text or "").translate(_BIZNO_LETTER_MAP)
+    t = _BIZNO_UNIDASH_RE.sub("-", t)
+    # 숫자 사이 공백·점·콜론 제거('12 4'→'124', '036.3'→'0363'). 구분자 대시는 보존.
+    return re.sub(r"(?<=\d)[.\s:]+(?=\d)", "", t)
+
+
+def _bizno_extract(txt: str) -> list[tuple[str, bool]]:
+    out: list[tuple[str, bool]] = []
+    for mo in _BIZNO_BROAD_RE.finditer(_bizno_canon(txt)):
+        out.append((mo.group(1) + mo.group(2) + mo.group(3), bool(_BIZNO_SEP_RE.search(mo.group()))))
+    return out
+
+
+def _bizno_candidates_ocr(ocr_lines_raw: Any) -> list[tuple[str, bool]]:
+    """OCR 라인에서 사업자번호 후보 (읽기순, 중복제거). (digits10, 구분자형여부).
+
+    라인 자체 + 인접 라인 결합(같은 y밴드 or 바로 아래)으로 재시도 → 번호가 두 토큰
+    ('409-81-' + '08080')으로 쪼개진 경우 회수. 065 실측: 라인결합 포함 +12."""
+    lines: list[tuple[float, float, str]] = []
+    for ln in (ocr_lines_raw or []):
+        try:
+            pts = ln[0]
+            ys = [p[1] for p in pts]
+            xs = [p[0] for p in pts]
+            lines.append((sum(ys) / len(ys), min(xs), str(ln[1])))
+        except Exception:
+            continue
+    lines.sort()
+    seen: list[tuple[str, bool]] = []
+
+    def _add(v: str, s: bool) -> None:
+        if not any(c[0] == v for c in seen):
+            seen.append((v, s))
+
+    for i, (cy, cx, txt) in enumerate(lines):
+        for v, s in _bizno_extract(txt):
+            _add(v, s)
+        for j in range(i + 1, min(i + 3, len(lines))):  # 인접 라인 결합 재시도
+            cy2, cx2, txt2 = lines[j]
+            if abs(cy2 - cy) <= 25 or (0 < cy2 - cy <= 30 and abs(cx2 - cx) < 200):
+                for v, s in _bizno_extract(txt + txt2):
+                    _add(v, s)
+    return seen
+
+
+def refine_supplier_bizno(
+    document_fields: Any, ocr_lines_raw: Any,
+) -> tuple[Any, dict[str, Any]]:
+    """공급자 사업자번호가 명백히 틀렸을 때만(빈칸/구분자없음/buyer와 동일) 재선택."""
+    dbg: dict[str, Any] = {"refined": 0}
+    if not isinstance(document_fields, dict):
+        return document_fields, dbg
+
+    def _d(v: Any) -> str:
+        return re.sub(r"\D", "", str(v or ""))
+
+    cur = _d(document_fields.get("supplierBizNumber"))
+    buyer = _d(document_fields.get("buyerBizNumber"))
+    branch = _get_buyer_branch_biznos()               # 데이터 유도(백제 지점 집합)
+    cands = _bizno_candidates_ocr(ocr_lines_raw)
+    sep = [c for c in cands if c[1]]
+    excl = {buyer} if buyer else set()
+    excl |= branch                                    # 공급받는자(백제 지점) 배제
+    cur_bad = ((not cur) or (cur in excl)
+               or (cur and not any(c[0] == cur and c[1] for c in cands)))
+    if cur_bad and sep:
+        # 배제 후 비면 sep 전체(지점 포함)로 폴백하지 말고, 최소한 지점만은 계속
+        # 배제한 후보로. 그래도 없으면 그때만 sep 전체.
+        pool = [c for c in sep if c[0] not in excl]
+        if not pool:
+            pool = [c for c in sep if c[0] not in branch] or sep
+        newv = pool[0][0]
+        if newv and newv != cur:
+            document_fields["supplierBizNumber"] = f"{newv[:3]}-{newv[3:5]}-{newv[5:]}"
+            dbg = {"refined": 1, "from": cur, "to": newv}
+    return document_fields, dbg
+
+
+def refine_buyer_bizno(
+    document_fields: Any, ocr_lines_raw: Any,
+) -> tuple[Any, dict[str, Any]]:
+    """공급받는자 사업자번호가 빈칸/무효(후보에 없음)일 때만 백제 지점 후보로 채움.
+
+    buyer = 백제 지점셋(buyerBranchBiznos)에 속한 구분자형 후보(공급자와 다른 것).
+    ★be==supplier 트리거는 금지: 일부 문서는 공급자==공급받는자(동일 사업체)라 정상값을
+    깬다(065 실측 reg 69의 전원). 빈칸/미추출만 트리거 → gain 37/reg 0 → 81.2→83.7%.
+    다중 백제 후보 중 '어느 지점'은 못 가리므로(라벨/블록 필요) 회수는 빈칸만 보수적."""
+    dbg: dict[str, Any] = {"refined": 0}
+    if not isinstance(document_fields, dict):
+        return document_fields, dbg
+
+    def _d(v: Any) -> str:
+        return re.sub(r"\D", "", str(v or ""))
+
+    cur = _d(document_fields.get("buyerBizNumber"))
+    supplier = _d(document_fields.get("supplierBizNumber"))
+    branch = _get_buyer_branch_biznos()
+    if not branch:
+        return document_fields, dbg
+    sep = [c for c in _bizno_candidates_ocr(ocr_lines_raw) if c[1]]
+    is_cand = cur and any(c[0] == cur for c in sep)
+    cur_bad = (not cur) or (cur and not is_cand)       # 빈칸 or 후보에 없음만
+    if cur_bad and cur not in branch:
+        baekje = [c[0] for c in sep if c[0] in branch and c[0] != supplier]
+        if baekje:
+            newv = baekje[0]
+            if newv and newv != cur:
+                document_fields["buyerBizNumber"] = f"{newv[:3]}-{newv[3:5]}-{newv[5:]}"
+                dbg = {"refined": 1, "from": cur, "to": newv}
+    return document_fields, dbg
 
 
 def _clean_labeled_value(value: str) -> str:

@@ -1,6 +1,6 @@
 """baseline_matrix — war GT 필드 × 단계(구글/룰/마스터/파인튜닝) 정확도.
 
-baseline(구글) = 구글이 읽은 값 vs GT 일치율. 값 없으면 0%. **1차 2000 샘플 기준.**
+baseline(구글) = 구글이 읽은 값 vs GT 일치율. 값 없으면 0%. **6000 샘플 기준(2606⊂6000).**
 라벨은 report._FIELD_KO 그대로. 스타일은 trend._CSS. 출력: runs/BASELINE_MATRIX.html
 usage: python eval/baseline_matrix.py
 """
@@ -17,7 +17,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(HERE, "data", "invoice_war")
 GT_PATH = os.path.join(DATA, "ground_truth_2606.json")
 MASTER_PATH = os.path.join(DATA, "master_dict.json")
-SAMPLE_PATH = os.path.join(DATA, "sample_2606.txt")
+SAMPLE_PATH = os.path.join(DATA, "sample_6000.txt")
 OUT = os.path.join(HERE, "runs", "BASELINE_MATRIX.html")
 
 # ocr.xml selectMasterItemLearnData: learn_count >= #{learn_count} 게이트.
@@ -486,7 +486,7 @@ def build_html(ndocs, item_pct, item_ok, item_tot, paddle, paddle_run, grule, gd
         f'<div class="head"><h1>필드 × 단계 정확도</h1>'
         f'<label class="toggle"><input type="checkbox" onchange="document.body.classList.toggle(\'hidecirc\',this.checked)"> '
         f'순환 컬럼 숨기기 <span class="muted">(금액·날짜·수량 등 pass-through 제외)</span></label></div>'
-        f'<div class="gen" style="max-width:1600px;margin:0 auto 6px">1차 샘플 {ndocs:,}장 (지점 분산) · 구글 vs GT</div>'
+        f'<div class="gen" style="max-width:1600px;margin:0 auto 6px">샘플 {ndocs:,}장 (지점 분산, 2606⊂6000) · 구글 vs GT</div>'
         f'<p class="note">탭 = 단계 · Google base = 구글 읽은 값 vs GT(값 없으면 0%) · '
         f'Paddle {("run " + paddle_run) if paddle_run else "(run 없음)"}: '
         f'<b>Base=룰전(compare)</b> → <b>Rule=룰후(replay_compare_rule, 매칭 전)</b> → '

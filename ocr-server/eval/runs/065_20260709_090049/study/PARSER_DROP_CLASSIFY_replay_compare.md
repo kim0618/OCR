@@ -1,31 +1,34 @@
 # Parser-drop classification — 065_20260709_090049\study
 
-Defects scored (mismatch|ext_missing): **164**  |  parser-drop (OCR read it, recoverable): **11**  |  ambiguous_fuzzy (fuzzy-only, pending): **0**  |  recognition (OCR-bound): **153**
-Parser-recoverable share of defects: **6.7%**
+Defects scored (mismatch|ext_missing): **168**  |  parser-drop (OCR read it, recoverable): **15**  |  ambiguous_fuzzy (fuzzy-only, pending): **0**  |  recognition (OCR-bound): **153**
+Parser-recoverable share of defects: **8.9%**
 
-## Parser-drops by column × pattern — CLEAN originals  (n=2)
+## Parser-drops by column × pattern — CLEAN originals  (n=3)
 
 | column | drop | mislocate | wrongpick | total |
 |---|--:|--:|--:|--:|
 | supplierAddress | 0 | 0 | 1 | **1** |
 | itemName | 0 | 0 | 1 | **1** |
+| supplierCompany | 0 | 0 | 1 | **1** |
 
-## Parser-drops by column × pattern — ANGLE variants  (n=9)
+## Parser-drops by column × pattern — ANGLE variants  (n=12)
 
 | column | drop | mislocate | wrongpick | total |
 |---|--:|--:|--:|--:|
 | supplierAddress | 0 | 0 | 3 | **3** |
+| supplierCompany | 0 | 0 | 3 | **3** |
 | buyerRepresentative | 0 | 1 | 1 | **2** |
 | productCode | 1 | 0 | 0 | **1** |
 | quantity | 0 | 0 | 1 | **1** |
 | unitPrice | 1 | 0 | 0 | **1** |
 | amount | 0 | 1 | 0 | **1** |
 
-## Parser-drops by column × pattern — ALL  (n=11)
+## Parser-drops by column × pattern — ALL  (n=15)
 
 | column | drop | mislocate | wrongpick | total |
 |---|--:|--:|--:|--:|
 | supplierAddress | 0 | 0 | 4 | **4** |
+| supplierCompany | 0 | 0 | 4 | **4** |
 | buyerRepresentative | 0 | 1 | 1 | **2** |
 | itemName | 0 | 0 | 1 | **1** |
 | productCode | 1 | 0 | 0 | **1** |

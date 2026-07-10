@@ -47,9 +47,9 @@
       },
       "supplierBizNumber": {
         "gt": "6038107005",
-        "ext": "260-61-50049",
+        "ext": "609-85-04585",
         "gtNorm": "6038107005",
-        "extNorm": "2606150049",
+        "extNorm": "6098504585",
         "type": "bizno",
         "status": "mismatch",
         "edited": false,
@@ -60,11 +60,11 @@
       },
       "supplierCompany": {
         "gt": "바이넥스(전)",
-        "ext": "",
+        "ext": "백제약품(주)영남본부",
         "gtNorm": "바이넥스",
-        "extNorm": "",
+        "extNorm": "백제약품영남본부",
         "type": "company",
-        "status": "ext_missing",
+        "status": "mismatch",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -86,9 +86,9 @@
       },
       "supplierAddress": {
         "gt": "부산광역시 사하구 다대로 368-3 (장림동)",
-        "ext": "부산광역시사하구대로368-3(장렴동",
+        "ext": "경남 김해시 진례면 김해테크노벨리로 33-12 백제약품(주)영남본부",
         "gtNorm": "부산광역시사하구다대로3683장림동",
-        "extNorm": "부산광역시사하구대로3683장렴동",
+        "extNorm": "경남김해시진례면김해테크노벨리로3312백제약품주영남본부",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -142,8 +142,8 @@
     "counts": {
       "scored": 10,
       "match": 5,
-      "mismatch": 4,
-      "ext_missing": 1,
+      "mismatch": 5,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -156,7 +156,7 @@
       "gtPresent": 10,
       "matched": 5,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
     "fieldAccuracy": 0.5
   },
@@ -749,33 +749,33 @@
         "location": "field:supplierBizNumber",
         "status": "mismatch",
         "gtNorm": "6038107005",
-        "extNorm": "2606150049",
+        "extNorm": "6098504585",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "field:supplierCompany",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "바이넥스",
-        "extNorm": "",
+        "extNorm": "백제약품영남본부",
         "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "reason": "ext value is gt's ['field:buyerCompany']"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "부산광역시사하구다대로3683장림동",
-        "extNorm": "부산광역시사하구대로3683장렴동",
+        "extNorm": "경남김해시진례면김해테크노벨리로3312백제약품주영남본부",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.91)"
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
         "gtNorm": "백제약품영남본부",
         "extNorm": "뱀제약품영남본부",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.88)"
+        "bucket": "structure",
+        "reason": "gt value present at ['field:supplierCompany']"
       },
       {
         "location": "field:buyerAddress",
@@ -1075,8 +1075,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 32,
-      "structure": 7,
+      "recognition": 31,
+      "structure": 8,
       "layout": 2,
       "preprocessing": 0
     },
@@ -1096,6 +1096,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.1
+    "fieldMissRate": 0.0
   }
 }

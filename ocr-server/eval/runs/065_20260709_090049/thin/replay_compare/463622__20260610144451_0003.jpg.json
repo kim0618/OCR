@@ -73,9 +73,9 @@
       },
       "supplierCompany": {
         "gt": "경보제약",
-        "ext": "주)제이에스에스팜",
+        "ext": "백제약품(주)영등포지점",
         "gtNorm": "경보제약",
-        "extNorm": "주제이에스에스팜",
+        "extNorm": "백제약품영등포지점",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -99,11 +99,11 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 영등포구 버드나루로 47, 고촌빌딩 201호 (영등포동2가)",
-        "ext": "",
+        "ext": "서울 구로구 공원로8길 24",
         "gtNorm": "서울특별시영등포구버드나루로47고촌빌딩201호영등포동2가",
-        "extNorm": "",
+        "extNorm": "서울구로구공원로8길24",
         "type": "address",
-        "status": "ext_missing",
+        "status": "mismatch",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -155,8 +155,8 @@
     "counts": {
       "scored": 11,
       "match": 8,
-      "mismatch": 2,
-      "ext_missing": 1,
+      "mismatch": 3,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -169,7 +169,7 @@
       "gtPresent": 11,
       "matched": 8,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
     "fieldAccuracy": 0.7272727272727273
   },
@@ -1263,17 +1263,17 @@
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "경보제약",
-        "extNorm": "주제이에스에스팜",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "백제약품영등포지점",
+        "bucket": "structure",
+        "reason": "ext value is gt's ['field:buyerCompany']"
       },
       {
         "location": "field:supplierAddress",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "서울특별시영등포구버드나루로47고촌빌딩201호영등포동2가",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "extNorm": "서울구로구공원로8길24",
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -1898,6 +1898,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.091
+    "fieldMissRate": 0.0
   }
 }

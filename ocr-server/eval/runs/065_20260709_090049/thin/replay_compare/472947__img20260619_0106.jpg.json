@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "6828500435",
-        "ext": "305-85-00993",
+        "ext": "682-85-00435",
         "gtNorm": "6828500435",
-        "extNorm": "3058500993",
+        "extNorm": "6828500435",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "일동제약(전문)",
-        "ext": "백제약품(주)대전지점",
+        "ext": "일동제약(전문)",
         "gtNorm": "일동제약전문",
-        "extNorm": "백제약품대전지점",
+        "extNorm": "일동제약전문",
         "type": "company",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "경기 안성시 공단1로 25 (신건지동)",
-        "ext": "대전광역시 중구 보문로 235 (대흥동)",
+        "ext": "서울특별시 서초구 바우뫼로27길 2 (양재동)",
         "gtNorm": "경기안성시공단1로25신건지동",
-        "extNorm": "대전광역시중구보문로235대흥동",
+        "extNorm": "서울특별시서초구바우뫼로27길2양재동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 1,
-      "mismatch": 11,
+      "match": 3,
+      "mismatch": 9,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 1,
+      "matched": 3,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.08333333333333333
+    "fieldAccuracy": 0.25
   },
   "table": {
     "alignMode": "content",
@@ -625,34 +625,18 @@
         "reason": "value differs, low similarity"
       },
       {
-        "location": "field:supplierBizNumber",
-        "status": "mismatch",
-        "gtNorm": "6828500435",
-        "extNorm": "3058500993",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
-      },
-      {
         "location": "field:buyerBizNumber",
         "status": "mismatch",
         "gtNorm": "3058500993",
         "extNorm": "8006289120",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:supplierBizNumber']"
-      },
-      {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "일동제약전문",
-        "extNorm": "백제약품대전지점",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['field:buyerCompany']"
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기안성시공단1로25신건지동",
-        "extNorm": "대전광역시중구보문로235대흥동",
+        "extNorm": "서울특별시서초구바우뫼로27길2양재동",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -669,8 +653,8 @@
         "status": "mismatch",
         "gtNorm": "백제약품대전지점",
         "extNorm": "백제약품대",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:supplierCompany']"
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.77)"
       },
       {
         "location": "field:buyerAddress",
@@ -978,8 +962,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 10,
-      "structure": 38,
+      "recognition": 11,
+      "structure": 35,
       "layout": 0,
       "preprocessing": 0
     },

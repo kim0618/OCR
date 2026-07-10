@@ -60,6 +60,19 @@
       },
       "supplierBizNumber": {
         "gt": "1188100601",
+        "ext": "118-81-00601",
+        "gtNorm": "1188100601",
+        "extNorm": "1188100601",
+        "type": "bizno",
+        "status": "match",
+        "edited": false,
+        "difficult": false,
+        "extAttempted": true,
+        "spurious": false,
+        "spuriousTag": null
+      },
+      "buyerBizNumber": {
+        "gt": "1188100601",
         "ext": "113-85-04425",
         "gtNorm": "1188100601",
         "extNorm": "1138504425",
@@ -71,24 +84,11 @@
         "spurious": false,
         "spuriousTag": null
       },
-      "buyerBizNumber": {
-        "gt": "1188100601",
-        "ext": "101-15-49114",
-        "gtNorm": "1188100601",
-        "extNorm": "1011549114",
-        "type": "bizno",
-        "status": "mismatch",
-        "edited": false,
-        "difficult": false,
-        "extAttempted": true,
-        "spurious": false,
-        "spuriousTag": null
-      },
       "supplierCompany": {
         "gt": "유한양행(전문)",
-        "ext": "백제약품(주)영등포지점",
+        "ext": "유한양행(전)",
         "gtNorm": "유한양행전문",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "유한양행",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울 동작구 노량진로 74 (대방동)",
-        "ext": "서울 구로구 공원로8길 24",
+        "ext": "충청북도 청주시 청원구 오창읍 연구단지로 219",
         "gtNorm": "서울동작구노량진로74대방동",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "충청북도청주시청원구오창읍연구단지로219",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 2,
-      "mismatch": 7,
+      "match": 3,
+      "mismatch": 6,
       "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 2,
+      "matched": 3,
       "extNotAttempted": 0,
       "extAttemptedMiss": 3
     },
-    "fieldAccuracy": 0.16666666666666666
+    "fieldAccuracy": 0.25
   },
   "table": {
     "alignMode": "content",
@@ -1272,28 +1272,20 @@
         "reason": "gt value present at ['field:discountAmount']"
       },
       {
-        "location": "field:supplierBizNumber",
-        "status": "mismatch",
-        "gtNorm": "1188100601",
-        "extNorm": "1138504425",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:buyerBizNumber",
         "status": "mismatch",
         "gtNorm": "1188100601",
-        "extNorm": "1011549114",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "1138504425",
+        "bucket": "structure",
+        "reason": "gt value present at ['field:supplierBizNumber']"
       },
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "유한양행전문",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "유한양행",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "field:taxType",
@@ -1307,7 +1299,7 @@
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울동작구노량진로74대방동",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "충청북도청주시청원구오창읍연구단지로219",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -1953,8 +1945,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 33,
-      "structure": 54,
+      "recognition": 31,
+      "structure": 55,
       "layout": 0,
       "preprocessing": 0
     },
