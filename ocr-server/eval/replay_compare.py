@@ -70,6 +70,26 @@ from extractors.master_match import fill_party_match as _fill_party  # noqa: E40
 MASTER_MATCH = True
 
 
+def _load_recorded_run_scope(run_dir: str) -> list[str] | None:
+    """Return the exact source-file scope recorded by the historical live run.
+
+    A run's snapshots directory may contain files left by an older invocation,
+    while the current manifest may have changed since the run was created.
+    ``run_meta.ran`` is therefore the only stable replay scope for historical
+    runs. Older runs without this metadata retain the legacy snapshot behavior.
+    """
+    path = os.path.join(run_dir, "run_meta.json")
+    try:
+        meta = json.load(open(path, encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    ran = meta.get("ran")
+    if not isinstance(ran, list) or not all(isinstance(src, str) and src for src in ran):
+        return None
+    # Preserve the recorded order while rejecting accidental duplicates.
+    return list(dict.fromkeys(ran))
+
+
 def replay_dispatch(snap: dict) -> tuple[dict, str]:
     """Reproduce the server's free->gate->fallback choice on a snapshot envelope.
 
@@ -196,20 +216,34 @@ def replay_compare(ts: str | None, testset: str, out_subdir: str) -> int:
     else:
         gt_by_src = {s["sourceFile"]: s["gt"] for s in manifest["samples"] if s.get("gt")}
 
-    snaps = sorted(f for f in os.listdir(snap_dir) if f.endswith(".json"))
-    print(f"replay+score over {os.path.relpath(run_dir, C.RUNS_DIR)}: {len(snaps)} snapshot(s) "
+    recorded_scope = _load_recorded_run_scope(run_dir)
+    snapshot_sources = {f[:-5] for f in os.listdir(snap_dir) if f.endswith(".json")}
+    if recorded_scope is not None:
+        missing_snapshots = [src for src in recorded_scope if src not in snapshot_sources]
+        if missing_snapshots:
+            print(f"run_meta.ran has {len(missing_snapshots)} source(s) without snapshots; "
+                  "historical replay would be incomplete")
+            for src in missing_snapshots[:20]:
+                print(f"  missing snapshot: {src}")
+            return 2
+        sources = recorded_scope
+        stale_count = len(snapshot_sources - set(recorded_scope))
+        scope_label = f"run_meta.ran ({len(sources)}), excluded stale snapshots={stale_count}"
+    else:
+        sources = sorted(snapshot_sources)
+        scope_label = f"legacy snapshots ({len(sources)}; no usable run_meta.ran)"
+    print(f"replay+score over {os.path.relpath(run_dir, C.RUNS_DIR)}: {scope_label} "
           f"-> {out_subdir}/\n")
     n_written = n_faithful = n_free = 0
     sys.stdout.reconfigure(errors="replace")
-    for f in snaps:
-        src = f[:-5]
+    for src in sources:
         if agg is not None:
             gtkey = gtkey_by_src.get(src)
             if not gtkey or gtkey not in agg:
                 print(f"  skip {src:<10} (no GT in manifest)"); continue
         elif not gt_by_src.get(src):
             print(f"  skip {src:<10} (no GT in manifest)"); continue
-        snap = json.load(open(os.path.join(snap_dir, f), encoding="utf-8"))
+        snap = json.load(open(os.path.join(snap_dir, src + ".json"), encoding="utf-8"))
         ext_df, path = replay_dispatch(snap)            # (edited) parser, faithful dispatch
         n_free += 1 if path == "free" else 0
         gt = agg[gtkey] if agg is not None else load_gt(

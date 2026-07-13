@@ -240,6 +240,63 @@ LOCAL_TOL = 15.0     # px around the row's median Y to count as "this row"
 LOCAL_CLEAN = 0.97   # local token must match GT this well to confirm parser
 
 
+def _load_run_meta(run_dir: str) -> dict:
+    try:
+        value = json.load(open(os.path.join(run_dir, "run_meta.json"), encoding="utf-8"))
+        return value if isinstance(value, dict) else {}
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def _recorded_scope(run_meta: dict) -> set[str] | None:
+    ran = run_meta.get("ran")
+    if not isinstance(ran, list) or not all(isinstance(src, str) and src for src in ran):
+        return None
+    return set(ran)
+
+
+def _clean_classification(src: str, run_meta: dict) -> bool | None:
+    """Return legacy study clean/angle classification, or None if unavailable.
+
+    The old six-name CLEAN set belongs only to invoice_study. Applying it to a
+    thin run labels every production filename as an angle variant, which is
+    false metadata. Thin stays explicitly unclassified until manifest/GT carries
+    original/variant provenance.
+    """
+    if run_meta.get("kind") == "thin" or run_meta.get("testset") == "invoice_thin":
+        return None
+    return src in CLEAN
+
+
+def _raw_master_cross_add(cross: dict, src: str, cmp: dict) -> None:
+    """Accumulate row-level itemName -> itemNameMaster transition metrics."""
+    counts = cross["counts"]
+    protected = cross["protectedRows"]
+    for row in (cmp.get("table") or {}).get("rows") or []:
+        cells = row.get("cells") or {}
+        raw_status = (cells.get("itemName") or {}).get("status", "none")
+        master_status = (cells.get("itemNameMaster") or {}).get("status", "none")
+        row_id = f"{src}#row{row.get('rowIndex', '')}"
+        raw_bad = raw_status in {"mismatch", "ext_missing"}
+        master_bad = master_status in {"mismatch", "ext_missing"}
+        if raw_bad and master_status == "match":
+            key = "rawWrong_masterCorrect"
+            protected[key].append(row_id)
+        elif raw_bad and master_bad:
+            key = "rawWrong_masterWrongOrMissing"
+        elif raw_status == "match" and master_status == "match":
+            key = "rawCorrect_masterCorrect"
+        elif raw_status == "match" and master_status == "mismatch":
+            key = "rawCorrect_masterWrong"
+            protected[key].append(row_id)
+        elif raw_status == "match" and master_status == "ext_missing":
+            key = "rawCorrect_masterMissing"
+            protected[key].append(row_id)
+        else:
+            continue
+        counts[key] += 1
+
+
 def _ocr_tokens_xy(snap: dict):
     """[(alnum, digits, y_center), ...] from snapshot bboxes (ocr_lines_raw row = [box, text, score])."""
     out = []
@@ -557,17 +614,20 @@ def _render_html(run_label, compare_dir, scores, pdrops, ambiguous, recog, n_def
              "<th data-num='1'>필드 정확도</th><th data-num='1'>셀 정확도</th></tr></thead><tbody>")
     for s in sorted(scores, key=lambda s: (s["fieldAcc"] is None, s["fieldAcc"] or 0)):
         pth = s["path"] or ""
+        clean_label = "미분류" if s["clean"] is None else ("정상" if s["clean"] else "변주")
         H.append(f"<tr><td>{_esc(s['src'])}</td>"
-                 f"<td>{'정상' if s['clean'] else '변주'}</td>"
+                 f"<td>{clean_label}</td>"
                  f"<td><span class='{pth}'>{_esc(pth)}</span></td>"
                  + acc_td(s['fMatch'], s['fScored'], s['fieldAcc'])
                  + acc_td(s['cMatch'], s['cScored'], s['cellAcc']) + "</tr>")
     H.append("</tbody></table></section>")
 
     # parser-drop class tables (ALL + clean/variant split)
-    for scope, rows in (("전체", pdrops),
-                        ("정상 원본", [d for d in pdrops if d["clean"]]),
-                        ("변주(각도)", [d for d in pdrops if not d["clean"]])):
+    html_scopes = [("전체", pdrops)]
+    if any(d["clean"] is not None for d in pdrops):
+        html_scopes.extend((("정상 원본", [d for d in pdrops if d["clean"] is True]),
+                            ("변주(각도)", [d for d in pdrops if d["clean"] is False])))
+    for scope, rows in html_scopes:
         agg = col_pattern_table(rows)
         ordered = sorted(agg.items(), key=lambda kv: -sum(kv[1].values()))
         H.append(f"<section><h2>컬럼 × 패턴 — {scope} <span class='muted'>(n={len(rows)} · 클릭=정렬)</span></h2>"
@@ -624,22 +684,37 @@ def main() -> int:
     if not os.path.isdir(cmp_dir):
         print(f"no {args.compare_dir}/ in {run_dir}"); return 2
     has_snap = os.path.isdir(snap_dir)
+    run_meta = _load_run_meta(run_dir)
+    recorded_scope = _recorded_scope(run_meta)
 
     defects: list[dict] = []
     scores: list[dict] = []   # per-sample field/cell accuracy for the HTML score table
+    raw_master_cross = {
+        "counts": defaultdict(int),
+        "protectedRows": defaultdict(list),
+    }
+    excluded_out_of_scope = 0
     for f in sorted(os.listdir(cmp_dir)):
         if not f.endswith(".json"):
             continue
         src = f[:-5]
+        if recorded_scope is not None and src not in recorded_scope:
+            excluded_out_of_scope += 1
+            continue
         cmp = json.load(open(os.path.join(cmp_dir, f), encoding="utf-8"))
         snap = None
         sp = os.path.join(snap_dir, f)
         if has_snap and os.path.exists(sp):
             snap = json.load(open(sp, encoding="utf-8"))
-        defects += classify_sample(src, cmp, snap)
+        clean = _clean_classification(src, run_meta)
+        sample_defects = classify_sample(src, cmp, snap)
+        for defect in sample_defects:
+            defect["clean"] = clean
+        defects += sample_defects
+        _raw_master_cross_add(raw_master_cross, src, cmp)
         fc, tc = cmp["fields"]["counts"], cmp["table"]["cellCounts"]
         scores.append({
-            "src": src, "clean": src in CLEAN, "path": cmp.get("extractionPath"),
+            "src": src, "clean": clean, "path": cmp.get("extractionPath"),
             "fScored": fc["scored"], "fMatch": fc["match"],
             "cScored": tc["scored"], "cMatch": tc["match"],
             "fieldAcc": cmp["fields"].get("fieldAccuracy"),
@@ -671,13 +746,39 @@ def main() -> int:
     pct = (100 * len(pdrops) / n_def) if n_def else 0
     lines.append(f"Parser-recoverable share of defects: **{pct:.1f}%**")
     lines.append("")
+    if recorded_scope is not None:
+        lines.append(f"Evaluation scope: **run_meta.ran {len(recorded_scope)} sources**; "
+                     f"out-of-scope compare files excluded: **{excluded_out_of_scope}**")
+        lines.append("")
 
-    for scope, rows in (("CLEAN originals", [d for d in pdrops if d["clean"]]),
-                        ("ANGLE variants", [d for d in pdrops if not d["clean"]]),
-                        ("ALL", pdrops)):
+    cross_counts = raw_master_cross["counts"]
+    lines.append("## Raw itemName × master itemNameMaster transitions")
+    lines.append("")
+    lines.append("| transition | rows |")
+    lines.append("|---|--:|")
+    for key in ("rawWrong_masterCorrect", "rawWrong_masterWrongOrMissing",
+                "rawCorrect_masterCorrect", "rawCorrect_masterWrong",
+                "rawCorrect_masterMissing"):
+        lines.append(f"| {key} | **{cross_counts.get(key, 0)}** |")
+    lines.append("")
+    lines.append("Regression gates use the persisted row identities, not fixed bin counts: "
+                 "a successful raw fix may legitimately move a protected row between bins.")
+    lines.append("")
+
+    classified_clean_angle = any(d["clean"] is not None for d in pdrops)
+    scope_rows = []
+    if classified_clean_angle:
+        scope_rows.extend((("CLEAN originals", [d for d in pdrops if d["clean"] is True]),
+                           ("ANGLE variants", [d for d in pdrops if d["clean"] is False])))
+    else:
+        lines.append("Clean/angle split: **unavailable for this run**. The legacy six-file "
+                     "study filename list is not applied to thin data.")
+        lines.append("")
+    scope_rows.append(("ALL", pdrops))
+    for scope_name, rows in scope_rows:
         agg = col_pattern_table(rows)
         ordered = sorted(agg.items(), key=lambda kv: -sum(kv[1].values()))
-        lines.append(f"## Parser-drops by column × pattern — {scope}  (n={len(rows)})")
+        lines.append(f"## Parser-drops by column × pattern — {scope_name}  (n={len(rows)})")
         lines.append("")
         lines.append("| column | drop | mislocate | wrongpick | total |")
         lines.append("|---|--:|--:|--:|--:|")
@@ -756,6 +857,12 @@ def main() -> int:
             "parserDropConfirmed": len(pdrops),
             "ambiguousFuzzy": len(ambiguous),
             "recognitionConfirmed": len(recog),
+            "scopeSourceCount": len(recorded_scope) if recorded_scope is not None else len(scores),
+            "outOfScopeCompareFilesExcluded": excluded_out_of_scope,
+        },
+        "rawMasterCross": {
+            "counts": dict(raw_master_cross["counts"]),
+            "protectedRows": dict(raw_master_cross["protectedRows"]),
         },
         # per-sample field/cell accuracy — persisted so a batch-level combiner
         # (local_summary.py) can compute KPIs without re-reading every compare/.
