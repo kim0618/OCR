@@ -336,12 +336,19 @@ def _render(batch_name: str, compare_dir: str, per: list[dict]) -> str:
     return "\n".join(H)
 
 
-def _col_accuracy(cdir_path: str) -> dict:
+def _col_accuracy(cdir_path: str, allowed_sources: set[str] | None = None) -> dict:
     """compare 디렉토리의 필드·셀별 정확도(맞음/채점셀) 집계. col -> [match, scored].
-    gt_empty(GT빈칸) 제외 — parser_drop_classify/baseline_matrix와 동일 기준."""
+    gt_empty(GT빈칸) 제외 — parser_drop_classify/baseline_matrix와 동일 기준.
+
+    ``allowed_sources`` mirrors the classifier's recorded run scope. This keeps
+    stale replay JSON files on disk from leaking into only this column table.
+    """
     acc: dict = defaultdict(lambda: [0, 0])
     for f in glob.glob(os.path.join(cdir_path, "*.json")):
         if f.endswith("compare_summary.json"):
+            continue
+        src = os.path.basename(f)[:-5]
+        if allowed_sources is not None and src not in allowed_sources:
             continue
         try:
             c = json.load(open(f, encoding="utf-8"))
@@ -400,7 +407,8 @@ def build(batch_dir: str, requested_compare_dir: str, refresh: bool = True) -> s
         for d in defects:
             col_class[d.get("column", "")][d.get("class", "")] += 1
         # 컬럼별 정확도(맞음/채점셀) — compare 셀 직접 집계 (gt_empty 제외)
-        col_acc = _col_accuracy(os.path.join(sub_dir, cdir))
+        allowed_sources = {s["src"] for s in scores if s.get("src")}
+        col_acc = _col_accuracy(os.path.join(sub_dir, cdir), allowed_sources)
         faccs = [s["fieldAcc"] for s in scores if s.get("fieldAcc") is not None]
         caccs = [s["cellAcc"] for s in scores if s.get("cellAcc") is not None]
         hist = []

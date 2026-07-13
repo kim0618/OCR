@@ -70,6 +70,22 @@ replay defect(run_meta.ran 5,964장 제한) × 같은 행 itemNameMaster 상태 
 교차표의 구간별 숫자 자체를 고정하지 않는다. 보호 기준은 `(sourceFile, rowIndex)` 행 ID이며,
 성공적인 raw 복구는 `raw오답→master정답` 행을 `raw정답→master정답`으로 이동시킬 수 있다.
 
+### 공식 replay 게이트 기준
+
+0단계 복구 후 사용자가 재실행한 `066_20260709_122046/thin/replay_compare`를 이후 파서 패치의
+공식 replay 기준으로 사용한다. 기준 `PARSER_DROP_CLASSIFY_replay_compare.json` 값:
+
+- scope 5,964 / stale 제외 49
+- rawWrong→masterCorrect 14,309
+- rawWrong→masterWrongOrMissing 9,456
+- rawCorrect→masterCorrect 12,593
+- rawCorrect→masterWrong 951
+- rawCorrect→masterMissing 37
+
+패치 전후 `rawMasterCross.protectedRows`를 행 ID 집합으로 비교한다. 기준 흡수 행의 master 정답
+손실과 기준 raw 정답 행의 신규 master 오교정은 각각 차집합으로 보고하며, 카테고리 총수만으로
+회귀를 판정하지 않는다. live 기준 교차표 `14,160/9,605/12,586/945/50`은 별도 불변 기준이다.
+
 ## 4. 실행 순서 (확정)
 
 | # | 작업 | 대상 물량 | 비고 |
