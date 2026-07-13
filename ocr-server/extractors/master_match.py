@@ -482,6 +482,161 @@ def get_matcher() -> "MasterMatcher | None":
         return _matcher
 
 
+_RAW_MASTER_HANGUL_RE = re.compile(r"[가-힣]{2,}")
+_RAW_MASTER_SUMMARY_RE = re.compile(
+    r"합계|소계|총계|이하여백|공급가|부가세|세액|거래선|사업자|페이지"
+)
+_RAW_MASTER_COMPANY_RE = re.compile(
+    r"제약|약품|파마|메디|바이오|헬스|상사|유통|주식회사"
+)
+
+
+def _raw_master_norm(value: object) -> str:
+    return re.sub(r"[^0-9a-z가-힣]", "", str(value or "").lower())
+
+
+def _raw_master_token_pos(text: str, value: object) -> int | None:
+    raw = str(value or "").strip()
+    if len(raw) < 2:
+        return None
+    match = re.search(rf"(?<!\d){re.escape(raw)}(?!\d)", text)
+    return match.start() if match else None
+
+
+def _raw_master_candidate_variants(row: dict[str, Any]) -> list[str]:
+    raw = str(row.get("_rawText") or row.get("rawText") or "").strip()
+    if not raw:
+        return []
+
+    positions: list[int] = []
+    spec = str(row.get("spec") or "").strip()
+    if spec:
+        pos = raw.find(spec)
+        if pos >= 2:
+            positions.append(pos)
+    for key in ("quantity", "unitPrice", "amount"):
+        pos = _raw_master_token_pos(raw, row.get(key))
+        if pos is not None and pos >= 2:
+            positions.append(pos)
+
+    prefix = raw[:min(positions)].strip() if positions else raw
+    prefix = re.sub(r"^\s*\d{1,3}\s+", "", prefix)
+    variants = [
+        prefix,
+        re.sub(r"^\s*\d{5,}[-./]?\d*\s*", "", prefix),
+    ]
+    parts = prefix.split()
+    for index in range(1, min(len(parts), 4)):
+        skipped = parts[:index]
+        if all(
+            _RAW_MASTER_COMPANY_RE.search(token)
+            or not _RAW_MASTER_HANGUL_RE.search(token)
+            for token in skipped
+        ):
+            variants.append(" ".join(parts[index:]))
+    if parts and _RAW_MASTER_COMPANY_RE.search(parts[0]):
+        variants.append(" ".join(parts[1:]))
+
+    unique: list[str] = []
+    seen: set[str] = set()
+    for value in variants:
+        value = value.strip(" -_/.,")
+        key = _raw_master_norm(value)
+        if (
+            key in seen
+            or not _RAW_MASTER_HANGUL_RE.search(value)
+            or _RAW_MASTER_SUMMARY_RE.search(value)
+        ):
+            continue
+        seen.add(key)
+        unique.append(value)
+    return unique
+
+
+def _fill_blank_master_from_rawtext(
+    rows: list, matcher: "MasterMatcher", dbg: dict[str, Any]
+) -> None:
+    """Fill only fallback master names from high-confidence same-row raw text.
+
+    Raw itemName and numeric cells remain untouched so thin content alignment is
+    structurally unchanged. The master name must be explicitly present in the
+    OCR candidate; matcher-added qualifiers are rejected.
+    """
+    used_codes = {
+        str(row.get("itemCode") or "").strip()
+        for row in rows
+        if isinstance(row, dict)
+        and str(row.get("itemCode") or "").strip()
+        and (
+            str(row.get("itemName") or "").strip()
+            or str(row.get("itemNameMaster") or "").strip()
+        )
+    }
+    samples: list[dict[str, Any]] = []
+    recovered = 0
+    for row in rows:
+        if (
+            not isinstance(row, dict)
+            or str(row.get("_source") or "") != "invoice_statement_table_parser"
+            or str(row.get("itemName") or "").strip()
+            or str(row.get("itemNameMaster") or "").strip()
+        ):
+            continue
+        evidence_count = sum(
+            bool(str(row.get(key) or "").strip())
+            for key in (
+                "spec", "quantity", "unitPrice", "amount", "itemCode", "insuranceCode"
+            )
+        )
+        if evidence_count < 3:
+            continue
+
+        matches: list[tuple[float, str, dict[str, Any]]] = []
+        for value in _raw_master_candidate_variants(row):
+            match = matcher.match(
+                clean_query_name(value),
+                parse_price(row.get("unitPrice")),
+                spec=str(row.get("spec") or ""),
+                quantity=row.get("quantity"),
+                amount=row.get("amount"),
+                floor=0.45,
+            )
+            if match:
+                matches.append((float(match.get("sim") or 0), value, match))
+        if not matches:
+            continue
+        matches.sort(
+            key=lambda item: (item[0], -len(_raw_master_norm(item[1]))),
+            reverse=True,
+        )
+        best_sim, value, match = matches[0]
+        best_code = str(match.get("itemCode") or "")
+        other_scores = [
+            score
+            for score, _value, other in matches
+            if str(other.get("itemCode") or "") != best_code
+        ]
+        if best_sim < 0.80 or (other_scores and best_sim - max(other_scores) < 0.10):
+            continue
+        if not best_code or best_code in used_codes:
+            continue
+
+        # Reserve before the qualifier gate so rejecting one row cannot make a
+        # later duplicate newly eligible; this keeps the release set monotonic.
+        used_codes.add(best_code)
+        master_name = str(match.get("itemNameMaster") or "").strip()
+        if not master_name or _raw_master_norm(master_name) not in _raw_master_norm(value):
+            continue
+        row["itemNameMaster"] = master_name
+        recovered += 1
+        if len(samples) < 8:
+            samples.append({"candidate": value[:80], "master": master_name, "sim": best_sim})
+
+    if recovered:
+        dbg["rawTextMasterRecovered"] = recovered
+        dbg["rawTextMasterSamples"] = samples
+
+
 def fill_master_match(rows: list, matcher: "MasterMatcher | None" = None,
                       supplier_bizno: str | None = None):
     """itemName 있는 행의 itemNameMaster/itemCode 빈칸을 매칭 결과로 채움.
@@ -520,4 +675,5 @@ def fill_master_match(rows: list, matcher: "MasterMatcher | None" = None,
         if not str(r.get("itemCode") or "").strip():
             r["itemCode"] = m["itemCode"]
         dbg["filled"] += 1
+    _fill_blank_master_from_rawtext(rows, matcher, dbg)
     return rows, dbg
