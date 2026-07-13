@@ -2101,6 +2101,63 @@ def _build_column_boundaries(
     return boundaries
 
 
+def _join_fragmented_item_name_header(
+    header_row: list[OcrLine], page_w: float
+) -> list[OcrLine]:
+    """Add a virtual itemName header when OCR split a nearby header token.
+
+    Only itemName is reconstructed here. Joining quantity/price/amount fragments
+    moved unrelated column boundaries in the 066 replay and is intentionally
+    outside this candidate.
+    """
+    ordered = sorted(header_row, key=lambda line: line.cx)
+    existing_keys = {
+        key
+        for line in ordered
+        if (key := _match_header_to_canonical(line.text)) is not None
+    }
+    if "itemName" in existing_keys:
+        return header_row
+
+    synthetic: list[OcrLine] = []
+    for left, right in zip(ordered, ordered[1:]):
+        gap = right.x - (left.x + left.w)
+        max_gap = max(page_w * 0.025, max(left.w, right.w) * 1.5)
+        if gap > max_gap:
+            continue
+        joined = f"{left.text}{right.text}"
+        if _match_header_to_canonical(joined) != "itemName":
+            continue
+        x1 = min(left.x, right.x)
+        y1 = min(left.y, right.y)
+        x2 = max(left.x + left.w, right.x + right.w)
+        y2 = max(left.y + left.h, right.y + right.h)
+        synthetic.append(OcrLine(
+            [[x1, y1], [x2, y1], [x2, y2], [x1, y2]],
+            joined,
+            min(left.confidence, right.confidence),
+            x1,
+            y1,
+            x2 - x1,
+            y2 - y1,
+            (x1 + x2) / 2.0,
+            (y1 + y2) / 2.0,
+        ))
+        break
+    return header_row + synthetic
+
+
+def _has_fragmented_item_name_header(
+    lines: list[OcrLine], page_h: float, page_w: float
+) -> bool:
+    rows = _group_rows(lines, tolerance_factor=0.55)
+    header_result = _find_structured_header_row(rows, page_h)
+    if header_result is None:
+        return False
+    _, header_row = header_result
+    return len(_join_fragmented_item_name_header(header_row, page_w)) > len(header_row)
+
+
 def _assign_canonical_by_x(cx: float, boundaries: list[dict[str, Any]]) -> str | None:
     """Return canonical key for a center_x within column boundaries.
     T-6c: falls back to nearest column when slightly outside boundary (OCR positional variance).
@@ -2147,6 +2204,7 @@ def _split_composite_cell_value(
 def _table_items_from_header_mapping(
     lines: list[OcrLine], page_h: float, page_w: float,
     debug: dict[str, Any] | None = None,
+    join_item_name_fragments: bool = False,
 ) -> list[dict[str, Any]]:
     """Extract table items by x-position column mapping. Falls back to [] if header not found.
     T-6c: multi-line header support, composite column handling, proximity-based assignment.
@@ -2160,6 +2218,8 @@ def _table_items_from_header_mapping(
     if header_result is None:
         return []
     header_idx, header_row = header_result
+    if join_item_name_fragments:
+        header_row = _join_fragmented_item_name_header(header_row, page_w)
     boundaries = _build_column_boundaries(header_row, page_w)
 
     if debug is not None:
@@ -6276,14 +6336,15 @@ def _extract_amount_fields(
     return {"supplyAmount": supply, "taxAmount": tax, "totalAmount": total}
 
 
-def _detect_table(
+def _detect_table_once(
     lines: list[OcrLine],
     page_h: float,
     table_header_y: float | None,
     expected_columns: dict[str, list[str]] | None = None,
     table_bounds: dict[str, float] | None = None,
     column_guides: list[float] | None = None,
-) -> dict[str, str]:
+    join_item_name_fragments: bool = False,
+) -> dict[str, Any]:
     rows = _group_rows(lines)
     header_index = -1
     for idx, row in enumerate(rows):
@@ -6479,7 +6540,13 @@ def _detect_table(
         if "rejectedRows" in expected_debug:
             _cg_debug_fields["colGuidesRejectedRows"] = expected_debug["rejectedRows"]
         header_debug = {}
-        header_items = _table_items_from_header_mapping(lines, page_h, page_w, debug=header_debug)
+        header_items = _table_items_from_header_mapping(
+            lines,
+            page_h,
+            page_w,
+            debug=header_debug,
+            join_item_name_fragments=join_item_name_fragments,
+        )
         # Merge preserved colGuides debug into header_debug without overwriting header-mapping fields
         for k, v in _cg_debug_fields.items():
             header_debug.setdefault(k, v)
@@ -6623,6 +6690,118 @@ def _detect_table(
         "items": table_items,
         "tableDebug": table_debug,
     }
+
+
+def _fragment_header_master_code(row: dict[str, Any]) -> str:
+    name = str(row.get("itemName") or "").strip()
+    if not name:
+        return ""
+    from extractors.master_match import clean_query_name, get_matcher, parse_price
+
+    match = get_matcher().match(
+        clean_query_name(name),
+        parse_price(row.get("unitPrice")),
+        spec=str(row.get("spec") or ""),
+        quantity=row.get("quantity"),
+        amount=row.get("amount"),
+    )
+    return str((match or {}).get("itemCode") or "")
+
+
+def _fragment_header_candidate_is_safe(
+    original: list[dict[str, Any]], candidate: list[dict[str, Any]]
+) -> bool:
+    if len(original) != len(candidate) or not original or len(original) > 6:
+        return False
+    if any(str(row.get("itemName") or "").strip() for row in original):
+        return False
+    if any(
+        str(old.get("spec") or "").strip() != str(new.get("spec") or "").strip()
+        for old, new in zip(original, candidate)
+    ):
+        return False
+
+    added = [
+        new
+        for old, new in zip(original, candidate)
+        if not str(old.get("itemName") or "").strip()
+        and str(new.get("itemName") or "").strip()
+    ]
+    if not added:
+        return False
+    added_codes = [_fragment_header_master_code(row) for row in added]
+    return bool(
+        all(added_codes)
+        and len(added_codes) == len(set(added_codes))
+    )
+
+
+def _fragment_header_has_ha_append(
+    result: dict[str, Any],
+    lines: list[OcrLine],
+    expected_columns: dict[str, list[str]] | None,
+) -> bool:
+    """Reject candidates that can change downstream HA row alignment."""
+    from extractors.invoice_statement_free import append_missing_ha_rows
+
+    table_debug = result.get("tableDebug") or {}
+    canonical = _build_canonical_table_rows(
+        result.get("tableRows") or result.get("items") or [],
+        expected_columns=expected_columns,
+        matched_column_keys=table_debug.get("matchedHeaders", []),
+    )
+    raw_lines = [(line.pts, line.text, line.confidence) for line in lines]
+    _, append_debug = append_missing_ha_rows(
+        list(canonical.get("tableRows") or []), raw_lines
+    )
+    return bool(append_debug.get("appended"))
+
+
+def _detect_table(
+    lines: list[OcrLine],
+    page_h: float,
+    table_header_y: float | None,
+    expected_columns: dict[str, list[str]] | None = None,
+    table_bounds: dict[str, float] | None = None,
+    column_guides: list[float] | None = None,
+) -> dict[str, Any]:
+    original = _detect_table_once(
+        lines,
+        page_h,
+        table_header_y,
+        expected_columns=expected_columns,
+        table_bounds=table_bounds,
+        column_guides=column_guides,
+    )
+    page_w = max((line.x + line.w for line in lines), default=1000.0) if lines else 1000.0
+    if not _has_fragmented_item_name_header(lines, page_h, page_w):
+        return original
+
+    candidate = _detect_table_once(
+        lines,
+        page_h,
+        table_header_y,
+        expected_columns=expected_columns,
+        table_bounds=table_bounds,
+        column_guides=column_guides,
+        join_item_name_fragments=True,
+    )
+    selected = _fragment_header_candidate_is_safe(
+        original.get("tableRows") or original.get("items") or [],
+        candidate.get("tableRows") or candidate.get("items") or [],
+    )
+    if selected:
+        selected = not (
+            _fragment_header_has_ha_append(original, lines, expected_columns)
+            or _fragment_header_has_ha_append(candidate, lines, expected_columns)
+        )
+
+    chosen = candidate if selected else original
+    chosen.setdefault("tableDebug", {})["fragmentItemNameHeaderCandidate"] = {
+        "attempted": True,
+        "selected": selected,
+    }
+    return chosen
 
 
 # ── T-3: canonical tableRows helpers ─────────────────────────────────────────
