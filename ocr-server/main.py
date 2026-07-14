@@ -78,7 +78,11 @@ from extractors.invoice_statement_free import (
     refine_supplier_bizno,
     refine_buyer_bizno,
 )
-from extractors.master_match import fill_master_match, fill_party_match
+from extractors.master_match import (
+    fill_master_match,
+    fill_party_match,
+    strip_trailing_item_classification,
+)
 from utils.regex_patterns import (
     _PHONE_RE,
     _ADDR_START_RE, _NEXT_LABEL_RE, _FIELD_NOISE_RE,
@@ -3591,6 +3595,17 @@ async def ocr_extract(
                         extract_debug["rowSynth"] = _sy_dbg
             except Exception as _sy_e:
                 print(f"[row_synth] failed (response unaffected): {_sy_e}")
+            # A whitespace-delimited trailing prescription/OTC marker is
+            # classification metadata, not part of the product name.
+            try:
+                if isinstance(document_fields, dict) and document_fields.get("tableRows"):
+                    _class_rows, _class_dbg = strip_trailing_item_classification(
+                        document_fields["tableRows"])
+                    document_fields["tableRows"] = _class_rows
+                    if _class_dbg.get("stripped"):
+                        extract_debug["trailingItemClassificationStrip"] = _class_dbg
+            except Exception as _class_e:
+                print(f"[item_classification_strip] failed (response unaffected): {_class_e}")
             # Path-agnostic 공급자/공급받는자 사업자번호 재선택: OCR 넓힌추출 + 보수적
             # 재선택. ★마스터매칭 앞이어야 교정된 supplier bizno가 itembuycust 앵커로 쓰인다.
             try:

@@ -64,6 +64,9 @@ from extractors.invoice_statement_free import (  # noqa: E402
 from extractors.invoice_statement import extract_invoice_statement_fields  # noqa: E402
 from extractors.master_match import fill_master_match as _fill_master  # noqa: E402
 from extractors.master_match import fill_party_match as _fill_party  # noqa: E402
+from extractors.master_match import (  # noqa: E402
+    strip_trailing_item_classification as _strip_item_classification,
+)
 
 # ②G4 마스터 매칭 포함 여부. False(--no-master-match)로 돌리면 Rule 단계(매칭 전) 사이드카가
 # 나온다 — baseline_matrix가 Rule=replay_compare_rule / Master=replay_compare로 단계 분리.
@@ -165,6 +168,12 @@ def replay_dispatch(snap: dict) -> tuple[dict, str]:
     if isinstance(df, dict) and df.get("tableRows"):
         try:
             df["tableRows"], _ = _synth_rows(df["tableRows"], lines)
+        except Exception:
+            pass
+    # mirror main.py join-point standalone trailing 전문/일반 cleanup
+    if isinstance(df, dict) and df.get("tableRows"):
+        try:
+            df["tableRows"], _ = _strip_item_classification(df["tableRows"])
         except Exception:
             pass
     # mirror main.py join-point 사업자번호 재선택 (마스터매칭 앞 — itembuycust 앵커)

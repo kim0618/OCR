@@ -210,6 +210,12 @@ def parse_price(v: Any):
 # itembuycust rescue floor: 거래처 구매이력(작은 셋)이라 전역 floor(0.25)보다 낮게 안전.
 # 065 실측(빈칸-only): 0.15=master+63/spurious0, 0.10=+66(오채움↑). 0.15 채택.
 IBC_RESCUE_FLOOR = 0.15
+IBC_STRICT_RERANK_FLOOR = 0.80
+
+
+def _compact_alnum(value: object) -> str:
+    """Case-insensitive alphanumeric form used by conservative containment gates."""
+    return "".join(ch for ch in str(value or "").lower() if ch.isalnum())
 
 
 class MasterMatcher:
@@ -286,6 +292,66 @@ class MasterMatcher:
             return None
         return {"itemCode": self._cds[best_i], "itemNameMaster": self._nms[best_i],
                 "sim": round(best, 4)}
+
+    def itembuycust_strict_rerank(
+        self,
+        name: str,
+        bizno: str,
+        current: dict[str, Any] | None,
+        floor: float = IBC_STRICT_RERANK_FLOOR,
+    ) -> dict[str, Any] | None:
+        """Return an observable, high-confidence purchase-history replacement.
+
+        This is deliberately narrower than ``itembuycust_rescue``.  It may
+        replace an existing global match only when the current SKU is outside
+        the supplier's history, the best in-history top-30 candidate is at
+        least as similar as the current candidate, and its canonical name is
+        explicitly present in the OCR item name.  Otherwise the global match
+        is preserved.
+        """
+        if not isinstance(current, dict):
+            return None
+        b = re.sub(r"\D", "", str(bizno or ""))
+        idxs = self._ibc.get(b) if len(b) == 10 else None
+        if not idxs:
+            return None
+
+        candidates = self.top_candidates(clean_query_name(name), 30)
+        current_master_key = _compact_alnum(current.get("itemNameMaster"))
+        current_candidate = next(
+            (
+                (float(sim), i)
+                for sim, i in candidates
+                if _compact_alnum(self._nms[i]) == current_master_key
+            ),
+            None,
+        )
+        if current_candidate is None:
+            return None
+        current_sim, current_i = current_candidate
+        if current_i in idxs:
+            return None
+        proposed = next(((float(sim), i) for sim, i in candidates if i in idxs), None)
+        if proposed is None:
+            return None
+        proposed_sim, proposed_i = proposed
+        if proposed_sim < floor or proposed_sim < current_sim:
+            return None
+        if proposed_i == current_i:
+            return None
+
+        raw_key = _compact_alnum(name)
+        master_name = self._nms[proposed_i]
+        master_key = _compact_alnum(master_name)
+        if master_key == current_master_key:
+            return None
+        if not raw_key or not master_key or master_key not in raw_key:
+            return None
+        return {
+            "itemCode": self._cds[proposed_i],
+            "itemNameMaster": master_name,
+            "sim": round(proposed_sim, 4),
+        }
 
     def top_candidates(self, name: str, k: int = 30):
         """유사도 상위 k 후보 → [(sim, idx)] sim DESC. 랭킹(tiebreak) 실험/재정렬용."""
@@ -637,6 +703,38 @@ def _fill_blank_master_from_rawtext(
         dbg["rawTextMasterSamples"] = samples
 
 
+_TRAILING_ITEM_CLASS_RE = re.compile(
+    r"^(?P<base>\S(?:.*\S)?)\s+(?P<classification>전문|일반)\s*$"
+)
+
+
+def strip_trailing_item_classification(rows: list) -> tuple[list, dict[str, Any]]:
+    """Remove a standalone trailing prescription/OTC marker from item names.
+
+    Only a whitespace-delimited final token is removed.  Standalone markers
+    and parenthesized text such as ``Mago 250mg(일반)`` are intentionally left
+    unchanged.  No other cell or row structure is touched.
+    """
+    dbg: dict[str, Any] = {"stripped": 0, "samples": []}
+    if not isinstance(rows, list):
+        return rows, dbg
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        name = str(row.get("itemName") or "").strip()
+        match = _TRAILING_ITEM_CLASS_RE.fullmatch(name)
+        if not match:
+            continue
+        base = match.group("base").strip()
+        if len(_compact_alnum(base)) < 3:
+            continue
+        row["itemName"] = base
+        dbg["stripped"] += 1
+        if len(dbg["samples"]) < 8:
+            dbg["samples"].append({"before": name[:100], "after": base[:100]})
+    return rows, dbg
+
+
 def fill_master_match(rows: list, matcher: "MasterMatcher | None" = None,
                       supplier_bizno: str | None = None):
     """itemName 있는 행의 itemNameMaster/itemCode 빈칸을 매칭 결과로 채움.
@@ -647,7 +745,13 @@ def fill_master_match(rows: list, matcher: "MasterMatcher | None" = None,
     반환 (rows, debug) — 시블링 룰(fill_pharma_columns 등)과 동일 계약.
     """
     matcher = matcher or get_matcher()
-    dbg: dict[str, Any] = {"enabled": matcher is not None, "filled": 0, "belowFloor": 0, "ibcFilled": 0}
+    dbg: dict[str, Any] = {
+        "enabled": matcher is not None,
+        "filled": 0,
+        "belowFloor": 0,
+        "ibcFilled": 0,
+        "ibcStrictReranked": 0,
+    }
     if matcher is None or not rows:
         return rows, dbg
     bz = re.sub(r"\D", "", str(supplier_bizno or ""))
@@ -670,6 +774,11 @@ def fill_master_match(rows: list, matcher: "MasterMatcher | None" = None,
                 dbg["belowFloor"] += 1
                 continue
             dbg["ibcFilled"] += 1
+        if len(bz) == 10:
+            reranked = matcher.itembuycust_strict_rerank(name, bz, m)
+            if reranked is not None:
+                m = reranked
+                dbg["ibcStrictReranked"] += 1
         if not str(r.get("itemNameMaster") or "").strip():
             r["itemNameMaster"] = m["itemNameMaster"]
         if not str(r.get("itemCode") or "").strip():
