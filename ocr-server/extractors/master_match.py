@@ -347,6 +347,11 @@ class MasterMatcher:
             return None
         if not raw_key or not master_key or master_key not in raw_key:
             return None
+        # A bare printed name does not prove that a lifecycle-qualified master
+        # such as ``(...품절)`` should be replaced by its base-name SKU.  The
+        # supplier history can otherwise erase a correct status-bearing code.
+        if "품절" in str(current.get("itemNameMaster") or "") and raw_key == master_key:
+            return None
         return {
             "itemCode": self._cds[proposed_i],
             "itemNameMaster": master_name,

@@ -117,6 +117,28 @@ class StrictPurchaseHistoryRerankTests(unittest.TestCase):
                 matcher.itembuycust_strict_rerank("SameDrug", self.BIZNO, current)
             )
 
+    def test_preserves_stockout_qualified_master_without_raw_replacement_evidence(self):
+        matcher = MasterMatcher(
+            {
+                "stockout": {"nm": "StatusDrug(제약사품절)", "bp1": 100},
+                "history": {"nm": "StatusDrug", "bp1": 100},
+            },
+            {self.BIZNO: ["history"]},
+        )
+        stockout_i = matcher._cd2i["stockout"]
+        history_i = matcher._cd2i["history"]
+        current = {
+            "itemCode": "stockout",
+            "itemNameMaster": "StatusDrug(제약사품절)",
+            "sim": 1.0,
+        }
+        with patch.object(
+            matcher, "top_candidates", return_value=[(1.0, history_i), (1.0, stockout_i)]
+        ):
+            self.assertIsNone(
+                matcher.itembuycust_strict_rerank("StatusDrug", self.BIZNO, current)
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
