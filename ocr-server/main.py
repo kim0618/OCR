@@ -59,7 +59,11 @@ from extractors.representative import (
     _extract_company_rep_from_slash,
     _fill_lone_representative_from_lines,
 )
-from extractors.invoice_statement import extract_invoice_statement_fields
+from extractors.invoice_statement import (
+    extract_invoice_statement_fields,
+    recover_postjoin_blank_amounts,
+    recover_postjoin_same_row_amounts,
+)
 from field_confidence import build_field_confidence
 from review_flags import build_review_flags
 from extractors.invoice_statement_free import (
@@ -75,6 +79,11 @@ from extractors.invoice_statement_free import (
     recover_shifted_item_name,
     adopt_missing_item_names,
     synthesize_missing_rows,
+    recover_unitprice_amount_columns,
+    fill_arith_empty_amount,
+    fill_arith_empty_quantity,
+    fix_swapped_qty_unitprice,
+    reconstruct_numeric_columns,
     refine_supplier_bizno,
     refine_buyer_bizno,
 )
@@ -1137,11 +1146,12 @@ def get_ocr_engine():
     if _ocr_engine is None:
         import os
         from paddleocr import PaddleOCR
-        # rec = 파인튜닝 가중치 우선(run-finetune.sh 가 best 를 이 경로에 export),
-        # 없으면 공식 korean_PP-OCRv5_mobile_rec. 상대경로라 로컬/AWS 공용,
-        # 파인튜닝 루프는 export 갱신 + 서버 재기동만으로 반영(main.py 재수정 불필요).
+        # rec = '채택된' 파인튜닝 모델 우선. output/(스크래치)이 아니라 adopted/inference 를 본다:
+        # finetune_adopt.py 로 게이트 통과분만 adopted/ 로 승격 → 서비스엔 채택본만 반영(스크래치
+        # 학습이 자동으로 서비스에 새지 않음). 없으면 공식 korean_PP-OCRv5_mobile_rec.
+        # 상대경로라 로컬/AWS 공용, 채택 + 서버 재기동만으로 반영(main.py 재수정 불필요).
         _ft_rec_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                   "eval", "finetune", "output", "best_accuracy", "inference")
+                                   "eval", "finetune", "adopted", "inference")
         _rec_kw = ({"text_recognition_model_dir": _ft_rec_dir,
                     "text_recognition_model_name": "korean_PP-OCRv5_mobile_rec"}
                    if os.path.isfile(os.path.join(_ft_rec_dir, "inference.yml"))
@@ -3606,6 +3616,77 @@ async def ocr_extract(
                         extract_debug["trailingItemClassificationStrip"] = _class_dbg
             except Exception as _class_e:
                 print(f"[item_classification_strip] failed (response unaffected): {_class_e}")
+            # Run only after row append/split/synthesis is complete.  This helper
+            # first repairs same-row column misplacement, then uses the stricter
+            # OCR-column recovery for any remaining blank amount cells.
+            try:
+                if isinstance(document_fields, dict) and document_fields.get("tableRows"):
+                    _amount_rows, _amount_move_dbg = recover_postjoin_same_row_amounts(
+                        document_fields["tableRows"])
+                    document_fields["tableRows"] = _amount_rows
+                    if _amount_move_dbg.get("applied"):
+                        extract_debug["postjoinSameRowAmountRecovery"] = _amount_move_dbg
+                    _amount_rows, _amount_col_dbg = recover_postjoin_blank_amounts(
+                        document_fields["tableRows"], ocr_lines_raw)
+                    document_fields["tableRows"] = _amount_rows
+                    if _amount_col_dbg.get("applied"):
+                        extract_debug["postjoinAmountColumnRecovery"] = _amount_col_dbg
+            except Exception as _amount_col_e:
+                print(f"[postjoin_amount_column] failed (response unaffected): {_amount_col_e}")
+            # 금액P1 단가·금액 열 복구 (free+fallback 합류점): 단가값이 amount 칸에
+            # 착지한 행 재배정 + '금액|단가' 표의 빈 unitPrice 산술 fill. 행 정체성은
+            # _rawText 토큰 중첩으로 보장(같은품목 인접행 락온 방지). 빈칸/오배치만.
+            try:
+                if isinstance(document_fields, dict) and document_fields.get("tableRows"):
+                    _upa_rows, _upa_dbg = recover_unitprice_amount_columns(
+                        document_fields["tableRows"], ocr_lines_raw)
+                    document_fields["tableRows"] = _upa_rows
+                    if _upa_dbg.get("moved") or _upa_dbg.get("unitFilled"):
+                        extract_debug["unitPriceAmountRecovery"] = _upa_dbg
+            except Exception as _upa_e:
+                print(f"[unitprice_amount_recovery] failed (response unaffected): {_upa_e}")
+            # 금액P2 산술 금액 채움: 빈 amount = 수량×단가 (그 값이 행 _rawText 에
+            # money 토큰으로 실재할 때만). P1 뒤에 둬야 P1이 채운 단가가 산술에 쓰임.
+            try:
+                if isinstance(document_fields, dict) and document_fields.get("tableRows"):
+                    _p2_rows, _p2_dbg = fill_arith_empty_amount(document_fields["tableRows"])
+                    document_fields["tableRows"] = _p2_rows
+                    if _p2_dbg.get("filled"):
+                        extract_debug["arithEmptyAmountFill"] = _p2_dbg
+            except Exception as _p2_e:
+                print(f"[arith_empty_amount] failed (response unaffected): {_p2_e}")
+            # 금액P3 geometry 숫자열 재구성: 붕괴 문서에서 OCR 토큰 기하(행=money
+            # y-클러스터, 열=숫자 x-클러스터)+열정체(헤더/산술투표)로 수량·단가·금액
+            # 복구. 빈칸 fill + 산술성립 행 append 만(덮어쓰기 없음). P1·P2 뒤.
+            try:
+                if isinstance(document_fields, dict) and document_fields.get("tableRows"):
+                    _geo_rows, _geo_dbg = reconstruct_numeric_columns(
+                        document_fields["tableRows"], ocr_lines_raw)
+                    document_fields["tableRows"] = _geo_rows
+                    if _geo_dbg.get("filled") or _geo_dbg.get("appended"):
+                        extract_debug["geoNumericRecon"] = _geo_dbg
+            except Exception as _geo_e:
+                print(f"[geo_numeric_recon] failed (response unaffected): {_geo_e}")
+            # 수량L2' 스왑: 수량칸↔단가칸 뒤바뀐 행 맞바꿈 (모양+산술 게이트).
+            # L1보다 먼저 — 스왑으로 자리 잡힌 값이 L1 나눗셈 입력이 됨.
+            try:
+                if isinstance(document_fields, dict) and document_fields.get("tableRows"):
+                    _sw_rows, _sw_dbg = fix_swapped_qty_unitprice(document_fields["tableRows"])
+                    document_fields["tableRows"] = _sw_rows
+                    if _sw_dbg.get("swapped"):
+                        extract_debug["swappedQtyUnitPrice"] = _sw_dbg
+            except Exception as _sw_e:
+                print(f"[swap_qty_unitprice] failed (response unaffected): {_sw_e}")
+            # 수량L1 산술 수량 채움: 빈 수량 = 금액÷단가(정수만). geo 뒤(geo가 채운
+            # 단가·금액을 입력으로 씀). 빈칸만, 덮기 없음.
+            try:
+                if isinstance(document_fields, dict) and document_fields.get("tableRows"):
+                    _ql_rows, _ql_dbg = fill_arith_empty_quantity(document_fields["tableRows"])
+                    document_fields["tableRows"] = _ql_rows
+                    if _ql_dbg.get("filled"):
+                        extract_debug["arithEmptyQuantityFill"] = _ql_dbg
+            except Exception as _ql_e:
+                print(f"[arith_empty_quantity] failed (response unaffected): {_ql_e}")
             # Path-agnostic 공급자/공급받는자 사업자번호 재선택: OCR 넓힌추출 + 보수적
             # 재선택. ★마스터매칭 앞이어야 교정된 supplier bizno가 itembuycust 앵커로 쓰인다.
             try:

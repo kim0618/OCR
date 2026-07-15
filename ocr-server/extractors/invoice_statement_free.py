@@ -5034,6 +5034,735 @@ def salvage_blob_amount(table_rows: Any) -> tuple[Any, dict[str, Any]]:
     return table_rows, debug
 
 
+# ─── 단가·금액 열 복구(금액P1): 재배정 + 산술 단가fill ─────────────────────────
+# 근거(066 thin 5,964 전수실측): amount 결함행 15,286 중 2,316행 = 같은 행의 단가
+# 값이 amount 칸에 착지(오배치, 그 81%는 unitPrice 칸이 빔). 반대로 '금액|단가'
+# 순서 표에서는 amount 는 정위치인데 unitPrice 만 빈다. 두 모양을 한 룰로 복구.
+#
+# 행 정체성이 핵심 가드: 페이지 전역 y-밴드 검색은 인접 '같은 품목' 행의 같은 값에
+# 락온한다(066 전수 시뮬: 회귀 18 전원이 이 부류 — 예: 같은 약이 수량 1/5로 두 행).
+# → 행 자신의 _rawText 토큰 문자열과 밴드 토큰의 중첩 스코어가 '유일 최대'인 밴드만
+# 그 행의 밴드로 인정(동률·저스코어 skip). 인접 같은품목 행은 숫자 토큰이 달라
+# (5|25,276|126,380 vs 1|25.276|25,276) 문자열 중첩으로 정확히 갈린다.
+#
+# 산술 게이트는 정확일치(±1)만 — 0.5% 비례 허용오차는 시뮬에서 오발화(36446×2=
+# 72892 를 72891 에 매칭). 066 800문서 시뮬: A재배정 222·C단가fill 132, 기존
+# amount match 훼손 0, spurious 0, unitPrice 정밀도 93.6%/89.8%.
+_UPA_SQ_RE = re.compile(r"\s+")
+
+
+def _upa_parse_money(raw: str) -> float | None:
+    """money 토큰 파서 — 천단위 콤마/점('174.600'→174600) + 소수 단가('34,920.00'
+    →34920.0) 인식. 비 money 문자열은 None."""
+    t = (raw or "").strip().strip(".")
+    if not t or not re.fullmatch(r"[\d,\.]+", t):
+        return None
+    if re.fullmatch(r"\d{1,3}(?:\.\d{3})+", t):        # 점-천단위 (OCR 콤마 오독)
+        return float(t.replace(".", ""))
+    if re.fullmatch(r"\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?", t):  # 콤마 천단위(+소수)
+        return float(t.replace(",", ""))
+    if re.fullmatch(r"\d+(?:\.\d{1,2})?", t):           # 순수 정수/소수
+        return float(t)
+    return None
+
+
+def _upa_money_like(raw: str, val: float | None) -> bool:
+    """단가/금액으로 쓸 만한 모양인가 — 구분자 보유 또는 1000 이상(코드·순번 배제)."""
+    return ("," in raw or "." in raw or (val is not None and val >= 1000))
+
+
+def _upa_fmt(val: float) -> str:
+    """정규화 안전 포맷: 정수는 '8939', 소수 단가는 '8939.5' (float 꼬리 '.0' 금지 —
+    norm_amount 가 digits-only 라 '34920.0'→'349200' 오염)."""
+    return str(int(val)) if float(val).is_integer() else str(val)
+
+
+def recover_unitprice_amount_columns(
+    table_rows: Any, ocr_lines_raw: Any,
+) -> tuple[Any, dict[str, Any]]:
+    """unitPrice 빈 행의 단가·금액 열 복구 (free+fallback 합류점, 경로무관).
+
+    C 단가fill: 행 밴드 내 u(≠v)가 q×u==v(±1) → unitPrice:=u (amount 불변·안전)
+    A 재배정:  행 밴드 내 앵커 오른쪽 정수 a가 q×v==a(±1) → unitPrice:=v, amount:=a
+    A·C 동시 성립 또는 후보 값 복수 → 모호 → skip. q>1 만(수량 1은 판별 불가·무익).
+    빈 quantity 는 증명에 쓰인 q 로 보조 채움(빈칸만)."""
+    dbg: dict[str, Any] = {"moved": 0, "unitFilled": 0, "qtyFilled": 0}
+    if not isinstance(table_rows, list) or not table_rows:
+        return table_rows, dbg
+    toks: list[tuple[float, float, float, str, float | None]] = []
+    for ln in (ocr_lines_raw or []):
+        try:
+            pts, txt = ln[0], str(ln[1] or "").strip()
+            xs = [float(p[0]) for p in pts]
+            ys = [float(p[1]) for p in pts]
+        except Exception:
+            continue
+        if not txt or not xs or not ys:
+            continue
+        toks.append((sum(xs) / len(xs), sum(ys) / len(ys),
+                     max(max(ys) - min(ys), 1.0), txt,
+                     _upa_parse_money(_UPA_SQ_RE.sub("", txt))))
+    if not toks:
+        return table_rows, dbg
+    # 같은 amount 값(파싱 기준 — '44,280.00'≡'44,280')이 여러 행에 있으면 어느 행의
+    # 페이지 앵커인지 판별 불가(파편/중복 행이 진짜 행의 앵커를 훔치는 사고 — 066
+    # 전수 시뮬 회귀 전부 이 부류) → 제외. HA-append 중복행이 흔해 파싱값으로 비교.
+    amt_counts: dict[float, int] = {}
+    for row in table_rows:
+        if isinstance(row, dict):
+            cv = _upa_parse_money(_UPA_SQ_RE.sub("", str(row.get("amount") or "")))
+            if cv is not None:
+                amt_counts[cv] = amt_counts.get(cv, 0) + 1
+    for row in table_rows:
+        if not isinstance(row, dict):
+            continue
+        if str(row.get("unitPrice") or "").strip():
+            continue
+        am = str(row.get("amount") or "").strip()
+        if not am:
+            continue
+        v_val = _upa_parse_money(_UPA_SQ_RE.sub("", am))
+        if v_val is None or v_val < 10:
+            continue
+        if amt_counts.get(v_val, 0) > 1:
+            continue
+        raw = str(row.get("_rawText") or "")
+        if not raw or _is_summary_or_header_line(_normalize_text(raw)):
+            continue
+        raw_toks = {_UPA_SQ_RE.sub("", t) for t in raw.split()
+                    if len(_UPA_SQ_RE.sub("", t)) >= 2}
+        if len(raw_toks) < 3:
+            continue
+        anchors = [t for t in toks if t[4] == v_val]
+        if not anchors:
+            continue
+        # 행 정체성: _rawText 토큰 문자열 중첩이 유일 최대인 앵커 밴드만
+        best: tuple | None = None
+        best_score, tie = -1, False
+        for a in anchors:
+            band = max(a[2] * 0.8, 10.0)
+            bt = [t for t in toks if abs(t[1] - a[1]) <= band]
+            score = sum(1 for t in bt if _UPA_SQ_RE.sub("", t[3]) in raw_toks)
+            if score > best_score:
+                best, best_score, tie = (a, bt), score, False
+            elif score == best_score:
+                tie = True
+        if best is None or tie or best_score < 3:
+            continue
+        anchor, bt = best
+        # 수량 후보: 행 ext 수량 우선, 없으면 밴드 내 정수 토큰
+        qs: list[float] = []
+        q_from_row = False
+        qd = re.sub(r"\D", "", str(row.get("quantity") or ""))
+        if qd and 1 <= len(qd) <= 5:
+            try:
+                qv = float(qd)
+                if qv > 1:
+                    qs, q_from_row = [qv], True
+            except ValueError:
+                pass
+        if not qs:
+            qs = [t[4] for t in bt if t[4] is not None and t[4].is_integer()
+                  and 1 < t[4] <= 9999 and t[4] != v_val][:6]
+        if not qs:
+            continue
+        c_hits: list[tuple[tuple, float]] = []
+        a_hits: list[tuple[tuple, float]] = []
+        for t in bt:
+            tv = t[4]
+            if tv is None or tv == v_val or t is anchor:
+                continue
+            if not _upa_money_like(t[3], tv):
+                continue
+            cq = next((q for q in qs if abs(q * tv - v_val) <= 1.0), None)
+            if cq is not None:
+                c_hits.append((t, cq))
+            if t[0] > anchor[0] and float(tv).is_integer():
+                aq = next((q for q in qs if abs(q * v_val - tv) <= 1.0), None)
+                if aq is not None:
+                    a_hits.append((t, aq))
+        c_vals = {t[4] for t, _ in c_hits}
+        a_vals = {t[4] for t, _ in a_hits}
+        if (c_vals and a_vals) or len(c_vals) > 1 or len(a_vals) > 1:
+            continue  # 모호 — 두 해석/복수 후보면 손대지 않음
+        if len(c_vals) == 1:
+            t, q = c_hits[0]
+            row["unitPrice"] = _upa_fmt(t[4])
+            dbg["unitFilled"] += 1
+        elif len(a_vals) == 1:
+            t, q = a_hits[0]
+            # A재배정은 amount 를 바꾸므로 증거 강도 가드: 행 자신의 수량으로 증명
+            # 됐거나, 아니면(밴드에서 빌린 q) 결과가 다른 행 amount 와 중복을 만들지
+            # 않아야 한다. 468482 실측: qty=1 행(단가==금액, 정답)이 빈 수량 때문에
+            # 하이재킹된 밴드의 q=4·147,552 를 물어 진짜 행과 중복 금액 생성 → 회귀.
+            if not q_from_row and amt_counts.get(float(t[4]), 0) >= 1:
+                continue
+            row["unitPrice"] = _upa_fmt(v_val)
+            row["amount"] = _upa_fmt(t[4])
+            dbg["moved"] += 1
+        else:
+            continue
+        if not q_from_row and not str(row.get("quantity") or "").strip():
+            row["quantity"] = _upa_fmt(q)
+            dbg["qtyFilled"] += 1
+    return table_rows, dbg
+
+
+# ─── geometry 숫자열 재구성(금액P3): 붕괴 문서의 수량·단가·금액 복구 ─────────────
+# 근거(066 thin 전수실측): 숫자 3열 동반붕괴 11,302행. 합류점 후처리 각도(산술트리플
+# 49%/열좌표 자기학습 19.6%/HA가드완화 79%쓰레기)는 전부 정밀도 미달로 기각 —
+# 붕괴행은 '조립 실패의 결과물'이라 결과물 기반 역추정이 불가능하기 때문.
+# 해법 = 조립 위치의 룰: OCR 토큰 기하만으로 표를 재구성(행=money y-클러스터,
+# 열=숫자 x-클러스터)하고 열 정체를 산술투표(V1)+헤더토큰(V2)으로 식별.
+# 600문서 드라이런: 재구성 성공 93%, 열배정 238문서, 배정문서 내 회복 76.4%·
+# 정밀도 91.8%. V3(순서/타입 휴리스틱)는 V1일치 40%로 기각.
+# 병합은 게이트 안전형: 빈 셀만 fill(정체앵커 필수) + 미바인딩 행 append(산술성립
+# 필수). 덮어쓰기 없음 → 기존 match 훼손 구조적으로 불가.
+_GEO_HDR_LABEL = {"수량": "quantity", "단가": "unitPrice", "금액": "amount",
+                  "판매단가": "unitPrice", "판매금액": "amount", "공급금액": "amount"}
+_ADOPT_NN_RE = re.compile(r"[^0-9A-Za-z가-힣]+")   # 이름 비교용 정규화(기호/공백 제거)
+
+
+def _geo_reconstruct(toks: list[tuple]) -> tuple[list[dict], list[float], float | None]:
+    """geometry-only 표 재구성. toks=(cx,cy,h,text,money|None).
+    반환 (rows, col_xs, first_row_y). row={"_y":y, col_x: money값}."""
+    nums = [t for t in toks if t[4] is not None and t[4] > 0]
+    moneys = [t for t in nums if ("," in t[3] or "." in t[3] or t[4] >= 1000)]
+    if len(moneys) < 2:
+        return [], [], None
+    rows_y: list[float] = []
+    for y in sorted(t[1] for t in moneys):
+        if not rows_y or y - rows_y[-1] > 8:
+            rows_y.append(y)
+    clusters: list[list[float]] = []
+    for x in sorted(t[0] for t in nums):
+        if not clusters or x - clusters[-1][-1] > 30:
+            clusters.append([x])
+        else:
+            clusters[-1].append(x)
+    cols = [sum(c) / len(c) for c in clusters if len(c) >= max(2, 0.3 * len(rows_y))]
+    if len(cols) < 2:
+        return [], [], None
+    rows: list[dict] = []
+    for ry in rows_y:
+        band = [t for t in nums if abs(t[1] - ry) <= max(10.0, t[2] * 0.8)]
+        row: dict = {"_y": ry}
+        for cx in cols:
+            cand = [t for t in band if abs(t[0] - cx) <= 30]
+            if cand:
+                row[cx] = min(cand, key=lambda t: abs(t[0] - cx))[4]
+        if len(row) >= 3:   # _y 포함 → 값 2개 이상
+            rows.append(row)
+    return rows, cols, (rows_y[0] if rows_y else None)
+
+
+def _geo_assign_columns(toks, recon_rows, cols, first_row_y):
+    """열 정체 식별: V2 헤더토큰(표 위쪽 단독 라벨, 3열 완전 발견 시) 우선,
+    아니면 V1 산술투표(q*u==a ±1 성립행 최다, >=2행). 실패 시 None.
+    드라이런: V1·V2 동시성공 11문서 전원 일치(충돌 0)."""
+    from itertools import permutations
+    if first_row_y is not None:
+        found: dict = {}
+        for t in toks:
+            lbl = _GEO_HDR_LABEL.get(_UPA_SQ_RE.sub("", t[3]))
+            if lbl and t[1] < first_row_y:
+                near = min(cols, key=lambda c: abs(c - t[0]))
+                if abs(near - t[0]) <= 40 and lbl not in found:
+                    found[lbl] = near
+        q, u, a = found.get("quantity"), found.get("unitPrice"), found.get("amount")
+        if q and u and a and len({q, u, a}) == 3:
+            return (q, u, a), "header"
+    best, bestv = None, 0
+    for q, u, a in permutations(cols, 3):
+        v = 0
+        for r in recon_rows:
+            qv, uv, av = r.get(q), r.get(u), r.get(a)
+            if qv and uv and av and float(qv).is_integer() and 1 <= qv <= 9999 \
+                    and uv >= 10 and av >= 10 and abs(qv * uv - av) <= 1:
+                v += 1
+        if v > bestv:
+            best, bestv = (q, u, a), v
+    return (best, "arith") if best is not None and bestv >= 2 else (None, "none")
+
+
+# ── 금액P3-T: y-밴드 산술 트리플 스캔 (열배정-무관) ─────────────────────────────
+# 근거(066 실측): 헤드룸에서 GT 수량·단가·금액이 같은 y-밴드에 공존+경쟁트리플 없음
+# = 1,886셀(배정성공 1,444 + 배정실패 442). q×u=a 가 성립하면 (수량,단가,금액)이
+# 수학적으로 자동 결정되므로 열배정·x클러스터 불요 → 기울어진 문서에도 면역.
+# 병합토큰(여러 숫자가 한 토큰) 대응: 토큰 내부 money 패턴 findall.
+# 유일성 가드: 밴드에 서로 다른 트리플 2개면 모호 → skip (실측 모호율 9~11%).
+_TRIPLE_MONEY_RE = re.compile(   # 글자에 붙은 숫자(625mg, EA30 등)는 값 아님 — 경계 요구
+    r"(?<![A-Za-z가-힣\d])(\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)(?![A-Za-z가-힣\d])")
+_TRIPLE_SUMMARY_RE = re.compile(r"합\s*계|소\s*계|총\s*계|총\s*액|매출\s*계|월\s*계|누\s*계")
+_TRIPLE_NN_RE = re.compile(r"[^0-9A-Za-z가-힣]+")
+
+
+def _geo_triple_scan(table_rows: Any, toks: list[tuple], dbg: dict) -> tuple[Any, dict]:
+    """밴드별 유일 산술 트리플을 찾아 기존 행에 병합(값앵커=덮기·이름앵커=빈칸fill)
+    하고, 못 이으면 append. reconstruct_numeric_columns 의 모든 경로 끝에서 호출."""
+    dbg.setdefault("tripleFilled", 0)
+    dbg.setdefault("tripleOverwritten", 0)
+    dbg.setdefault("tripleAppended", 0)
+    if not isinstance(table_rows, list) or not table_rows or not toks:
+        return table_rows, dbg
+    # 밴드 앵커: 토큰 '내부' money (병합토큰 '20 3,952 79,040' 도 앵커가 되도록)
+    anchor_ys: list[float] = []
+    for t in toks:
+        for m in _TRIPLE_MONEY_RE.findall(t[3]):
+            v = _upa_parse_money(m)
+            if v is not None and (("," in m) or v >= 1000):
+                anchor_ys.append(t[1])
+                break
+    if not anchor_ys:
+        return table_rows, dbg
+    band_ys: list[float] = []
+    for y in sorted(anchor_ys):
+        if not band_ys or y - band_ys[-1] > 8:
+            band_ys.append(y)
+    # 밴드별 유일 트리플 추출
+    triples: list[tuple[float, float, float, float]] = []   # (y, q, u, a)
+    for by in band_ys:
+        band = [t for t in toks if abs(t[1] - by) <= max(12.0, t[2] * 0.9)]
+        if any(_TRIPLE_SUMMARY_RE.search(t[3]) for t in band):
+            continue
+        vals: set[float] = set()
+        for t in band:
+            for m in _TRIPLE_MONEY_RE.findall(t[3]):
+                v = _upa_parse_money(m)
+                if v is not None and v > 0:
+                    vals.add(v)
+        if len(vals) < 3:
+            continue
+        sv = sorted(vals)
+        # 거울쌍 (q,u,a)/(u,q,a) 는 같은 물리 트리플 → (a, {q,u}) 로 정규화해 유일성 판정
+        found: set[tuple[float, frozenset]] = set()
+        for q in sv:
+            if not (float(q).is_integer() and 2 <= q <= 9999):
+                continue  # q=1 은 (1,v,v) 퇴화로 모호 폭발 → 제외
+            for u in sv:
+                if u < 10 or u == q:
+                    continue
+                for a in sv:
+                    if a < 100 or a == u or a == q:
+                        continue
+                    if abs(q * u - a) <= 1:
+                        found.add((a, frozenset((q, u))))
+        if len(found) != 1:
+            continue  # 0=불가, 2+=모호
+        a, qu = next(iter(found))
+        q, u = sorted(qu)   # 관례: 작은 쪽=수량 (제약시장 단가≫수량)
+        triples.append((by, q, u, a))
+    if not triples:
+        return table_rows, dbg
+
+    def pnum(row, col):
+        return _upa_parse_money(_UPA_SQ_RE.sub("", str(row.get(col) or "")))
+
+    def nn(s):
+        return _TRIPLE_NN_RE.sub("", str(s or "")).lower()
+
+    hangul_lines = [(t[1], t[3]) for t in toks
+                    if _ADOPT_HANGUL_RE.search(t[3]) and _adopt_name_line_ok(t[3])]
+
+    def band_name(by):
+        near = min(hangul_lines, key=lambda z: abs(z[0] - by), default=None)
+        return near[1].strip() if near is not None and abs(near[0] - by) <= 12 else ""
+
+    exist_amts = {v for row in table_rows if isinstance(row, dict)
+                  if (v := pnum(row, "amount")) is not None}
+    used_rows: set[int] = set()
+    appends: list[dict] = []
+    next_idx = len(table_rows) + 1
+    for by, q, u, a in triples:
+        if a in exist_amts:
+            continue  # 이미 어떤 행이 이 금액 보유(정답행 or 중복) → 손대지 않음
+        target = None; strength = None
+        # 1) 값앵커: 수량·단가 둘 다 일치(강) 또는 단가 일치(중)
+        for row in table_rows:
+            if not isinstance(row, dict) or id(row) in used_rows:
+                continue
+            rq, ru = pnum(row, "quantity"), pnum(row, "unitPrice")
+            if rq == q and ru == u:
+                target, strength = row, "strong"
+                break
+        if target is None:
+            cand = [row for row in table_rows if isinstance(row, dict)
+                    and id(row) not in used_rows and pnum(row, "unitPrice") == u]
+            if len(cand) == 1:
+                target, strength = cand[0], "strong"
+        # 2) 이름앵커(약): 밴드 품명 ↔ 행 품명
+        if target is None:
+            bn = nn(band_name(by))
+            if len(bn) >= 3:
+                for row in table_rows:
+                    if not isinstance(row, dict) or id(row) in used_rows:
+                        continue
+                    rn = nn(row.get("itemName"))
+                    if len(rn) >= 3 and (bn[:6] in rn or rn[:6] in bn):
+                        target, strength = row, "weak"
+                        break
+        if target is not None:
+            used_rows.add(id(target))
+            for col, v in (("quantity", q), ("unitPrice", u), ("amount", a)):
+                cur = str(target.get(col) or "").strip()
+                if not cur:
+                    target[col] = _upa_fmt(v)
+                    dbg["tripleFilled"] += 1
+                    if col == "amount":
+                        exist_amts.add(a)
+                    continue
+                if strength != "strong":
+                    continue
+                cur_val = _upa_parse_money(_UPA_SQ_RE.sub("", cur))
+                if cur_val is None or cur_val == v:
+                    continue
+                if col == "amount":
+                    # F4b 금액가드 동일: 단가침범 or 곱의<0.45배(쓰레기)만 덮음
+                    if not (cur_val == u or (a and cur_val / a < 0.45)):
+                        continue
+                    exist_amts.add(a)
+                target[col] = _upa_fmt(v)
+                dbg["tripleOverwritten"] += 1
+            continue
+        # 3) append: 밴드 품명이 기존 행과 겹치면 금지(정렬스틸), 금액중복은 위에서 차단
+        name = band_name(by)
+        if name and any(
+                (rn := nn(row.get("itemName"))) and len(rn) >= 3
+                and (nn(name)[:6] in rn or rn[:6] in nn(name))
+                for row in table_rows if isinstance(row, dict)):
+            continue
+        appends.append({
+            "rowIndex": str(next_idx),
+            "itemCode": "", "productCode": "", "itemName": name, "spec": "",
+            "lotNo": "", "serialNo": "", "manufacturingNo": "", "expiryDate": "",
+            "quantity": _upa_fmt(q), "unit": "", "unitPrice": _upa_fmt(u),
+            "supplyAmount": "", "taxAmount": "", "amount": _upa_fmt(a),
+            "totalAmount": "", "manufacturer": "", "insuranceCode": "", "remark": "",
+            "_rawText": "", "_confidence": "0.5",
+            "_source": "invoice_statement_free_geo_triple",
+        })
+        exist_amts.add(a)
+        next_idx += 1
+        dbg["tripleAppended"] += 1
+    table_rows.extend(appends)
+    return table_rows, dbg
+
+
+def reconstruct_numeric_columns(
+    table_rows: Any, ocr_lines_raw: Any,
+) -> tuple[Any, dict[str, Any]]:
+    """붕괴 문서의 수량·단가·금액 geometry 복구 (free+fallback 합류점).
+
+    M1 fill: 기존 행 ↔ 재구성 행을 정체앵커로 바인딩 — (i) 기존 행의 비지 않은
+       숫자셀 값이 재구성 행 같은 열 값과 정확일치 >=1개, 또는 (ii) _rawText 토큰의
+       y-중심이 재구성 행 y와 일치. 바인딩된 행의 '빈' 숫자셀만 채움.
+    M2 append: 어느 기존 행에도 안 바인딩된 재구성 행 중 산술성립(q*u==a ±1)이고
+       금액이 comma-money 인 것만 새 행으로 추가(+같은 y-밴드 미소비 한글 품명 입양).
+    덮어쓰기 없음. 요약행(합계 등) y 이후 재구성 행은 append 금지."""
+    dbg: dict[str, Any] = {"filled": 0, "appended": 0, "assign": "none"}
+    if not isinstance(table_rows, list) or not table_rows:
+        return table_rows, dbg
+    toks: list[tuple] = []
+    for ln in (ocr_lines_raw or []):
+        try:
+            pts, txt = ln[0], str(ln[1] or "").strip()
+            xs = [float(p[0]) for p in pts]
+            ys = [float(p[1]) for p in pts]
+        except Exception:
+            continue
+        if not txt or not xs or not ys:
+            continue
+        toks.append((sum(xs) / len(xs), sum(ys) / len(ys),
+                     max(max(ys) - min(ys), 1.0), txt,
+                     _upa_parse_money(_UPA_SQ_RE.sub("", txt))))
+    if not toks:
+        return table_rows, dbg
+    recon, cols, fry = _geo_reconstruct(toks)
+    if not recon:
+        return _geo_triple_scan(table_rows, toks, dbg)
+    assign, how = _geo_assign_columns(toks, recon, cols, fry)
+    dbg["assign"] = how
+    if not assign:
+        return _geo_triple_scan(table_rows, toks, dbg)
+    q_c, u_c, a_c = assign
+    COLMAP = (("quantity", q_c), ("unitPrice", u_c), ("amount", a_c))
+
+    # ── 기존 행 바인딩: 값일치 앵커 → rawText-y 앵커
+    def row_y_from_raw(row) -> float | None:
+        raw_toks = {_UPA_SQ_RE.sub("", t) for t in str(row.get("_rawText") or "").split()
+                    if len(_UPA_SQ_RE.sub("", t)) >= 4}
+        if not raw_toks:
+            return None
+        ys = [t[1] for t in toks if _UPA_SQ_RE.sub("", t[3]) in raw_toks]
+        if len(ys) < 3:   # 토큰 2개는 오바인딩 잦음(검증 실측) → 3개 이상 요구
+            return None
+        ys.sort()
+        return ys[len(ys) // 2]
+
+    # 재구성행 y 근처의 품명 라인(이름 바인딩·append 입양 공용)
+    hangul_lines = [(t[1], t[3]) for t in toks
+                    if _ADOPT_HANGUL_RE.search(t[3]) and _adopt_name_line_ok(t[3])]
+
+    def geo_name(rr) -> str:
+        near = min(hangul_lines, key=lambda z: abs(z[0] - rr["_y"]), default=None)
+        return near[1].strip() if near is not None and abs(near[0] - rr["_y"]) <= 12 else ""
+
+    def name_sim_ok(a: str, b: str) -> bool:
+        na, nb = _ADOPT_NN_RE.sub("", a).lower(), _ADOPT_NN_RE.sub("", b).lower()
+        if len(na) < 3 or len(nb) < 3:
+            return False
+        return na[:6] in nb or nb[:6] in na
+
+    # 값일치 앵커의 유일성 전제: 같은 값이 재구성표의 여러 행에 있으면(같은 품목
+    # 반복행) 어느 행인지 판별 불가 → 그 값은 앵커로 못 씀. (fill-only 검증에서
+    # 회귀 621의 주범 = 중복값 오바인딩)
+    from collections import Counter as _Ctr
+    val_freq: dict = _Ctr()
+    for rr in recon:
+        for _col, c in COLMAP:
+            v = rr.get(c)
+            if v is not None:
+                val_freq[v] += 1
+
+    def geo_arith_ok(rr) -> bool:
+        qv, uv, av = rr.get(q_c), rr.get(u_c), rr.get(a_c)
+        return bool(qv and uv and av and abs(qv * uv - av) <= 1)
+
+    used_recon: set[int] = set()
+    bound: list[tuple[dict, int]] = []
+    # 1패스: 값일치 앵커 (유일값만 — 가장 강한 정체 증거)
+    for row in table_rows:
+        if not isinstance(row, dict):
+            continue
+        vals = {col: _upa_parse_money(_UPA_SQ_RE.sub("", str(row.get(col) or "")))
+                for col, _c in COLMAP}
+        for i, rr in enumerate(recon):
+            if i in used_recon:
+                continue
+            agree = sum(1 for col, c in COLMAP
+                        if vals[col] is not None and rr.get(c) is not None
+                        and vals[col] == rr[c] and val_freq.get(rr[c], 0) == 1)
+            if agree >= 1:
+                used_recon.add(i)
+                bound.append((row, i, "strong"))
+                break
+    bound_rows = {id(r) for r, _, _ in bound}
+    # 2패스: 품명 바인딩 — geo행 y 근처 품명라인 ↔ 기존 행 itemName. append 가
+    # 정렬을 뺏는 사고(전수검증 회귀 2,023 주범)를 '그 행에 병합'으로 바꾼다.
+    for row in table_rows:
+        if not isinstance(row, dict) or id(row) in bound_rows:
+            continue
+        rn = str(row.get("itemName") or "").strip()
+        if len(rn) < 3:
+            continue
+        for i, rr in enumerate(recon):
+            if i in used_recon:
+                continue
+            gn = geo_name(rr)
+            if gn and name_sim_ok(rn, gn):
+                used_recon.add(i)
+                bound.append((row, i, "weak"))
+                bound_rows.add(id(row))
+                break
+    # 3패스: rawText-y 바인딩
+    for row in table_rows:
+        if not isinstance(row, dict) or id(row) in bound_rows:
+            continue
+        ry = row_y_from_raw(row)
+        if ry is None:
+            continue
+        near = min(((i, rr) for i, rr in enumerate(recon) if i not in used_recon),
+                   key=lambda z: abs(z[1]["_y"] - ry), default=None)
+        if near is not None and abs(near[1]["_y"] - ry) <= 12:
+            used_recon.add(near[0])
+            bound.append((row, near[0], "weak"))
+            bound_rows.add(id(row))
+    # M1 fill/overwrite. geo행 산술성립 필수(내적 자기검증). 강한 바인딩(값일치 유일
+    # 앵커)에서는 오값도 산술성립 geo값으로 덮음(F4b: 헤드룸 6,734 중 geo가 이미
+    # 정답을 amount열에 잡은 2,603셀 = 단가침범·오독을 산술+geo 이중확인으로 교정).
+    # 약한 바인딩(품명/rawText)은 빈칸만 — 오바인딩 시 오값 덮기 위험 차단.
+    dbg.setdefault("overwritten", 0)
+    for row, i, strength in bound:
+        rr = recon[i]
+        if not geo_arith_ok(rr):
+            continue
+        for col, c in COLMAP:
+            v = rr.get(c)
+            if v is None or v <= 0:
+                continue
+            if col == "quantity" and not (float(v).is_integer() and 1 <= v <= 9999):
+                continue
+            cur = str(row.get(col) or "").strip()
+            if not cur:
+                row[col] = _upa_fmt(v)
+                dbg["filled"] += 1
+            elif strength == "strong":
+                # 오값 덮기: 현재값이 산술성립 geo값과 다를 때만(같으면 no-op).
+                # 강한 앵커라 이 행=이 geo행 확정, geo 산술성립이라 geo 3값이 정답.
+                cur_val = _upa_parse_money(_UPA_SQ_RE.sub("", cur))
+                if cur_val is None or cur_val == v:
+                    continue
+                # 금액 가드(비-곱행 보호): amount 는 할인·부가세로 곱과 정당히 다를 수
+                # 있다(감사 실측: 금액 오버라이트 회귀 55 전원이 이 함정). 현재값이
+                # 곱의 0.45~1.02배(할인 가능대)면 진짜 값일 수 있으니 덮지 않는다.
+                # 단 현재값==단가(단가침범) 또는 곱의 0.45배 미만(명백한 쓰레기)이면 덮음.
+                # 수량·단가는 입력값이라 이 애매성이 없어 무가드(감사 43:1·21:1).
+                if col == "amount":
+                    geo_u = rr.get(u_c)
+                    is_bleed = geo_u is not None and cur_val == geo_u
+                    ratio = cur_val / v if v else 0
+                    if not (is_bleed or ratio < 0.45):
+                        continue
+                row[col] = _upa_fmt(v)
+                dbg["overwritten"] += 1
+    # M2 append (산술성립 미바인딩 행). 정렬 스틸 방지 가드:
+    #  - 기존 행과 같은 amount 값이면 append 금지(중복 경쟁자 생성 차단)
+    #  - 입양 품명이 기존 행 품명과 겹치면 append 금지(그 행의 정렬을 뺏게 됨)
+    exist_amts = {v for row in table_rows if isinstance(row, dict)
+                  if (v := _upa_parse_money(_UPA_SQ_RE.sub("", str(row.get("amount") or "")))) is not None}
+    exist_names = [str(row.get("itemName") or "").strip()
+                   for row in table_rows if isinstance(row, dict)
+                   and len(str(row.get("itemName") or "").strip()) >= 3]
+    next_idx = len(table_rows) + 1
+    for i, rr in enumerate(recon):
+        if i in used_recon:
+            continue
+        qv, uv, av = rr.get(q_c), rr.get(u_c), rr.get(a_c)
+        if not (qv and uv and av and float(qv).is_integer() and 1 <= qv <= 9999
+                and uv >= 10 and av >= 100 and abs(qv * uv - av) <= 1):
+            continue
+        if av in exist_amts:
+            continue
+        name = geo_name(rr)
+        if name and any(name_sim_ok(name, en) for en in exist_names):
+            continue
+        new_row = {
+            "rowIndex": str(next_idx),
+            "itemCode": "", "productCode": "", "itemName": name, "spec": "",
+            "lotNo": "", "serialNo": "", "manufacturingNo": "", "expiryDate": "",
+            "quantity": _upa_fmt(qv), "unit": "", "unitPrice": _upa_fmt(uv),
+            "supplyAmount": "", "taxAmount": "", "amount": _upa_fmt(av),
+            "totalAmount": "", "manufacturer": "", "insuranceCode": "", "remark": "",
+            "_rawText": "", "_confidence": "0.5",
+            "_source": "invoice_statement_free_geo_recon",
+        }
+        table_rows.append(new_row)
+        used_recon.add(i)
+        next_idx += 1
+        dbg["appended"] += 1
+    return _geo_triple_scan(table_rows, toks, dbg)
+
+
+# ─── 산술 금액 채움(금액P2): 빈 금액 = 수량×단가 ────────────────────────────────
+# 근거(066 thin, P1+R2 통과 후 잔여 실측 1,500문서): 금액 빈칸 + 수량·단가 둘 다
+# 정상 + 수량×단가 정수 후보 중, 그 값이 행 _rawText 에 money 토큰으로 실재하는 것만
+# 채움 → 전체 ~286행, 회귀 0, spurious 0, 정밀도 89%(오답 6/56은 단가 오독발 —
+# 빈칸→mismatch 라 neutral, 회귀 아님). WRONG-overwrite(금액 있는데 ≠수량×단가)는
+# 폐기: anchor 통과분도 정밀도 53%·회귀 77(할인/부가세포함/오독으로 산술 불성립
+# 43%). 기존 R2(_ha_fill_arith_and_spec)는 HA 헤더검출 성공 행만 커버 → 이 룰은
+# HA 미적용 빈칸을 _rawText anchor 로 보완. EMPTY 만, 읽힌 값 절대 불변.
+_P2_MONEY_TOK_RE = re.compile(r"\d[\d,\.]*")
+
+
+# ─── 수량↔단가 스왑(수량L2'): 두 칸이 통째로 뒤바뀐 행 복원 ─────────────────────
+# 근거(066 공식 replay 전수 드라이런): 오배치 목적지 거울상(GT단가→수량칸 1,212 /
+# GT수량→단가칸 1,197) = 같은 행들의 열 스왑. 순수 맞바꿈 + 산술 게이트:
+#   수량칸=money꼴(콤마 or >=1000) & 단가칸=소형정수(1..9999 비콤마) & 금액 존재
+#   & 현재 산술 불성립 → 스왑. both OK 86.5%(수량 88.8%·단가 94.1%), 회귀 27/1,134,
+#   spurious 0 (75:1). 산술 이미 성립 행은 발화 금지 — 곱의 교환법칙상 방향 판정
+#   불가 + 실측 55.8%(진짜 '수량 대량×단가 소액' 행을 깨뜨림).
+# 유도 나눗셈 변형(u'=a/q)은 기각(정밀도 6~64%, 회귀 794) — 맞바꿈만 안전.
+def fix_swapped_qty_unitprice(table_rows: Any) -> tuple[Any, dict[str, Any]]:
+    """수량칸↔단가칸 값이 서로 바뀐 행을 모양+산술 게이트로 감지해 맞바꿈."""
+    dbg: dict[str, Any] = {"swapped": 0}
+    if not isinstance(table_rows, list) or not table_rows:
+        return table_rows, dbg
+    for row in table_rows:
+        if not isinstance(row, dict):
+            continue
+        q_raw = str(row.get("quantity") or "").strip()
+        u_raw = str(row.get("unitPrice") or "").strip()
+        if not q_raw or not u_raw:
+            continue
+        eq = _upa_parse_money(_UPA_SQ_RE.sub("", q_raw))
+        eu = _upa_parse_money(_UPA_SQ_RE.sub("", u_raw))
+        ea = _upa_parse_money(_UPA_SQ_RE.sub("", str(row.get("amount") or "")))
+        if eq is None or eu is None or not ea or ea <= 0:
+            continue
+        q_moneyish = ("," in q_raw) or eq >= 1000
+        u_smallint = float(eu).is_integer() and 1 <= eu <= 9999 and "," not in u_raw
+        if not (q_moneyish and u_smallint):
+            continue
+        if abs(eq * eu - ea) <= 1:
+            continue  # 이미 산술성립 — 방향 판정 불가, 불가침
+        row["quantity"], row["unitPrice"] = u_raw, q_raw
+        dbg["swapped"] += 1
+    return table_rows, dbg
+
+
+# ─── 산술 수량 채움(수량L1): 빈 수량 = 금액÷단가 ───────────────────────────────
+# 근거(066 공식 replay 전수 드라이런): 빈칸fill 발화 761 · 정밀도 92.2% · 회귀 0
+# (구조상 불가) · spurious 0. 덮기 변형은 기각 — 할인행(금액≠수량×단가)에서
+# 나눗셈 정수가 우연히 성립해 맞는 수량을 덮음(회귀 760, 런타임 구분 불가).
+def fill_arith_empty_quantity(table_rows: Any) -> tuple[Any, dict[str, Any]]:
+    """빈 quantity 를 금액÷단가(정수 1..9999일 때만)로 채움. 값 있는 행 절대 불변."""
+    dbg: dict[str, Any] = {"filled": 0}
+    if not isinstance(table_rows, list) or not table_rows:
+        return table_rows, dbg
+    for row in table_rows:
+        if not isinstance(row, dict):
+            continue
+        if str(row.get("quantity") or "").strip():
+            continue
+        u = _upa_parse_money(_UPA_SQ_RE.sub("", str(row.get("unitPrice") or "")))
+        a = _upa_parse_money(_UPA_SQ_RE.sub("", str(row.get("amount") or "")))
+        if not u or not a or u <= 0 or a <= 0:
+            continue
+        ratio = a / u
+        r_int = round(ratio)
+        if abs(ratio - r_int) > 1e-6 or not (1 <= r_int <= 9999):
+            continue
+        row["quantity"] = str(int(r_int))
+        dbg["filled"] += 1
+    return table_rows, dbg
+
+
+def fill_arith_empty_amount(table_rows: Any) -> tuple[Any, dict[str, Any]]:
+    """빈 amount 를 수량×단가로 채움 — 그 값이 행 _rawText 에 money 토큰으로 존재할
+    때만(anchor). free+fallback 합류점, 경로무관. amount 있는 행은 절대 안 건드림."""
+    dbg: dict[str, Any] = {"filled": 0}
+    if not isinstance(table_rows, list) or not table_rows:
+        return table_rows, dbg
+    for row in table_rows:
+        if not isinstance(row, dict):
+            continue
+        if str(row.get("amount") or "").strip():
+            continue
+        q = _upa_parse_money(_UPA_SQ_RE.sub("", str(row.get("quantity") or "")))
+        u = _upa_parse_money(_UPA_SQ_RE.sub("", str(row.get("unitPrice") or "")))
+        if q is None or u is None or q < 1 or u <= 0:
+            continue
+        calc = q * u
+        if calc <= 0 or not float(calc).is_integer():
+            continue
+        raw = str(row.get("_rawText") or "")
+        if not raw or _is_summary_or_header_line(_normalize_text(raw)):
+            continue
+        target = str(int(calc))
+        # anchor: 수량×단가 값이 이 행 _rawText 안에 money 토큰으로 실재해야 함
+        # (파서가 읽고도 amount 칸에 못 넣은 것 → 회수 가능; 없으면 증거 없음 → skip)
+        anchored = any(
+            _upa_parse_money(m.group(0)) is not None
+            and re.sub(r"\D", "", m.group(0)) == target
+            for m in _P2_MONEY_TOK_RE.finditer(raw)
+        )
+        if not anchored:
+            continue
+        row["amount"] = _upa_fmt(calc)
+        dbg["filled"] += 1
+    return table_rows, dbg
+
+
 def fill_scalar_defaults(document_fields: Any) -> tuple[dict[str, Any], dict[str, Any]]:
     """Emit taxType/discountAmount when the parser left them empty. war GT carries
     both in ~100%/99% of docs (taxType 과세 86%, discountAmount '0' 90%), so these

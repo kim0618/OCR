@@ -58,10 +58,19 @@ from extractors.invoice_statement_free import (  # noqa: E402
     recover_shifted_item_name as _recover_shifted_item_name,
     adopt_missing_item_names as _adopt_item_names,
     synthesize_missing_rows as _synth_rows,
+    recover_unitprice_amount_columns as _recover_upa,
+    fill_arith_empty_amount as _fill_arith_amount,
+    fill_arith_empty_quantity as _fill_arith_qty,
+    fix_swapped_qty_unitprice as _fix_swap_qu,
+    reconstruct_numeric_columns as _geo_recon,
     refine_supplier_bizno as _refine_sup_bizno,
     refine_buyer_bizno as _refine_buy_bizno,
 )
-from extractors.invoice_statement import extract_invoice_statement_fields  # noqa: E402
+from extractors.invoice_statement import (  # noqa: E402
+    extract_invoice_statement_fields,
+    recover_postjoin_blank_amounts as _recover_postjoin_amounts,
+    recover_postjoin_same_row_amounts as _recover_same_row_amounts,
+)
 from extractors.master_match import fill_master_match as _fill_master  # noqa: E402
 from extractors.master_match import fill_party_match as _fill_party  # noqa: E402
 from extractors.master_match import (  # noqa: E402
@@ -71,6 +80,10 @@ from extractors.master_match import (  # noqa: E402
 # ②G4 마스터 매칭 포함 여부. False(--no-master-match)로 돌리면 Rule 단계(매칭 전) 사이드카가
 # 나온다 — baseline_matrix가 Rule=replay_compare_rule / Master=replay_compare로 단계 분리.
 MASTER_MATCH = True
+# 금액P1 열복구 적용 여부 — 분석 하네스 전용 토글. 프로덕션(main.py)에서는 항상 켜져
+# 있고, 이 플래그는 base(패치 전) 사이드카를 같은 코드로 재현해 P1 효과만 격리하려는
+# 측정용이다(--skip-upa → replay_compare_base). 제품 기능 게이트가 아님.
+APPLY_UPA = True
 
 
 def _load_recorded_run_scope(run_dir: str) -> list[str] | None:
@@ -176,6 +189,43 @@ def replay_dispatch(snap: dict) -> tuple[dict, str]:
             df["tableRows"], _ = _strip_item_classification(df["tableRows"])
         except Exception:
             pass
+    # mirror main.py final-row same-row relocation + OCR-column recovery
+    if isinstance(df, dict) and df.get("tableRows"):
+        try:
+            df["tableRows"], _ = _recover_same_row_amounts(df["tableRows"])
+            df["tableRows"], _ = _recover_postjoin_amounts(df["tableRows"], lines)
+        except Exception:
+            pass
+    # mirror main.py 금액P1 단가·금액 열 복구 (재배정 + 산술 단가fill, 빈칸/오배치만)
+    if APPLY_UPA and isinstance(df, dict) and df.get("tableRows"):
+        try:
+            df["tableRows"], _ = _recover_upa(df["tableRows"], lines)
+        except Exception:
+            pass
+    # mirror main.py 금액P2 산술 금액 채움 (빈 amount = 수량×단가, _rawText anchor)
+    if APPLY_UPA and isinstance(df, dict) and df.get("tableRows"):
+        try:
+            df["tableRows"], _ = _fill_arith_amount(df["tableRows"])
+        except Exception:
+            pass
+    # mirror main.py 금액P3 geometry 숫자열 재구성 (빈칸 fill + 산술성립 append)
+    if APPLY_UPA and isinstance(df, dict) and df.get("tableRows"):
+        try:
+            df["tableRows"], _ = _geo_recon(df["tableRows"], lines)
+        except Exception:
+            pass
+    # mirror main.py 수량L2' 스왑 (수량칸↔단가칸 뒤바뀐 행, L1보다 먼저)
+    if APPLY_UPA and isinstance(df, dict) and df.get("tableRows"):
+        try:
+            df["tableRows"], _ = _fix_swap_qu(df["tableRows"])
+        except Exception:
+            pass
+    # mirror main.py 수량L1 산술 수량 채움 (빈 수량 = 금액÷단가, 빈칸만)
+    if APPLY_UPA and isinstance(df, dict) and df.get("tableRows"):
+        try:
+            df["tableRows"], _ = _fill_arith_qty(df["tableRows"])
+        except Exception:
+            pass
     # mirror main.py join-point 사업자번호 재선택 (마스터매칭 앞 — itembuycust 앵커)
     if isinstance(df, dict):
         try:
@@ -245,13 +295,16 @@ def replay_compare(ts: str | None, testset: str, out_subdir: str) -> int:
           f"-> {out_subdir}/\n")
     n_written = n_faithful = n_free = 0
     sys.stdout.reconfigure(errors="replace")
-    for src in sources:
+    total = len(sources)
+    w = len(str(total))
+    for i, src in enumerate(sources, 1):
+        prog = f"[{i:>{w}}/{total}]"
         if agg is not None:
             gtkey = gtkey_by_src.get(src)
             if not gtkey or gtkey not in agg:
-                print(f"  skip {src:<10} (no GT in manifest)"); continue
+                print(f"  {prog} skip {src:<10} (no GT in manifest)"); continue
         elif not gt_by_src.get(src):
-            print(f"  skip {src:<10} (no GT in manifest)"); continue
+            print(f"  {prog} skip {src:<10} (no GT in manifest)"); continue
         snap = json.load(open(os.path.join(snap_dir, src + ".json"), encoding="utf-8"))
         ext_df, path = replay_dispatch(snap)            # (edited) parser, faithful dispatch
         n_free += 1 if path == "free" else 0
@@ -276,7 +329,7 @@ def replay_compare(ts: str | None, testset: str, out_subdir: str) -> int:
         n_faithful += 1 if faithful else 0
         fa = fcmp["fieldAccuracy"]; ca = tcmp["cellAccuracy"]
         tag = "FAITHFUL" if faithful else ("CHANGED " if rec is not None else "no-record")
-        print(f"  {tag}  {path:<8} {src:<10} field={('n/a' if fa is None else f'{fa*100:5.1f}%')}"
+        print(f"  {prog} {tag}  {path:<8} {src:<10} field={('n/a' if fa is None else f'{fa*100:5.1f}%')}"
               f"  cell={('n/a' if ca is None else f'{ca*100:5.1f}%')}")
 
     print(f"\n[written] {out_dir}  ({n_written} samples, path: {n_free} free / "
@@ -295,7 +348,12 @@ if __name__ == "__main__":
     ap.add_argument("--no-master-match", action="store_true",
                     help="②G4 마스터 매칭 없이 replay (Rule 단계 사이드카용; "
                          "관례: --out-subdir replay_compare_rule)")
+    ap.add_argument("--skip-upa", action="store_true",
+                    help="금액P1 단가·금액 열복구 없이 replay (P1 전 base 사이드카용; "
+                         "관례: --out-subdir replay_compare_base)")
     args = ap.parse_args()
     if args.no_master_match:
         MASTER_MATCH = False
+    if args.skip_upa:
+        APPLY_UPA = False
     raise SystemExit(replay_compare(args.ts, args.testset, args.out_subdir))
