@@ -498,17 +498,17 @@
           },
           "quantity": {
             "gt": "5",
-            "ext": "30,438.00",
+            "ext": "5",
             "gtNorm": "5",
-            "extNorm": "3043800",
-            "status": "mismatch",
+            "extNorm": "5",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "30438",
-            "ext": "5",
+            "ext": "30,438.00",
             "gtNorm": "30438",
-            "extNorm": "5",
+            "extNorm": "3043800",
             "status": "mismatch",
             "spurious": false
           },
@@ -538,10 +538,10 @@
           },
           "itemCode": {
             "gt": "01013568",
-            "ext": "16001234",
+            "ext": "01013568",
             "gtNorm": "01013568",
-            "extNorm": "16001234",
-            "status": "mismatch",
+            "extNorm": "01013568",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -928,10 +928,10 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -1074,13 +1074,13 @@
     ],
     "cellCounts": {
       "scored": 100,
-      "match": 37,
-      "mismatch": 34,
-      "ext_missing": 29,
+      "match": 40,
+      "mismatch": 32,
+      "ext_missing": 28,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.37
+    "cellAccuracy": 0.4
   },
   "buckets": {
     "defects": [
@@ -1317,20 +1317,12 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row11:quantity",
-        "status": "mismatch",
-        "gtNorm": "5",
-        "extNorm": "3043800",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['unitPrice']"
-      },
-      {
         "location": "row11:unitPrice",
         "status": "mismatch",
         "gtNorm": "30438",
-        "extNorm": "5",
+        "extNorm": "3043800",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.83)"
       },
       {
         "location": "row11:amount",
@@ -1347,14 +1339,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row11:itemCode",
-        "status": "mismatch",
-        "gtNorm": "01013568",
-        "extNorm": "16001234",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
       },
       {
         "location": "row11:insuranceCode",
@@ -1557,14 +1541,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row10:quantity",
-        "status": "ext_missing",
-        "gtNorm": "10",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row10:itemCode",
         "status": "mismatch",
         "gtNorm": "14002534",
@@ -1662,9 +1638,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 36,
-      "structure": 28,
-      "layout": 8,
+      "recognition": 35,
+      "structure": 27,
+      "layout": 7,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

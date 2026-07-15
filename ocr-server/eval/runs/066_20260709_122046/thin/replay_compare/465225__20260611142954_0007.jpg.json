@@ -163,14 +163,16 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 2,
-    "rowCountExt": 2,
-    "rowCountMatch": true,
+    "rowCountExt": 3,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
-      "2"
+      "3"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "2"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -251,63 +253,63 @@
         }
       },
       {
-        "rowIndex": "2",
+        "rowIndex": "3",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "제미메트 서방정 25/1000mg 56T",
-            "ext": "제미메트서방정25/1000mg 56T PAC",
+            "ext": "",
             "gtNorm": "제미메트서방정251000mg56t",
-            "extNorm": "제미메트서방정251000mg56tpac",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "제미메트서방정25/1000mg",
-            "ext": "제미메트서방정25/1000mg",
+            "ext": "",
             "gtNorm": "제미메트서방정25/1000mg",
-            "extNorm": "제미메트서방정25/1000mg",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "spec": {
             "gt": "56TX1PA\nC",
-            "ext": "제미메트서방정25/1000mg 56T PAC",
+            "ext": "",
             "gtNorm": "56tx1pa c",
-            "extNorm": "제미메트서방정25/1000mg 56t pac",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "quantity": {
             "gt": "50",
-            "ext": "22160",
+            "ext": "50",
             "gtNorm": "50",
-            "extNorm": "22160",
-            "status": "mismatch",
+            "extNorm": "50",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "22160",
-            "ext": "1,108,000",
+            "ext": "22160",
             "gtNorm": "22160",
-            "extNorm": "1108000",
-            "status": "mismatch",
+            "extNorm": "22160",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "1108000",
-            "ext": "1,218,800",
+            "ext": "1108000",
             "gtNorm": "1108000",
-            "extNorm": "1218800",
-            "status": "mismatch",
+            "extNorm": "1108000",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
             "gt": "20290223",
-            "ext": "2029-02-23",
+            "ext": "",
             "gtNorm": "20290223",
-            "extNorm": "20290223",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "manufacturingNo": {
@@ -320,10 +322,10 @@
           },
           "itemCode": {
             "gt": "12000967",
-            "ext": "12000967",
+            "ext": "",
             "gtNorm": "12000967",
-            "extNorm": "12000967",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           }
         }
@@ -332,8 +334,8 @@
     "cellCounts": {
       "scored": 18,
       "match": 6,
-      "mismatch": 10,
-      "ext_missing": 2,
+      "mismatch": 5,
+      "ext_missing": 7,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -398,6 +400,14 @@
         "reason": "gt value present at ['field:supplierAddress']"
       },
       {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['2']"
+      },
+      {
         "location": "row1:itemName",
         "status": "mismatch",
         "gtNorm": "비모보vimovo정60t",
@@ -446,58 +456,58 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:itemName",
-        "status": "mismatch",
+        "location": "row3:itemName",
+        "status": "ext_missing",
         "gtNorm": "제미메트서방정251000mg56t",
-        "extNorm": "제미메트서방정251000mg56tpac",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:spec",
-        "status": "mismatch",
+        "location": "row3:itemNameMaster",
+        "status": "ext_missing",
+        "gtNorm": "제미메트서방정25/1000mg",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row3:spec",
+        "status": "ext_missing",
         "gtNorm": "56tx1pa c",
-        "extNorm": "제미메트서방정25/1000mg 56t pac",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:quantity",
-        "status": "mismatch",
-        "gtNorm": "50",
-        "extNorm": "22160",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "location": "row3:expiryDate",
+        "status": "ext_missing",
+        "gtNorm": "20290223",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "22160",
-        "extNorm": "1108000",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['quantity']"
-      },
-      {
-        "location": "row2:amount",
-        "status": "mismatch",
-        "gtNorm": "1108000",
-        "extNorm": "1218800",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['unitPrice']"
-      },
-      {
-        "location": "row2:manufacturingNo",
+        "location": "row3:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "ZMK26509",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row3:itemCode",
+        "status": "ext_missing",
+        "gtNorm": "12000967",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 6,
-      "structure": 9,
-      "layout": 4,
+      "recognition": 3,
+      "structure": 15,
+      "layout": 2,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

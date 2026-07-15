@@ -195,7 +195,7 @@
       "1",
       "2",
       "3",
-      "4",
+      "26",
       "5",
       "6",
       "7",
@@ -218,10 +218,10 @@
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
+      "4",
       "10",
       "20",
-      "22",
-      "26"
+      "22"
     ],
     "rows": [
       {
@@ -483,14 +483,14 @@
         }
       },
       {
-        "rowIndex": "4",
+        "rowIndex": "26",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "아주록손정 60MG 30T (병)",
-            "ext": "아주록손정6EMG 30T (병 1114",
+            "ext": "아주록손정6EMG 30T (병)",
             "gtNorm": "아주록손정60mg30t병",
-            "extNorm": "아주록손정6emg30t병1114",
+            "extNorm": "아주록손정6emg30t병",
             "status": "mismatch",
             "spurious": false
           },
@@ -536,10 +536,10 @@
           },
           "expiryDate": {
             "gt": "20280928",
-            "ext": "20280928",
+            "ext": "",
             "gtNorm": "20280928",
-            "extNorm": "20280928",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "manufacturingNo": {
@@ -552,18 +552,18 @@
           },
           "itemCode": {
             "gt": "01000953",
-            "ext": "900183",
+            "ext": "01000953",
             "gtNorm": "01000953",
-            "extNorm": "900183",
-            "status": "mismatch",
+            "extNorm": "01000953",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "654004180",
-            "ext": "654004180",
+            "ext": "654004180 20280928 1 A003032",
             "gtNorm": "654004180",
-            "extNorm": "654004180",
-            "status": "match",
+            "extNorm": "654004180202809281A003032",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -2138,18 +2138,18 @@
           },
           "quantity": {
             "gt": "20",
-            "ext": "49,773",
+            "ext": "20",
             "gtNorm": "20",
-            "extNorm": "49773",
-            "status": "mismatch",
+            "extNorm": "20",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "49773",
-            "ext": "20",
+            "ext": "49,773",
             "gtNorm": "49773",
-            "extNorm": "20",
-            "status": "mismatch",
+            "extNorm": "49773",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -2197,13 +2197,13 @@
     ],
     "cellCounts": {
       "scored": 229,
-      "match": 133,
-      "mismatch": 46,
-      "ext_missing": 50,
+      "match": 134,
+      "mismatch": 44,
+      "ext_missing": 51,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5807860262008734
+    "cellAccuracy": 0.5851528384279476
   },
   "buckets": {
     "defects": [
@@ -2253,7 +2253,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['10', '20', '22', '26']"
+        "reason": "extractor invented rows ['4', '10', '20', '22']"
       },
       {
         "location": "row1:itemName",
@@ -2360,15 +2360,15 @@
         "reason": "char-level diff (sim=0.50)"
       },
       {
-        "location": "row4:itemName",
+        "location": "row26:itemName",
         "status": "mismatch",
         "gtNorm": "아주록손정60mg30t병",
-        "extNorm": "아주록손정6emg30t병1114",
+        "extNorm": "아주록손정6emg30t병",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.80)"
+        "reason": "char-level diff (sim=0.92)"
       },
       {
-        "location": "row4:spec",
+        "location": "row26:spec",
         "status": "ext_missing",
         "gtNorm": "30t",
         "extNorm": "",
@@ -2376,7 +2376,15 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row4:manufacturingNo",
+        "location": "row26:expiryDate",
+        "status": "ext_missing",
+        "gtNorm": "20280928",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row26:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "A003032",
         "extNorm": "",
@@ -2384,12 +2392,12 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row4:itemCode",
+        "location": "row26:insuranceCode",
         "status": "mismatch",
-        "gtNorm": "01000953",
-        "extNorm": "900183",
+        "gtNorm": "654004180",
+        "extNorm": "654004180202809281A003032",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.53)"
       },
       {
         "location": "row5:itemName",
@@ -2984,22 +2992,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row27:quantity",
-        "status": "mismatch",
-        "gtNorm": "20",
-        "extNorm": "49773",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['unitPrice']"
-      },
-      {
-        "location": "row27:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "49773",
-        "extNorm": "20",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['quantity']"
-      },
-      {
         "location": "row27:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20290104",
@@ -3026,8 +3018,8 @@
     ],
     "bucketTally": {
       "recognition": 45,
-      "structure": 55,
-      "layout": 2,
+      "structure": 56,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

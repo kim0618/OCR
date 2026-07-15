@@ -196,7 +196,7 @@
       "4",
       "11",
       "12",
-      "13"
+      "6"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
@@ -204,10 +204,10 @@
       "2",
       "3",
       "5",
-      "6",
       "7",
       "9",
       "10",
+      "13",
       "14"
     ],
     "rows": [
@@ -516,31 +516,31 @@
         }
       },
       {
-        "rowIndex": "13",
+        "rowIndex": "6",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "투페리정",
-            "ext": "케이에스제약 투페리정",
+            "ext": "투페리정",
             "gtNorm": "투페리정",
-            "extNorm": "케이에스제약투페리정",
-            "status": "mismatch",
+            "extNorm": "투페리정",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "투페리정",
-            "ext": "케이페리정",
+            "ext": "투페리정",
             "gtNorm": "투페리정",
-            "extNorm": "케이페리정",
-            "status": "mismatch",
+            "extNorm": "투페리정",
+            "status": "match",
             "spurious": false
           },
           "spec": {
             "gt": "50mg/500정",
-            "ext": "50mg/500정",
+            "ext": "",
             "gtNorm": "50mg/500정",
-            "extNorm": "50mg/500정",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "quantity": {
@@ -553,7 +553,7 @@
           },
           "unitPrice": {
             "gt": "44100",
-            "ext": "44,100",
+            "ext": "44100",
             "gtNorm": "44100",
             "extNorm": "44100",
             "status": "match",
@@ -561,7 +561,7 @@
           },
           "amount": {
             "gt": "441000",
-            "ext": "441,000",
+            "ext": "441000",
             "gtNorm": "441000",
             "extNorm": "441000",
             "status": "match",
@@ -577,18 +577,18 @@
           },
           "manufacturingNo": {
             "gt": "25002",
-            "ext": "25002 2028=03-18",
+            "ext": "",
             "gtNorm": "25002",
-            "extNorm": "2500220280318",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemCode": {
             "gt": "04004189",
-            "ext": "8806717013546",
+            "ext": "04004189",
             "gtNorm": "04004189",
-            "extNorm": "8806717013546",
-            "status": "mismatch",
+            "extNorm": "04004189",
+            "status": "match",
             "spurious": false
           }
         }
@@ -596,13 +596,13 @@
     ],
     "cellCounts": {
       "scored": 44,
-      "match": 28,
-      "mismatch": 11,
-      "ext_missing": 5,
+      "match": 30,
+      "mismatch": 7,
+      "ext_missing": 7,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.6363636363636364
+    "cellAccuracy": 0.6818181818181818
   },
   "buckets": {
     "defects": [
@@ -628,7 +628,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '2', '3', '5', '6', '7', '9', '10', '14']"
+        "reason": "extractor invented rows ['1', '2', '3', '5', '7', '9', '10', '13', '14']"
       },
       {
         "location": "row8:itemName",
@@ -719,23 +719,15 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row13:itemName",
-        "status": "mismatch",
-        "gtNorm": "투페리정",
-        "extNorm": "케이에스제약투페리정",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.57)"
+        "location": "row6:spec",
+        "status": "ext_missing",
+        "gtNorm": "50mg/500정",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row13:itemNameMaster",
-        "status": "mismatch",
-        "gtNorm": "투페리정",
-        "extNorm": "케이페리정",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
-      },
-      {
-        "location": "row13:expiryDate",
+        "location": "row6:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20280318",
         "extNorm": "",
@@ -743,25 +735,17 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row13:manufacturingNo",
-        "status": "mismatch",
+        "location": "row6:manufacturingNo",
+        "status": "ext_missing",
         "gtNorm": "25002",
-        "extNorm": "2500220280318",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.56)"
-      },
-      {
-        "location": "row13:itemCode",
-        "status": "mismatch",
-        "gtNorm": "04004189",
-        "extNorm": "8806717013546",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 11,
-      "structure": 6,
+      "recognition": 7,
+      "structure": 8,
       "layout": 2,
       "preprocessing": 0
     },

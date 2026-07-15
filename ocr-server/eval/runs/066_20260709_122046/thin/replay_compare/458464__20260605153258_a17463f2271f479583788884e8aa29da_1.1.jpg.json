@@ -176,14 +176,13 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 2,
-    "rowCountExt": 1,
-    "rowCountMatch": false,
+    "rowCountExt": 2,
+    "rowCountMatch": true,
     "matchedRowIdx": [
-      "1"
-    ],
-    "gtOnlyRowIdx": [
+      "1",
       "2"
     ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [],
     "rows": [
       {
@@ -275,7 +274,6 @@
       {
         "rowIndex": "2",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "나제아주사제 0.3mg/5A.",
@@ -303,26 +301,26 @@
           },
           "quantity": {
             "gt": "3",
-            "ext": "",
+            "ext": "3",
             "gtNorm": "3",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "3",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "57280",
-            "ext": "",
+            "ext": "57280",
             "gtNorm": "57280",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "57280",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "171840",
-            "ext": "",
+            "ext": "171840",
             "gtNorm": "171840",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "171840",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -362,13 +360,13 @@
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 3,
+      "match": 6,
       "mismatch": 4,
-      "ext_missing": 13,
+      "ext_missing": 10,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.15
+    "cellAccuracy": 0.3
   },
   "buckets": {
     "defects": [
@@ -411,14 +409,6 @@
         "extNorm": "서울특별시중구을지로5길26수하동미1래에",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
-      },
-      {
-        "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['2']"
       },
       {
         "location": "row1:itemName",
@@ -501,30 +491,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:quantity",
-        "status": "ext_missing",
-        "gtNorm": "3",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "57280",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:amount",
-        "status": "ext_missing",
-        "gtNorm": "171840",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row2:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20280531",
@@ -559,7 +525,7 @@
     ],
     "bucketTally": {
       "recognition": 7,
-      "structure": 15,
+      "structure": 11,
       "layout": 1,
       "preprocessing": 0
     },

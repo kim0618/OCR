@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "10542719",
-        "ext": "",
+        "ext": "10542810",
         "gtNorm": "10542719",
-        "extNorm": "",
+        "extNorm": "10542810",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -60,11 +60,11 @@
       },
       "buyerBizNumber": {
         "gt": "4088500180",
-        "ext": "112-62-15362",
+        "ext": "408-85-00180",
         "gtNorm": "4088500180",
-        "extNorm": "1126215362",
+        "extNorm": "4088500180",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -154,9 +154,9 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 5,
+      "match": 6,
       "mismatch": 4,
-      "ext_missing": 2,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -167,17 +167,17 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 5,
+      "matched": 6,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.45454545454545453
+    "fieldAccuracy": 0.5454545454545454
   },
   "table": {
     "alignMode": "content",
     "rowCountGt": 19,
-    "rowCountExt": 18,
-    "rowCountMatch": false,
+    "rowCountExt": 19,
+    "rowCountMatch": true,
     "matchedRowIdx": [
       "1",
       "2",
@@ -201,7 +201,9 @@
     "gtOnlyRowIdx": [
       "19"
     ],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "19"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -1405,11 +1407,11 @@
       },
       {
         "location": "field:taxAmount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "10542719",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "extNorm": "10542810",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.75)"
       },
       {
         "location": "field:discountAmount",
@@ -1418,14 +1420,6 @@
         "extNorm": "0",
         "bucket": "structure",
         "reason": "ext value is gt's ['row19:unitPrice', 'row1:amount']"
-      },
-      {
-        "location": "field:buyerBizNumber",
-        "status": "mismatch",
-        "gtNorm": "4088500180",
-        "extNorm": "1126215362",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerCompany",
@@ -1450,6 +1444,14 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "extractor missed rows ['19']"
+      },
+      {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['19']"
       },
       {
         "location": "row1:spec",
@@ -1770,6 +1772,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.182
+    "fieldMissRate": 0.091
   }
 }

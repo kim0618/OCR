@@ -8,11 +8,11 @@
     "perField": {
       "totalAmount": {
         "gt": "845849",
-        "ext": "1,369,451",
+        "ext": "845849",
         "gtNorm": "845849",
-        "extNorm": "1369451",
+        "extNorm": "845849",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -73,11 +73,11 @@
       },
       "supplierCompany": {
         "gt": "명문바이오",
-        "ext": "백제약품(주)영남본부",
+        "ext": "명문바이오(주)",
         "gtNorm": "명문바이오",
-        "extNorm": "백제약품영남본부",
+        "extNorm": "명문바이오",
         "type": "company",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -99,9 +99,9 @@
       },
       "supplierAddress": {
         "gt": "경기 화성시 만세구 향남읍 제약공단2길 28",
-        "ext": "경남 김해시 진례면 김해테크노벨리로 33-12 백제약품(주)영남본부",
+        "ext": "경기도 화성시 향남읍 제약공단2길 28",
         "gtNorm": "경기화성시만세구향남읍제약공단2길28",
-        "extNorm": "경남김해시진례면김해테크노벨리로3312백제약품주영남본부",
+        "extNorm": "경기도화성시향남읍제약공단2길28",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -154,8 +154,8 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 7,
-      "mismatch": 4,
+      "match": 9,
+      "mismatch": 2,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 7,
+      "matched": 9,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6363636363636364
+    "fieldAccuracy": 0.8181818181818182
   },
   "table": {
     "alignMode": "content",
@@ -229,18 +229,18 @@
           },
           "quantity": {
             "gt": "30",
-            "ext": "8,225",
+            "ext": "30",
             "gtNorm": "30",
-            "extNorm": "8225",
-            "status": "mismatch",
+            "extNorm": "30",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "8225",
-            "ext": "30",
+            "ext": "8,225",
             "gtNorm": "8225",
-            "extNorm": "30",
-            "status": "mismatch",
+            "extNorm": "8225",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -315,18 +315,18 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "2,926",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "2926",
-            "status": "mismatch",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "2926",
-            "ext": "10",
+            "ext": "2,926",
             "gtNorm": "2926",
-            "extNorm": "10",
-            "status": "mismatch",
+            "extNorm": "2926",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -718,39 +718,23 @@
     ],
     "cellCounts": {
       "scored": 60,
-      "match": 30,
-      "mismatch": 24,
+      "match": 34,
+      "mismatch": 20,
       "ext_missing": 6,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5
+    "cellAccuracy": 0.5666666666666667
   },
   "buckets": {
     "defects": [
       {
-        "location": "field:totalAmount",
-        "status": "mismatch",
-        "gtNorm": "845849",
-        "extNorm": "1369451",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "명문바이오",
-        "extNorm": "백제약품영남본부",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['field:buyerCompany']"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기화성시만세구향남읍제약공단2길28",
-        "extNorm": "경남김해시진례면김해테크노벨리로3312백제약품주영남본부",
+        "extNorm": "경기도화성시향남읍제약공단2길28",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.89)"
       },
       {
         "location": "field:buyerAddress",
@@ -775,22 +759,6 @@
         "extNorm": "12649800160명문제약뉴로처오hr정",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row11:quantity",
-        "status": "mismatch",
-        "gtNorm": "30",
-        "extNorm": "8225",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['unitPrice']"
-      },
-      {
-        "location": "row11:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "8225",
-        "extNorm": "30",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['quantity']"
       },
       {
         "location": "row11:expiryDate",
@@ -831,22 +799,6 @@
         "extNorm": "비씨메토카르바몰정(제약사품절)",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.51)"
-      },
-      {
-        "location": "row12:quantity",
-        "status": "mismatch",
-        "gtNorm": "10",
-        "extNorm": "2926",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['unitPrice']"
-      },
-      {
-        "location": "row12:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "2926",
-        "extNorm": "10",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['quantity']"
       },
       {
         "location": "row12:expiryDate",
@@ -1010,9 +962,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 13,
-      "structure": 8,
-      "layout": 14,
+      "recognition": 12,
+      "structure": 7,
+      "layout": 10,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

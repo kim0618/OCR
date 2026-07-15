@@ -73,9 +73,9 @@
       },
       "supplierCompany": {
         "gt": "경보제약",
-        "ext": "백제약품(주)영등포지점",
+        "ext": "주)제이에스에스팜",
         "gtNorm": "경보제약",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "주제이에스에스팜",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -99,11 +99,11 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 영등포구 버드나루로 47, 고촌빌딩 201호 (영등포동2가)",
-        "ext": "서울 구로구 공원로8길 24",
+        "ext": "",
         "gtNorm": "서울특별시영등포구버드나루로47고촌빌딩201호영등포동2가",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "",
         "type": "address",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -155,8 +155,8 @@
     "counts": {
       "scored": 11,
       "match": 8,
-      "mismatch": 3,
-      "ext_missing": 0,
+      "mismatch": 2,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -169,7 +169,7 @@
       "gtPresent": 11,
       "matched": 8,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 0
+      "extAttemptedMiss": 1
     },
     "fieldAccuracy": 0.7272727272727273
   },
@@ -415,18 +415,18 @@
           },
           "quantity": {
             "gt": "18",
-            "ext": "24,032",
+            "ext": "18",
             "gtNorm": "18",
-            "extNorm": "24032",
-            "status": "mismatch",
+            "extNorm": "18",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "24032",
-            "ext": "18",
+            "ext": "24,032",
             "gtNorm": "24032",
-            "extNorm": "18",
-            "status": "mismatch",
+            "extNorm": "24032",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -485,10 +485,10 @@
           },
           "itemNameMaster": {
             "gt": "리리카캡슐300mg(비아트리스)",
-            "ext": "리리카캡슐300mg(비아트리스)(유통처변경)",
+            "ext": "",
             "gtNorm": "리리카캡슐300mg(비아트리스)",
-            "extNorm": "리리카캡슐300mg(비아트리스)(유통처변경)",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "spec": {
@@ -541,10 +541,10 @@
           },
           "itemCode": {
             "gt": "01013714",
-            "ext": "22004479",
+            "ext": "",
             "gtNorm": "01013714",
-            "extNorm": "22004479",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "insuranceCode": {
@@ -1249,13 +1249,13 @@
     ],
     "cellCounts": {
       "scored": 120,
-      "match": 48,
-      "mismatch": 36,
-      "ext_missing": 36,
+      "match": 50,
+      "mismatch": 32,
+      "ext_missing": 38,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4
+    "cellAccuracy": 0.4166666666666667
   },
   "buckets": {
     "defects": [
@@ -1263,17 +1263,17 @@
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "경보제약",
-        "extNorm": "백제약품영등포지점",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['field:buyerCompany']"
+        "extNorm": "주제이에스에스팜",
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplierAddress",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "서울특별시영등포구버드나루로47고촌빌딩201호영등포동2가",
-        "extNorm": "서울구로구공원로8길24",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:buyerAddress",
@@ -1412,22 +1412,6 @@
         "reason": "char-level diff (sim=0.95)"
       },
       {
-        "location": "row21:quantity",
-        "status": "mismatch",
-        "gtNorm": "18",
-        "extNorm": "24032",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['unitPrice']"
-      },
-      {
-        "location": "row21:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "24032",
-        "extNorm": "18",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['quantity']"
-      },
-      {
         "location": "row21:expiryDate",
         "status": "mismatch",
         "gtNorm": "20280429",
@@ -1453,11 +1437,11 @@
       },
       {
         "location": "row22:itemNameMaster",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "리리카캡슐300mg(비아트리스)",
-        "extNorm": "리리카캡슐300mg(비아트리스)(유통처변경)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.83)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row22:quantity",
@@ -1485,11 +1469,11 @@
       },
       {
         "location": "row22:itemCode",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "01013714",
-        "extNorm": "22004479",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row22:insuranceCode",
@@ -1877,9 +1861,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 36,
-      "structure": 38,
-      "layout": 3,
+      "recognition": 34,
+      "structure": 40,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,
@@ -1898,6 +1882,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.0
+    "fieldMissRate": 0.091
   }
 }

@@ -5763,6 +5763,82 @@ def fill_arith_empty_amount(table_rows: Any) -> tuple[Any, dict[str, Any]]:
     return table_rows, dbg
 
 
+# ─── 합계 3형제 산술 복구: 공급가액+세액=총액 ──────────────────────────────────
+# 근거(066 공식 replay 전수): GT 자기일관 100.0%(5,814/5,814) — 완전 오라클.
+# 무게이트 유도는 28%로 붕괴(존재≠정답) → 부가세 prior(세액==round(공급가액×0.1)
+# or 면세 0, GT 성립 73.7%)를 소스쌍 검증기로: RA' 유도fill 89.8%(발화303·REG0),
+# RB' 교체(3존재·불성립·유도값 OCR토큰 실재·사후 10% 통과·유일후보) 89.4%(REG5).
+# Σ행금액 게이트는 기각(행합==공급가액 27%뿐 — 약한 오라클).
+_TOTALS_NUMTOK_RE = re.compile(r"(?<![A-Za-z가-힣\d])(\d[\d,\.]*)(?![A-Za-z가-힣\d])")
+
+
+def _totals_vat_ok(supply: float | None, tax: float | None) -> bool:
+    return (supply is not None and tax is not None and supply > 0
+            and (abs(tax - round(supply * 0.1)) <= 1 or tax == 0))
+
+
+def fix_totals_arithmetic(
+    document_fields: Any, ocr_lines_raw: Any,
+) -> tuple[Any, dict[str, Any]]:
+    """총액·세액·공급가액을 방정식+부가세 prior 로 유도/교정 (free+fallback 합류점)."""
+    dbg: dict[str, Any] = {"derived": 0, "replaced": 0}
+    if not isinstance(document_fields, dict):
+        return document_fields, dbg
+    def gv(k):
+        return _upa_parse_money(_UPA_SQ_RE.sub("", str(document_fields.get(k) or "")))
+    tot, tax, sup = gv("totalAmount"), gv("taxAmount"), gv("supplyAmount")
+    present = [v is not None and v > 0 for v in (tot, tax, sup)]
+    # 세액은 0(면세)도 유효값 — 존재 판정만 별도
+    tax_present = _UPA_SQ_RE.sub("", str(document_fields.get("taxAmount") or "")) != ""
+    if tax_present and tax is None:
+        return document_fields, dbg
+    n = sum((tot is not None and tot > 0, tax_present, sup is not None and sup > 0))
+    if n == 2:
+        # RA': 빠진 1개 유도 (10% 게이트 통과 시만)
+        if tot is None or tot <= 0:
+            if tax is not None and sup and _totals_vat_ok(sup, tax):
+                document_fields["totalAmount"] = _upa_fmt(sup + tax)
+                dbg["derived"] += 1
+        elif not tax_present:
+            derived = tot - (sup or 0)
+            if sup and derived >= 0 and _totals_vat_ok(sup, derived):
+                document_fields["taxAmount"] = _upa_fmt(derived)
+                dbg["derived"] += 1
+        else:
+            derived = tot - (tax or 0)
+            if derived > 0 and _totals_vat_ok(derived, tax):
+                document_fields["supplyAmount"] = _upa_fmt(derived)
+                dbg["derived"] += 1
+        return document_fields, dbg
+    if n == 3 and tot is not None and tax is not None and sup is not None \
+            and abs(sup + tax - tot) > 1:
+        # RB': 유도값이 OCR 토큰으로 실재 + 사후 10% 통과 + 유일 후보일 때만 교체
+        toks: set[str] = set()
+        for ln in (ocr_lines_raw or []):
+            try:
+                for m in _TOTALS_NUMTOK_RE.findall(str(ln[1] or "")):
+                    toks.add(re.sub(r"\D", "", m))
+            except Exception:
+                continue
+        cands = []
+        for key, dv, chk in (
+            ("totalAmount", sup + tax, (sup, tax)),
+            ("taxAmount", tot - sup, (sup, tot - sup)),
+            ("supplyAmount", tot - tax, (tot - tax, tax)),
+        ):
+            if dv is None or dv < 0:
+                continue
+            dd = re.sub(r"\D", "", str(int(dv)))
+            cur = gv(key)
+            if dd and dd in toks and cur != dv and _totals_vat_ok(chk[0], chk[1]):
+                cands.append((key, dv))
+        if len(cands) == 1:
+            key, dv = cands[0]
+            document_fields[key] = _upa_fmt(dv)
+            dbg["replaced"] += 1
+    return document_fields, dbg
+
+
 def fill_scalar_defaults(document_fields: Any) -> tuple[dict[str, Any], dict[str, Any]]:
     """Emit taxType/discountAmount when the parser left them empty. war GT carries
     both in ~100%/99% of docs (taxType 과세 86%, discountAmount '0' 90%), so these

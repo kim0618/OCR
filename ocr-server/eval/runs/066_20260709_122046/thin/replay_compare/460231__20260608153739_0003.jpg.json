@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "1088603912",
-        "ext": "113-85-04425",
+        "ext": "",
         "gtNorm": "1088603912",
-        "extNorm": "1138504425",
+        "extNorm": "",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -86,9 +86,9 @@
       },
       "supplierCompany": {
         "gt": "제이오팜",
-        "ext": "백제약품(주)영등포지점",
+        "ext": "주)제이오팜",
         "gtNorm": "제이오팜",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "주제이오팜",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울 강서구 방화대로40길 34(방화동)",
-        "ext": "서울 구로구 공원로8길 24",
+        "ext": "서울시 감서구 방화대로40길 34(방호",
         "gtNorm": "서울강서구방화대로40길34방화동",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "서울시감서구방화대로40길34방호",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 5,
-      "mismatch": 7,
-      "ext_missing": 0,
+      "mismatch": 6,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,7 +182,7 @@
       "gtPresent": 12,
       "matched": 5,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 0
+      "extAttemptedMiss": 1
     },
     "fieldAccuracy": 0.4166666666666667
   },
@@ -323,18 +323,18 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "23042",
-            "ext": "",
+            "ext": "23042",
             "gtNorm": "23042",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "23042",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -393,10 +393,10 @@
           },
           "itemNameMaster": {
             "gt": "발사원정80mg",
-            "ext": "발사원정40mg",
+            "ext": "발사원정80mg",
             "gtNorm": "발사원정80mg",
-            "extNorm": "발사원정40mg",
-            "status": "mismatch",
+            "extNorm": "발사원정80mg",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -409,18 +409,18 @@
           },
           "quantity": {
             "gt": "20",
-            "ext": "",
+            "ext": "20",
             "gtNorm": "20",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "11394",
-            "ext": "",
+            "ext": "11394",
             "gtNorm": "11394",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "11394",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -449,10 +449,10 @@
           },
           "itemCode": {
             "gt": "01000239",
-            "ext": "01000704",
+            "ext": "01000239",
             "gtNorm": "01000239",
-            "extNorm": "01000704",
-            "status": "mismatch",
+            "extNorm": "01000239",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -815,13 +815,13 @@
     ],
     "cellCounts": {
       "scored": 70,
-      "match": 7,
-      "mismatch": 9,
-      "ext_missing": 54,
+      "match": 13,
+      "mismatch": 7,
+      "ext_missing": 50,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.1
+    "cellAccuracy": 0.18571428571428572
   },
   "buckets": {
     "defects": [
@@ -835,27 +835,27 @@
       },
       {
         "location": "field:supplierBizNumber",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "1088603912",
-        "extNorm": "1138504425",
+        "extNorm": "",
         "bucket": "structure",
-        "reason": "ext value is gt's ['field:buyerBizNumber']"
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "제이오팜",
-        "extNorm": "백제약품영등포지점",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['field:buyerCompany']"
+        "extNorm": "주제이오팜",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.89)"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울강서구방화대로40길34방화동",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "서울시감서구방화대로40길34방호",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.82)"
       },
       {
         "location": "field:supplyAmount",
@@ -870,8 +870,8 @@
         "status": "mismatch",
         "gtNorm": "백제약품영등포지점",
         "extNorm": "백제약품",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:supplierCompany']"
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.62)"
       },
       {
         "location": "field:buyerAddress",
@@ -970,22 +970,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row6:quantity",
-        "status": "ext_missing",
-        "gtNorm": "10",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row6:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "23042",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
-      },
-      {
         "location": "row6:amount",
         "status": "mismatch",
         "gtNorm": "230421",
@@ -1026,30 +1010,6 @@
         "reason": "char-level diff (sim=0.70)"
       },
       {
-        "location": "row3:itemNameMaster",
-        "status": "mismatch",
-        "gtNorm": "발사원정80mg",
-        "extNorm": "발사원정40mg",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.88)"
-      },
-      {
-        "location": "row3:quantity",
-        "status": "ext_missing",
-        "gtNorm": "20",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "11394",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
-      },
-      {
         "location": "row3:amount",
         "status": "mismatch",
         "gtNorm": "227880",
@@ -1072,14 +1032,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:itemCode",
-        "status": "mismatch",
-        "gtNorm": "01000239",
-        "extNorm": "01000704",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.62)"
       },
       {
         "location": "row3:insuranceCode",
@@ -1404,8 +1356,8 @@
     ],
     "bucketTally": {
       "recognition": 11,
-      "structure": 59,
-      "layout": 2,
+      "structure": 55,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,
@@ -1424,6 +1376,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.0
+    "fieldMissRate": 0.083
   }
 }

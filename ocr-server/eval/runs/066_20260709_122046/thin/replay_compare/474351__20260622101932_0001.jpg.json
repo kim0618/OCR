@@ -191,22 +191,25 @@
     "rowCountGt": 1,
     "rowCountExt": 1,
     "rowCountMatch": true,
-    "matchedRowIdx": [
+    "matchedRowIdx": [],
+    "gtOnlyRowIdx": [
       "1"
     ],
-    "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "1"
+    ],
     "rows": [
       {
         "rowIndex": "1",
         "rowMatch": false,
+        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "매입에누리(OCR)",
-            "ext": "(643500801)맥시부펜시럽(천연색소)/ 50m",
+            "ext": "",
             "gtNorm": "매입에누리ocr",
-            "extNorm": "643500801맥시부펜시럽천연색소50m",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemNameMaster": {
@@ -219,34 +222,34 @@
           },
           "spec": {
             "gt": "-",
-            "ext": "√",
+            "ext": "",
             "gtNorm": "-",
-            "extNorm": "√",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "quantity": {
             "gt": "1",
-            "ext": "11",
+            "ext": "",
             "gtNorm": "1",
-            "extNorm": "11",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "unitPrice": {
             "gt": "0",
-            "ext": "1,450",
+            "ext": "",
             "gtNorm": "0",
-            "extNorm": "1450",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "amount": {
             "gt": "15950",
-            "ext": "15,950",
+            "ext": "",
             "gtNorm": "15950",
-            "extNorm": "15950",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemCode": {
@@ -262,13 +265,13 @@
     ],
     "cellCounts": {
       "scored": 7,
-      "match": 1,
-      "mismatch": 4,
-      "ext_missing": 2,
+      "match": 0,
+      "mismatch": 0,
+      "ext_missing": 7,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.14285714285714285
+    "cellAccuracy": 0.0
   },
   "buckets": {
     "defects": [
@@ -294,7 +297,7 @@
         "gtNorm": "15950",
         "extNorm": "0",
         "bucket": "structure",
-        "reason": "gt value present at ['row1:amount']"
+        "reason": "ext value is gt's ['row1:unitPrice']"
       },
       {
         "location": "field:supplyAmount",
@@ -313,12 +316,28 @@
         "reason": "char-level diff (sim=0.65)"
       },
       {
+        "location": "table",
+        "status": "rows_missed",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor missed rows ['1']"
+      },
+      {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['1']"
+      },
+      {
         "location": "row1:itemName",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "매입에누리ocr",
-        "extNorm": "643500801맥시부펜시럽천연색소50m",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row1:itemNameMaster",
@@ -330,27 +349,35 @@
       },
       {
         "location": "row1:spec",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "-",
-        "extNorm": "√",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row1:quantity",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "1",
-        "extNorm": "11",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row1:unitPrice",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "0",
-        "extNorm": "1450",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row1:amount",
+        "status": "ext_missing",
+        "gtNorm": "15950",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row1:itemCode",
@@ -362,8 +389,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 6,
+      "recognition": 1,
+      "structure": 13,
       "layout": 0,
       "preprocessing": 0
     },

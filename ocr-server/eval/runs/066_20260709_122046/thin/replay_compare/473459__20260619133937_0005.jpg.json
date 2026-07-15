@@ -176,24 +176,21 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 3,
-    "rowCountExt": 3,
-    "rowCountMatch": true,
-    "matchedRowIdx": [],
-    "gtOnlyRowIdx": [
+    "rowCountExt": 4,
+    "rowCountMatch": false,
+    "matchedRowIdx": [
       "1",
       "2",
       "3"
     ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "1",
-      "2",
-      "3"
+      "4"
     ],
     "rows": [
       {
         "rowIndex": "1",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "타벡스겔",
@@ -213,34 +210,34 @@
           },
           "spec": {
             "gt": "50g",
-            "ext": "",
+            "ext": "50g",
             "gtNorm": "50g",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "50g",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
             "gt": "50",
-            "ext": "",
+            "ext": "50",
             "gtNorm": "50",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "50",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "6000",
-            "ext": "",
+            "ext": "6,000",
             "gtNorm": "6000",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "6000",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "300000",
-            "ext": "",
+            "ext": "300.000",
             "gtNorm": "300000",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "300000",
+            "status": "match",
             "spurious": false
           },
           "manufacturingNo": {
@@ -264,7 +261,6 @@
       {
         "rowIndex": "2",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "티눈밴드원형(8매)",
@@ -284,34 +280,34 @@
           },
           "spec": {
             "gt": "8매/EA",
-            "ext": "",
+            "ext": "8매H/EA",
             "gtNorm": "8매/ea",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "8매h/ea",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
             "gt": "360",
-            "ext": "",
+            "ext": "√ 360",
             "gtNorm": "360",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "360",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "2140",
-            "ext": "",
+            "ext": "2,140",
             "gtNorm": "2140",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "2140",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "770400",
-            "ext": "",
+            "ext": "770.400",
             "gtNorm": "770400",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "770400",
+            "status": "match",
             "spurious": false
           },
           "manufacturingNo": {
@@ -335,7 +331,6 @@
       {
         "rowIndex": "3",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "헛개컨디션",
@@ -355,10 +350,10 @@
           },
           "spec": {
             "gt": "120ml x 10병",
-            "ext": "",
+            "ext": "120m1x10병V",
             "gtNorm": "120ml x 10병",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "120m1x10병v",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -371,18 +366,18 @@
           },
           "unitPrice": {
             "gt": "24500",
-            "ext": "",
+            "ext": "201 24.500",
             "gtNorm": "24500",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20124500",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "490000",
-            "ext": "",
+            "ext": "490.000",
             "gtNorm": "490000",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "490000",
+            "status": "match",
             "spurious": false
           },
           "manufacturingNo": {
@@ -406,13 +401,13 @@
     ],
     "cellCounts": {
       "scored": 24,
-      "match": 0,
-      "mismatch": 0,
-      "ext_missing": 24,
+      "match": 8,
+      "mismatch": 3,
+      "ext_missing": 13,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.0
+    "cellAccuracy": 0.3333333333333333
   },
   "buckets": {
     "defects": [
@@ -434,19 +429,11 @@
       },
       {
         "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['1', '2', '3']"
-      },
-      {
-        "location": "table",
         "status": "rows_extra",
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '2', '3']"
+        "reason": "extractor invented rows ['4']"
       },
       {
         "location": "row1:itemName",
@@ -460,38 +447,6 @@
         "location": "row1:itemNameMaster",
         "status": "ext_missing",
         "gtNorm": "타벡스겔50g(부광)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "50g",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "50",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "6000",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:amount",
-        "status": "ext_missing",
-        "gtNorm": "300000",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -530,35 +485,11 @@
       },
       {
         "location": "row2:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "8매/ea",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:quantity",
-        "status": "ext_missing",
-        "gtNorm": "360",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "2140",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:amount",
-        "status": "ext_missing",
-        "gtNorm": "770400",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "8매h/ea",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.91)"
       },
       {
         "location": "row2:manufacturingNo",
@@ -594,11 +525,11 @@
       },
       {
         "location": "row3:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "120ml x 10병",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "120m1x10병v",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.76)"
       },
       {
         "location": "row3:quantity",
@@ -610,19 +541,11 @@
       },
       {
         "location": "row3:unitPrice",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "24500",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:amount",
-        "status": "ext_missing",
-        "gtNorm": "490000",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "20124500",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.77)"
       },
       {
         "location": "row3:manufacturingNo",
@@ -642,8 +565,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 2,
-      "structure": 26,
+      "recognition": 5,
+      "structure": 14,
       "layout": 0,
       "preprocessing": 0
     },

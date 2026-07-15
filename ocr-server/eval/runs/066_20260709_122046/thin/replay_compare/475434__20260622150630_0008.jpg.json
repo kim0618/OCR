@@ -222,18 +222,18 @@
           },
           "unitPrice": {
             "gt": "0",
-            "ext": "",
+            "ext": "20208",
             "gtNorm": "0",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20208",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "1212480",
-            "ext": "",
+            "ext": "1212480",
             "gtNorm": "1212480",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "1212480",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -265,13 +265,13 @@
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 4,
-      "mismatch": 0,
-      "ext_missing": 5,
+      "match": 5,
+      "mismatch": 1,
+      "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4444444444444444
+    "cellAccuracy": 0.5555555555555556
   },
   "buckets": {
     "defects": [
@@ -313,7 +313,7 @@
         "gtNorm": "1212480",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "reason": "gt value present at ['row1:amount']"
       },
       {
         "location": "field:buyerCompany",
@@ -341,19 +341,11 @@
       },
       {
         "location": "row1:unitPrice",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "0",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:amount",
-        "status": "ext_missing",
-        "gtNorm": "1212480",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "20208",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:expiryDate",
@@ -373,8 +365,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 4,
-      "structure": 8,
+      "recognition": 5,
+      "structure": 6,
       "layout": 0,
       "preprocessing": 0
     },

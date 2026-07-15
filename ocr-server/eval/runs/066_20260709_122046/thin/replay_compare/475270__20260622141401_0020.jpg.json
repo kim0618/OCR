@@ -216,10 +216,10 @@
           },
           "itemNameMaster": {
             "gt": "하루신서방정0.2mg",
-            "ext": "하루신서방정0.2mg(제약사품절)",
+            "ext": "하루신서방정0.2mg",
             "gtNorm": "하루신서방정0.2mg",
-            "extNorm": "하루신서방정0.2mg(제약사품절)",
-            "status": "mismatch",
+            "extNorm": "하루신서방정0.2mg",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -232,18 +232,18 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "43,245",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "43245",
-            "status": "mismatch",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "43245",
-            "ext": "10",
+            "ext": "43,245",
             "gtNorm": "43245",
-            "extNorm": "10",
-            "status": "mismatch",
+            "extNorm": "43245",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -272,10 +272,10 @@
           },
           "itemCode": {
             "gt": "8806540019425",
-            "ext": "075262",
+            "ext": "8806540019425",
             "gtNorm": "8806540019425",
-            "extNorm": "075262",
-            "status": "mismatch",
+            "extNorm": "8806540019425",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -318,18 +318,18 @@
           },
           "quantity": {
             "gt": "30",
-            "ext": "18,832",
+            "ext": "30",
             "gtNorm": "30",
-            "extNorm": "18832",
-            "status": "mismatch",
+            "extNorm": "30",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "18832",
-            "ext": "30",
+            "ext": "18,832",
             "gtNorm": "18832",
-            "extNorm": "30",
-            "status": "mismatch",
+            "extNorm": "18832",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -377,13 +377,13 @@
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 6,
-      "mismatch": 8,
+      "match": 12,
+      "mismatch": 2,
       "ext_missing": 6,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3
+    "cellAccuracy": 0.6
   },
   "buckets": {
     "defects": [
@@ -420,36 +420,12 @@
         "reason": "extractor invented rows ['1', '2', '4']"
       },
       {
-        "location": "row4:itemNameMaster",
-        "status": "mismatch",
-        "gtNorm": "하루신서방정0.2mg",
-        "extNorm": "하루신서방정0.2mg(제약사품절)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.76)"
-      },
-      {
         "location": "row4:spec",
         "status": "ext_missing",
         "gtNorm": "100t",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:quantity",
-        "status": "mismatch",
-        "gtNorm": "10",
-        "extNorm": "43245",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['unitPrice']"
-      },
-      {
-        "location": "row4:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "43245",
-        "extNorm": "10",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['quantity']"
       },
       {
         "location": "row4:expiryDate",
@@ -468,14 +444,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row4:itemCode",
-        "status": "mismatch",
-        "gtNorm": "8806540019425",
-        "extNorm": "075262",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
         "location": "row4:insuranceCode",
         "status": "mismatch",
         "gtNorm": "654001940",
@@ -490,22 +458,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row5:quantity",
-        "status": "mismatch",
-        "gtNorm": "30",
-        "extNorm": "18832",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['unitPrice']"
-      },
-      {
-        "location": "row5:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "18832",
-        "extNorm": "30",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['quantity']"
       },
       {
         "location": "row5:expiryDate",
@@ -533,9 +485,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 7,
+      "recognition": 5,
       "structure": 7,
-      "layout": 4,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

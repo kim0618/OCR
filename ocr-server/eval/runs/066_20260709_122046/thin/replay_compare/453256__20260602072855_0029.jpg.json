@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "40776",
-        "ext": "",
+        "ext": "40776",
         "gtNorm": "40776",
-        "extNorm": "",
+        "extNorm": "40776",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "1348500765",
-        "ext": "085-44-83095",
+        "ext": "134-85-00765",
         "gtNorm": "1348500765",
-        "extNorm": "0854483095",
+        "extNorm": "1348500765",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -86,9 +86,9 @@
       },
       "supplierCompany": {
         "gt": "삼일제약(기타)",
-        "ext": "용)",
+        "ext": "삼일제약(전문)",
         "gtNorm": "삼일제약기타",
-        "extNorm": "용",
+        "extNorm": "삼일제약전문",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
-      "mismatch": 3,
-      "ext_missing": 1,
+      "match": 10,
+      "mismatch": 2,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 10,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.8333333333333334
   },
   "table": {
     "alignMode": "content",
@@ -289,28 +289,12 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:taxAmount",
-        "status": "ext_missing",
-        "gtNorm": "40776",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
-      },
-      {
-        "location": "field:supplierBizNumber",
-        "status": "mismatch",
-        "gtNorm": "1348500765",
-        "extNorm": "0854483095",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "삼일제약기타",
-        "extNorm": "용",
+        "extNorm": "삼일제약전문",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "field:supplierAddress",
@@ -354,8 +338,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 3,
+      "recognition": 4,
+      "structure": 2,
       "layout": 0,
       "preprocessing": 0
     },
@@ -375,6 +359,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

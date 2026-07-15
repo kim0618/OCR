@@ -191,65 +191,62 @@
     "rowCountGt": 1,
     "rowCountExt": 1,
     "rowCountMatch": true,
-    "matchedRowIdx": [],
-    "gtOnlyRowIdx": [
+    "matchedRowIdx": [
       "1"
     ],
-    "extOnlyRowIdx": [
-      "1"
-    ],
+    "gtOnlyRowIdx": [],
+    "extOnlyRowIdx": [],
     "rows": [
       {
         "rowIndex": "1",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "텔미트렌정",
-            "ext": "",
+            "ext": "텔미트렌정 4OMG(정규)(병",
             "gtNorm": "텔미트렌정",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "텔미트렌정4omg정규병",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "텔미트렌정20mg",
-            "ext": "",
+            "ext": "텔미트렌정40mg(병)",
             "gtNorm": "텔미트렌정20mg",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "텔미트렌정40mg(병)",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
             "gt": "40MG(정규) (병) 30T",
-            "ext": "",
+            "ext": "30T",
             "gtNorm": "40mg(정규) (병) 30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
             "gt": "100",
-            "ext": "",
+            "ext": "100",
             "gtNorm": "100",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "100",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "10363",
-            "ext": "",
+            "ext": "1,036,300",
             "gtNorm": "10363",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "1036300",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "1036300",
-            "ext": "",
+            "ext": "10,363",
             "gtNorm": "1036300",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10363",
+            "status": "mismatch",
             "spurious": false
           },
           "expiryDate": {
@@ -270,10 +267,10 @@
           },
           "itemCode": {
             "gt": "04005201",
-            "ext": "",
+            "ext": "18000354",
             "gtNorm": "04005201",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "18000354",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -281,13 +278,13 @@
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 0,
-      "mismatch": 0,
-      "ext_missing": 9,
+      "match": 1,
+      "mismatch": 6,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.0
+    "cellAccuracy": 0.1111111111111111
   },
   "buckets": {
     "defects": [
@@ -332,68 +329,44 @@
         "reason": "char-level diff (sim=0.68)"
       },
       {
-        "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['1']"
-      },
-      {
-        "location": "table",
-        "status": "rows_extra",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor invented rows ['1']"
-      },
-      {
         "location": "row1:itemName",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "텔미트렌정",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "텔미트렌정4omg정규병",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.59)"
       },
       {
         "location": "row1:itemNameMaster",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "텔미트렌정20mg",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "텔미트렌정40mg(병)",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.76)"
       },
       {
         "location": "row1:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "40mg(정규) (병) 30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "100",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "30t",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:unitPrice",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "10363",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "1036300",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['amount']"
       },
       {
         "location": "row1:amount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "1036300",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "10363",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['unitPrice']"
       },
       {
         "location": "row1:expiryDate",
@@ -413,17 +386,17 @@
       },
       {
         "location": "row1:itemCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "04005201",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "18000354",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       }
     ],
     "bucketTally": {
-      "recognition": 4,
-      "structure": 12,
-      "layout": 0,
+      "recognition": 8,
+      "structure": 3,
+      "layout": 2,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

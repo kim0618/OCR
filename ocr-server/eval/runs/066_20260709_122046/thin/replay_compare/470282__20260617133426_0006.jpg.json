@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "4028153584",
-        "ext": "402-85-15138",
+        "ext": "",
         "gtNorm": "4028153584",
-        "extNorm": "4028515138",
+        "extNorm": "",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -73,9 +73,9 @@
       },
       "supplierCompany": {
         "gt": "엘약품(주)(매입)",
-        "ext": "삼성제약(주)(전문)",
+        "ext": "의약품",
         "gtNorm": "엘약품매입",
-        "extNorm": "삼성제약전문",
+        "extNorm": "의약품",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -99,9 +99,9 @@
       },
       "supplierAddress": {
         "gt": "전주시 완산구 효자동 2가141-9",
-        "ext": "경기도 화성시 향남읍 제약공단2길 35",
+        "ext": "전북 전주시 완산구 우전2길 56(효자동",
         "gtNorm": "전주시완산구효자동2가1419",
-        "extNorm": "경기도화성시향남읍제약공단2길35",
+        "extNorm": "전북전주시완산구우전2길56효자동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -155,8 +155,8 @@
     "counts": {
       "scored": 11,
       "match": 6,
-      "mismatch": 5,
-      "ext_missing": 0,
+      "mismatch": 4,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -169,7 +169,7 @@
       "gtPresent": 11,
       "matched": 6,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 0
+      "extAttemptedMiss": 1
     },
     "fieldAccuracy": 0.5454545454545454
   },
@@ -216,10 +216,10 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -275,39 +275,39 @@
     ],
     "cellCounts": {
       "scored": 10,
-      "match": 6,
+      "match": 7,
       "mismatch": 2,
-      "ext_missing": 2,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.6
+    "cellAccuracy": 0.7
   },
   "buckets": {
     "defects": [
       {
         "location": "field:supplierBizNumber",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "4028153584",
-        "extNorm": "4028515138",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.80)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "엘약품매입",
-        "extNorm": "삼성제약전문",
+        "extNorm": "의약품",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "전주시완산구효자동2가1419",
-        "extNorm": "경기도화성시향남읍제약공단2길35",
+        "extNorm": "전북전주시완산구우전2길56효자동",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.56)"
       },
       {
         "location": "field:buyerCompany",
@@ -342,14 +342,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "10",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row1:manufacturingNo",
         "status": "mismatch",
         "gtNorm": "25007",
@@ -367,7 +359,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 7,
+      "recognition": 6,
       "structure": 3,
       "layout": 0,
       "preprocessing": 0
@@ -388,6 +380,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.0
+    "fieldMissRate": 0.091
   }
 }

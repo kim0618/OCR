@@ -176,32 +176,34 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 1,
-    "rowCountExt": 1,
-    "rowCountMatch": true,
+    "rowCountExt": 2,
+    "rowCountMatch": false,
     "matchedRowIdx": [
-      "1"
+      "2"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "1"
+    ],
     "rows": [
       {
-        "rowIndex": "1",
+        "rowIndex": "2",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "테올란비서방캡슐100mg",
-            "ext": "테올란비서방캡슬100mg200C",
+            "ext": "11,918백제약품(주)대전지점",
             "gtNorm": "테올란비서방캡슐100mg",
-            "extNorm": "테올란비서방캡슬100mg200c",
+            "extNorm": "11918백제약품주대전지점",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "테올란비서방캡슐100mg",
-            "ext": "테올란비서방캡슐100mg",
+            "ext": "",
             "gtNorm": "테올란비서방캡슐100mg",
-            "extNorm": "테올란비서방캡슐100mg",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "spec": {
@@ -214,34 +216,34 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "08",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "08",
-            "status": "mismatch",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "11918",
-            "ext": "",
+            "ext": "11918",
             "gtNorm": "11918",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "11918",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "119180",
-            "ext": "11,918",
+            "ext": "119180",
             "gtNorm": "119180",
-            "extNorm": "11918",
-            "status": "mismatch",
+            "extNorm": "119180",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
             "gt": "8806526013621",
-            "ext": "8806526013614",
+            "ext": "",
             "gtNorm": "8806526013621",
-            "extNorm": "8806526013614",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           }
         }
@@ -249,13 +251,13 @@
     ],
     "cellCounts": {
       "scored": 7,
-      "match": 1,
-      "mismatch": 4,
-      "ext_missing": 2,
+      "match": 3,
+      "mismatch": 1,
+      "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.14285714285714285
+    "cellAccuracy": 0.42857142857142855
   },
   "buckets": {
     "defects": [
@@ -292,15 +294,31 @@
         "reason": "char-level diff (sim=0.81)"
       },
       {
-        "location": "row1:itemName",
-        "status": "mismatch",
-        "gtNorm": "테올란비서방캡슐100mg",
-        "extNorm": "테올란비서방캡슬100mg200c",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemNameMaster']"
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['1']"
       },
       {
-        "location": "row1:spec",
+        "location": "row2:itemName",
+        "status": "mismatch",
+        "gtNorm": "테올란비서방캡슐100mg",
+        "extNorm": "11918백제약품주대전지점",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
+      },
+      {
+        "location": "row2:itemNameMaster",
+        "status": "ext_missing",
+        "gtNorm": "테올란비서방캡슐100mg",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row2:spec",
         "status": "ext_missing",
         "gtNorm": "200c",
         "extNorm": "",
@@ -308,42 +326,18 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:quantity",
-        "status": "mismatch",
-        "gtNorm": "10",
-        "extNorm": "08",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
-      },
-      {
-        "location": "row1:unitPrice",
+        "location": "row2:itemCode",
         "status": "ext_missing",
-        "gtNorm": "11918",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
-      },
-      {
-        "location": "row1:amount",
-        "status": "mismatch",
-        "gtNorm": "119180",
-        "extNorm": "11918",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.91)"
-      },
-      {
-        "location": "row1:itemCode",
-        "status": "mismatch",
         "gtNorm": "8806526013621",
-        "extNorm": "8806526013614",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 6,
-      "structure": 2,
-      "layout": 2,
+      "recognition": 4,
+      "structure": 5,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

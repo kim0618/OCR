@@ -8,11 +8,11 @@
     "perField": {
       "totalAmount": {
         "gt": "3908700",
-        "ext": "5,842,440",
+        "ext": "3908700",
         "gtNorm": "3908700",
-        "extNorm": "5842440",
+        "extNorm": "3908700",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -73,9 +73,9 @@
       },
       "supplierCompany": {
         "gt": "미림약품",
-        "ext": "백제약품(주)영등포지점",
+        "ext": "주)미림약품",
         "gtNorm": "미림약품",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "주미림약품",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -99,9 +99,9 @@
       },
       "supplierAddress": {
         "gt": "경기 수원시 영통구 청명로21번길 15(영통동,해광빌딩501,502호)",
-        "ext": "서울 구로구 공원로8길 24",
+        "ext": "경기도수원시영통구청명로4(영통동,다빈별",
         "gtNorm": "경기수원시영통구청명로21번길15영통동해광빌딩501502호",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "경기도수원시영통구청명로4영통동다빈별",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -154,8 +154,8 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 6,
-      "mismatch": 5,
+      "match": 7,
+      "mismatch": 4,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 6,
+      "matched": 7,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.5454545454545454
+    "fieldAccuracy": 0.6363636363636364
   },
   "table": {
     "alignMode": "content",
@@ -374,10 +374,10 @@
           },
           "itemNameMaster": {
             "gt": "이무테라정50mg(병)(반품불가)",
-            "ext": "리나로엠정2.5/1000mg",
+            "ext": "",
             "gtNorm": "이무테라정50mg(병)(반품불가)",
-            "extNorm": "리나로엠정2.5/1000mg",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "spec": {
@@ -430,10 +430,10 @@
           },
           "itemCode": {
             "gt": "04004604",
-            "ext": "04006282",
+            "ext": "",
             "gtNorm": "04004604",
-            "extNorm": "04006282",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "insuranceCode": {
@@ -450,8 +450,8 @@
     "cellCounts": {
       "scored": 30,
       "match": 18,
-      "mismatch": 12,
-      "ext_missing": 0,
+      "mismatch": 10,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -460,28 +460,20 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:totalAmount",
-        "status": "mismatch",
-        "gtNorm": "3908700",
-        "extNorm": "5842440",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "미림약품",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "주미림약품",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.89)"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기수원시영통구청명로21번길15영통동해광빌딩501502호",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "경기도수원시영통구청명로4영통동다빈별",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.56)"
       },
       {
         "location": "field:buyerCompany",
@@ -565,11 +557,11 @@
       },
       {
         "location": "row3:itemNameMaster",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "이무테라정50mg(병)(반품불가)",
-        "extNorm": "리나로엠정2.5/1000mg",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row3:spec",
@@ -589,11 +581,11 @@
       },
       {
         "location": "row3:itemCode",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "04004604",
-        "extNorm": "04006282",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.62)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row3:insuranceCode",
@@ -605,8 +597,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 17,
-      "structure": 1,
+      "recognition": 14,
+      "structure": 3,
       "layout": 0,
       "preprocessing": 0
     },

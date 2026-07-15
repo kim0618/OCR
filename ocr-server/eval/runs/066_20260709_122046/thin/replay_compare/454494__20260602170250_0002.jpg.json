@@ -189,8 +189,8 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 15,
-    "rowCountExt": 15,
-    "rowCountMatch": true,
+    "rowCountExt": 19,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "14",
       "15",
@@ -209,7 +209,12 @@
       "13"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "16",
+      "17",
+      "18",
+      "19"
+    ],
     "rows": [
       {
         "rowIndex": "14",
@@ -373,18 +378,18 @@
           },
           "unitPrice": {
             "gt": "2580",
-            "ext": "2,580",
+            "ext": "2350",
             "gtNorm": "2580",
-            "extNorm": "2580",
-            "status": "match",
+            "extNorm": "2350",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "68112",
-            "ext": "68,112",
+            "ext": "564000",
             "gtNorm": "68112",
-            "extNorm": "68112",
-            "status": "match",
+            "extNorm": "564000",
+            "status": "mismatch",
             "spurious": false
           },
           "itemCode": {
@@ -427,18 +432,18 @@
           },
           "quantity": {
             "gt": "36",
-            "ext": "36 0",
+            "ext": "24",
             "gtNorm": "36",
-            "extNorm": "360",
+            "extNorm": "24",
             "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "4400",
-            "ext": "4,400",
+            "ext": "7260",
             "gtNorm": "4400",
-            "extNorm": "4400",
-            "status": "match",
+            "extNorm": "7260",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
@@ -489,10 +494,10 @@
           },
           "quantity": {
             "gt": "24",
-            "ext": "24 0",
+            "ext": "24",
             "gtNorm": "24",
-            "extNorm": "240",
-            "status": "mismatch",
+            "extNorm": "24",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -1144,13 +1149,13 @@
     ],
     "cellCounts": {
       "scored": 105,
-      "match": 68,
-      "mismatch": 33,
+      "match": 66,
+      "mismatch": 35,
       "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.6476190476190476
+    "cellAccuracy": 0.6285714285714286
   },
   "buckets": {
     "defects": [
@@ -1177,6 +1182,14 @@
         "extNorm": "서울구로구공원로8길24구로동백제약품주영등포지점",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
+      },
+      {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['16', '17', '18', '19']"
       },
       {
         "location": "row14:quantity",
@@ -1211,6 +1224,22 @@
         "reason": "char-level diff (sim=0.80)"
       },
       {
+        "location": "row1:unitPrice",
+        "status": "mismatch",
+        "gtNorm": "2580",
+        "extNorm": "2350",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.75)"
+      },
+      {
+        "location": "row1:amount",
+        "status": "mismatch",
+        "gtNorm": "68112",
+        "extNorm": "564000",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
+      },
+      {
         "location": "row2:itemName",
         "status": "mismatch",
         "gtNorm": "가그린n오리지널750ml",
@@ -1222,9 +1251,17 @@
         "location": "row2:quantity",
         "status": "mismatch",
         "gtNorm": "36",
-        "extNorm": "360",
+        "extNorm": "24",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.80)"
+        "reason": "cell differs, low similarity"
+      },
+      {
+        "location": "row2:unitPrice",
+        "status": "mismatch",
+        "gtNorm": "4400",
+        "extNorm": "7260",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row3:itemName",
@@ -1241,14 +1278,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:quantity",
-        "status": "mismatch",
-        "gtNorm": "24",
-        "extNorm": "240",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "row3:itemCode",
@@ -1476,8 +1505,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 35,
-      "structure": 5,
+      "recognition": 37,
+      "structure": 6,
       "layout": 0,
       "preprocessing": 0
     },

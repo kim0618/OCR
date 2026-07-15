@@ -478,10 +478,10 @@
           },
           "itemNameMaster": {
             "gt": "지소렌정(제약사품절)",
-            "ext": "지소렌정(제약사품절)",
+            "ext": "지소렌정(지엘팜텍)(표준코드변경)",
             "gtNorm": "지소렌정(제약사품절)",
-            "extNorm": "지소렌정(제약사품절)",
-            "status": "match",
+            "extNorm": "지소렌정(지엘팜텍)(표준코드변경)",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
@@ -494,18 +494,18 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "",
+            "ext": "5",
             "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "5",
+            "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "292560",
-            "ext": "",
+            "ext": "48760",
             "gtNorm": "292560",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "48760",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
@@ -838,18 +838,18 @@
           },
           "quantity": {
             "gt": "20",
-            "ext": "",
+            "ext": "20",
             "gtNorm": "20",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "19110",
-            "ext": "",
+            "ext": "19110",
             "gtNorm": "19110",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "19110",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -1061,13 +1061,13 @@
     ],
     "cellCounts": {
       "scored": 99,
-      "match": 34,
-      "mismatch": 19,
-      "ext_missing": 46,
+      "match": 35,
+      "mismatch": 22,
+      "ext_missing": 42,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3434343434343434
+    "cellAccuracy": 0.35353535353535354
   },
   "buckets": {
     "defects": [
@@ -1296,20 +1296,28 @@
         "reason": "gt cell absent in extracted row"
       },
       {
+        "location": "row4:itemNameMaster",
+        "status": "mismatch",
+        "gtNorm": "지소렌정(제약사품절)",
+        "extNorm": "지소렌정(지엘팜텍)(표준코드변경)",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
+      },
+      {
         "location": "row4:quantity",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "10",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "5",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row4:unitPrice",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "292560",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "48760",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row4:expiryDate",
@@ -1496,22 +1504,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row8:quantity",
-        "status": "ext_missing",
-        "gtNorm": "20",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row8:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "19110",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
-      },
-      {
         "location": "row8:amount",
         "status": "mismatch",
         "gtNorm": "382200",
@@ -1633,9 +1625,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 20,
-      "structure": 46,
-      "layout": 4,
+      "recognition": 23,
+      "structure": 43,
+      "layout": 3,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

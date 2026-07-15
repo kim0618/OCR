@@ -60,11 +60,11 @@
       },
       "buyerBizNumber": {
         "gt": "6168513350",
-        "ext": "112-60-96259",
+        "ext": "616-85-13350",
         "gtNorm": "6168513350",
-        "extNorm": "1126096259",
+        "extNorm": "6168513350",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -154,8 +154,8 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 5,
-      "mismatch": 5,
+      "match": 6,
+      "mismatch": 4,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -167,21 +167,22 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 5,
+      "matched": 6,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.45454545454545453
+    "fieldAccuracy": 0.5454545454545454
   },
   "table": {
     "alignMode": "content",
     "rowCountGt": 3,
-    "rowCountExt": 2,
+    "rowCountExt": 4,
     "rowCountMatch": false,
-    "matchedRowIdx": [],
+    "matchedRowIdx": [
+      "3",
+      "4"
+    ],
     "gtOnlyRowIdx": [
-      "1",
-      "2",
       "3"
     ],
     "extOnlyRowIdx": [
@@ -190,9 +191,8 @@
     ],
     "rows": [
       {
-        "rowIndex": "1",
+        "rowIndex": "3",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "낙소졸정500/20밀리그램(나프록센, 에스오메프라졸)",
@@ -220,26 +220,26 @@
           },
           "quantity": {
             "gt": "20",
-            "ext": "",
+            "ext": "20",
             "gtNorm": "20",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "133500",
-            "ext": "",
+            "ext": "133500",
             "gtNorm": "133500",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "133500",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "2670000",
-            "ext": "",
+            "ext": "2670000",
             "gtNorm": "2670000",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "2670000",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -277,9 +277,8 @@
         }
       },
       {
-        "rowIndex": "2",
+        "rowIndex": "4",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "수바스트정5mg",
@@ -307,26 +306,26 @@
           },
           "quantity": {
             "gt": "30",
-            "ext": "",
+            "ext": "30",
             "gtNorm": "30",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "9750",
-            "ext": "",
+            "ext": "9750",
             "gtNorm": "9750",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "9750",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "292500",
-            "ext": "",
+            "ext": "292500",
             "gtNorm": "292500",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "292500",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -429,13 +428,13 @@
     ],
     "cellCounts": {
       "scored": 27,
-      "match": 0,
+      "match": 6,
       "mismatch": 0,
-      "ext_missing": 27,
+      "ext_missing": 21,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.0
+    "cellAccuracy": 0.2222222222222222
   },
   "buckets": {
     "defects": [
@@ -454,14 +453,6 @@
         "extNorm": "0",
         "bucket": "structure",
         "reason": "ext value is gt's ['row3:unitPrice']"
-      },
-      {
-        "location": "field:buyerBizNumber",
-        "status": "mismatch",
-        "gtNorm": "6168513350",
-        "extNorm": "1126096259",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplyAmount",
@@ -493,7 +484,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor missed rows ['1', '2', '3']"
+        "reason": "extractor missed rows ['3']"
       },
       {
         "location": "table",
@@ -504,7 +495,7 @@
         "reason": "extractor invented rows ['5', '6']"
       },
       {
-        "location": "row1:itemName",
+        "location": "row3:itemName",
         "status": "ext_missing",
         "gtNorm": "낙소졸정50020밀리그램나프록센에스오메프라졸",
         "extNorm": "",
@@ -512,7 +503,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemNameMaster",
+        "location": "row3:itemNameMaster",
         "status": "ext_missing",
         "gtNorm": "낙소졸정500/20mg",
         "extNorm": "",
@@ -520,7 +511,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:spec",
+        "location": "row3:spec",
         "status": "ext_missing",
         "gtNorm": "300t",
         "extNorm": "",
@@ -528,31 +519,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "20",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "133500",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:amount",
-        "status": "ext_missing",
-        "gtNorm": "2670000",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:expiryDate",
+        "location": "row3:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20271221",
         "extNorm": "",
@@ -560,7 +527,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:manufacturingNo",
+        "location": "row3:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "083325771",
         "extNorm": "",
@@ -568,7 +535,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemCode",
+        "location": "row3:itemCode",
         "status": "ext_missing",
         "gtNorm": "07000988",
         "extNorm": "",
@@ -576,7 +543,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:insuranceCode",
+        "location": "row3:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "643506630",
         "extNorm": "",
@@ -584,7 +551,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:itemName",
+        "location": "row4:itemName",
         "status": "ext_missing",
         "gtNorm": "수바스트정5mg",
         "extNorm": "",
@@ -592,7 +559,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:itemNameMaster",
+        "location": "row4:itemNameMaster",
         "status": "ext_missing",
         "gtNorm": "수바스트정5mg",
         "extNorm": "",
@@ -600,7 +567,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:spec",
+        "location": "row4:spec",
         "status": "ext_missing",
         "gtNorm": "30t(ptp)",
         "extNorm": "",
@@ -608,31 +575,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:quantity",
-        "status": "ext_missing",
-        "gtNorm": "30",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "9750",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:amount",
-        "status": "ext_missing",
-        "gtNorm": "292500",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:expiryDate",
+        "location": "row4:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20280119",
         "extNorm": "",
@@ -640,7 +583,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:manufacturingNo",
+        "location": "row4:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "087926011",
         "extNorm": "",
@@ -648,7 +591,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:itemCode",
+        "location": "row4:itemCode",
         "status": "ext_missing",
         "gtNorm": "01008266",
         "extNorm": "",
@@ -656,7 +599,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:insuranceCode",
+        "location": "row4:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "643506750",
         "extNorm": "",
@@ -721,8 +664,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 4,
-      "structure": 31,
+      "recognition": 3,
+      "structure": 25,
       "layout": 0,
       "preprocessing": 0
     },

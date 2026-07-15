@@ -125,11 +125,11 @@
       },
       "supplyAmount": {
         "gt": "1796727",
-        "ext": "",
+        "ext": "1796727",
         "gtNorm": "1796727",
-        "extNorm": "",
+        "extNorm": "1796727",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 6,
+      "match": 7,
       "mismatch": 5,
-      "ext_missing": 1,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,22 +180,24 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 6,
+      "matched": 7,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.5
+    "fieldAccuracy": 0.5833333333333334
   },
   "table": {
     "alignMode": "content",
     "rowCountGt": 1,
-    "rowCountExt": 1,
-    "rowCountMatch": true,
+    "rowCountExt": 2,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "2"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -305,14 +307,6 @@
         "reason": "char-level diff (sim=0.94)"
       },
       {
-        "location": "field:supplyAmount",
-        "status": "ext_missing",
-        "gtNorm": "1796727",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
-      },
-      {
         "location": "field:buyerCompany",
         "status": "mismatch",
         "gtNorm": "백제약품북부물류센터",
@@ -327,6 +321,14 @@
         "extNorm": "중북전천군진천읍문화12길61",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
+      },
+      {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['2']"
       },
       {
         "location": "row1:itemName",
@@ -399,6 +401,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

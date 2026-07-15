@@ -62,6 +62,7 @@ from extractors.invoice_statement_free import (  # noqa: E402
     fill_arith_empty_amount as _fill_arith_amount,
     fill_arith_empty_quantity as _fill_arith_qty,
     fix_swapped_qty_unitprice as _fix_swap_qu,
+    fix_totals_arithmetic as _fix_totals,
     reconstruct_numeric_columns as _geo_recon,
     refine_supplier_bizno as _refine_sup_bizno,
     refine_buyer_bizno as _refine_buy_bizno,
@@ -224,6 +225,12 @@ def replay_dispatch(snap: dict) -> tuple[dict, str]:
     if APPLY_UPA and isinstance(df, dict) and df.get("tableRows"):
         try:
             df["tableRows"], _ = _fill_arith_qty(df["tableRows"])
+        except Exception:
+            pass
+    # mirror main.py 합계 3형제 산술 복구 (supply+tax=total, 10% prior 게이트)
+    if APPLY_UPA and isinstance(df, dict):
+        try:
+            df, _ = _fix_totals(df, lines)
         except Exception:
             pass
     # mirror main.py join-point 사업자번호 재선택 (마스터매칭 앞 — itembuycust 앵커)

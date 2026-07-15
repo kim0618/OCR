@@ -163,7 +163,7 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 4,
-    "rowCountExt": 5,
+    "rowCountExt": 6,
     "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
@@ -173,7 +173,8 @@
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "2"
+      "2",
+      "6"
     ],
     "rows": [
       {
@@ -276,18 +277,18 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "26,938",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "26938",
-            "status": "mismatch",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "26938",
-            "ext": "",
+            "ext": "26938",
             "gtNorm": "26938",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "26938",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -346,26 +347,26 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "9018",
-            "ext": "",
+            "ext": "9018",
             "gtNorm": "9018",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "9018",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "90180",
-            "ext": "9,018",
+            "ext": "90180",
             "gtNorm": "90180",
-            "extNorm": "9018",
-            "status": "mismatch",
+            "extNorm": "90180",
+            "status": "match",
             "spurious": false
           },
           "manufacturingNo": {
@@ -459,13 +460,13 @@
     ],
     "cellCounts": {
       "scored": 32,
-      "match": 13,
-      "mismatch": 7,
-      "ext_missing": 12,
+      "match": 18,
+      "mismatch": 5,
+      "ext_missing": 9,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.40625
+    "cellAccuracy": 0.5625
   },
   "buckets": {
     "defects": [
@@ -491,7 +492,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['2']"
+        "reason": "extractor invented rows ['2', '6']"
       },
       {
         "location": "row1:spec",
@@ -558,22 +559,6 @@
         "reason": "char-level diff (sim=0.60)"
       },
       {
-        "location": "row5:quantity",
-        "status": "mismatch",
-        "gtNorm": "10",
-        "extNorm": "26938",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row5:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "26938",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['quantity']"
-      },
-      {
         "location": "row5:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "48003",
@@ -588,30 +573,6 @@
         "extNorm": "22001141",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.50)"
-      },
-      {
-        "location": "row3:quantity",
-        "status": "ext_missing",
-        "gtNorm": "10",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "9018",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
-      },
-      {
-        "location": "row3:amount",
-        "status": "mismatch",
-        "gtNorm": "90180",
-        "extNorm": "9018",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.89)"
       },
       {
         "location": "row3:manufacturingNo",
@@ -647,9 +608,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 8,
-      "structure": 12,
-      "layout": 2,
+      "recognition": 6,
+      "structure": 11,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

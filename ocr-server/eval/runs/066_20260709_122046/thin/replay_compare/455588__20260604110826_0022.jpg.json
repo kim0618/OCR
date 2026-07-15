@@ -60,9 +60,9 @@
       },
       "supplierCompany": {
         "gt": "에이치엘비제약KGSP물류",
-        "ext": "일양약품 (전문)",
+        "ext": "몬테를플러스정105밀리그램100T(전공정제일약품",
         "gtNorm": "에이치엘비제약kgsp물류",
-        "extNorm": "일양약품전문",
+        "extNorm": "몬테를플러스정105밀리그램100t전공정제일약품",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -86,11 +86,11 @@
       },
       "supplierAddress": {
         "gt": "경기 남양주시 진접읍 진벌로51번길 65 나동",
-        "ext": "경기도 용인시 기흥구 하갈로 110 (하갈동)",
+        "ext": "",
         "gtNorm": "경기남양주시진접읍진벌로51번길65나동",
-        "extNorm": "경기도용인시기흥구하갈로110하갈동",
+        "extNorm": "",
         "type": "address",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -142,8 +142,8 @@
     "counts": {
       "scored": 10,
       "match": 5,
-      "mismatch": 5,
-      "ext_missing": 0,
+      "mismatch": 4,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -156,7 +156,7 @@
       "gtPresent": 10,
       "matched": 5,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 0
+      "extAttemptedMiss": 1
     },
     "fieldAccuracy": 0.5
   },
@@ -560,10 +560,10 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -1049,13 +1049,13 @@
     ],
     "cellCounts": {
       "scored": 100,
-      "match": 70,
+      "match": 71,
       "mismatch": 27,
-      "ext_missing": 3,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.7
+    "cellAccuracy": 0.71
   },
   "buckets": {
     "defects": [
@@ -1071,17 +1071,17 @@
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "에이치엘비제약kgsp물류",
-        "extNorm": "일양약품전문",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "몬테를플러스정105밀리그램100t전공정제일약품",
+        "bucket": "structure",
+        "reason": "ext value is gt's ['row7:itemName']"
       },
       {
         "location": "field:supplierAddress",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "경기남양주시진접읍진벌로51번길65나동",
-        "extNorm": "경기도용인시기흥구하갈로110하갈동",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:buyerCompany",
@@ -1210,14 +1210,6 @@
         "extNorm": "아 3o0r√10",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row5:quantity",
-        "status": "ext_missing",
-        "gtNorm": "10",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row5:manufacturingNo",
@@ -1349,8 +1341,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 32,
-      "structure": 4,
+      "recognition": 30,
+      "structure": 5,
       "layout": 0,
       "preprocessing": 0
     },
@@ -1370,6 +1362,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.0
+    "fieldMissRate": 0.1
   }
 }

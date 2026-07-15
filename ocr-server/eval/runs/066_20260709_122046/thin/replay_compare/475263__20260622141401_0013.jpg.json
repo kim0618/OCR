@@ -60,11 +60,11 @@
       },
       "supplierCompany": {
         "gt": "메디카코리아(전)",
-        "ext": "삼진제약(전)",
+        "ext": "메디카코리아(주)",
         "gtNorm": "메디카코리아",
-        "extNorm": "삼진제약",
+        "extNorm": "메디카코리아",
         "type": "company",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -86,9 +86,9 @@
       },
       "supplierAddress": {
         "gt": "서울 서초구 명달로 9, 방배빌딩 2층 (방배동)",
-        "ext": "서울 마포구 와우산로 121 (서교동)",
+        "ext": "서울 서초구 명달로 9 (방배동) 2층",
         "gtNorm": "서울서초구명달로9방배빌딩2층방배동",
-        "extNorm": "서울마포구와우산로121서교동",
+        "extNorm": "서울서초구명달로9방배동2층",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -141,8 +141,8 @@
     "profile": "thin",
     "counts": {
       "scored": 10,
-      "match": 6,
-      "mismatch": 4,
+      "match": 7,
+      "mismatch": 3,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -154,11 +154,11 @@
     },
     "coverage": {
       "gtPresent": 10,
-      "matched": 6,
+      "matched": 7,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6
+    "fieldAccuracy": 0.7
   },
   "table": {
     "alignMode": "content",
@@ -2205,20 +2205,12 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "메디카코리아",
-        "extNorm": "삼진제약",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울서초구명달로9방배빌딩2층방배동",
-        "extNorm": "서울마포구와우산로121서교동",
+        "extNorm": "서울서초구명달로9방배동2층",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.81)"
       },
       {
         "location": "field:buyerCompany",
@@ -3886,7 +3878,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 6,
+      "recognition": 5,
       "structure": 203,
       "layout": 1,
       "preprocessing": 0

@@ -60,11 +60,11 @@
       },
       "buyerBizNumber": {
         "gt": "6098504585",
-        "ext": "112-61-70337",
+        "ext": "609-85-04585",
         "gtNorm": "6098504585",
-        "extNorm": "1126170337",
+        "extNorm": "6098504585",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -154,8 +154,8 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 5,
-      "mismatch": 6,
+      "match": 6,
+      "mismatch": 5,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -167,24 +167,26 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 5,
+      "matched": 6,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.45454545454545453
+    "fieldAccuracy": 0.5454545454545454
   },
   "table": {
     "alignMode": "content",
     "rowCountGt": 2,
-    "rowCountExt": 1,
-    "rowCountMatch": false,
+    "rowCountExt": 2,
+    "rowCountMatch": true,
     "matchedRowIdx": [
       "1"
     ],
     "gtOnlyRowIdx": [
       "2"
     ],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "2"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -365,14 +367,6 @@
         "reason": "gt value present at ['row1:unitPrice']"
       },
       {
-        "location": "field:buyerBizNumber",
-        "status": "mismatch",
-        "gtNorm": "6098504585",
-        "extNorm": "1126170337",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplyAmount",
         "status": "mismatch",
         "gtNorm": "81144",
@@ -395,6 +389,14 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "extractor missed rows ['2']"
+      },
+      {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['2']"
       },
       {
         "location": "row1:itemName",
@@ -502,8 +504,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 6,
-      "structure": 14,
+      "recognition": 5,
+      "structure": 15,
       "layout": 0,
       "preprocessing": 0
     },

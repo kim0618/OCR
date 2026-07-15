@@ -189,8 +189,8 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 8,
-    "rowCountExt": 8,
-    "rowCountMatch": true,
+    "rowCountExt": 10,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
       "2",
@@ -202,7 +202,10 @@
       "8"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "9",
+      "10"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -320,10 +323,10 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "10",
+            "ext": "7",
             "gtNorm": "10",
-            "extNorm": "10",
-            "status": "match",
+            "extNorm": "7",
+            "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
@@ -895,13 +898,13 @@
     ],
     "cellCounts": {
       "scored": 80,
-      "match": 29,
-      "mismatch": 29,
+      "match": 28,
+      "mismatch": 30,
       "ext_missing": 22,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3625
+    "cellAccuracy": 0.35
   },
   "buckets": {
     "defects": [
@@ -954,6 +957,14 @@
         "reason": "value differs, low similarity"
       },
       {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['9', '10']"
+      },
+      {
         "location": "row1:unitPrice",
         "status": "mismatch",
         "gtNorm": "42864",
@@ -1000,6 +1011,14 @@
         "extNorm": "40g/30정",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.93)"
+      },
+      {
+        "location": "row2:quantity",
+        "status": "mismatch",
+        "gtNorm": "10",
+        "extNorm": "7",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row2:unitPrice",
@@ -1363,8 +1382,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 34,
-      "structure": 23,
+      "recognition": 35,
+      "structure": 24,
       "layout": 0,
       "preprocessing": 0
     },

@@ -189,14 +189,15 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 1,
-    "rowCountExt": 2,
+    "rowCountExt": 3,
     "rowCountMatch": false,
     "matchedRowIdx": [
       "2"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "1"
+      "1",
+      "3"
     ],
     "rows": [
       {
@@ -229,18 +230,18 @@
           },
           "quantity": {
             "gt": "3",
-            "ext": "",
+            "ext": "3",
             "gtNorm": "3",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "3",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "90240",
-            "ext": "",
+            "ext": "90240",
             "gtNorm": "90240",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "90240",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -288,13 +289,13 @@
     ],
     "cellCounts": {
       "scored": 10,
-      "match": 3,
+      "match": 5,
       "mismatch": 1,
-      "ext_missing": 6,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3
+    "cellAccuracy": 0.5
   },
   "buckets": {
     "defects": [
@@ -344,7 +345,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1']"
+        "reason": "extractor invented rows ['1', '3']"
       },
       {
         "location": "row2:spec",
@@ -353,22 +354,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:quantity",
-        "status": "ext_missing",
-        "gtNorm": "3",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "90240",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
       },
       {
         "location": "row2:amount",
@@ -405,8 +390,8 @@
     ],
     "bucketTally": {
       "recognition": 3,
-      "structure": 8,
-      "layout": 2,
+      "structure": 7,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

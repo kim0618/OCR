@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "2208100530",
-        "ext": "085-49-77003",
+        "ext": "220-81-00530",
         "gtNorm": "2208100530",
-        "extNorm": "0854977003",
+        "extNorm": "2208100530",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "한독(전)",
-        "ext": "용)",
+        "ext": "한독(전)",
         "gtNorm": "한독",
-        "extNorm": "용",
+        "extNorm": "한독",
         "type": "company",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울 강남구 테헤란로 132(역삼동)",
-        "ext": "서울시강남구테헤란로132(역삼동",
+        "ext": "서울 강남구 테헤란로 132(역삼동)",
         "gtNorm": "서울강남구테헤란로132역삼동",
-        "extNorm": "서울시강남구테헤란로132역삼동",
+        "extNorm": "서울강남구테헤란로132역삼동",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 6,
-      "mismatch": 4,
+      "match": 9,
+      "mismatch": 1,
       "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 6,
+      "matched": 9,
       "extNotAttempted": 0,
       "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.5
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -469,18 +469,18 @@
           },
           "quantity": {
             "gt": "800",
-            "ext": "",
+            "ext": "800",
             "gtNorm": "800",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "800",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "2059",
-            "ext": "",
+            "ext": "2059",
             "gtNorm": "2059",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "2059",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -676,13 +676,13 @@
     ],
     "cellCounts": {
       "scored": 54,
-      "match": 25,
+      "match": 27,
       "mismatch": 14,
-      "ext_missing": 15,
+      "ext_missing": 13,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.46296296296296297
+    "cellAccuracy": 0.5
   },
   "buckets": {
     "defects": [
@@ -693,30 +693,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
-      },
-      {
-        "location": "field:supplierBizNumber",
-        "status": "mismatch",
-        "gtNorm": "2208100530",
-        "extNorm": "0854977003",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
-      },
-      {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "한독",
-        "extNorm": "용",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "서울강남구테헤란로132역삼동",
-        "extNorm": "서울시강남구테헤란로132역삼동",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.97)"
       },
       {
         "location": "field:supplyAmount",
@@ -855,22 +831,6 @@
         "reason": "char-level diff (sim=0.50)"
       },
       {
-        "location": "row6:quantity",
-        "status": "ext_missing",
-        "gtNorm": "800",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row6:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "2059",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row6:expiryDate",
         "status": "mismatch",
         "gtNorm": "20291005",
@@ -976,8 +936,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 18,
-      "structure": 18,
+      "recognition": 15,
+      "structure": 16,
       "layout": 0,
       "preprocessing": 0
     },

@@ -163,74 +163,75 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 1,
-    "rowCountExt": 2,
+    "rowCountExt": 3,
     "rowCountMatch": false,
     "matchedRowIdx": [
-      "1"
+      "3"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
+      "1",
       "2"
     ],
     "rows": [
       {
-        "rowIndex": "1",
+        "rowIndex": "3",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "레바캄 10/80mg",
-            "ext": "레바캄10/80mg",
-            "gtNorm": "레바캄1080mg",
-            "extNorm": "레바캄1080mg",
-            "status": "match",
-            "spurious": false
-          },
-          "itemNameMaster": {
-            "gt": "레바캄정10/80mg",
-            "ext": "레바캄정10/80mg",
-            "gtNorm": "레바캄정10/80mg",
-            "extNorm": "레바캄정10/80mg",
-            "status": "match",
-            "spurious": false
-          },
-          "spec": {
-            "gt": "100T/\nBAC",
-            "ext": "DAC 100T/ PAC V",
-            "gtNorm": "100t/ bac",
-            "extNorm": "dac 100t/ pac v",
-            "status": "mismatch",
-            "spurious": false
-          },
-          "quantity": {
-            "gt": "30",
             "ext": "",
-            "gtNorm": "30",
+            "gtNorm": "레바캄1080mg",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
           },
+          "itemNameMaster": {
+            "gt": "레바캄정10/80mg",
+            "ext": "",
+            "gtNorm": "레바캄정10/80mg",
+            "extNorm": "",
+            "status": "ext_missing",
+            "spurious": false
+          },
+          "spec": {
+            "gt": "100T/\nBAC",
+            "ext": "",
+            "gtNorm": "100t/ bac",
+            "extNorm": "",
+            "status": "ext_missing",
+            "spurious": false
+          },
+          "quantity": {
+            "gt": "30",
+            "ext": "30",
+            "gtNorm": "30",
+            "extNorm": "30",
+            "status": "match",
+            "spurious": false
+          },
           "unitPrice": {
             "gt": "64940",
-            "ext": "1,948,200",
+            "ext": "64940",
             "gtNorm": "64940",
-            "extNorm": "1948200",
-            "status": "mismatch",
+            "extNorm": "64940",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "1948200",
-            "ext": "64,940",
+            "ext": "1948200",
             "gtNorm": "1948200",
-            "extNorm": "64940",
-            "status": "mismatch",
+            "extNorm": "1948200",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
             "gt": "20290114",
-            "ext": "20290114",
+            "ext": "",
             "gtNorm": "20290114",
-            "extNorm": "20290114",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "manufacturingNo": {
@@ -243,10 +244,10 @@
           },
           "itemCode": {
             "gt": "12000251",
-            "ext": "ZVA26501",
+            "ext": "",
             "gtNorm": "12000251",
-            "extNorm": "ZVA26501",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           }
         }
@@ -255,8 +256,8 @@
     "cellCounts": {
       "scored": 9,
       "match": 3,
-      "mismatch": 4,
-      "ext_missing": 2,
+      "mismatch": 0,
+      "ext_missing": 6,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -326,61 +327,61 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['2']"
+        "reason": "extractor invented rows ['1', '2']"
       },
       {
-        "location": "row1:spec",
-        "status": "mismatch",
-        "gtNorm": "100t/ bac",
-        "extNorm": "dac 100t/ pac v",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
-      },
-      {
-        "location": "row1:quantity",
+        "location": "row3:itemName",
         "status": "ext_missing",
-        "gtNorm": "30",
+        "gtNorm": "레바캄1080mg",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "64940",
-        "extNorm": "1948200",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
+        "location": "row3:itemNameMaster",
+        "status": "ext_missing",
+        "gtNorm": "레바캄정10/80mg",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:amount",
-        "status": "mismatch",
-        "gtNorm": "1948200",
-        "extNorm": "64940",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['unitPrice']"
+        "location": "row3:spec",
+        "status": "ext_missing",
+        "gtNorm": "100t/ bac",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:manufacturingNo",
+        "location": "row3:expiryDate",
+        "status": "ext_missing",
+        "gtNorm": "20290114",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row3:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "ZVA26501",
         "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemCode",
-        "status": "mismatch",
+        "location": "row3:itemCode",
+        "status": "ext_missing",
         "gtNorm": "12000251",
-        "extNorm": "ZVA26501",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 3,
-      "structure": 8,
-      "layout": 3,
+      "recognition": 1,
+      "structure": 13,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

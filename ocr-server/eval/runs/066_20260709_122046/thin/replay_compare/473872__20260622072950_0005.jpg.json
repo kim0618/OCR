@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "1248135615",
-        "ext": "113-85-04425",
+        "ext": "",
         "gtNorm": "1248135615",
-        "extNorm": "1138504425",
+        "extNorm": "",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -86,9 +86,9 @@
       },
       "supplierCompany": {
         "gt": "명문제약",
-        "ext": "백제약품(주)영등포지점",
+        "ext": "접대문제약주식회사",
         "gtNorm": "명문제약",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "접대문제약",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 강남구 봉은사로 476 (삼성동)",
-        "ext": "서울 구로구 공원로8길 24",
+        "ext": "",
         "gtNorm": "서울특별시강남구봉은사로476삼성동",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "",
         "type": "address",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 5,
-      "mismatch": 5,
-      "ext_missing": 2,
+      "mismatch": 3,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,7 +182,7 @@
       "gtPresent": 12,
       "matched": 5,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 4
     },
     "fieldAccuracy": 0.4166666666666667
   },
@@ -229,26 +229,26 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "33564",
-            "ext": "",
+            "ext": "33564",
             "gtNorm": "33564",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "33564",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "335640",
-            "ext": "",
+            "ext": "335640",
             "gtNorm": "335640",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "335640",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -288,13 +288,13 @@
     ],
     "cellCounts": {
       "scored": 10,
-      "match": 3,
+      "match": 6,
       "mismatch": 2,
-      "ext_missing": 5,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3
+    "cellAccuracy": 0.6
   },
   "buckets": {
     "defects": [
@@ -304,31 +304,31 @@
         "gtNorm": "335640",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "reason": "gt value present at ['row1:amount']"
       },
       {
         "location": "field:supplierBizNumber",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "1248135615",
-        "extNorm": "1138504425",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "명문제약",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "접대문제약",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "field:supplierAddress",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "서울특별시강남구봉은사로476삼성동",
-        "extNorm": "서울구로구공원로8길24",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplyAmount",
@@ -371,30 +371,6 @@
         "reason": "char-level diff (sim=0.67)"
       },
       {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "10",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "33564",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:amount",
-        "status": "ext_missing",
-        "gtNorm": "335640",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row1:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "26001",
@@ -420,8 +396,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 7,
-      "structure": 8,
+      "recognition": 5,
+      "structure": 7,
       "layout": 0,
       "preprocessing": 0
     },
@@ -441,6 +417,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.167
+    "fieldMissRate": 0.333
   }
 }

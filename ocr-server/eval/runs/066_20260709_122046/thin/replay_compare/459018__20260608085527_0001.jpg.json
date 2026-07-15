@@ -99,11 +99,11 @@
       },
       "supplyAmount": {
         "gt": "240210",
-        "ext": "",
+        "ext": "266900",
         "gtNorm": "240210",
-        "extNorm": "",
+        "extNorm": "266900",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -142,8 +142,8 @@
     "counts": {
       "scored": 10,
       "match": 6,
-      "mismatch": 3,
-      "ext_missing": 1,
+      "mismatch": 4,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -156,7 +156,7 @@
       "gtPresent": 10,
       "matched": 6,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
     "fieldAccuracy": 0.6
   },
@@ -270,15 +270,15 @@
         "gtNorm": "266900",
         "extNorm": "293590",
         "bucket": "structure",
-        "reason": "gt value present at ['row1:amount']"
+        "reason": "gt value present at ['field:supplyAmount', 'row1:amount']"
       },
       {
         "location": "field:supplyAmount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "240210",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "extNorm": "266900",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "field:buyerCompany",
@@ -314,8 +314,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 3,
-      "structure": 3,
+      "recognition": 4,
+      "structure": 2,
       "layout": 0,
       "preprocessing": 0
     },
@@ -335,6 +335,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.1
+    "fieldMissRate": 0.0
   }
 }

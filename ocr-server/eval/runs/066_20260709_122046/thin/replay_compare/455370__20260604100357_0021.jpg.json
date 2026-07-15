@@ -168,14 +168,16 @@
     "matchedRowIdx": [
       "1",
       "4",
-      "2",
       "3"
     ],
     "gtOnlyRowIdx": [
       "2",
+      "4",
       "6"
     ],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "2"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -223,10 +225,10 @@
           },
           "amount": {
             "gt": "129600",
-            "ext": "12,960",
+            "ext": "129600",
             "gtNorm": "129600",
-            "extNorm": "12960",
-            "status": "mismatch",
+            "extNorm": "129600",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
@@ -318,68 +320,6 @@
         }
       },
       {
-        "rowIndex": "2",
-        "rowMatch": false,
-        "cells": {
-          "itemName": {
-            "gt": "뉴락스에프정",
-            "ext": "뉴락스에프정 B6on. x9.i1) F. 10T*50",
-            "gtNorm": "뉴락스에프정",
-            "extNorm": "뉴락스에프정b6onx9i1f10t50",
-            "status": "mismatch",
-            "spurious": false
-          },
-          "itemNameMaster": {
-            "gt": "뉴락스에프정",
-            "ext": "뉴락스에프정",
-            "gtNorm": "뉴락스에프정",
-            "extNorm": "뉴락스에프정",
-            "status": "match",
-            "spurious": false
-          },
-          "spec": {
-            "gt": "10T",
-            "ext": "개",
-            "gtNorm": "10t",
-            "extNorm": "개",
-            "status": "mismatch",
-            "spurious": false
-          },
-          "quantity": {
-            "gt": "1",
-            "ext": "1",
-            "gtNorm": "1",
-            "extNorm": "1",
-            "status": "match",
-            "spurious": false
-          },
-          "unitPrice": {
-            "gt": "0",
-            "ext": "35,000",
-            "gtNorm": "0",
-            "extNorm": "35000",
-            "status": "mismatch",
-            "spurious": false
-          },
-          "amount": {
-            "gt": "0",
-            "ext": "35,000",
-            "gtNorm": "0",
-            "extNorm": "35000",
-            "status": "mismatch",
-            "spurious": false
-          },
-          "itemCode": {
-            "gt": "05004334",
-            "ext": "05004334",
-            "gtNorm": "05004334",
-            "extNorm": "05004334",
-            "status": "match",
-            "spurious": false
-          }
-        }
-      },
-      {
         "rowIndex": "3",
         "rowMatch": false,
         "cells": {
@@ -425,10 +365,10 @@
           },
           "amount": {
             "gt": "27000",
-            "ext": "27,000",
+            "ext": "270000",
             "gtNorm": "27000",
-            "extNorm": "27000",
-            "status": "match",
+            "extNorm": "270000",
+            "status": "mismatch",
             "spurious": false
           },
           "expiryDate": {
@@ -521,6 +461,69 @@
         }
       },
       {
+        "rowIndex": "4",
+        "rowMatch": false,
+        "missingGtRow": true,
+        "cells": {
+          "itemName": {
+            "gt": "뉴락스에프정",
+            "ext": "",
+            "gtNorm": "뉴락스에프정",
+            "extNorm": "",
+            "status": "ext_missing",
+            "spurious": false
+          },
+          "itemNameMaster": {
+            "gt": "뉴락스에프정",
+            "ext": "",
+            "gtNorm": "뉴락스에프정",
+            "extNorm": "",
+            "status": "ext_missing",
+            "spurious": false
+          },
+          "spec": {
+            "gt": "10T",
+            "ext": "",
+            "gtNorm": "10t",
+            "extNorm": "",
+            "status": "ext_missing",
+            "spurious": false
+          },
+          "quantity": {
+            "gt": "1",
+            "ext": "",
+            "gtNorm": "1",
+            "extNorm": "",
+            "status": "ext_missing",
+            "spurious": false
+          },
+          "unitPrice": {
+            "gt": "0",
+            "ext": "",
+            "gtNorm": "0",
+            "extNorm": "",
+            "status": "ext_missing",
+            "spurious": false
+          },
+          "amount": {
+            "gt": "0",
+            "ext": "",
+            "gtNorm": "0",
+            "extNorm": "",
+            "status": "ext_missing",
+            "spurious": false
+          },
+          "itemCode": {
+            "gt": "05004334",
+            "ext": "",
+            "gtNorm": "05004334",
+            "extNorm": "",
+            "status": "ext_missing",
+            "spurious": false
+          }
+        }
+      },
+      {
         "rowIndex": "6",
         "rowMatch": false,
         "missingGtRow": true,
@@ -586,13 +589,13 @@
     ],
     "cellCounts": {
       "scored": 46,
-      "match": 16,
-      "mismatch": 9,
-      "ext_missing": 21,
+      "match": 13,
+      "mismatch": 5,
+      "ext_missing": 28,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.34782608695652173
+    "cellAccuracy": 0.2826086956521739
   },
   "buckets": {
     "defects": [
@@ -650,7 +653,15 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor missed rows ['2', '6']"
+        "reason": "extractor missed rows ['2', '4', '6']"
+      },
+      {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['2']"
       },
       {
         "location": "row1:itemName",
@@ -667,14 +678,6 @@
         "extNorm": "개",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row1:amount",
-        "status": "mismatch",
-        "gtNorm": "129600",
-        "extNorm": "12960",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.91)"
       },
       {
         "location": "row4:spec",
@@ -717,38 +720,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:itemName",
-        "status": "mismatch",
-        "gtNorm": "뉴락스에프정",
-        "extNorm": "뉴락스에프정b6onx9i1f10t50",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemNameMaster']"
-      },
-      {
-        "location": "row2:spec",
-        "status": "mismatch",
-        "gtNorm": "10t",
-        "extNorm": "개",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row2:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "0",
-        "extNorm": "35000",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row2:amount",
-        "status": "mismatch",
-        "gtNorm": "0",
-        "extNorm": "35000",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
         "location": "row3:itemName",
         "status": "mismatch",
         "gtNorm": "덱스파놀연고",
@@ -763,6 +734,14 @@
         "extNorm": "개",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
+      },
+      {
+        "location": "row3:amount",
+        "status": "mismatch",
+        "gtNorm": "27000",
+        "extNorm": "270000",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.91)"
       },
       {
         "location": "row3:expiryDate",
@@ -837,6 +816,62 @@
         "reason": "gt cell absent in extracted row"
       },
       {
+        "location": "row4:itemName",
+        "status": "ext_missing",
+        "gtNorm": "뉴락스에프정",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row4:itemNameMaster",
+        "status": "ext_missing",
+        "gtNorm": "뉴락스에프정",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row4:spec",
+        "status": "ext_missing",
+        "gtNorm": "10t",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row4:quantity",
+        "status": "ext_missing",
+        "gtNorm": "1",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row4:unitPrice",
+        "status": "ext_missing",
+        "gtNorm": "0",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row4:amount",
+        "status": "ext_missing",
+        "gtNorm": "0",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row4:itemCode",
+        "status": "ext_missing",
+        "gtNorm": "05004334",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
         "location": "row6:itemName",
         "status": "ext_missing",
         "gtNorm": "덱스파놀연고",
@@ -894,9 +929,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 11,
-      "structure": 25,
-      "layout": 1,
+      "recognition": 8,
+      "structure": 33,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

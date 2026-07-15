@@ -8,11 +8,11 @@
     "perField": {
       "totalAmount": {
         "gt": "4140000",
-        "ext": "8,580,000",
+        "ext": "4140000",
         "gtNorm": "4140000",
-        "extNorm": "8580000",
+        "extNorm": "4140000",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "1138504425",
-        "ext": "113-85-04425",
+        "ext": "",
         "gtNorm": "1138504425",
-        "extNorm": "1138504425",
+        "extNorm": "",
         "type": "bizno",
-        "status": "match",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -129,8 +129,8 @@
     "counts": {
       "scored": 9,
       "match": 7,
-      "mismatch": 2,
-      "ext_missing": 0,
+      "mismatch": 1,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -143,19 +143,20 @@
       "gtPresent": 9,
       "matched": 7,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 0
+      "extAttemptedMiss": 1
     },
     "fieldAccuracy": 0.7777777777777778
   },
   "table": {
     "alignMode": "content",
     "rowCountGt": 0,
-    "rowCountExt": 1,
+    "rowCountExt": 2,
     "rowCountMatch": false,
     "matchedRowIdx": [],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "1"
+      "1",
+      "2"
     ],
     "rows": [],
     "cellCounts": {
@@ -171,12 +172,12 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:totalAmount",
-        "status": "mismatch",
-        "gtNorm": "4140000",
-        "extNorm": "8580000",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.57)"
+        "location": "field:supplierBizNumber",
+        "status": "ext_missing",
+        "gtNorm": "1138504425",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:buyerAddress",
@@ -192,12 +193,12 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1']"
+        "reason": "extractor invented rows ['1', '2']"
       }
     ],
     "bucketTally": {
-      "recognition": 2,
-      "structure": 1,
+      "recognition": 1,
+      "structure": 2,
       "layout": 0,
       "preprocessing": 0
     },
@@ -217,6 +218,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.0
+    "fieldMissRate": 0.111
   }
 }

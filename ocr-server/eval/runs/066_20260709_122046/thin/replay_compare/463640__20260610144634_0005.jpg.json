@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "1068156683",
-        "ext": "085-50-16399",
+        "ext": "106-81-56683",
         "gtNorm": "1068156683",
-        "extNorm": "0855016399",
+        "extNorm": "1068156683",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "글락소(전문)",
-        "ext": "용)",
+        "ext": "글락소(전문)",
         "gtNorm": "글락소전문",
-        "extNorm": "용",
+        "extNorm": "글락소전문",
         "type": "company",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 용산구 한강대로 92, LS용산타워 9층 (한강로2가)",
-        "ext": "리디거구나알렉세이",
+        "ext": "서울특별시 용산구 한강대로 92, LS용산타워 9층 (한강로2가)",
         "gtNorm": "서울특별시용산구한강대로92ls용산타워9층한강로2가",
-        "extNorm": "리디거구나알렉세이",
+        "extNorm": "서울특별시용산구한강대로92ls용산타워9층한강로2가",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 3,
-      "mismatch": 6,
+      "match": 6,
+      "mismatch": 3,
       "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 3,
+      "matched": 6,
       "extNotAttempted": 0,
       "extAttemptedMiss": 3
     },
-    "fieldAccuracy": 0.25
+    "fieldAccuracy": 0.5
   },
   "table": {
     "alignMode": "content",
@@ -410,18 +410,18 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "116145",
-            "ext": "",
+            "ext": "24",
             "gtNorm": "116145",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "24",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
@@ -450,10 +450,10 @@
           },
           "itemCode": {
             "gt": "22004753",
-            "ext": "22004753",
+            "ext": "22003903",
             "gtNorm": "22004753",
-            "extNorm": "22004753",
-            "status": "match",
+            "extNorm": "22003903",
+            "status": "mismatch",
             "spurious": false
           },
           "insuranceCode": {
@@ -840,18 +840,18 @@
           },
           "quantity": {
             "gt": "3",
-            "ext": "",
+            "ext": "11",
             "gtNorm": "3",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "11",
+            "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "1274551",
-            "ext": "",
+            "ext": "50",
             "gtNorm": "1274551",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "50",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
@@ -987,8 +987,8 @@
     "cellCounts": {
       "scored": 90,
       "match": 28,
-      "mismatch": 13,
-      "ext_missing": 49,
+      "mismatch": 17,
+      "ext_missing": 45,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -1021,36 +1021,12 @@
         "reason": "char-level diff (sim=0.88)"
       },
       {
-        "location": "field:supplierBizNumber",
-        "status": "mismatch",
-        "gtNorm": "1068156683",
-        "extNorm": "0855016399",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:buyerBizNumber",
         "status": "mismatch",
         "gtNorm": "1068156683",
         "extNorm": "1138504425",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "글락소전문",
-        "extNorm": "용",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "서울특별시용산구한강대로92ls용산타워9층한강로2가",
-        "extNorm": "리디거구나알렉세이",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "bucket": "structure",
+        "reason": "gt value present at ['field:supplierBizNumber']"
       },
       {
         "location": "field:supplyAmount",
@@ -1197,20 +1173,12 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row5:quantity",
-        "status": "ext_missing",
-        "gtNorm": "10",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row5:unitPrice",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "116145",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "24",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row5:amount",
@@ -1235,6 +1203,14 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row5:itemCode",
+        "status": "mismatch",
+        "gtNorm": "22004753",
+        "extNorm": "22003903",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.62)"
       },
       {
         "location": "row5:insuranceCode",
@@ -1462,19 +1438,19 @@
       },
       {
         "location": "row9:quantity",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "3",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "11",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row9:unitPrice",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "1274551",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "50",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row9:expiryDate",
@@ -1583,7 +1559,7 @@
     ],
     "bucketTally": {
       "recognition": 19,
-      "structure": 50,
+      "structure": 47,
       "layout": 4,
       "preprocessing": 0
     },

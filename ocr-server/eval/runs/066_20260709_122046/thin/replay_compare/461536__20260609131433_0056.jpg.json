@@ -198,7 +198,7 @@
       "10",
       "11",
       "12",
-      "7"
+      "13"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
@@ -206,8 +206,8 @@
       "4",
       "5",
       "6",
-      "9",
-      "13"
+      "7",
+      "9"
     ],
     "rows": [
       {
@@ -727,14 +727,14 @@
         }
       },
       {
-        "rowIndex": "7",
+        "rowIndex": "13",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "명문에페신정/30T",
-            "ext": "7문제약영문에폐신정/30T",
+            "ext": "8 10 9 7문제약영문에폐신정/30T",
             "gtNorm": "명문에페신정30t",
-            "extNorm": "7문제약영문에폐신정30t",
+            "extNorm": "81097문제약영문에폐신정30t",
             "status": "mismatch",
             "spurious": false
           },
@@ -756,15 +756,15 @@
           },
           "quantity": {
             "gt": "30",
-            "ext": "30T V30",
+            "ext": "30",
             "gtNorm": "30",
-            "extNorm": "3030",
-            "status": "mismatch",
+            "extNorm": "30",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "3153",
-            "ext": "3.153",
+            "ext": "3153",
             "gtNorm": "3153",
             "extNorm": "3153",
             "status": "match",
@@ -780,26 +780,26 @@
           },
           "expiryDate": {
             "gt": "20280325",
-            "ext": "20280325",
+            "ext": "\" 649802520 L",
             "gtNorm": "20280325",
-            "extNorm": "20280325",
-            "status": "match",
+            "extNorm": "649802520",
+            "status": "mismatch",
             "spurious": false
           },
           "manufacturingNo": {
             "gt": "25024",
-            "ext": "94,581 25024",
+            "ext": "25024 20280325",
             "gtNorm": "25024",
-            "extNorm": "9458125024",
+            "extNorm": "2502420280325",
             "status": "mismatch",
             "spurious": false
           },
           "itemCode": {
             "gt": "043343",
-            "ext": "8806498025226",
+            "ext": "043343",
             "gtNorm": "043343",
-            "extNorm": "8806498025226",
-            "status": "mismatch",
+            "extNorm": "043343",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -815,13 +815,13 @@
     ],
     "cellCounts": {
       "scored": 70,
-      "match": 32,
-      "mismatch": 29,
+      "match": 33,
+      "mismatch": 28,
       "ext_missing": 9,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.45714285714285713
+    "cellAccuracy": 0.4714285714285714
   },
   "buckets": {
     "defects": [
@@ -847,7 +847,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['2', '4', '5', '6', '9', '13']"
+        "reason": "extractor invented rows ['2', '4', '5', '6', '7', '9']"
       },
       {
         "location": "row1:itemName",
@@ -1106,15 +1106,15 @@
         "reason": "gt cell appears in column(s) ['expiryDate']"
       },
       {
-        "location": "row7:itemName",
+        "location": "row13:itemName",
         "status": "mismatch",
         "gtNorm": "명문에페신정30t",
-        "extNorm": "7문제약영문에폐신정30t",
+        "extNorm": "81097문제약영문에폐신정30t",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.64)"
+        "reason": "char-level diff (sim=0.54)"
       },
       {
-        "location": "row7:spec",
+        "location": "row13:spec",
         "status": "mismatch",
         "gtNorm": "30t",
         "extNorm": "30t 이하여백",
@@ -1122,42 +1122,34 @@
         "reason": "char-level diff (sim=0.55)"
       },
       {
-        "location": "row7:quantity",
+        "location": "row13:expiryDate",
         "status": "mismatch",
-        "gtNorm": "30",
-        "extNorm": "3030",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
-      },
-      {
-        "location": "row7:manufacturingNo",
-        "status": "mismatch",
-        "gtNorm": "25024",
-        "extNorm": "9458125024",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
-      },
-      {
-        "location": "row7:itemCode",
-        "status": "mismatch",
-        "gtNorm": "043343",
-        "extNorm": "8806498025226",
+        "gtNorm": "20280325",
+        "extNorm": "649802520",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row7:insuranceCode",
+        "location": "row13:manufacturingNo",
+        "status": "mismatch",
+        "gtNorm": "25024",
+        "extNorm": "2502420280325",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.56)"
+      },
+      {
+        "location": "row13:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "649802520",
         "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['expiryDate']"
       }
     ],
     "bucketTally": {
-      "recognition": 31,
-      "structure": 7,
-      "layout": 3,
+      "recognition": 30,
+      "structure": 6,
+      "layout": 4,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

@@ -176,21 +176,20 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 1,
-    "rowCountExt": 2,
+    "rowCountExt": 3,
     "rowCountMatch": false,
-    "matchedRowIdx": [],
-    "gtOnlyRowIdx": [
-      "1"
+    "matchedRowIdx": [
+      "3"
     ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
       "1",
       "2"
     ],
     "rows": [
       {
-        "rowIndex": "1",
+        "rowIndex": "3",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "다파글루엠서방정 10/1000mg",
@@ -218,26 +217,26 @@
           },
           "quantity": {
             "gt": "30",
-            "ext": "",
+            "ext": "30",
             "gtNorm": "30",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "11745",
-            "ext": "",
+            "ext": "11745",
             "gtNorm": "11745",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "11745",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "352350",
-            "ext": "",
+            "ext": "352350",
             "gtNorm": "352350",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "352350",
+            "status": "match",
             "spurious": false
           },
           "manufacturingNo": {
@@ -269,13 +268,13 @@
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 0,
+      "match": 3,
       "mismatch": 0,
-      "ext_missing": 9,
+      "ext_missing": 6,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.0
+    "cellAccuracy": 0.3333333333333333
   },
   "buckets": {
     "defects": [
@@ -285,7 +284,7 @@
         "gtNorm": "352350",
         "extNorm": "640904470",
         "bucket": "structure",
-        "reason": "ext value is gt's ['row1:insuranceCode']"
+        "reason": "gt value present at ['row3:amount']"
       },
       {
         "location": "field:supplyAmount",
@@ -305,14 +304,6 @@
       },
       {
         "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['1']"
-      },
-      {
-        "location": "table",
         "status": "rows_extra",
         "gtNorm": "",
         "extNorm": "",
@@ -320,7 +311,7 @@
         "reason": "extractor invented rows ['1', '2']"
       },
       {
-        "location": "row1:itemName",
+        "location": "row3:itemName",
         "status": "ext_missing",
         "gtNorm": "다파글루엠서방정101000mg",
         "extNorm": "",
@@ -328,7 +319,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemNameMaster",
+        "location": "row3:itemNameMaster",
         "status": "ext_missing",
         "gtNorm": "다파글루엠서방정10/1000mg(제약사품절)",
         "extNorm": "",
@@ -336,7 +327,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:spec",
+        "location": "row3:spec",
         "status": "ext_missing",
         "gtNorm": "30t",
         "extNorm": "",
@@ -344,31 +335,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "30",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "11745",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:amount",
-        "status": "ext_missing",
-        "gtNorm": "352350",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:manufacturingNo",
+        "location": "row3:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "26001B",
         "extNorm": "",
@@ -376,7 +343,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemCode",
+        "location": "row3:itemCode",
         "status": "ext_missing",
         "gtNorm": "05005444",
         "extNorm": "",
@@ -384,7 +351,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:insuranceCode",
+        "location": "row3:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "640904470",
         "extNorm": "",
@@ -394,7 +361,7 @@
     ],
     "bucketTally": {
       "recognition": 2,
-      "structure": 12,
+      "structure": 8,
       "layout": 0,
       "preprocessing": 0
     },

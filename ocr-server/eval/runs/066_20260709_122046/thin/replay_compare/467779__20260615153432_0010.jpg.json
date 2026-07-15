@@ -73,11 +73,11 @@
       },
       "supplierCompany": {
         "gt": "제이더블유신약",
-        "ext": "일양약품 (전문)",
+        "ext": "제이더블유신약주식회사",
         "gtNorm": "제이더블유신약",
-        "extNorm": "일양약품전문",
+        "extNorm": "제이더블유신약",
         "type": "company",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -99,9 +99,9 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 금천구 가산디지털1로 24, 대륭테크노타운73차 3층 (가산동)",
-        "ext": "경기도 용인시 기흥구 하갈로 110 (하갈동)",
+        "ext": "제주제주시 우령4길45(외도일동",
         "gtNorm": "서울특별시금천구가산디지털1로24대륭테크노타운73차3층가산동",
-        "extNorm": "경기도용인시기흥구하갈로110하갈동",
+        "extNorm": "제주제주시우령4길45외도일동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -154,8 +154,8 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 4,
-      "mismatch": 5,
+      "match": 5,
+      "mismatch": 4,
       "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
@@ -167,29 +167,28 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 4,
+      "matched": 5,
       "extNotAttempted": 0,
       "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.36363636363636365
+    "fieldAccuracy": 0.45454545454545453
   },
   "table": {
     "alignMode": "content",
     "rowCountGt": 1,
-    "rowCountExt": 1,
-    "rowCountMatch": true,
-    "matchedRowIdx": [],
-    "gtOnlyRowIdx": [
-      "1"
+    "rowCountExt": 2,
+    "rowCountMatch": false,
+    "matchedRowIdx": [
+      "2"
     ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
       "1"
     ],
     "rows": [
       {
-        "rowIndex": "1",
+        "rowIndex": "2",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "미녹파즈정5밀리그램",
@@ -217,26 +216,26 @@
           },
           "quantity": {
             "gt": "20",
-            "ext": "",
+            "ext": "20",
             "gtNorm": "20",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "1982",
-            "ext": "",
+            "ext": "1982",
             "gtNorm": "1982",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "1982",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "39640",
-            "ext": "",
+            "ext": "39640",
             "gtNorm": "39640",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "39640",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
@@ -260,13 +259,13 @@
     ],
     "cellCounts": {
       "scored": 8,
-      "match": 0,
+      "match": 3,
       "mismatch": 0,
-      "ext_missing": 8,
+      "ext_missing": 5,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.0
+    "cellAccuracy": 0.375
   },
   "buckets": {
     "defects": [
@@ -287,18 +286,10 @@
         "reason": "gt value not found anywhere in extraction"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "제이더블유신약",
-        "extNorm": "일양약품전문",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울특별시금천구가산디지털1로24대륭테크노타운73차3층가산동",
-        "extNorm": "경기도용인시기흥구하갈로110하갈동",
+        "extNorm": "제주제주시우령4길45외도일동",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -308,7 +299,7 @@
         "gtNorm": "39640",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "reason": "gt value present at ['row2:amount']"
       },
       {
         "location": "field:buyerCompany",
@@ -328,14 +319,6 @@
       },
       {
         "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['1']"
-      },
-      {
-        "location": "table",
         "status": "rows_extra",
         "gtNorm": "",
         "extNorm": "",
@@ -343,7 +326,7 @@
         "reason": "extractor invented rows ['1']"
       },
       {
-        "location": "row1:itemName",
+        "location": "row2:itemName",
         "status": "ext_missing",
         "gtNorm": "미녹파즈정5밀리그램",
         "extNorm": "",
@@ -351,7 +334,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemNameMaster",
+        "location": "row2:itemNameMaster",
         "status": "ext_missing",
         "gtNorm": "미녹파즈정5mg",
         "extNorm": "",
@@ -359,7 +342,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:spec",
+        "location": "row2:spec",
         "status": "ext_missing",
         "gtNorm": "30정",
         "extNorm": "",
@@ -367,31 +350,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "20",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "1982",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:amount",
-        "status": "ext_missing",
-        "gtNorm": "39640",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:itemCode",
+        "location": "row2:itemCode",
         "status": "ext_missing",
         "gtNorm": "04007110",
         "extNorm": "",
@@ -399,7 +358,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:insuranceCode",
+        "location": "row2:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "10000508",
         "extNorm": "",
@@ -408,8 +367,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 12,
+      "recognition": 4,
+      "structure": 8,
       "layout": 0,
       "preprocessing": 0
     },

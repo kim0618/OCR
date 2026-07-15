@@ -398,6 +398,18 @@ def run_all_multi(server: str, workers: int, testsets: list[str] | None = None) 
         render_changes()
     except Exception as exc:
         print(f"  (CHANGES.html unavailable: {exc})")
+    # 실행 이력 장부(RUN_HISTORY): 실데이터 testset(thin)을 대표로 기록 — 장수·소요·처리량
+    try:
+        import run_history
+        for r in results:
+            if r.get("sampleCount") and r["testset"] != C.DEFAULT_TESTSET:  # thin(실데이터)
+                run_history.record(
+                    "eval", ts=r.get("ts"), images=r.get("sampleCount"),
+                    elapsedSec=r.get("elapsedSec"),
+                    field=round((r.get("fieldAcc") or 0) * 100, 1) if r.get("fieldAcc") else None,
+                    cell=round((r.get("cellAcc") or 0) * 100, 1) if r.get("cellAcc") else None)
+    except Exception as exc:
+        print(f"  (run_history unavailable: {exc})")
     summary = _write_batch_summary(batch_dir, batch, results, batch_elapsed)
     try:
         render_summary_html(batch_dir, batch, results, batch_elapsed)

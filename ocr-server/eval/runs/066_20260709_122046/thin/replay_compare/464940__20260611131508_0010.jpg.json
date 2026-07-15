@@ -230,18 +230,18 @@
           },
           "quantity": {
             "gt": "50",
-            "ext": "1,848",
+            "ext": "50",
             "gtNorm": "50",
-            "extNorm": "1848",
-            "status": "mismatch",
+            "extNorm": "50",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "1848",
-            "ext": "50",
+            "ext": "1,848",
             "gtNorm": "1848",
-            "extNorm": "50",
-            "status": "mismatch",
+            "extNorm": "1848",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -324,18 +324,18 @@
           },
           "unitPrice": {
             "gt": "4013",
-            "ext": "",
+            "ext": "4013",
             "gtNorm": "4013",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "4013",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "240780",
-            "ext": "",
+            "ext": "240780",
             "gtNorm": "240780",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "240780",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -356,10 +356,10 @@
           },
           "itemCode": {
             "gt": "8806530034612",
-            "ext": "8806530034629",
+            "ext": "8806530034612",
             "gtNorm": "8806530034612",
-            "extNorm": "8806530034629",
-            "status": "mismatch",
+            "extNorm": "8806530034612",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -375,13 +375,13 @@
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 5,
-      "mismatch": 7,
-      "ext_missing": 8,
+      "match": 10,
+      "mismatch": 4,
+      "ext_missing": 6,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.25
+    "cellAccuracy": 0.5
   },
   "buckets": {
     "defects": [
@@ -416,22 +416,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:quantity",
-        "status": "mismatch",
-        "gtNorm": "50",
-        "extNorm": "1848",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['unitPrice']"
-      },
-      {
-        "location": "row3:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "1848",
-        "extNorm": "50",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['quantity']"
       },
       {
         "location": "row3:amount",
@@ -490,36 +474,12 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row2:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "4013",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:amount",
-        "status": "ext_missing",
-        "gtNorm": "240780",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row2:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "25013",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:itemCode",
-        "status": "mismatch",
-        "gtNorm": "8806530034612",
-        "extNorm": "8806530034629",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "row2:insuranceCode",
@@ -531,9 +491,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 7,
-      "structure": 8,
-      "layout": 3,
+      "recognition": 6,
+      "structure": 6,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

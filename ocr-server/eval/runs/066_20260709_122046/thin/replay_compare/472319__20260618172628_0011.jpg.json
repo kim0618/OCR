@@ -165,33 +165,30 @@
     "rowCountGt": 1,
     "rowCountExt": 1,
     "rowCountMatch": true,
-    "matchedRowIdx": [],
-    "gtOnlyRowIdx": [
+    "matchedRowIdx": [
       "1"
     ],
-    "extOnlyRowIdx": [
-      "1"
-    ],
+    "gtOnlyRowIdx": [],
+    "extOnlyRowIdx": [],
     "rows": [
       {
         "rowIndex": "1",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "텔미트렌플러스정",
-            "ext": "",
+            "ext": "텔미트렌플러스정 40/12.5MG(정규)(병)30T",
             "gtNorm": "텔미트렌플러스정",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "텔미트렌플러스정40125mg정규병30t",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "텔미트렌플러스정40/12.5mg(병)",
-            "ext": "",
+            "ext": "텔미트렌플러스정40/12.5mg(병)",
             "gtNorm": "텔미트렌플러스정40/12.5mg(병)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "텔미트렌플러스정40/12.5mg(병)",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -204,26 +201,26 @@
           },
           "quantity": {
             "gt": "30",
-            "ext": "",
+            "ext": "30",
             "gtNorm": "30",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "10436",
-            "ext": "",
+            "ext": "313,080",
             "gtNorm": "10436",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "313080",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "313080",
-            "ext": "",
+            "ext": "10,436",
             "gtNorm": "313080",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10436",
+            "status": "mismatch",
             "spurious": false
           },
           "expiryDate": {
@@ -236,10 +233,10 @@
           },
           "itemCode": {
             "gt": "01004376",
-            "ext": "",
+            "ext": "01004376",
             "gtNorm": "01004376",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "01004376",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -255,13 +252,13 @@
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 0,
-      "mismatch": 0,
-      "ext_missing": 9,
+      "match": 3,
+      "mismatch": 3,
+      "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.0
+    "cellAccuracy": 0.3333333333333333
   },
   "buckets": {
     "defects": [
@@ -271,7 +268,7 @@
         "gtNorm": "313080",
         "extNorm": "344388",
         "bucket": "structure",
-        "reason": "gt value present at ['field:supplyAmount']"
+        "reason": "gt value present at ['field:supplyAmount', 'row1:unitPrice']"
       },
       {
         "location": "field:issueDate",
@@ -306,36 +303,12 @@
         "reason": "value differs, low similarity"
       },
       {
-        "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['1']"
-      },
-      {
-        "location": "table",
-        "status": "rows_extra",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor invented rows ['1']"
-      },
-      {
         "location": "row1:itemName",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "텔미트렌플러스정",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "텔미트렌플러스정40/12.5mg(병)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "텔미트렌플러스정40125mg정규병30t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.55)"
       },
       {
         "location": "row1:spec",
@@ -346,41 +319,25 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "30",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row1:unitPrice",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "10436",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "313080",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['amount']"
       },
       {
         "location": "row1:amount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "313080",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "10436",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['unitPrice']"
       },
       {
         "location": "row1:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20290310",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "01004376",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -395,9 +352,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 3,
-      "structure": 13,
-      "layout": 0,
+      "recognition": 4,
+      "structure": 5,
+      "layout": 2,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

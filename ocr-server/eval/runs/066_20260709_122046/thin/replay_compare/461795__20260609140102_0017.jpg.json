@@ -189,19 +189,20 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 6,
-    "rowCountExt": 5,
+    "rowCountExt": 7,
     "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
       "2",
       "3",
+      "6",
       "4",
       "5"
     ],
-    "gtOnlyRowIdx": [
-      "4"
+    "gtOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "7"
     ],
-    "extOnlyRowIdx": [],
     "rows": [
       {
         "rowIndex": "1",
@@ -390,6 +391,68 @@
         }
       },
       {
+        "rowIndex": "6",
+        "rowMatch": false,
+        "cells": {
+          "itemName": {
+            "gt": "자론티연질캡슐",
+            "ext": "",
+            "gtNorm": "자론티연질캡슐",
+            "extNorm": "",
+            "status": "ext_missing",
+            "spurious": false
+          },
+          "itemNameMaster": {
+            "gt": "자론티연질캡슐",
+            "ext": "",
+            "gtNorm": "자론티연질캡슐",
+            "extNorm": "",
+            "status": "ext_missing",
+            "spurious": false
+          },
+          "spec": {
+            "gt": "100C",
+            "ext": "",
+            "gtNorm": "100c",
+            "extNorm": "",
+            "status": "ext_missing",
+            "spurious": false
+          },
+          "quantity": {
+            "gt": "5",
+            "ext": "5",
+            "gtNorm": "5",
+            "extNorm": "5",
+            "status": "match",
+            "spurious": false
+          },
+          "unitPrice": {
+            "gt": "71593",
+            "ext": "71593",
+            "gtNorm": "71593",
+            "extNorm": "71593",
+            "status": "match",
+            "spurious": false
+          },
+          "amount": {
+            "gt": "357964",
+            "ext": "357964",
+            "gtNorm": "357964",
+            "extNorm": "357964",
+            "status": "match",
+            "spurious": false
+          },
+          "itemCode": {
+            "gt": "03000156",
+            "ext": "",
+            "gtNorm": "03000156",
+            "extNorm": "",
+            "status": "ext_missing",
+            "spurious": false
+          }
+        }
+      },
+      {
         "rowIndex": "4",
         "rowMatch": false,
         "cells": {
@@ -512,80 +575,17 @@
             "spurious": false
           }
         }
-      },
-      {
-        "rowIndex": "4",
-        "rowMatch": false,
-        "missingGtRow": true,
-        "cells": {
-          "itemName": {
-            "gt": "자론티연질캡슐",
-            "ext": "",
-            "gtNorm": "자론티연질캡슐",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "itemNameMaster": {
-            "gt": "자론티연질캡슐",
-            "ext": "",
-            "gtNorm": "자론티연질캡슐",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "spec": {
-            "gt": "100C",
-            "ext": "",
-            "gtNorm": "100c",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "quantity": {
-            "gt": "5",
-            "ext": "",
-            "gtNorm": "5",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "unitPrice": {
-            "gt": "71593",
-            "ext": "",
-            "gtNorm": "71593",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "amount": {
-            "gt": "357964",
-            "ext": "",
-            "gtNorm": "357964",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "itemCode": {
-            "gt": "03000156",
-            "ext": "",
-            "gtNorm": "03000156",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          }
-        }
       }
     ],
     "cellCounts": {
       "scored": 42,
-      "match": 13,
+      "match": 16,
       "mismatch": 21,
-      "ext_missing": 8,
+      "ext_missing": 5,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.30952380952380953
+    "cellAccuracy": 0.38095238095238093
   },
   "buckets": {
     "defects": [
@@ -623,11 +623,11 @@
       },
       {
         "location": "table",
-        "status": "rows_missed",
+        "status": "rows_extra",
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor missed rows ['4']"
+        "reason": "extractor invented rows ['7']"
       },
       {
         "location": "row1:itemName",
@@ -750,6 +750,38 @@
         "reason": "cell differs, low similarity"
       },
       {
+        "location": "row6:itemName",
+        "status": "ext_missing",
+        "gtNorm": "자론티연질캡슐",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row6:itemNameMaster",
+        "status": "ext_missing",
+        "gtNorm": "자론티연질캡슐",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row6:spec",
+        "status": "ext_missing",
+        "gtNorm": "100c",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row6:itemCode",
+        "status": "ext_missing",
+        "gtNorm": "03000156",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
         "location": "row4:itemName",
         "status": "mismatch",
         "gtNorm": "칼리크레인정50",
@@ -804,67 +836,11 @@
         "extNorm": "04006528",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.50)"
-      },
-      {
-        "location": "row4:itemName",
-        "status": "ext_missing",
-        "gtNorm": "자론티연질캡슐",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "자론티연질캡슐",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:spec",
-        "status": "ext_missing",
-        "gtNorm": "100c",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:quantity",
-        "status": "ext_missing",
-        "gtNorm": "5",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "71593",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:amount",
-        "status": "ext_missing",
-        "gtNorm": "357964",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "03000156",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
       "recognition": 14,
-      "structure": 12,
+      "structure": 9,
       "layout": 8,
       "preprocessing": 0
     },

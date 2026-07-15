@@ -60,11 +60,11 @@
       },
       "supplierCompany": {
         "gt": "중헌제약",
-        "ext": "백제약품(주)영남본부",
+        "ext": "중헌제약",
         "gtNorm": "중헌제약",
-        "extNorm": "백제약품영남본부",
+        "extNorm": "중헌제약",
         "type": "company",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -86,11 +86,11 @@
       },
       "supplierAddress": {
         "gt": "서울 영등포구 국회대로62길 15 (여의도동) 8층",
-        "ext": "경남 김해시 진례면 김해테크노벨리로 33-12 백제약품(주)영남본부",
+        "ext": "서울 영등포구 국회대로62길 15 (여의도동) 8층",
         "gtNorm": "서울영등포구국회대로62길15여의도동8층",
-        "extNorm": "경남김해시진례면김해테크노벨리로3312백제약품주영남본부",
+        "extNorm": "서울영등포구국회대로62길15여의도동8층",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -141,8 +141,8 @@
     "profile": "thin",
     "counts": {
       "scored": 10,
-      "match": 6,
-      "mismatch": 4,
+      "match": 8,
+      "mismatch": 2,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -154,19 +154,19 @@
     },
     "coverage": {
       "gtPresent": 10,
-      "matched": 6,
+      "matched": 8,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6
+    "fieldAccuracy": 0.8
   },
   "table": {
     "alignMode": "content",
     "rowCountGt": 9,
-    "rowCountExt": 13,
+    "rowCountExt": 14,
     "rowCountMatch": false,
     "matchedRowIdx": [
-      "2",
+      "14",
       "8",
       "9",
       "10",
@@ -179,29 +179,30 @@
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
       "1",
+      "2",
       "3",
       "4",
       "13"
     ],
     "rows": [
       {
-        "rowIndex": "2",
+        "rowIndex": "14",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "넥사브이정20mg(전문)",
-            "ext": "루루카캡슬25mg(전문",
+            "ext": "(주)종현제약넥사브이정20mg(전문)",
             "gtNorm": "넥사브이정20mg전문",
-            "extNorm": "루루카캡슬25mg전문",
+            "extNorm": "주종현제약넥사브이정20mg전문",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "넥사브이정20mg(반품불가)",
-            "ext": "루루카캡슐25mg(반품불가)",
+            "ext": "",
             "gtNorm": "넥사브이정20mg(반품불가)",
-            "extNorm": "루루카캡슐25mg(반품불가)",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "spec": {
@@ -222,18 +223,18 @@
           },
           "unitPrice": {
             "gt": "19293",
-            "ext": "",
+            "ext": "19293",
             "gtNorm": "19293",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "19293",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "385860",
-            "ext": "7,590",
+            "ext": "385860",
             "gtNorm": "385860",
-            "extNorm": "7590",
-            "status": "mismatch",
+            "extNorm": "385860",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -254,10 +255,10 @@
           },
           "itemCode": {
             "gt": "22004940",
-            "ext": "01012643",
+            "ext": "",
             "gtNorm": "22004940",
-            "extNorm": "01012643",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "insuranceCode": {
@@ -961,39 +962,23 @@
     ],
     "cellCounts": {
       "scored": 90,
-      "match": 36,
-      "mismatch": 29,
-      "ext_missing": 25,
+      "match": 38,
+      "mismatch": 26,
+      "ext_missing": 26,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4
+    "cellAccuracy": 0.4222222222222222
   },
   "buckets": {
     "defects": [
-      {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "중헌제약",
-        "extNorm": "백제약품영남본부",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['field:buyerCompany']"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "서울영등포구국회대로62길15여의도동8층",
-        "extNorm": "경남김해시진례면김해테크노벨리로3312백제약품주영남본부",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
         "gtNorm": "백제약품영남본부",
         "extNorm": "백제약품영남본부성명",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:supplierCompany']"
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.89)"
       },
       {
         "location": "field:buyerAddress",
@@ -1009,26 +994,26 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '3', '4', '13']"
+        "reason": "extractor invented rows ['1', '2', '3', '4', '13']"
       },
       {
-        "location": "row2:itemName",
+        "location": "row14:itemName",
         "status": "mismatch",
         "gtNorm": "넥사브이정20mg전문",
-        "extNorm": "루루카캡슬25mg전문",
+        "extNorm": "주종현제약넥사브이정20mg전문",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.81)"
       },
       {
-        "location": "row2:itemNameMaster",
-        "status": "mismatch",
+        "location": "row14:itemNameMaster",
+        "status": "ext_missing",
         "gtNorm": "넥사브이정20mg(반품불가)",
-        "extNorm": "루루카캡슐25mg(반품불가)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.60)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:spec",
+        "location": "row14:spec",
         "status": "ext_missing",
         "gtNorm": "30t",
         "extNorm": "",
@@ -1036,23 +1021,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "19293",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:amount",
-        "status": "mismatch",
-        "gtNorm": "385860",
-        "extNorm": "7590",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row2:expiryDate",
+        "location": "row14:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20281020",
         "extNorm": "",
@@ -1060,7 +1029,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:manufacturingNo",
+        "location": "row14:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "J25015",
         "extNorm": "",
@@ -1068,15 +1037,15 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:itemCode",
-        "status": "mismatch",
+        "location": "row14:itemCode",
+        "status": "ext_missing",
         "gtNorm": "22004940",
-        "extNorm": "01012643",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:insuranceCode",
+        "location": "row14:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "053300580",
         "extNorm": "",
@@ -1445,8 +1414,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 29,
-      "structure": 27,
+      "recognition": 26,
+      "structure": 26,
       "layout": 3,
       "preprocessing": 0
     },

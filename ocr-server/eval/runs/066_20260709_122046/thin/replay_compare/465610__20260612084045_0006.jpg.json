@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "1018548584",
-        "ext": "113-85-04425",
+        "ext": "",
         "gtNorm": "1018548584",
-        "extNorm": "1138504425",
+        "extNorm": "",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -86,9 +86,9 @@
       },
       "supplierCompany": {
         "gt": "알리코제약(주)(전문)",
-        "ext": "백제약품(주)영등포지점",
+        "ext": "에이치엘비제약KG5P물류지점",
         "gtNorm": "알리코제약전문",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "에이치엘비제약kg5p물류지점",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울 서초구 바우뫼로27길 7-21 (양재동) (양재동, 알리코제약빌딩)",
-        "ext": "서울 구로구 공원로8길 24",
+        "ext": "",
         "gtNorm": "서울서초구바우뫼로27길721양재동양재동알리코제약빌딩",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "",
         "type": "address",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 7,
-      "mismatch": 5,
-      "ext_missing": 0,
+      "mismatch": 3,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,7 +182,7 @@
       "gtPresent": 12,
       "matched": 7,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 0
+      "extAttemptedMiss": 2
     },
     "fieldAccuracy": 0.5833333333333334
   },
@@ -1090,27 +1090,27 @@
     "defects": [
       {
         "location": "field:supplierBizNumber",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "1018548584",
-        "extNorm": "1138504425",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.60)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "알리코제약전문",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "에이치엘비제약kg5p물류지점",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplierAddress",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "서울서초구바우뫼로27길721양재동양재동알리코제약빌딩",
-        "extNorm": "서울구로구공원로8길24",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:buyerCompany",
@@ -1298,8 +1298,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 21,
-      "structure": 5,
+      "recognition": 19,
+      "structure": 7,
       "layout": 0,
       "preprocessing": 0
     },
@@ -1319,6 +1319,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.0
+    "fieldMissRate": 0.167
   }
 }

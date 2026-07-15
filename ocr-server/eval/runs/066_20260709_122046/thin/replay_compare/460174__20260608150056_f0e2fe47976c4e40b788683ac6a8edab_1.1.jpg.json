@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "2248154571",
-        "ext": "616-85-13350",
+        "ext": "",
         "gtNorm": "2248154571",
-        "extNorm": "6168513350",
+        "extNorm": "",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -86,9 +86,9 @@
       },
       "supplierCompany": {
         "gt": "오스코리아",
-        "ext": "일양약품 (전문)",
+        "ext": "주)오스코리아제약",
         "gtNorm": "오스코리아",
-        "extNorm": "일양약품전문",
+        "extNorm": "주오스코리아제약",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "강원도 원주시 문막읍 문막공단길 252",
-        "ext": "경기도 용인시 기흥구 하갈로 110 (하갈동)",
+        "ext": "문막읍문막공단길",
         "gtNorm": "강원도원주시문막읍문막공단길252",
-        "extNorm": "경기도용인시기흥구하갈로110하갈동",
+        "extNorm": "문막읍문막공단길",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 7,
-      "mismatch": 4,
-      "ext_missing": 1,
+      "mismatch": 3,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,7 +182,7 @@
       "gtPresent": 12,
       "matched": 7,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 2
     },
     "fieldAccuracy": 0.5833333333333334
   },
@@ -231,10 +231,10 @@
           },
           "quantity": {
             "gt": "2",
-            "ext": "",
+            "ext": "2",
             "gtNorm": "2",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "2",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -309,10 +309,10 @@
           },
           "quantity": {
             "gt": "5",
-            "ext": "",
+            "ext": "5",
             "gtNorm": "5",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "5",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -387,10 +387,10 @@
           },
           "quantity": {
             "gt": "5",
-            "ext": "",
+            "ext": "5",
             "gtNorm": "5",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "5",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -438,39 +438,39 @@
     ],
     "cellCounts": {
       "scored": 27,
-      "match": 16,
+      "match": 19,
       "mismatch": 3,
-      "ext_missing": 8,
+      "ext_missing": 5,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5925925925925926
+    "cellAccuracy": 0.7037037037037037
   },
   "buckets": {
     "defects": [
       {
         "location": "field:supplierBizNumber",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "2248154571",
-        "extNorm": "6168513350",
+        "extNorm": "",
         "bucket": "structure",
-        "reason": "ext value is gt's ['field:buyerBizNumber']"
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "오스코리아",
-        "extNorm": "일양약품전문",
+        "extNorm": "주오스코리아제약",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.77)"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "강원도원주시문막읍문막공단길252",
-        "extNorm": "경기도용인시기흥구하갈로110하갈동",
+        "extNorm": "문막읍문막공단길",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.64)"
       },
       {
         "location": "field:buyerCompany",
@@ -497,14 +497,6 @@
         "reason": "extractor invented rows ['1']"
       },
       {
-        "location": "row4:quantity",
-        "status": "ext_missing",
-        "gtNorm": "2",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row4:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20290302",
@@ -524,14 +516,6 @@
         "location": "row2:spec",
         "status": "ext_missing",
         "gtNorm": "10vl",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:quantity",
-        "status": "ext_missing",
-        "gtNorm": "5",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -561,14 +545,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row3:quantity",
-        "status": "ext_missing",
-        "gtNorm": "5",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row3:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20260804",
@@ -587,7 +563,7 @@
     ],
     "bucketTally": {
       "recognition": 6,
-      "structure": 11,
+      "structure": 8,
       "layout": 0,
       "preprocessing": 0
     },
@@ -607,6 +583,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.167
   }
 }

@@ -189,7 +189,7 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 5,
-    "rowCountExt": 6,
+    "rowCountExt": 7,
     "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
@@ -200,7 +200,8 @@
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "3"
+      "3",
+      "7"
     ],
     "rows": [
       {
@@ -249,9 +250,9 @@
           },
           "amount": {
             "gt": "287850",
-            "ext": "28,785",
+            "ext": "465500",
             "gtNorm": "287850",
-            "extNorm": "28785",
+            "extNorm": "465500",
             "status": "mismatch",
             "spurious": false
           },
@@ -311,10 +312,10 @@
           },
           "unitPrice": {
             "gt": "13908",
-            "ext": "",
+            "ext": "13908",
             "gtNorm": "13908",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "13908",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -373,18 +374,18 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "139080",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "139080",
-            "status": "mismatch",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "139080",
-            "ext": "",
+            "ext": "139080",
             "gtNorm": "139080",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "139080",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -556,13 +557,13 @@
     ],
     "cellCounts": {
       "scored": 40,
-      "match": 12,
-      "mismatch": 17,
-      "ext_missing": 11,
+      "match": 15,
+      "mismatch": 16,
+      "ext_missing": 9,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3
+    "cellAccuracy": 0.375
   },
   "buckets": {
     "defects": [
@@ -628,7 +629,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['3']"
+        "reason": "extractor invented rows ['3', '7']"
       },
       {
         "location": "row1:itemName",
@@ -667,16 +668,16 @@
         "status": "mismatch",
         "gtNorm": "28785",
         "extNorm": "46550",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:amount",
         "status": "mismatch",
         "gtNorm": "287850",
-        "extNorm": "28785",
+        "extNorm": "465500",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.91)"
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:manufacturingNo",
@@ -701,14 +702,6 @@
         "extNorm": "2013908",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row2:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "13908",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row2:manufacturingNo",
@@ -741,22 +734,6 @@
         "extNorm": "자라탄플러스정",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.53)"
-      },
-      {
-        "location": "row6:quantity",
-        "status": "mismatch",
-        "gtNorm": "10",
-        "extNorm": "139080",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
-      },
-      {
-        "location": "row6:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "139080",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['quantity']"
       },
       {
         "location": "row6:manufacturingNo",
@@ -857,8 +834,8 @@
     ],
     "bucketTally": {
       "recognition": 19,
-      "structure": 12,
-      "layout": 5,
+      "structure": 11,
+      "layout": 3,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

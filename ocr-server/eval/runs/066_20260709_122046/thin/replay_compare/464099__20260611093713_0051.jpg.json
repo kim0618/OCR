@@ -189,15 +189,17 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 3,
-    "rowCountExt": 3,
-    "rowCountMatch": true,
+    "rowCountExt": 4,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
       "2",
       "3"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "4"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -323,9 +325,9 @@
           },
           "amount": {
             "gt": "46145",
-            "ext": "4,615",
+            "ext": "50760",
             "gtNorm": "46145",
-            "extNorm": "4615",
+            "extNorm": "50760",
             "status": "mismatch",
             "spurious": false
           },
@@ -471,6 +473,14 @@
         "reason": "value differs, low similarity"
       },
       {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['4']"
+      },
+      {
         "location": "row1:spec",
         "status": "ext_missing",
         "gtNorm": "30t",
@@ -530,9 +540,9 @@
         "location": "row2:amount",
         "status": "mismatch",
         "gtNorm": "46145",
-        "extNorm": "4615",
+        "extNorm": "50760",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.89)"
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row2:expiryDate",
@@ -609,7 +619,7 @@
     ],
     "bucketTally": {
       "recognition": 10,
-      "structure": 10,
+      "structure": 11,
       "layout": 0,
       "preprocessing": 0
     },

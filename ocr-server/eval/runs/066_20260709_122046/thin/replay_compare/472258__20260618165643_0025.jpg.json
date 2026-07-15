@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "1138504425",
-        "ext": "113-85-04425",
+        "ext": "",
         "gtNorm": "1138504425",
-        "extNorm": "1138504425",
+        "extNorm": "",
         "type": "bizno",
-        "status": "match",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -73,9 +73,9 @@
       },
       "supplierCompany": {
         "gt": "JW중외신약",
-        "ext": "백제약품(주)영등포지점",
+        "ext": "의약의약품외수출입",
         "gtNorm": "jw중외신약",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "의약의약품외수출입",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -99,9 +99,9 @@
       },
       "supplierAddress": {
         "gt": "서울 서초구 남부순환로 2477 (서초동)",
-        "ext": "서울 구로구 공원로8길 24",
+        "ext": "경기도과천시 과천대로7길38(갈현동,JW과천사옥 공원로8길24",
         "gtNorm": "서울서초구남부순환로2477서초동",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "경기도과천시과천대로7길38갈현동jw과천사옥공원로8길24",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -154,9 +154,9 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 7,
+      "match": 6,
       "mismatch": 4,
-      "ext_missing": 0,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -167,29 +167,28 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 7,
+      "matched": 6,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 0
+      "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.6363636363636364
+    "fieldAccuracy": 0.5454545454545454
   },
   "table": {
     "alignMode": "content",
     "rowCountGt": 1,
-    "rowCountExt": 1,
-    "rowCountMatch": true,
-    "matchedRowIdx": [],
-    "gtOnlyRowIdx": [
-      "1"
+    "rowCountExt": 2,
+    "rowCountMatch": false,
+    "matchedRowIdx": [
+      "2"
     ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
       "1"
     ],
     "rows": [
       {
-        "rowIndex": "1",
+        "rowIndex": "2",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "펜터미정",
@@ -217,26 +216,26 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "69000",
-            "ext": "",
+            "ext": "69000",
             "gtNorm": "69000",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "69000",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "690000",
-            "ext": "",
+            "ext": "690000",
             "gtNorm": "690000",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "690000",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
@@ -252,21 +251,29 @@
     ],
     "cellCounts": {
       "scored": 7,
-      "match": 0,
+      "match": 3,
       "mismatch": 0,
-      "ext_missing": 7,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.0
+    "cellAccuracy": 0.42857142857142855
   },
   "buckets": {
     "defects": [
       {
+        "location": "field:supplierBizNumber",
+        "status": "ext_missing",
+        "gtNorm": "1138504425",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
+      },
+      {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "jw중외신약",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "의약의약품외수출입",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -274,7 +281,7 @@
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울서초구남부순환로2477서초동",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "경기도과천시과천대로7길38갈현동jw과천사옥공원로8길24",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -296,14 +303,6 @@
       },
       {
         "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['1']"
-      },
-      {
-        "location": "table",
         "status": "rows_extra",
         "gtNorm": "",
         "extNorm": "",
@@ -311,7 +310,7 @@
         "reason": "extractor invented rows ['1']"
       },
       {
-        "location": "row1:itemName",
+        "location": "row2:itemName",
         "status": "ext_missing",
         "gtNorm": "펜터미정",
         "extNorm": "",
@@ -319,7 +318,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemNameMaster",
+        "location": "row2:itemNameMaster",
         "status": "ext_missing",
         "gtNorm": "펜터미정(향정)(비만치료)",
         "extNorm": "",
@@ -327,7 +326,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:spec",
+        "location": "row2:spec",
         "status": "ext_missing",
         "gtNorm": "100t",
         "extNorm": "",
@@ -335,31 +334,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "10",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "69000",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:amount",
-        "status": "ext_missing",
-        "gtNorm": "690000",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:itemCode",
+        "location": "row2:itemCode",
         "status": "ext_missing",
         "gtNorm": "8806441006425",
         "extNorm": "",
@@ -369,7 +344,7 @@
     ],
     "bucketTally": {
       "recognition": 4,
-      "structure": 9,
+      "structure": 6,
       "layout": 0,
       "preprocessing": 0
     },
@@ -389,6 +364,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.0
+    "fieldMissRate": 0.091
   }
 }

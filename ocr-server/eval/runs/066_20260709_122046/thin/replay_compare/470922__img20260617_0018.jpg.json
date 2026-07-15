@@ -163,15 +163,14 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 3,
-    "rowCountExt": 2,
-    "rowCountMatch": false,
+    "rowCountExt": 3,
+    "rowCountMatch": true,
     "matchedRowIdx": [
       "1",
-      "2"
-    ],
-    "gtOnlyRowIdx": [
+      "2",
       "3"
     ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [],
     "rows": [
       {
@@ -290,26 +289,26 @@
           },
           "quantity": {
             "gt": "5",
-            "ext": "",
+            "ext": "5",
             "gtNorm": "5",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "5",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "134385",
-            "ext": "",
+            "ext": "134385",
             "gtNorm": "134385",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "134385",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "671925",
-            "ext": "134,385",
+            "ext": "671925",
             "gtNorm": "671925",
-            "extNorm": "134385",
-            "status": "mismatch",
+            "extNorm": "671925",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -349,22 +348,21 @@
       {
         "rowIndex": "3",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "프릴린정75밀리그램",
-            "ext": "",
+            "ext": "프릴립정75밀리그램",
             "gtNorm": "프릴린정75밀리그램",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "프릴립정75밀리그램",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "프릴린정75mg",
-            "ext": "",
+            "ext": "프릴린정75mg",
             "gtNorm": "프릴린정75mg",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "프릴린정75mg",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -377,26 +375,26 @@
           },
           "quantity": {
             "gt": "20",
-            "ext": "",
+            "ext": "20",
             "gtNorm": "20",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "14424",
-            "ext": "",
+            "ext": "14424",
             "gtNorm": "14424",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "14424",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "288480",
-            "ext": "",
+            "ext": "288480",
             "gtNorm": "288480",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "288480",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -417,10 +415,10 @@
           },
           "itemCode": {
             "gt": "01008361",
-            "ext": "",
+            "ext": "01008361",
             "gtNorm": "01008361",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "01008361",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -436,13 +434,13 @@
     ],
     "cellCounts": {
       "scored": 30,
-      "match": 9,
+      "match": 17,
       "mismatch": 3,
-      "ext_missing": 18,
+      "ext_missing": 10,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3
+    "cellAccuracy": 0.5666666666666667
   },
   "buckets": {
     "defects": [
@@ -487,14 +485,6 @@
         "reason": "char-level diff (sim=0.54)"
       },
       {
-        "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['3']"
-      },
-      {
         "location": "row1:itemName",
         "status": "mismatch",
         "gtNorm": "브로피딘정",
@@ -535,30 +525,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:quantity",
-        "status": "ext_missing",
-        "gtNorm": "5",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "134385",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
-      },
-      {
-        "location": "row2:amount",
-        "status": "mismatch",
-        "gtNorm": "671925",
-        "extNorm": "134385",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
         "location": "row2:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20290218",
@@ -584,48 +550,16 @@
       },
       {
         "location": "row3:itemName",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "프릴린정75밀리그램",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "프릴린정75mg",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "프릴립정75밀리그램",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.90)"
       },
       {
         "location": "row3:spec",
         "status": "ext_missing",
         "gtNorm": "30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:quantity",
-        "status": "ext_missing",
-        "gtNorm": "20",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "14424",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:amount",
-        "status": "ext_missing",
-        "gtNorm": "288480",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -647,14 +581,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row3:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "01008361",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row3:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "649807490",
@@ -665,8 +591,8 @@
     ],
     "bucketTally": {
       "recognition": 4,
-      "structure": 20,
-      "layout": 3,
+      "structure": 12,
+      "layout": 2,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

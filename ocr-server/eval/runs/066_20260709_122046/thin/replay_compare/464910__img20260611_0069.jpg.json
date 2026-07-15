@@ -176,16 +176,15 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 4,
-    "rowCountExt": 3,
-    "rowCountMatch": false,
+    "rowCountExt": 4,
+    "rowCountMatch": true,
     "matchedRowIdx": [
       "3",
       "1",
-      "2"
-    ],
-    "gtOnlyRowIdx": [
+      "2",
       "4"
     ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [],
     "rows": [
       {
@@ -218,26 +217,26 @@
           },
           "quantity": {
             "gt": "20",
-            "ext": "",
+            "ext": "20",
             "gtNorm": "20",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "15525",
-            "ext": "",
+            "ext": "15525",
             "gtNorm": "15525",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "15525",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "310500",
-            "ext": "15,525",
+            "ext": "310500",
             "gtNorm": "310500",
-            "extNorm": "15525",
-            "status": "mismatch",
+            "extNorm": "310500",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
@@ -377,7 +376,6 @@
       {
         "rowIndex": "4",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "피타스탄정2밀리그램",
@@ -405,26 +403,26 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "12879",
-            "ext": "",
+            "ext": "12879",
             "gtNorm": "12879",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "12879",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "128790",
-            "ext": "",
+            "ext": "128790",
             "gtNorm": "128790",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "128790",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
@@ -440,13 +438,13 @@
     ],
     "cellCounts": {
       "scored": 28,
-      "match": 15,
-      "mismatch": 3,
-      "ext_missing": 10,
+      "match": 21,
+      "mismatch": 2,
+      "ext_missing": 5,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5357142857142857
+    "cellAccuracy": 0.75
   },
   "buckets": {
     "defects": [
@@ -475,44 +473,12 @@
         "reason": "char-level diff (sim=0.73)"
       },
       {
-        "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['4']"
-      },
-      {
         "location": "row3:spec",
         "status": "ext_missing",
         "gtNorm": "250ml",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:quantity",
-        "status": "ext_missing",
-        "gtNorm": "20",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "15525",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
-      },
-      {
-        "location": "row3:amount",
-        "status": "mismatch",
-        "gtNorm": "310500",
-        "extNorm": "15525",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:itemName",
@@ -555,30 +521,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row4:quantity",
-        "status": "ext_missing",
-        "gtNorm": "10",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "12879",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:amount",
-        "status": "ext_missing",
-        "gtNorm": "128790",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row4:itemCode",
         "status": "ext_missing",
         "gtNorm": "03002261",
@@ -588,9 +530,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 11,
-      "layout": 1,
+      "recognition": 4,
+      "structure": 6,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

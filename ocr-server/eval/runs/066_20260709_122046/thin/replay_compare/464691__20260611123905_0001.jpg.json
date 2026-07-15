@@ -47,9 +47,9 @@
       },
       "supplierCompany": {
         "gt": "동화약품(전문)",
-        "ext": "백제약품(주)영등포지점",
+        "ext": "주)대추약품",
         "gtNorm": "동화약품전문",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "주대추약품",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -73,9 +73,9 @@
       },
       "supplierAddress": {
         "gt": "서울 중구 남대문로9길 24 (다동) 6층~8층",
-        "ext": "서울 구로구 공원로8길 24",
+        "ext": "서울특별시 중랑구 용마산로 382, 정이든빌딩 1~2층(연",
         "gtNorm": "서울중구남대문로9길24다동6층8층",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "서울특별시중랑구용마산로382정이든빌딩12층연",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -190,18 +190,18 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "20151",
-            "ext": "",
+            "ext": "20151",
             "gtNorm": "20151",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20151",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -249,13 +249,13 @@
     ],
     "cellCounts": {
       "scored": 10,
-      "match": 3,
+      "match": 5,
       "mismatch": 1,
-      "ext_missing": 6,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3
+    "cellAccuracy": 0.5
   },
   "buckets": {
     "defects": [
@@ -263,7 +263,7 @@
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "동화약품전문",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "주대추약품",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -271,7 +271,7 @@
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울중구남대문로9길24다동6층8층",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "서울특별시중랑구용마산로382정이든빌딩12층연",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -308,22 +308,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:quantity",
-        "status": "ext_missing",
-        "gtNorm": "10",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "20151",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
-      },
-      {
         "location": "row2:amount",
         "status": "mismatch",
         "gtNorm": "201510",
@@ -358,8 +342,8 @@
     ],
     "bucketTally": {
       "recognition": 5,
-      "structure": 6,
-      "layout": 1,
+      "structure": 5,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

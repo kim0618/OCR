@@ -176,11 +176,12 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 2,
-    "rowCountExt": 2,
-    "rowCountMatch": true,
-    "matchedRowIdx": [],
+    "rowCountExt": 3,
+    "rowCountMatch": false,
+    "matchedRowIdx": [
+      "3"
+    ],
     "gtOnlyRowIdx": [
-      "1",
       "2"
     ],
     "extOnlyRowIdx": [
@@ -189,9 +190,8 @@
     ],
     "rows": [
       {
-        "rowIndex": "1",
+        "rowIndex": "3",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "아모디핀정5밀리그램",
@@ -219,26 +219,26 @@
           },
           "quantity": {
             "gt": "180",
-            "ext": "",
+            "ext": "180",
             "gtNorm": "180",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "180",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "11700",
-            "ext": "",
+            "ext": "11700",
             "gtNorm": "11700",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "11700",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "2106000",
-            "ext": "",
+            "ext": "2106000",
             "gtNorm": "2106000",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "2106000",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -333,13 +333,13 @@
     ],
     "cellCounts": {
       "scored": 16,
-      "match": 0,
+      "match": 3,
       "mismatch": 0,
-      "ext_missing": 16,
+      "ext_missing": 13,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.0
+    "cellAccuracy": 0.1875
   },
   "buckets": {
     "defects": [
@@ -365,7 +365,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor missed rows ['1', '2']"
+        "reason": "extractor missed rows ['2']"
       },
       {
         "location": "table",
@@ -376,7 +376,7 @@
         "reason": "extractor invented rows ['5', '6']"
       },
       {
-        "location": "row1:itemName",
+        "location": "row3:itemName",
         "status": "ext_missing",
         "gtNorm": "아모디핀정5밀리그램",
         "extNorm": "",
@@ -384,7 +384,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemNameMaster",
+        "location": "row3:itemNameMaster",
         "status": "ext_missing",
         "gtNorm": "아모디핀정5mg(병)",
         "extNorm": "",
@@ -392,7 +392,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:spec",
+        "location": "row3:spec",
         "status": "ext_missing",
         "gtNorm": "30t(ptp)",
         "extNorm": "",
@@ -400,31 +400,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "180",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "11700",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:amount",
-        "status": "ext_missing",
-        "gtNorm": "2106000",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:expiryDate",
+        "location": "row3:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20290128",
         "extNorm": "",
@@ -432,7 +408,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemCode",
+        "location": "row3:itemCode",
         "status": "ext_missing",
         "gtNorm": "8806435016065",
         "extNorm": "",
@@ -440,7 +416,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:insuranceCode",
+        "location": "row3:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "039226011",
         "extNorm": "",
@@ -506,7 +482,7 @@
     ],
     "bucketTally": {
       "recognition": 1,
-      "structure": 19,
+      "structure": 16,
       "layout": 0,
       "preprocessing": 0
     },

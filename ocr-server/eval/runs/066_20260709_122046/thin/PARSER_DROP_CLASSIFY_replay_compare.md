@@ -1,106 +1,91 @@
 # Parser-drop classification — 066_20260709_122046\thin
 
-Defects scored (mismatch|ext_missing): **223637**  |  parser-drop (OCR read it, recoverable): **134308**  |  ambiguous_fuzzy (fuzzy-only, pending): **1266**  |  recognition (OCR-bound): **88063**
-Parser-recoverable share of defects: **60.1%**
+Defects scored (mismatch|ext_missing): **204657**  |  parser-drop (OCR read it, recoverable): **118744**  |  ambiguous_fuzzy (fuzzy-only, pending): **1063**  |  recognition (OCR-bound): **84850**
+Parser-recoverable share of defects: **58.0%**
 
-## Parser-drops by column × pattern — CLEAN originals  (n=0)
+Evaluation scope: **run_meta.ran 5964 sources**; out-of-scope compare files excluded: **49**
+
+## Raw itemName × master itemNameMaster transitions
+
+| transition | rows |
+|---|--:|
+| rawWrong_masterCorrect | **14234** |
+| rawWrong_masterWrongOrMissing | **9420** |
+| rawCorrect_masterCorrect | **12748** |
+| rawCorrect_masterWrong | **904** |
+| rawCorrect_masterMissing | **40** |
+
+Regression gates use the persisted row identities, not fixed bin counts: a successful raw fix may legitimately move a protected row between bins.
+
+Clean/angle split: **unavailable for this run**. The legacy six-file study filename list is not applied to thin data.
+
+## Parser-drops by column × pattern — ALL  (n=118744)
 
 | column | drop | mislocate | wrongpick | total |
 |---|--:|--:|--:|--:|
-
-## Parser-drops by column × pattern — ANGLE variants  (n=134308)
-
-| column | drop | mislocate | wrongpick | total |
-|---|--:|--:|--:|--:|
-| spec | 14205 | 2714 | 5175 | **22094** |
-| unitPrice | 8102 | 4732 | 4301 | **17135** |
-| manufacturingNo | 11914 | 2087 | 3105 | **17106** |
-| insuranceCode | 10555 | 1448 | 2936 | **14939** |
-| quantity | 7061 | 4201 | 2949 | **14211** |
-| amount | 6725 | 1336 | 5081 | **13142** |
-| expiryDate | 9302 | 1039 | 1471 | **11812** |
-| itemName | 1972 | 1645 | 7283 | **10900** |
-| taxAmount | 1023 | 325 | 868 | **2216** |
-| itemNameMaster | 995 | 576 | 614 | **2185** |
-| supplyAmount | 829 | 522 | 797 | **2148** |
-| totalAmount | 124 | 457 | 1451 | **2032** |
-| supplierCompany | 9 | 70 | 693 | **772** |
-| buyerAddress | 41 | 7 | 719 | **767** |
-| buyerBizNumber | 43 | 161 | 511 | **715** |
-| discountAmount | 0 | 111 | 512 | **623** |
+| spec | 13713 | 2690 | 5197 | **21600** |
+| manufacturingNo | 11811 | 2225 | 3068 | **17104** |
+| insuranceCode | 10396 | 1441 | 2932 | **14769** |
+| unitPrice | 4985 | 2465 | 4539 | **11989** |
+| expiryDate | 9239 | 1006 | 1427 | **11672** |
+| itemName | 1759 | 1726 | 7120 | **10605** |
+| amount | 4147 | 1081 | 4343 | **9571** |
+| quantity | 3807 | 3149 | 2518 | **9474** |
+| itemNameMaster | 902 | 555 | 624 | **2081** |
+| taxAmount | 889 | 316 | 854 | **2059** |
+| supplyAmount | 687 | 507 | 766 | **1960** |
+| totalAmount | 118 | 489 | 1307 | **1914** |
+| buyerAddress | 41 | 8 | 710 | **759** |
+| supplierCompany | 8 | 69 | 628 | **705** |
+| discountAmount | 0 | 81 | 537 | **618** |
 | issueDate | 0 | 0 | 504 | **504** |
-| buyerCompany | 42 | 8 | 385 | **435** |
-| itemCode | 108 | 13 | 121 | **242** |
-| supplierBizNumber | 18 | 18 | 184 | **220** |
-| supplierAddress | 2 | 15 | 93 | **110** |
-
-## Parser-drops by column × pattern — ALL  (n=134308)
-
-| column | drop | mislocate | wrongpick | total |
-|---|--:|--:|--:|--:|
-| spec | 14205 | 2714 | 5175 | **22094** |
-| unitPrice | 8102 | 4732 | 4301 | **17135** |
-| manufacturingNo | 11914 | 2087 | 3105 | **17106** |
-| insuranceCode | 10555 | 1448 | 2936 | **14939** |
-| quantity | 7061 | 4201 | 2949 | **14211** |
-| amount | 6725 | 1336 | 5081 | **13142** |
-| expiryDate | 9302 | 1039 | 1471 | **11812** |
-| itemName | 1972 | 1645 | 7283 | **10900** |
-| taxAmount | 1023 | 325 | 868 | **2216** |
-| itemNameMaster | 995 | 576 | 614 | **2185** |
-| supplyAmount | 829 | 522 | 797 | **2148** |
-| totalAmount | 124 | 457 | 1451 | **2032** |
-| supplierCompany | 9 | 70 | 693 | **772** |
-| buyerAddress | 41 | 7 | 719 | **767** |
-| buyerBizNumber | 43 | 161 | 511 | **715** |
-| discountAmount | 0 | 111 | 512 | **623** |
-| issueDate | 0 | 0 | 504 | **504** |
-| buyerCompany | 42 | 8 | 385 | **435** |
-| itemCode | 108 | 13 | 121 | **242** |
-| supplierBizNumber | 18 | 18 | 184 | **220** |
+| buyerCompany | 42 | 6 | 383 | **431** |
+| buyerBizNumber | 38 | 157 | 212 | **407** |
+| itemCode | 106 | 9 | 110 | **225** |
+| supplierBizNumber | 54 | 28 | 105 | **187** |
 | supplierAddress | 2 | 15 | 93 | **110** |
 
 ## Ambiguous fuzzy-only evidence by column
 
 | column | count |
 |---|--:|
-| itemName | 567 |
+| itemName | 416 |
 | buyerCompany | 347 |
-| supplierAddress | 88 |
-| insuranceCode | 80 |
-| itemNameMaster | 77 |
-| spec | 47 |
-| manufacturingNo | 35 |
-| buyerAddress | 25 |
+| supplierAddress | 99 |
+| itemNameMaster | 62 |
+| insuranceCode | 56 |
+| spec | 32 |
+| manufacturingNo | 28 |
+| buyerAddress | 23 |
 
 ## Recognition (OCR-bound, NOT parser) by column
 
 | column | count |
 |---|--:|
-| itemCode | 16097 |
-| itemName | 12562 |
-| itemNameMaster | 8299 |
-| expiryDate | 6567 |
-| spec | 6352 |
-| quantity | 5197 |
-| buyerAddress | 5147 |
-| manufacturingNo | 5131 |
-| buyerCompany | 3859 |
-| insuranceCode | 3711 |
-| supplierAddress | 3227 |
-| unitPrice | 3209 |
-| amount | 2338 |
-| supplierCompany | 2190 |
-| supplyAmount | 1040 |
-| taxAmount | 882 |
-| totalAmount | 831 |
-| taxType | 809 |
-| supplierBizNumber | 277 |
+| itemCode | 15247 |
+| itemName | 12647 |
+| itemNameMaster | 8221 |
+| expiryDate | 6452 |
+| spec | 6396 |
+| buyerAddress | 5108 |
+| manufacturingNo | 4784 |
+| buyerCompany | 3842 |
+| quantity | 3815 |
+| insuranceCode | 3678 |
+| supplierAddress | 3162 |
+| unitPrice | 3064 |
+| amount | 2177 |
+| supplierCompany | 2151 |
+| supplyAmount | 1023 |
+| taxAmount | 864 |
+| totalAmount | 818 |
+| taxType | 792 |
+| supplierBizNumber | 276 |
 | issueDate | 176 |
-| buyerBizNumber | 154 |
+| buyerBizNumber | 149 |
 | discountAmount | 8 |
 
-## Preprocessing diagnosis  (telemetry 6013/6013 samples)
+## Preprocessing diagnosis  (telemetry 5964/5964 samples)
 
 recognition rate = recognition defects / scored cells. Δ = vs baseline bucket (+ = that condition is costing accuracy → fix server-side preprocessing).
 
@@ -108,23 +93,23 @@ recognition rate = recognition defects / scored cells. Δ = vs baseline bucket (
 
 | condition | n | cellAcc | recognition% | Δ vs base |
 |---|--:|--:|--:|--:|
-| 270° 적용 | 275 | 41.2% | 28.9% | +3.6pp |
-| 180° 적용 | 120 | 44.8% | 25.6% | +0.4pp |
-| 미적용(0°) | 5309 | 44.2% | 25.2% | — |
-| 90° 적용 | 309 | 52.2% | 21.7% | -3.5pp |
+| 270° 적용 | 268 | 46.7% | 28.3% | +3.7pp |
+| 180° 적용 | 120 | 49.8% | 24.9% | +0.3pp |
+| 미적용(0°) | 5269 | 48.7% | 24.6% | — |
+| 90° 적용 | 307 | 55.4% | 21.2% | -3.4pp |
 
 ### Deskew
 
 | condition | n | cellAcc | recognition% | Δ vs base |
 |---|--:|--:|--:|--:|
-| >2° | 80 | 38.4% | 30.8% | +6.3pp |
-| ≤2° | 682 | 39.4% | 28.6% | +4.1pp |
-| 미적용 | 5251 | 45.4% | 24.6% | — |
+| >2° | 80 | 42.0% | 31.0% | +7.1pp |
+| ≤2° | 672 | 44.8% | 28.0% | +4.0pp |
+| 미적용 | 5212 | 49.8% | 24.0% | — |
 
 ### Warp
 
 | condition | n | cellAcc | recognition% | Δ vs base |
 |---|--:|--:|--:|--:|
-| 영역50–90% | 1 | 44.4% | 33.3% | +8.2pp |
-| forcedWarpOnSkip | 6013 | 44.6% | 25.1% | +0.0pp |
-| 영역≥90% | 6012 | 44.6% | 25.1% | — |
+| 영역50–90% | 1 | 55.6% | 33.3% | +8.8pp |
+| forcedWarpOnSkip | 5964 | 49.1% | 24.5% | +0.0pp |
+| 영역≥90% | 5963 | 49.1% | 24.5% | — |

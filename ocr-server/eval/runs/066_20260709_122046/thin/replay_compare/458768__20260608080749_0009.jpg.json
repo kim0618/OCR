@@ -125,11 +125,11 @@
       },
       "supplyAmount": {
         "gt": "45141594",
-        "ext": "",
+        "ext": "45141594",
         "gtNorm": "45141594",
-        "extNorm": "",
+        "extNorm": "45141594",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
+      "match": 9,
       "mismatch": 2,
-      "ext_missing": 2,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,23 +180,23 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 9,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
     "rowCountGt": 5,
-    "rowCountExt": 6,
+    "rowCountExt": 9,
     "rowCountMatch": false,
     "matchedRowIdx": [
       "2",
-      "3"
+      "3",
+      "8"
     ],
     "gtOnlyRowIdx": [
-      "3",
       "4",
       "5"
     ],
@@ -204,7 +204,9 @@
       "1",
       "4",
       "5",
-      "6"
+      "6",
+      "7",
+      "9"
     ],
     "rows": [
       {
@@ -237,18 +239,18 @@
           },
           "quantity": {
             "gt": "20",
-            "ext": "48278",
+            "ext": "20",
             "gtNorm": "20",
-            "extNorm": "48278",
-            "status": "mismatch",
+            "extNorm": "20",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "48278",
-            "ext": "20",
+            "ext": "48278",
             "gtNorm": "48278",
-            "extNorm": "20",
-            "status": "mismatch",
+            "extNorm": "48278",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -315,18 +317,18 @@
           },
           "quantity": {
             "gt": "50",
-            "ext": "67,105",
+            "ext": "50",
             "gtNorm": "50",
-            "extNorm": "67105",
-            "status": "mismatch",
+            "extNorm": "50",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "67105",
-            "ext": "50",
+            "ext": "67,105",
             "gtNorm": "67105",
-            "extNorm": "50",
-            "status": "mismatch",
+            "extNorm": "67105",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -364,9 +366,8 @@
         }
       },
       {
-        "rowIndex": "3",
+        "rowIndex": "8",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "펜타사서방정 1g 60T",
@@ -394,26 +395,26 @@
           },
           "quantity": {
             "gt": "640",
-            "ext": "",
+            "ext": "640",
             "gtNorm": "640",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "640",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "43476",
-            "ext": "",
+            "ext": "43476",
             "gtNorm": "43476",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "43476",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "27824640",
-            "ext": "",
+            "ext": "27824640",
             "gtNorm": "27824640",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "27824640",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -603,13 +604,13 @@
     ],
     "cellCounts": {
       "scored": 45,
-      "match": 6,
-      "mismatch": 8,
-      "ext_missing": 31,
+      "match": 13,
+      "mismatch": 4,
+      "ext_missing": 28,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.13333333333333333
+    "cellAccuracy": 0.28888888888888886
   },
   "buckets": {
     "defects": [
@@ -620,14 +621,6 @@
         "extNorm": "서울특별시서초구고무래로66송원빌딩78층반포동",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.98)"
-      },
-      {
-        "location": "field:supplyAmount",
-        "status": "ext_missing",
-        "gtNorm": "45141594",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:buyerCompany",
@@ -651,7 +644,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor missed rows ['3', '4', '5']"
+        "reason": "extractor missed rows ['4', '5']"
       },
       {
         "location": "table",
@@ -659,7 +652,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '4', '5', '6']"
+        "reason": "extractor invented rows ['1', '4', '5', '6', '7', '9']"
       },
       {
         "location": "row2:itemName",
@@ -676,22 +669,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:quantity",
-        "status": "mismatch",
-        "gtNorm": "20",
-        "extNorm": "48278",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['unitPrice']"
-      },
-      {
-        "location": "row2:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "48278",
-        "extNorm": "20",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['quantity']"
       },
       {
         "location": "row2:amount",
@@ -726,22 +703,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row3:quantity",
-        "status": "mismatch",
-        "gtNorm": "50",
-        "extNorm": "67105",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['unitPrice']"
-      },
-      {
-        "location": "row3:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "67105",
-        "extNorm": "50",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['quantity']"
-      },
-      {
         "location": "row3:amount",
         "status": "mismatch",
         "gtNorm": "3355250",
@@ -758,7 +719,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row3:itemName",
+        "location": "row8:itemName",
         "status": "ext_missing",
         "gtNorm": "펜타사서방정1g60t",
         "extNorm": "",
@@ -766,7 +727,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row3:itemNameMaster",
+        "location": "row8:itemNameMaster",
         "status": "ext_missing",
         "gtNorm": "펜타사서방정1g",
         "extNorm": "",
@@ -774,7 +735,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row3:spec",
+        "location": "row8:spec",
         "status": "ext_missing",
         "gtNorm": "한국페링제약",
         "extNorm": "",
@@ -782,31 +743,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row3:quantity",
-        "status": "ext_missing",
-        "gtNorm": "640",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "43476",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:amount",
-        "status": "ext_missing",
-        "gtNorm": "27824640",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:expiryDate",
+        "location": "row8:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20290131",
         "extNorm": "",
@@ -814,7 +751,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row3:manufacturingNo",
+        "location": "row8:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "1019441",
         "extNorm": "",
@@ -822,7 +759,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row3:itemCode",
+        "location": "row8:itemCode",
         "status": "ext_missing",
         "gtNorm": "01001006",
         "extNorm": "",
@@ -976,8 +913,8 @@
     ],
     "bucketTally": {
       "recognition": 6,
-      "structure": 34,
-      "layout": 5,
+      "structure": 30,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,
@@ -996,6 +933,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.167
+    "fieldMissRate": 0.083
   }
 }

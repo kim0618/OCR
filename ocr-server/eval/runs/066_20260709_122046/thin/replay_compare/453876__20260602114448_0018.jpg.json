@@ -193,14 +193,14 @@
     "rowCountMatch": false,
     "matchedRowIdx": [
       "9",
-      "3",
+      "2",
       "5",
       "11"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
       "1",
-      "2",
+      "3",
       "4",
       "6",
       "7",
@@ -287,31 +287,31 @@
         }
       },
       {
-        "rowIndex": "3",
+        "rowIndex": "2",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "사이프리엠점안액0.05% 0.4mL*30점안액",
-            "ext": "30점안액",
+            "ext": "사이프리엠점안액0.05%",
             "gtNorm": "사이프리엠점안액00504ml30점안액",
-            "extNorm": "30점안액",
+            "extNorm": "사이프리엠점안액005",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "사이프리엠점안액0.05%",
-            "ext": "리안점안액(파마리서치프로덕트)",
+            "ext": "사이프리엠점안액0.05%",
             "gtNorm": "사이프리엠점안액0.05%",
-            "extNorm": "리안점안액(파마리서치프로덕트)",
-            "status": "mismatch",
+            "extNorm": "사이프리엠점안액0.05%",
+            "status": "match",
             "spurious": false
           },
           "spec": {
             "gt": "30점안액",
-            "ext": "",
+            "ext": "0.4mL*",
             "gtNorm": "30점안액",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "0.4ml*",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -324,15 +324,15 @@
           },
           "unitPrice": {
             "gt": "2061720",
-            "ext": "20,617",
+            "ext": "20617.2",
             "gtNorm": "2061720",
-            "extNorm": "20617",
+            "extNorm": "206172",
             "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "3092580",
-            "ext": "3,092,580",
+            "ext": "3092580",
             "gtNorm": "3092580",
             "extNorm": "3092580",
             "status": "match",
@@ -348,18 +348,18 @@
           },
           "manufacturingNo": {
             "gt": "6001",
-            "ext": "20290202",
+            "ext": "",
             "gtNorm": "6001",
-            "extNorm": "20290202",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemCode": {
             "gt": "01010770",
-            "ext": "16001465",
+            "ext": "01010770",
             "gtNorm": "01010770",
-            "extNorm": "16001465",
-            "status": "mismatch",
+            "extNorm": "01010770",
+            "status": "match",
             "spurious": false
           }
         }
@@ -523,13 +523,13 @@
     ],
     "cellCounts": {
       "scored": 36,
-      "match": 14,
-      "mismatch": 9,
+      "match": 16,
+      "mismatch": 7,
       "ext_missing": 13,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3888888888888889
+    "cellAccuracy": 0.4444444444444444
   },
   "buckets": {
     "defects": [
@@ -555,7 +555,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '2', '4', '6', '7', '8', '10']"
+        "reason": "extractor invented rows ['1', '3', '4', '6', '7', '8', '10']"
       },
       {
         "location": "row9:itemName",
@@ -582,60 +582,44 @@
         "reason": "char-level diff (sim=0.50)"
       },
       {
-        "location": "row3:itemName",
+        "location": "row2:itemName",
         "status": "mismatch",
         "gtNorm": "사이프리엠점안액00504ml30점안액",
-        "extNorm": "30점안액",
+        "extNorm": "사이프리엠점안액005",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.71)"
       },
       {
-        "location": "row3:itemNameMaster",
+        "location": "row2:spec",
         "status": "mismatch",
-        "gtNorm": "사이프리엠점안액0.05%",
-        "extNorm": "리안점안액(파마리서치프로덕트)",
+        "gtNorm": "30점안액",
+        "extNorm": "0.4ml*",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row3:spec",
-        "status": "ext_missing",
-        "gtNorm": "30점안액",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemName']"
-      },
-      {
-        "location": "row3:unitPrice",
+        "location": "row2:unitPrice",
         "status": "mismatch",
         "gtNorm": "2061720",
-        "extNorm": "20617",
+        "extNorm": "206172",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.83)"
+        "reason": "char-level diff (sim=0.92)"
       },
       {
-        "location": "row3:expiryDate",
+        "location": "row2:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20290202",
         "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['manufacturingNo']"
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row3:manufacturingNo",
-        "status": "mismatch",
+        "location": "row2:manufacturingNo",
+        "status": "ext_missing",
         "gtNorm": "6001",
-        "extNorm": "20290202",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row3:itemCode",
-        "status": "mismatch",
-        "gtNorm": "01010770",
-        "extNorm": "16001465",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row5:itemName",
@@ -735,9 +719,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 11,
-      "structure": 11,
-      "layout": 3,
+      "recognition": 9,
+      "structure": 13,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

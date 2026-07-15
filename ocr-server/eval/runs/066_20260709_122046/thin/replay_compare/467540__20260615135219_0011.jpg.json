@@ -47,11 +47,11 @@
       },
       "supplierCompany": {
         "gt": "대화제약",
-        "ext": "백제약품(주)영등포지점",
+        "ext": "대화제약(주)",
         "gtNorm": "대화제약",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "대화제약",
         "type": "company",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -73,9 +73,9 @@
       },
       "supplierAddress": {
         "gt": "경기도 시흥시 정왕동 시화공단1라 603",
-        "ext": "서울 구로구 공원로8길 24",
+        "ext": "강원특별자치도 횡성군 횡성읍 한우로",
         "gtNorm": "경기도시흥시정왕동시화공단1라603",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "강원특별자치도횡성군횡성읍한우로",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -128,8 +128,8 @@
     "profile": "thin",
     "counts": {
       "scored": 9,
-      "match": 2,
-      "mismatch": 7,
+      "match": 3,
+      "mismatch": 6,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -141,11 +141,11 @@
     },
     "coverage": {
       "gtPresent": 9,
-      "matched": 2,
+      "matched": 3,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.2222222222222222
+    "fieldAccuracy": 0.3333333333333333
   },
   "table": {
     "alignMode": "content",
@@ -207,10 +207,10 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -675,26 +675,26 @@
           },
           "quantity": {
             "gt": "40",
-            "ext": "",
+            "ext": "10",
             "gtNorm": "40",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "2196",
-            "ext": "",
+            "ext": "20",
             "gtNorm": "2196",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "87840",
-            "ext": "",
+            "ext": "200",
             "gtNorm": "87840",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "200",
+            "status": "mismatch",
             "spurious": false
           },
           "expiryDate": {
@@ -1197,13 +1197,13 @@
     ],
     "cellCounts": {
       "scored": 117,
-      "match": 22,
-      "mismatch": 27,
-      "ext_missing": 68,
+      "match": 23,
+      "mismatch": 30,
+      "ext_missing": 64,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.18803418803418803
+    "cellAccuracy": 0.19658119658119658
   },
   "buckets": {
     "defects": [
@@ -1224,18 +1224,10 @@
         "reason": "ext value is gt's ['row13:unitPrice']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "대화제약",
-        "extNorm": "백제약품영등포지점",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기도시흥시정왕동시화공단1라603",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "강원특별자치도횡성군횡성읍한우로",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -1291,14 +1283,6 @@
         "location": "row1:spec",
         "status": "ext_missing",
         "gtNorm": "30t 병",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "10",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -1633,27 +1617,27 @@
       },
       {
         "location": "row14:quantity",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "40",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "10",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "row14:unitPrice",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "2196",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "20",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row14:amount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "87840",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "200",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row14:expiryDate",
@@ -2041,8 +2025,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 32,
-      "structure": 72,
+      "recognition": 34,
+      "structure": 68,
       "layout": 0,
       "preprocessing": 0
     },

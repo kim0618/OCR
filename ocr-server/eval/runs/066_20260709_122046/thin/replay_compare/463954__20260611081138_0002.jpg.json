@@ -73,9 +73,9 @@
       },
       "supplierCompany": {
         "gt": "알보젠코리아(근화전문.보령아산)",
-        "ext": "백제약품(주)영등포지점",
+        "ext": "주식회사 휴온스메디텍",
         "gtNorm": "알보젠코리아근화전문보령아산",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "휴온스메디텍",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -99,11 +99,11 @@
       },
       "supplierAddress": {
         "gt": "서울 서초구 서초대로 411 (서초동) 5층",
-        "ext": "서울 구로구 공원로8길 24",
+        "ext": "",
         "gtNorm": "서울서초구서초대로411서초동5층",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "",
         "type": "address",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -155,8 +155,8 @@
     "counts": {
       "scored": 11,
       "match": 4,
-      "mismatch": 4,
-      "ext_missing": 3,
+      "mismatch": 3,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -169,7 +169,7 @@
       "gtPresent": 11,
       "matched": 4,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 3
+      "extAttemptedMiss": 4
     },
     "fieldAccuracy": 0.36363636363636365
   },
@@ -690,17 +690,17 @@
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "알보젠코리아근화전문보령아산",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "휴온스메디텍",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplierAddress",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "서울서초구서초대로411서초동5층",
-        "extNorm": "서울구로구공원로8길24",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplyAmount",
@@ -816,8 +816,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 14,
-      "structure": 3,
+      "recognition": 13,
+      "structure": 4,
       "layout": 1,
       "preprocessing": 0
     },
@@ -837,6 +837,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.273
+    "fieldMissRate": 0.364
   }
 }

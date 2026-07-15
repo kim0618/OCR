@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "3128509139",
-        "ext": "305-85-00993",
+        "ext": "312-85-09139",
         "gtNorm": "3128509139",
-        "extNorm": "3058500993",
+        "extNorm": "3128509139",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -86,9 +86,9 @@
       },
       "supplierCompany": {
         "gt": "동성제약(전)",
-        "ext": "백제약품(주)대전지점",
+        "ext": "동성제약(전문)",
         "gtNorm": "동성제약",
-        "extNorm": "백제약품대전지점",
+        "extNorm": "동성제약전문",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -154,8 +154,8 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 7,
-      "mismatch": 3,
+      "match": 8,
+      "mismatch": 2,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 7,
+      "matched": 8,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.6363636363636364
+    "fieldAccuracy": 0.7272727272727273
   },
   "table": {
     "alignMode": "content",
@@ -286,10 +286,10 @@
           },
           "itemNameMaster": {
             "gt": "레보팜정25mg",
-            "ext": "레보큐정",
+            "ext": "",
             "gtNorm": "레보팜정25mg",
-            "extNorm": "레보큐정",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "spec": {
@@ -544,10 +544,10 @@
           },
           "unitPrice": {
             "gt": "0",
-            "ext": "",
+            "ext": "20",
             "gtNorm": "0",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
@@ -910,20 +910,12 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierBizNumber",
-        "status": "mismatch",
-        "gtNorm": "3128509139",
-        "extNorm": "3058500993",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.60)"
-      },
-      {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "동성제약",
-        "extNorm": "백제약품대전지점",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['field:buyerCompany']"
+        "extNorm": "동성제약전문",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "field:buyerCompany",
@@ -931,7 +923,7 @@
         "gtNorm": "백제약품대전지점",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "gt value present at ['field:supplierCompany']"
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:buyerAddress",
@@ -991,11 +983,11 @@
       },
       {
         "location": "row2:itemNameMaster",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "레보팜정25mg",
-        "extNorm": "레보큐정",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row2:quantity",
@@ -1111,11 +1103,11 @@
       },
       {
         "location": "row5:unitPrice",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "0",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "20",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "row5:manufacturingNo",
@@ -1272,7 +1264,7 @@
     ],
     "bucketTally": {
       "recognition": 32,
-      "structure": 13,
+      "structure": 12,
       "layout": 0,
       "preprocessing": 0
     },

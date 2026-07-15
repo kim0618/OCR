@@ -396,18 +396,18 @@
           },
           "quantity": {
             "gt": "0",
-            "ext": "",
+            "ext": "150",
             "gtNorm": "0",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "150",
+            "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "19062",
-            "ext": "",
+            "ext": "19062",
             "gtNorm": "19062",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "19062",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -628,13 +628,13 @@
     ],
     "cellCounts": {
       "scored": 49,
-      "match": 9,
-      "mismatch": 10,
-      "ext_missing": 30,
+      "match": 10,
+      "mismatch": 11,
+      "ext_missing": 28,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.1836734693877551
+    "cellAccuracy": 0.20408163265306123
   },
   "buckets": {
     "defects": [
@@ -840,19 +840,11 @@
       },
       {
         "location": "row3:quantity",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "0",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "19062",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
+        "extNorm": "150",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "row3:amount",
@@ -1032,9 +1024,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 14,
-      "structure": 33,
-      "layout": 2,
+      "recognition": 15,
+      "structure": 32,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

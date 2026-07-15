@@ -176,8 +176,8 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 6,
-    "rowCountExt": 6,
-    "rowCountMatch": true,
+    "rowCountExt": 8,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
       "2",
@@ -187,7 +187,10 @@
       "5"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "7",
+      "8"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -375,10 +378,10 @@
           },
           "quantity": {
             "gt": "30",
-            "ext": "",
+            "ext": "30",
             "gtNorm": "30",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -668,13 +671,13 @@
     ],
     "cellCounts": {
       "scored": 55,
-      "match": 13,
+      "match": 14,
       "mismatch": 17,
-      "ext_missing": 25,
+      "ext_missing": 24,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.23636363636363636
+    "cellAccuracy": 0.2545454545454545
   },
   "buckets": {
     "defects": [
@@ -709,6 +712,14 @@
         "extNorm": "중북진천군진천읍문화12길61",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
+      },
+      {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['7', '8']"
       },
       {
         "location": "row1:spec",
@@ -829,14 +840,6 @@
         "extNorm": "30t26op1b",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.50)"
-      },
-      {
-        "location": "row3:quantity",
-        "status": "ext_missing",
-        "gtNorm": "30",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row3:manufacturingNo",

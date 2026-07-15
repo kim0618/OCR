@@ -8,11 +8,11 @@
     "perField": {
       "totalAmount": {
         "gt": "444074",
-        "ext": "142,662,095",
+        "ext": "444074",
         "gtNorm": "444074",
-        "extNorm": "142662095",
+        "extNorm": "444074",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -73,11 +73,11 @@
       },
       "buyerBizNumber": {
         "gt": "6168513350",
-        "ext": "112-60-96259",
+        "ext": "616-85-13350",
         "gtNorm": "6168513350",
-        "extNorm": "1126096259",
+        "extNorm": "6168513350",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 7,
-      "mismatch": 4,
+      "match": 9,
+      "mismatch": 2,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -180,33 +180,36 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 7,
+      "matched": 9,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.5833333333333334
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
     "rowCountGt": 1,
     "rowCountExt": 1,
     "rowCountMatch": true,
-    "matchedRowIdx": [
+    "matchedRowIdx": [],
+    "gtOnlyRowIdx": [
       "1"
     ],
-    "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "1"
+    ],
     "rows": [
       {
         "rowIndex": "1",
         "rowMatch": false,
+        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "매입에누리(OCR)",
-            "ext": "(643507130)한미오메가연질캡슬1000밀리그램_60C(PTP)",
+            "ext": "",
             "gtNorm": "매입에누리ocr",
-            "extNorm": "643507130한미오메가연질캡슬1000밀리그램60cptp",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemNameMaster": {
@@ -227,26 +230,26 @@
           },
           "quantity": {
             "gt": "1",
-            "ext": "28",
+            "ext": "",
             "gtNorm": "1",
-            "extNorm": "28",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "unitPrice": {
             "gt": "0",
-            "ext": "17,820",
+            "ext": "",
             "gtNorm": "0",
-            "extNorm": "17820",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "amount": {
             "gt": "54886",
-            "ext": "54,886",
+            "ext": "",
             "gtNorm": "54886",
-            "extNorm": "54886",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemCode": {
@@ -262,39 +265,23 @@
     ],
     "cellCounts": {
       "scored": 7,
-      "match": 1,
-      "mismatch": 3,
-      "ext_missing": 3,
+      "match": 0,
+      "mismatch": 0,
+      "ext_missing": 7,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.14285714285714285
+    "cellAccuracy": 0.0
   },
   "buckets": {
     "defects": [
-      {
-        "location": "field:totalAmount",
-        "status": "mismatch",
-        "gtNorm": "444074",
-        "extNorm": "142662095",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
       {
         "location": "field:discountAmount",
         "status": "mismatch",
         "gtNorm": "54886",
         "extNorm": "0",
         "bucket": "structure",
-        "reason": "gt value present at ['row1:amount']"
-      },
-      {
-        "location": "field:buyerBizNumber",
-        "status": "mismatch",
-        "gtNorm": "6168513350",
-        "extNorm": "1126096259",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "ext value is gt's ['row1:unitPrice']"
       },
       {
         "location": "field:buyerCompany",
@@ -313,12 +300,28 @@
         "reason": "ext value is gt's ['field:supplierAddress']"
       },
       {
+        "location": "table",
+        "status": "rows_missed",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor missed rows ['1']"
+      },
+      {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['1']"
+      },
+      {
         "location": "row1:itemName",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "매입에누리ocr",
-        "extNorm": "643507130한미오메가연질캡슬1000밀리그램60cptp",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row1:itemNameMaster",
@@ -338,19 +341,27 @@
       },
       {
         "location": "row1:quantity",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "1",
-        "extNorm": "28",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row1:unitPrice",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "0",
-        "extNorm": "17820",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row1:amount",
+        "status": "ext_missing",
+        "gtNorm": "54886",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row1:itemCode",
@@ -362,8 +373,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 6,
+      "recognition": 0,
+      "structure": 12,
       "layout": 0,
       "preprocessing": 0
     },

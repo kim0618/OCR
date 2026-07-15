@@ -192,7 +192,7 @@
     "rowCountExt": 13,
     "rowCountMatch": false,
     "matchedRowIdx": [
-      "1",
+      "12",
       "2",
       "3",
       "4",
@@ -205,18 +205,18 @@
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
+      "1",
       "11",
-      "12",
       "13"
     ],
     "rows": [
       {
-        "rowIndex": "1",
+        "rowIndex": "12",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "큐알론점안액 0.15%(히알루론산나트륨)(1회용)0.5ML 60관",
-            "ext": "0.5ML60관// 11 큐알론점안액 0.15%(히알루론산나트륨)(1회용",
+            "ext": "0.5ML60관// 11 큐알론점안액 0.15%(히알루론산나트륨)(1회용)",
             "gtNorm": "큐알론점안액015히알루론산나트륨1회용05ml60관",
             "extNorm": "05ml60관11큐알론점안액015히알루론산나트륨1회용",
             "status": "mismatch",
@@ -264,10 +264,10 @@
           },
           "expiryDate": {
             "gt": "20280501",
-            "ext": "20280501",
+            "ext": "",
             "gtNorm": "20280501",
-            "extNorm": "20280501",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "manufacturingNo": {
@@ -280,18 +280,18 @@
           },
           "itemCode": {
             "gt": "22003334",
-            "ext": "ECO33",
+            "ext": "22003334",
             "gtNorm": "22003334",
-            "extNorm": "ECO33",
-            "status": "mismatch",
+            "extNorm": "22003334",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "643704311",
-            "ext": "643704311",
+            "ext": "643704311 20280501/ EC03264Q",
             "gtNorm": "643704311",
-            "extNorm": "643704311",
-            "status": "match",
+            "extNorm": "64370431120280501EC03264Q",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -1073,13 +1073,13 @@
     ],
     "cellCounts": {
       "scored": 100,
-      "match": 56,
+      "match": 55,
       "mismatch": 23,
-      "ext_missing": 21,
+      "ext_missing": 22,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.56
+    "cellAccuracy": 0.55
   },
   "buckets": {
     "defects": [
@@ -1105,10 +1105,10 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['11', '12', '13']"
+        "reason": "extractor invented rows ['1', '11', '13']"
       },
       {
-        "location": "row1:itemName",
+        "location": "row12:itemName",
         "status": "mismatch",
         "gtNorm": "큐알론점안액015히알루론산나트륨1회용05ml60관",
         "extNorm": "05ml60관11큐알론점안액015히알루론산나트륨1회용",
@@ -1116,7 +1116,7 @@
         "reason": "char-level diff (sim=0.71)"
       },
       {
-        "location": "row1:spec",
+        "location": "row12:spec",
         "status": "ext_missing",
         "gtNorm": "0.5ml 60관",
         "extNorm": "",
@@ -1124,7 +1124,15 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:manufacturingNo",
+        "location": "row12:expiryDate",
+        "status": "ext_missing",
+        "gtNorm": "20280501",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row12:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "EC032644Q",
         "extNorm": "",
@@ -1132,12 +1140,12 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemCode",
+        "location": "row12:insuranceCode",
         "status": "mismatch",
-        "gtNorm": "22003334",
-        "extNorm": "ECO33",
+        "gtNorm": "643704311",
+        "extNorm": "64370431120280501EC03264Q",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.53)"
       },
       {
         "location": "row2:itemName",
@@ -1462,7 +1470,7 @@
     ],
     "bucketTally": {
       "recognition": 24,
-      "structure": 22,
+      "structure": 23,
       "layout": 1,
       "preprocessing": 0
     },

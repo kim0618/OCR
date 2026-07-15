@@ -47,11 +47,11 @@
       },
       "supplierBizNumber": {
         "gt": "2208100530",
-        "ext": "085-46-90389",
+        "ext": "220-81-00530",
         "gtNorm": "2208100530",
-        "extNorm": "0854690389",
+        "extNorm": "2208100530",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -73,11 +73,11 @@
       },
       "supplierCompany": {
         "gt": "한독(전)",
-        "ext": "용)",
+        "ext": "한독(전)",
         "gtNorm": "한독",
-        "extNorm": "용",
+        "extNorm": "한독",
         "type": "company",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -99,9 +99,9 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 강남구 테헤란로 132(역삼동)",
-        "ext": "서울서강남구테헤란로132(역삼동",
+        "ext": "서울 강남구 테헤란로 132(역삼동)",
         "gtNorm": "서울특별시강남구테헤란로132역삼동",
-        "extNorm": "서울서강남구테헤란로132역삼동",
+        "extNorm": "서울강남구테헤란로132역삼동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -154,8 +154,8 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 3,
-      "mismatch": 5,
+      "match": 5,
+      "mismatch": 3,
       "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
@@ -167,17 +167,17 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 3,
+      "matched": 5,
       "extNotAttempted": 0,
       "extAttemptedMiss": 3
     },
-    "fieldAccuracy": 0.2727272727272727
+    "fieldAccuracy": 0.45454545454545453
   },
   "table": {
     "alignMode": "content",
     "rowCountGt": 4,
-    "rowCountExt": 4,
-    "rowCountMatch": true,
+    "rowCountExt": 5,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "3",
       "1",
@@ -185,7 +185,9 @@
       "4"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "5"
+    ],
     "rows": [
       {
         "rowIndex": "3",
@@ -217,26 +219,26 @@
           },
           "quantity": {
             "gt": "100",
-            "ext": "",
+            "ext": "100",
             "gtNorm": "100",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "100",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "25995",
-            "ext": "",
+            "ext": "25995",
             "gtNorm": "25995",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "25995",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "2599500",
-            "ext": "25,995",
+            "ext": "2599500",
             "gtNorm": "2599500",
-            "extNorm": "25995",
-            "status": "mismatch",
+            "extNorm": "2599500",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -279,10 +281,10 @@
           },
           "itemNameMaster": {
             "gt": "엑셀론캡슐3mg",
-            "ext": "",
+            "ext": "엑셀론캡슐6mg",
             "gtNorm": "엑셀론캡슐3mg",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "엑셀론캡슐6mg",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
@@ -335,10 +337,10 @@
           },
           "itemCode": {
             "gt": "04003824",
-            "ext": "",
+            "ext": "22002017",
             "gtNorm": "04003824",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "22002017",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -502,13 +504,13 @@
     ],
     "cellCounts": {
       "scored": 36,
-      "match": 14,
-      "mismatch": 6,
-      "ext_missing": 16,
+      "match": 17,
+      "mismatch": 7,
+      "ext_missing": 12,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3888888888888889
+    "cellAccuracy": 0.4722222222222222
   },
   "buckets": {
     "defects": [
@@ -529,28 +531,12 @@
         "reason": "gt value not found anywhere in extraction"
       },
       {
-        "location": "field:supplierBizNumber",
-        "status": "mismatch",
-        "gtNorm": "2208100530",
-        "extNorm": "0854690389",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "한독",
-        "extNorm": "용",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울특별시강남구테헤란로132역삼동",
-        "extNorm": "서울서강남구테헤란로132역삼동",
+        "extNorm": "서울강남구테헤란로132역삼동",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.88)"
+        "reason": "char-level diff (sim=0.91)"
       },
       {
         "location": "field:supplyAmount",
@@ -577,6 +563,14 @@
         "reason": "char-level diff (sim=0.81)"
       },
       {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['5']"
+      },
+      {
         "location": "row3:itemName",
         "status": "mismatch",
         "gtNorm": "엑셀론캡슐15mg28c",
@@ -591,30 +585,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:quantity",
-        "status": "ext_missing",
-        "gtNorm": "100",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "25995",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
-      },
-      {
-        "location": "row3:amount",
-        "status": "mismatch",
-        "gtNorm": "2599500",
-        "extNorm": "25995",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.83)"
       },
       {
         "location": "row3:expiryDate",
@@ -642,11 +612,11 @@
       },
       {
         "location": "row1:itemNameMaster",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "엑셀론캡슐3mg",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "엑셀론캡슐6mg",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.88)"
       },
       {
         "location": "row1:expiryDate",
@@ -666,11 +636,11 @@
       },
       {
         "location": "row1:itemCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "04003824",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "22002017",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row2:itemName",
@@ -754,9 +724,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 11,
-      "structure": 17,
-      "layout": 2,
+      "recognition": 10,
+      "structure": 15,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

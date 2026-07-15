@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "2208100530",
-        "ext": "085-48-18349",
+        "ext": "220-81-00530",
         "gtNorm": "2208100530",
-        "extNorm": "0854818349",
+        "extNorm": "2208100530",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -86,9 +86,9 @@
       },
       "supplierCompany": {
         "gt": "한독약품",
-        "ext": "용)",
+        "ext": "한독(전)",
         "gtNorm": "한독약품",
-        "extNorm": "용",
+        "extNorm": "한독",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 강남구 테헤란로 132",
-        "ext": "서울시강남구테헤란로132(역참동",
+        "ext": "서울 강남구 테헤란로 132(역삼동)",
         "gtNorm": "서울특별시강남구테헤란로132",
-        "extNorm": "서울시강남구테헤란로132역참동",
+        "extNorm": "서울강남구테헤란로132역삼동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 3,
-      "mismatch": 5,
+      "match": 4,
+      "mismatch": 4,
       "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 3,
+      "matched": 4,
       "extNotAttempted": 0,
       "extAttemptedMiss": 4
     },
-    "fieldAccuracy": 0.25
+    "fieldAccuracy": 0.3333333333333333
   },
   "table": {
     "alignMode": "content",
@@ -1531,20 +1531,12 @@
         "reason": "gt value present at ['field:discountAmount']"
       },
       {
-        "location": "field:supplierBizNumber",
-        "status": "mismatch",
-        "gtNorm": "2208100530",
-        "extNorm": "0854818349",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "한독약품",
-        "extNorm": "용",
+        "extNorm": "한독",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "field:taxType",
@@ -1558,9 +1550,9 @@
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울특별시강남구테헤란로132",
-        "extNorm": "서울시강남구테헤란로132역참동",
+        "extNorm": "서울강남구테헤란로132역삼동",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.84)"
+        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "field:supplyAmount",
@@ -2212,7 +2204,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 23,
+      "recognition": 22,
       "structure": 64,
       "layout": 0,
       "preprocessing": 0

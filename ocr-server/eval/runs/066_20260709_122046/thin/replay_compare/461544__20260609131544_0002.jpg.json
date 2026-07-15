@@ -60,9 +60,9 @@
       },
       "supplierCompany": {
         "gt": "유한양행(전)",
-        "ext": "백제약품(주)영남본부",
+        "ext": "주)대주약품",
         "gtNorm": "유한양행",
-        "extNorm": "백제약품영남본부",
+        "extNorm": "주대주약품",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -86,9 +86,9 @@
       },
       "supplierAddress": {
         "gt": "충청북도 청주시 청원구 오창읍 연구단지로 219",
-        "ext": "경남 김해시 진례면 김해테크노벨리로 33-12 백제약품(주)영남본부",
+        "ext": "도매업, 부동산업",
         "gtNorm": "충청북도청주시청원구오창읍연구단지로219",
-        "extNorm": "경남김해시진례면김해테크노벨리로3312백제약품주영남본부",
+        "extNorm": "도매업부동산업",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -205,18 +205,18 @@
           },
           "quantity": {
             "gt": "368",
-            "ext": "",
+            "ext": "368",
             "gtNorm": "368",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "368",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "70903",
-            "ext": "",
+            "ext": "70903",
             "gtNorm": "70903",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "70903",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -436,13 +436,13 @@
     ],
     "cellCounts": {
       "scored": 30,
-      "match": 19,
+      "match": 21,
       "mismatch": 5,
-      "ext_missing": 6,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.6333333333333333
+    "cellAccuracy": 0.7
   },
   "buckets": {
     "defects": [
@@ -450,15 +450,15 @@
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "유한양행",
-        "extNorm": "백제약품영남본부",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['field:buyerCompany']"
+        "extNorm": "주대주약품",
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "충청북도청주시청원구오창읍연구단지로219",
-        "extNorm": "경남김해시진례면김해테크노벨리로3312백제약품주영남본부",
+        "extNorm": "도매업부동산업",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -467,8 +467,8 @@
         "status": "mismatch",
         "gtNorm": "백제약품영남본부",
         "extNorm": "백제약품",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:supplierCompany']"
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "field:buyerAddress",
@@ -493,22 +493,6 @@
         "extNorm": "3ot v",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.50)"
-      },
-      {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "368",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "70903",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row1:expiryDate",
@@ -576,8 +560,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 8,
+      "recognition": 7,
+      "structure": 4,
       "layout": 3,
       "preprocessing": 0
     },

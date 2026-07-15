@@ -60,9 +60,9 @@
       },
       "supplierCompany": {
         "gt": "JW중외신약",
-        "ext": "백제약품(주)영등포지점",
+        "ext": "의약의약품외수출입",
         "gtNorm": "jw중외신약",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "의약의약품외수출입",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -86,11 +86,11 @@
       },
       "supplierAddress": {
         "gt": "서울 서초구 남부순환로 2477 (서초동)",
-        "ext": "서울 구로구 공원로8길 24",
+        "ext": "",
         "gtNorm": "서울서초구남부순환로2477서초동",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "",
         "type": "address",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -142,8 +142,8 @@
     "counts": {
       "scored": 10,
       "match": 6,
-      "mismatch": 4,
-      "ext_missing": 0,
+      "mismatch": 3,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -156,28 +156,27 @@
       "gtPresent": 10,
       "matched": 6,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 0
+      "extAttemptedMiss": 1
     },
     "fieldAccuracy": 0.6
   },
   "table": {
     "alignMode": "content",
     "rowCountGt": 1,
-    "rowCountExt": 2,
+    "rowCountExt": 3,
     "rowCountMatch": false,
-    "matchedRowIdx": [],
-    "gtOnlyRowIdx": [
-      "1"
+    "matchedRowIdx": [
+      "3"
     ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
       "1",
       "2"
     ],
     "rows": [
       {
-        "rowIndex": "1",
+        "rowIndex": "3",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "펜터미정",
@@ -205,26 +204,26 @@
           },
           "quantity": {
             "gt": "5",
-            "ext": "",
+            "ext": "5",
             "gtNorm": "5",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "5",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "69000",
-            "ext": "",
+            "ext": "69000",
             "gtNorm": "69000",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "69000",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "345000",
-            "ext": "",
+            "ext": "345000",
             "gtNorm": "345000",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "345000",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
@@ -240,13 +239,13 @@
     ],
     "cellCounts": {
       "scored": 7,
-      "match": 0,
+      "match": 3,
       "mismatch": 0,
-      "ext_missing": 7,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.0
+    "cellAccuracy": 0.42857142857142855
   },
   "buckets": {
     "defects": [
@@ -254,17 +253,17 @@
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "jw중외신약",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "의약의약품외수출입",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplierAddress",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "서울서초구남부순환로2477서초동",
-        "extNorm": "서울구로구공원로8길24",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:buyerCompany",
@@ -284,14 +283,6 @@
       },
       {
         "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['1']"
-      },
-      {
-        "location": "table",
         "status": "rows_extra",
         "gtNorm": "",
         "extNorm": "",
@@ -299,7 +290,7 @@
         "reason": "extractor invented rows ['1', '2']"
       },
       {
-        "location": "row1:itemName",
+        "location": "row3:itemName",
         "status": "ext_missing",
         "gtNorm": "펜터미정",
         "extNorm": "",
@@ -307,7 +298,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemNameMaster",
+        "location": "row3:itemNameMaster",
         "status": "ext_missing",
         "gtNorm": "펜터미정(향정)(비만치료)",
         "extNorm": "",
@@ -315,7 +306,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:spec",
+        "location": "row3:spec",
         "status": "ext_missing",
         "gtNorm": "100t",
         "extNorm": "",
@@ -323,31 +314,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "5",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "69000",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:amount",
-        "status": "ext_missing",
-        "gtNorm": "345000",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:itemCode",
+        "location": "row3:itemCode",
         "status": "ext_missing",
         "gtNorm": "8806441006425",
         "extNorm": "",
@@ -356,8 +323,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 4,
-      "structure": 9,
+      "recognition": 3,
+      "structure": 6,
       "layout": 0,
       "preprocessing": 0
     },
@@ -377,6 +344,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.0
+    "fieldMissRate": 0.1
   }
 }

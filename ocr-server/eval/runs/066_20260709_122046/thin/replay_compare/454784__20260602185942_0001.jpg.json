@@ -223,10 +223,10 @@
           },
           "unitPrice": {
             "gt": "38000",
-            "ext": "4,560,000",
+            "ext": "38000",
             "gtNorm": "38000",
-            "extNorm": "4560000",
-            "status": "mismatch",
+            "extNorm": "38000",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -255,10 +255,10 @@
           },
           "itemCode": {
             "gt": "04004374",
-            "ext": "14000808",
+            "ext": "04004374",
             "gtNorm": "04004374",
-            "extNorm": "14000808",
-            "status": "mismatch",
+            "extNorm": "04004374",
+            "status": "match",
             "spurious": false
           }
         }
@@ -293,10 +293,10 @@
           },
           "quantity": {
             "gt": "240",
-            "ext": "24",
+            "ext": "240",
             "gtNorm": "240",
-            "extNorm": "24",
-            "status": "mismatch",
+            "extNorm": "240",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -309,10 +309,10 @@
           },
           "amount": {
             "gt": "16644000",
-            "ext": "1,664,400",
+            "ext": "16644000",
             "gtNorm": "16644000",
-            "extNorm": "1664400",
-            "status": "mismatch",
+            "extNorm": "16644000",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -344,13 +344,13 @@
     ],
     "cellCounts": {
       "scored": 18,
-      "match": 8,
-      "mismatch": 10,
+      "match": 12,
+      "mismatch": 6,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4444444444444444
+    "cellAccuracy": 0.6666666666666666
   },
   "buckets": {
     "defects": [
@@ -411,20 +411,12 @@
         "reason": "gt cell appears in column(s) ['itemNameMaster']"
       },
       {
-        "location": "row1:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "38000",
-        "extNorm": "4560000",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
-      },
-      {
         "location": "row1:amount",
         "status": "mismatch",
         "gtNorm": "4560000",
         "extNorm": "5016000",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['unitPrice']"
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.71)"
       },
       {
         "location": "row1:manufacturingNo",
@@ -435,36 +427,12 @@
         "reason": "char-level diff (sim=0.67)"
       },
       {
-        "location": "row1:itemCode",
-        "status": "mismatch",
-        "gtNorm": "04004374",
-        "extNorm": "14000808",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
         "location": "row2:itemName",
         "status": "mismatch",
         "gtNorm": "메이킨큐장용정",
         "extNorm": "비급여메이킨큐장용정",
         "bucket": "layout",
         "reason": "gt cell appears in column(s) ['itemNameMaster']"
-      },
-      {
-        "location": "row2:quantity",
-        "status": "mismatch",
-        "gtNorm": "240",
-        "extNorm": "24",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.80)"
-      },
-      {
-        "location": "row2:amount",
-        "status": "mismatch",
-        "gtNorm": "16644000",
-        "extNorm": "1664400",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['expiryDate']"
       },
       {
         "location": "row2:expiryDate",
@@ -484,9 +452,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 10,
+      "recognition": 8,
       "structure": 2,
-      "layout": 4,
+      "layout": 2,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

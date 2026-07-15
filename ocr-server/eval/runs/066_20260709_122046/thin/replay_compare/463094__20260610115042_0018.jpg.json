@@ -163,14 +163,13 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 2,
-    "rowCountExt": 3,
+    "rowCountExt": 4,
     "rowCountMatch": false,
     "matchedRowIdx": [
-      "1"
+      "1",
+      "4"
     ],
-    "gtOnlyRowIdx": [
-      "2"
-    ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
       "2",
       "3"
@@ -206,10 +205,10 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -255,9 +254,8 @@
         }
       },
       {
-        "rowIndex": "2",
+        "rowIndex": "4",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "제미메트 서방정 50/1000mg 30T",
@@ -285,26 +283,26 @@
           },
           "quantity": {
             "gt": "50",
-            "ext": "",
+            "ext": "50",
             "gtNorm": "50",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "50",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "21560",
-            "ext": "",
+            "ext": "21560",
             "gtNorm": "21560",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "21560",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "1078000",
-            "ext": "",
+            "ext": "1078000",
             "gtNorm": "1078000",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "1078000",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -336,13 +334,13 @@
     ],
     "cellCounts": {
       "scored": 18,
-      "match": 2,
+      "match": 6,
       "mismatch": 5,
-      "ext_missing": 11,
+      "ext_missing": 7,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.1111111111111111
+    "cellAccuracy": 0.3333333333333333
   },
   "buckets": {
     "defects": [
@@ -404,14 +402,6 @@
       },
       {
         "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['2']"
-      },
-      {
-        "location": "table",
         "status": "rows_extra",
         "gtNorm": "",
         "extNorm": "",
@@ -433,14 +423,6 @@
         "extNorm": "56t pac",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.75)"
-      },
-      {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "10",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row1:unitPrice",
@@ -475,7 +457,7 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row2:itemName",
+        "location": "row4:itemName",
         "status": "ext_missing",
         "gtNorm": "제미메트서방정501000mg30t",
         "extNorm": "",
@@ -483,7 +465,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:itemNameMaster",
+        "location": "row4:itemNameMaster",
         "status": "ext_missing",
         "gtNorm": "제미메트서방정50/1000mg",
         "extNorm": "",
@@ -491,7 +473,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:spec",
+        "location": "row4:spec",
         "status": "ext_missing",
         "gtNorm": "30t/ back",
         "extNorm": "",
@@ -499,31 +481,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:quantity",
-        "status": "ext_missing",
-        "gtNorm": "50",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "21560",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:amount",
-        "status": "ext_missing",
-        "gtNorm": "1078000",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:expiryDate",
+        "location": "row4:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20290304",
         "extNorm": "",
@@ -531,7 +489,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:manufacturingNo",
+        "location": "row4:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "ZMG26535",
         "extNorm": "",
@@ -539,7 +497,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:itemCode",
+        "location": "row4:itemCode",
         "status": "ext_missing",
         "gtNorm": "05005946",
         "extNorm": "",
@@ -549,7 +507,7 @@
     ],
     "bucketTally": {
       "recognition": 6,
-      "structure": 16,
+      "structure": 11,
       "layout": 3,
       "preprocessing": 0
     },

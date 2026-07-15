@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "1098636089",
-        "ext": "609-85-04585",
+        "ext": "",
         "gtNorm": "1098636089",
-        "extNorm": "6098504585",
+        "extNorm": "",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "유진의약품",
-        "ext": "백제약품(주)영남본부",
+        "ext": "주식회사 유진의약품",
         "gtNorm": "유진의약품",
-        "extNorm": "백제약품영남본부",
+        "extNorm": "유진의약품",
         "type": "company",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울 강서구 공항대로 53가길 1,302 (등촌동 3층)",
-        "ext": "경남 김해시 진례면 김해테크노벨리로 33-12 백제약품(주)영남본부",
+        "ext": "",
         "gtNorm": "서울강서구공항대로53가길1302등촌동3층",
-        "extNorm": "경남김해시진례면김해테크노벨리로3312백제약품주영남본부",
+        "extNorm": "",
         "type": "address",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 3,
-      "mismatch": 9,
-      "ext_missing": 0,
+      "match": 4,
+      "mismatch": 6,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 3,
+      "matched": 4,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 0
+      "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.25
+    "fieldAccuracy": 0.3333333333333333
   },
   "table": {
     "alignMode": "content",
@@ -200,19 +200,19 @@
       "6",
       "16",
       "7",
-      "8"
+      "14"
     ],
     "gtOnlyRowIdx": [
       "5"
     ],
     "extOnlyRowIdx": [
       "4",
+      "8",
       "9",
       "10",
       "11",
       "12",
-      "13",
-      "14"
+      "13"
     ],
     "rows": [
       {
@@ -761,18 +761,18 @@
           },
           "quantity": {
             "gt": "8",
-            "ext": "",
+            "ext": "8",
             "gtNorm": "8",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "8",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "11448",
-            "ext": "",
+            "ext": "11448",
             "gtNorm": "11448",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "11448",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -904,7 +904,7 @@
         }
       },
       {
-        "rowIndex": "8",
+        "rowIndex": "14",
         "rowMatch": false,
         "cells": {
           "itemName": {
@@ -933,10 +933,10 @@
           },
           "quantity": {
             "gt": "8",
-            "ext": "4",
+            "ext": "8",
             "gtNorm": "8",
-            "extNorm": "4",
-            "status": "mismatch",
+            "extNorm": "8",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -1079,13 +1079,13 @@
     ],
     "cellCounts": {
       "scored": 100,
-      "match": 45,
-      "mismatch": 34,
-      "ext_missing": 21,
+      "match": 48,
+      "mismatch": 33,
+      "ext_missing": 19,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.45
+    "cellAccuracy": 0.48
   },
   "buckets": {
     "defects": [
@@ -1107,19 +1107,11 @@
       },
       {
         "location": "field:supplierBizNumber",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "1098636089",
-        "extNorm": "6098504585",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
-      },
-      {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "유진의약품",
-        "extNorm": "백제약품영남본부",
+        "extNorm": "",
         "bucket": "structure",
-        "reason": "ext value is gt's ['field:buyerCompany']"
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:taxType",
@@ -1131,11 +1123,11 @@
       },
       {
         "location": "field:supplierAddress",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "서울강서구공항대로53가길1302등촌동3층",
-        "extNorm": "경남김해시진례면김해테크노벨리로3312백제약품주영남본부",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplyAmount",
@@ -1150,8 +1142,8 @@
         "status": "mismatch",
         "gtNorm": "백제약품영남본부",
         "extNorm": "준백제약품영남본",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:supplierCompany']"
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.88)"
       },
       {
         "location": "field:buyerAddress",
@@ -1175,7 +1167,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['4', '9', '10', '11', '12', '13', '14']"
+        "reason": "extractor invented rows ['4', '8', '9', '10', '11', '12', '13']"
       },
       {
         "location": "row15:spec",
@@ -1434,22 +1426,6 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row16:quantity",
-        "status": "ext_missing",
-        "gtNorm": "8",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row16:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "11448",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row16:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20271114",
@@ -1506,7 +1482,7 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row8:itemName",
+        "location": "row14:itemName",
         "status": "mismatch",
         "gtNorm": "아토반정10mg",
         "extNorm": "10653402570아토반정10mg100t",
@@ -1514,7 +1490,7 @@
         "reason": "gt cell appears in column(s) ['itemNameMaster']"
       },
       {
-        "location": "row8:spec",
+        "location": "row14:spec",
         "status": "mismatch",
         "gtNorm": "100t",
         "extNorm": "100t v 8",
@@ -1522,15 +1498,7 @@
         "reason": "char-level diff (sim=0.67)"
       },
       {
-        "location": "row8:quantity",
-        "status": "mismatch",
-        "gtNorm": "8",
-        "extNorm": "4",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row8:manufacturingNo",
+        "location": "row14:manufacturingNo",
         "status": "mismatch",
         "gtNorm": "25AV10004",
         "extNorm": "20270831",
@@ -1619,8 +1587,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 35,
-      "structure": 28,
+      "recognition": 33,
+      "structure": 26,
       "layout": 3,
       "preprocessing": 0
     },
@@ -1640,6 +1608,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.0
+    "fieldMissRate": 0.167
   }
 }

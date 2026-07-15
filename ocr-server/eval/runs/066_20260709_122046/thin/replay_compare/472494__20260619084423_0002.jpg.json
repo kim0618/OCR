@@ -125,11 +125,11 @@
       },
       "supplyAmount": {
         "gt": "1221211",
-        "ext": "",
+        "ext": "1221211",
         "gtNorm": "1221211",
-        "extNorm": "",
+        "extNorm": "1221211",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 9,
+      "match": 10,
       "mismatch": 2,
-      "ext_missing": 1,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 9,
+      "matched": 10,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.75
+    "fieldAccuracy": 0.8333333333333334
   },
   "table": {
     "alignMode": "content",
@@ -204,10 +204,10 @@
         "cells": {
           "itemName": {
             "gt": "페르본주사1%-10mLX10V/갑(",
-            "ext": "페르본주사1%-10mLX10V/갑( 전문",
+            "ext": "페르본주사1%-10mLX10V/갑(",
             "gtNorm": "페르본주사110mlx10v갑",
-            "extNorm": "페르본주사110mlx10v갑전문",
-            "status": "mismatch",
+            "extNorm": "페르본주사110mlx10v갑",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
@@ -282,9 +282,9 @@
         "cells": {
           "itemName": {
             "gt": "페르본주사1%-30mLX1V/갑(O",
-            "ext": "페르본주사1%-30mLX1V/갑(0 전문",
+            "ext": "페르본주사1%-30mLX1V/갑(0",
             "gtNorm": "페르본주사130mlx1v갑o",
-            "extNorm": "페르본주사130mlx1v갑0전문",
+            "extNorm": "페르본주사130mlx1v갑0",
             "status": "mismatch",
             "spurious": false
           },
@@ -357,24 +357,16 @@
     ],
     "cellCounts": {
       "scored": 18,
-      "match": 12,
-      "mismatch": 4,
+      "match": 13,
+      "mismatch": 3,
       "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.6666666666666666
+    "cellAccuracy": 0.7222222222222222
   },
   "buckets": {
     "defects": [
-      {
-        "location": "field:supplyAmount",
-        "status": "ext_missing",
-        "gtNorm": "1221211",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
-      },
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
@@ -390,14 +382,6 @@
         "extNorm": "서울특별시구로구공원로8길24구로동",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
-      },
-      {
-        "location": "row1:itemName",
-        "status": "mismatch",
-        "gtNorm": "페르본주사110mlx10v갑",
-        "extNorm": "페르본주사110mlx10v갑전문",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.94)"
       },
       {
         "location": "row1:spec",
@@ -419,9 +403,9 @@
         "location": "row2:itemName",
         "status": "mismatch",
         "gtNorm": "페르본주사130mlx1v갑o",
-        "extNorm": "페르본주사130mlx1v갑0전문",
+        "extNorm": "페르본주사130mlx1v갑0",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.88)"
+        "reason": "char-level diff (sim=0.93)"
       },
       {
         "location": "row2:spec",
@@ -441,8 +425,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 6,
-      "structure": 3,
+      "recognition": 5,
+      "structure": 2,
       "layout": 0,
       "preprocessing": 0
     },
@@ -462,6 +446,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

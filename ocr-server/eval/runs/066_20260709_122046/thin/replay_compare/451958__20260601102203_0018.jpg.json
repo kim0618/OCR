@@ -189,7 +189,7 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 10,
-    "rowCountExt": 1,
+    "rowCountExt": 2,
     "rowCountMatch": false,
     "matchedRowIdx": [
       "1"
@@ -205,7 +205,9 @@
       "9",
       "10"
     ],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "2"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -237,18 +239,18 @@
           },
           "quantity": {
             "gt": "20",
-            "ext": "",
+            "ext": "9",
             "gtNorm": "20",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "9",
+            "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "9855",
-            "ext": "",
+            "ext": "22",
             "gtNorm": "9855",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "22",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
@@ -1080,8 +1082,8 @@
     "cellCounts": {
       "scored": 100,
       "match": 4,
-      "mismatch": 2,
-      "ext_missing": 94,
+      "mismatch": 4,
+      "ext_missing": 92,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -1114,6 +1116,14 @@
         "reason": "extractor missed rows ['1', '2', '3', '4', '5', '6', '8', '9', '10']"
       },
       {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['2']"
+      },
+      {
         "location": "row1:itemName",
         "status": "mismatch",
         "gtNorm": "병메가텔미클정40125mg30t",
@@ -1131,19 +1141,19 @@
       },
       {
         "location": "row1:quantity",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "20",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "9",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:unitPrice",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "9855",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "22",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:manufacturingNo",
@@ -1883,8 +1893,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 4,
-      "structure": 95,
+      "recognition": 6,
+      "structure": 94,
       "layout": 0,
       "preprocessing": 0
     },

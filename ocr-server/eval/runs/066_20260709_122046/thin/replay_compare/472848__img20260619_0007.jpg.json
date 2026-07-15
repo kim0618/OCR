@@ -73,9 +73,9 @@
       },
       "supplierCompany": {
         "gt": "태준제약",
-        "ext": "백제약품(주)대전지점",
+        "ext": "주)태",
         "gtNorm": "태준제약",
-        "extNorm": "백제약품대전지점",
+        "extNorm": "주태",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -290,18 +290,18 @@
           },
           "quantity": {
             "gt": "56",
-            "ext": "",
+            "ext": "40",
             "gtNorm": "56",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "40",
+            "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "8874",
-            "ext": "",
+            "ext": "10650",
             "gtNorm": "8874",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10650",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
@@ -376,10 +376,10 @@
           },
           "unitPrice": {
             "gt": "10650",
-            "ext": "",
+            "ext": "10650",
             "gtNorm": "10650",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10650",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -889,13 +889,13 @@
     ],
     "cellCounts": {
       "scored": 81,
-      "match": 9,
-      "mismatch": 24,
-      "ext_missing": 48,
+      "match": 10,
+      "mismatch": 26,
+      "ext_missing": 45,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.1111111111111111
+    "cellAccuracy": 0.12345679012345678
   },
   "buckets": {
     "defects": [
@@ -903,9 +903,9 @@
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "태준제약",
-        "extNorm": "백제약품대전지점",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['field:buyerCompany']"
+        "extNorm": "주태",
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerCompany",
@@ -913,7 +913,7 @@
         "gtNorm": "백제약품대전지점",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "gt value present at ['field:supplierCompany']"
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:buyerAddress",
@@ -1013,17 +1013,17 @@
       },
       {
         "location": "row7:quantity",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "56",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "40",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row7:unitPrice",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "8874",
-        "extNorm": "",
+        "extNorm": "10650",
         "bucket": "layout",
         "reason": "gt cell appears in column(s) ['amount']"
       },
@@ -1074,14 +1074,6 @@
         "extNorm": "6001",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row2:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "10650",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row2:amount",
@@ -1517,8 +1509,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 25,
-      "structure": 47,
+      "recognition": 27,
+      "structure": 44,
       "layout": 5,
       "preprocessing": 0
     },

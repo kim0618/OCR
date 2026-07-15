@@ -8,11 +8,11 @@
     "perField": {
       "supplierBizNumber": {
         "gt": "572-81-01750",
-        "ext": "113-85-04425",
+        "ext": "",
         "gtNorm": "5728101750",
-        "extNorm": "1138504425",
+        "extNorm": "",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": true,
         "difficult": true,
         "extAttempted": true,
@@ -21,11 +21,11 @@
       },
       "supplierCompany": {
         "gt": "주식회사 예일선",
-        "ext": "백제약품(주)영등포지점",
+        "ext": "주식회사 예일선",
         "gtNorm": "예일선",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "예일선",
         "type": "company",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -34,11 +34,11 @@
       },
       "supplierAddress": {
         "gt": "경기도 안양시 만안구 만안로 17 203A호(안양동,명지캐럿 162)",
-        "ext": "서울 구로구 공원로8길 24",
+        "ext": "",
         "gtNorm": "경기도안양시만안구만안로17203a호안양동명지캐럿162",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "",
         "type": "address",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": true,
         "difficult": true,
         "extAttempted": true,
@@ -180,35 +180,37 @@
     "profile": "rich",
     "counts": {
       "scored": 12,
-      "match": 6,
-      "mismatch": 5,
-      "ext_missing": 1,
+      "match": 7,
+      "mismatch": 2,
+      "ext_missing": 3,
       "gt_empty": 1,
       "spurious": 0
     },
     "editedCounts": {
       "match": 2,
-      "mismatch": 4,
-      "ext_missing": 1
+      "mismatch": 2,
+      "ext_missing": 3
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 6,
+      "matched": 7,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 3
     },
-    "fieldAccuracy": 0.5
+    "fieldAccuracy": 0.5833333333333334
   },
   "table": {
     "alignMode": "rowIndex",
     "rowCountGt": 1,
-    "rowCountExt": 1,
-    "rowCountMatch": true,
+    "rowCountExt": 2,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "2"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -295,27 +297,19 @@
     "defects": [
       {
         "location": "field:supplierBizNumber",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "5728101750",
-        "extNorm": "1138504425",
+        "extNorm": "",
         "bucket": "structure",
-        "reason": "ext value is gt's ['field:buyerBizNumber']"
-      },
-      {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "예일선",
-        "extNorm": "백제약품영등포지점",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['field:buyerCompany']"
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplierAddress",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "경기도안양시만안구만안로17203a호안양동명지캐럿162",
-        "extNorm": "서울구로구공원로8길24",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplierRepresentative",
@@ -331,7 +325,7 @@
         "gtNorm": "백제약품영등포지점",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "gt value present at ['field:supplierCompany']"
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:buyerAddress",
@@ -340,6 +334,14 @@
         "extNorm": "서울특별시구로구공원로8길24구로동",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.94)"
+      },
+      {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['2']"
       },
       {
         "location": "row1:itemName",
@@ -359,8 +361,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 4,
-      "structure": 4,
+      "recognition": 3,
+      "structure": 5,
       "layout": 0,
       "preprocessing": 0
     },
@@ -380,6 +382,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.25
   }
 }

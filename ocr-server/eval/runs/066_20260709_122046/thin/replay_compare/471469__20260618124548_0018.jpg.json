@@ -432,18 +432,18 @@
           },
           "quantity": {
             "gt": "400",
-            "ext": "3 400",
+            "ext": "545",
             "gtNorm": "400",
-            "extNorm": "3400",
+            "extNorm": "545",
             "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "545",
-            "ext": "545",
+            "ext": "3 400",
             "gtNorm": "545",
-            "extNorm": "545",
-            "status": "match",
+            "extNorm": "3400",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
@@ -475,13 +475,13 @@
     ],
     "cellCounts": {
       "scored": 32,
-      "match": 17,
-      "mismatch": 7,
+      "match": 16,
+      "mismatch": 8,
       "ext_missing": 8,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.53125
+    "cellAccuracy": 0.5
   },
   "buckets": {
     "defects": [
@@ -625,9 +625,17 @@
         "location": "row4:quantity",
         "status": "mismatch",
         "gtNorm": "400",
-        "extNorm": "3400",
+        "extNorm": "545",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.86)"
+        "reason": "cell differs, low similarity"
+      },
+      {
+        "location": "row4:unitPrice",
+        "status": "mismatch",
+        "gtNorm": "545",
+        "extNorm": "3400",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['quantity']"
       },
       {
         "location": "row4:manufacturingNo",
@@ -649,7 +657,7 @@
     "bucketTally": {
       "recognition": 11,
       "structure": 9,
-      "layout": 0,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

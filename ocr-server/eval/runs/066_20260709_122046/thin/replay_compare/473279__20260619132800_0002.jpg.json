@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "1068118826",
-        "ext": "113-85-04425",
+        "ext": "",
         "gtNorm": "1068118826",
-        "extNorm": "1138504425",
+        "extNorm": "",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -86,9 +86,9 @@
       },
       "supplierCompany": {
         "gt": "태준제약",
-        "ext": "백제약품(주)영등포지점",
+        "ext": "주)태준제약",
         "gtNorm": "태준제약",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "주태준제약",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 용산구 대사관로31길 8 (한남동)",
-        "ext": "서울 구로구 공원로8길 24",
+        "ext": "서울시 용산구 대사관로31길8",
         "gtNorm": "서울특별시용산구대사관로31길8한남동",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "서울시용산구대사관로31길8",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 2,
-      "mismatch": 8,
-      "ext_missing": 2,
+      "mismatch": 7,
+      "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,7 +182,7 @@
       "gtPresent": 12,
       "matched": 2,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 3
     },
     "fieldAccuracy": 0.16666666666666666
   },
@@ -233,10 +233,10 @@
           },
           "quantity": {
             "gt": "420",
-            "ext": "",
+            "ext": "420",
             "gtNorm": "420",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "420",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -311,10 +311,10 @@
           },
           "quantity": {
             "gt": "60",
-            "ext": "",
+            "ext": "60",
             "gtNorm": "60",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "60",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -440,13 +440,13 @@
     ],
     "cellCounts": {
       "scored": 27,
-      "match": 12,
+      "match": 14,
       "mismatch": 8,
-      "ext_missing": 7,
+      "ext_missing": 5,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4444444444444444
+    "cellAccuracy": 0.5185185185185185
   },
   "buckets": {
     "defects": [
@@ -476,19 +476,19 @@
       },
       {
         "location": "field:supplierBizNumber",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "1068118826",
-        "extNorm": "1138504425",
+        "extNorm": "",
         "bucket": "structure",
-        "reason": "ext value is gt's ['field:buyerBizNumber']"
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "태준제약",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "주태준제약",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.89)"
       },
       {
         "location": "field:taxType",
@@ -502,9 +502,9 @@
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울특별시용산구대사관로31길8한남동",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "서울시용산구대사관로31길8",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.85)"
       },
       {
         "location": "field:supplyAmount",
@@ -547,14 +547,6 @@
         "reason": "char-level diff (sim=0.89)"
       },
       {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "420",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row1:unitPrice",
         "status": "mismatch",
         "gtNorm": "9483",
@@ -582,14 +574,6 @@
         "location": "row2:spec",
         "status": "ext_missing",
         "gtNorm": "0.4ml\\times30",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:quantity",
-        "status": "ext_missing",
-        "gtNorm": "60",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -661,7 +645,7 @@
     ],
     "bucketTally": {
       "recognition": 14,
-      "structure": 12,
+      "structure": 10,
       "layout": 0,
       "preprocessing": 0
     },
@@ -681,6 +665,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.167
+    "fieldMissRate": 0.25
   }
 }

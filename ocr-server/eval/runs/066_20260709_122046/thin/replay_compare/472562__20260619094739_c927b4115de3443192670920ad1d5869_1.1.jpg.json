@@ -191,14 +191,12 @@
     "rowCountGt": 2,
     "rowCountExt": 4,
     "rowCountMatch": false,
-    "matchedRowIdx": [],
-    "gtOnlyRowIdx": [
+    "matchedRowIdx": [
       "1",
       "2"
     ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "1",
-      "2",
       "3",
       "5"
     ],
@@ -206,7 +204,6 @@
       {
         "rowIndex": "1",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "무코텍트서방정",
@@ -234,26 +231,26 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "",
+            "ext": "V/10",
             "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "4358",
-            "ext": "",
+            "ext": "4358",
             "gtNorm": "4358",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "4358",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "43580",
-            "ext": "",
+            "ext": "43580",
             "gtNorm": "43580",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "43580",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -285,7 +282,6 @@
       {
         "rowIndex": "2",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "칸데디핀절 16/5mg",
@@ -313,34 +309,34 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "",
+            "ext": "√10",
             "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "18125",
-            "ext": "",
+            "ext": "18125",
             "gtNorm": "18125",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "18125",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "181250",
-            "ext": "",
+            "ext": "181250",
             "gtNorm": "181250",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "181250",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
             "gt": "20281130",
-            "ext": "",
+            "ext": "20280715",
             "gtNorm": "20281130",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20280715",
+            "status": "mismatch",
             "spurious": false
           },
           "manufacturingNo": {
@@ -364,13 +360,13 @@
     ],
     "cellCounts": {
       "scored": 18,
-      "match": 0,
-      "mismatch": 0,
-      "ext_missing": 18,
+      "match": 6,
+      "mismatch": 1,
+      "ext_missing": 11,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.0
+    "cellAccuracy": 0.3333333333333333
   },
   "buckets": {
     "defects": [
@@ -456,19 +452,11 @@
       },
       {
         "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['1', '2']"
-      },
-      {
-        "location": "table",
         "status": "rows_extra",
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '2', '3', '5']"
+        "reason": "extractor invented rows ['3', '5']"
       },
       {
         "location": "row1:itemName",
@@ -490,30 +478,6 @@
         "location": "row1:spec",
         "status": "ext_missing",
         "gtNorm": "150mg-30tab",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "10",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "4358",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:amount",
-        "status": "ext_missing",
-        "gtNorm": "43580",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -567,36 +531,12 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:quantity",
-        "status": "ext_missing",
-        "gtNorm": "10",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "18125",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:amount",
-        "status": "ext_missing",
-        "gtNorm": "181250",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row2:expiryDate",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "20281130",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "20280715",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.62)"
       },
       {
         "location": "row2:manufacturingNo",
@@ -616,8 +556,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 25,
+      "recognition": 6,
+      "structure": 17,
       "layout": 0,
       "preprocessing": 0
     },

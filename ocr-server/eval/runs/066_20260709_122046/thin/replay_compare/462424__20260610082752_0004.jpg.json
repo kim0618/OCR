@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "4628801883",
-        "ext": "224-85-09735",
+        "ext": "",
         "gtNorm": "4628801883",
-        "extNorm": "2248509735",
+        "extNorm": "",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -86,9 +86,9 @@
       },
       "supplierCompany": {
         "gt": "경신팜(매입)",
-        "ext": "광동제약(전문205327,V375188,115009)",
+        "ext": "총목의약품의약",
         "gtNorm": "경신팜매입",
-        "extNorm": "광동제약전문205327v375188115009",
+        "extNorm": "총목의약품의약",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울 송파구 마천로 146 (오금동) 4층 4층",
-        "ext": "서울특별시 서초구 서초중앙로 85",
+        "ext": "서울시 송파구마천로146, 4층(오",
         "gtNorm": "서울송파구마천로146오금동4층4층",
-        "extNorm": "서울특별시서초구서초중앙로85",
+        "extNorm": "서울시송파구마천로1464층오",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 6,
-      "mismatch": 5,
-      "ext_missing": 1,
+      "mismatch": 4,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,7 +182,7 @@
       "gtPresent": 12,
       "matched": 6,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 2
     },
     "fieldAccuracy": 0.5
   },
@@ -194,7 +194,7 @@
     "matchedRowIdx": [
       "1",
       "2",
-      "9",
+      "3",
       "10",
       "11",
       "4",
@@ -205,8 +205,8 @@
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "3",
-      "7"
+      "7",
+      "9"
     ],
     "rows": [
       {
@@ -366,15 +366,15 @@
         }
       },
       {
-        "rowIndex": "9",
+        "rowIndex": "3",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "삼일제약)길렉트정1mg",
-            "ext": "삼일제약)길렉트정1mg",
+            "ext": "삼일제약)길렉트정1mg 1mg/30정",
             "gtNorm": "삼일제약길렉트정1mg",
-            "extNorm": "삼일제약길렉트정1mg",
-            "status": "match",
+            "extNorm": "삼일제약길렉트정1mg1mg30정",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
@@ -395,23 +395,23 @@
           },
           "quantity": {
             "gt": "5",
-            "ext": "",
+            "ext": "5",
             "gtNorm": "5",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "5",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "46667",
-            "ext": "",
+            "ext": "46667",
             "gtNorm": "46667",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "46667",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "233334",
-            "ext": "233,334",
+            "ext": "233334",
             "gtNorm": "233334",
             "extNorm": "233334",
             "status": "match",
@@ -833,18 +833,18 @@
           },
           "unitPrice": {
             "gt": "14904",
-            "ext": "",
+            "ext": "14904",
             "gtNorm": "14904",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "14904",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "298080",
-            "ext": "14,904",
+            "ext": "298080",
             "gtNorm": "298080",
-            "extNorm": "14904",
-            "status": "mismatch",
+            "extNorm": "298080",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -1056,13 +1056,13 @@
     ],
     "cellCounts": {
       "scored": 98,
-      "match": 34,
+      "match": 37,
       "mismatch": 13,
-      "ext_missing": 51,
+      "ext_missing": 48,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3469387755102041
+    "cellAccuracy": 0.37755102040816324
   },
   "buckets": {
     "defects": [
@@ -1076,17 +1076,17 @@
       },
       {
         "location": "field:supplierBizNumber",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "4628801883",
-        "extNorm": "2248509735",
+        "extNorm": "",
         "bucket": "structure",
-        "reason": "ext value is gt's ['field:buyerBizNumber']"
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "경신팜매입",
-        "extNorm": "광동제약전문205327v375188115009",
+        "extNorm": "총목의약품의약",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -1094,9 +1094,9 @@
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울송파구마천로146오금동4층4층",
-        "extNorm": "서울특별시서초구서초중앙로85",
+        "extNorm": "서울시송파구마천로1464층오",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.79)"
       },
       {
         "location": "field:supplyAmount",
@@ -1120,7 +1120,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['3', '7']"
+        "reason": "extractor invented rows ['7', '9']"
       },
       {
         "location": "row1:itemName",
@@ -1219,7 +1219,15 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row9:spec",
+        "location": "row3:itemName",
+        "status": "mismatch",
+        "gtNorm": "삼일제약길렉트정1mg",
+        "extNorm": "삼일제약길렉트정1mg1mg30정",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.79)"
+      },
+      {
+        "location": "row3:spec",
         "status": "ext_missing",
         "gtNorm": "1mg/30정",
         "extNorm": "",
@@ -1227,23 +1235,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row9:quantity",
-        "status": "ext_missing",
-        "gtNorm": "5",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row9:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "46667",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row9:expiryDate",
+        "location": "row3:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20290107",
         "extNorm": "",
@@ -1251,7 +1243,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row9:manufacturingNo",
+        "location": "row3:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "050409",
         "extNorm": "",
@@ -1259,7 +1251,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row9:insuranceCode",
+        "location": "row3:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "643903740",
         "extNorm": "",
@@ -1459,22 +1451,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row6:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "14904",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
-      },
-      {
-        "location": "row6:amount",
-        "status": "mismatch",
-        "gtNorm": "298080",
-        "extNorm": "14904",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
         "location": "row6:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20280126",
@@ -1637,8 +1613,8 @@
     ],
     "bucketTally": {
       "recognition": 16,
-      "structure": 53,
-      "layout": 2,
+      "structure": 51,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,
@@ -1657,6 +1633,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.167
   }
 }

@@ -202,10 +202,10 @@
           },
           "itemNameMaster": {
             "gt": "엔블로정0.3mg(병)",
-            "ext": "엔블로정0.3mg",
+            "ext": "엔블로정0.3mg(병)",
             "gtNorm": "엔블로정0.3mg(병)",
-            "extNorm": "엔블로정0.3mg",
-            "status": "mismatch",
+            "extNorm": "엔블로정0.3mg(병)",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -218,26 +218,26 @@
           },
           "quantity": {
             "gt": "100",
-            "ext": "",
+            "ext": "100",
             "gtNorm": "100",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "100",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "17790",
-            "ext": "",
+            "ext": "17790",
             "gtNorm": "17790",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "17790",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "1779000",
-            "ext": "",
+            "ext": "1779000",
             "gtNorm": "1779000",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "1779000",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -340,13 +340,13 @@
     ],
     "cellCounts": {
       "scored": 17,
-      "match": 0,
-      "mismatch": 3,
-      "ext_missing": 14,
+      "match": 4,
+      "mismatch": 2,
+      "ext_missing": 11,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.0
+    "cellAccuracy": 0.23529411764705882
   },
   "buckets": {
     "defects": [
@@ -355,8 +355,8 @@
         "status": "mismatch",
         "gtNorm": "1779000",
         "extNorm": "35580",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "bucket": "structure",
+        "reason": "gt value present at ['row1:amount']"
       },
       {
         "location": "field:taxAmount",
@@ -423,41 +423,9 @@
         "reason": "char-level diff (sim=0.87)"
       },
       {
-        "location": "row1:itemNameMaster",
-        "status": "mismatch",
-        "gtNorm": "엔블로정0.3mg(병)",
-        "extNorm": "엔블로정0.3mg",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.86)"
-      },
-      {
         "location": "row1:spec",
         "status": "ext_missing",
         "gtNorm": "30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "100",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "17790",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:amount",
-        "status": "ext_missing",
-        "gtNorm": "1779000",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -552,8 +520,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 7,
-      "structure": 17,
+      "recognition": 5,
+      "structure": 15,
       "layout": 1,
       "preprocessing": 0
     },

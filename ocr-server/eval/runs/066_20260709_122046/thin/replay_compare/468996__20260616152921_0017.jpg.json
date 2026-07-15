@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "1018548584",
-        "ext": "113-85-04425",
+        "ext": "",
         "gtNorm": "1018548584",
-        "extNorm": "1138504425",
+        "extNorm": "",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -86,9 +86,9 @@
       },
       "supplierCompany": {
         "gt": "에이치엘비제약KGSP물류지점",
-        "ext": "백제약품(주)영등포지점",
+        "ext": "에이치엘비제약KG5P물류지점",
         "gtNorm": "에이치엘비제약kgsp물류지점",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "에이치엘비제약kg5p물류지점",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "경기 남양주시 진접읍 진벌로51번길 65 나동",
-        "ext": "서울 구로구 공원로8길 24",
+        "ext": "",
         "gtNorm": "경기남양주시진접읍진벌로51번길65나동",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "",
         "type": "address",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 4,
-      "mismatch": 8,
-      "ext_missing": 0,
+      "mismatch": 6,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,7 +182,7 @@
       "gtPresent": 12,
       "matched": 4,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 0
+      "extAttemptedMiss": 2
     },
     "fieldAccuracy": 0.3333333333333333
   },
@@ -1107,27 +1107,27 @@
       },
       {
         "location": "field:supplierBizNumber",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "1018548584",
-        "extNorm": "1138504425",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.60)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "에이치엘비제약kgsp물류지점",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "에이치엘비제약kg5p물류지점",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.93)"
       },
       {
         "location": "field:supplierAddress",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "경기남양주시진접읍진벌로51번길65나동",
-        "extNorm": "서울구로구공원로8길24",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplyAmount",
@@ -1427,8 +1427,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 38,
-      "structure": 4,
+      "recognition": 36,
+      "structure": 6,
       "layout": 0,
       "preprocessing": 0
     },
@@ -1448,6 +1448,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.0
+    "fieldMissRate": 0.167
   }
 }

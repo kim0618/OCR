@@ -165,33 +165,30 @@
     "rowCountGt": 1,
     "rowCountExt": 1,
     "rowCountMatch": true,
-    "matchedRowIdx": [],
-    "gtOnlyRowIdx": [
+    "matchedRowIdx": [
       "1"
     ],
-    "extOnlyRowIdx": [
-      "1"
-    ],
+    "gtOnlyRowIdx": [],
+    "extOnlyRowIdx": [],
     "rows": [
       {
         "rowIndex": "1",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "(주)중헌제약 탐스루신캡슐(전문)",
-            "ext": "",
+            "ext": "탐스루신캡슬(전문",
             "gtNorm": "주중헌제약탐스루신캡슐전문",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "탐스루신캡슬전문",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "탐스루신캡슐",
-            "ext": "",
+            "ext": "탐스루신캡슐(반품불가)",
             "gtNorm": "탐스루신캡슐",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "탐스루신캡슐(반품불가)",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
@@ -204,26 +201,26 @@
           },
           "quantity": {
             "gt": "20",
-            "ext": "",
+            "ext": "02",
             "gtNorm": "20",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "02",
+            "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "42688",
-            "ext": "",
+            "ext": "42688",
             "gtNorm": "42688",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "42688",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "853760",
-            "ext": "",
+            "ext": "853760",
             "gtNorm": "853760",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "853760",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -244,10 +241,10 @@
           },
           "itemCode": {
             "gt": "8806689014022",
-            "ext": "",
+            "ext": "05003749",
             "gtNorm": "8806689014022",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "05003749",
+            "status": "mismatch",
             "spurious": false
           },
           "insuranceCode": {
@@ -263,13 +260,13 @@
     ],
     "cellCounts": {
       "scored": 10,
-      "match": 0,
-      "mismatch": 0,
-      "ext_missing": 10,
+      "match": 2,
+      "mismatch": 4,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.0
+    "cellAccuracy": 0.2
   },
   "buckets": {
     "defects": [
@@ -298,36 +295,20 @@
         "reason": "value differs, low similarity"
       },
       {
-        "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['1']"
-      },
-      {
-        "location": "table",
-        "status": "rows_extra",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor invented rows ['1']"
-      },
-      {
         "location": "row1:itemName",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "주중헌제약탐스루신캡슐전문",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "탐스루신캡슬전문",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "row1:itemNameMaster",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "탐스루신캡슐",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "탐스루신캡슐(반품불가)",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "row1:spec",
@@ -339,27 +320,11 @@
       },
       {
         "location": "row1:quantity",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "20",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "42688",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:amount",
-        "status": "ext_missing",
-        "gtNorm": "853760",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "02",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "row1:expiryDate",
@@ -379,11 +344,11 @@
       },
       {
         "location": "row1:itemCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "8806689014022",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "05003749",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:insuranceCode",
@@ -395,8 +360,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 3,
-      "structure": 12,
+      "recognition": 7,
+      "structure": 4,
       "layout": 0,
       "preprocessing": 0
     },

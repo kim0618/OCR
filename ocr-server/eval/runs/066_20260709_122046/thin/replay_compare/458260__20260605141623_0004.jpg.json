@@ -8,11 +8,11 @@
     "perField": {
       "totalAmount": {
         "gt": "4493682",
-        "ext": "4,493,682",
+        "ext": "2214000",
         "gtNorm": "4493682",
-        "extNorm": "4493682",
+        "extNorm": "2214000",
         "type": "amount",
-        "status": "match",
+        "status": "mismatch",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "1088603912",
-        "ext": "113-85-04425",
+        "ext": "",
         "gtNorm": "1088603912",
-        "extNorm": "1138504425",
+        "extNorm": "",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -86,9 +86,9 @@
       },
       "supplierCompany": {
         "gt": "제이오팜",
-        "ext": "백제약품(주)영등포지점",
+        "ext": "종목의약품",
         "gtNorm": "제이오팜",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "종목의약품",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울 강서구 방화대로40길 34 (방화동)",
-        "ext": "서울 구로구 공원로8길 24",
+        "ext": "서울시 강서구 방회대로40길 34(방화",
         "gtNorm": "서울강서구방화대로40길34방화동",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "서울시강서구방회대로40길34방화",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 6,
+      "match": 5,
       "mismatch": 6,
-      "ext_missing": 0,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 6,
+      "matched": 5,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 0
+      "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.5
+    "fieldAccuracy": 0.4166666666666667
   },
   "table": {
     "alignMode": "content",
@@ -292,18 +292,26 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplierBizNumber",
+        "location": "field:totalAmount",
         "status": "mismatch",
-        "gtNorm": "1088603912",
-        "extNorm": "1138504425",
+        "gtNorm": "4493682",
+        "extNorm": "2214000",
         "bucket": "structure",
-        "reason": "ext value is gt's ['field:buyerBizNumber']"
+        "reason": "ext value is gt's ['row1:amount']"
+      },
+      {
+        "location": "field:supplierBizNumber",
+        "status": "ext_missing",
+        "gtNorm": "1088603912",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "제이오팜",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "종목의약품",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -311,9 +319,9 @@
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울강서구방화대로40길34방화동",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "서울시강서구방회대로40길34방화",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.88)"
       },
       {
         "location": "field:supplyAmount",
@@ -430,7 +438,7 @@
     ],
     "bucketTally": {
       "recognition": 5,
-      "structure": 12,
+      "structure": 13,
       "layout": 0,
       "preprocessing": 0
     },
@@ -450,6 +458,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.0
+    "fieldMissRate": 0.083
   }
 }

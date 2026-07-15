@@ -8,11 +8,11 @@
     "perField": {
       "totalAmount": {
         "gt": "3376410",
-        "ext": "8,074,268",
+        "ext": "3376410",
         "gtNorm": "3376410",
-        "extNorm": "8074268",
+        "extNorm": "3376410",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "1088603912",
-        "ext": "408-85-00180",
+        "ext": "",
         "gtNorm": "1088603912",
-        "extNorm": "4088500180",
+        "extNorm": "",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -86,9 +86,9 @@
       },
       "supplierCompany": {
         "gt": "제이오팜(주)",
-        "ext": "삼진제약(전)",
+        "ext": "주)제이오팜",
         "gtNorm": "제이오팜",
-        "extNorm": "삼진제약",
+        "extNorm": "주제이오팜",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 강서구 방화대로40길 34 (방화동)",
-        "ext": "서울 마포구 와우산로 121 (서교동)",
+        "ext": "",
         "gtNorm": "서울특별시강서구방화대로40길34방화동",
-        "extNorm": "서울마포구와우산로121서교동",
+        "extNorm": "",
         "type": "address",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 6,
-      "mismatch": 6,
-      "ext_missing": 0,
+      "match": 7,
+      "mismatch": 3,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 6,
+      "matched": 7,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 0
+      "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.5
+    "fieldAccuracy": 0.5833333333333334
   },
   "table": {
     "alignMode": "content",
@@ -480,36 +480,28 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:totalAmount",
-        "status": "mismatch",
-        "gtNorm": "3376410",
-        "extNorm": "8074268",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplierBizNumber",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "1088603912",
-        "extNorm": "4088500180",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "제이오팜",
-        "extNorm": "삼진제약",
+        "extNorm": "주제이오팜",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.89)"
       },
       {
         "location": "field:supplierAddress",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "서울특별시강서구방화대로40길34방화동",
-        "extNorm": "서울마포구와우산로121서교동",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:buyerCompany",
@@ -785,8 +777,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 6,
-      "structure": 32,
+      "recognition": 3,
+      "structure": 34,
       "layout": 0,
       "preprocessing": 0
     },
@@ -806,6 +798,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.0
+    "fieldMissRate": 0.167
   }
 }

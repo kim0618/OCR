@@ -198,10 +198,10 @@
           },
           "itemNameMaster": {
             "gt": "브로다제장용정",
-            "ext": "브로다제장용정",
+            "ext": "브로다제장용정(제약사품절)",
             "gtNorm": "브로다제장용정",
-            "extNorm": "브로다제장용정",
-            "status": "match",
+            "extNorm": "브로다제장용정(제약사품절)",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
@@ -214,26 +214,26 @@
           },
           "quantity": {
             "gt": "5",
-            "ext": "",
+            "ext": "5",
             "gtNorm": "5",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "5",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "30150",
-            "ext": "",
+            "ext": "30",
             "gtNorm": "30150",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "150750",
-            "ext": "",
+            "ext": "150",
             "gtNorm": "150750",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "150",
+            "status": "mismatch",
             "spurious": false
           },
           "expiryDate": {
@@ -254,10 +254,10 @@
           },
           "itemCode": {
             "gt": "085402",
-            "ext": "085402",
+            "ext": "8806619005120",
             "gtNorm": "085402",
-            "extNorm": "085402",
-            "status": "match",
+            "extNorm": "8806619005120",
+            "status": "mismatch",
             "spurious": false
           },
           "insuranceCode": {
@@ -273,13 +273,13 @@
     ],
     "cellCounts": {
       "scored": 10,
-      "match": 3,
-      "mismatch": 0,
-      "ext_missing": 7,
+      "match": 2,
+      "mismatch": 4,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3
+    "cellAccuracy": 0.2
   },
   "buckets": {
     "defects": [
@@ -300,6 +300,14 @@
         "reason": "char-level diff (sim=0.90)"
       },
       {
+        "location": "row1:itemNameMaster",
+        "status": "mismatch",
+        "gtNorm": "브로다제장용정",
+        "extNorm": "브로다제장용정(제약사품절)",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemName']"
+      },
+      {
         "location": "row1:spec",
         "status": "ext_missing",
         "gtNorm": "500t",
@@ -308,28 +316,20 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "5",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row1:unitPrice",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "30150",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "30",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.57)"
       },
       {
         "location": "row1:amount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "150750",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "150",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "row1:expiryDate",
@@ -348,6 +348,14 @@
         "reason": "gt cell absent in extracted row"
       },
       {
+        "location": "row1:itemCode",
+        "status": "mismatch",
+        "gtNorm": "085402",
+        "extNorm": "8806619005120",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
+      },
+      {
         "location": "row1:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "661900510",
@@ -357,9 +365,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 1,
-      "structure": 8,
-      "layout": 0,
+      "recognition": 4,
+      "structure": 5,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

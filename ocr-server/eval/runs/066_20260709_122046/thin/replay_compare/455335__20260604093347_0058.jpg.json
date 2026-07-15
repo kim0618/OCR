@@ -73,11 +73,11 @@
       },
       "supplierCompany": {
         "gt": "휴온스메디텍",
-        "ext": "백제약품(주)영등포지점",
+        "ext": "주식회사 휴온스메디텍",
         "gtNorm": "휴온스메디텍",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "휴온스메디텍",
         "type": "company",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -99,11 +99,11 @@
       },
       "supplierAddress": {
         "gt": "부산 강서구 녹산산단165로 22(송정동)",
-        "ext": "서울 구로구 공원로8길 24",
+        "ext": "",
         "gtNorm": "부산강서구녹산산단165로22송정동",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "",
         "type": "address",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -154,9 +154,9 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 4,
-      "mismatch": 6,
-      "ext_missing": 1,
+      "match": 5,
+      "mismatch": 4,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 4,
+      "matched": 5,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.36363636363636365
+    "fieldAccuracy": 0.45454545454545453
   },
   "table": {
     "alignMode": "content",
@@ -2032,20 +2032,12 @@
         "reason": "ext value is gt's ['row3:unitPrice']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "휴온스메디텍",
-        "extNorm": "백제약품영등포지점",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplierAddress",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "부산강서구녹산산단165로22송정동",
-        "extNorm": "서울구로구공원로8길24",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplyAmount",
@@ -2217,8 +2209,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 18,
-      "structure": 4,
+      "recognition": 16,
+      "structure": 5,
       "layout": 3,
       "preprocessing": 0
     },
@@ -2238,6 +2230,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.091
+    "fieldMissRate": 0.182
   }
 }

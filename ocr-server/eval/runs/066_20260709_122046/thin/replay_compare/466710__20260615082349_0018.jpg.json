@@ -196,7 +196,7 @@
       "1",
       "4",
       "5",
-      "6",
+      "7",
       "8",
       "9"
     ],
@@ -208,7 +208,7 @@
     "extOnlyRowIdx": [
       "2",
       "3",
-      "7",
+      "6",
       "11",
       "12",
       "13",
@@ -561,14 +561,14 @@
         }
       },
       {
-        "rowIndex": "6",
+        "rowIndex": "7",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "알잘정 10mg",
-            "ext": "7 643903760 알잘정10mg 30T C 10 5.733 57,330 050387 20281221",
+            "ext": "8 643903760 알잘정10mg 3OT 30 5.733 171.990 050388 20281221",
             "gtNorm": "알잘정10mg",
-            "extNorm": "7643903760알잘정10mg30tc1057335733005038720281221",
+            "extNorm": "8643903760알잘정10mg3ot30573317199005038820281221",
             "status": "mismatch",
             "spurious": false
           },
@@ -582,31 +582,31 @@
           },
           "spec": {
             "gt": "30T",
-            "ext": "30T C",
+            "ext": "",
             "gtNorm": "30t",
-            "extNorm": "30t c",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "quantity": {
             "gt": "10",
-            "ext": "",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "5733",
-            "ext": "",
+            "ext": "5733",
             "gtNorm": "5733",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "5733",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "57330",
-            "ext": "57,330",
+            "ext": "57330",
             "gtNorm": "57330",
             "extNorm": "57330",
             "status": "match",
@@ -622,10 +622,10 @@
           },
           "manufacturingNo": {
             "gt": "050387",
-            "ext": "20281221",
+            "ext": "",
             "gtNorm": "050387",
-            "extNorm": "20281221",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemCode": {
@@ -638,10 +638,10 @@
           },
           "insuranceCode": {
             "gt": "643903760",
-            "ext": "643903760",
+            "ext": "",
             "gtNorm": "643903760",
-            "extNorm": "643903760",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           }
         }
@@ -1082,13 +1082,13 @@
     ],
     "cellCounts": {
       "scored": 100,
-      "match": 45,
-      "mismatch": 22,
-      "ext_missing": 33,
+      "match": 46,
+      "mismatch": 20,
+      "ext_missing": 34,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.45
+    "cellAccuracy": 0.46
   },
   "buckets": {
     "defects": [
@@ -1138,7 +1138,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['2', '3', '7', '11', '12', '13', '14', '15']"
+        "reason": "extractor invented rows ['2', '3', '6', '11', '12', '13', '14', '15']"
       },
       {
         "location": "row10:itemName",
@@ -1245,44 +1245,36 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row6:itemName",
+        "location": "row7:itemName",
         "status": "mismatch",
         "gtNorm": "알잘정10mg",
-        "extNorm": "7643903760알잘정10mg30tc1057335733005038720281221",
+        "extNorm": "8643903760알잘정10mg3ot30573317199005038820281221",
         "bucket": "layout",
         "reason": "gt cell appears in column(s) ['itemNameMaster']"
       },
       {
-        "location": "row6:spec",
-        "status": "mismatch",
+        "location": "row7:spec",
+        "status": "ext_missing",
         "gtNorm": "30t",
-        "extNorm": "30t c",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.75)"
-      },
-      {
-        "location": "row6:quantity",
-        "status": "ext_missing",
-        "gtNorm": "10",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row6:unitPrice",
+        "location": "row7:manufacturingNo",
         "status": "ext_missing",
-        "gtNorm": "5733",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row6:manufacturingNo",
-        "status": "mismatch",
         "gtNorm": "050387",
-        "extNorm": "20281221",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row7:insuranceCode",
+        "status": "ext_missing",
+        "gtNorm": "643903760",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row8:itemName",
@@ -1582,8 +1574,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 22,
-      "structure": 35,
+      "recognition": 20,
+      "structure": 36,
       "layout": 4,
       "preprocessing": 0
     },

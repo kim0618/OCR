@@ -193,7 +193,7 @@
     "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
-      "2",
+      "3",
       "4",
       "6",
       "7",
@@ -210,7 +210,7 @@
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "3",
+      "2",
       "5",
       "16",
       "19"
@@ -303,36 +303,36 @@
         }
       },
       {
-        "rowIndex": "2",
+        "rowIndex": "3",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "탐루신디서방정0.4밀리그램(탐스로신염산염)",
-            "ext": "탐루신디서방정",
+            "ext": "0.4밀리그램(탐스로신염산염",
             "gtNorm": "탐루신디서방정04밀리그램탐스로신염산염",
-            "extNorm": "탐루신디서방정",
+            "extNorm": "04밀리그램탐스로신염산염",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "탐루신디서방정0.4mg",
-            "ext": "탐루신디서방정0.4mg",
+            "ext": "현대탐스로신염산염캡슐",
             "gtNorm": "탐루신디서방정0.4mg",
-            "extNorm": "탐루신디서방정0.4mg",
-            "status": "match",
+            "extNorm": "현대탐스로신염산염캡슐",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
             "gt": "/30Tab.",
-            "ext": "/30Tab",
+            "ext": "",
             "gtNorm": "/30tab.",
-            "extNorm": "/30tab",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "quantity": {
             "gt": "30",
-            "ext": "↓ 30",
+            "ext": "30",
             "gtNorm": "30",
             "extNorm": "30",
             "status": "match",
@@ -340,7 +340,7 @@
           },
           "unitPrice": {
             "gt": "19035",
-            "ext": "19,035",
+            "ext": "19035",
             "gtNorm": "19035",
             "extNorm": "19035",
             "status": "match",
@@ -348,7 +348,7 @@
           },
           "amount": {
             "gt": "571050",
-            "ext": "571,050",
+            "ext": "571050",
             "gtNorm": "571050",
             "extNorm": "571050",
             "status": "match",
@@ -356,26 +356,26 @@
           },
           "expiryDate": {
             "gt": "20281028",
-            "ext": "2028.10.28",
+            "ext": "",
             "gtNorm": "20281028",
-            "extNorm": "20281028",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "manufacturingNo": {
             "gt": "25001",
-            "ext": "25001",
+            "ext": "",
             "gtNorm": "25001",
-            "extNorm": "25001",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemCode": {
             "gt": "01009336",
-            "ext": "01009336",
+            "ext": "04001644",
             "gtNorm": "01009336",
-            "extNorm": "01009336",
-            "status": "match",
+            "extNorm": "04001644",
+            "status": "mismatch",
             "spurious": false
           },
           "insuranceCode": {
@@ -1509,13 +1509,13 @@
     ],
     "cellCounts": {
       "scored": 150,
-      "match": 96,
-      "mismatch": 39,
-      "ext_missing": 15,
+      "match": 92,
+      "mismatch": 40,
+      "ext_missing": 18,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.64
+    "cellAccuracy": 0.6133333333333333
   },
   "buckets": {
     "defects": [
@@ -1533,7 +1533,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['3', '5', '16', '19']"
+        "reason": "extractor invented rows ['2', '5', '16', '19']"
       },
       {
         "location": "row1:itemNameMaster",
@@ -1568,23 +1568,55 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:itemName",
+        "location": "row3:itemName",
         "status": "mismatch",
         "gtNorm": "탐루신디서방정04밀리그램탐스로신염산염",
-        "extNorm": "탐루신디서방정",
+        "extNorm": "04밀리그램탐스로신염산염",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.52)"
+        "reason": "char-level diff (sim=0.79)"
       },
       {
-        "location": "row2:spec",
+        "location": "row3:itemNameMaster",
         "status": "mismatch",
-        "gtNorm": "/30tab.",
-        "extNorm": "/30tab",
+        "gtNorm": "탐루신디서방정0.4mg",
+        "extNorm": "현대탐스로신염산염캡슐",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
+        "reason": "cell differs, low similarity"
       },
       {
-        "location": "row2:insuranceCode",
+        "location": "row3:spec",
+        "status": "ext_missing",
+        "gtNorm": "/30tab.",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row3:expiryDate",
+        "status": "ext_missing",
+        "gtNorm": "20281028",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row3:manufacturingNo",
+        "status": "ext_missing",
+        "gtNorm": "25001",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row3:itemCode",
+        "status": "mismatch",
+        "gtNorm": "01009336",
+        "extNorm": "04001644",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
+      },
+      {
+        "location": "row3:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "8806706084410",
         "extNorm": "",
@@ -1969,8 +2001,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 40,
-      "structure": 16,
+      "recognition": 41,
+      "structure": 19,
       "layout": 0,
       "preprocessing": 0
     },

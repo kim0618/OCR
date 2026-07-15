@@ -189,9 +189,10 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 11,
-    "rowCountExt": 9,
+    "rowCountExt": 10,
     "rowCountMatch": false,
     "matchedRowIdx": [
+      "10",
       "1",
       "2",
       "3",
@@ -203,11 +204,72 @@
       "9"
     ],
     "gtOnlyRowIdx": [
-      "1",
       "11"
     ],
     "extOnlyRowIdx": [],
     "rows": [
+      {
+        "rowIndex": "10",
+        "rowMatch": false,
+        "cells": {
+          "itemName": {
+            "gt": "쎄레민캡슐200밀리그램",
+            "ext": "쎄레민캡슬200밀리그램",
+            "gtNorm": "쎄레민캡슐200밀리그램",
+            "extNorm": "쎄레민캡슬200밀리그램",
+            "status": "mismatch",
+            "spurious": false
+          },
+          "itemNameMaster": {
+            "gt": "쎄레민캡슐200mg",
+            "ext": "쎄레민캡슐200mg(병)",
+            "gtNorm": "쎄레민캡슐200mg",
+            "extNorm": "쎄레민캡슐200mg(병)",
+            "status": "mismatch",
+            "spurious": false
+          },
+          "spec": {
+            "gt": "30C",
+            "ext": "",
+            "gtNorm": "30c",
+            "extNorm": "",
+            "status": "ext_missing",
+            "spurious": false
+          },
+          "quantity": {
+            "gt": "10",
+            "ext": "10",
+            "gtNorm": "10",
+            "extNorm": "10",
+            "status": "match",
+            "spurious": false
+          },
+          "unitPrice": {
+            "gt": "14067",
+            "ext": "14067",
+            "gtNorm": "14067",
+            "extNorm": "14067",
+            "status": "match",
+            "spurious": false
+          },
+          "amount": {
+            "gt": "140670",
+            "ext": "140670",
+            "gtNorm": "140670",
+            "extNorm": "140670",
+            "status": "match",
+            "spurious": false
+          },
+          "itemCode": {
+            "gt": "01003643",
+            "ext": "01003457",
+            "gtNorm": "01003643",
+            "extNorm": "01003457",
+            "status": "mismatch",
+            "spurious": false
+          }
+        }
+      },
       {
         "rowIndex": "1",
         "rowMatch": false,
@@ -767,69 +829,6 @@
         }
       },
       {
-        "rowIndex": "1",
-        "rowMatch": false,
-        "missingGtRow": true,
-        "cells": {
-          "itemName": {
-            "gt": "쎄레민캡슐200밀리그램",
-            "ext": "",
-            "gtNorm": "쎄레민캡슐200밀리그램",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "itemNameMaster": {
-            "gt": "쎄레민캡슐200mg",
-            "ext": "",
-            "gtNorm": "쎄레민캡슐200mg",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "spec": {
-            "gt": "30C",
-            "ext": "",
-            "gtNorm": "30c",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "quantity": {
-            "gt": "10",
-            "ext": "",
-            "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "unitPrice": {
-            "gt": "14067",
-            "ext": "",
-            "gtNorm": "14067",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "amount": {
-            "gt": "140670",
-            "ext": "",
-            "gtNorm": "140670",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "itemCode": {
-            "gt": "01003643",
-            "ext": "",
-            "gtNorm": "01003643",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          }
-        }
-      },
-      {
         "rowIndex": "11",
         "rowMatch": false,
         "missingGtRow": true,
@@ -895,13 +894,13 @@
     ],
     "cellCounts": {
       "scored": 77,
-      "match": 43,
-      "mismatch": 20,
-      "ext_missing": 14,
+      "match": 46,
+      "mismatch": 23,
+      "ext_missing": 8,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5584415584415584
+    "cellAccuracy": 0.5974025974025974
   },
   "buckets": {
     "defects": [
@@ -943,7 +942,39 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor missed rows ['1', '11']"
+        "reason": "extractor missed rows ['11']"
+      },
+      {
+        "location": "row10:itemName",
+        "status": "mismatch",
+        "gtNorm": "쎄레민캡슐200밀리그램",
+        "extNorm": "쎄레민캡슬200밀리그램",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.92)"
+      },
+      {
+        "location": "row10:itemNameMaster",
+        "status": "mismatch",
+        "gtNorm": "쎄레민캡슐200mg",
+        "extNorm": "쎄레민캡슐200mg(병)",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.87)"
+      },
+      {
+        "location": "row10:spec",
+        "status": "ext_missing",
+        "gtNorm": "30c",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row10:itemCode",
+        "status": "mismatch",
+        "gtNorm": "01003643",
+        "extNorm": "01003457",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.75)"
       },
       {
         "location": "row1:itemName",
@@ -1106,62 +1137,6 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row1:itemName",
-        "status": "ext_missing",
-        "gtNorm": "쎄레민캡슐200밀리그램",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "쎄레민캡슐200mg",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "30c",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "10",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "14067",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:amount",
-        "status": "ext_missing",
-        "gtNorm": "140670",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "01003643",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row11:itemName",
         "status": "ext_missing",
         "gtNorm": "매입에누리ocr",
@@ -1219,8 +1194,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 16,
-      "structure": 17,
+      "recognition": 19,
+      "structure": 11,
       "layout": 6,
       "preprocessing": 0
     },

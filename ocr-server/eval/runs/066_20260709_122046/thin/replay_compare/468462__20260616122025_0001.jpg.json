@@ -1022,18 +1022,18 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "22,330.90",
+            "ext": "60",
             "gtNorm": "10",
-            "extNorm": "2233090",
+            "extNorm": "60",
             "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "2233090",
-            "ext": "60",
+            "ext": "22,330.90",
             "gtNorm": "2233090",
-            "extNorm": "60",
-            "status": "mismatch",
+            "extNorm": "2233090",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -1062,10 +1062,10 @@
           },
           "itemCode": {
             "gt": "22001275",
-            "ext": "22001274",
+            "ext": "22001275",
             "gtNorm": "22001275",
-            "extNorm": "22001274",
-            "status": "mismatch",
+            "extNorm": "22001275",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -1178,10 +1178,10 @@
           },
           "itemNameMaster": {
             "gt": "리피원정20mg(병)",
-            "ext": "리피원정20mg",
+            "ext": "리피원정20mg(병)",
             "gtNorm": "리피원정20mg(병)",
-            "extNorm": "리피원정20mg",
-            "status": "mismatch",
+            "extNorm": "리피원정20mg(병)",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -1194,18 +1194,18 @@
           },
           "quantity": {
             "gt": "40",
-            "ext": "",
+            "ext": "40",
             "gtNorm": "40",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "40",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "1783963",
-            "ext": "",
+            "ext": "17839.63",
             "gtNorm": "1783963",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "1783963",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -1234,10 +1234,10 @@
           },
           "itemCode": {
             "gt": "01007140",
-            "ext": "8806718005823",
+            "ext": "01007140",
             "gtNorm": "01007140",
-            "extNorm": "8806718005823",
-            "status": "mismatch",
+            "extNorm": "01007140",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -1514,13 +1514,13 @@
     ],
     "cellCounts": {
       "scored": 150,
-      "match": 41,
-      "mismatch": 28,
-      "ext_missing": 81,
+      "match": 47,
+      "mismatch": 24,
+      "ext_missing": 79,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.2733333333333333
+    "cellAccuracy": 0.31333333333333335
   },
   "buckets": {
     "defects": [
@@ -2040,17 +2040,9 @@
         "location": "row13:quantity",
         "status": "mismatch",
         "gtNorm": "10",
-        "extNorm": "2233090",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row13:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "2233090",
         "extNorm": "60",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['quantity']"
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "row13:amount",
@@ -2075,14 +2067,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row13:itemCode",
-        "status": "mismatch",
-        "gtNorm": "22001275",
-        "extNorm": "22001274",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.88)"
       },
       {
         "location": "row13:insuranceCode",
@@ -2117,33 +2101,9 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row17:itemNameMaster",
-        "status": "mismatch",
-        "gtNorm": "리피원정20mg(병)",
-        "extNorm": "리피원정20mg",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.84)"
-      },
-      {
         "location": "row17:spec",
         "status": "ext_missing",
         "gtNorm": "30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row17:quantity",
-        "status": "ext_missing",
-        "gtNorm": "40",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row17:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "1783963",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -2169,16 +2129,8 @@
         "status": "ext_missing",
         "gtNorm": "40",
         "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row17:itemCode",
-        "status": "mismatch",
-        "gtNorm": "01007140",
-        "extNorm": "8806718005823",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['quantity']"
       },
       {
         "location": "row17:insuranceCode",
@@ -2430,8 +2382,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 29,
-      "structure": 75,
+      "recognition": 26,
+      "structure": 72,
       "layout": 9,
       "preprocessing": 0
     },

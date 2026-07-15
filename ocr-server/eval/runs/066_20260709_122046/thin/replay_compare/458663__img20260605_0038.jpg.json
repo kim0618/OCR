@@ -60,11 +60,11 @@
       },
       "buyerBizNumber": {
         "gt": "3058500993",
-        "ext": "",
+        "ext": "305-85-00993",
         "gtNorm": "3058500993",
-        "extNorm": "",
+        "extNorm": "3058500993",
         "type": "bizno",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -73,9 +73,9 @@
       },
       "supplierCompany": {
         "gt": "에자이(전)",
-        "ext": "백제약품(주)대전지점",
+        "ext": "약품",
         "gtNorm": "에자이",
-        "extNorm": "백제약품대전지점",
+        "extNorm": "약품",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -141,9 +141,9 @@
     "profile": "thin",
     "counts": {
       "scored": 10,
-      "match": 3,
+      "match": 4,
       "mismatch": 5,
-      "ext_missing": 2,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -154,11 +154,11 @@
     },
     "coverage": {
       "gtPresent": 10,
-      "matched": 3,
+      "matched": 4,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.3
+    "fieldAccuracy": 0.4
   },
   "table": {
     "alignMode": "content",
@@ -369,20 +369,12 @@
         "reason": "ext value is gt's ['row7:unitPrice']"
       },
       {
-        "location": "field:buyerBizNumber",
-        "status": "ext_missing",
-        "gtNorm": "3058500993",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
-      },
-      {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "에자이",
-        "extNorm": "백제약품대전지점",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['field:buyerCompany']"
+        "extNorm": "약품",
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplyAmount",
@@ -397,8 +389,8 @@
         "status": "mismatch",
         "gtNorm": "백제약품대전지점",
         "extNorm": "한국에자이",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:supplierCompany']"
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -434,8 +426,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 2,
-      "structure": 8,
+      "recognition": 4,
+      "structure": 5,
       "layout": 0,
       "preprocessing": 0
     },
@@ -455,6 +447,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.2
+    "fieldMissRate": 0.1
   }
 }

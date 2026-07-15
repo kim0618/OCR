@@ -47,11 +47,11 @@
       },
       "supplierBizNumber": {
         "gt": "2248509735",
-        "ext": "224-85-09735",
+        "ext": "",
         "gtNorm": "2248509735",
-        "extNorm": "2248509735",
+        "extNorm": "",
         "type": "bizno",
-        "status": "match",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -73,11 +73,11 @@
       },
       "supplierCompany": {
         "gt": "대화제약",
-        "ext": "광동제약(전문205327,V375188,115009)",
+        "ext": "대화제약(주)",
         "gtNorm": "대화제약",
-        "extNorm": "광동제약전문205327v375188115009",
+        "extNorm": "대화제약",
         "type": "company",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -99,9 +99,9 @@
       },
       "supplierAddress": {
         "gt": "강원도 횡성군 횡성읍 한우로 495",
-        "ext": "서울특별시 서초구 서초중앙로 85",
+        "ext": "강원특별자치도 횡성군 횡성읍 한우로",
         "gtNorm": "강원도횡성군횡성읍한우로495",
-        "extNorm": "서울특별시서초구서초중앙로85",
+        "extNorm": "강원특별자치도횡성군횡성읍한우로",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -155,8 +155,8 @@
     "counts": {
       "scored": 11,
       "match": 5,
-      "mismatch": 6,
-      "ext_missing": 0,
+      "mismatch": 5,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -169,7 +169,7 @@
       "gtPresent": 11,
       "matched": 5,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 0
+      "extAttemptedMiss": 1
     },
     "fieldAccuracy": 0.45454545454545453
   },
@@ -456,6 +456,14 @@
         "reason": "char-level diff (sim=0.80)"
       },
       {
+        "location": "field:supplierBizNumber",
+        "status": "ext_missing",
+        "gtNorm": "2248509735",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value present at ['field:buyerBizNumber']"
+      },
+      {
         "location": "field:buyerBizNumber",
         "status": "mismatch",
         "gtNorm": "13381223215",
@@ -464,20 +472,12 @@
         "reason": "ext value is gt's ['field:supplierBizNumber']"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "대화제약",
-        "extNorm": "광동제약전문205327v375188115009",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "강원도횡성군횡성읍한우로495",
-        "extNorm": "서울특별시서초구서초중앙로85",
+        "extNorm": "강원특별자치도횡성군횡성읍한우로",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.77)"
       },
       {
         "location": "field:buyerAddress",
@@ -689,8 +689,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 7,
-      "structure": 24,
+      "recognition": 6,
+      "structure": 25,
       "layout": 0,
       "preprocessing": 0
     },
@@ -710,6 +710,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.0
+    "fieldMissRate": 0.091
   }
 }

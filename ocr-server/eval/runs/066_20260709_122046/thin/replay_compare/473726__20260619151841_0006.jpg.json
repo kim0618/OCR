@@ -193,14 +193,11 @@
     "rowCountMatch": true,
     "matchedRowIdx": [
       "1",
-      "2"
-    ],
-    "gtOnlyRowIdx": [
+      "2",
       "3"
     ],
-    "extOnlyRowIdx": [
-      "3"
-    ],
+    "gtOnlyRowIdx": [],
+    "extOnlyRowIdx": [],
     "rows": [
       {
         "rowIndex": "1",
@@ -361,7 +358,6 @@
       {
         "rowIndex": "3",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "메가트리연질캡슐(오메가-3-산에틸에스테르 90",
@@ -389,34 +385,34 @@
           },
           "quantity": {
             "gt": "120",
-            "ext": "",
+            "ext": "60C 2 120 3) + 0",
             "gtNorm": "120",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "60212030",
+            "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "13608",
-            "ext": "",
+            "ext": "13,608.0",
             "gtNorm": "13608",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "136080",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "1484509",
-            "ext": "",
+            "ext": "1,484,509",
             "gtNorm": "1484509",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "1484509",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
             "gt": "20290331",
-            "ext": "",
+            "ext": "20290331",
             "gtNorm": "20290331",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20290331",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
@@ -440,13 +436,13 @@
     ],
     "cellCounts": {
       "scored": 27,
-      "match": 10,
-      "mismatch": 4,
-      "ext_missing": 13,
+      "match": 12,
+      "mismatch": 6,
+      "ext_missing": 9,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.37037037037037035
+    "cellAccuracy": 0.4444444444444444
   },
   "buckets": {
     "defects": [
@@ -473,22 +469,6 @@
         "extNorm": "백제약품물류센터",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.89)"
-      },
-      {
-        "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['3']"
-      },
-      {
-        "location": "table",
-        "status": "rows_extra",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor invented rows ['3']"
       },
       {
         "location": "row1:spec",
@@ -580,35 +560,19 @@
       },
       {
         "location": "row3:quantity",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "120",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "60212030",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.55)"
       },
       {
         "location": "row3:unitPrice",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "13608",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:amount",
-        "status": "ext_missing",
-        "gtNorm": "1484509",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:expiryDate",
-        "status": "ext_missing",
-        "gtNorm": "20290331",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "136080",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.91)"
       },
       {
         "location": "row3:itemCode",
@@ -628,8 +592,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 7,
-      "structure": 15,
+      "recognition": 9,
+      "structure": 9,
       "layout": 0,
       "preprocessing": 0
     },

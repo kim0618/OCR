@@ -163,34 +163,35 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 1,
-    "rowCountExt": 2,
+    "rowCountExt": 3,
     "rowCountMatch": false,
     "matchedRowIdx": [
-      "1"
+      "3"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
+      "1",
       "2"
     ],
     "rows": [
       {
-        "rowIndex": "1",
+        "rowIndex": "3",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "제미메트 서방정 50/1000mg 56T (국",
-            "ext": "제미메트서방정50/1000mg 56T(국 내81 5TK PAC",
+            "ext": "",
             "gtNorm": "제미메트서방정501000mg56t국",
-            "extNorm": "제미메트서방정501000mg56t국내815tkpac",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "제미메트서방정50/1000mg",
-            "ext": "제미메트서방정50/1000mg",
+            "ext": "",
             "gtNorm": "제미메트서방정50/1000mg",
-            "extNorm": "제미메트서방정50/1000mg",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "spec": {
@@ -203,34 +204,34 @@
           },
           "quantity": {
             "gt": "50",
-            "ext": "",
+            "ext": "50",
             "gtNorm": "50",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "50",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "40250",
-            "ext": "",
+            "ext": "40250",
             "gtNorm": "40250",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "40250",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "2012500",
-            "ext": "2,213,750",
+            "ext": "2012500",
             "gtNorm": "2012500",
-            "extNorm": "2213750",
-            "status": "mismatch",
+            "extNorm": "2012500",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
             "gt": "20281215",
-            "ext": "20281215",
+            "ext": "",
             "gtNorm": "20281215",
-            "extNorm": "20281215",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "manufacturingNo": {
@@ -243,10 +244,10 @@
           },
           "itemCode": {
             "gt": "12000656",
-            "ext": "ZMG25712",
+            "ext": "",
             "gtNorm": "12000656",
-            "extNorm": "ZMG25712",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           }
         }
@@ -254,13 +255,13 @@
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 2,
-      "mismatch": 3,
-      "ext_missing": 4,
+      "match": 3,
+      "mismatch": 0,
+      "ext_missing": 6,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.2222222222222222
+    "cellAccuracy": 0.3333333333333333
   },
   "buckets": {
     "defects": [
@@ -302,7 +303,7 @@
         "gtNorm": "2213750",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "gt value present at ['field:totalAmount', 'row1:amount']"
+        "reason": "gt value present at ['field:totalAmount']"
       },
       {
         "location": "field:buyerAddress",
@@ -318,18 +319,26 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['2']"
+        "reason": "extractor invented rows ['1', '2']"
       },
       {
-        "location": "row1:itemName",
-        "status": "mismatch",
+        "location": "row3:itemName",
+        "status": "ext_missing",
         "gtNorm": "제미메트서방정501000mg56t국",
-        "extNorm": "제미메트서방정501000mg56t국내815tkpac",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.81)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:spec",
+        "location": "row3:itemNameMaster",
+        "status": "ext_missing",
+        "gtNorm": "제미메트서방정50/1000mg",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row3:spec",
         "status": "ext_missing",
         "gtNorm": "56t/ back",
         "extNorm": "",
@@ -337,50 +346,34 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:quantity",
+        "location": "row3:expiryDate",
         "status": "ext_missing",
-        "gtNorm": "50",
+        "gtNorm": "20281215",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "40250",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:amount",
-        "status": "mismatch",
-        "gtNorm": "2012500",
-        "extNorm": "2213750",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.57)"
-      },
-      {
-        "location": "row1:manufacturingNo",
+        "location": "row3:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "ZMG25712",
         "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemCode",
-        "status": "mismatch",
+        "location": "row3:itemCode",
+        "status": "ext_missing",
         "gtNorm": "12000656",
-        "extNorm": "ZMG25712",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 4,
-      "structure": 9,
-      "layout": 1,
+      "recognition": 1,
+      "structure": 12,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

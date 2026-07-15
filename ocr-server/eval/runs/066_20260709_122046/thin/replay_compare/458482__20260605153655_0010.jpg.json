@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "5858800979",
-        "ext": "113-85-04425",
+        "ext": "",
         "gtNorm": "5858800979",
-        "extNorm": "1138504425",
+        "extNorm": "",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -86,9 +86,9 @@
       },
       "supplierCompany": {
         "gt": "케이에이치팜",
-        "ext": "백제약품(주)영등포지점",
+        "ext": "의약품외",
         "gtNorm": "케이에이치팜",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "의약품외",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "경기 김포시 고촌읍 아라육로 80 212호 창고(2층)",
-        "ext": "서울 구로구 공원로8길 24",
+        "ext": "",
         "gtNorm": "경기김포시고촌읍아라육로80212호창고2층",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "",
         "type": "address",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 6,
-      "mismatch": 6,
-      "ext_missing": 0,
+      "mismatch": 4,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,7 +182,7 @@
       "gtPresent": 12,
       "matched": 6,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 0
+      "extAttemptedMiss": 2
     },
     "fieldAccuracy": 0.5
   },
@@ -292,11 +292,11 @@
     "defects": [
       {
         "location": "field:supplierBizNumber",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "5858800979",
-        "extNorm": "1138504425",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:buyerBizNumber",
@@ -310,17 +310,17 @@
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "케이에이치팜",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "의약품외",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplierAddress",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "경기김포시고촌읍아라육로80212호창고2층",
-        "extNorm": "서울구로구공원로8길24",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:buyerCompany",
@@ -396,8 +396,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 7,
-      "structure": 5,
+      "recognition": 5,
+      "structure": 7,
       "layout": 1,
       "preprocessing": 0
     },
@@ -417,6 +417,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.0
+    "fieldMissRate": 0.167
   }
 }

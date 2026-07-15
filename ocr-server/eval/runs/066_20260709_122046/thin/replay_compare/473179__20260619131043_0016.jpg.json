@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "2158121950",
-        "ext": "408-85-00180",
+        "ext": "",
         "gtNorm": "2158121950",
-        "extNorm": "4088500180",
+        "extNorm": "",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "알보젠코리아",
-        "ext": "삼진제약(전)",
+        "ext": "알보젠코리아주식회사",
         "gtNorm": "알보젠코리아",
-        "extNorm": "삼진제약",
+        "extNorm": "알보젠코리아",
         "type": "company",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "충청남도 공주시 정안면 정안농공단지길 55-8",
-        "ext": "서울 마포구 와우산로 121 (서교동)",
+        "ext": "서울특별시서초구서초대로4115층(서초동",
         "gtNorm": "충청남도공주시정안면정안농공단지길558",
-        "extNorm": "서울마포구와우산로121서교동",
+        "extNorm": "서울특별시서초구서초대로4115층서초동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 4,
-      "mismatch": 5,
-      "ext_missing": 3,
+      "match": 5,
+      "mismatch": 3,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,17 +180,17 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 4,
+      "matched": 5,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 3
+      "extAttemptedMiss": 4
     },
-    "fieldAccuracy": 0.3333333333333333
+    "fieldAccuracy": 0.4166666666666667
   },
   "table": {
     "alignMode": "content",
     "rowCountGt": 5,
-    "rowCountExt": 5,
-    "rowCountMatch": true,
+    "rowCountExt": 7,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
       "2",
@@ -199,11 +199,14 @@
       "5"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "6",
+      "7"
+    ],
     "rows": [
       {
         "rowIndex": "1",
-        "rowMatch": false,
+        "rowMatch": true,
         "cells": {
           "itemName": {
             "gt": "푸리민정 37.5밀리그램 30T",
@@ -239,18 +242,18 @@
           },
           "unitPrice": {
             "gt": "21660",
-            "ext": "",
+            "ext": "21660",
             "gtNorm": "21660",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "21660",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "216600",
-            "ext": "21,660",
+            "ext": "216600",
             "gtNorm": "216600",
-            "extNorm": "21660",
-            "status": "mismatch",
+            "extNorm": "216600",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
@@ -363,10 +366,10 @@
           },
           "itemCode": {
             "gt": "16002391",
-            "ext": "01013170",
+            "ext": "",
             "gtNorm": "16002391",
-            "extNorm": "01013170",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           }
         }
@@ -401,10 +404,10 @@
           },
           "unitPrice": {
             "gt": "114000",
-            "ext": "",
+            "ext": "114000",
             "gtNorm": "114000",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "114000",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -417,10 +420,10 @@
           },
           "itemCode": {
             "gt": "16002389",
-            "ext": "8806433036829",
+            "ext": "",
             "gtNorm": "16002389",
-            "extNorm": "8806433036829",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           }
         }
@@ -482,13 +485,13 @@
     ],
     "cellCounts": {
       "scored": 31,
-      "match": 9,
-      "mismatch": 13,
+      "match": 12,
+      "mismatch": 10,
       "ext_missing": 9,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.2903225806451613
+    "cellAccuracy": 0.3870967741935484
   },
   "buckets": {
     "defects": [
@@ -510,25 +513,17 @@
       },
       {
         "location": "field:supplierBizNumber",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "2158121950",
-        "extNorm": "4088500180",
+        "extNorm": "",
         "bucket": "structure",
-        "reason": "ext value is gt's ['field:buyerBizNumber']"
-      },
-      {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "알보젠코리아",
-        "extNorm": "삼진제약",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "충청남도공주시정안면정안농공단지길558",
-        "extNorm": "서울마포구와우산로121서교동",
+        "extNorm": "서울특별시서초구서초대로4115층서초동",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -557,20 +552,12 @@
         "reason": "char-level diff (sim=0.90)"
       },
       {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "21660",
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
         "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
-      },
-      {
-        "location": "row1:amount",
-        "status": "mismatch",
-        "gtNorm": "216600",
-        "extNorm": "21660",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.91)"
+        "bucket": "structure",
+        "reason": "extractor invented rows ['6', '7']"
       },
       {
         "location": "row2:itemName",
@@ -646,11 +633,11 @@
       },
       {
         "location": "row3:itemCode",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "16002391",
-        "extNorm": "01013170",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row4:itemName",
@@ -669,14 +656,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row4:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "114000",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
-      },
-      {
         "location": "row4:amount",
         "status": "mismatch",
         "gtNorm": "5700000",
@@ -686,11 +665,11 @@
       },
       {
         "location": "row4:itemCode",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "16002389",
-        "extNorm": "8806433036829",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row5:itemName",
@@ -734,9 +713,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 16,
-      "structure": 9,
-      "layout": 5,
+      "recognition": 12,
+      "structure": 12,
+      "layout": 3,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,
@@ -755,6 +734,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.25
+    "fieldMissRate": 0.333
   }
 }

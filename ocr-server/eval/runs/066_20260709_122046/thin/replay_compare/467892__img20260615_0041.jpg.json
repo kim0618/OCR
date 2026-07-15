@@ -178,25 +178,22 @@
     "rowCountGt": 1,
     "rowCountExt": 1,
     "rowCountMatch": true,
-    "matchedRowIdx": [],
-    "gtOnlyRowIdx": [
+    "matchedRowIdx": [
       "1"
     ],
-    "extOnlyRowIdx": [
-      "1"
-    ],
+    "gtOnlyRowIdx": [],
+    "extOnlyRowIdx": [],
     "rows": [
       {
         "rowIndex": "1",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "텔미트렌플러스정 40/12.5MG(정규) (병) 30T",
-            "ext": "",
+            "ext": "번호",
             "gtNorm": "텔미트렌플러스정40125mg정규병30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "번호",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
@@ -217,26 +214,26 @@
           },
           "quantity": {
             "gt": "20",
-            "ext": "",
+            "ext": "1",
             "gtNorm": "20",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "1",
+            "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "10436",
-            "ext": "",
+            "ext": "10436",
             "gtNorm": "10436",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10436",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "208720",
-            "ext": "",
+            "ext": "208720",
             "gtNorm": "208720",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "208720",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -268,13 +265,13 @@
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 0,
-      "mismatch": 0,
-      "ext_missing": 9,
+      "match": 2,
+      "mismatch": 2,
+      "ext_missing": 5,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.0
+    "cellAccuracy": 0.2222222222222222
   },
   "buckets": {
     "defects": [
@@ -319,28 +316,12 @@
         "reason": "value differs, low similarity"
       },
       {
-        "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['1']"
-      },
-      {
-        "location": "table",
-        "status": "rows_extra",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor invented rows ['1']"
-      },
-      {
         "location": "row1:itemName",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "텔미트렌플러스정40125mg정규병30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "번호",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:itemNameMaster",
@@ -360,27 +341,11 @@
       },
       {
         "location": "row1:quantity",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "20",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "10436",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:amount",
-        "status": "ext_missing",
-        "gtNorm": "208720",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "1",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:expiryDate",
@@ -408,8 +373,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 3,
-      "structure": 13,
+      "recognition": 5,
+      "structure": 7,
       "layout": 0,
       "preprocessing": 0
     },

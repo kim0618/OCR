@@ -73,9 +73,9 @@
       },
       "supplierCompany": {
         "gt": "JW중외신약",
-        "ext": "백제약품(주)영등포지점",
+        "ext": "의약의약품외수출입",
         "gtNorm": "jw중외신약",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "의약의약품외수출입",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -99,11 +99,11 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 금천구 가산디지털1로 24, 대륭테크노타운13차 3층 (가산동)",
-        "ext": "서울 구로구 공원로8길 24",
+        "ext": "",
         "gtNorm": "서울특별시금천구가산디지털1로24대륭테크노타운13차3층가산동",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "",
         "type": "address",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -155,8 +155,8 @@
     "counts": {
       "scored": 11,
       "match": 7,
-      "mismatch": 4,
-      "ext_missing": 0,
+      "mismatch": 3,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -169,27 +169,26 @@
       "gtPresent": 11,
       "matched": 7,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 0
+      "extAttemptedMiss": 1
     },
     "fieldAccuracy": 0.6363636363636364
   },
   "table": {
     "alignMode": "content",
     "rowCountGt": 1,
-    "rowCountExt": 1,
-    "rowCountMatch": true,
-    "matchedRowIdx": [],
-    "gtOnlyRowIdx": [
-      "1"
+    "rowCountExt": 2,
+    "rowCountMatch": false,
+    "matchedRowIdx": [
+      "2"
     ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
       "1"
     ],
     "rows": [
       {
-        "rowIndex": "1",
+        "rowIndex": "2",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "펜디예뜨정(소)",
@@ -217,26 +216,26 @@
           },
           "quantity": {
             "gt": "20",
-            "ext": "",
+            "ext": "20",
             "gtNorm": "20",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "8804",
-            "ext": "",
+            "ext": "8804",
             "gtNorm": "8804",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "8804",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "176080",
-            "ext": "",
+            "ext": "176080",
             "gtNorm": "176080",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "176080",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
@@ -252,13 +251,13 @@
     ],
     "cellCounts": {
       "scored": 7,
-      "match": 0,
+      "match": 3,
       "mismatch": 0,
-      "ext_missing": 7,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.0
+    "cellAccuracy": 0.42857142857142855
   },
   "buckets": {
     "defects": [
@@ -266,17 +265,17 @@
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "jw중외신약",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "의약의약품외수출입",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplierAddress",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "서울특별시금천구가산디지털1로24대륭테크노타운13차3층가산동",
-        "extNorm": "서울구로구공원로8길24",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:buyerCompany",
@@ -296,14 +295,6 @@
       },
       {
         "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['1']"
-      },
-      {
-        "location": "table",
         "status": "rows_extra",
         "gtNorm": "",
         "extNorm": "",
@@ -311,7 +302,7 @@
         "reason": "extractor invented rows ['1']"
       },
       {
-        "location": "row1:itemName",
+        "location": "row2:itemName",
         "status": "ext_missing",
         "gtNorm": "펜디예뜨정소",
         "extNorm": "",
@@ -319,7 +310,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemNameMaster",
+        "location": "row2:itemNameMaster",
         "status": "ext_missing",
         "gtNorm": "펜디예뜨정(향정)",
         "extNorm": "",
@@ -327,7 +318,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:spec",
+        "location": "row2:spec",
         "status": "ext_missing",
         "gtNorm": "30t",
         "extNorm": "",
@@ -335,31 +326,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "20",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "8804",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:amount",
-        "status": "ext_missing",
-        "gtNorm": "176080",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:itemCode",
+        "location": "row2:itemCode",
         "status": "ext_missing",
         "gtNorm": "8806441012617",
         "extNorm": "",
@@ -368,8 +335,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 4,
-      "structure": 9,
+      "recognition": 3,
+      "structure": 6,
       "layout": 0,
       "preprocessing": 0
     },
@@ -389,6 +356,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.0
+    "fieldMissRate": 0.091
   }
 }

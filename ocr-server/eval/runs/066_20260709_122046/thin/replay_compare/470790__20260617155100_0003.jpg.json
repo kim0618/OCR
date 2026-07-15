@@ -189,14 +189,17 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 2,
-    "rowCountExt": 2,
-    "rowCountMatch": true,
+    "rowCountExt": 4,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
       "2"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "3",
+      "4"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -228,10 +231,10 @@
           },
           "quantity": {
             "gt": "40",
-            "ext": "",
+            "ext": "40",
             "gtNorm": "40",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "40",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -373,13 +376,13 @@
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 2,
+      "match": 3,
       "mismatch": 8,
-      "ext_missing": 10,
+      "ext_missing": 9,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.1
+    "cellAccuracy": 0.15
   },
   "buckets": {
     "defects": [
@@ -416,6 +419,14 @@
         "reason": "char-level diff (sim=0.50)"
       },
       {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['3', '4']"
+      },
+      {
         "location": "row1:itemName",
         "status": "mismatch",
         "gtNorm": "대한플라스콘주500ml전문",
@@ -427,14 +438,6 @@
         "location": "row1:spec",
         "status": "ext_missing",
         "gtNorm": "500ml/1백",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "40",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"

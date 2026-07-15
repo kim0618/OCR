@@ -8,11 +8,11 @@
     "perField": {
       "totalAmount": {
         "gt": "40998818",
-        "ext": "45,951,218",
+        "ext": "40998818",
         "gtNorm": "40998818",
-        "extNorm": "45951218",
+        "extNorm": "40998818",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 7,
-      "mismatch": 5,
+      "match": 8,
+      "mismatch": 4,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,17 +180,17 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 7,
+      "matched": 8,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.5833333333333334
+    "fieldAccuracy": 0.6666666666666666
   },
   "table": {
     "alignMode": "content",
     "rowCountGt": 10,
-    "rowCountExt": 10,
-    "rowCountMatch": true,
+    "rowCountExt": 11,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
       "2",
@@ -204,7 +204,9 @@
       "10"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "11"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -1072,14 +1074,6 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:totalAmount",
-        "status": "mismatch",
-        "gtNorm": "40998818",
-        "extNorm": "45951218",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
-      },
-      {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "유진약품",
@@ -1110,6 +1104,14 @@
         "extNorm": "광주광역시북구신임로31번길광주광역시동구제봉로200대인동",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.60)"
+      },
+      {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['11']"
       },
       {
         "location": "row1:itemName",
@@ -1753,8 +1755,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 49,
-      "structure": 35,
+      "recognition": 48,
+      "structure": 36,
       "layout": 1,
       "preprocessing": 0
     },

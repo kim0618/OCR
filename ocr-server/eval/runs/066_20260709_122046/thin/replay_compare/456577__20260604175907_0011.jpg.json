@@ -784,10 +784,10 @@
           },
           "itemNameMaster": {
             "gt": "텔미베타플러스정40/12.5mg(병)",
-            "ext": "텔미베타플러스정40/12.5mg(병)",
+            "ext": "텔미베타플러스정40/12.5mg",
             "gtNorm": "텔미베타플러스정40/12.5mg(병)",
-            "extNorm": "텔미베타플러스정40/12.5mg(병)",
-            "status": "match",
+            "extNorm": "텔미베타플러스정40/12.5mg",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
@@ -808,18 +808,18 @@
           },
           "unitPrice": {
             "gt": "10950",
-            "ext": "10,950",
+            "ext": "35500",
             "gtNorm": "10950",
-            "extNorm": "10950",
-            "status": "match",
+            "extNorm": "35500",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "876000",
-            "ext": "876,000",
+            "ext": "2840000",
             "gtNorm": "876000",
-            "extNorm": "876000",
-            "status": "match",
+            "extNorm": "2840000",
+            "status": "mismatch",
             "spurious": false
           },
           "expiryDate": {
@@ -840,10 +840,10 @@
           },
           "itemCode": {
             "gt": "01008027",
-            "ext": "01008027",
+            "ext": "04003898",
             "gtNorm": "01008027",
-            "extNorm": "01008027",
-            "status": "match",
+            "extNorm": "04003898",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -1072,13 +1072,13 @@
     ],
     "cellCounts": {
       "scored": 99,
-      "match": 55,
-      "mismatch": 14,
+      "match": 51,
+      "mismatch": 18,
       "ext_missing": 30,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5555555555555556
+    "cellAccuracy": 0.5151515151515151
   },
   "buckets": {
     "defects": [
@@ -1259,6 +1259,14 @@
         "reason": "char-level diff (sim=0.91)"
       },
       {
+        "location": "row5:itemNameMaster",
+        "status": "mismatch",
+        "gtNorm": "텔미베타플러스정40/12.5mg(병)",
+        "extNorm": "텔미베타플러스정40/12.5mg",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.92)"
+      },
+      {
         "location": "row5:spec",
         "status": "mismatch",
         "gtNorm": "30t",
@@ -1271,6 +1279,30 @@
         "status": "mismatch",
         "gtNorm": "10",
         "extNorm": "80",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.50)"
+      },
+      {
+        "location": "row5:unitPrice",
+        "status": "mismatch",
+        "gtNorm": "10950",
+        "extNorm": "35500",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
+      },
+      {
+        "location": "row5:amount",
+        "status": "mismatch",
+        "gtNorm": "876000",
+        "extNorm": "2840000",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.62)"
+      },
+      {
+        "location": "row5:itemCode",
+        "status": "mismatch",
+        "gtNorm": "01008027",
+        "extNorm": "04003898",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.50)"
       },
@@ -1476,7 +1508,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 17,
+      "recognition": 21,
       "structure": 32,
       "layout": 0,
       "preprocessing": 0

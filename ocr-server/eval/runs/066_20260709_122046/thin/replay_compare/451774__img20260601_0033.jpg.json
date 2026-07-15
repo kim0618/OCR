@@ -176,23 +176,25 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 10,
-    "rowCountExt": 8,
-    "rowCountMatch": false,
+    "rowCountExt": 10,
+    "rowCountMatch": true,
     "matchedRowIdx": [
       "1",
       "2",
       "3",
       "4",
+      "10",
       "5",
       "6",
       "7",
       "8"
     ],
     "gtOnlyRowIdx": [
-      "1",
-      "6"
+      "1"
     ],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "9"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -507,6 +509,76 @@
         }
       },
       {
+        "rowIndex": "10",
+        "rowMatch": false,
+        "cells": {
+          "itemName": {
+            "gt": "팜비오)노자임캡슐 10000",
+            "ext": "",
+            "gtNorm": "팜비오노자임캡슐10000",
+            "extNorm": "",
+            "status": "ext_missing",
+            "spurious": false
+          },
+          "itemNameMaster": {
+            "gt": "노자임캡슐10000",
+            "ext": "",
+            "gtNorm": "노자임캡슐10000",
+            "extNorm": "",
+            "status": "ext_missing",
+            "spurious": false
+          },
+          "spec": {
+            "gt": "162.7/1000",
+            "ext": "",
+            "gtNorm": "162.7/1000",
+            "extNorm": "",
+            "status": "ext_missing",
+            "spurious": false
+          },
+          "quantity": {
+            "gt": "10",
+            "ext": "10",
+            "gtNorm": "10",
+            "extNorm": "10",
+            "status": "match",
+            "spurious": false
+          },
+          "unitPrice": {
+            "gt": "28800",
+            "ext": "28800",
+            "gtNorm": "28800",
+            "extNorm": "28800",
+            "status": "match",
+            "spurious": false
+          },
+          "amount": {
+            "gt": "288000",
+            "ext": "288000",
+            "gtNorm": "288000",
+            "extNorm": "288000",
+            "status": "match",
+            "spurious": false
+          },
+          "manufacturingNo": {
+            "gt": "360401",
+            "ext": "",
+            "gtNorm": "360401",
+            "extNorm": "",
+            "status": "ext_missing",
+            "spurious": false
+          },
+          "itemCode": {
+            "gt": "8806599003918",
+            "ext": "",
+            "gtNorm": "8806599003918",
+            "extNorm": "",
+            "status": "ext_missing",
+            "spurious": false
+          }
+        }
+      },
+      {
         "rowIndex": "5",
         "rowMatch": false,
         "cells": {
@@ -692,10 +764,10 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -896,88 +968,17 @@
             "spurious": false
           }
         }
-      },
-      {
-        "rowIndex": "6",
-        "rowMatch": false,
-        "missingGtRow": true,
-        "cells": {
-          "itemName": {
-            "gt": "팜비오)노자임캡슐 10000",
-            "ext": "",
-            "gtNorm": "팜비오노자임캡슐10000",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "itemNameMaster": {
-            "gt": "노자임캡슐10000",
-            "ext": "",
-            "gtNorm": "노자임캡슐10000",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "spec": {
-            "gt": "162.7/1000",
-            "ext": "",
-            "gtNorm": "162.7/1000",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "quantity": {
-            "gt": "10",
-            "ext": "",
-            "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "unitPrice": {
-            "gt": "28800",
-            "ext": "",
-            "gtNorm": "28800",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "amount": {
-            "gt": "288000",
-            "ext": "",
-            "gtNorm": "288000",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "manufacturingNo": {
-            "gt": "360401",
-            "ext": "",
-            "gtNorm": "360401",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "itemCode": {
-            "gt": "8806599003918",
-            "ext": "",
-            "gtNorm": "8806599003918",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          }
-        }
       }
     ],
     "cellCounts": {
       "scored": 89,
-      "match": 30,
+      "match": 34,
       "mismatch": 18,
-      "ext_missing": 41,
+      "ext_missing": 37,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.33707865168539325
+    "cellAccuracy": 0.38202247191011235
   },
   "buckets": {
     "defects": [
@@ -1043,7 +1044,15 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor missed rows ['1', '6']"
+        "reason": "extractor missed rows ['1']"
+      },
+      {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['9']"
       },
       {
         "location": "row1:itemName",
@@ -1230,6 +1239,46 @@
         "reason": "gt cell absent in extracted row"
       },
       {
+        "location": "row10:itemName",
+        "status": "ext_missing",
+        "gtNorm": "팜비오노자임캡슐10000",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row10:itemNameMaster",
+        "status": "ext_missing",
+        "gtNorm": "노자임캡슐10000",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row10:spec",
+        "status": "ext_missing",
+        "gtNorm": "162.7/1000",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row10:manufacturingNo",
+        "status": "ext_missing",
+        "gtNorm": "360401",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row10:itemCode",
+        "status": "ext_missing",
+        "gtNorm": "8806599003918",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
         "location": "row5:itemName",
         "status": "mismatch",
         "gtNorm": "한독아리셉트정",
@@ -1305,14 +1354,6 @@
         "location": "row7:spec",
         "status": "ext_missing",
         "gtNorm": "30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row7:quantity",
-        "status": "ext_missing",
-        "gtNorm": "10",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -1452,75 +1493,11 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row6:itemName",
-        "status": "ext_missing",
-        "gtNorm": "팜비오노자임캡슐10000",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row6:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "노자임캡슐10000",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row6:spec",
-        "status": "ext_missing",
-        "gtNorm": "162.7/1000",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row6:quantity",
-        "status": "ext_missing",
-        "gtNorm": "10",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row6:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "28800",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row6:amount",
-        "status": "ext_missing",
-        "gtNorm": "288000",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row6:manufacturingNo",
-        "status": "ext_missing",
-        "gtNorm": "360401",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row6:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "8806599003918",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
       "recognition": 24,
-      "structure": 43,
+      "structure": 40,
       "layout": 0,
       "preprocessing": 0
     },

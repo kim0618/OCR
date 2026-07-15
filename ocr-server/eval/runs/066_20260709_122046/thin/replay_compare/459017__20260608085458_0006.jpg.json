@@ -186,7 +186,7 @@
       "14",
       "15",
       "16",
-      "17",
+      "7",
       "18",
       "10"
     ],
@@ -197,9 +197,9 @@
       "4",
       "5",
       "6",
-      "7",
       "8",
-      "9"
+      "9",
+      "17"
     ],
     "rows": [
       {
@@ -805,7 +805,7 @@
         }
       },
       {
-        "rowIndex": "17",
+        "rowIndex": "7",
         "rowMatch": false,
         "cells": {
           "itemName": {
@@ -842,15 +842,15 @@
           },
           "unitPrice": {
             "gt": "4180",
-            "ext": "4,180.00",
+            "ext": "4180",
             "gtNorm": "4180",
-            "extNorm": "418000",
-            "status": "mismatch",
+            "extNorm": "4180",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "418000",
-            "ext": "418,000",
+            "ext": "418000",
             "gtNorm": "418000",
             "extNorm": "418000",
             "status": "match",
@@ -858,18 +858,18 @@
           },
           "expiryDate": {
             "gt": "20270709",
-            "ext": "2027.07.09",
+            "ext": "",
             "gtNorm": "20270709",
-            "extNorm": "20270709",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "manufacturingNo": {
             "gt": "25007",
-            "ext": "25007",
+            "ext": "",
             "gtNorm": "25007",
-            "extNorm": "25007",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemCode": {
@@ -882,10 +882,10 @@
           },
           "insuranceCode": {
             "gt": "8",
-            "ext": "8 073000891 보령제약(주",
+            "ext": "",
             "gtNorm": "8",
-            "extNorm": "8073000891보령제약주",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           }
         }
@@ -1065,13 +1065,13 @@
     ],
     "cellCounts": {
       "scored": 100,
-      "match": 59,
-      "mismatch": 23,
-      "ext_missing": 18,
+      "match": 58,
+      "mismatch": 21,
+      "ext_missing": 21,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.59
+    "cellAccuracy": 0.58
   },
   "buckets": {
     "defects": [
@@ -1113,7 +1113,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '2', '4', '5', '6', '7', '8', '9']"
+        "reason": "extractor invented rows ['1', '2', '4', '5', '6', '8', '9', '17']"
       },
       {
         "location": "row11:spec",
@@ -1324,7 +1324,7 @@
         "reason": "char-level diff (sim=0.83)"
       },
       {
-        "location": "row17:itemName",
+        "location": "row7:itemName",
         "status": "mismatch",
         "gtNorm": "아목크라네오시럽50ml",
         "extNorm": "아목크라네오시럼50ml",
@@ -1332,7 +1332,7 @@
         "reason": "gt cell appears in column(s) ['itemNameMaster']"
       },
       {
-        "location": "row17:spec",
+        "location": "row7:spec",
         "status": "ext_missing",
         "gtNorm": "50밀리리 터",
         "extNorm": "",
@@ -1340,20 +1340,28 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row17:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "4180",
-        "extNorm": "418000",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.80)"
+        "location": "row7:expiryDate",
+        "status": "ext_missing",
+        "gtNorm": "20270709",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row17:insuranceCode",
-        "status": "mismatch",
+        "location": "row7:manufacturingNo",
+        "status": "ext_missing",
+        "gtNorm": "25007",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row7:insuranceCode",
+        "status": "ext_missing",
         "gtNorm": "8",
-        "extNorm": "8073000891보령제약주",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row18:itemName",
@@ -1445,8 +1453,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 23,
-      "structure": 20,
+      "recognition": 21,
+      "structure": 23,
       "layout": 3,
       "preprocessing": 0
     },

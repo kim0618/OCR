@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "113920",
-        "ext": "",
+        "ext": "113920",
         "gtNorm": "113920",
-        "extNorm": "",
+        "extNorm": "113920",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 7,
+      "match": 8,
       "mismatch": 4,
-      "ext_missing": 1,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,22 +180,24 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 7,
+      "matched": 8,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.5833333333333334
+    "fieldAccuracy": 0.6666666666666666
   },
   "table": {
     "alignMode": "content",
     "rowCountGt": 1,
-    "rowCountExt": 1,
-    "rowCountMatch": true,
+    "rowCountExt": 2,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "2"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -289,14 +291,6 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:taxAmount",
-        "status": "ext_missing",
-        "gtNorm": "113920",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
-      },
-      {
         "location": "field:supplierBizNumber",
         "status": "mismatch",
         "gtNorm": "124833615",
@@ -327,6 +321,14 @@
         "extNorm": "경기도화성시향남읍제약공단2길18",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
+      },
+      {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['2']"
       },
       {
         "location": "row1:itemName",
@@ -391,6 +393,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

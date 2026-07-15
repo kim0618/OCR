@@ -222,18 +222,18 @@
           },
           "unitPrice": {
             "gt": "250752",
-            "ext": "",
+            "ext": "250752",
             "gtNorm": "250752",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "250752",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "7522560",
-            "ext": "250,752",
+            "ext": "7522560",
             "gtNorm": "7522560",
-            "extNorm": "250752",
-            "status": "mismatch",
+            "extNorm": "7522560",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -273,13 +273,13 @@
     ],
     "cellCounts": {
       "scored": 10,
-      "match": 3,
-      "mismatch": 2,
-      "ext_missing": 5,
+      "match": 5,
+      "mismatch": 1,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3
+    "cellAccuracy": 0.5
   },
   "buckets": {
     "defects": [
@@ -288,8 +288,8 @@
         "status": "mismatch",
         "gtNorm": "7522560",
         "extNorm": "219919631",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "bucket": "structure",
+        "reason": "gt value present at ['row1:amount']"
       },
       {
         "location": "field:taxAmount",
@@ -348,22 +348,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "250752",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
-      },
-      {
-        "location": "row1:amount",
-        "status": "mismatch",
-        "gtNorm": "7522560",
-        "extNorm": "250752",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
         "location": "row1:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20270826",
@@ -389,9 +373,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 6,
-      "structure": 6,
-      "layout": 1,
+      "recognition": 4,
+      "structure": 7,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

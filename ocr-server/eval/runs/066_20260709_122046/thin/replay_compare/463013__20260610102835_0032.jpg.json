@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "3867508",
-        "ext": "",
+        "ext": "3867508",
         "gtNorm": "3867508",
-        "extNorm": "",
+        "extNorm": "3867508",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 10,
+      "match": 11,
       "mismatch": 1,
-      "ext_missing": 1,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 10,
+      "matched": 11,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.8333333333333334
+    "fieldAccuracy": 0.9166666666666666
   },
   "table": {
     "alignMode": "content",
@@ -452,10 +452,10 @@
           },
           "itemNameMaster": {
             "gt": "헥사메딘액0.12%",
-            "ext": "헥사메딘액0.12%(비급여)(제약사품절)",
+            "ext": "헥사메딘액0.12%",
             "gtNorm": "헥사메딘액0.12%",
-            "extNorm": "헥사메딘액0.12%(비급여)(제약사품절)",
-            "status": "mismatch",
+            "extNorm": "헥사메딘액0.12%",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -468,17 +468,17 @@
           },
           "quantity": {
             "gt": "1",
-            "ext": "1,245",
+            "ext": "100",
             "gtNorm": "1",
-            "extNorm": "1245",
+            "extNorm": "100",
             "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "821",
-            "ext": "100",
+            "ext": "1,245",
             "gtNorm": "821",
-            "extNorm": "100",
+            "extNorm": "1245",
             "status": "mismatch",
             "spurious": false
           },
@@ -508,9 +508,9 @@
           },
           "itemCode": {
             "gt": "04003870",
-            "ext": "05004711",
+            "ext": "01013064",
             "gtNorm": "04003870",
-            "extNorm": "05004711",
+            "extNorm": "01013064",
             "status": "mismatch",
             "spurious": false
           }
@@ -831,24 +831,16 @@
     ],
     "cellCounts": {
       "scored": 72,
-      "match": 48,
-      "mismatch": 21,
+      "match": 49,
+      "mismatch": 20,
       "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.6666666666666666
+    "cellAccuracy": 0.6805555555555556
   },
   "buckets": {
     "defects": [
-      {
-        "location": "field:taxAmount",
-        "status": "ext_missing",
-        "gtNorm": "3867508",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
-      },
       {
         "location": "field:buyerAddress",
         "status": "mismatch",
@@ -906,14 +898,6 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row8:itemNameMaster",
-        "status": "mismatch",
-        "gtNorm": "헥사메딘액0.12%",
-        "extNorm": "헥사메딘액0.12%(비급여)(제약사품절)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.62)"
-      },
-      {
         "location": "row8:spec",
         "status": "ext_missing",
         "gtNorm": "100ml",
@@ -925,15 +909,15 @@
         "location": "row8:quantity",
         "status": "mismatch",
         "gtNorm": "1",
-        "extNorm": "1245",
+        "extNorm": "100",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "row8:unitPrice",
         "status": "mismatch",
         "gtNorm": "821",
-        "extNorm": "100",
+        "extNorm": "1245",
         "bucket": "layout",
         "reason": "gt cell appears in column(s) ['amount']"
       },
@@ -957,7 +941,7 @@
         "location": "row8:itemCode",
         "status": "mismatch",
         "gtNorm": "04003870",
-        "extNorm": "05004711",
+        "extNorm": "01013064",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
@@ -1051,8 +1035,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 17,
-      "structure": 4,
+      "recognition": 16,
+      "structure": 3,
       "layout": 5,
       "preprocessing": 0
     },
@@ -1072,6 +1056,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

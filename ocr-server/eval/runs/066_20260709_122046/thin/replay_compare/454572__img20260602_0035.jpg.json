@@ -218,18 +218,18 @@
           },
           "quantity": {
             "gt": "80",
-            "ext": "",
+            "ext": "80",
             "gtNorm": "80",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "80",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "23167",
-            "ext": "",
+            "ext": "23167",
             "gtNorm": "23167",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "23167",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -304,18 +304,18 @@
           },
           "unitPrice": {
             "gt": "6487",
-            "ext": "",
+            "ext": "200",
             "gtNorm": "6487",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "200",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "1297400",
-            "ext": "",
+            "ext": "400",
             "gtNorm": "1297400",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "400",
+            "status": "mismatch",
             "spurious": false
           },
           "expiryDate": {
@@ -382,10 +382,10 @@
           },
           "unitPrice": {
             "gt": "69501",
-            "ext": "",
+            "ext": "69501",
             "gtNorm": "69501",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "69501",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -425,13 +425,13 @@
     ],
     "cellCounts": {
       "scored": 27,
-      "match": 7,
-      "mismatch": 9,
-      "ext_missing": 11,
+      "match": 10,
+      "mismatch": 11,
+      "ext_missing": 6,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.25925925925925924
+    "cellAccuracy": 0.37037037037037035
   },
   "buckets": {
     "defects": [
@@ -492,22 +492,6 @@
         "reason": "extractor invented rows ['4']"
       },
       {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "80",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "23167",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
-      },
-      {
         "location": "row1:amount",
         "status": "mismatch",
         "gtNorm": "1853360",
@@ -552,24 +536,24 @@
         "status": "mismatch",
         "gtNorm": "200",
         "extNorm": "2",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['unitPrice']"
       },
       {
         "location": "row2:unitPrice",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "6487",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "200",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row2:amount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "1297400",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "400",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.60)"
       },
       {
         "location": "row2:expiryDate",
@@ -620,14 +604,6 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row3:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "69501",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
-      },
-      {
         "location": "row3:amount",
         "status": "mismatch",
         "gtNorm": "5560080",
@@ -653,9 +629,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 12,
-      "structure": 13,
-      "layout": 2,
+      "recognition": 13,
+      "structure": 10,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

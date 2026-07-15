@@ -73,9 +73,9 @@
       },
       "supplierCompany": {
         "gt": "진양제약(전문)(주)",
-        "ext": "백제약품(주)영등포지점",
+        "ext": "주식회사 시어트원에코정40",
         "gtNorm": "진양제약전문",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "시어트원에코정40",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -99,11 +99,11 @@
       },
       "supplierAddress": {
         "gt": "경기도 안산시 단원구 별망로 627 (초지동)",
-        "ext": "서울 구로구 공원로8길 24",
+        "ext": "",
         "gtNorm": "경기도안산시단원구별망로627초지동",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "",
         "type": "address",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -155,8 +155,8 @@
     "counts": {
       "scored": 11,
       "match": 4,
-      "mismatch": 6,
-      "ext_missing": 1,
+      "mismatch": 5,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -169,7 +169,7 @@
       "gtPresent": 11,
       "matched": 4,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 2
     },
     "fieldAccuracy": 0.36363636363636365
   },
@@ -234,10 +234,10 @@
           },
           "unitPrice": {
             "gt": "2646",
-            "ext": "264,600",
+            "ext": "2646",
             "gtNorm": "2646",
-            "extNorm": "264600",
-            "status": "mismatch",
+            "extNorm": "2646",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -1060,13 +1060,13 @@
     ],
     "cellCounts": {
       "scored": 100,
-      "match": 65,
-      "mismatch": 21,
+      "match": 66,
+      "mismatch": 20,
       "ext_missing": 14,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.65
+    "cellAccuracy": 0.66
   },
   "buckets": {
     "defects": [
@@ -1090,17 +1090,17 @@
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "진양제약전문",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "시어트원에코정40",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplierAddress",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "경기도안산시단원구별망로627초지동",
-        "extNorm": "서울구로구공원로8길24",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplyAmount",
@@ -1149,14 +1149,6 @@
         "extNorm": "에이치엘비제에이치엘비에페리손정30t30tv",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.72)"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "2646",
-        "extNorm": "264600",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "row2:itemName",
@@ -1424,8 +1416,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 26,
-      "structure": 18,
+      "recognition": 24,
+      "structure": 19,
       "layout": 0,
       "preprocessing": 0
     },
@@ -1445,6 +1437,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.091
+    "fieldMissRate": 0.182
   }
 }

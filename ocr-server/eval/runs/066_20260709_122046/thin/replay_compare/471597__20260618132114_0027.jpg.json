@@ -176,14 +176,13 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 2,
-    "rowCountExt": 1,
-    "rowCountMatch": false,
+    "rowCountExt": 2,
+    "rowCountMatch": true,
     "matchedRowIdx": [
-      "1"
-    ],
-    "gtOnlyRowIdx": [
+      "1",
       "2"
     ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [],
     "rows": [
       {
@@ -216,18 +215,18 @@
           },
           "quantity": {
             "gt": "100",
-            "ext": "9487",
+            "ext": "100",
             "gtNorm": "100",
-            "extNorm": "9487",
-            "status": "mismatch",
+            "extNorm": "100",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "9487",
-            "ext": "100",
+            "ext": "9487",
             "gtNorm": "9487",
-            "extNorm": "100",
-            "status": "mismatch",
+            "extNorm": "9487",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -267,22 +266,21 @@
       {
         "rowIndex": "2",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "엠파맥스정 25MG(정규) (병) 30T",
-            "ext": "",
+            "ext": "엠파맥스정25MG(정규)(병)30T",
             "gtNorm": "엠파맥스정25mg정규병30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "엠파맥스정25mg정규병30t",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "엠파맥스정25mg(병)",
-            "ext": "",
+            "ext": "엠파맥스정25mg(병)",
             "gtNorm": "엠파맥스정25mg(병)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "엠파맥스정25mg(병)",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -295,26 +293,26 @@
           },
           "quantity": {
             "gt": "80",
-            "ext": "",
+            "ext": "80",
             "gtNorm": "80",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "80",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "12407",
-            "ext": "",
+            "ext": "12407",
             "gtNorm": "12407",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "12407",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "992560",
-            "ext": "",
+            "ext": "992560",
             "gtNorm": "992560",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "992560",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -327,10 +325,10 @@
           },
           "itemCode": {
             "gt": "01014320",
-            "ext": "",
+            "ext": "01014320",
             "gtNorm": "01014320",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "01014320",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -346,13 +344,13 @@
     ],
     "cellCounts": {
       "scored": 18,
-      "match": 3,
-      "mismatch": 3,
-      "ext_missing": 12,
+      "match": 11,
+      "mismatch": 1,
+      "ext_missing": 6,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.16666666666666666
+    "cellAccuracy": 0.6111111111111112
   },
   "buckets": {
     "defects": [
@@ -421,14 +419,6 @@
         "reason": "char-level diff (sim=0.68)"
       },
       {
-        "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['2']"
-      },
-      {
         "location": "row1:itemName",
         "status": "mismatch",
         "gtNorm": "엠파맥스정",
@@ -443,22 +433,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:quantity",
-        "status": "mismatch",
-        "gtNorm": "100",
-        "extNorm": "9487",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['unitPrice']"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "9487",
-        "extNorm": "100",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['quantity']"
       },
       {
         "location": "row1:expiryDate",
@@ -477,22 +451,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:itemName",
-        "status": "ext_missing",
-        "gtNorm": "엠파맥스정25mg정규병30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "엠파맥스정25mg(병)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row2:spec",
         "status": "ext_missing",
         "gtNorm": "30t",
@@ -501,41 +459,9 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:quantity",
-        "status": "ext_missing",
-        "gtNorm": "80",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "12407",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:amount",
-        "status": "ext_missing",
-        "gtNorm": "992560",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row2:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20280826",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "01014320",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -551,8 +477,8 @@
     ],
     "bucketTally": {
       "recognition": 7,
-      "structure": 15,
-      "layout": 2,
+      "structure": 8,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

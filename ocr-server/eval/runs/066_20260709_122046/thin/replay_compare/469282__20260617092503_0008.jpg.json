@@ -178,25 +178,22 @@
     "rowCountGt": 1,
     "rowCountExt": 1,
     "rowCountMatch": true,
-    "matchedRowIdx": [],
-    "gtOnlyRowIdx": [
+    "matchedRowIdx": [
       "1"
     ],
-    "extOnlyRowIdx": [
-      "1"
-    ],
+    "gtOnlyRowIdx": [],
+    "extOnlyRowIdx": [],
     "rows": [
       {
         "rowIndex": "1",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "푸링정 300T",
-            "ext": "",
+            "ext": "월일",
             "gtNorm": "푸링정300t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "월일",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
@@ -217,26 +214,26 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "85500",
-            "ext": "",
+            "ext": "85,500",
             "gtNorm": "85500",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "85500",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "855000",
-            "ext": "",
+            "ext": "855000",
             "gtNorm": "855000",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "855000",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
@@ -252,13 +249,13 @@
     ],
     "cellCounts": {
       "scored": 7,
-      "match": 0,
-      "mismatch": 0,
-      "ext_missing": 7,
+      "match": 3,
+      "mismatch": 1,
+      "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.0
+    "cellAccuracy": 0.42857142857142855
   },
   "buckets": {
     "defects": [
@@ -275,8 +272,8 @@
         "status": "mismatch",
         "gtNorm": "85500",
         "extNorm": "855000",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.91)"
+        "bucket": "structure",
+        "reason": "gt value present at ['row1:unitPrice']"
       },
       {
         "location": "field:supplierCompany",
@@ -311,28 +308,12 @@
         "reason": "char-level diff (sim=0.97)"
       },
       {
-        "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['1']"
-      },
-      {
-        "location": "table",
-        "status": "rows_extra",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor invented rows ['1']"
-      },
-      {
         "location": "row1:itemName",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "푸링정300t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "월일",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:itemNameMaster",
@@ -351,30 +332,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "10",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "85500",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:amount",
-        "status": "ext_missing",
-        "gtNorm": "855000",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row1:itemCode",
         "status": "ext_missing",
         "gtNorm": "16001483",
@@ -385,7 +342,7 @@
     ],
     "bucketTally": {
       "recognition": 6,
-      "structure": 9,
+      "structure": 4,
       "layout": 0,
       "preprocessing": 0
     },

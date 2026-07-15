@@ -176,37 +176,38 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 3,
-    "rowCountExt": 3,
-    "rowCountMatch": true,
+    "rowCountExt": 4,
+    "rowCountMatch": false,
     "matchedRowIdx": [
-      "1",
+      "4",
       "2"
     ],
     "gtOnlyRowIdx": [
       "3"
     ],
     "extOnlyRowIdx": [
+      "1",
       "3"
     ],
     "rows": [
       {
-        "rowIndex": "1",
+        "rowIndex": "4",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "아모잘탄정 5/50밀리그램",
-            "ext": "(643504680)-0모잘탄정-5/50밀리크램-307",
+            "ext": "",
             "gtNorm": "아모잘탄정550밀리그램",
-            "extNorm": "6435046800모잘탄정550밀리크램307",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "아모잘탄정5/50mg",
-            "ext": "아모잘탄정5/50mg",
+            "ext": "",
             "gtNorm": "아모잘탄정5/50mg",
-            "extNorm": "아모잘탄정5/50mg",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "spec": {
@@ -227,18 +228,18 @@
           },
           "unitPrice": {
             "gt": "23010",
-            "ext": "4,832,100",
+            "ext": "23010",
             "gtNorm": "23010",
-            "extNorm": "4832100",
-            "status": "mismatch",
+            "extNorm": "23010",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "4832100",
-            "ext": "9,909,609",
+            "ext": "4832100",
             "gtNorm": "4832100",
-            "extNorm": "9909609",
-            "status": "mismatch",
+            "extNorm": "4832100",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -259,10 +260,10 @@
           },
           "itemCode": {
             "gt": "8806435046826",
-            "ext": "8806435046833",
+            "ext": "",
             "gtNorm": "8806435046826",
-            "extNorm": "8806435046833",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "insuranceCode": {
@@ -321,10 +322,10 @@
           },
           "amount": {
             "gt": "305000",
-            "ext": "33,550",
+            "ext": "305000",
             "gtNorm": "305000",
-            "extNorm": "33550",
-            "status": "mismatch",
+            "extNorm": "305000",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -427,13 +428,13 @@
     ],
     "cellCounts": {
       "scored": 27,
-      "match": 7,
-      "mismatch": 6,
-      "ext_missing": 14,
+      "match": 9,
+      "mismatch": 1,
+      "ext_missing": 17,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.25925925925925924
+    "cellAccuracy": 0.3333333333333333
   },
   "buckets": {
     "defects": [
@@ -443,7 +444,7 @@
         "gtNorm": "5137100",
         "extNorm": "643504680",
         "bucket": "structure",
-        "reason": "ext value is gt's ['row1:insuranceCode']"
+        "reason": "ext value is gt's ['row4:insuranceCode']"
       },
       {
         "location": "field:taxAmount",
@@ -491,18 +492,26 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['3']"
+        "reason": "extractor invented rows ['1', '3']"
       },
       {
-        "location": "row1:itemName",
-        "status": "mismatch",
+        "location": "row4:itemName",
+        "status": "ext_missing",
         "gtNorm": "아모잘탄정550밀리그램",
-        "extNorm": "6435046800모잘탄정550밀리크램307",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.56)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:spec",
+        "location": "row4:itemNameMaster",
+        "status": "ext_missing",
+        "gtNorm": "아모잘탄정5/50mg",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row4:spec",
         "status": "ext_missing",
         "gtNorm": "30t",
         "extNorm": "",
@@ -510,23 +519,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "23010",
-        "extNorm": "4832100",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
-      },
-      {
-        "location": "row1:amount",
-        "status": "mismatch",
-        "gtNorm": "4832100",
-        "extNorm": "9909609",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['unitPrice']"
-      },
-      {
-        "location": "row1:expiryDate",
+        "location": "row4:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20281222",
         "extNorm": "",
@@ -534,7 +527,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:manufacturingNo",
+        "location": "row4:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "060425681",
         "extNorm": "",
@@ -542,15 +535,15 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemCode",
-        "status": "mismatch",
+        "location": "row4:itemCode",
+        "status": "ext_missing",
         "gtNorm": "8806435046826",
-        "extNorm": "8806435046833",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.85)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:insuranceCode",
+        "location": "row4:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "643504680",
         "extNorm": "",
@@ -564,14 +557,6 @@
         "extNorm": "643503630한미아스피린장용정100밀리그램",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.78)"
-      },
-      {
-        "location": "row2:amount",
-        "status": "mismatch",
-        "gtNorm": "305000",
-        "extNorm": "33550",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.55)"
       },
       {
         "location": "row2:expiryDate",
@@ -655,9 +640,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 6,
-      "structure": 20,
-      "layout": 1,
+      "recognition": 2,
+      "structure": 23,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

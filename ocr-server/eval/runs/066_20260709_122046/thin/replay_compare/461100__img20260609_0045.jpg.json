@@ -189,8 +189,8 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 10,
-    "rowCountExt": 10,
-    "rowCountMatch": true,
+    "rowCountExt": 11,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
       "2",
@@ -204,7 +204,9 @@
       "10"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "11"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -736,10 +738,10 @@
           },
           "itemNameMaster": {
             "gt": "아스로정",
-            "ext": "",
+            "ext": "아스로정",
             "gtNorm": "아스로정",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "아스로정",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -1069,13 +1071,13 @@
     ],
     "cellCounts": {
       "scored": 100,
-      "match": 44,
+      "match": 45,
       "mismatch": 41,
-      "ext_missing": 15,
+      "ext_missing": 14,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.44
+    "cellAccuracy": 0.45
   },
   "buckets": {
     "defects": [
@@ -1150,6 +1152,14 @@
         "extNorm": "충남서천군종천면종천공단길32번길",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
+      },
+      {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['11']"
       },
       {
         "location": "row1:spec",
@@ -1428,16 +1438,8 @@
         "status": "ext_missing",
         "gtNorm": "아스로정",
         "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row7:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "아스로정",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemNameMaster']"
       },
       {
         "location": "row7:unitPrice",
@@ -1602,8 +1604,8 @@
     ],
     "bucketTally": {
       "recognition": 35,
-      "structure": 19,
-      "layout": 11,
+      "structure": 18,
+      "layout": 12,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

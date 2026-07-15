@@ -60,11 +60,11 @@
       },
       "buyerBizNumber": {
         "gt": "6098504585",
-        "ext": "812-74-05069",
+        "ext": "609-85-04585",
         "gtNorm": "6098504585",
-        "extNorm": "8127405069",
+        "extNorm": "6098504585",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -154,8 +154,8 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 5,
-      "mismatch": 4,
+      "match": 6,
+      "mismatch": 3,
       "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
@@ -167,20 +167,21 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 5,
+      "matched": 6,
       "extNotAttempted": 0,
       "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.45454545454545453
+    "fieldAccuracy": 0.5454545454545454
   },
   "table": {
     "alignMode": "content",
     "rowCountGt": 2,
-    "rowCountExt": 3,
+    "rowCountExt": 4,
     "rowCountMatch": false,
-    "matchedRowIdx": [],
+    "matchedRowIdx": [
+      "4"
+    ],
     "gtOnlyRowIdx": [
-      "1",
       "2"
     ],
     "extOnlyRowIdx": [
@@ -190,9 +191,8 @@
     ],
     "rows": [
       {
-        "rowIndex": "1",
+        "rowIndex": "4",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "(643507991) 히알루미니점안액0.3%(1회용) / (0.5mL*6)*10",
@@ -220,26 +220,26 @@
           },
           "quantity": {
             "gt": "32",
-            "ext": "",
+            "ext": "32",
             "gtNorm": "32",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "32",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "23760",
-            "ext": "",
+            "ext": "23760",
             "gtNorm": "23760",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "23760",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "760320",
-            "ext": "",
+            "ext": "760320",
             "gtNorm": "760320",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "760320",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -334,13 +334,13 @@
     ],
     "cellCounts": {
       "scored": 16,
-      "match": 0,
+      "match": 3,
       "mismatch": 0,
-      "ext_missing": 16,
+      "ext_missing": 13,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.0
+    "cellAccuracy": 0.1875
   },
   "buckets": {
     "defects": [
@@ -350,7 +350,7 @@
         "gtNorm": "760320",
         "extNorm": "111626031",
         "bucket": "structure",
-        "reason": "ext value is gt's ['row1:manufacturingNo']"
+        "reason": "gt value present at ['row4:amount']"
       },
       {
         "location": "field:taxAmount",
@@ -367,14 +367,6 @@
         "extNorm": "0",
         "bucket": "structure",
         "reason": "ext value is gt's ['row2:unitPrice']"
-      },
-      {
-        "location": "field:buyerBizNumber",
-        "status": "mismatch",
-        "gtNorm": "6098504585",
-        "extNorm": "8127405069",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplyAmount",
@@ -398,7 +390,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor missed rows ['1', '2']"
+        "reason": "extractor missed rows ['2']"
       },
       {
         "location": "table",
@@ -409,7 +401,7 @@
         "reason": "extractor invented rows ['1', '5', '6']"
       },
       {
-        "location": "row1:itemName",
+        "location": "row4:itemName",
         "status": "ext_missing",
         "gtNorm": "643507991히알루미니점안액031회용05ml610",
         "extNorm": "",
@@ -417,7 +409,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemNameMaster",
+        "location": "row4:itemNameMaster",
         "status": "ext_missing",
         "gtNorm": "히아레인미니점안액0.3%/0.5ml",
         "extNorm": "",
@@ -425,7 +417,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:spec",
+        "location": "row4:spec",
         "status": "ext_missing",
         "gtNorm": "100ea",
         "extNorm": "",
@@ -433,31 +425,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "32",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "23760",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:amount",
-        "status": "ext_missing",
-        "gtNorm": "760320",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:expiryDate",
+        "location": "row4:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20290425",
         "extNorm": "",
@@ -465,7 +433,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:manufacturingNo",
+        "location": "row4:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "111626031",
         "extNorm": "",
@@ -473,7 +441,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemCode",
+        "location": "row4:itemCode",
         "status": "ext_missing",
         "gtNorm": "16002097",
         "extNorm": "",
@@ -538,8 +506,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 2,
-      "structure": 22,
+      "recognition": 1,
+      "structure": 19,
       "layout": 0,
       "preprocessing": 0
     },

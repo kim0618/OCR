@@ -300,10 +300,10 @@
           },
           "quantity": {
             "gt": "150",
-            "ext": "",
+            "ext": "150",
             "gtNorm": "150",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "150",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -316,10 +316,10 @@
           },
           "amount": {
             "gt": "602700",
-            "ext": "4,018",
+            "ext": "602700",
             "gtNorm": "602700",
-            "extNorm": "4018",
-            "status": "mismatch",
+            "extNorm": "602700",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -707,13 +707,13 @@
     ],
     "cellCounts": {
       "scored": 59,
-      "match": 7,
-      "mismatch": 5,
-      "ext_missing": 47,
+      "match": 9,
+      "mismatch": 4,
+      "ext_missing": 46,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.11864406779661017
+    "cellAccuracy": 0.15254237288135594
   },
   "buckets": {
     "defects": [
@@ -814,28 +814,12 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row3:quantity",
-        "status": "ext_missing",
-        "gtNorm": "150",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row3:unitPrice",
         "status": "mismatch",
         "gtNorm": "4018",
         "extNorm": "401800",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
-      },
-      {
-        "location": "row3:amount",
-        "status": "mismatch",
-        "gtNorm": "602700",
-        "extNorm": "4018",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "row3:expiryDate",
@@ -1184,8 +1168,8 @@
     ],
     "bucketTally": {
       "recognition": 5,
-      "structure": 51,
-      "layout": 2,
+      "structure": 50,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

@@ -308,10 +308,10 @@
           },
           "unitPrice": {
             "gt": "5130",
-            "ext": "",
+            "ext": "85500",
             "gtNorm": "5130",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "85500",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
@@ -324,10 +324,10 @@
           },
           "itemCode": {
             "gt": "16000196",
-            "ext": "16000196",
+            "ext": "348110",
             "gtNorm": "16000196",
-            "extNorm": "16000196",
-            "status": "match",
+            "extNorm": "348110",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -408,10 +408,10 @@
           },
           "itemNameMaster": {
             "gt": "에스암로민정2.5mg",
-            "ext": "에스암로민정2.5mg",
+            "ext": "에스암로민정2.5mg(제약사품절)",
             "gtNorm": "에스암로민정2.5mg",
-            "extNorm": "에스암로민정2.5mg",
-            "status": "match",
+            "extNorm": "에스암로민정2.5mg(제약사품절)",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
@@ -424,18 +424,18 @@
           },
           "quantity": {
             "gt": "5",
-            "ext": "",
+            "ext": "5",
             "gtNorm": "5",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "5",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "84240",
-            "ext": "",
+            "ext": "84240",
             "gtNorm": "84240",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "84240",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -448,10 +448,10 @@
           },
           "itemCode": {
             "gt": "05001354",
-            "ext": "05001354",
+            "ext": "22000854",
             "gtNorm": "05001354",
-            "extNorm": "05001354",
-            "status": "match",
+            "extNorm": "22000854",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -486,10 +486,10 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -895,8 +895,8 @@
     "cellCounts": {
       "scored": 77,
       "match": 33,
-      "mismatch": 10,
-      "ext_missing": 34,
+      "mismatch": 14,
+      "ext_missing": 30,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -1002,11 +1002,11 @@
       },
       {
         "location": "row2:unitPrice",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "5130",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "85500",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row2:amount",
@@ -1015,6 +1015,14 @@
         "extNorm": "85500",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.60)"
+      },
+      {
+        "location": "row2:itemCode",
+        "status": "mismatch",
+        "gtNorm": "16000196",
+        "extNorm": "348110",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row3:spec",
@@ -1049,6 +1057,14 @@
         "reason": "gt cell absent in extracted row"
       },
       {
+        "location": "row4:itemNameMaster",
+        "status": "mismatch",
+        "gtNorm": "에스암로민정2.5mg",
+        "extNorm": "에스암로민정2.5mg(제약사품절)",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.76)"
+      },
+      {
         "location": "row4:spec",
         "status": "ext_missing",
         "gtNorm": "300t",
@@ -1057,28 +1073,20 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row4:quantity",
-        "status": "ext_missing",
-        "gtNorm": "5",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "84240",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
-      },
-      {
         "location": "row4:amount",
         "status": "mismatch",
         "gtNorm": "421200",
         "extNorm": "84240",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.55)"
+      },
+      {
+        "location": "row4:itemCode",
+        "status": "mismatch",
+        "gtNorm": "05001354",
+        "extNorm": "22000854",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "row5:itemName",
@@ -1092,14 +1100,6 @@
         "location": "row5:spec",
         "status": "ext_missing",
         "gtNorm": "30c",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row5:quantity",
-        "status": "ext_missing",
-        "gtNorm": "10",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -1322,9 +1322,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 11,
-      "structure": 37,
-      "layout": 4,
+      "recognition": 15,
+      "structure": 34,
+      "layout": 3,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

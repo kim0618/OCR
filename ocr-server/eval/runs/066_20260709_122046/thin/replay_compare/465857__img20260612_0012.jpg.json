@@ -176,34 +176,35 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 1,
-    "rowCountExt": 2,
+    "rowCountExt": 3,
     "rowCountMatch": false,
     "matchedRowIdx": [
-      "1"
+      "3"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
+      "1",
       "3"
     ],
     "rows": [
       {
-        "rowIndex": "1",
+        "rowIndex": "3",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "텔미트렌플러스",
-            "ext": "번호 텔미트렌플러스정 40/12.5MG(정규)(병)30T 품명및",
+            "ext": "",
             "gtNorm": "텔미트렌플러스",
-            "extNorm": "번호텔미트렌플러스정40125mg정규병30t품명및",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "텔미트렌플러스정40/12.5mg(병)",
-            "ext": "텔미트렌플러스정40/12.5mg(병)",
+            "ext": "",
             "gtNorm": "텔미트렌플러스정40/12.5mg(병)",
-            "extNorm": "텔미트렌플러스정40/12.5mg(병)",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "spec": {
@@ -224,18 +225,18 @@
           },
           "unitPrice": {
             "gt": "10436",
-            "ext": "",
+            "ext": "10436",
             "gtNorm": "10436",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10436",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "104360",
-            "ext": "10,436",
+            "ext": "104360",
             "gtNorm": "104360",
-            "extNorm": "10436",
-            "status": "mismatch",
+            "extNorm": "104360",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -256,10 +257,10 @@
           },
           "itemCode": {
             "gt": "01004376",
-            "ext": "01004376",
+            "ext": "",
             "gtNorm": "01004376",
-            "extNorm": "01004376",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           }
         }
@@ -268,8 +269,8 @@
     "cellCounts": {
       "scored": 9,
       "match": 3,
-      "mismatch": 2,
-      "ext_missing": 4,
+      "mismatch": 0,
+      "ext_missing": 6,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -283,7 +284,7 @@
         "gtNorm": "104360",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "reason": "gt value present at ['row3:amount']"
       },
       {
         "location": "field:taxAmount",
@@ -291,7 +292,7 @@
         "gtNorm": "10436",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "gt value present at ['row1:amount']"
+        "reason": "gt value present at ['row3:unitPrice']"
       },
       {
         "location": "field:issueDate",
@@ -339,18 +340,26 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['3']"
+        "reason": "extractor invented rows ['1', '3']"
       },
       {
-        "location": "row1:itemName",
-        "status": "mismatch",
+        "location": "row3:itemName",
+        "status": "ext_missing",
         "gtNorm": "텔미트렌플러스",
-        "extNorm": "번호텔미트렌플러스정40125mg정규병30t품명및",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:spec",
+        "location": "row3:itemNameMaster",
+        "status": "ext_missing",
+        "gtNorm": "텔미트렌플러스정40/12.5mg(병)",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row3:spec",
         "status": "ext_missing",
         "gtNorm": "40/12.5mg(정규)(병) 30t",
         "extNorm": "",
@@ -358,23 +367,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "10436",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
-      },
-      {
-        "location": "row1:amount",
-        "status": "mismatch",
-        "gtNorm": "104360",
-        "extNorm": "10436",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.91)"
-      },
-      {
-        "location": "row1:expiryDate",
+        "location": "row3:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20290310",
         "extNorm": "",
@@ -382,18 +375,26 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:manufacturingNo",
+        "location": "row3:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "LE001AS8",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row3:itemCode",
+        "status": "ext_missing",
+        "gtNorm": "01004376",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 8,
-      "layout": 1,
+      "recognition": 3,
+      "structure": 11,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

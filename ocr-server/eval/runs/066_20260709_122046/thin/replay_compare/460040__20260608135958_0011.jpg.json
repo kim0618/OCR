@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "2078100726",
-        "ext": "",
+        "ext": "207-81-00726",
         "gtNorm": "2078100726",
-        "extNorm": "",
+        "extNorm": "2078100726",
         "type": "bizno",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "삼성제약(CSO)",
-        "ext": "백제약품(주)북부물류센터",
+        "ext": "삼성제약(CSO)",
         "gtNorm": "삼성제약cso",
-        "extNorm": "백제약품북부물류센터",
+        "extNorm": "삼성제약cso",
         "type": "company",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "경기 화성시 향남읍 제약공단2길 35",
-        "ext": "경기도파주시광탄역장지산로127(용미리",
+        "ext": "경기 화성시 향남읍 제약공단2길 35",
         "gtNorm": "경기화성시향남읍제약공단2길35",
-        "extNorm": "경기도파주시광탄역장지산로127용미리",
+        "extNorm": "경기화성시향남읍제약공단2길35",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 2,
-      "mismatch": 4,
-      "ext_missing": 6,
+      "match": 5,
+      "mismatch": 2,
+      "ext_missing": 5,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 2,
+      "matched": 5,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 6
+      "extAttemptedMiss": 5
     },
-    "fieldAccuracy": 0.16666666666666666
+    "fieldAccuracy": 0.4166666666666667
   },
   "table": {
     "alignMode": "content",
@@ -796,14 +796,6 @@
         "reason": "gt value present at ['field:discountAmount']"
       },
       {
-        "location": "field:supplierBizNumber",
-        "status": "ext_missing",
-        "gtNorm": "2078100726",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
-      },
-      {
         "location": "field:buyerBizNumber",
         "status": "ext_missing",
         "gtNorm": "1138504425",
@@ -812,28 +804,12 @@
         "reason": "gt value not found anywhere in extraction"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "삼성제약cso",
-        "extNorm": "백제약품북부물류센터",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['field:buyerCompany']"
-      },
-      {
         "location": "field:taxType",
         "status": "mismatch",
         "gtNorm": "면세",
         "extNorm": "과세",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.50)"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "경기화성시향남읍제약공단2길35",
-        "extNorm": "경기도파주시광탄역장지산로127용미리",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplyAmount",
@@ -848,8 +824,8 @@
         "status": "mismatch",
         "gtNorm": "백제약품북부물류센터",
         "extNorm": "담당지점",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:supplierCompany']"
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -1182,7 +1158,7 @@
     ],
     "bucketTally": {
       "recognition": 8,
-      "structure": 42,
+      "structure": 39,
       "layout": 0,
       "preprocessing": 0
     },
@@ -1202,6 +1178,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.5
+    "fieldMissRate": 0.417
   }
 }

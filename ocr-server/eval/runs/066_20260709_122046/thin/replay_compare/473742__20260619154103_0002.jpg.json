@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "1068118826",
-        "ext": "113-85-04425",
+        "ext": "",
         "gtNorm": "1068118826",
-        "extNorm": "1138504425",
+        "extNorm": "",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -73,9 +73,9 @@
       },
       "supplierCompany": {
         "gt": "태준제약",
-        "ext": "백제약품(주)영등포지점",
+        "ext": "주)태준",
         "gtNorm": "태준제약",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "주태준",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -99,9 +99,9 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 용산구 대사관로31길 8 (한남동)",
-        "ext": "서울 구로구 공원로8길 24",
+        "ext": "서울시 용산구 대사관로31길8",
         "gtNorm": "서울특별시용산구대사관로31길8한남동",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "서울시용산구대사관로31길8",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -155,8 +155,8 @@
     "counts": {
       "scored": 11,
       "match": 1,
-      "mismatch": 9,
-      "ext_missing": 1,
+      "mismatch": 8,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -169,7 +169,7 @@
       "gtPresent": 11,
       "matched": 1,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 2
     },
     "fieldAccuracy": 0.09090909090909091
   },
@@ -780,19 +780,19 @@
       },
       {
         "location": "field:supplierBizNumber",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "1068118826",
-        "extNorm": "1138504425",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "태준제약",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "주태준",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.57)"
       },
       {
         "location": "field:taxType",
@@ -806,9 +806,9 @@
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울특별시용산구대사관로31길8한남동",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "서울시용산구대사관로31길8",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.85)"
       },
       {
         "location": "field:supplyAmount",
@@ -1244,8 +1244,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 35,
-      "structure": 26,
+      "recognition": 34,
+      "structure": 27,
       "layout": 0,
       "preprocessing": 0
     },
@@ -1265,6 +1265,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.091
+    "fieldMissRate": 0.182
   }
 }

@@ -167,12 +167,12 @@
     "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
-      "4"
+      "2"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "2",
-      "3"
+      "3",
+      "4"
     ],
     "rows": [
       {
@@ -221,10 +221,10 @@
           },
           "amount": {
             "gt": "5796000",
-            "ext": "579,600",
+            "ext": "5796000",
             "gtNorm": "5796000",
-            "extNorm": "579600",
-            "status": "mismatch",
+            "extNorm": "5796000",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -254,23 +254,23 @@
         }
       },
       {
-        "rowIndex": "4",
+        "rowIndex": "2",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "미그보스필름코팅(상품)",
-            "ext": "3 2 5 7 4 6 미그보스필름코팅(상품)",
+            "ext": "",
             "gtNorm": "미그보스필름코팅상품",
-            "extNorm": "325746미그보스필름코팅상품",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "미그보스필름코팅정(대원)(비급여)",
-            "ext": "미그보스필름코팅정(대원)(비급여)",
+            "ext": "",
             "gtNorm": "미그보스필름코팅정(대원)(비급여)",
-            "extNorm": "미그보스필름코팅정(대원)(비급여)",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "spec": {
@@ -283,50 +283,50 @@
           },
           "quantity": {
             "gt": "20",
-            "ext": "138,000",
+            "ext": "20",
             "gtNorm": "20",
-            "extNorm": "138000",
-            "status": "mismatch",
+            "extNorm": "20",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "138000",
-            "ext": "20",
+            "ext": "138,000",
             "gtNorm": "138000",
-            "extNorm": "20",
-            "status": "mismatch",
+            "extNorm": "138000",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "2760000",
-            "ext": "276,000",
+            "ext": "2760000",
             "gtNorm": "2760000",
-            "extNorm": "276000",
-            "status": "mismatch",
+            "extNorm": "2760000",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
             "gt": "20280903",
-            "ext": "",
+            "ext": "20280903",
             "gtNorm": "20280903",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20280903",
+            "status": "match",
             "spurious": false
           },
           "manufacturingNo": {
             "gt": "25012",
-            "ext": "25012(20280903) 749655123",
+            "ext": "25012",
             "gtNorm": "25012",
-            "extNorm": "2501220280903749655123",
-            "status": "mismatch",
+            "extNorm": "25012",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
             "gt": "04004434",
-            "ext": "04004434",
+            "ext": "",
             "gtNorm": "04004434",
-            "extNorm": "04004434",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "insuranceCode": {
@@ -342,13 +342,13 @@
     ],
     "cellCounts": {
       "scored": 19,
-      "match": 9,
-      "mismatch": 8,
-      "ext_missing": 2,
+      "match": 13,
+      "mismatch": 2,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.47368421052631576
+    "cellAccuracy": 0.6842105263157895
   },
   "buckets": {
     "defects": [
@@ -374,7 +374,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['2', '3']"
+        "reason": "extractor invented rows ['3', '4']"
       },
       {
         "location": "row1:spec",
@@ -385,23 +385,23 @@
         "reason": "char-level diff (sim=0.86)"
       },
       {
-        "location": "row1:amount",
-        "status": "mismatch",
-        "gtNorm": "5796000",
-        "extNorm": "579600",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
-      },
-      {
-        "location": "row4:itemName",
-        "status": "mismatch",
+        "location": "row2:itemName",
+        "status": "ext_missing",
         "gtNorm": "미그보스필름코팅상품",
-        "extNorm": "325746미그보스필름코팅상품",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.77)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row4:spec",
+        "location": "row2:itemNameMaster",
+        "status": "ext_missing",
+        "gtNorm": "미그보스필름코팅정(대원)(비급여)",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row2:spec",
         "status": "mismatch",
         "gtNorm": "500 t",
         "extNorm": "500t",
@@ -409,47 +409,15 @@
         "reason": "char-level diff (sim=0.89)"
       },
       {
-        "location": "row4:quantity",
-        "status": "mismatch",
-        "gtNorm": "20",
-        "extNorm": "138000",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['unitPrice']"
-      },
-      {
-        "location": "row4:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "138000",
-        "extNorm": "20",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['quantity']"
-      },
-      {
-        "location": "row4:amount",
-        "status": "mismatch",
-        "gtNorm": "2760000",
-        "extNorm": "276000",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
-      },
-      {
-        "location": "row4:expiryDate",
+        "location": "row2:itemCode",
         "status": "ext_missing",
-        "gtNorm": "20280903",
+        "gtNorm": "04004434",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row4:manufacturingNo",
-        "status": "mismatch",
-        "gtNorm": "25012",
-        "extNorm": "2501220280903749655123",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row4:insuranceCode",
+        "location": "row2:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "749655123",
         "extNorm": "",
@@ -458,9 +426,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 7,
-      "structure": 4,
-      "layout": 2,
+      "recognition": 3,
+      "structure": 6,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

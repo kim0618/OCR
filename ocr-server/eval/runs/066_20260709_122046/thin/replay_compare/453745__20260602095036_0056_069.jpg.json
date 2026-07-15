@@ -192,13 +192,11 @@
     "rowCountExt": 3,
     "rowCountMatch": false,
     "matchedRowIdx": [
-      "3"
+      "3",
+      "1"
     ],
-    "gtOnlyRowIdx": [
-      "2"
-    ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "1",
       "2"
     ],
     "rows": [
@@ -232,18 +230,18 @@
           },
           "quantity": {
             "gt": "50",
-            "ext": "",
+            "ext": "50",
             "gtNorm": "50",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "50",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "20324",
-            "ext": "",
+            "ext": "20324",
             "gtNorm": "20324",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20324",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -272,65 +270,64 @@
           },
           "itemCode": {
             "gt": "8806698010312",
-            "ext": "8806698010312",
+            "ext": "012315",
             "gtNorm": "8806698010312",
-            "extNorm": "8806698010312",
-            "status": "match",
+            "extNorm": "012315",
+            "status": "mismatch",
             "spurious": false
           }
         }
       },
       {
-        "rowIndex": "2",
+        "rowIndex": "1",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "메부틴정",
-            "ext": "",
+            "ext": "메부틴정 300정(B",
             "gtNorm": "메부틴정",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "메부틴정300정b",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "메부틴정",
-            "ext": "",
+            "ext": "메부틴정",
             "gtNorm": "메부틴정",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "메부틴정",
+            "status": "match",
             "spurious": false
           },
           "spec": {
             "gt": "30정(B)",
-            "ext": "",
+            "ext": "300정(B)",
             "gtNorm": "30정(b)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "300정(b)",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
             "gt": "80",
-            "ext": "",
+            "ext": "80",
             "gtNorm": "80",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "80",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "2032",
-            "ext": "",
+            "ext": "2032",
             "gtNorm": "2032",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "2032",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "162560",
-            "ext": "",
+            "ext": "162560",
             "gtNorm": "162560",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "162560",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -351,10 +348,10 @@
           },
           "itemCode": {
             "gt": "8806698010312",
-            "ext": "",
+            "ext": "8806698010312",
             "gtNorm": "8806698010312",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "8806698010312",
+            "status": "match",
             "spurious": false
           }
         }
@@ -362,13 +359,13 @@
     ],
     "cellCounts": {
       "scored": 18,
-      "match": 4,
-      "mismatch": 0,
-      "ext_missing": 14,
+      "match": 10,
+      "mismatch": 3,
+      "ext_missing": 5,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.2222222222222222
+    "cellAccuracy": 0.5555555555555556
   },
   "buckets": {
     "defects": [
@@ -390,40 +387,16 @@
       },
       {
         "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['2']"
-      },
-      {
-        "location": "table",
         "status": "rows_extra",
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '2']"
+        "reason": "extractor invented rows ['2']"
       },
       {
         "location": "row3:spec",
         "status": "ext_missing",
         "gtNorm": "300정(b)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:quantity",
-        "status": "ext_missing",
-        "gtNorm": "50",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "20324",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -445,55 +418,31 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:itemName",
-        "status": "ext_missing",
-        "gtNorm": "메부틴정",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "location": "row3:itemCode",
+        "status": "mismatch",
+        "gtNorm": "8806698010312",
+        "extNorm": "012315",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
-        "location": "row2:itemNameMaster",
-        "status": "ext_missing",
+        "location": "row1:itemName",
+        "status": "mismatch",
         "gtNorm": "메부틴정",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "메부틴정300정b",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemNameMaster']"
       },
       {
-        "location": "row2:spec",
-        "status": "ext_missing",
+        "location": "row1:spec",
+        "status": "mismatch",
         "gtNorm": "30정(b)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "300정(b)",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.92)"
       },
       {
-        "location": "row2:quantity",
-        "status": "ext_missing",
-        "gtNorm": "80",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "2032",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:amount",
-        "status": "ext_missing",
-        "gtNorm": "162560",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:expiryDate",
+        "location": "row1:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20290219",
         "extNorm": "",
@@ -501,26 +450,18 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:manufacturingNo",
+        "location": "row1:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "10522604A",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "8806698010312",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 2,
-      "structure": 16,
-      "layout": 0,
+      "recognition": 4,
+      "structure": 6,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

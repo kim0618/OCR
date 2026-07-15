@@ -228,18 +228,18 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "33578",
-            "ext": "",
+            "ext": "33578",
             "gtNorm": "33578",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "33578",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -306,26 +306,26 @@
           },
           "quantity": {
             "gt": "20",
-            "ext": "",
+            "ext": "10",
             "gtNorm": "20",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "14652",
-            "ext": "",
+            "ext": "30525",
             "gtNorm": "14652",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30525",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "293040",
-            "ext": "",
+            "ext": "305250",
             "gtNorm": "293040",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "305250",
+            "status": "mismatch",
             "spurious": false
           },
           "expiryDate": {
@@ -357,13 +357,13 @@
     ],
     "cellCounts": {
       "scored": 18,
-      "match": 3,
-      "mismatch": 4,
-      "ext_missing": 11,
+      "match": 5,
+      "mismatch": 7,
+      "ext_missing": 6,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.16666666666666666
+    "cellAccuracy": 0.2777777777777778
   },
   "buckets": {
     "defects": [
@@ -440,22 +440,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:quantity",
-        "status": "ext_missing",
-        "gtNorm": "10",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "33578",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
-      },
-      {
         "location": "row2:amount",
         "status": "mismatch",
         "gtNorm": "335780",
@@ -505,27 +489,27 @@
       },
       {
         "location": "row1:quantity",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "20",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "10",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "row1:unitPrice",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "14652",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "30525",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:amount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "293040",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "305250",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "row1:expiryDate",
@@ -553,9 +537,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 12,
-      "structure": 10,
-      "layout": 1,
+      "recognition": 15,
+      "structure": 6,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

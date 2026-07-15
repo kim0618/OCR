@@ -194,12 +194,12 @@
     "matchedRowIdx": [
       "1",
       "2",
-      "5"
+      "3"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "3",
-      "4"
+      "4",
+      "5"
     ],
     "rows": [
       {
@@ -334,10 +334,10 @@
           },
           "amount": {
             "gt": "828000",
-            "ext": "",
+            "ext": "828000",
             "gtNorm": "828000",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "828000",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -375,23 +375,23 @@
         }
       },
       {
-        "rowIndex": "5",
+        "rowIndex": "3",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "펜틴정(향정신성의약품)",
-            "ext": "3 5 4 7 8 6 펜틴정(향정신성의약품)",
+            "ext": "",
             "gtNorm": "펜틴정향정신성의약품",
-            "extNorm": "354786펜틴정향정신성의약품",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "펜틴정(향정)",
-            "ext": "펜틴정(향정)",
+            "ext": "",
             "gtNorm": "펜틴정(향정)",
-            "extNorm": "펜틴정(향정)",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "spec": {
@@ -404,50 +404,50 @@
           },
           "quantity": {
             "gt": "50",
-            "ext": "82,800",
+            "ext": "√50",
             "gtNorm": "50",
-            "extNorm": "82800",
-            "status": "mismatch",
+            "extNorm": "50",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "82800",
-            "ext": "50",
+            "ext": "82,800",
             "gtNorm": "82800",
-            "extNorm": "50",
-            "status": "mismatch",
+            "extNorm": "82800",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "4140000",
-            "ext": "414,000",
+            "ext": "4140000",
             "gtNorm": "4140000",
-            "extNorm": "414000",
-            "status": "mismatch",
+            "extNorm": "4140000",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
             "gt": "20290419",
-            "ext": "",
+            "ext": "20290419",
             "gtNorm": "20290419",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20290419",
+            "status": "match",
             "spurious": false
           },
           "manufacturingNo": {
             "gt": "26004",
-            "ext": "26004( 20290419) 669904170",
+            "ext": "26004",
             "gtNorm": "26004",
-            "extNorm": "2600420290419669904170",
-            "status": "mismatch",
+            "extNorm": "26004",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
             "gt": "8806699041735",
-            "ext": "8806699041735",
+            "ext": "",
             "gtNorm": "8806699041735",
-            "extNorm": "8806699041735",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "insuranceCode": {
@@ -463,13 +463,13 @@
     ],
     "cellCounts": {
       "scored": 30,
-      "match": 16,
-      "mismatch": 9,
-      "ext_missing": 5,
+      "match": 20,
+      "mismatch": 4,
+      "ext_missing": 6,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5333333333333333
+    "cellAccuracy": 0.6666666666666666
   },
   "buckets": {
     "defects": [
@@ -495,7 +495,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['3', '4']"
+        "reason": "extractor invented rows ['4', '5']"
       },
       {
         "location": "row1:spec",
@@ -538,14 +538,6 @@
         "reason": "char-level diff (sim=0.89)"
       },
       {
-        "location": "row2:amount",
-        "status": "ext_missing",
-        "gtNorm": "828000",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row2:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "669904170",
@@ -554,55 +546,31 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row5:itemName",
-        "status": "mismatch",
-        "gtNorm": "펜틴정향정신성의약품",
-        "extNorm": "354786펜틴정향정신성의약품",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.77)"
-      },
-      {
-        "location": "row5:quantity",
-        "status": "mismatch",
-        "gtNorm": "50",
-        "extNorm": "82800",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['unitPrice']"
-      },
-      {
-        "location": "row5:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "82800",
-        "extNorm": "50",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['quantity']"
-      },
-      {
-        "location": "row5:amount",
-        "status": "mismatch",
-        "gtNorm": "4140000",
-        "extNorm": "414000",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
-      },
-      {
-        "location": "row5:expiryDate",
+        "location": "row3:itemName",
         "status": "ext_missing",
-        "gtNorm": "20290419",
+        "gtNorm": "펜틴정향정신성의약품",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row5:manufacturingNo",
-        "status": "mismatch",
-        "gtNorm": "26004",
-        "extNorm": "2600420290419669904170",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "location": "row3:itemNameMaster",
+        "status": "ext_missing",
+        "gtNorm": "펜틴정(향정)",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row5:insuranceCode",
+        "location": "row3:itemCode",
+        "status": "ext_missing",
+        "gtNorm": "8806699041735",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row3:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "669904170",
         "extNorm": "",
@@ -611,9 +579,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 8,
-      "structure": 7,
-      "layout": 2,
+      "recognition": 5,
+      "structure": 8,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

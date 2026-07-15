@@ -125,11 +125,11 @@
       },
       "supplyAmount": {
         "gt": "59711",
-        "ext": "",
+        "ext": "131364",
         "gtNorm": "59711",
-        "extNorm": "",
+        "extNorm": "131364",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 5,
-      "mismatch": 6,
-      "ext_missing": 1,
+      "mismatch": 7,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,20 +182,22 @@
       "gtPresent": 12,
       "matched": 5,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
     "fieldAccuracy": 0.4166666666666667
   },
   "table": {
     "alignMode": "content",
     "rowCountGt": 1,
-    "rowCountExt": 1,
-    "rowCountMatch": true,
+    "rowCountExt": 2,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "2"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -330,11 +332,11 @@
       },
       {
         "location": "field:supplyAmount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "59711",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "extNorm": "131364",
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerCompany",
@@ -351,6 +353,14 @@
         "extNorm": "서울시강서구방화대로40길34방회주소도매",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
+      },
+      {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['2']"
       },
       {
         "location": "row1:itemName",
@@ -386,7 +396,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
+      "recognition": 6,
       "structure": 6,
       "layout": 0,
       "preprocessing": 0
@@ -407,6 +417,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

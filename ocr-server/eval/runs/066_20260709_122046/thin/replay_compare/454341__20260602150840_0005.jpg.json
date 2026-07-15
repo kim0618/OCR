@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "4628801883",
-        "ext": "609-85-04585",
+        "ext": "",
         "gtNorm": "4628801883",
-        "extNorm": "6098504585",
+        "extNorm": "",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -73,9 +73,9 @@
       },
       "supplierCompany": {
         "gt": "경신팜",
-        "ext": "백제약품(주)영남본부",
+        "ext": "종목의약품의억",
         "gtNorm": "경신팜",
-        "extNorm": "백제약품영남본부",
+        "extNorm": "종목의약품의억",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -99,9 +99,9 @@
       },
       "supplierAddress": {
         "gt": "서울 송파구 마천로 146 (오금동) 4층",
-        "ext": "경남 김해시 진례면 김해테크노벨리로 33-12 백제약품(주)영남본부",
+        "ext": "서울시 송파구 마천로 146, 4층(오",
         "gtNorm": "서울송파구마천로146오금동4층",
-        "extNorm": "경남김해시진례면김해테크노벨리로3312백제약품주영남본부",
+        "extNorm": "서울시송파구마천로1464층오",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -155,8 +155,8 @@
     "counts": {
       "scored": 11,
       "match": 4,
-      "mismatch": 6,
-      "ext_missing": 1,
+      "mismatch": 5,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -169,14 +169,14 @@
       "gtPresent": 11,
       "matched": 4,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 2
     },
     "fieldAccuracy": 0.36363636363636365
   },
   "table": {
     "alignMode": "content",
     "rowCountGt": 6,
-    "rowCountExt": 8,
+    "rowCountExt": 9,
     "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
@@ -192,7 +192,8 @@
       "3",
       "5",
       "6",
-      "7"
+      "7",
+      "9"
     ],
     "rows": [
       {
@@ -728,27 +729,27 @@
       },
       {
         "location": "field:supplierBizNumber",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "4628801883",
-        "extNorm": "6098504585",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "경신팜",
-        "extNorm": "백제약품영남본부",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['field:buyerCompany']"
+        "extNorm": "종목의약품의억",
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울송파구마천로146오금동4층",
-        "extNorm": "경남김해시진례면김해테크노벨리로3312백제약품주영남본부",
+        "extNorm": "서울시송파구마천로1464층오",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.84)"
       },
       {
         "location": "field:supplyAmount",
@@ -780,7 +781,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['3', '5', '6', '7']"
+        "reason": "extractor invented rows ['3', '5', '6', '7', '9']"
       },
       {
         "location": "row1:itemName",
@@ -1213,6 +1214,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.091
+    "fieldMissRate": 0.182
   }
 }

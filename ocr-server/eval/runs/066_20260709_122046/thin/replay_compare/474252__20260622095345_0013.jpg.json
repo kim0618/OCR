@@ -112,11 +112,11 @@
       },
       "supplyAmount": {
         "gt": "2372181",
-        "ext": "",
+        "ext": "2372181",
         "gtNorm": "2372181",
-        "extNorm": "",
+        "extNorm": "2372181",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -154,9 +154,9 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 6,
+      "match": 7,
       "mismatch": 3,
-      "ext_missing": 2,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -167,16 +167,16 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 6,
+      "matched": 7,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.5454545454545454
+    "fieldAccuracy": 0.6363636363636364
   },
   "table": {
     "alignMode": "content",
     "rowCountGt": 4,
-    "rowCountExt": 2,
+    "rowCountExt": 3,
     "rowCountMatch": false,
     "matchedRowIdx": [
       "2"
@@ -187,7 +187,8 @@
       "3"
     ],
     "extOnlyRowIdx": [
-      "1"
+      "1",
+      "3"
     ],
     "rows": [
       {
@@ -220,18 +221,18 @@
           },
           "quantity": {
             "gt": "60",
-            "ext": "30590",
+            "ext": "60",
             "gtNorm": "60",
-            "extNorm": "30590",
-            "status": "mismatch",
+            "extNorm": "60",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "30590",
-            "ext": "60",
+            "ext": "30590",
             "gtNorm": "30590",
-            "extNorm": "60",
-            "status": "mismatch",
+            "extNorm": "30590",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -540,13 +541,13 @@
     ],
     "cellCounts": {
       "scored": 40,
-      "match": 4,
-      "mismatch": 4,
+      "match": 6,
+      "mismatch": 2,
       "ext_missing": 32,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.1
+    "cellAccuracy": 0.15
   },
   "buckets": {
     "defects": [
@@ -565,14 +566,6 @@
         "extNorm": "경기도화성시봉담읍왕림2길4225라이트팜텍물류창고이찬희주임님01022397765",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplyAmount",
-        "status": "ext_missing",
-        "gtNorm": "2372181",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:buyerCompany",
@@ -604,7 +597,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1']"
+        "reason": "extractor invented rows ['1', '3']"
       },
       {
         "location": "row2:itemName",
@@ -621,22 +614,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:quantity",
-        "status": "mismatch",
-        "gtNorm": "60",
-        "extNorm": "30590",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['unitPrice']"
-      },
-      {
-        "location": "row2:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "30590",
-        "extNorm": "60",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['quantity']"
       },
       {
         "location": "row2:amount",
@@ -897,8 +874,8 @@
     ],
     "bucketTally": {
       "recognition": 5,
-      "structure": 35,
-      "layout": 3,
+      "structure": 34,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,
@@ -917,6 +894,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.182
+    "fieldMissRate": 0.091
   }
 }

@@ -125,11 +125,11 @@
       },
       "supplyAmount": {
         "gt": "21083290",
-        "ext": "",
+        "ext": "21083292",
         "gtNorm": "21083290",
-        "extNorm": "",
+        "extNorm": "21083292",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 8,
-      "mismatch": 3,
-      "ext_missing": 1,
+      "mismatch": 4,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,20 +182,20 @@
       "gtPresent": 12,
       "matched": 8,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
     "fieldAccuracy": 0.6666666666666666
   },
   "table": {
     "alignMode": "content",
     "rowCountGt": 9,
-    "rowCountExt": 9,
-    "rowCountMatch": true,
+    "rowCountExt": 10,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "2",
       "3",
       "4",
-      "7",
+      "10",
       "5",
       "6",
       "1",
@@ -203,7 +203,9 @@
       "9"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "7"
+    ],
     "rows": [
       {
         "rowIndex": "2",
@@ -464,31 +466,31 @@
         }
       },
       {
-        "rowIndex": "7",
+        "rowIndex": "10",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "아시클정200밀리그램(아시클로버)100T",
-            "ext": "클리토신정500밀리그램200T",
+            "ext": "",
             "gtNorm": "아시클정200밀리그램아시클로버100t",
-            "extNorm": "클리토신정500밀리그램200t",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "아시클정200mg",
-            "ext": "클리토신정500mg(제약사품절)",
+            "ext": "",
             "gtNorm": "아시클정200mg",
-            "extNorm": "클리토신정500mg(제약사품절)",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "spec": {
             "gt": "200밀리그\n램",
-            "ext": "1정",
+            "ext": "",
             "gtNorm": "200밀리그 램",
-            "extNorm": "1정",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "quantity": {
@@ -501,50 +503,50 @@
           },
           "unitPrice": {
             "gt": "7865990",
-            "ext": "208,429.10",
+            "ext": "78659.9",
             "gtNorm": "7865990",
-            "extNorm": "20842910",
+            "extNorm": "786599",
             "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "393300",
-            "ext": "1,042,146",
+            "ext": "393300",
             "gtNorm": "393300",
-            "extNorm": "1042146",
-            "status": "mismatch",
+            "extNorm": "393300",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
             "gt": "20280612",
-            "ext": "2027.09.24",
+            "ext": "",
             "gtNorm": "20280612",
-            "extNorm": "20270924",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "manufacturingNo": {
             "gt": "25001-2",
-            "ext": "24003-2",
+            "ext": "",
             "gtNorm": "250012",
-            "extNorm": "240032",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemCode": {
             "gt": "01011764",
-            "ext": "01012364",
+            "ext": "",
             "gtNorm": "01011764",
-            "extNorm": "01012364",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "073000990",
-            "ext": "18073000700 대원제약(주",
+            "ext": "",
             "gtNorm": "073000990",
-            "extNorm": "18073000700대원제약주",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           }
         }
@@ -974,13 +976,13 @@
     ],
     "cellCounts": {
       "scored": 89,
-      "match": 53,
-      "mismatch": 31,
-      "ext_missing": 5,
+      "match": 54,
+      "mismatch": 23,
+      "ext_missing": 12,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5955056179775281
+    "cellAccuracy": 0.6067415730337079
   },
   "buckets": {
     "defects": [
@@ -994,11 +996,11 @@
       },
       {
         "location": "field:supplyAmount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "21083290",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "extNorm": "21083292",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.88)"
       },
       {
         "location": "field:buyerCompany",
@@ -1015,6 +1017,14 @@
         "extNorm": "경기도파주시장지산로127광탄면",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.77)"
+      },
+      {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['7']"
       },
       {
         "location": "row2:itemName",
@@ -1137,76 +1147,68 @@
         "reason": "char-level diff (sim=0.90)"
       },
       {
-        "location": "row7:itemName",
-        "status": "mismatch",
+        "location": "row10:itemName",
+        "status": "ext_missing",
         "gtNorm": "아시클정200밀리그램아시클로버100t",
-        "extNorm": "클리토신정500밀리그램200t",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.61)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row7:itemNameMaster",
-        "status": "mismatch",
+        "location": "row10:itemNameMaster",
+        "status": "ext_missing",
         "gtNorm": "아시클정200mg",
-        "extNorm": "클리토신정500mg(제약사품절)",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row7:spec",
-        "status": "mismatch",
+        "location": "row10:spec",
+        "status": "ext_missing",
         "gtNorm": "200밀리그 램",
-        "extNorm": "1정",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row7:unitPrice",
+        "location": "row10:unitPrice",
         "status": "mismatch",
         "gtNorm": "7865990",
-        "extNorm": "20842910",
+        "extNorm": "786599",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.92)"
       },
       {
-        "location": "row7:amount",
-        "status": "mismatch",
-        "gtNorm": "393300",
-        "extNorm": "1042146",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row7:expiryDate",
-        "status": "mismatch",
+        "location": "row10:expiryDate",
+        "status": "ext_missing",
         "gtNorm": "20280612",
-        "extNorm": "20270924",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.62)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row7:manufacturingNo",
-        "status": "mismatch",
+        "location": "row10:manufacturingNo",
+        "status": "ext_missing",
         "gtNorm": "250012",
-        "extNorm": "240032",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row7:itemCode",
-        "status": "mismatch",
+        "location": "row10:itemCode",
+        "status": "ext_missing",
         "gtNorm": "01011764",
-        "extNorm": "01012364",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.75)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row7:insuranceCode",
-        "status": "mismatch",
+        "location": "row10:insuranceCode",
+        "status": "ext_missing",
         "gtNorm": "073000990",
-        "extNorm": "18073000700대원제약주",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.56)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row5:insuranceCode",
@@ -1306,8 +1308,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 33,
-      "structure": 6,
+      "recognition": 26,
+      "structure": 13,
       "layout": 1,
       "preprocessing": 0
     },
@@ -1327,6 +1329,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

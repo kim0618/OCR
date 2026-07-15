@@ -73,9 +73,9 @@
       },
       "supplierCompany": {
         "gt": "온라인팜/(한미약품-ETC)",
-        "ext": "광동제약(전문205327,V375188,115009)",
+        "ext": "주)경신팜",
         "gtNorm": "온라인팜한미약품etc",
-        "extNorm": "광동제약전문205327v375188115009",
+        "extNorm": "주경신팜",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -99,11 +99,11 @@
       },
       "supplierAddress": {
         "gt": "서울 송파구 위례성대로2길 5 (방이동) 한미C&C스퀘어 8층 온라인팜 도매관리그룹",
-        "ext": "서울특별시 서초구 서초중앙로 85",
+        "ext": "",
         "gtNorm": "서울송파구위례성대로2길5방이동한미cc스퀘어8층온라인팜도매관리그룹",
-        "extNorm": "서울특별시서초구서초중앙로85",
+        "extNorm": "",
         "type": "address",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -155,8 +155,8 @@
     "counts": {
       "scored": 11,
       "match": 4,
-      "mismatch": 7,
-      "ext_missing": 0,
+      "mismatch": 6,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -169,7 +169,7 @@
       "gtPresent": 11,
       "matched": 4,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 0
+      "extAttemptedMiss": 1
     },
     "fieldAccuracy": 0.36363636363636365
   },
@@ -444,10 +444,10 @@
           },
           "itemNameMaster": {
             "gt": "한미아스피린장용정100mg",
-            "ext": "한미아스피린장용정100mg(비급여)",
+            "ext": "한미아스피린장용정100mg",
             "gtNorm": "한미아스피린장용정100mg",
-            "extNorm": "한미아스피린장용정100mg(비급여)",
-            "status": "mismatch",
+            "extNorm": "한미아스피린장용정100mg",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -468,10 +468,10 @@
           },
           "unitPrice": {
             "gt": "27145",
-            "ext": "",
+            "ext": "27145",
             "gtNorm": "27145",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "27145",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -492,10 +492,10 @@
           },
           "itemCode": {
             "gt": "8806435036346",
-            "ext": "143272",
+            "ext": "8806435036346",
             "gtNorm": "8806435036346",
-            "extNorm": "143272",
-            "status": "mismatch",
+            "extNorm": "8806435036346",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -979,13 +979,13 @@
     ],
     "cellCounts": {
       "scored": 90,
-      "match": 28,
-      "mismatch": 17,
-      "ext_missing": 45,
+      "match": 31,
+      "mismatch": 15,
+      "ext_missing": 44,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3111111111111111
+    "cellAccuracy": 0.34444444444444444
   },
   "buckets": {
     "defects": [
@@ -1009,17 +1009,17 @@
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "온라인팜한미약품etc",
-        "extNorm": "광동제약전문205327v375188115009",
+        "extNorm": "주경신팜",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplierAddress",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "서울송파구위례성대로2길5방이동한미cc스퀘어8층온라인팜도매관리그룹",
-        "extNorm": "서울특별시서초구서초중앙로85",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplyAmount",
@@ -1198,28 +1198,12 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row3:itemNameMaster",
-        "status": "mismatch",
-        "gtNorm": "한미아스피린장용정100mg",
-        "extNorm": "한미아스피린장용정100mg(비급여)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.85)"
-      },
-      {
         "location": "row3:spec",
         "status": "ext_missing",
         "gtNorm": "500t",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "27145",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
       },
       {
         "location": "row3:amount",
@@ -1236,14 +1220,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:itemCode",
-        "status": "mismatch",
-        "gtNorm": "8806435036346",
-        "extNorm": "143272",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
       },
       {
         "location": "row3:insuranceCode",
@@ -1551,9 +1527,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 20,
-      "structure": 45,
-      "layout": 5,
+      "recognition": 17,
+      "structure": 46,
+      "layout": 4,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,
@@ -1572,6 +1548,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.0
+    "fieldMissRate": 0.091
   }
 }

@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "4108800110",
-        "ext": "113-85-04425",
+        "ext": "",
         "gtNorm": "4108800110",
-        "extNorm": "1138504425",
+        "extNorm": "",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -86,9 +86,9 @@
       },
       "supplierCompany": {
         "gt": "현대약품(전문)",
-        "ext": "백제약품(주)영등포지점",
+        "ext": "의약품",
         "gtNorm": "현대약품전문",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "의약품",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "경기 부천시 남구 소사동 213",
-        "ext": "서울 구로구 공원로8길 24",
+        "ext": "",
         "gtNorm": "경기부천시남구소사동213",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "",
         "type": "address",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 4,
-      "mismatch": 6,
-      "ext_missing": 2,
+      "mismatch": 4,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,7 +182,7 @@
       "gtPresent": 12,
       "matched": 4,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 4
     },
     "fieldAccuracy": 0.3333333333333333
   },
@@ -583,27 +583,27 @@
       },
       {
         "location": "field:supplierBizNumber",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "4108800110",
-        "extNorm": "1138504425",
+        "extNorm": "",
         "bucket": "structure",
-        "reason": "ext value is gt's ['field:buyerBizNumber']"
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "현대약품전문",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "의약품",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplierAddress",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "경기부천시남구소사동213",
-        "extNorm": "서울구로구공원로8길24",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplyAmount",
@@ -871,8 +871,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 10,
-      "structure": 27,
+      "recognition": 9,
+      "structure": 28,
       "layout": 1,
       "preprocessing": 0
     },
@@ -892,6 +892,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.167
+    "fieldMissRate": 0.333
   }
 }

@@ -189,7 +189,7 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 10,
-    "rowCountExt": 15,
+    "rowCountExt": 16,
     "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
@@ -198,18 +198,19 @@
       "11",
       "4",
       "5",
-      "13",
+      "6",
       "14",
       "15",
       "9"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "6",
       "7",
       "8",
       "10",
-      "12"
+      "12",
+      "13",
+      "16"
     ],
     "rows": [
       {
@@ -721,31 +722,31 @@
         }
       },
       {
-        "rowIndex": "13",
+        "rowIndex": "6",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "엘티리진정 5mg",
-            "ext": "7 한미약품 엘티리진정5mg",
+            "ext": "엘티리진정5mg",
             "gtNorm": "엘티리진정5mg",
-            "extNorm": "7한미약품엘티리진정5mg",
-            "status": "mismatch",
+            "extNorm": "엘티리진정5mg",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "엘티리진정",
-            "ext": "엘트리진정5mg",
+            "ext": "엘티리진정",
             "gtNorm": "엘티리진정",
-            "extNorm": "엘트리진정5mg",
-            "status": "mismatch",
+            "extNorm": "엘티리진정",
+            "status": "match",
             "spurious": false
           },
           "spec": {
             "gt": "300T",
-            "ext": "300T",
+            "ext": "",
             "gtNorm": "300t",
-            "extNorm": "300t",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "quantity": {
@@ -758,7 +759,7 @@
           },
           "unitPrice": {
             "gt": "55440",
-            "ext": "55,440",
+            "ext": "55440",
             "gtNorm": "55440",
             "extNorm": "55440",
             "status": "match",
@@ -766,7 +767,7 @@
           },
           "amount": {
             "gt": "554400",
-            "ext": "554,400",
+            "ext": "554400",
             "gtNorm": "554400",
             "extNorm": "554400",
             "status": "match",
@@ -782,18 +783,18 @@
           },
           "itemCode": {
             "gt": "8806435043429",
-            "ext": "01009938",
+            "ext": "8806435043429",
             "gtNorm": "8806435043429",
-            "extNorm": "01009938",
-            "status": "mismatch",
+            "extNorm": "8806435043429",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "643504340-063525081",
-            "ext": "643504340",
+            "ext": "",
             "gtNorm": "643504340063525081",
-            "extNorm": "643504340",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           }
         }
@@ -1059,13 +1060,13 @@
     ],
     "cellCounts": {
       "scored": 98,
-      "match": 52,
-      "mismatch": 19,
-      "ext_missing": 27,
+      "match": 54,
+      "mismatch": 15,
+      "ext_missing": 29,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5306122448979592
+    "cellAccuracy": 0.5510204081632653
   },
   "buckets": {
     "defects": [
@@ -1123,7 +1124,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['6', '7', '8', '10', '12']"
+        "reason": "extractor invented rows ['7', '8', '10', '12', '13', '16']"
       },
       {
         "location": "row1:spec",
@@ -1350,23 +1351,15 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row13:itemName",
-        "status": "mismatch",
-        "gtNorm": "엘티리진정5mg",
-        "extNorm": "7한미약품엘티리진정5mg",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.76)"
+        "location": "row6:spec",
+        "status": "ext_missing",
+        "gtNorm": "300t",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row13:itemNameMaster",
-        "status": "mismatch",
-        "gtNorm": "엘티리진정",
-        "extNorm": "엘트리진정5mg",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.62)"
-      },
-      {
-        "location": "row13:expiryDate",
+        "location": "row6:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20280821",
         "extNorm": "",
@@ -1374,20 +1367,12 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row13:itemCode",
-        "status": "mismatch",
-        "gtNorm": "8806435043429",
-        "extNorm": "01009938",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row13:insuranceCode",
-        "status": "mismatch",
+        "location": "row6:insuranceCode",
+        "status": "ext_missing",
         "gtNorm": "643504340063525081",
-        "extNorm": "643504340",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row14:itemName",
@@ -1495,8 +1480,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 21,
-      "structure": 30,
+      "recognition": 17,
+      "structure": 32,
       "layout": 2,
       "preprocessing": 0
     },

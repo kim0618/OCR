@@ -125,11 +125,11 @@
       },
       "supplyAmount": {
         "gt": "2100000",
-        "ext": "",
+        "ext": "2100000",
         "gtNorm": "2100000",
-        "extNorm": "",
+        "extNorm": "2100000",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 9,
+      "match": 10,
       "mismatch": 2,
-      "ext_missing": 1,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 9,
+      "matched": 10,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.75
+    "fieldAccuracy": 0.8333333333333334
   },
   "table": {
     "alignMode": "content",
@@ -203,10 +203,10 @@
         "cells": {
           "itemName": {
             "gt": "안정액50mL-1병/갑",
-            "ext": "안정액50mL-1병/갑 일반",
+            "ext": "안정액50mL-1병/갑",
             "gtNorm": "안정액50ml1병갑",
-            "extNorm": "안정액50ml1병갑일반",
-            "status": "mismatch",
+            "extNorm": "안정액50ml1병갑",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
@@ -278,24 +278,16 @@
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 2,
-      "mismatch": 4,
+      "match": 3,
+      "mismatch": 3,
       "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.2222222222222222
+    "cellAccuracy": 0.3333333333333333
   },
   "buckets": {
     "defects": [
-      {
-        "location": "field:supplyAmount",
-        "status": "ext_missing",
-        "gtNorm": "2100000",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
-      },
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
@@ -311,14 +303,6 @@
         "extNorm": "서울구로구공원로8길24구로동",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.86)"
-      },
-      {
-        "location": "row1:itemName",
-        "status": "mismatch",
-        "gtNorm": "안정액50ml1병갑",
-        "extNorm": "안정액50ml1병갑일반",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.91)"
       },
       {
         "location": "row1:spec",
@@ -370,8 +354,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 4,
-      "structure": 4,
+      "recognition": 3,
+      "structure": 3,
       "layout": 2,
       "preprocessing": 0
     },
@@ -391,6 +375,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

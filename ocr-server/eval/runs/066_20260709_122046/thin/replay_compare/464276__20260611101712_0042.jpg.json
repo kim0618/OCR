@@ -8,11 +8,11 @@
     "perField": {
       "totalAmount": {
         "gt": "6616474",
-        "ext": "9,462,875",
+        "ext": "6616474",
         "gtNorm": "6616474",
-        "extNorm": "9462875",
+        "extNorm": "6616474",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -154,8 +154,8 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 8,
-      "mismatch": 2,
+      "match": 9,
+      "mismatch": 1,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -167,24 +167,26 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 8,
+      "matched": 9,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.7272727272727273
+    "fieldAccuracy": 0.8181818181818182
   },
   "table": {
     "alignMode": "content",
     "rowCountGt": 2,
-    "rowCountExt": 1,
-    "rowCountMatch": false,
+    "rowCountExt": 2,
+    "rowCountMatch": true,
     "matchedRowIdx": [
       "1"
     ],
     "gtOnlyRowIdx": [
       "2"
     ],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "2"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -349,14 +351,6 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:totalAmount",
-        "status": "mismatch",
-        "gtNorm": "6616474",
-        "extNorm": "9462875",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:discountAmount",
         "status": "mismatch",
         "gtNorm": "817766",
@@ -379,6 +373,14 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "extractor missed rows ['2']"
+      },
+      {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['2']"
       },
       {
         "location": "row1:itemName",
@@ -510,8 +512,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 4,
-      "structure": 16,
+      "recognition": 3,
+      "structure": 17,
       "layout": 0,
       "preprocessing": 0
     },

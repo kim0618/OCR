@@ -73,11 +73,11 @@
       },
       "buyerBizNumber": {
         "gt": "3058500993",
-        "ext": "812-74-55681",
+        "ext": "305-85-00993",
         "gtNorm": "3058500993",
-        "extNorm": "8127455681",
+        "extNorm": "3058500993",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 4,
-      "mismatch": 6,
+      "match": 5,
+      "mismatch": 5,
       "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
@@ -180,54 +180,55 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 4,
+      "matched": 5,
       "extNotAttempted": 0,
       "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.3333333333333333
+    "fieldAccuracy": 0.4166666666666667
   },
   "table": {
     "alignMode": "content",
     "rowCountGt": 2,
-    "rowCountExt": 3,
+    "rowCountExt": 4,
     "rowCountMatch": false,
     "matchedRowIdx": [
-      "1"
+      "4"
     ],
     "gtOnlyRowIdx": [
       "2"
     ],
     "extOnlyRowIdx": [
+      "1",
       "2",
       "3"
     ],
     "rows": [
       {
-        "rowIndex": "1",
+        "rowIndex": "4",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "도벨티정250밀리그램",
-            "ext": "(643508460)도벨티정250밀리그램",
+            "ext": "",
             "gtNorm": "도벨티정250밀리그램",
-            "extNorm": "643508460도벨티정250밀리그램",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "도벨티정250mg",
-            "ext": "도벨티정250mg",
+            "ext": "",
             "gtNorm": "도벨티정250mg",
-            "extNorm": "도벨티정250mg",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "spec": {
             "gt": "30T",
-            "ext": "30T",
+            "ext": "",
             "gtNorm": "30t",
-            "extNorm": "30t",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "quantity": {
@@ -240,18 +241,18 @@
           },
           "unitPrice": {
             "gt": "4680",
-            "ext": "5,148",
+            "ext": "4680",
             "gtNorm": "4680",
-            "extNorm": "5148",
-            "status": "mismatch",
+            "extNorm": "4680",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "46800",
-            "ext": "37,866",
+            "ext": "46800",
             "gtNorm": "46800",
-            "extNorm": "37866",
-            "status": "mismatch",
+            "extNorm": "46800",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -272,10 +273,10 @@
           },
           "itemCode": {
             "gt": "04004750",
-            "ext": "04004750",
+            "ext": "",
             "gtNorm": "04004750",
-            "extNorm": "04004750",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "insuranceCode": {
@@ -354,13 +355,13 @@
     ],
     "cellCounts": {
       "scored": 17,
-      "match": 4,
-      "mismatch": 3,
-      "ext_missing": 10,
+      "match": 3,
+      "mismatch": 0,
+      "ext_missing": 14,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.23529411764705882
+    "cellAccuracy": 0.17647058823529413
   },
   "buckets": {
     "defects": [
@@ -370,7 +371,7 @@
         "gtNorm": "46800",
         "extNorm": "643508460",
         "bucket": "structure",
-        "reason": "ext value is gt's ['row1:insuranceCode']"
+        "reason": "gt value present at ['row4:amount']"
       },
       {
         "location": "field:taxAmount",
@@ -386,15 +387,7 @@
         "gtNorm": "5148",
         "extNorm": "0",
         "bucket": "structure",
-        "reason": "gt value present at ['row1:unitPrice']"
-      },
-      {
-        "location": "field:buyerBizNumber",
-        "status": "mismatch",
-        "gtNorm": "3058500993",
-        "extNorm": "8127455681",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "ext value is gt's ['row2:unitPrice']"
       },
       {
         "location": "field:supplierCompany",
@@ -442,34 +435,34 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['2', '3']"
+        "reason": "extractor invented rows ['1', '2', '3']"
       },
       {
-        "location": "row1:itemName",
-        "status": "mismatch",
+        "location": "row4:itemName",
+        "status": "ext_missing",
         "gtNorm": "도벨티정250밀리그램",
-        "extNorm": "643508460도벨티정250밀리그램",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.71)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "4680",
-        "extNorm": "5148",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
+        "location": "row4:itemNameMaster",
+        "status": "ext_missing",
+        "gtNorm": "도벨티정250mg",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:amount",
-        "status": "mismatch",
-        "gtNorm": "46800",
-        "extNorm": "37866",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "location": "row4:spec",
+        "status": "ext_missing",
+        "gtNorm": "30t",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:expiryDate",
+        "location": "row4:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20281112",
         "extNorm": "",
@@ -477,7 +470,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:manufacturingNo",
+        "location": "row4:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "25016",
         "extNorm": "",
@@ -485,7 +478,15 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:insuranceCode",
+        "location": "row4:itemCode",
+        "status": "ext_missing",
+        "gtNorm": "04004750",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row4:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "643508460",
         "extNorm": "",
@@ -550,8 +551,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 7,
-      "structure": 16,
+      "recognition": 3,
+      "structure": 20,
       "layout": 0,
       "preprocessing": 0
     },

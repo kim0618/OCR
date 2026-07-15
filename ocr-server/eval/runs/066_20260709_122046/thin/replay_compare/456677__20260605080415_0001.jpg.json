@@ -60,9 +60,9 @@
       },
       "supplierCompany": {
         "gt": "한림MS(주)",
-        "ext": "백제약품(주)영등포지점",
+        "ext": "성산코리아(주)",
         "gtNorm": "한림ms",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "성산코리아",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -86,11 +86,11 @@
       },
       "supplierAddress": {
         "gt": "경기도 용인시 처인구 영문로 2-27 (유방동)",
-        "ext": "서울 구로구 공원로8길 24",
+        "ext": "",
         "gtNorm": "경기도용인시처인구영문로227유방동",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "",
         "type": "address",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -142,8 +142,8 @@
     "counts": {
       "scored": 10,
       "match": 6,
-      "mismatch": 4,
-      "ext_missing": 0,
+      "mismatch": 3,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -156,7 +156,7 @@
       "gtPresent": 10,
       "matched": 6,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 0
+      "extAttemptedMiss": 1
     },
     "fieldAccuracy": 0.6
   },
@@ -191,10 +191,10 @@
           },
           "itemNameMaster": {
             "gt": "엔시트라세미서방정",
-            "ext": "자톨정2.5mg",
+            "ext": "",
             "gtNorm": "엔시트라세미서방정",
-            "extNorm": "자톨정2.5mg",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "spec": {
@@ -525,8 +525,8 @@
     "cellCounts": {
       "scored": 40,
       "match": 21,
-      "mismatch": 16,
-      "ext_missing": 3,
+      "mismatch": 15,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -538,17 +538,17 @@
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "한림ms",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "성산코리아",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplierAddress",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "경기도용인시처인구영문로227유방동",
-        "extNorm": "서울구로구공원로8길24",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:buyerCompany",
@@ -584,11 +584,11 @@
       },
       {
         "location": "row1:itemNameMaster",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "엔시트라세미서방정",
-        "extNorm": "자톨정2.5mg",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row1:quantity",
@@ -728,8 +728,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 20,
-      "structure": 4,
+      "recognition": 18,
+      "structure": 6,
       "layout": 0,
       "preprocessing": 0
     },
@@ -749,6 +749,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.0
+    "fieldMissRate": 0.1
   }
 }

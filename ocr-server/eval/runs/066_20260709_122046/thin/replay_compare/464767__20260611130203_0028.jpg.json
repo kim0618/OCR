@@ -189,7 +189,7 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 2,
-    "rowCountExt": 3,
+    "rowCountExt": 4,
     "rowCountMatch": false,
     "matchedRowIdx": [
       "3"
@@ -199,7 +199,8 @@
     ],
     "extOnlyRowIdx": [
       "1",
-      "2"
+      "2",
+      "4"
     ],
     "rows": [
       {
@@ -232,18 +233,18 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "199950",
-            "ext": "",
+            "ext": "199950",
             "gtNorm": "199950",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "199950",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -272,10 +273,10 @@
           },
           "itemCode": {
             "gt": "04004352",
-            "ext": "04004439",
+            "ext": "04004352",
             "gtNorm": "04004352",
-            "extNorm": "04004439",
-            "status": "mismatch",
+            "extNorm": "04004352",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -378,13 +379,13 @@
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 2,
-      "mismatch": 2,
-      "ext_missing": 16,
+      "match": 5,
+      "mismatch": 1,
+      "ext_missing": 14,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.1
+    "cellAccuracy": 0.25
   },
   "buckets": {
     "defects": [
@@ -426,7 +427,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '2']"
+        "reason": "extractor invented rows ['1', '2', '4']"
       },
       {
         "location": "row3:itemName",
@@ -440,22 +441,6 @@
         "location": "row3:spec",
         "status": "ext_missing",
         "gtNorm": "0.5mg/100캠 슐",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:quantity",
-        "status": "ext_missing",
-        "gtNorm": "10",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "199950",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -475,14 +460,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:itemCode",
-        "status": "mismatch",
-        "gtNorm": "04004352",
-        "extNorm": "04004439",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.75)"
       },
       {
         "location": "row3:insuranceCode",
@@ -574,8 +551,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 18,
+      "recognition": 4,
+      "structure": 16,
       "layout": 0,
       "preprocessing": 0
     },

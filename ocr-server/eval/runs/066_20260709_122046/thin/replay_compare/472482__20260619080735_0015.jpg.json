@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "1088611033",
-        "ext": "224-85-09735",
+        "ext": "",
         "gtNorm": "1088611033",
-        "extNorm": "2248509735",
+        "extNorm": "",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -86,9 +86,9 @@
       },
       "supplierCompany": {
         "gt": "제이에스에스팜(매입)",
-        "ext": "광동제약(전문205327,V375188,115009)",
+        "ext": "주)제이에스에스팜",
         "gtNorm": "제이에스에스팜매입",
-        "extNorm": "광동제약전문205327v375188115009",
+        "extNorm": "주제이에스에스팜",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울 양천구 남부순환로 (신월동,)",
-        "ext": "서울특별시 서초구 서초중앙로 85",
+        "ext": "",
         "gtNorm": "서울양천구남부순환로신월동",
-        "extNorm": "서울특별시서초구서초중앙로85",
+        "extNorm": "",
         "type": "address",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 4,
-      "mismatch": 6,
-      "ext_missing": 2,
+      "mismatch": 4,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,7 +182,7 @@
       "gtPresent": 12,
       "matched": 4,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 4
     },
     "fieldAccuracy": 0.3333333333333333
   },
@@ -1272,19 +1272,19 @@
       },
       {
         "location": "field:supplierBizNumber",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "1088611033",
-        "extNorm": "2248509735",
+        "extNorm": "",
         "bucket": "structure",
-        "reason": "ext value is gt's ['field:buyerBizNumber']"
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "제이에스에스팜매입",
-        "extNorm": "광동제약전문205327v375188115009",
+        "extNorm": "주제이에스에스팜",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.82)"
       },
       {
         "location": "field:taxType",
@@ -1296,11 +1296,11 @@
       },
       {
         "location": "field:supplierAddress",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "서울양천구남부순환로신월동",
-        "extNorm": "서울특별시서초구서초중앙로85",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplyAmount",
@@ -1944,8 +1944,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 48,
-      "structure": 33,
+      "recognition": 47,
+      "structure": 34,
       "layout": 5,
       "preprocessing": 0
     },
@@ -1965,6 +1965,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.167
+    "fieldMissRate": 0.333
   }
 }

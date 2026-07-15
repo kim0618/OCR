@@ -73,11 +73,11 @@
       },
       "buyerBizNumber": {
         "gt": "4088500180",
-        "ext": "800-62-84764",
+        "ext": "408-85-00180",
         "gtNorm": "4088500180",
-        "extNorm": "8006284764",
+        "extNorm": "4088500180",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 6,
-      "mismatch": 4,
+      "match": 7,
+      "mismatch": 3,
       "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
@@ -180,44 +180,43 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 6,
+      "matched": 7,
       "extNotAttempted": 0,
       "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.5
+    "fieldAccuracy": 0.5833333333333334
   },
   "table": {
     "alignMode": "content",
     "rowCountGt": 1,
-    "rowCountExt": 1,
-    "rowCountMatch": true,
-    "matchedRowIdx": [],
-    "gtOnlyRowIdx": [
-      "1"
+    "rowCountExt": 2,
+    "rowCountMatch": false,
+    "matchedRowIdx": [
+      "2"
     ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
       "1"
     ],
     "rows": [
       {
-        "rowIndex": "1",
+        "rowIndex": "2",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "헤일리온 폴리덴트 나이트파워클린세정제 (F) 48T",
-            "ext": "",
+            "ext": "헤일리온_플리덴트나이트파워클린세정제(F) 48T",
             "gtNorm": "헤일리온폴리덴트나이트파워클린세정제f48t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "헤일리온플리덴트나이트파워클린세정제f48t",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "폴리덴트틀니세정제(5분퀵파워클린)",
-            "ext": "",
+            "ext": "폴리덴트틀니세정제(취침전/오버나이트)(제약사품절)",
             "gtNorm": "폴리덴트틀니세정제(5분퀵파워클린)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "폴리덴트틀니세정제(취침전/오버나이트)(제약사품절)",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
@@ -230,34 +229,34 @@
           },
           "quantity": {
             "gt": "144",
-            "ext": "",
+            "ext": "144",
             "gtNorm": "144",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "144",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "7733",
-            "ext": "",
+            "ext": "7733",
             "gtNorm": "7733",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "7733",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "1113552",
-            "ext": "",
+            "ext": "1113552",
             "gtNorm": "1113552",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "1113552",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
             "gt": "01014968",
-            "ext": "",
+            "ext": "03001703",
             "gtNorm": "01014968",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "03001703",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -265,13 +264,13 @@
     ],
     "cellCounts": {
       "scored": 7,
-      "match": 0,
-      "mismatch": 0,
-      "ext_missing": 7,
+      "match": 3,
+      "mismatch": 3,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.0
+    "cellAccuracy": 0.42857142857142855
   },
   "buckets": {
     "defects": [
@@ -282,14 +281,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
-      },
-      {
-        "location": "field:buyerBizNumber",
-        "status": "mismatch",
-        "gtNorm": "4088500180",
-        "extNorm": "8006284764",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplierCompany",
@@ -313,7 +304,7 @@
         "gtNorm": "1113552",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "reason": "gt value present at ['row2:amount']"
       },
       {
         "location": "field:buyerCompany",
@@ -325,14 +316,6 @@
       },
       {
         "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['1']"
-      },
-      {
-        "location": "table",
         "status": "rows_extra",
         "gtNorm": "",
         "extNorm": "",
@@ -340,23 +323,23 @@
         "reason": "extractor invented rows ['1']"
       },
       {
-        "location": "row1:itemName",
-        "status": "ext_missing",
+        "location": "row2:itemName",
+        "status": "mismatch",
         "gtNorm": "헤일리온폴리덴트나이트파워클린세정제f48t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "헤일리온플리덴트나이트파워클린세정제f48t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.95)"
       },
       {
-        "location": "row1:itemNameMaster",
-        "status": "ext_missing",
+        "location": "row2:itemNameMaster",
+        "status": "mismatch",
         "gtNorm": "폴리덴트틀니세정제(5분퀵파워클린)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "폴리덴트틀니세정제(취침전/오버나이트)(제약사품절)",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
-        "location": "row1:spec",
+        "location": "row2:spec",
         "status": "ext_missing",
         "gtNorm": "48t",
         "extNorm": "",
@@ -364,41 +347,17 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "144",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "7733",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:amount",
-        "status": "ext_missing",
-        "gtNorm": "1113552",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:itemCode",
-        "status": "ext_missing",
+        "location": "row2:itemCode",
+        "status": "mismatch",
         "gtNorm": "01014968",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "03001703",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       }
     ],
     "bucketTally": {
-      "recognition": 4,
-      "structure": 11,
+      "recognition": 6,
+      "structure": 4,
       "layout": 0,
       "preprocessing": 0
     },

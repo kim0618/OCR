@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "1138504425",
-        "ext": "113-85-04425",
+        "ext": "",
         "gtNorm": "1138504425",
-        "extNorm": "1138504425",
+        "extNorm": "",
         "type": "bizno",
-        "status": "match",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -141,9 +141,9 @@
     "profile": "thin",
     "counts": {
       "scored": 10,
-      "match": 4,
+      "match": 3,
       "mismatch": 4,
-      "ext_missing": 2,
+      "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -154,21 +154,22 @@
     },
     "coverage": {
       "gtPresent": 10,
-      "matched": 4,
+      "matched": 3,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 3
     },
-    "fieldAccuracy": 0.4
+    "fieldAccuracy": 0.3
   },
   "table": {
     "alignMode": "content",
     "rowCountGt": 0,
-    "rowCountExt": 1,
+    "rowCountExt": 2,
     "rowCountMatch": false,
     "matchedRowIdx": [],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "1"
+      "1",
+      "2"
     ],
     "rows": [],
     "cellCounts": {
@@ -198,6 +199,14 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
+      },
+      {
+        "location": "field:supplierBizNumber",
+        "status": "ext_missing",
+        "gtNorm": "1138504425",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value present at ['field:buyerBizNumber']"
       },
       {
         "location": "field:buyerBizNumber",
@@ -237,12 +246,12 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1']"
+        "reason": "extractor invented rows ['1', '2']"
       }
     ],
     "bucketTally": {
       "recognition": 3,
-      "structure": 4,
+      "structure": 5,
       "layout": 0,
       "preprocessing": 0
     },
@@ -262,6 +271,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.2
+    "fieldMissRate": 0.3
   }
 }

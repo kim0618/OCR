@@ -194,7 +194,7 @@
     "matchedRowIdx": [
       "11",
       "2",
-      "12",
+      "3",
       "13",
       "14",
       "6",
@@ -206,11 +206,11 @@
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
       "1",
-      "3",
       "4",
       "5",
       "7",
-      "9"
+      "9",
+      "12"
     ],
     "rows": [
       {
@@ -321,18 +321,18 @@
           },
           "quantity": {
             "gt": "5",
-            "ext": "",
+            "ext": "5",
             "gtNorm": "5",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "5",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "35640",
-            "ext": "",
+            "ext": "35640",
             "gtNorm": "35640",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "35640",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -361,23 +361,23 @@
           },
           "itemCode": {
             "gt": "22001265",
-            "ext": "22001266",
+            "ext": "22001265",
             "gtNorm": "22001265",
-            "extNorm": "22001266",
-            "status": "mismatch",
+            "extNorm": "22001265",
+            "status": "match",
             "spurious": false
           }
         }
       },
       {
-        "rowIndex": "12",
+        "rowIndex": "3",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "로수틴엠정10mg(로수바스",
-            "ext": "(주)마더스 A-038-a2- 로수틴엠정10mg (로수바스",
+            "ext": "로수틴엠정10mg",
             "gtNorm": "로수틴엠정10mg로수바스",
-            "extNorm": "주마더스a038a2로수틴엠정10mg로수바스",
+            "extNorm": "로수틴엠정10mg",
             "status": "mismatch",
             "spurious": false
           },
@@ -391,10 +391,10 @@
           },
           "spec": {
             "gt": "30정",
-            "ext": "↑ 30정",
+            "ext": "",
             "gtNorm": "30정",
-            "extNorm": "↑ 30정",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "quantity": {
@@ -407,15 +407,15 @@
           },
           "unitPrice": {
             "gt": "14040",
-            "ext": "14,040.00",
+            "ext": "14040",
             "gtNorm": "14040",
-            "extNorm": "1404000",
-            "status": "mismatch",
+            "extNorm": "14040",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "70200",
-            "ext": "70,200",
+            "ext": "70200",
             "gtNorm": "70200",
             "extNorm": "70200",
             "status": "match",
@@ -431,10 +431,10 @@
           },
           "manufacturingNo": {
             "gt": "5001",
-            "ext": "50270013",
+            "ext": "",
             "gtNorm": "5001",
-            "extNorm": "50270013",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemCode": {
@@ -996,13 +996,13 @@
     ],
     "cellCounts": {
       "scored": 90,
-      "match": 45,
-      "mismatch": 28,
+      "match": 49,
+      "mismatch": 24,
       "ext_missing": 17,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5
+    "cellAccuracy": 0.5444444444444444
   },
   "buckets": {
     "defects": [
@@ -1076,7 +1076,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '3', '4', '5', '7', '9']"
+        "reason": "extractor invented rows ['1', '4', '5', '7', '9', '12']"
       },
       {
         "location": "row11:itemName",
@@ -1127,22 +1127,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:quantity",
-        "status": "ext_missing",
-        "gtNorm": "5",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "35640",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row2:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20290203",
@@ -1159,39 +1143,23 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:itemCode",
-        "status": "mismatch",
-        "gtNorm": "22001265",
-        "extNorm": "22001266",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.88)"
-      },
-      {
-        "location": "row12:itemName",
+        "location": "row3:itemName",
         "status": "mismatch",
         "gtNorm": "로수틴엠정10mg로수바스",
-        "extNorm": "주마더스a038a2로수틴엠정10mg로수바스",
+        "extNorm": "로수틴엠정10mg",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.72)"
+        "reason": "char-level diff (sim=0.82)"
       },
       {
-        "location": "row12:spec",
-        "status": "mismatch",
+        "location": "row3:spec",
+        "status": "ext_missing",
         "gtNorm": "30정",
-        "extNorm": "↑ 30정",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.75)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row12:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "14040",
-        "extNorm": "1404000",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.83)"
-      },
-      {
-        "location": "row12:expiryDate",
+        "location": "row3:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20270113",
         "extNorm": "",
@@ -1199,12 +1167,12 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row12:manufacturingNo",
-        "status": "mismatch",
+        "location": "row3:manufacturingNo",
+        "status": "ext_missing",
         "gtNorm": "5001",
-        "extNorm": "50270013",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row13:itemName",
@@ -1440,7 +1408,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 33,
+      "recognition": 29,
       "structure": 20,
       "layout": 1,
       "preprocessing": 0

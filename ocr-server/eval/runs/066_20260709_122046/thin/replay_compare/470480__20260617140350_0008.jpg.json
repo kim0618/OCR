@@ -8,11 +8,11 @@
     "perField": {
       "totalAmount": {
         "gt": "3557934",
-        "ext": "6,454,480",
+        "ext": "3557934",
         "gtNorm": "3557934",
-        "extNorm": "6454480",
+        "extNorm": "3557934",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -154,8 +154,8 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 8,
-      "mismatch": 3,
+      "match": 9,
+      "mismatch": 2,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 8,
+      "matched": 9,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.7272727272727273
+    "fieldAccuracy": 0.8181818181818182
   },
   "table": {
     "alignMode": "content",
@@ -181,7 +181,7 @@
     "matchedRowIdx": [
       "2",
       "7",
-      "8"
+      "6"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
@@ -189,7 +189,7 @@
       "3",
       "4",
       "5",
-      "6",
+      "8",
       "9"
     ],
     "rows": [
@@ -350,14 +350,14 @@
         }
       },
       {
-        "rowIndex": "8",
+        "rowIndex": "6",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "디쿠아엠점안액 0.4ml/60관",
-            "ext": "3 마더스제약 S02-17 디쿠아엠점안액0.4m1/60관 이하여백",
+            "ext": "디쿠아엠점안액0.4m1/60관",
             "gtNorm": "디쿠아엠점안액04ml60관",
-            "extNorm": "3마더스제약s0217디쿠아엠점안액04m160관이하여백",
+            "extNorm": "디쿠아엠점안액04m160관",
             "status": "mismatch",
             "spurious": false
           },
@@ -371,10 +371,10 @@
           },
           "spec": {
             "gt": "0.4mL*60EA",
-            "ext": "60점안액",
+            "ext": "",
             "gtNorm": "0.4ml*60ea",
-            "extNorm": "60점안액",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "quantity": {
@@ -387,15 +387,15 @@
           },
           "unitPrice": {
             "gt": "2804160",
-            "ext": "28,041.60",
+            "ext": "28041.6",
             "gtNorm": "2804160",
-            "extNorm": "2804160",
-            "status": "match",
+            "extNorm": "280416",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "841248",
-            "ext": "841,248",
+            "ext": "841248",
             "gtNorm": "841248",
             "extNorm": "841248",
             "status": "match",
@@ -403,10 +403,10 @@
           },
           "expiryDate": {
             "gt": "20290325",
-            "ext": "6001 20290325",
+            "ext": "",
             "gtNorm": "20290325",
-            "extNorm": "600120290325",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "manufacturingNo": {
@@ -430,24 +430,16 @@
     ],
     "cellCounts": {
       "scored": 27,
-      "match": 14,
-      "mismatch": 9,
-      "ext_missing": 4,
+      "match": 13,
+      "mismatch": 8,
+      "ext_missing": 6,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5185185185185185
+    "cellAccuracy": 0.48148148148148145
   },
   "buckets": {
     "defects": [
-      {
-        "location": "field:totalAmount",
-        "status": "mismatch",
-        "gtNorm": "3557934",
-        "extNorm": "6454480",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
@@ -470,7 +462,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '3', '4', '5', '6', '9']"
+        "reason": "extractor invented rows ['1', '3', '4', '5', '8', '9']"
       },
       {
         "location": "row2:itemName",
@@ -545,31 +537,39 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row8:itemName",
+        "location": "row6:itemName",
         "status": "mismatch",
         "gtNorm": "디쿠아엠점안액04ml60관",
-        "extNorm": "3마더스제약s0217디쿠아엠점안액04m160관이하여백",
+        "extNorm": "디쿠아엠점안액04m160관",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.60)"
+        "reason": "char-level diff (sim=0.93)"
       },
       {
-        "location": "row8:spec",
-        "status": "mismatch",
+        "location": "row6:spec",
+        "status": "ext_missing",
         "gtNorm": "0.4ml*60ea",
-        "extNorm": "60점안액",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row8:expiryDate",
+        "location": "row6:unitPrice",
         "status": "mismatch",
-        "gtNorm": "20290325",
-        "extNorm": "600120290325",
+        "gtNorm": "2804160",
+        "extNorm": "280416",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.80)"
+        "reason": "char-level diff (sim=0.92)"
       },
       {
-        "location": "row8:manufacturingNo",
+        "location": "row6:expiryDate",
+        "status": "ext_missing",
+        "gtNorm": "20290325",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row6:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "6001",
         "extNorm": "",
@@ -578,8 +578,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 12,
-      "structure": 4,
+      "recognition": 10,
+      "structure": 6,
       "layout": 1,
       "preprocessing": 0
     },

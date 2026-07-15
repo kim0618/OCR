@@ -3,8 +3,15 @@
 #
 # tmux 로 돌리는 방식 (run-eval.sh 와 동일):
 #   tmux new -s finetune
-#   bash ~/OCR/run-finetune.sh          # (나오기: Ctrl+B 떼고 D)
+#   bash ~/OCR/run-finetune.sh          # official pretrained 에서 새로 학습(트리 뿌리)
+#   bash ~/OCR/run-finetune.sh --from-adopted   # ★ 채택된 모델을 이어받아 학습(트리 줄기 연장)
 #   tmux attach -t finetune             # 재접속
+#
+# 트리 구조 이어받기:
+#   --from-adopted 를 주면 pretrain 을 official 대신 eval/finetune/adopted/best_accuracy.pdparams
+#   (직전 채택본)로 바꿔 그 위에 얹어 학습한다. 아직 채택본이 없으면 자동으로 official 로 시작.
+#   학습 후 게이트 통과 시 채택:  python eval/finetune_adopt.py --version v6
+#   (채택하면 adopted/ 갱신 → main.py 반영 + 다음 --from-adopted 의 base 가 됨)
 #
 # 흐름: corpus 최신 크롭 -> rec 리스트 -> PaddleX 레이아웃 -> 데이터셋 검증 -> 학습.
 # 로그는 ~/OCR/logs/finetune.log 에 tee. best 가중치 = eval/finetune/output/best_accuracy/.
@@ -13,9 +20,27 @@ export PYTHONUNBUFFERED=1
 source ~/OCR/ocr-server/.venv/bin/activate
 cd ~/OCR/ocr-server
 mkdir -p ~/OCR/logs
+_FT_START=$SECONDS   # 실행 이력 장부용 타이머
 
 CFG=eval/finetune/config_ppocrv5_rec_finetune.yaml
 DRV=eval/finetune/paddlex_train.py
+
+# --- 이어받기(트리) 결정: --from-adopted 면 채택본을 base 로 pretrain override ---
+FROM_ADOPTED=0
+for a in "$@"; do [ "$a" = "--from-adopted" ] && FROM_ADOPTED=1; done
+ADOPTED_PDP=eval/finetune/adopted/best_accuracy.pdparams
+ADOPTED_META=eval/finetune/adopted/META.json
+TRAIN_OVERRIDE=""      # 학습 스텝에 추가할 -o (기본: 없음 = config 의 official pretrained)
+BASE_TAG="official"    # run_history 계보에 남길 부모
+if [ "$FROM_ADOPTED" = "1" ]; then
+  if [ -f "$ADOPTED_PDP" ]; then
+    TRAIN_OVERRIDE="-o Train.pretrain_weight_path=$PWD/$ADOPTED_PDP"
+    BASE_TAG=$(python -c "import json;print(json.load(open('$ADOPTED_META')).get('version','adopted'))" 2>/dev/null || echo adopted)
+    echo "[이어받기] 채택본을 base 로 학습: $ADOPTED_PDP  (부모=$BASE_TAG)"
+  else
+    echo "[이어받기] 아직 채택본 없음($ADOPTED_PDP) → official pretrained 로 시작(트리 뿌리)"
+  fi
+fi
 {
   echo "==================== 파인튜닝 시작 [$(date +'%F %T')] ===================="
   echo "[1/6] corpus -> rec 리스트 재빌드 (최신 크롭 반영)"
@@ -41,7 +66,7 @@ DRV=eval/finetune/paddlex_train.py
   echo "[4/6] 학습"
   # 학습 출력을 진행 정리기로 통과 → 왼쪽에 '전체 대비 진행/​%' 카운터로 깔끔하게.
   # (에러·다운로드·평가결과 줄은 그대로 통과하니 문제 생기면 그대로 보임)
-  python "$DRV" -c "$CFG" -o Global.mode=train 2>&1 | python eval/finetune_progress.py
+  python "$DRV" -c "$CFG" -o Global.mode=train $TRAIN_OVERRIDE 2>&1 | python eval/finetune_progress.py
   echo "[5/6] export (서버가 읽는 inference 형식으로 변환)"
   python "$DRV" -c "$CFG" -o Global.mode=export
   echo "[6/6] 인식 비교 리포트 (base vs 파인튜닝, held-out test 크롭 직접)"
@@ -49,6 +74,15 @@ DRV=eval/finetune/paddlex_train.py
   echo "==================== 파인튜닝 끝 [$(date +'%F %T')] ===================="
   echo "best 가중치: eval/finetune/output/best_accuracy/"
   echo "인식 리포트: eval/finetune/FINETUNE_REPORT.html  (← 로컬에서 열면 됨)"
-  echo "--- export된 inference 경로 (main.py rec 를 이걸로 교체) ---"
-  find eval/finetune/output -type d -name inference 2>/dev/null || true
+  echo "--- 채택하려면(게이트 통과 시): 트리 줄기로 승격 + main.py 반영 ---"
+  echo "  python eval/finetune_adopt.py --version v6      # 부모=직전 채택본(없으면 official)"
+  echo "  이후 이어받아 학습: bash ~/OCR/run-finetune.sh --from-adopted"
+  # 실행 이력 장부 기록: 학습 크롭 수 · epoch · 소요 시간 · best acc
+  _ft_imgs=$(wc -l < eval/finetune_corpus/train.txt 2>/dev/null || echo 0)
+  _ft_ep=$(grep -oE 'epochs_iters: [0-9]+' "$CFG" | grep -oE '[0-9]+' | head -1)
+  _ft_acc=$(grep -a 'best metric' ~/OCR/logs/finetune.log 2>/dev/null | tail -1 | grep -oE 'acc: [0-9.]+' | grep -oE '[0-9.]+' | head -1)
+  python eval/run_history.py --record finetune --ts "$(date +%y%m%d_%H%M)" \
+    --base "$BASE_TAG" \
+    --images "$_ft_imgs" --epochs "${_ft_ep:-0}" --elapsed "$((SECONDS - _FT_START))" \
+    --best-acc "${_ft_acc:-0}" --adopted 0 || true
 } 2>&1 | stdbuf -oL -eL tee -a ~/OCR/logs/finetune.log

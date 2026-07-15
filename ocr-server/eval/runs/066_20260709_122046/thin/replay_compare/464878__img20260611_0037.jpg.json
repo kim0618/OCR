@@ -171,12 +171,12 @@
       "10",
       "11",
       "12",
-      "5"
+      "4"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
       "3",
-      "4",
+      "5",
       "6",
       "7",
       "8",
@@ -369,18 +369,18 @@
           },
           "quantity": {
             "gt": "3",
-            "ext": "",
+            "ext": "10",
             "gtNorm": "3",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "9801",
-            "ext": "",
+            "ext": "15757",
             "gtNorm": "9801",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "15757",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
@@ -409,10 +409,10 @@
           },
           "itemCode": {
             "gt": "01009382",
-            "ext": "05004243",
+            "ext": "01009382",
             "gtNorm": "01009382",
-            "extNorm": "05004243",
-            "status": "mismatch",
+            "extNorm": "01009382",
+            "status": "match",
             "spurious": false
           }
         }
@@ -574,31 +574,31 @@
         }
       },
       {
-        "rowIndex": "5",
+        "rowIndex": "4",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "티자리드정 1mg",
-            "ext": "",
+            "ext": "티자리드정1mg",
             "gtNorm": "티자리드정1mg",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "티자리드정1mg",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "티자리드정1mg",
-            "ext": "",
+            "ext": "티자리드정1mg",
             "gtNorm": "티자리드정1mg",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "티자리드정1mg",
+            "status": "match",
             "spurious": false
           },
           "spec": {
             "gt": "500T",
-            "ext": "500T",
+            "ext": "30정/병",
             "gtNorm": "500t",
-            "extNorm": "500t",
-            "status": "match",
+            "extNorm": "30정/병",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -611,25 +611,25 @@
           },
           "unitPrice": {
             "gt": "32850",
-            "ext": "32,850",
+            "ext": "9,018",
             "gtNorm": "32850",
-            "extNorm": "32850",
-            "status": "match",
+            "extNorm": "9018",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "98550",
-            "ext": "98,550",
+            "ext": "27,054",
             "gtNorm": "98550",
-            "extNorm": "98550",
-            "status": "match",
+            "extNorm": "27054",
+            "status": "mismatch",
             "spurious": false
           },
           "expiryDate": {
             "gt": "20290222",
-            "ext": "26001 2029.02.22",
+            "ext": "25001 2028.09.23",
             "gtNorm": "20290222",
-            "extNorm": "2600120290222",
+            "extNorm": "2500120280923",
             "status": "mismatch",
             "spurious": false
           },
@@ -643,10 +643,10 @@
           },
           "itemCode": {
             "gt": "8806418048038",
-            "ext": "",
+            "ext": "8806418048021",
             "gtNorm": "8806418048038",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "8806418048021",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -655,8 +655,8 @@
     "cellCounts": {
       "scored": 54,
       "match": 22,
-      "mismatch": 11,
-      "ext_missing": 21,
+      "mismatch": 16,
+      "ext_missing": 16,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -718,7 +718,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['3', '4', '6', '7', '8', '9']"
+        "reason": "extractor invented rows ['3', '5', '6', '7', '8', '9']"
       },
       {
         "location": "row1:itemName",
@@ -786,17 +786,17 @@
       },
       {
         "location": "row10:quantity",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "3",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "10",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row10:unitPrice",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "9801",
-        "extNorm": "",
+        "extNorm": "15757",
         "bucket": "layout",
         "reason": "gt cell appears in column(s) ['amount']"
       },
@@ -823,14 +823,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row10:itemCode",
-        "status": "mismatch",
-        "gtNorm": "01009382",
-        "extNorm": "05004243",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "row11:spec",
@@ -937,31 +929,39 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row5:itemName",
-        "status": "ext_missing",
-        "gtNorm": "티자리드정1mg",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "location": "row4:spec",
+        "status": "mismatch",
+        "gtNorm": "500t",
+        "extNorm": "30정/병",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
-        "location": "row5:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "티자리드정1mg",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "location": "row4:unitPrice",
+        "status": "mismatch",
+        "gtNorm": "32850",
+        "extNorm": "9018",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
-        "location": "row5:expiryDate",
+        "location": "row4:amount",
+        "status": "mismatch",
+        "gtNorm": "98550",
+        "extNorm": "27054",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
+      },
+      {
+        "location": "row4:expiryDate",
         "status": "mismatch",
         "gtNorm": "20290222",
-        "extNorm": "2600120290222",
+        "extNorm": "2500120280923",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.76)"
+        "reason": "cell differs, low similarity"
       },
       {
-        "location": "row5:manufacturingNo",
+        "location": "row4:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "26001",
         "extNorm": "",
@@ -969,17 +969,17 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row5:itemCode",
-        "status": "ext_missing",
+        "location": "row4:itemCode",
+        "status": "mismatch",
         "gtNorm": "8806418048038",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "8806418048021",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.85)"
       }
     ],
     "bucketTally": {
-      "recognition": 13,
-      "structure": 24,
+      "recognition": 17,
+      "structure": 20,
       "layout": 2,
       "preprocessing": 0
     },

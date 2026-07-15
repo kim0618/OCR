@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "1358104771",
-        "ext": "113-85-04425",
+        "ext": "",
         "gtNorm": "1358104771",
-        "extNorm": "1138504425",
+        "extNorm": "",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -73,11 +73,11 @@
       },
       "supplierCompany": {
         "gt": "한화제약(주)",
-        "ext": "백제약품(주)영등포지점",
+        "ext": "한화제약(주)",
         "gtNorm": "한화제약",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "한화제약",
         "type": "company",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -99,9 +99,9 @@
       },
       "supplierAddress": {
         "gt": "경기도 용인시 처인구 양지면 용곡로 87",
-        "ext": "서울 구로구 공원로8길 24",
+        "ext": "강원도 춘천시 남면 약암길",
         "gtNorm": "경기도용인시처인구양지면용곡로87",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "강원도춘천시남면약암길",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -154,9 +154,9 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 5,
-      "mismatch": 6,
-      "ext_missing": 0,
+      "match": 6,
+      "mismatch": 4,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 5,
+      "matched": 6,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 0
+      "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.45454545454545453
+    "fieldAccuracy": 0.5454545454545454
   },
   "table": {
     "alignMode": "content",
@@ -229,10 +229,10 @@
           },
           "unitPrice": {
             "gt": "0",
-            "ext": "",
+            "ext": "177045",
             "gtNorm": "0",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "177045",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
@@ -507,8 +507,8 @@
     "cellCounts": {
       "scored": 36,
       "match": 19,
-      "mismatch": 7,
-      "ext_missing": 10,
+      "mismatch": 8,
+      "ext_missing": 9,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -526,25 +526,17 @@
       },
       {
         "location": "field:supplierBizNumber",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "1358104771",
-        "extNorm": "1138504425",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
-      },
-      {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "한화제약",
-        "extNorm": "백제약품영등포지점",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기도용인시처인구양지면용곡로87",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "강원도춘천시남면약암길",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -598,11 +590,11 @@
       },
       {
         "location": "row2:unitPrice",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "0",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "177045",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row2:itemCode",
@@ -710,7 +702,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 13,
+      "recognition": 12,
       "structure": 11,
       "layout": 0,
       "preprocessing": 0
@@ -731,6 +723,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.0
+    "fieldMissRate": 0.091
   }
 }

@@ -8,11 +8,11 @@
     "perField": {
       "totalAmount": {
         "gt": "1842255",
-        "ext": "6,355,377",
+        "ext": "1842255",
         "gtNorm": "1842255",
-        "extNorm": "6355377",
+        "extNorm": "1842255",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
-      "mismatch": 4,
+      "match": 9,
+      "mismatch": 3,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 9,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -192,23 +192,23 @@
     "rowCountExt": 10,
     "rowCountMatch": false,
     "matchedRowIdx": [
-      "7",
-      "8",
+      "1",
+      "2",
       "9",
       "3"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "1",
-      "2",
       "5",
       "6",
       "7",
+      "7",
+      "8",
       "10"
     ],
     "rows": [
       {
-        "rowIndex": "7",
+        "rowIndex": "1",
         "rowMatch": false,
         "cells": {
           "itemName": {
@@ -269,10 +269,10 @@
           },
           "manufacturingNo": {
             "gt": "AQFD025",
-            "ext": "AQFD025 652105770 전/보",
+            "ext": "AQFD025",
             "gtNorm": "AQFD025",
-            "extNorm": "AQFD025652105770전보",
-            "status": "mismatch",
+            "extNorm": "AQFD025",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
@@ -294,7 +294,7 @@
         }
       },
       {
-        "rowIndex": "8",
+        "rowIndex": "2",
         "rowMatch": false,
         "cells": {
           "itemName": {
@@ -355,9 +355,9 @@
           },
           "manufacturingNo": {
             "gt": "83",
-            "ext": "8NYNO3 645305670 전/보",
+            "ext": "8NYNO3",
             "gtNorm": "83",
-            "extNorm": "8NYNO3645305670전보",
+            "extNorm": "8NYNO3",
             "status": "mismatch",
             "spurious": false
           },
@@ -495,10 +495,10 @@
           },
           "quantity": {
             "gt": "30",
-            "ext": "1,360",
+            "ext": "30",
             "gtNorm": "30",
-            "extNorm": "1360",
-            "status": "mismatch",
+            "extNorm": "30",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -554,24 +554,16 @@
     ],
     "cellCounts": {
       "scored": 40,
-      "match": 18,
-      "mismatch": 18,
+      "match": 20,
+      "mismatch": 16,
       "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.45
+    "cellAccuracy": 0.5
   },
   "buckets": {
     "defects": [
-      {
-        "location": "field:totalAmount",
-        "status": "mismatch",
-        "gtNorm": "1842255",
-        "extNorm": "6355377",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
@@ -602,10 +594,10 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '2', '5', '6', '7', '10']"
+        "reason": "extractor invented rows ['5', '6', '7', '7', '8', '10']"
       },
       {
-        "location": "row7:itemName",
+        "location": "row1:itemName",
         "status": "mismatch",
         "gtNorm": "한독아리셉트정10mg",
         "extNorm": "1한독아리셉트정10mg",
@@ -613,7 +605,7 @@
         "reason": "char-level diff (sim=0.96)"
       },
       {
-        "location": "row7:spec",
+        "location": "row1:spec",
         "status": "mismatch",
         "gtNorm": "10mg/100정",
         "extNorm": "√ 10mg/100정",
@@ -621,7 +613,7 @@
         "reason": "char-level diff (sim=0.90)"
       },
       {
-        "location": "row7:expiryDate",
+        "location": "row1:expiryDate",
         "status": "mismatch",
         "gtNorm": "20281215",
         "extNorm": "281215",
@@ -629,15 +621,7 @@
         "reason": "char-level diff (sim=0.86)"
       },
       {
-        "location": "row7:manufacturingNo",
-        "status": "mismatch",
-        "gtNorm": "AQFD025",
-        "extNorm": "AQFD025652105770전보",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.56)"
-      },
-      {
-        "location": "row7:insuranceCode",
+        "location": "row1:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "652105770",
         "extNorm": "",
@@ -645,7 +629,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row8:itemName",
+        "location": "row2:itemName",
         "status": "mismatch",
         "gtNorm": "한림덱시뉴로정",
         "extNorm": "2한림덱시뉴로정",
@@ -653,7 +637,7 @@
         "reason": "char-level diff (sim=0.93)"
       },
       {
-        "location": "row8:spec",
+        "location": "row2:spec",
         "status": "mismatch",
         "gtNorm": "480mg/30정",
         "extNorm": "v 480mg/30정",
@@ -661,7 +645,7 @@
         "reason": "char-level diff (sim=0.90)"
       },
       {
-        "location": "row8:expiryDate",
+        "location": "row2:expiryDate",
         "status": "mismatch",
         "gtNorm": "20281117",
         "extNorm": "281117",
@@ -669,15 +653,15 @@
         "reason": "char-level diff (sim=0.86)"
       },
       {
-        "location": "row8:manufacturingNo",
+        "location": "row2:manufacturingNo",
         "status": "mismatch",
         "gtNorm": "83",
-        "extNorm": "8NYNO3645305670전보",
+        "extNorm": "8NYNO3",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.50)"
       },
       {
-        "location": "row8:insuranceCode",
+        "location": "row2:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "645305670",
         "extNorm": "",
@@ -749,14 +733,6 @@
         "reason": "char-level diff (sim=0.90)"
       },
       {
-        "location": "row3:quantity",
-        "status": "mismatch",
-        "gtNorm": "30",
-        "extNorm": "1360",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
-      },
-      {
         "location": "row3:expiryDate",
         "status": "mismatch",
         "gtNorm": "20280502",
@@ -782,7 +758,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 22,
+      "recognition": 19,
       "structure": 5,
       "layout": 0,
       "preprocessing": 0

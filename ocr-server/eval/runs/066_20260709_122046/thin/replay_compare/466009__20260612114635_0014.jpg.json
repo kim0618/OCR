@@ -182,7 +182,7 @@
       "16",
       "17",
       "18",
-      "19",
+      "6",
       "20",
       "21",
       "22",
@@ -197,7 +197,6 @@
       "3",
       "4",
       "5",
-      "6",
       "7",
       "8",
       "9",
@@ -207,6 +206,7 @@
       "13",
       "14",
       "15",
+      "19",
       "26"
     ],
     "rows": [
@@ -445,15 +445,15 @@
         }
       },
       {
-        "rowIndex": "19",
+        "rowIndex": "6",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "로수엠젯정 10/2.5mg 30정",
-            "ext": "(주)마더스 A-273-12- 로수엠젯정10/2.5mg 30정",
+            "ext": "로수엠젯정10/2.5mg 30정",
             "gtNorm": "로수엠젯정1025mg30정",
-            "extNorm": "주마더스a27312로수엠젯정1025mg30정",
-            "status": "mismatch",
+            "extNorm": "로수엠젯정1025mg30정",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
@@ -466,10 +466,10 @@
           },
           "spec": {
             "gt": "10/2.5mg30정",
-            "ext": "10/2.5mg30정",
+            "ext": "",
             "gtNorm": "10/2.5mg30정",
-            "extNorm": "10/2.5mg30정",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "quantity": {
@@ -482,15 +482,15 @@
           },
           "unitPrice": {
             "gt": "15120",
-            "ext": "15,120.00",
+            "ext": "15120",
             "gtNorm": "15120",
-            "extNorm": "1512000",
-            "status": "mismatch",
+            "extNorm": "15120",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "756000",
-            "ext": "756,000",
+            "ext": "756000",
             "gtNorm": "756000",
             "extNorm": "756000",
             "status": "match",
@@ -506,10 +506,10 @@
           },
           "manufacturingNo": {
             "gt": "6003",
-            "ext": "6003 20290222",
+            "ext": "",
             "gtNorm": "6003",
-            "extNorm": "600320290222",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemCode": {
@@ -993,13 +993,13 @@
     ],
     "cellCounts": {
       "scored": 90,
-      "match": 44,
-      "mismatch": 35,
-      "ext_missing": 11,
+      "match": 45,
+      "mismatch": 32,
+      "ext_missing": 13,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4888888888888889
+    "cellAccuracy": 0.5
   },
   "buckets": {
     "defects": [
@@ -1065,7 +1065,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '26']"
+        "reason": "extractor invented rows ['1', '2', '3', '4', '5', '7', '8', '9', '10', '11', '12', '13', '14', '15', '19', '26']"
       },
       {
         "location": "row16:itemName",
@@ -1172,23 +1172,15 @@
         "reason": "char-level diff (sim=0.55)"
       },
       {
-        "location": "row19:itemName",
-        "status": "mismatch",
-        "gtNorm": "로수엠젯정1025mg30정",
-        "extNorm": "주마더스a27312로수엠젯정1025mg30정",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.74)"
+        "location": "row6:spec",
+        "status": "ext_missing",
+        "gtNorm": "10/2.5mg30정",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row19:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "15120",
-        "extNorm": "1512000",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.83)"
-      },
-      {
-        "location": "row19:expiryDate",
+        "location": "row6:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20290222",
         "extNorm": "",
@@ -1196,12 +1188,12 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row19:manufacturingNo",
-        "status": "mismatch",
+        "location": "row6:manufacturingNo",
+        "status": "ext_missing",
         "gtNorm": "6003",
-        "extNorm": "600320290222",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row20:itemName",
@@ -1437,8 +1429,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 39,
-      "structure": 15,
+      "recognition": 36,
+      "structure": 17,
       "layout": 0,
       "preprocessing": 0
     },

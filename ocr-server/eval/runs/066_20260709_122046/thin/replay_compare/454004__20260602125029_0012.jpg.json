@@ -532,18 +532,18 @@
           },
           "unitPrice": {
             "gt": "0",
-            "ext": "",
+            "ext": "20",
             "gtNorm": "0",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "105682",
-            "ext": "",
+            "ext": "100",
             "gtNorm": "105682",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "100",
+            "status": "mismatch",
             "spurious": false
           },
           "expiryDate": {
@@ -810,8 +810,8 @@
     "cellCounts": {
       "scored": 72,
       "match": 33,
-      "mismatch": 19,
-      "ext_missing": 20,
+      "mismatch": 21,
+      "ext_missing": 18,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -1064,24 +1064,24 @@
         "status": "mismatch",
         "gtNorm": "20",
         "extNorm": "6",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['unitPrice']"
       },
       {
         "location": "row5:unitPrice",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "0",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "20",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "row5:amount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "105682",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "100",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row5:manufacturingNo",
@@ -1205,9 +1205,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 23,
-      "structure": 24,
-      "layout": 1,
+      "recognition": 24,
+      "structure": 22,
+      "layout": 2,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

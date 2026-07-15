@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "12081",
-        "ext": "609-85-04585",
+        "ext": "",
         "gtNorm": "12081",
-        "extNorm": "6098504585",
+        "extNorm": "",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "한국에자이(전)",
-        "ext": "백제약품(주)영남본부",
+        "ext": "한국에자이주식회사",
         "gtNorm": "한국에자이",
-        "extNorm": "백제약품영남본부",
+        "extNorm": "한국에자이",
         "type": "company",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "경기 성남시 분당구 수내동 월드프라자 505호",
-        "ext": "경남 김해시 진례면 김해테크노벨리로 33-12 백제약품(주)영남본부",
+        "ext": "서울시강남구봉은사로86길6빌딩레베쌍",
         "gtNorm": "경기성남시분당구수내동월드프라자505호",
-        "extNorm": "경남김해시진례면김해테크노벨리로3312백제약품주영남본부",
+        "extNorm": "서울시강남구봉은사로86길6빌딩레베쌍",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 3,
-      "mismatch": 9,
-      "ext_missing": 0,
+      "match": 4,
+      "mismatch": 7,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 3,
+      "matched": 4,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 0
+      "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.25
+    "fieldAccuracy": 0.3333333333333333
   },
   "table": {
     "alignMode": "content",
@@ -628,19 +628,11 @@
       },
       {
         "location": "field:supplierBizNumber",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "12081",
-        "extNorm": "6098504585",
+        "extNorm": "",
         "bucket": "structure",
-        "reason": "ext value is gt's ['field:buyerBizNumber']"
-      },
-      {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "한국에자이",
-        "extNorm": "백제약품영남본부",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['field:buyerCompany']"
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:taxType",
@@ -654,7 +646,7 @@
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기성남시분당구수내동월드프라자505호",
-        "extNorm": "경남김해시진례면김해테크노벨리로3312백제약품주영남본부",
+        "extNorm": "서울시강남구봉은사로86길6빌딩레베쌍",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -671,8 +663,8 @@
         "status": "mismatch",
         "gtNorm": "백제약품영남본부",
         "extNorm": "백제약품영남본부청명",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:supplierCompany']"
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.89)"
       },
       {
         "location": "field:buyerAddress",
@@ -756,8 +748,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 10,
-      "structure": 8,
+      "recognition": 11,
+      "structure": 6,
       "layout": 0,
       "preprocessing": 0
     },
@@ -777,6 +769,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.0
+    "fieldMissRate": 0.083
   }
 }

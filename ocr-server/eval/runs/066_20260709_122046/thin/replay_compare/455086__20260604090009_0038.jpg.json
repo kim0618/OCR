@@ -183,7 +183,7 @@
       "8",
       "9",
       "10",
-      "11"
+      "5"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
@@ -191,8 +191,8 @@
       "2",
       "3",
       "4",
-      "5",
-      "6"
+      "6",
+      "11"
     ],
     "rows": [
       {
@@ -508,23 +508,23 @@
         }
       },
       {
-        "rowIndex": "11",
+        "rowIndex": "5",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "이노베론정 400mg",
-            "ext": "이노베론정400mg 비고 계",
+            "ext": "이노베론정400mg",
             "gtNorm": "이노베론정400mg",
-            "extNorm": "이노베론정400mg비고계",
-            "status": "mismatch",
+            "extNorm": "이노베론정400mg",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "이노베론필름코팅정400mg(한독)",
-            "ext": "이노베론필름코팅정400mg(한독)",
+            "ext": "이브론정400mg(비급여)",
             "gtNorm": "이노베론필름코팅정400mg(한독)",
-            "extNorm": "이노베론필름코팅정400mg(한독)",
-            "status": "match",
+            "extNorm": "이브론정400mg(비급여)",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
@@ -537,7 +537,7 @@
           },
           "quantity": {
             "gt": "5",
-            "ext": "5",
+            "ext": "V 5",
             "gtNorm": "5",
             "extNorm": "5",
             "status": "match",
@@ -553,7 +553,7 @@
           },
           "amount": {
             "gt": "552750",
-            "ext": "552,750",
+            "ext": "552750",
             "gtNorm": "552750",
             "extNorm": "552750",
             "status": "match",
@@ -561,10 +561,10 @@
           },
           "expiryDate": {
             "gt": "20281117",
-            "ext": "55,275 28-11-17",
+            "ext": "",
             "gtNorm": "20281117",
-            "extNorm": "55275281117",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "manufacturingNo": {
@@ -577,10 +577,10 @@
           },
           "itemCode": {
             "gt": "01004296",
-            "ext": "01004296",
+            "ext": "IVFE001",
             "gtNorm": "01004296",
-            "extNorm": "01004296",
-            "status": "match",
+            "extNorm": "IVFE001",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -588,13 +588,13 @@
     ],
     "cellCounts": {
       "scored": 45,
-      "match": 38,
+      "match": 37,
       "mismatch": 7,
-      "ext_missing": 0,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.8444444444444444
+    "cellAccuracy": 0.8222222222222222
   },
   "buckets": {
     "defects": [
@@ -676,7 +676,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '2', '3', '4', '5', '6']"
+        "reason": "extractor invented rows ['1', '2', '3', '4', '6', '11']"
       },
       {
         "location": "row7:expiryDate",
@@ -719,25 +719,33 @@
         "reason": "char-level diff (sim=0.74)"
       },
       {
-        "location": "row11:itemName",
+        "location": "row5:itemNameMaster",
         "status": "mismatch",
-        "gtNorm": "이노베론정400mg",
-        "extNorm": "이노베론정400mg비고계",
+        "gtNorm": "이노베론필름코팅정400mg(한독)",
+        "extNorm": "이브론정400mg(비급여)",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.87)"
+        "reason": "char-level diff (sim=0.62)"
       },
       {
-        "location": "row11:expiryDate",
-        "status": "mismatch",
+        "location": "row5:expiryDate",
+        "status": "ext_missing",
         "gtNorm": "20281117",
-        "extNorm": "55275281117",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row5:itemCode",
+        "status": "mismatch",
+        "gtNorm": "01004296",
+        "extNorm": "IVFE001",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.74)"
+        "reason": "cell differs, low similarity"
       }
     ],
     "bucketTally": {
       "recognition": 12,
-      "structure": 5,
+      "structure": 6,
       "layout": 0,
       "preprocessing": 0
     },

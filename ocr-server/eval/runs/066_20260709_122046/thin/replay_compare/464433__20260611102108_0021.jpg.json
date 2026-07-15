@@ -176,15 +176,14 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 3,
-    "rowCountExt": 2,
-    "rowCountMatch": false,
+    "rowCountExt": 3,
+    "rowCountMatch": true,
     "matchedRowIdx": [
       "1",
-      "2"
-    ],
-    "gtOnlyRowIdx": [
+      "2",
       "3"
     ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [],
     "rows": [
       {
@@ -225,10 +224,10 @@
           },
           "unitPrice": {
             "gt": "25446",
-            "ext": "",
+            "ext": "25446",
             "gtNorm": "25446",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "25446",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -295,10 +294,10 @@
           },
           "quantity": {
             "gt": "100",
-            "ext": "",
+            "ext": "100",
             "gtNorm": "100",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "100",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -346,7 +345,6 @@
       {
         "rowIndex": "3",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "고덱스캡슐(PTP)",
@@ -374,26 +372,26 @@
           },
           "quantity": {
             "gt": "200",
-            "ext": "",
+            "ext": "200",
             "gtNorm": "200",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "200",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "25446",
-            "ext": "",
+            "ext": "25446",
             "gtNorm": "25446",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "25446",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "5089200",
-            "ext": "",
+            "ext": "5089200",
             "gtNorm": "5089200",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "5089200",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -425,13 +423,13 @@
     ],
     "cellCounts": {
       "scored": 27,
-      "match": 4,
+      "match": 9,
       "mismatch": 6,
-      "ext_missing": 17,
+      "ext_missing": 12,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.14814814814814814
+    "cellAccuracy": 0.3333333333333333
   },
   "buckets": {
     "defects": [
@@ -476,14 +474,6 @@
         "reason": "value differs, low similarity"
       },
       {
-        "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['3']"
-      },
-      {
         "location": "row1:itemName",
         "status": "mismatch",
         "gtNorm": "고덱스캡슐병",
@@ -514,14 +504,6 @@
         "extNorm": "9",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "25446",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
       },
       {
         "location": "row1:amount",
@@ -572,14 +554,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:quantity",
-        "status": "ext_missing",
-        "gtNorm": "100",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row2:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20281130",
@@ -620,30 +594,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row3:quantity",
-        "status": "ext_missing",
-        "gtNorm": "200",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "25446",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:amount",
-        "status": "ext_missing",
-        "gtNorm": "5089200",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row3:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20280220",
@@ -670,8 +620,8 @@
     ],
     "bucketTally": {
       "recognition": 8,
-      "structure": 20,
-      "layout": 1,
+      "structure": 15,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

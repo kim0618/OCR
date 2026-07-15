@@ -202,10 +202,10 @@
           },
           "itemNameMaster": {
             "gt": "듀오트라브점안액2.5mL(노바티스)",
-            "ext": "듀오트라브점안액2.5mL(노바티스)",
+            "ext": "듀오트라브점안액2.5mL(판매원변경)",
             "gtNorm": "듀오트라브점안액2.5ml(노바티스)",
-            "extNorm": "듀오트라브점안액2.5ml(노바티스)",
-            "status": "match",
+            "extNorm": "듀오트라브점안액2.5ml(판매원변경)",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
@@ -226,18 +226,18 @@
           },
           "unitPrice": {
             "gt": "19792",
-            "ext": "",
+            "ext": "19792",
             "gtNorm": "19792",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "19792",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "197920",
-            "ext": "",
+            "ext": "197920",
             "gtNorm": "197920",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "197920",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -258,10 +258,10 @@
           },
           "itemCode": {
             "gt": "04006084",
-            "ext": "04006084",
+            "ext": "22001148",
             "gtNorm": "04006084",
-            "extNorm": "04006084",
-            "status": "match",
+            "extNorm": "22001148",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -304,18 +304,18 @@
           },
           "unitPrice": {
             "gt": "26143",
-            "ext": "",
+            "ext": "26143",
             "gtNorm": "26143",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "26143",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "1568580",
-            "ext": "",
+            "ext": "1568580",
             "gtNorm": "1568580",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "1568580",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -336,10 +336,10 @@
           },
           "itemCode": {
             "gt": "12000690",
-            "ext": "12000693",
+            "ext": "12000690",
             "gtNorm": "12000690",
-            "extNorm": "12000693",
-            "status": "mismatch",
+            "extNorm": "12000690",
+            "status": "match",
             "spurious": false
           }
         }
@@ -347,13 +347,13 @@
     ],
     "cellCounts": {
       "scored": 18,
-      "match": 4,
-      "mismatch": 5,
-      "ext_missing": 9,
+      "match": 7,
+      "mismatch": 6,
+      "ext_missing": 5,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.2222222222222222
+    "cellAccuracy": 0.3888888888888889
   },
   "buckets": {
     "defects": [
@@ -398,28 +398,20 @@
         "reason": "char-level diff (sim=0.86)"
       },
       {
+        "location": "row1:itemNameMaster",
+        "status": "mismatch",
+        "gtNorm": "듀오트라브점안액2.5ml(노바티스)",
+        "extNorm": "듀오트라브점안액2.5ml(판매원변경)",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.77)"
+      },
+      {
         "location": "row1:spec",
         "status": "mismatch",
         "gtNorm": "2.5ml/병",
         "extNorm": "bt",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "19792",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:amount",
-        "status": "ext_missing",
-        "gtNorm": "197920",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row1:expiryDate",
@@ -436,6 +428,14 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row1:itemCode",
+        "status": "mismatch",
+        "gtNorm": "04006084",
+        "extNorm": "22001148",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row3:itemName",
@@ -462,22 +462,6 @@
         "reason": "char-level diff (sim=0.50)"
       },
       {
-        "location": "row3:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "26143",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:amount",
-        "status": "ext_missing",
-        "gtNorm": "1568580",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row3:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20290419",
@@ -492,19 +476,11 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:itemCode",
-        "status": "mismatch",
-        "gtNorm": "12000690",
-        "extNorm": "12000693",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.88)"
       }
     ],
     "bucketTally": {
-      "recognition": 8,
-      "structure": 10,
+      "recognition": 9,
+      "structure": 6,
       "layout": 0,
       "preprocessing": 0
     },

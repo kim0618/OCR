@@ -232,10 +232,10 @@
           },
           "amount": {
             "gt": "756000",
-            "ext": "83,160",
+            "ext": "756000",
             "gtNorm": "756000",
-            "extNorm": "83160",
-            "status": "mismatch",
+            "extNorm": "756000",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -338,13 +338,13 @@
     ],
     "cellCounts": {
       "scored": 17,
-      "match": 2,
-      "mismatch": 2,
+      "match": 3,
+      "mismatch": 1,
       "ext_missing": 13,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.11764705882352941
+    "cellAccuracy": 0.17647058823529413
   },
   "buckets": {
     "defects": [
@@ -354,7 +354,7 @@
         "gtNorm": "756000",
         "extNorm": "643501510",
         "bucket": "structure",
-        "reason": "ext value is gt's ['row1:insuranceCode']"
+        "reason": "gt value present at ['row1:amount']"
       },
       {
         "location": "field:taxAmount",
@@ -370,7 +370,7 @@
         "gtNorm": "83160",
         "extNorm": "0",
         "bucket": "structure",
-        "reason": "gt value present at ['row1:amount']"
+        "reason": "ext value is gt's ['row2:unitPrice']"
       },
       {
         "location": "field:supplyAmount",
@@ -419,14 +419,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:amount",
-        "status": "mismatch",
-        "gtNorm": "756000",
-        "extNorm": "83160",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:expiryDate",
@@ -518,7 +510,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 4,
+      "recognition": 3,
       "structure": 17,
       "layout": 0,
       "preprocessing": 0

@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "2078100726",
-        "ext": "402-85-15138",
+        "ext": "",
         "gtNorm": "2078100726",
-        "extNorm": "4028515138",
+        "extNorm": "",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "삼성제약(주)(전문)",
-        "ext": "삼성제약(주)(전문)",
+        "ext": "전리복도정주시덕직구신복로16(팔복용4기백제약품(주)",
         "gtNorm": "삼성제약전문",
-        "extNorm": "삼성제약전문",
+        "extNorm": "전리복도정주시덕직구신복로16팔복용4기백제약품",
         "type": "company",
-        "status": "match",
+        "status": "mismatch",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "경기도 화성시 향남읍 제약공단2길 35",
-        "ext": "경기도 화성시 향남읍 제약공단2길 35",
+        "ext": "",
         "gtNorm": "경기도화성시향남읍제약공단2길35",
-        "extNorm": "경기도화성시향남읍제약공단2길35",
+        "extNorm": "",
         "type": "address",
-        "status": "match",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
+      "match": 6,
       "mismatch": 4,
-      "ext_missing": 0,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 6,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 0
+      "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.5
   },
   "table": {
     "alignMode": "content",
@@ -471,11 +471,27 @@
       },
       {
         "location": "field:supplierBizNumber",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "2078100726",
-        "extNorm": "4028515138",
+        "extNorm": "",
         "bucket": "structure",
-        "reason": "ext value is gt's ['field:buyerBizNumber']"
+        "reason": "gt value not found anywhere in extraction"
+      },
+      {
+        "location": "field:supplierCompany",
+        "status": "mismatch",
+        "gtNorm": "삼성제약전문",
+        "extNorm": "전리복도정주시덕직구신복로16팔복용4기백제약품",
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
+      },
+      {
+        "location": "field:supplierAddress",
+        "status": "ext_missing",
+        "gtNorm": "경기도화성시향남읍제약공단2길35",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:buyerCompany",
@@ -639,8 +655,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 11,
-      "structure": 11,
+      "recognition": 12,
+      "structure": 12,
       "layout": 0,
       "preprocessing": 0
     },
@@ -660,6 +676,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.0
+    "fieldMissRate": 0.167
   }
 }

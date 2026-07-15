@@ -192,7 +192,7 @@
     "rowCountExt": 30,
     "rowCountMatch": false,
     "matchedRowIdx": [
-      "1",
+      "19",
       "2",
       "3",
       "4",
@@ -215,7 +215,7 @@
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "19",
+      "1",
       "20",
       "22",
       "23",
@@ -228,15 +228,15 @@
     ],
     "rows": [
       {
-        "rowIndex": "1",
+        "rowIndex": "19",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "글리민정",
-            "ext": "글리민정",
+            "ext": "1 글리민정",
             "gtNorm": "글리민정",
-            "extNorm": "글리민정",
-            "status": "match",
+            "extNorm": "1글리민정",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
@@ -249,34 +249,34 @@
           },
           "spec": {
             "gt": "30",
-            "ext": "",
+            "ext": "30",
             "gtNorm": "30",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
             "gt": "10",
-            "ext": "",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "5162",
-            "ext": "",
+            "ext": "5,162.00",
             "gtNorm": "5162",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "516200",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "46927",
-            "ext": "",
+            "ext": "4,693",
             "gtNorm": "46927",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "4693",
+            "status": "mismatch",
             "spurious": false
           },
           "expiryDate": {
@@ -289,18 +289,18 @@
           },
           "manufacturingNo": {
             "gt": "KJ001",
-            "ext": "",
+            "ext": "KJ001 20280120",
             "gtNorm": "KJ001",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "KJ00120280120",
+            "status": "mismatch",
             "spurious": false
           },
           "itemCode": {
             "gt": "8806481002913",
-            "ext": "8806481002920",
+            "ext": "8806481002913",
             "gtNorm": "8806481002913",
-            "extNorm": "8806481002920",
-            "status": "mismatch",
+            "extNorm": "8806481002913",
+            "status": "match",
             "spurious": false
           }
         }
@@ -1790,13 +1790,13 @@
     ],
     "cellCounts": {
       "scored": 180,
-      "match": 47,
-      "mismatch": 45,
-      "ext_missing": 88,
+      "match": 49,
+      "mismatch": 48,
+      "ext_missing": 83,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.2611111111111111
+    "cellAccuracy": 0.2722222222222222
   },
   "buckets": {
     "defects": [
@@ -1862,42 +1862,34 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['19', '20', '22', '23', '24', '25', '27', '28', '29', '30']"
+        "reason": "extractor invented rows ['1', '20', '22', '23', '24', '25', '27', '28', '29', '30']"
       },
       {
-        "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "30",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "location": "row19:itemName",
+        "status": "mismatch",
+        "gtNorm": "글리민정",
+        "extNorm": "1글리민정",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemNameMaster']"
       },
       {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "10",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
+        "location": "row19:unitPrice",
+        "status": "mismatch",
         "gtNorm": "5162",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "516200",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.80)"
       },
       {
-        "location": "row1:amount",
-        "status": "ext_missing",
+        "location": "row19:amount",
+        "status": "mismatch",
         "gtNorm": "46927",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "4693",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.67)"
       },
       {
-        "location": "row1:expiryDate",
+        "location": "row19:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20280120",
         "extNorm": "",
@@ -1905,20 +1897,12 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:manufacturingNo",
-        "status": "ext_missing",
-        "gtNorm": "KJ001",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:itemCode",
+        "location": "row19:manufacturingNo",
         "status": "mismatch",
-        "gtNorm": "8806481002913",
-        "extNorm": "8806481002920",
+        "gtNorm": "KJ001",
+        "extNorm": "KJ00120280120",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.85)"
+        "reason": "char-level diff (sim=0.56)"
       },
       {
         "location": "row2:spec",
@@ -2930,9 +2914,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 45,
-      "structure": 78,
-      "layout": 18,
+      "recognition": 47,
+      "structure": 73,
+      "layout": 19,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

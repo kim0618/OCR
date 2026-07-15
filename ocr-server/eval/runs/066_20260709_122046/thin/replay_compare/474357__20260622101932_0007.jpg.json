@@ -176,34 +176,36 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 2,
-    "rowCountExt": 1,
-    "rowCountMatch": false,
+    "rowCountExt": 2,
+    "rowCountMatch": true,
     "matchedRowIdx": [
-      "1"
+      "2"
     ],
     "gtOnlyRowIdx": [
       "2"
     ],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "1"
+    ],
     "rows": [
       {
-        "rowIndex": "1",
+        "rowIndex": "2",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "암브로콜시럽 500mL",
-            "ext": "(643501833)암브로콜시럽-500mt",
+            "ext": "",
             "gtNorm": "암브로콜시럽500ml",
-            "extNorm": "643501833암브로콜시럽500mt",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "암브로콜시럽500mL(특정로트회수)",
-            "ext": "암브로콜시럽500mL(특정로트회수)",
+            "ext": "",
             "gtNorm": "암브로콜시럽500ml(특정로트회수)",
-            "extNorm": "암브로콜시럽500ml(특정로트회수)",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "spec": {
@@ -224,18 +226,18 @@
           },
           "unitPrice": {
             "gt": "7500",
-            "ext": "8,250",
+            "ext": "7500",
             "gtNorm": "7500",
-            "extNorm": "8250",
-            "status": "mismatch",
+            "extNorm": "7500",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "75000",
-            "ext": "60,682",
+            "ext": "75000",
             "gtNorm": "75000",
-            "extNorm": "60682",
-            "status": "mismatch",
+            "extNorm": "75000",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -256,10 +258,10 @@
           },
           "itemCode": {
             "gt": "04002967",
-            "ext": "04002967",
+            "ext": "",
             "gtNorm": "04002967",
-            "extNorm": "04002967",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "insuranceCode": {
@@ -339,8 +341,8 @@
     "cellCounts": {
       "scored": 17,
       "match": 3,
-      "mismatch": 3,
-      "ext_missing": 11,
+      "mismatch": 0,
+      "ext_missing": 14,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -370,7 +372,7 @@
         "gtNorm": "8250",
         "extNorm": "0",
         "bucket": "structure",
-        "reason": "gt value present at ['row1:unitPrice']"
+        "reason": "ext value is gt's ['row2:unitPrice']"
       },
       {
         "location": "field:supplyAmount",
@@ -378,7 +380,7 @@
         "gtNorm": "60682",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "gt value present at ['row1:amount']"
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:buyerAddress",
@@ -397,15 +399,31 @@
         "reason": "extractor missed rows ['2']"
       },
       {
-        "location": "row1:itemName",
-        "status": "mismatch",
-        "gtNorm": "암브로콜시럽500ml",
-        "extNorm": "643501833암브로콜시럽500mt",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.65)"
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['1']"
       },
       {
-        "location": "row1:spec",
+        "location": "row2:itemName",
+        "status": "ext_missing",
+        "gtNorm": "암브로콜시럽500ml",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row2:itemNameMaster",
+        "status": "ext_missing",
+        "gtNorm": "암브로콜시럽500ml(특정로트회수)",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row2:spec",
         "status": "ext_missing",
         "gtNorm": "1ea",
         "extNorm": "",
@@ -413,23 +431,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "7500",
-        "extNorm": "8250",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
-      },
-      {
-        "location": "row1:amount",
-        "status": "mismatch",
-        "gtNorm": "75000",
-        "extNorm": "60682",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row1:expiryDate",
+        "location": "row2:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20290115",
         "extNorm": "",
@@ -437,7 +439,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:manufacturingNo",
+        "location": "row2:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "122526111",
         "extNorm": "",
@@ -445,7 +447,15 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:insuranceCode",
+        "location": "row2:itemCode",
+        "status": "ext_missing",
+        "gtNorm": "04002967",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row2:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "643501833",
         "extNorm": "",
@@ -510,8 +520,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 4,
-      "structure": 16,
+      "recognition": 1,
+      "structure": 20,
       "layout": 0,
       "preprocessing": 0
     },

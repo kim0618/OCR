@@ -189,34 +189,36 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 2,
-    "rowCountExt": 1,
-    "rowCountMatch": false,
+    "rowCountExt": 2,
+    "rowCountMatch": true,
     "matchedRowIdx": [
-      "1"
+      "2"
     ],
     "gtOnlyRowIdx": [
       "2"
     ],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "1"
+    ],
     "rows": [
       {
-        "rowIndex": "1",
+        "rowIndex": "2",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "다이아벡스정 1000밀리그램(메트포르민염 9000080",
-            "ext": "다이아벡스정1000밀리그램(메트포르민염",
+            "ext": "",
             "gtNorm": "다이아벡스정1000밀리그램메트포르민염9000080",
-            "extNorm": "다이아벡스정1000밀리그램메트포르민염",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "다이아벡스정1000mg",
-            "ext": "다이아벡스정1000mg",
+            "ext": "",
             "gtNorm": "다이아벡스정1000mg",
-            "extNorm": "다이아벡스정1000mg",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "spec": {
@@ -229,26 +231,26 @@
           },
           "quantity": {
             "gt": "1440",
-            "ext": "1",
+            "ext": "1440",
             "gtNorm": "1440",
-            "extNorm": "1",
-            "status": "mismatch",
+            "extNorm": "1440",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "11200",
-            "ext": "1,440",
+            "ext": "11200",
             "gtNorm": "11200",
-            "extNorm": "1440",
-            "status": "mismatch",
+            "extNorm": "11200",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "16128000",
-            "ext": "11,200",
+            "ext": "16128000",
             "gtNorm": "16128000",
-            "extNorm": "11200",
-            "status": "mismatch",
+            "extNorm": "16128000",
+            "status": "match",
             "spurious": false
           },
           "manufacturingNo": {
@@ -261,10 +263,10 @@
           },
           "itemCode": {
             "gt": "8806416003725",
-            "ext": "8806416003718",
+            "ext": "",
             "gtNorm": "8806416003725",
-            "extNorm": "8806416003718",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "insuranceCode": {
@@ -343,13 +345,13 @@
     ],
     "cellCounts": {
       "scored": 16,
-      "match": 1,
-      "mismatch": 5,
-      "ext_missing": 10,
+      "match": 3,
+      "mismatch": 0,
+      "ext_missing": 13,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.0625
+    "cellAccuracy": 0.1875
   },
   "buckets": {
     "defects": [
@@ -378,15 +380,31 @@
         "reason": "extractor missed rows ['2']"
       },
       {
-        "location": "row1:itemName",
-        "status": "mismatch",
-        "gtNorm": "다이아벡스정1000밀리그램메트포르민염9000080",
-        "extNorm": "다이아벡스정1000밀리그램메트포르민염",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.85)"
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['1']"
       },
       {
-        "location": "row1:spec",
+        "location": "row2:itemName",
+        "status": "ext_missing",
+        "gtNorm": "다이아벡스정1000밀리그램메트포르민염9000080",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row2:itemNameMaster",
+        "status": "ext_missing",
+        "gtNorm": "다이아벡스정1000mg",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row2:spec",
         "status": "ext_missing",
         "gtNorm": "100t",
         "extNorm": "",
@@ -394,31 +412,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:quantity",
-        "status": "mismatch",
-        "gtNorm": "1440",
-        "extNorm": "1",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['unitPrice']"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "11200",
-        "extNorm": "1440",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
-      },
-      {
-        "location": "row1:amount",
-        "status": "mismatch",
-        "gtNorm": "16128000",
-        "extNorm": "11200",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.77)"
-      },
-      {
-        "location": "row1:manufacturingNo",
+        "location": "row2:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "641600370",
         "extNorm": "",
@@ -426,15 +420,15 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemCode",
-        "status": "mismatch",
+        "location": "row2:itemCode",
+        "status": "ext_missing",
         "gtNorm": "8806416003725",
-        "extNorm": "8806416003718",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.85)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:insuranceCode",
+        "location": "row2:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "9000080",
         "extNorm": "",
@@ -499,9 +493,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 4,
-      "structure": 12,
-      "layout": 2,
+      "recognition": 1,
+      "structure": 16,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

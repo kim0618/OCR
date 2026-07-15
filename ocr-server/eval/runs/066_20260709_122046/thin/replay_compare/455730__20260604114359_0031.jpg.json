@@ -230,18 +230,18 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "290510 10",
+            "ext": "828",
             "gtNorm": "10",
-            "extNorm": "29051010",
+            "extNorm": "828",
             "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "828",
-            "ext": "828",
+            "ext": "290510 10",
             "gtNorm": "828",
-            "extNorm": "828",
-            "status": "match",
+            "extNorm": "29051010",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
@@ -281,13 +281,13 @@
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 5,
-      "mismatch": 3,
+      "match": 4,
+      "mismatch": 4,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5555555555555556
+    "cellAccuracy": 0.4444444444444444
   },
   "buckets": {
     "defects": [
@@ -305,7 +305,7 @@
         "gtNorm": "828",
         "extNorm": "126037",
         "bucket": "structure",
-        "reason": "gt value present at ['row1:unitPrice']"
+        "reason": "gt value present at ['row1:quantity']"
       },
       {
         "location": "field:buyerBizNumber",
@@ -367,9 +367,17 @@
         "location": "row1:quantity",
         "status": "mismatch",
         "gtNorm": "10",
-        "extNorm": "29051010",
+        "extNorm": "828",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
+      },
+      {
+        "location": "row1:unitPrice",
+        "status": "mismatch",
+        "gtNorm": "828",
+        "extNorm": "29051010",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['quantity']"
       },
       {
         "location": "row1:expiryDate",
@@ -399,7 +407,7 @@
     "bucketTally": {
       "recognition": 8,
       "structure": 5,
-      "layout": 0,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

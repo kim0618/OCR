@@ -200,7 +200,7 @@
       "6",
       "5",
       "7",
-      "14",
+      "8",
       "15"
     ],
     "gtOnlyRowIdx": [],
@@ -208,8 +208,8 @@
       "1",
       "2",
       "4",
-      "8",
-      "9"
+      "9",
+      "14"
     ],
     "rows": [
       {
@@ -893,7 +893,7 @@
         }
       },
       {
-        "rowIndex": "14",
+        "rowIndex": "8",
         "rowMatch": false,
         "cells": {
           "itemName": {
@@ -930,15 +930,15 @@
           },
           "unitPrice": {
             "gt": "1074480",
-            "ext": "10,744.80",
+            "ext": "10744.8",
             "gtNorm": "1074480",
-            "extNorm": "1074480",
-            "status": "match",
+            "extNorm": "107448",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "85958",
-            "ext": "85,958",
+            "ext": "85958",
             "gtNorm": "85958",
             "extNorm": "85958",
             "status": "match",
@@ -946,18 +946,18 @@
           },
           "expiryDate": {
             "gt": "20281015",
-            "ext": "2028.10.15",
+            "ext": "",
             "gtNorm": "20281015",
-            "extNorm": "20281015",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "manufacturingNo": {
             "gt": "KE004147",
-            "ext": "KE004147",
+            "ext": "",
             "gtNorm": "KE004147",
-            "extNorm": "KE004147",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemCode": {
@@ -970,10 +970,10 @@
           },
           "insuranceCode": {
             "gt": "643300040",
-            "ext": "9 643300040 종근당",
+            "ext": "",
             "gtNorm": "643300040",
-            "extNorm": "9643300040종근당",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           }
         }
@@ -1067,13 +1067,13 @@
     ],
     "cellCounts": {
       "scored": 99,
-      "match": 54,
+      "match": 51,
       "mismatch": 24,
-      "ext_missing": 21,
+      "ext_missing": 24,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5454545454545454
+    "cellAccuracy": 0.5151515151515151
   },
   "buckets": {
     "defects": [
@@ -1123,7 +1123,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '2', '4', '8', '9']"
+        "reason": "extractor invented rows ['1', '2', '4', '9', '14']"
       },
       {
         "location": "row10:itemName",
@@ -1430,7 +1430,7 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row14:itemName",
+        "location": "row8:itemName",
         "status": "mismatch",
         "gtNorm": "가바렙캡슐300mg",
         "extNorm": "가바렙캡슬300mg",
@@ -1438,7 +1438,7 @@
         "reason": "gt cell appears in column(s) ['itemNameMaster']"
       },
       {
-        "location": "row14:spec",
+        "location": "row8:spec",
         "status": "ext_missing",
         "gtNorm": "30c",
         "extNorm": "",
@@ -1446,12 +1446,36 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row14:insuranceCode",
+        "location": "row8:unitPrice",
         "status": "mismatch",
-        "gtNorm": "643300040",
-        "extNorm": "9643300040종근당",
+        "gtNorm": "1074480",
+        "extNorm": "107448",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.82)"
+        "reason": "char-level diff (sim=0.92)"
+      },
+      {
+        "location": "row8:expiryDate",
+        "status": "ext_missing",
+        "gtNorm": "20281015",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row8:manufacturingNo",
+        "status": "ext_missing",
+        "gtNorm": "KE004147",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row8:insuranceCode",
+        "status": "ext_missing",
+        "gtNorm": "643300040",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row15:itemName",
@@ -1488,7 +1512,7 @@
     ],
     "bucketTally": {
       "recognition": 25,
-      "structure": 24,
+      "structure": 27,
       "layout": 2,
       "preprocessing": 0
     },

@@ -163,12 +163,12 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 1,
-    "rowCountExt": 3,
+    "rowCountExt": 4,
     "rowCountMatch": false,
-    "matchedRowIdx": [],
-    "gtOnlyRowIdx": [
-      "1"
+    "matchedRowIdx": [
+      "4"
     ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
       "1",
       "2",
@@ -176,24 +176,23 @@
     ],
     "rows": [
       {
-        "rowIndex": "1",
+        "rowIndex": "4",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "삼아탄툼액(M)",
-            "ext": "",
+            "ext": "삼아탄둠액(M)",
             "gtNorm": "삼아탄툼액m",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "삼아탄둠액m",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "탄툼액100mL",
-            "ext": "",
+            "ext": "삼정톤액(홍)",
             "gtNorm": "탄툼액100ml",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "삼정톤액(홍)",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
@@ -206,34 +205,34 @@
           },
           "quantity": {
             "gt": "3040",
-            "ext": "",
+            "ext": "1133",
             "gtNorm": "3040",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "1133",
+            "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "1133",
-            "ext": "",
+            "ext": "3040",
             "gtNorm": "1133",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "3040",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "3444320",
-            "ext": "",
+            "ext": "3444320",
             "gtNorm": "3444320",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "3444320",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
             "gt": "01007187",
-            "ext": "",
+            "ext": "07000868",
             "gtNorm": "01007187",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "07000868",
+            "status": "mismatch",
             "spurious": false
           },
           "insuranceCode": {
@@ -249,13 +248,13 @@
     ],
     "cellCounts": {
       "scored": 8,
-      "match": 0,
-      "mismatch": 0,
-      "ext_missing": 8,
+      "match": 1,
+      "mismatch": 5,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.0
+    "cellAccuracy": 0.125
   },
   "buckets": {
     "defects": [
@@ -277,14 +276,6 @@
       },
       {
         "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['1']"
-      },
-      {
-        "location": "table",
         "status": "rows_extra",
         "gtNorm": "",
         "extNorm": "",
@@ -292,23 +283,23 @@
         "reason": "extractor invented rows ['1', '2', '3']"
       },
       {
-        "location": "row1:itemName",
-        "status": "ext_missing",
+        "location": "row4:itemName",
+        "status": "mismatch",
         "gtNorm": "삼아탄툼액m",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "삼아탄둠액m",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.83)"
       },
       {
-        "location": "row1:itemNameMaster",
-        "status": "ext_missing",
+        "location": "row4:itemNameMaster",
+        "status": "mismatch",
         "gtNorm": "탄툼액100ml",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "삼정톤액(홍)",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
-        "location": "row1:spec",
+        "location": "row4:spec",
         "status": "ext_missing",
         "gtNorm": "100ml",
         "extNorm": "",
@@ -316,39 +307,31 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:quantity",
-        "status": "ext_missing",
+        "location": "row4:quantity",
+        "status": "mismatch",
         "gtNorm": "3040",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "1133",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['unitPrice']"
       },
       {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
+        "location": "row4:unitPrice",
+        "status": "mismatch",
         "gtNorm": "1133",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "3040",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['quantity']"
       },
       {
-        "location": "row1:amount",
-        "status": "ext_missing",
-        "gtNorm": "3444320",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:itemCode",
-        "status": "ext_missing",
+        "location": "row4:itemCode",
+        "status": "mismatch",
         "gtNorm": "01007187",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "07000868",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.50)"
       },
       {
-        "location": "row1:insuranceCode",
+        "location": "row4:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "645700791",
         "extNorm": "",
@@ -357,9 +340,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 1,
-      "structure": 11,
-      "layout": 0,
+      "recognition": 4,
+      "structure": 4,
+      "layout": 2,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

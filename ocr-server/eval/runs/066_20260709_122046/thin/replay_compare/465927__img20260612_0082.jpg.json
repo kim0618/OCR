@@ -277,10 +277,10 @@
           },
           "itemNameMaster": {
             "gt": "로마졸크림15g(급여)",
-            "ext": "로마졸크림15g(급여)",
+            "ext": "로마졸크림15g(비급여)",
             "gtNorm": "로마졸크림15g(급여)",
-            "extNorm": "로마졸크림15g(급여)",
-            "status": "match",
+            "extNorm": "로마졸크림15g(비급여)",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
@@ -293,18 +293,18 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "825",
-            "ext": "",
+            "ext": "825",
             "gtNorm": "825",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "825",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -333,10 +333,10 @@
           },
           "itemCode": {
             "gt": "307155",
-            "ext": "307155",
+            "ext": "307248",
             "gtNorm": "307155",
-            "extNorm": "307155",
-            "status": "match",
+            "extNorm": "307248",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -345,8 +345,8 @@
     "cellCounts": {
       "scored": 18,
       "match": 11,
-      "mismatch": 0,
-      "ext_missing": 7,
+      "mismatch": 2,
+      "ext_missing": 5,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -419,25 +419,17 @@
         "reason": "gt cell absent in extracted row"
       },
       {
+        "location": "row2:itemNameMaster",
+        "status": "mismatch",
+        "gtNorm": "로마졸크림15g(급여)",
+        "extNorm": "로마졸크림15g(비급여)",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.96)"
+      },
+      {
         "location": "row2:spec",
         "status": "ext_missing",
         "gtNorm": "15g/튜브",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:quantity",
-        "status": "ext_missing",
-        "gtNorm": "10",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "825",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -457,11 +449,19 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row2:itemCode",
+        "status": "mismatch",
+        "gtNorm": "307155",
+        "extNorm": "307248",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.50)"
       }
     ],
     "bucketTally": {
-      "recognition": 3,
-      "structure": 10,
+      "recognition": 5,
+      "structure": 8,
       "layout": 0,
       "preprocessing": 0
     },

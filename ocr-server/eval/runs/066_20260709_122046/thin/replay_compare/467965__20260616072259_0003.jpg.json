@@ -47,11 +47,11 @@
       },
       "supplierBizNumber": {
         "gt": "133812232",
-        "ext": "113-85-04425",
+        "ext": "",
         "gtNorm": "133812232",
-        "extNorm": "1138504425",
+        "extNorm": "",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -73,11 +73,11 @@
       },
       "supplierCompany": {
         "gt": "대화제약",
-        "ext": "백제약품(주)영등포지점",
+        "ext": "대화제약(주)",
         "gtNorm": "대화제약",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "대화제약",
         "type": "company",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -99,9 +99,9 @@
       },
       "supplierAddress": {
         "gt": "경기도 시흥시 정왕동 시화공단1라 603",
-        "ext": "서울 구로구 공원로8길 24",
+        "ext": "강원특별자치도 횡성군 횡성읍 한우로",
         "gtNorm": "경기도시흥시정왕동시화공단1라603",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "강원특별자치도횡성군횡성읍한우로",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -154,9 +154,9 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 5,
-      "mismatch": 6,
-      "ext_missing": 0,
+      "match": 6,
+      "mismatch": 4,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 5,
+      "matched": 6,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 0
+      "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.45454545454545453
+    "fieldAccuracy": 0.5454545454545454
   },
   "table": {
     "alignMode": "content",
@@ -313,26 +313,26 @@
           },
           "quantity": {
             "gt": "20",
-            "ext": "",
+            "ext": "20",
             "gtNorm": "20",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "20547",
-            "ext": "",
+            "ext": "20547",
             "gtNorm": "20547",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20547",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "410940",
-            "ext": "20,547",
+            "ext": "410940",
             "gtNorm": "410940",
-            "extNorm": "20547",
-            "status": "mismatch",
+            "extNorm": "410940",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -399,18 +399,18 @@
           },
           "unitPrice": {
             "gt": "16524",
-            "ext": "",
+            "ext": "16524",
             "gtNorm": "16524",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "16524",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "991440",
-            "ext": "",
+            "ext": "991440",
             "gtNorm": "991440",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "991440",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -1149,23 +1149,23 @@
     ],
     "cellCounts": {
       "scored": 108,
-      "match": 22,
-      "mismatch": 13,
-      "ext_missing": 73,
+      "match": 27,
+      "mismatch": 12,
+      "ext_missing": 69,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.2037037037037037
+    "cellAccuracy": 0.25
   },
   "buckets": {
     "defects": [
       {
         "location": "field:supplierBizNumber",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "133812232",
-        "extNorm": "1138504425",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:buyerBizNumber",
@@ -1176,18 +1176,10 @@
         "reason": "value differs, low similarity"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "대화제약",
-        "extNorm": "백제약품영등포지점",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기도시흥시정왕동시화공단1라603",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "강원특별자치도횡성군횡성읍한우로",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -1280,30 +1272,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:quantity",
-        "status": "ext_missing",
-        "gtNorm": "20",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "20547",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
-      },
-      {
-        "location": "row2:amount",
-        "status": "mismatch",
-        "gtNorm": "410940",
-        "extNorm": "20547",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
         "location": "row2:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20281013",
@@ -1342,22 +1310,6 @@
         "extNorm": "4",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row3:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "16524",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:amount",
-        "status": "ext_missing",
-        "gtNorm": "991440",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row3:expiryDate",
@@ -1913,9 +1865,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 19,
-      "structure": 74,
-      "layout": 1,
+      "recognition": 16,
+      "structure": 72,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,
@@ -1934,6 +1886,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.0
+    "fieldMissRate": 0.091
   }
 }

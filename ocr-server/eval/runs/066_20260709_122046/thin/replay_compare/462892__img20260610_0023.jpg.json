@@ -189,8 +189,8 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 4,
-    "rowCountExt": 4,
-    "rowCountMatch": true,
+    "rowCountExt": 5,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
       "2",
@@ -198,7 +198,9 @@
       "4"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "5"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -472,10 +474,10 @@
           },
           "unitPrice": {
             "gt": "288660",
-            "ext": "",
+            "ext": "288660",
             "gtNorm": "288660",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "288660",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -515,13 +517,13 @@
     ],
     "cellCounts": {
       "scored": 36,
-      "match": 15,
+      "match": 16,
       "mismatch": 13,
-      "ext_missing": 8,
+      "ext_missing": 7,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4166666666666667
+    "cellAccuracy": 0.4444444444444444
   },
   "buckets": {
     "defects": [
@@ -572,6 +574,14 @@
         "extNorm": "대전광역시중구보문로235대흥동",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.81)"
+      },
+      {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['5']"
       },
       {
         "location": "row1:itemName",
@@ -726,14 +736,6 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row4:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "288660",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
-      },
-      {
         "location": "row4:amount",
         "status": "mismatch",
         "gtNorm": "173196013020",
@@ -744,8 +746,8 @@
     ],
     "bucketTally": {
       "recognition": 18,
-      "structure": 5,
-      "layout": 4,
+      "structure": 6,
+      "layout": 3,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

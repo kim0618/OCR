@@ -189,8 +189,8 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 6,
-    "rowCountExt": 6,
-    "rowCountMatch": true,
+    "rowCountExt": 9,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
       "2",
@@ -200,7 +200,11 @@
       "6"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "7",
+      "8",
+      "9"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -404,18 +408,18 @@
           },
           "quantity": {
             "gt": "36",
-            "ext": "12,170",
+            "ext": "36",
             "gtNorm": "36",
-            "extNorm": "12170",
-            "status": "mismatch",
+            "extNorm": "36",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "12170",
-            "ext": "36",
+            "ext": "12,170",
             "gtNorm": "12170",
-            "extNorm": "36",
-            "status": "mismatch",
+            "extNorm": "12170",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -662,18 +666,18 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "31,694",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "31694",
-            "status": "mismatch",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "31694",
-            "ext": "10",
+            "ext": "31,694",
             "gtNorm": "31694",
-            "extNorm": "10",
-            "status": "mismatch",
+            "extNorm": "31694",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -721,13 +725,13 @@
     ],
     "cellCounts": {
       "scored": 60,
-      "match": 26,
-      "mismatch": 18,
+      "match": 30,
+      "mismatch": 14,
       "ext_missing": 16,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.43333333333333335
+    "cellAccuracy": 0.5
   },
   "buckets": {
     "defects": [
@@ -754,6 +758,14 @@
         "extNorm": "경기화성시향남읍제약공단3길87",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
+      },
+      {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['7', '8', '9']"
       },
       {
         "location": "row1:itemName",
@@ -818,22 +830,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row5:quantity",
-        "status": "mismatch",
-        "gtNorm": "36",
-        "extNorm": "12170",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['unitPrice']"
-      },
-      {
-        "location": "row5:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "12170",
-        "extNorm": "36",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['quantity']"
       },
       {
         "location": "row5:amount",
@@ -980,22 +976,6 @@
         "reason": "char-level diff (sim=0.86)"
       },
       {
-        "location": "row6:quantity",
-        "status": "mismatch",
-        "gtNorm": "10",
-        "extNorm": "31694",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['unitPrice']"
-      },
-      {
-        "location": "row6:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "31694",
-        "extNorm": "10",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['quantity']"
-      },
-      {
         "location": "row6:amount",
         "status": "mismatch",
         "gtNorm": "316940",
@@ -1030,8 +1010,8 @@
     ],
     "bucketTally": {
       "recognition": 17,
-      "structure": 14,
-      "layout": 6,
+      "structure": 15,
+      "layout": 2,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

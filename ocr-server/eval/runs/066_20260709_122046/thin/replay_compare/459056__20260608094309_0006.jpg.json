@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "4758100969",
-        "ext": "113-85-04425",
+        "ext": "",
         "gtNorm": "4758100969",
-        "extNorm": "1138504425",
+        "extNorm": "",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -73,9 +73,9 @@
       },
       "supplierCompany": {
         "gt": "준성홀딩스",
-        "ext": "백제약품(주)영등포지점",
+        "ext": "목의약품",
         "gtNorm": "준성홀딩스",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "목의약품",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -99,9 +99,9 @@
       },
       "supplierAddress": {
         "gt": "경기 성남시 중원구 갈마치로 215 (상대원동) 에이동 104호(상대원동, 금강펜테리움IT타워)",
-        "ext": "서울 구로구 공원로8길 24",
+        "ext": "경기 하남시 동남로424번길 27",
         "gtNorm": "경기성남시중원구갈마치로215상대원동에이동104호상대원동금강펜테리움it타워",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "경기하남시동남로424번길27",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -155,8 +155,8 @@
     "counts": {
       "scored": 11,
       "match": 2,
-      "mismatch": 9,
-      "ext_missing": 0,
+      "mismatch": 8,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -169,7 +169,7 @@
       "gtPresent": 11,
       "matched": 2,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 0
+      "extAttemptedMiss": 1
     },
     "fieldAccuracy": 0.18181818181818182
   },
@@ -485,10 +485,10 @@
           },
           "quantity": {
             "gt": "7",
-            "ext": "",
+            "ext": "7",
             "gtNorm": "7",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "7",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -813,10 +813,10 @@
           },
           "itemNameMaster": {
             "gt": "삼세틸정",
-            "ext": "삼세틸정",
+            "ext": "",
             "gtNorm": "삼세틸정",
-            "extNorm": "삼세틸정",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "spec": {
@@ -829,10 +829,10 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -869,10 +869,10 @@
           },
           "itemCode": {
             "gt": "01009760",
-            "ext": "01009760",
+            "ext": "",
             "gtNorm": "01009760",
-            "extNorm": "01009760",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "insuranceCode": {
@@ -1089,17 +1089,17 @@
       },
       {
         "location": "field:supplierBizNumber",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "4758100969",
-        "extNorm": "1138504425",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "준성홀딩스",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "목의약품",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -1115,7 +1115,7 @@
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기성남시중원구갈마치로215상대원동에이동104호상대원동금강펜테리움it타워",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "경기하남시동남로424번길27",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -1312,14 +1312,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row5:quantity",
-        "status": "ext_missing",
-        "gtNorm": "7",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row5:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "25002",
@@ -1496,6 +1488,14 @@
         "reason": "cell differs, low similarity"
       },
       {
+        "location": "row8:itemNameMaster",
+        "status": "ext_missing",
+        "gtNorm": "삼세틸정",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
         "location": "row8:spec",
         "status": "ext_missing",
         "gtNorm": "300.72mg/10",
@@ -1504,17 +1504,17 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row8:quantity",
+        "location": "row8:manufacturingNo",
         "status": "ext_missing",
-        "gtNorm": "10",
+        "gtNorm": "TCS405",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row8:manufacturingNo",
+        "location": "row8:itemCode",
         "status": "ext_missing",
-        "gtNorm": "TCS405",
+        "gtNorm": "01009760",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -1657,8 +1657,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 24,
-      "structure": 47,
+      "recognition": 23,
+      "structure": 48,
       "layout": 2,
       "preprocessing": 0
     },
@@ -1678,6 +1678,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.0
+    "fieldMissRate": 0.091
   }
 }

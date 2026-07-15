@@ -189,8 +189,8 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 23,
-    "rowCountExt": 23,
-    "rowCountMatch": true,
+    "rowCountExt": 32,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
       "2",
@@ -217,7 +217,17 @@
       "22"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "24",
+      "25",
+      "26",
+      "27",
+      "28",
+      "29",
+      "30",
+      "31",
+      "32"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -1115,17 +1125,17 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "18,819",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "18819",
-            "status": "mismatch",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "0",
-            "ext": "10",
+            "ext": "18,819",
             "gtNorm": "0",
-            "extNorm": "10",
+            "extNorm": "18819",
             "status": "mismatch",
             "spurious": false
           },
@@ -1155,10 +1165,10 @@
           },
           "itemCode": {
             "gt": "030265",
-            "ext": "030265",
+            "ext": "22005572",
             "gtNorm": "030265",
-            "extNorm": "030265",
-            "status": "match",
+            "extNorm": "22005572",
+            "status": "mismatch",
             "spurious": false
           },
           "insuranceCode": {
@@ -1981,17 +1991,17 @@
           },
           "quantity": {
             "gt": "5",
-            "ext": "24,273",
+            "ext": "5",
             "gtNorm": "5",
-            "extNorm": "24273",
-            "status": "mismatch",
+            "extNorm": "5",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "0",
-            "ext": "5",
+            "ext": "24,273",
             "gtNorm": "0",
-            "extNorm": "5",
+            "extNorm": "24273",
             "status": "mismatch",
             "spurious": false
           },
@@ -2032,13 +2042,13 @@
     ],
     "cellCounts": {
       "scored": 209,
-      "match": 100,
-      "mismatch": 75,
+      "match": 101,
+      "mismatch": 74,
       "ext_missing": 34,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4784688995215311
+    "cellAccuracy": 0.48325358851674644
   },
   "buckets": {
     "defects": [
@@ -2097,6 +2107,14 @@
         "extNorm": "경기도화성시향남읍제약공단2길18",
         "bucket": "structure",
         "reason": "ext value is gt's ['field:supplierAddress']"
+      },
+      {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['24', '25', '26', '27', '28', '29', '30', '31', '32']"
       },
       {
         "location": "row1:itemName",
@@ -2531,20 +2549,12 @@
         "reason": "char-level diff (sim=0.67)"
       },
       {
-        "location": "row21:quantity",
-        "status": "mismatch",
-        "gtNorm": "10",
-        "extNorm": "18819",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['unitPrice']"
-      },
-      {
         "location": "row21:unitPrice",
         "status": "mismatch",
         "gtNorm": "0",
-        "extNorm": "10",
+        "extNorm": "18819",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row21:amount",
@@ -2569,6 +2579,14 @@
         "extNorm": "",
         "bucket": "layout",
         "reason": "gt cell appears in column(s) ['amount']"
+      },
+      {
+        "location": "row21:itemCode",
+        "status": "mismatch",
+        "gtNorm": "030265",
+        "extNorm": "22005572",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row21:insuranceCode",
@@ -2931,18 +2949,10 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row22:quantity",
-        "status": "mismatch",
-        "gtNorm": "5",
-        "extNorm": "24273",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['unitPrice']"
-      },
-      {
         "location": "row22:unitPrice",
         "status": "mismatch",
         "gtNorm": "0",
-        "extNorm": "5",
+        "extNorm": "24273",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
@@ -2972,9 +2982,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 70,
-      "structure": 37,
-      "layout": 9,
+      "recognition": 71,
+      "structure": 38,
+      "layout": 7,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

@@ -194,7 +194,7 @@
     "matchedRowIdx": [
       "13",
       "14",
-      "15",
+      "3",
       "4",
       "16",
       "6",
@@ -207,14 +207,14 @@
     "extOnlyRowIdx": [
       "1",
       "2",
-      "3",
       "5",
       "7",
       "8",
       "9",
       "10",
       "11",
-      "12"
+      "12",
+      "15"
     ],
     "rows": [
       {
@@ -390,14 +390,14 @@
         }
       },
       {
-        "rowIndex": "15",
+        "rowIndex": "3",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "액시딘캅셀 150mg(BTL-2 150mg",
-            "ext": "3 액시민합셀15Omg(BTL-",
+            "ext": "3 액시민합셀15Omg(BTL- 150mg 30C",
             "gtNorm": "액시딘캅셀150mgbtl2150mg",
-            "extNorm": "3액시민합셀15omgbtl",
+            "extNorm": "3액시민합셀15omgbtl150mg30c",
             "status": "mismatch",
             "spurious": false
           },
@@ -443,10 +443,10 @@
           },
           "expiryDate": {
             "gt": "20271118",
-            "ext": "27.11.18 644302360",
+            "ext": "",
             "gtNorm": "20271118",
-            "extNorm": "271118644302360",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "manufacturingNo": {
@@ -505,10 +505,10 @@
           },
           "quantity": {
             "gt": "20",
-            "ext": "3,000",
+            "ext": "20",
             "gtNorm": "20",
-            "extNorm": "3000",
-            "status": "mismatch",
+            "extNorm": "20",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -1080,13 +1080,13 @@
     ],
     "cellCounts": {
       "scored": 100,
-      "match": 53,
-      "mismatch": 35,
-      "ext_missing": 12,
+      "match": 54,
+      "mismatch": 33,
+      "ext_missing": 13,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.53
+    "cellAccuracy": 0.54
   },
   "buckets": {
     "defects": [
@@ -1160,7 +1160,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '2', '3', '5', '7', '8', '9', '10', '11', '12']"
+        "reason": "extractor invented rows ['1', '2', '5', '7', '8', '9', '10', '11', '12', '15']"
       },
       {
         "location": "row13:itemName",
@@ -1259,15 +1259,15 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row15:itemName",
+        "location": "row3:itemName",
         "status": "mismatch",
         "gtNorm": "액시딘캅셀150mgbtl2150mg",
-        "extNorm": "3액시민합셀15omgbtl",
+        "extNorm": "3액시민합셀15omgbtl150mg30c",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.61)"
+        "reason": "cell differs, low similarity"
       },
       {
-        "location": "row15:spec",
+        "location": "row3:spec",
         "status": "mismatch",
         "gtNorm": "30c",
         "extNorm": "150mg 30c",
@@ -1275,15 +1275,15 @@
         "reason": "char-level diff (sim=0.50)"
       },
       {
-        "location": "row15:expiryDate",
-        "status": "mismatch",
+        "location": "row3:expiryDate",
+        "status": "ext_missing",
         "gtNorm": "20271118",
-        "extNorm": "271118644302360",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.52)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row15:insuranceCode",
+        "location": "row3:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "644302360",
         "extNorm": "",
@@ -1313,14 +1313,6 @@
         "extNorm": "150mg",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.67)"
-      },
-      {
-        "location": "row4:quantity",
-        "status": "mismatch",
-        "gtNorm": "20",
-        "extNorm": "3000",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
       },
       {
         "location": "row4:expiryDate",
@@ -1540,8 +1532,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 39,
-      "structure": 16,
+      "recognition": 37,
+      "structure": 17,
       "layout": 1,
       "preprocessing": 0
     },

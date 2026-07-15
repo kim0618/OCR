@@ -196,7 +196,7 @@
       "11",
       "12",
       "13",
-      "14",
+      "4",
       "15",
       "16",
       "17",
@@ -208,12 +208,12 @@
       "1",
       "2",
       "3",
-      "4",
       "5",
       "6",
       "7",
       "8",
-      "9"
+      "9",
+      "14"
     ],
     "rows": [
       {
@@ -529,14 +529,14 @@
         }
       },
       {
-        "rowIndex": "14",
+        "rowIndex": "4",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "뉴가틴엠캡슐 300mg 100C",
-            "ext": "(주)마더스 A-056-b4- 뉴가틴엠캡슬300mg 100C",
+            "ext": "뉴가틴엠캡슬300mg",
             "gtNorm": "뉴가틴엠캡슐300mg100c",
-            "extNorm": "주마더스a056b4뉴가틴엠캡슬300mg100c",
+            "extNorm": "뉴가틴엠캡슬300mg",
             "status": "mismatch",
             "spurious": false
           },
@@ -550,10 +550,10 @@
           },
           "spec": {
             "gt": "100캡슐",
-            "ext": "100캡슬",
+            "ext": "",
             "gtNorm": "100캡슐",
-            "extNorm": "100캡슬",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "quantity": {
@@ -566,15 +566,15 @@
           },
           "unitPrice": {
             "gt": "31140",
-            "ext": "31,140.00",
+            "ext": "31140",
             "gtNorm": "31140",
-            "extNorm": "3114000",
-            "status": "mismatch",
+            "extNorm": "31140",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "311400",
-            "ext": "311,400",
+            "ext": "311400",
             "gtNorm": "311400",
             "extNorm": "311400",
             "status": "match",
@@ -948,18 +948,18 @@
           },
           "quantity": {
             "gt": "5200",
-            "ext": "9,903.60",
+            "ext": "5200",
             "gtNorm": "5200",
-            "extNorm": "990360",
-            "status": "mismatch",
+            "extNorm": "5200",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "990360",
-            "ext": "5200",
+            "ext": "9,903.60",
             "gtNorm": "990360",
-            "extNorm": "5200",
-            "status": "mismatch",
+            "extNorm": "990360",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -999,13 +999,13 @@
     ],
     "cellCounts": {
       "scored": 90,
-      "match": 42,
-      "mismatch": 37,
-      "ext_missing": 11,
+      "match": 45,
+      "mismatch": 33,
+      "ext_missing": 12,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4666666666666667
+    "cellAccuracy": 0.5
   },
   "buckets": {
     "defects": [
@@ -1079,7 +1079,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '2', '3', '4', '5', '6', '7', '8', '9']"
+        "reason": "extractor invented rows ['1', '2', '3', '5', '6', '7', '8', '9', '14']"
       },
       {
         "location": "row10:itemName",
@@ -1234,31 +1234,23 @@
         "reason": "char-level diff (sim=0.50)"
       },
       {
-        "location": "row14:itemName",
+        "location": "row4:itemName",
         "status": "mismatch",
         "gtNorm": "뉴가틴엠캡슐300mg100c",
-        "extNorm": "주마더스a056b4뉴가틴엠캡슬300mg100c",
+        "extNorm": "뉴가틴엠캡슬300mg",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.70)"
+        "reason": "char-level diff (sim=0.77)"
       },
       {
-        "location": "row14:spec",
-        "status": "mismatch",
+        "location": "row4:spec",
+        "status": "ext_missing",
         "gtNorm": "100캡슐",
-        "extNorm": "100캡슬",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.80)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row14:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "31140",
-        "extNorm": "3114000",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.83)"
-      },
-      {
-        "location": "row14:expiryDate",
+        "location": "row4:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20290114",
         "extNorm": "",
@@ -1266,7 +1258,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row14:manufacturingNo",
+        "location": "row4:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "6001",
         "extNorm": "",
@@ -1434,22 +1426,6 @@
         "reason": "char-level diff (sim=0.94)"
       },
       {
-        "location": "row19:quantity",
-        "status": "mismatch",
-        "gtNorm": "5200",
-        "extNorm": "990360",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['unitPrice']"
-      },
-      {
-        "location": "row19:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "990360",
-        "extNorm": "5200",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['quantity']"
-      },
-      {
         "location": "row19:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20290413",
@@ -1467,9 +1443,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 40,
-      "structure": 15,
-      "layout": 2,
+      "recognition": 38,
+      "structure": 16,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

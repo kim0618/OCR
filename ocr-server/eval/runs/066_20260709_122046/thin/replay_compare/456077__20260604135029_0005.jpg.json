@@ -125,11 +125,11 @@
       },
       "supplyAmount": {
         "gt": "1111964",
-        "ext": "",
+        "ext": "1111964",
         "gtNorm": "1111964",
-        "extNorm": "",
+        "extNorm": "1111964",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
+      "match": 9,
       "mismatch": 3,
-      "ext_missing": 1,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,16 +180,16 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 9,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
     "rowCountGt": 6,
-    "rowCountExt": 7,
+    "rowCountExt": 8,
     "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
@@ -201,7 +201,8 @@
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "7"
+      "7",
+      "8"
     ],
     "rows": [
       {
@@ -242,17 +243,17 @@
           },
           "unitPrice": {
             "gt": "77382",
-            "ext": "",
+            "ext": "77382",
             "gtNorm": "77382",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "77382",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "86910",
-            "ext": "77,382",
+            "ext": "386910",
             "gtNorm": "86910",
-            "extNorm": "77382",
+            "extNorm": "386910",
             "status": "mismatch",
             "spurious": false
           },
@@ -627,13 +628,13 @@
     ],
     "cellCounts": {
       "scored": 48,
-      "match": 17,
+      "match": 18,
       "mismatch": 19,
-      "ext_missing": 12,
+      "ext_missing": 11,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3541666666666667
+    "cellAccuracy": 0.375
   },
   "buckets": {
     "defects": [
@@ -644,14 +645,6 @@
         "extNorm": "영일제약",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.80)"
-      },
-      {
-        "location": "field:supplyAmount",
-        "status": "ext_missing",
-        "gtNorm": "1111964",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:buyerCompany",
@@ -675,7 +668,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['7']"
+        "reason": "extractor invented rows ['7', '8']"
       },
       {
         "location": "row1:spec",
@@ -694,20 +687,12 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "77382",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
-      },
-      {
         "location": "row1:amount",
         "status": "mismatch",
         "gtNorm": "86910",
-        "extNorm": "77382",
+        "extNorm": "386910",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.91)"
       },
       {
         "location": "row1:manufacturingNo",
@@ -928,8 +913,8 @@
     ],
     "bucketTally": {
       "recognition": 22,
-      "structure": 4,
-      "layout": 10,
+      "structure": 3,
+      "layout": 9,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,
@@ -948,6 +933,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

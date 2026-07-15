@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "4028515138",
-        "ext": "402-85-15138",
+        "ext": "542-00-00208",
         "gtNorm": "4028515138",
-        "extNorm": "4028515138",
+        "extNorm": "5420000208",
         "type": "bizno",
-        "status": "match",
+        "status": "mismatch",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -86,9 +86,9 @@
       },
       "supplierCompany": {
         "gt": "제이더블유신약(주)(중외신약)",
-        "ext": "삼성제약(주)(전문)",
+        "ext": "제이더블유신약주식회사",
         "gtNorm": "제이더블유신약중외신약",
-        "extNorm": "삼성제약전문",
+        "extNorm": "제이더블유신약",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 서초구 남부순환로 2477",
-        "ext": "경기도 화성시 향남읍 제약공단2길 35",
+        "ext": "전북전주시덕진구신복로116-7",
         "gtNorm": "서울특별시서초구남부순환로2477",
-        "extNorm": "경기도화성시향남읍제약공단2길35",
+        "extNorm": "전북전주시덕진구신복로1167",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 3,
-      "mismatch": 7,
+      "match": 2,
+      "mismatch": 8,
       "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 3,
+      "matched": 2,
       "extNotAttempted": 0,
       "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.25
+    "fieldAccuracy": 0.16666666666666666
   },
   "table": {
     "alignMode": "content",
@@ -300,6 +300,14 @@
         "reason": "char-level diff (sim=0.88)"
       },
       {
+        "location": "field:supplierBizNumber",
+        "status": "mismatch",
+        "gtNorm": "4028515138",
+        "extNorm": "5420000208",
+        "bucket": "structure",
+        "reason": "gt value present at ['field:buyerBizNumber']"
+      },
+      {
         "location": "field:buyerBizNumber",
         "status": "mismatch",
         "gtNorm": "10019100",
@@ -311,17 +319,17 @@
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "제이더블유신약중외신약",
-        "extNorm": "삼성제약전문",
+        "extNorm": "제이더블유신약",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.78)"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울특별시서초구남부순환로2477",
-        "extNorm": "경기도화성시향남읍제약공단2길35",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "전북전주시덕진구신복로1167",
+        "bucket": "structure",
+        "reason": "ext value is gt's ['field:buyerAddress']"
       },
       {
         "location": "field:supplyAmount",
@@ -344,8 +352,8 @@
         "status": "mismatch",
         "gtNorm": "전북전주시덕진구신복로1167",
         "extNorm": "경기도과천시과천대로7길38갈현동jw과천사옥전북전주시덕진구신복로1167",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.57)"
+        "bucket": "structure",
+        "reason": "gt value present at ['field:supplierAddress']"
       },
       {
         "location": "table",
@@ -421,8 +429,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 6,
-      "structure": 12,
+      "recognition": 4,
+      "structure": 15,
       "layout": 0,
       "preprocessing": 0
     },

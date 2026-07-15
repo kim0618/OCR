@@ -43,7 +43,9 @@ working tree에 적용(미커밋), 게이트 레벨만 검증됨 → 순 cell �
 - `.venv` 자동 사용, `pip install` 제안 금지.
 - 기능 게이트에 env 플래그 금지 — doc-type 등 코드 게이트로 바로 켜라.
 - 모델/fine-tune/KIE 얘기 금지(직접 물을 때만). **룰 보강만.**
-- `main.py`는 push에서 제외(AWS만 GPU sed). 이번 작업 파일은 main.py 아님 → 정상 커밋 대상.
+- `main.py`도 이제 **정상 커밋/push 대상**(2026-07-14~). cpu/gpu 분기는 `runtime_config.py`
+  단일 파일에만 격리돼 있어(main.py 는 `RT.DEVICE` 참조만) main.py push 가 AWS 와 안 부딪힘.
+  divergence 관리가 필요한 파일은 `runtime_config.py` 뿐.
 - AWS는 하루치 모아 1회 push → GPU run으로 일괄 스케일 검증. micro-edit마다 GPU 불요.
 
 ## 3. 완료된 작업

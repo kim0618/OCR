@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "1098636089",
-        "ext": "224-85-09735",
+        "ext": "",
         "gtNorm": "1098636089",
-        "extNorm": "2248509735",
+        "extNorm": "",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -86,9 +86,9 @@
       },
       "supplierCompany": {
         "gt": "유진의약품(주)",
-        "ext": "광동제약(전문205327,V375188,115009)",
+        "ext": "추식회사유진의약품",
         "gtNorm": "유진의약품",
-        "extNorm": "광동제약전문205327v375188115009",
+        "extNorm": "추식회사유진의약품",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울 강서구 공항대로53가길 1 (등촌동) 501호",
-        "ext": "서울특별시 서초구 서초중앙로 85",
+        "ext": "",
         "gtNorm": "서울강서구공항대로53가길1등촌동501호",
-        "extNorm": "서울특별시서초구서초중앙로85",
+        "extNorm": "",
         "type": "address",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 7,
-      "mismatch": 5,
-      "ext_missing": 0,
+      "mismatch": 3,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,7 +182,7 @@
       "gtPresent": 12,
       "matched": 7,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 0
+      "extAttemptedMiss": 2
     },
     "fieldAccuracy": 0.5833333333333334
   },
@@ -227,10 +227,10 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -286,39 +286,39 @@
     ],
     "cellCounts": {
       "scored": 10,
-      "match": 5,
+      "match": 6,
       "mismatch": 0,
-      "ext_missing": 5,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5
+    "cellAccuracy": 0.6
   },
   "buckets": {
     "defects": [
       {
         "location": "field:supplierBizNumber",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "1098636089",
-        "extNorm": "2248509735",
+        "extNorm": "",
         "bucket": "structure",
-        "reason": "ext value is gt's ['field:buyerBizNumber']"
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "유진의약품",
-        "extNorm": "광동제약전문205327v375188115009",
+        "extNorm": "추식회사유진의약품",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.71)"
       },
       {
         "location": "field:supplierAddress",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "서울강서구공항대로53가길1등촌동501호",
-        "extNorm": "서울특별시서초구서초중앙로85",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:buyerCompany",
@@ -340,14 +340,6 @@
         "location": "row1:spec",
         "status": "ext_missing",
         "gtNorm": "100t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "10",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -378,7 +370,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 4,
+      "recognition": 3,
       "structure": 6,
       "layout": 0,
       "preprocessing": 0
@@ -399,6 +391,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.0
+    "fieldMissRate": 0.167
   }
 }

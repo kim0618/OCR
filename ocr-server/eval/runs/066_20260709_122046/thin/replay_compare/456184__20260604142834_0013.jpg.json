@@ -211,7 +211,7 @@
       "37",
       "38",
       "39",
-      "19"
+      "20"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
@@ -232,7 +232,7 @@
       "16",
       "17",
       "18",
-      "20",
+      "19",
       "28",
       "40"
     ],
@@ -1205,10 +1205,10 @@
           },
           "quantity": {
             "gt": "20",
-            "ext": "",
+            "ext": "20",
             "gtNorm": "20",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -1864,23 +1864,23 @@
         }
       },
       {
-        "rowIndex": "19",
+        "rowIndex": "20",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "프로몬로션(30G)",
-            "ext": "프로몬로션(30G",
+            "ext": "30G/튜브",
             "gtNorm": "프로몬로션30g",
-            "extNorm": "프로몬로션30g",
-            "status": "match",
+            "extNorm": "30g튜브",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "프로몬로션30g(튜브)",
-            "ext": "프로몬로션30g(튜브)",
+            "ext": "튜비스투정150/300mg",
             "gtNorm": "프로몬로션30g(튜브)",
-            "extNorm": "프로몬로션30g(튜브)",
-            "status": "match",
+            "extNorm": "튜비스투정150/300mg",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
@@ -1901,18 +1901,18 @@
           },
           "unitPrice": {
             "gt": "4968",
-            "ext": "",
+            "ext": "4,968",
             "gtNorm": "4968",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "4968",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "99360",
-            "ext": "",
+            "ext": "99,360",
             "gtNorm": "99360",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "99360",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -1933,10 +1933,10 @@
           },
           "itemCode": {
             "gt": "22003381",
-            "ext": "22003381",
+            "ext": "14000675",
             "gtNorm": "22003381",
-            "extNorm": "22003381",
-            "status": "match",
+            "extNorm": "14000675",
+            "status": "mismatch",
             "spurious": false
           },
           "insuranceCode": {
@@ -1953,8 +1953,8 @@
     "cellCounts": {
       "scored": 199,
       "match": 156,
-      "mismatch": 32,
-      "ext_missing": 11,
+      "mismatch": 35,
+      "ext_missing": 8,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -2000,7 +2000,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '2', '3', '4', '5', '6', '7', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '20', '28', '40']"
+        "reason": "extractor invented rows ['1', '2', '3', '4', '5', '6', '7', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '28', '40']"
       },
       {
         "location": "row21:insuranceCode",
@@ -2203,14 +2203,6 @@
         "reason": "char-level diff (sim=0.75)"
       },
       {
-        "location": "row32:quantity",
-        "status": "ext_missing",
-        "gtNorm": "20",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row32:insuranceCode",
         "status": "mismatch",
         "gtNorm": "671702950",
@@ -2299,7 +2291,23 @@
         "reason": "char-level diff (sim=0.75)"
       },
       {
-        "location": "row19:spec",
+        "location": "row20:itemName",
+        "status": "mismatch",
+        "gtNorm": "프로몬로션30g",
+        "extNorm": "30g튜브",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
+      },
+      {
+        "location": "row20:itemNameMaster",
+        "status": "mismatch",
+        "gtNorm": "프로몬로션30g(튜브)",
+        "extNorm": "튜비스투정150/300mg",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
+      },
+      {
+        "location": "row20:spec",
         "status": "ext_missing",
         "gtNorm": "30g/튜브",
         "extNorm": "",
@@ -2307,23 +2315,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row19:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "4968",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row19:amount",
-        "status": "ext_missing",
-        "gtNorm": "99360",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row19:expiryDate",
+        "location": "row20:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20270729",
         "extNorm": "",
@@ -2331,7 +2323,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row19:manufacturingNo",
+        "location": "row20:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "25005",
         "extNorm": "",
@@ -2339,7 +2331,15 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row19:insuranceCode",
+        "location": "row20:itemCode",
+        "status": "mismatch",
+        "gtNorm": "22003381",
+        "extNorm": "14000675",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
+      },
+      {
+        "location": "row20:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "698003813",
         "extNorm": "",
@@ -2348,8 +2348,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 35,
-      "structure": 12,
+      "recognition": 38,
+      "structure": 9,
       "layout": 1,
       "preprocessing": 0
     },

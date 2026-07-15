@@ -189,34 +189,35 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 1,
-    "rowCountExt": 2,
+    "rowCountExt": 3,
     "rowCountMatch": false,
     "matchedRowIdx": [
-      "2"
+      "3"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "1"
+      "1",
+      "2"
     ],
     "rows": [
       {
-        "rowIndex": "2",
+        "rowIndex": "3",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "두테론연질캡슐0.5mg",
-            "ext": "두테론연질캡술0.5mg",
+            "ext": "",
             "gtNorm": "두테론연질캡슐05mg",
-            "extNorm": "두테론연질캡술05mg",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "두테론연질캡슐0.5mg(PTP)",
-            "ext": "두테론연질캡슐0.5mg(PTP)",
+            "ext": "",
             "gtNorm": "두테론연질캡슐0.5mg(ptp)",
-            "extNorm": "두테론연질캡슐0.5mg(ptp)",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "spec": {
@@ -229,26 +230,26 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "1",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "1",
-            "status": "mismatch",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "15129",
-            "ext": "",
+            "ext": "15129",
             "gtNorm": "15129",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "15129",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "151290",
-            "ext": "",
+            "ext": "151290",
             "gtNorm": "151290",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "151290",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -269,10 +270,10 @@
           },
           "itemCode": {
             "gt": "12000823",
-            "ext": "12000823",
+            "ext": "",
             "gtNorm": "12000823",
-            "extNorm": "12000823",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "insuranceCode": {
@@ -288,13 +289,13 @@
     ],
     "cellCounts": {
       "scored": 10,
-      "match": 2,
-      "mismatch": 2,
-      "ext_missing": 6,
+      "match": 3,
+      "mismatch": 0,
+      "ext_missing": 7,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.2
+    "cellAccuracy": 0.3
   },
   "buckets": {
     "defects": [
@@ -328,18 +329,26 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1']"
+        "reason": "extractor invented rows ['1', '2']"
       },
       {
-        "location": "row2:itemName",
-        "status": "mismatch",
+        "location": "row3:itemName",
+        "status": "ext_missing",
         "gtNorm": "두테론연질캡슐05mg",
-        "extNorm": "두테론연질캡술05mg",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.91)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:spec",
+        "location": "row3:itemNameMaster",
+        "status": "ext_missing",
+        "gtNorm": "두테론연질캡슐0.5mg(ptp)",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row3:spec",
         "status": "ext_missing",
         "gtNorm": "30c(ptp)",
         "extNorm": "",
@@ -347,31 +356,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:quantity",
-        "status": "mismatch",
-        "gtNorm": "10",
-        "extNorm": "1",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
-      },
-      {
-        "location": "row2:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "15129",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:amount",
-        "status": "ext_missing",
-        "gtNorm": "151290",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:expiryDate",
+        "location": "row3:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20290127",
         "extNorm": "",
@@ -379,7 +364,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:manufacturingNo",
+        "location": "row3:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "DDT2F001",
         "extNorm": "",
@@ -387,7 +372,15 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:insuranceCode",
+        "location": "row3:itemCode",
+        "status": "ext_missing",
+        "gtNorm": "12000823",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row3:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "645905930",
         "extNorm": "",
@@ -396,8 +389,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 7,
+      "recognition": 3,
+      "structure": 8,
       "layout": 0,
       "preprocessing": 0
     },

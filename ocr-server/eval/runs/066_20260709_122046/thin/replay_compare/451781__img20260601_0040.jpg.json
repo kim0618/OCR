@@ -211,10 +211,10 @@
           },
           "itemNameMaster": {
             "gt": "레콕스정",
-            "ext": "레녹스정",
+            "ext": "레콕스정",
             "gtNorm": "레콕스정",
-            "extNorm": "레녹스정",
-            "status": "mismatch",
+            "extNorm": "레콕스정",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -235,18 +235,18 @@
           },
           "unitPrice": {
             "gt": "139995",
-            "ext": "",
+            "ext": "139995",
             "gtNorm": "139995",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "139995",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "2799900",
-            "ext": "139,995",
+            "ext": "2799900",
             "gtNorm": "2799900",
-            "extNorm": "139995",
-            "status": "mismatch",
+            "extNorm": "2799900",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -267,10 +267,10 @@
           },
           "itemCode": {
             "gt": "04005913",
-            "ext": "8806429002210",
+            "ext": "04005913",
             "gtNorm": "04005913",
-            "extNorm": "8806429002210",
-            "status": "mismatch",
+            "extNorm": "04005913",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -286,13 +286,13 @@
     ],
     "cellCounts": {
       "scored": 10,
-      "match": 1,
-      "mismatch": 4,
-      "ext_missing": 5,
+      "match": 5,
+      "mismatch": 1,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.1
+    "cellAccuracy": 0.5
   },
   "buckets": {
     "defects": [
@@ -321,36 +321,12 @@
         "reason": "char-level diff (sim=0.60)"
       },
       {
-        "location": "row1:itemNameMaster",
-        "status": "mismatch",
-        "gtNorm": "레콕스정",
-        "extNorm": "레녹스정",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.75)"
-      },
-      {
         "location": "row1:spec",
         "status": "ext_missing",
         "gtNorm": "405.4mg/300정",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "139995",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
-      },
-      {
-        "location": "row1:amount",
-        "status": "mismatch",
-        "gtNorm": "2799900",
-        "extNorm": "139995",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:expiryDate",
@@ -369,14 +345,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemCode",
-        "status": "mismatch",
-        "gtNorm": "04005913",
-        "extNorm": "8806429002210",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
         "location": "row1:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "643904160",
@@ -386,9 +354,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 6,
+      "recognition": 3,
       "structure": 4,
-      "layout": 1,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

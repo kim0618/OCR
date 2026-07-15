@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "1238638104",
-        "ext": "113-85-04425",
+        "ext": "",
         "gtNorm": "1238638104",
-        "extNorm": "1138504425",
+        "extNorm": "",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -86,9 +86,9 @@
       },
       "supplierCompany": {
         "gt": "선우팜",
-        "ext": "백제약품(주)영등포지점",
+        "ext": "배송백제약품(주)",
         "gtNorm": "선우팜",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "배송백제약품",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "경기 군포시 공단로 133 (당동) 5층",
-        "ext": "서울 구로구 공원로8길 24",
+        "ext": "소경기도 군포시 공단로133(당동",
         "gtNorm": "경기군포시공단로133당동5층",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "소경기도군포시공단로133당동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 3,
-      "mismatch": 7,
-      "ext_missing": 2,
+      "mismatch": 6,
+      "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,7 +182,7 @@
       "gtPresent": 12,
       "matched": 3,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 3
     },
     "fieldAccuracy": 0.25
   },
@@ -719,10 +719,10 @@
           },
           "unitPrice": {
             "gt": "43388",
-            "ext": "",
+            "ext": "10124",
             "gtNorm": "43388",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10124",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
@@ -1153,8 +1153,8 @@
     "cellCounts": {
       "scored": 108,
       "match": 37,
-      "mismatch": 21,
-      "ext_missing": 50,
+      "mismatch": 22,
+      "ext_missing": 49,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -1180,17 +1180,17 @@
       },
       {
         "location": "field:supplierBizNumber",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "1238638104",
-        "extNorm": "1138504425",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "선우팜",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "배송백제약품",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -1206,9 +1206,9 @@
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기군포시공단로133당동5층",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "소경기도군포시공단로133당동",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.87)"
       },
       {
         "location": "field:supplyAmount",
@@ -1508,9 +1508,9 @@
       },
       {
         "location": "row7:unitPrice",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "43388",
-        "extNorm": "",
+        "extNorm": "10124",
         "bucket": "layout",
         "reason": "gt cell appears in column(s) ['amount']"
       },
@@ -1812,8 +1812,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 28,
-      "structure": 44,
+      "recognition": 27,
+      "structure": 45,
       "layout": 9,
       "preprocessing": 0
     },
@@ -1833,6 +1833,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.167
+    "fieldMissRate": 0.25
   }
 }

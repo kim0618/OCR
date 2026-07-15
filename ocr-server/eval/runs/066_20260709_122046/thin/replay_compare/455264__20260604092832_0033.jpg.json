@@ -73,9 +73,9 @@
       },
       "supplierCompany": {
         "gt": "한국휴텍스제약(주)",
-        "ext": "삼진제약(전)",
+        "ext": "약품",
         "gtNorm": "한국휴텍스제약",
-        "extNorm": "삼진제약",
+        "extNorm": "약품",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -99,9 +99,9 @@
       },
       "supplierAddress": {
         "gt": "경기도 화성시 삼성1로 344-2 한국휴텍스제약(주)",
-        "ext": "서울 마포구 와우산로 121 (서교동)",
+        "ext": "서울시강남구봉은사로86길6빌딩레베쌍 200(대인동",
         "gtNorm": "경기도화성시삼성1로3442한국휴텍스제약주",
-        "extNorm": "서울마포구와우산로121서교동",
+        "extNorm": "서울시강남구봉은사로86길6빌딩레베쌍200대인동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -176,67 +176,68 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 2,
-    "rowCountExt": 3,
+    "rowCountExt": 4,
     "rowCountMatch": false,
     "matchedRowIdx": [
-      "1",
+      "4",
       "3"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
+      "1",
       "2"
     ],
     "rows": [
       {
-        "rowIndex": "1",
+        "rowIndex": "4",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "미오날 50mg",
-            "ext": "미오날50mg",
+            "ext": "",
             "gtNorm": "미오날50mg",
-            "extNorm": "미오날50mg",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "미오날정(한독)",
-            "ext": "미오날정(한독)",
+            "ext": "",
             "gtNorm": "미오날정(한독)",
-            "extNorm": "미오날정(한독)",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "spec": {
             "gt": "30T",
-            "ext": "30T",
+            "ext": "",
             "gtNorm": "30t",
-            "extNorm": "30t",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "quantity": {
             "gt": "10",
-            "ext": "12",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "12",
-            "status": "mismatch",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "2830",
-            "ext": "28,300",
+            "ext": "2830",
             "gtNorm": "2830",
-            "extNorm": "28300",
-            "status": "mismatch",
+            "extNorm": "2830",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "28300",
-            "ext": "2,830",
+            "ext": "28300",
             "gtNorm": "28300",
-            "extNorm": "2830",
-            "status": "mismatch",
+            "extNorm": "28300",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -257,10 +258,10 @@
           },
           "itemCode": {
             "gt": "04002691",
-            "ext": "04002691",
+            "ext": "",
             "gtNorm": "04002691",
-            "extNorm": "04002691",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           }
         }
@@ -295,10 +296,10 @@
           },
           "quantity": {
             "gt": "5",
-            "ext": "",
+            "ext": "5",
             "gtNorm": "5",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "5",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -347,8 +348,8 @@
     "cellCounts": {
       "scored": 18,
       "match": 9,
-      "mismatch": 6,
-      "ext_missing": 3,
+      "mismatch": 3,
+      "ext_missing": 6,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -376,7 +377,7 @@
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "한국휴텍스제약",
-        "extNorm": "삼진제약",
+        "extNorm": "약품",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -384,7 +385,7 @@
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기도화성시삼성1로3442한국휴텍스제약주",
-        "extNorm": "서울마포구와우산로121서교동",
+        "extNorm": "서울시강남구봉은사로86길6빌딩레베쌍200대인동",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -418,34 +419,34 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['2']"
+        "reason": "extractor invented rows ['1', '2']"
       },
       {
-        "location": "row1:quantity",
-        "status": "mismatch",
-        "gtNorm": "10",
-        "extNorm": "12",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
+        "location": "row4:itemName",
+        "status": "ext_missing",
+        "gtNorm": "미오날50mg",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "2830",
-        "extNorm": "28300",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
+        "location": "row4:itemNameMaster",
+        "status": "ext_missing",
+        "gtNorm": "미오날정(한독)",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:amount",
-        "status": "mismatch",
-        "gtNorm": "28300",
-        "extNorm": "2830",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['unitPrice']"
+        "location": "row4:spec",
+        "status": "ext_missing",
+        "gtNorm": "30t",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:expiryDate",
+        "location": "row4:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20271029",
         "extNorm": "",
@@ -453,9 +454,17 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:manufacturingNo",
+        "location": "row4:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "MYFC012",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row4:itemCode",
+        "status": "ext_missing",
+        "gtNorm": "04002691",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -477,14 +486,6 @@
         "reason": "char-level diff (sim=0.67)"
       },
       {
-        "location": "row3:quantity",
-        "status": "ext_missing",
-        "gtNorm": "5",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row3:expiryDate",
         "status": "mismatch",
         "gtNorm": "20280903",
@@ -494,9 +495,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 8,
-      "structure": 7,
-      "layout": 2,
+      "recognition": 7,
+      "structure": 10,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "677523",
-        "ext": "",
+        "ext": "677523",
         "gtNorm": "677523",
-        "extNorm": "",
+        "extNorm": "677523",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -154,9 +154,9 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 7,
+      "match": 8,
       "mismatch": 3,
-      "ext_missing": 1,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 7,
+      "matched": 8,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6363636363636364
+    "fieldAccuracy": 0.7272727272727273
   },
   "table": {
     "alignMode": "content",
@@ -380,26 +380,26 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "3682",
-            "ext": "",
+            "ext": "3682",
             "gtNorm": "3682",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "3682",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "36820",
-            "ext": "3,682",
+            "ext": "36820",
             "gtNorm": "36820",
-            "extNorm": "3682",
-            "status": "mismatch",
+            "extNorm": "36820",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -420,10 +420,10 @@
           },
           "itemCode": {
             "gt": "01011251",
-            "ext": "01011252",
+            "ext": "01011251",
             "gtNorm": "01011251",
-            "extNorm": "01011252",
-            "status": "mismatch",
+            "extNorm": "01011251",
+            "status": "match",
             "spurious": false
           }
         }
@@ -458,18 +458,18 @@
           },
           "quantity": {
             "gt": "20",
-            "ext": "",
+            "ext": "20",
             "gtNorm": "20",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "11640",
-            "ext": "",
+            "ext": "11640",
             "gtNorm": "11640",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "11640",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -979,24 +979,16 @@
     ],
     "cellCounts": {
       "scored": 90,
-      "match": 29,
-      "mismatch": 6,
-      "ext_missing": 55,
+      "match": 35,
+      "mismatch": 4,
+      "ext_missing": 51,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.32222222222222224
+    "cellAccuracy": 0.3888888888888889
   },
   "buckets": {
     "defects": [
-      {
-        "location": "field:taxAmount",
-        "status": "ext_missing",
-        "gtNorm": "677523",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
-      },
       {
         "location": "field:issueDate",
         "status": "mismatch",
@@ -1110,30 +1102,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row3:quantity",
-        "status": "ext_missing",
-        "gtNorm": "10",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "3682",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
-      },
-      {
-        "location": "row3:amount",
-        "status": "mismatch",
-        "gtNorm": "36820",
-        "extNorm": "3682",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.89)"
-      },
-      {
         "location": "row3:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20280727",
@@ -1150,36 +1118,12 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row3:itemCode",
-        "status": "mismatch",
-        "gtNorm": "01011251",
-        "extNorm": "01011252",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.88)"
-      },
-      {
         "location": "row4:spec",
         "status": "ext_missing",
         "gtNorm": "30t",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:quantity",
-        "status": "ext_missing",
-        "gtNorm": "20",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "11640",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
       },
       {
         "location": "row4:amount",
@@ -1519,9 +1463,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 9,
-      "structure": 55,
-      "layout": 2,
+      "recognition": 7,
+      "structure": 52,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,
@@ -1540,6 +1484,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.091
+    "fieldMissRate": 0.0
   }
 }

@@ -166,24 +166,24 @@
     "rowCountExt": 3,
     "rowCountMatch": false,
     "matchedRowIdx": [
-      "3",
+      "1",
       "2"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "1"
+      "3"
     ],
     "rows": [
       {
-        "rowIndex": "3",
+        "rowIndex": "1",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "자니딥정 500T",
-            "ext": "자니딥정500T",
+            "ext": "자니딥정500T 500TAB PAC",
             "gtNorm": "자니딥정500t",
-            "extNorm": "자니딥정500t",
-            "status": "match",
+            "extNorm": "자니딥정500t500tabpac",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
@@ -204,34 +204,34 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "153450",
-            "ext": "",
+            "ext": "1,534,500",
             "gtNorm": "153450",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "1534500",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "1534500",
-            "ext": "153,450",
+            "ext": "1,687,950",
             "gtNorm": "1534500",
-            "extNorm": "153450",
+            "extNorm": "1687950",
             "status": "mismatch",
             "spurious": false
           },
           "expiryDate": {
             "gt": "20290126",
-            "ext": "",
+            "ext": "153,450",
             "gtNorm": "20290126",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "153450",
+            "status": "mismatch",
             "spurious": false
           },
           "manufacturingNo": {
@@ -334,8 +334,8 @@
     "cellCounts": {
       "scored": 18,
       "match": 4,
-      "mismatch": 6,
-      "ext_missing": 8,
+      "mismatch": 9,
+      "ext_missing": 5,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -389,7 +389,7 @@
         "gtNorm": "4415290",
         "extNorm": "1534500",
         "bucket": "structure",
-        "reason": "ext value is gt's ['row3:amount']"
+        "reason": "ext value is gt's ['row1:amount']"
       },
       {
         "location": "field:buyerAddress",
@@ -405,10 +405,18 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1']"
+        "reason": "extractor invented rows ['3']"
       },
       {
-        "location": "row3:spec",
+        "location": "row1:itemName",
+        "status": "mismatch",
+        "gtNorm": "자니딥정500t",
+        "extNorm": "자니딥정500t500tabpac",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.64)"
+      },
+      {
+        "location": "row1:spec",
         "status": "ext_missing",
         "gtNorm": "500tab",
         "extNorm": "",
@@ -416,39 +424,31 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row3:quantity",
-        "status": "ext_missing",
-        "gtNorm": "10",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:unitPrice",
-        "status": "ext_missing",
+        "location": "row1:unitPrice",
+        "status": "mismatch",
         "gtNorm": "153450",
-        "extNorm": "",
+        "extNorm": "1534500",
         "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
+        "reason": "gt cell appears in column(s) ['expiryDate']"
       },
       {
-        "location": "row3:amount",
+        "location": "row1:amount",
         "status": "mismatch",
         "gtNorm": "1534500",
+        "extNorm": "1687950",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['unitPrice']"
+      },
+      {
+        "location": "row1:expiryDate",
+        "status": "mismatch",
+        "gtNorm": "20290126",
         "extNorm": "153450",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
+        "reason": "cell differs, low similarity"
       },
       {
-        "location": "row3:expiryDate",
-        "status": "ext_missing",
-        "gtNorm": "20290126",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:manufacturingNo",
+        "location": "row1:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "ZAN26501",
         "extNorm": "",
@@ -521,9 +521,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 6,
-      "structure": 13,
-      "layout": 3,
+      "recognition": 7,
+      "structure": 11,
+      "layout": 4,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

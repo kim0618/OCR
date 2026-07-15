@@ -199,7 +199,7 @@
       "5",
       "15",
       "16",
-      "17",
+      "8",
       "18",
       "19"
     ],
@@ -211,9 +211,9 @@
       "4",
       "6",
       "7",
-      "8",
       "9",
-      "10"
+      "10",
+      "17"
     ],
     "rows": [
       {
@@ -819,7 +819,7 @@
         }
       },
       {
-        "rowIndex": "17",
+        "rowIndex": "8",
         "rowMatch": false,
         "cells": {
           "itemName": {
@@ -856,15 +856,15 @@
           },
           "unitPrice": {
             "gt": "6499",
-            "ext": "6,499.00",
+            "ext": "6499",
             "gtNorm": "6499",
-            "extNorm": "649900",
-            "status": "mismatch",
+            "extNorm": "6499",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "64990",
-            "ext": "64,990",
+            "ext": "64990",
             "gtNorm": "64990",
             "extNorm": "64990",
             "status": "match",
@@ -872,18 +872,18 @@
           },
           "expiryDate": {
             "gt": "20280520",
-            "ext": "2028.05.20",
+            "ext": "",
             "gtNorm": "20280520",
-            "extNorm": "20280520",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "manufacturingNo": {
             "gt": "T0342502A",
-            "ext": "T0342502A",
+            "ext": "",
             "gtNorm": "T0342502A",
-            "extNorm": "T0342502A",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemCode": {
@@ -896,10 +896,10 @@
           },
           "insuranceCode": {
             "gt": "653100990",
-            "ext": "9 653100990 약(주) 비씨월드제",
+            "ext": "",
             "gtNorm": "653100990",
-            "extNorm": "9653100990약주비씨월드제",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           }
         }
@@ -1079,13 +1079,13 @@
     ],
     "cellCounts": {
       "scored": 100,
-      "match": 73,
-      "mismatch": 17,
-      "ext_missing": 10,
+      "match": 72,
+      "mismatch": 15,
+      "ext_missing": 13,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.73
+    "cellAccuracy": 0.72
   },
   "buckets": {
     "defects": [
@@ -1143,7 +1143,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '2', '3', '4', '6', '7', '8', '9', '10']"
+        "reason": "extractor invented rows ['1', '2', '3', '4', '6', '7', '9', '10', '17']"
       },
       {
         "location": "row11:spec",
@@ -1282,7 +1282,7 @@
         "reason": "char-level diff (sim=0.82)"
       },
       {
-        "location": "row17:spec",
+        "location": "row8:spec",
         "status": "ext_missing",
         "gtNorm": "100t",
         "extNorm": "",
@@ -1290,20 +1290,28 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row17:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "6499",
-        "extNorm": "649900",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.80)"
+        "location": "row8:expiryDate",
+        "status": "ext_missing",
+        "gtNorm": "20280520",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row17:insuranceCode",
-        "status": "mismatch",
+        "location": "row8:manufacturingNo",
+        "status": "ext_missing",
+        "gtNorm": "T0342502A",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row8:insuranceCode",
+        "status": "ext_missing",
         "gtNorm": "653100990",
-        "extNorm": "9653100990약주비씨월드제",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.69)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row18:itemNameMaster",
@@ -1363,8 +1371,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 21,
-      "structure": 13,
+      "recognition": 19,
+      "structure": 16,
       "layout": 0,
       "preprocessing": 0
     },

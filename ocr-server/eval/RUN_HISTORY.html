@@ -1,0 +1,32 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AWS 실행 이력 (eval / 파인튜닝)</title><style>
+:root{--bg:#f6f8fa;--card:#fff;--line:#d0d7de;--fg:#1f2328;--muted:#59636e;--up:#1a7f37;--head:#eef1f4}
+@media(prefers-color-scheme:dark){:root{--bg:#0d1117;--card:#161b22;--line:#30363d;--fg:#e6edf3;--muted:#8b949e;--head:#21262d}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);
+font-family:'Segoe UI','Malgun Gothic',system-ui,sans-serif;font-size:14px;padding:24px}
+h1{font-size:20px;margin:0 0 4px}h2{font-size:15px;margin:22px 0 8px}
+.gen{color:var(--muted);font-size:12.5px;margin-bottom:8px}
+section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 18px;
+max-width:1200px;overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:nth-child(-n+3),td:nth-child(-n+3){text-align:left}
+th{color:var(--muted);font-weight:600;font-size:12.5px;background:var(--head)}
+code{background:var(--head);border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:11.5px}
+.tot{font-weight:700;background:var(--head)}.up{color:var(--up);font-weight:600}.muted{color:var(--muted)}
+</style></head><body>
+<h1>AWS 실행 이력</h1><div class="gen">생성 2026-07-14 10:02 · eval 2 run · 파인튜닝 2 run · 돌릴 때마다 자동 누적</div>
+
+<h2>① eval (측정 + 크롭 수확)</h2>
+<section><table><thead><tr>
+<th>#</th><th>일시</th><th>run</th><th>처리 장수</th><th>소요 시간</th><th>시간당 처리</th>
+<th>필드</th><th>셀</th></tr></thead>
+<tbody><tr><td>1</td><td>2026-07-14 10:02</td><td><code>065_.../thin</code></td><td>2,002장</td><td>1시간 32분</td><td>1,297 장/시간</td><td>54.2%</td><td>44.4%</td></tr><tr><td>2</td><td>2026-07-14 10:02</td><td><code>066_.../thin</code></td><td>5,964장</td><td>2시간 29분</td><td>2,402 장/시간</td><td>54.2%</td><td>44.4%</td></tr><tr class='tot'><td colspan='3'>누계 (2 run)</td><td>7,966장</td><td>4시간 1분</td><td>1,978 장/시간</td><td colspan='2'></td></tr></tbody></table></section>
+
+<h2>② 파인튜닝 (모델 학습)</h2>
+<section><table><thead><tr>
+<th>#</th><th>일시</th><th>run</th><th>학습 크롭</th><th>epoch(반복)</th><th>소요 시간</th>
+<th>시간당 처리</th><th>best acc</th><th>채택</th></tr></thead>
+<tbody><tr><td>1</td><td>2026-07-14 10:02</td><td><code>v4_260708</code></td><td>13,050장</td><td>6</td><td>25분 0초</td><td>31,320 장/시간</td><td>0.282</td><td><span class='muted'>미채택</span></td></tr><tr><td>2</td><td>2026-07-14 10:02</td><td><code>v5_260709</code></td><td>26,000장</td><td>6</td><td>27분 30초</td><td>56,727 장/시간</td><td>0.31</td><td><span class='up'>채택</span></td></tr><tr class='tot'><td colspan='3'>누계 (2 run)</td><td>39,050장</td><td colspan='1'></td><td>52분 30초</td><td>44,629 장/시간</td><td colspan='2'></td></tr></tbody></table></section>
+</body></html>

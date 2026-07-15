@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "6168513350",
-        "ext": "616-85-13350",
+        "ext": "",
         "gtNorm": "6168513350",
-        "extNorm": "6168513350",
+        "extNorm": "",
         "type": "bizno",
-        "status": "match",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -73,9 +73,9 @@
       },
       "supplierCompany": {
         "gt": "제이더블유신약",
-        "ext": "일양약품 (전문)",
+        "ext": "의약의약품외수출입",
         "gtNorm": "제이더블유신약",
-        "extNorm": "일양약품전문",
+        "extNorm": "의약의약품외수출입",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -99,11 +99,11 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 금천구 가산디지털1로 24, 대륭테크노타운73차 3층 (가산동)",
-        "ext": "경기도 용인시 기흥구 하갈로 110 (하갈동)",
+        "ext": "",
         "gtNorm": "서울특별시금천구가산디지털1로24대륭테크노타운73차3층가산동",
-        "extNorm": "경기도용인시기흥구하갈로110하갈동",
+        "extNorm": "",
         "type": "address",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -154,9 +154,9 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 4,
-      "mismatch": 4,
-      "ext_missing": 3,
+      "match": 3,
+      "mismatch": 3,
+      "ext_missing": 5,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -167,29 +167,28 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 4,
+      "matched": 3,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 3
+      "extAttemptedMiss": 5
     },
-    "fieldAccuracy": 0.36363636363636365
+    "fieldAccuracy": 0.2727272727272727
   },
   "table": {
     "alignMode": "content",
     "rowCountGt": 1,
-    "rowCountExt": 1,
-    "rowCountMatch": true,
-    "matchedRowIdx": [],
-    "gtOnlyRowIdx": [
-      "1"
+    "rowCountExt": 2,
+    "rowCountMatch": false,
+    "matchedRowIdx": [
+      "2"
     ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
       "1"
     ],
     "rows": [
       {
-        "rowIndex": "1",
+        "rowIndex": "2",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "펜디예뜨정(소)",
@@ -217,26 +216,26 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "8804",
-            "ext": "",
+            "ext": "8804",
             "gtNorm": "8804",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "8804",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "88040",
-            "ext": "",
+            "ext": "88040",
             "gtNorm": "88040",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "88040",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
@@ -252,13 +251,13 @@
     ],
     "cellCounts": {
       "scored": 7,
-      "match": 0,
+      "match": 3,
       "mismatch": 0,
-      "ext_missing": 7,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.0
+    "cellAccuracy": 0.42857142857142855
   },
   "buckets": {
     "defects": [
@@ -276,23 +275,31 @@
         "gtNorm": "8804",
         "extNorm": "",
         "bucket": "structure",
+        "reason": "gt value present at ['row2:unitPrice']"
+      },
+      {
+        "location": "field:supplierBizNumber",
+        "status": "ext_missing",
+        "gtNorm": "6168513350",
+        "extNorm": "",
+        "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "제이더블유신약",
-        "extNorm": "일양약품전문",
+        "extNorm": "의약의약품외수출입",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplierAddress",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "서울특별시금천구가산디지털1로24대륭테크노타운73차3층가산동",
-        "extNorm": "경기도용인시기흥구하갈로110하갈동",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplyAmount",
@@ -300,7 +307,7 @@
         "gtNorm": "88040",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "reason": "gt value present at ['row2:amount']"
       },
       {
         "location": "field:buyerCompany",
@@ -320,14 +327,6 @@
       },
       {
         "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['1']"
-      },
-      {
-        "location": "table",
         "status": "rows_extra",
         "gtNorm": "",
         "extNorm": "",
@@ -335,7 +334,7 @@
         "reason": "extractor invented rows ['1']"
       },
       {
-        "location": "row1:itemName",
+        "location": "row2:itemName",
         "status": "ext_missing",
         "gtNorm": "펜디예뜨정소",
         "extNorm": "",
@@ -343,7 +342,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemNameMaster",
+        "location": "row2:itemNameMaster",
         "status": "ext_missing",
         "gtNorm": "펜디예뜨정(향정)",
         "extNorm": "",
@@ -351,7 +350,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:spec",
+        "location": "row2:spec",
         "status": "ext_missing",
         "gtNorm": "30t",
         "extNorm": "",
@@ -359,31 +358,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "10",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "8804",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:amount",
-        "status": "ext_missing",
-        "gtNorm": "88040",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:itemCode",
+        "location": "row2:itemCode",
         "status": "ext_missing",
         "gtNorm": "8806441012617",
         "extNorm": "",
@@ -392,8 +367,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 4,
-      "structure": 12,
+      "recognition": 3,
+      "structure": 10,
       "layout": 0,
       "preprocessing": 0
     },
@@ -413,6 +388,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.273
+    "fieldMissRate": 0.455
   }
 }

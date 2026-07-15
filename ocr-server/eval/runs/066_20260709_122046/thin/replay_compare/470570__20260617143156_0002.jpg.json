@@ -60,11 +60,11 @@
       },
       "buyerBizNumber": {
         "gt": "4088500180",
-        "ext": "800-62-80363",
+        "ext": "408-85-00180",
         "gtNorm": "4088500180",
-        "extNorm": "8006280363",
+        "extNorm": "4088500180",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -154,8 +154,8 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 7,
-      "mismatch": 4,
+      "match": 8,
+      "mismatch": 3,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 7,
+      "matched": 8,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6363636363636364
+    "fieldAccuracy": 0.7272727272727273
   },
   "table": {
     "alignMode": "content",
@@ -200,10 +200,10 @@
           },
           "itemNameMaster": {
             "gt": "카두라엑스엘서방정4mg(비아트리스)",
-            "ext": "카두라엑스엘서방정4mg(비아트리스)",
+            "ext": "카두라엑스엘서방정4mg(비아트리스)(EXP:20261015)(유통처변경)",
             "gtNorm": "카두라엑스엘서방정4mg(비아트리스)",
-            "extNorm": "카두라엑스엘서방정4mg(비아트리스)",
-            "status": "match",
+            "extNorm": "카두라엑스엘서방정4mg(비아트리스)(exp:20261015)(유통처변경)",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
@@ -216,18 +216,18 @@
           },
           "quantity": {
             "gt": "20",
-            "ext": "",
+            "ext": "20",
             "gtNorm": "20",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "26427",
-            "ext": "",
+            "ext": "26427",
             "gtNorm": "26427",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "26427",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -240,10 +240,10 @@
           },
           "itemCode": {
             "gt": "22006398",
-            "ext": "22006398",
+            "ext": "01011796",
             "gtNorm": "22006398",
-            "extNorm": "22006398",
-            "status": "match",
+            "extNorm": "01011796",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -252,8 +252,8 @@
     "cellCounts": {
       "scored": 7,
       "match": 3,
-      "mismatch": 2,
-      "ext_missing": 2,
+      "mismatch": 4,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -261,14 +261,6 @@
   },
   "buckets": {
     "defects": [
-      {
-        "location": "field:buyerBizNumber",
-        "status": "mismatch",
-        "gtNorm": "4088500180",
-        "extNorm": "8006280363",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
-      },
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
@@ -310,20 +302,12 @@
         "reason": "char-level diff (sim=0.87)"
       },
       {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "20",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "26427",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "location": "row1:itemNameMaster",
+        "status": "mismatch",
+        "gtNorm": "카두라엑스엘서방정4mg(비아트리스)",
+        "extNorm": "카두라엑스엘서방정4mg(비아트리스)(exp:20261015)(유통처변경)",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.64)"
       },
       {
         "location": "row1:amount",
@@ -332,11 +316,19 @@
         "extNorm": "581394",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.50)"
+      },
+      {
+        "location": "row1:itemCode",
+        "status": "mismatch",
+        "gtNorm": "22006398",
+        "extNorm": "01011796",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       }
     ],
     "bucketTally": {
-      "recognition": 6,
-      "structure": 3,
+      "recognition": 7,
+      "structure": 1,
       "layout": 0,
       "preprocessing": 0
     },

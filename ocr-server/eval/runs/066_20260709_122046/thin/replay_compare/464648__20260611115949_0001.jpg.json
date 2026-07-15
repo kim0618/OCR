@@ -8,11 +8,11 @@
     "perField": {
       "totalAmount": {
         "gt": "8109660",
-        "ext": "29,892,589",
+        "ext": "8109660",
         "gtNorm": "8109660",
-        "extNorm": "29892589",
+        "extNorm": "8109660",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -73,9 +73,9 @@
       },
       "supplierCompany": {
         "gt": "메디카코리아(주)",
-        "ext": "백제약품(주)영등포지점",
+        "ext": "주)제이에스에스팜",
         "gtNorm": "메디카코리아",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "주제이에스에스팜",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -99,11 +99,11 @@
       },
       "supplierAddress": {
         "gt": "서울 서초구 명달로 9 (방배동) 서울 서초구 명달로 9 (방배동)",
-        "ext": "서울 구로구 공원로8길 24",
+        "ext": "",
         "gtNorm": "서울서초구명달로9방배동서울서초구명달로9방배동",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "",
         "type": "address",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -154,9 +154,9 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 6,
-      "mismatch": 5,
-      "ext_missing": 0,
+      "match": 7,
+      "mismatch": 3,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 6,
+      "matched": 7,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 0
+      "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.5454545454545454
+    "fieldAccuracy": 0.6363636363636364
   },
   "table": {
     "alignMode": "content",
@@ -837,10 +837,10 @@
           },
           "quantity": {
             "gt": "25",
-            "ext": "",
+            "ext": "25",
             "gtNorm": "25",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "25",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -1009,18 +1009,18 @@
           },
           "quantity": {
             "gt": "20",
-            "ext": "",
+            "ext": "20",
             "gtNorm": "20",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "8811",
-            "ext": "",
+            "ext": "8811",
             "gtNorm": "8811",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "8811",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -1095,18 +1095,18 @@
           },
           "quantity": {
             "gt": "29",
-            "ext": "6435",
+            "ext": "29",
             "gtNorm": "29",
-            "extNorm": "6435",
-            "status": "mismatch",
+            "extNorm": "29",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "6435",
-            "ext": "29",
+            "ext": "6435",
             "gtNorm": "6435",
-            "extNorm": "29",
-            "status": "mismatch",
+            "extNorm": "6435",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -1240,39 +1240,31 @@
     ],
     "cellCounts": {
       "scored": 120,
-      "match": 42,
-      "mismatch": 33,
-      "ext_missing": 45,
+      "match": 47,
+      "mismatch": 31,
+      "ext_missing": 42,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.35
+    "cellAccuracy": 0.39166666666666666
   },
   "buckets": {
     "defects": [
       {
-        "location": "field:totalAmount",
-        "status": "mismatch",
-        "gtNorm": "8109660",
-        "extNorm": "29892589",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "메디카코리아",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "주제이에스에스팜",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplierAddress",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "서울서초구명달로9방배동서울서초구명달로9방배동",
-        "extNorm": "서울구로구공원로8길24",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:buyerCompany",
@@ -1707,14 +1699,6 @@
         "reason": "char-level diff (sim=0.91)"
       },
       {
-        "location": "row20:quantity",
-        "status": "ext_missing",
-        "gtNorm": "25",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row20:expiryDate",
         "status": "mismatch",
         "gtNorm": "20281130",
@@ -1819,22 +1803,6 @@
         "reason": "char-level diff (sim=0.93)"
       },
       {
-        "location": "row15:quantity",
-        "status": "ext_missing",
-        "gtNorm": "20",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row15:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "8811",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row15:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20280420",
@@ -1857,22 +1825,6 @@
         "extNorm": "11한미실타졸정50mg",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.91)"
-      },
-      {
-        "location": "row21:quantity",
-        "status": "mismatch",
-        "gtNorm": "29",
-        "extNorm": "6435",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['unitPrice']"
-      },
-      {
-        "location": "row21:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "6435",
-        "extNorm": "29",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['quantity']"
       },
       {
         "location": "row21:expiryDate",
@@ -1924,9 +1876,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 36,
-      "structure": 46,
-      "layout": 2,
+      "recognition": 34,
+      "structure": 44,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,
@@ -1945,6 +1897,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.0
+    "fieldMissRate": 0.091
   }
 }

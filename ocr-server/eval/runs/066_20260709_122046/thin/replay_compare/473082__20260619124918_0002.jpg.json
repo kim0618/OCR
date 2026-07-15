@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "4628801883",
-        "ext": "113-85-04425",
+        "ext": "",
         "gtNorm": "4628801883",
-        "extNorm": "1138504425",
+        "extNorm": "",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -73,9 +73,9 @@
       },
       "supplierCompany": {
         "gt": "경신팜",
-        "ext": "백제약품(주)영등포지점",
+        "ext": "주)경신팜",
         "gtNorm": "경신팜",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "주경신팜",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -99,9 +99,9 @@
       },
       "supplierAddress": {
         "gt": "서울 송파구 마천로 146 (오금동) 4층",
-        "ext": "서울 구로구 공원로8길 24",
+        "ext": "서울시 송파구 마천로 146,4층(오",
         "gtNorm": "서울송파구마천로146오금동4층",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "서울시송파구마천로1464층오",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -155,8 +155,8 @@
     "counts": {
       "scored": 11,
       "match": 3,
-      "mismatch": 8,
-      "ext_missing": 0,
+      "mismatch": 7,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -169,7 +169,7 @@
       "gtPresent": 11,
       "matched": 3,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 0
+      "extAttemptedMiss": 1
     },
     "fieldAccuracy": 0.2727272727272727
   },
@@ -293,27 +293,27 @@
       },
       {
         "location": "field:supplierBizNumber",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "4628801883",
-        "extNorm": "1138504425",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "경신팜",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "주경신팜",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.86)"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울송파구마천로146오금동4층",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "서울시송파구마천로1464층오",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.84)"
       },
       {
         "location": "field:supplyAmount",
@@ -389,8 +389,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 8,
-      "structure": 6,
+      "recognition": 7,
+      "structure": 7,
       "layout": 0,
       "preprocessing": 0
     },
@@ -410,6 +410,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.0
+    "fieldMissRate": 0.091
   }
 }

@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "2248154571",
-        "ext": "113-85-04425",
+        "ext": "",
         "gtNorm": "2248154571",
-        "extNorm": "1138504425",
+        "extNorm": "",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -86,9 +86,9 @@
       },
       "supplierCompany": {
         "gt": "오스코리아제약",
-        "ext": "백제약품(주)영등포지점",
+        "ext": "주)오스코리이제약",
         "gtNorm": "오스코리아제약",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "주오스코리이제약",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "강원 원주시 문막읍 문막공단길 252",
-        "ext": "서울 구로구 공원로8길 24",
+        "ext": "",
         "gtNorm": "강원원주시문막읍문막공단길252",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "",
         "type": "address",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 7,
-      "mismatch": 5,
-      "ext_missing": 0,
+      "mismatch": 3,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,7 +182,7 @@
       "gtPresent": 12,
       "matched": 7,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 0
+      "extAttemptedMiss": 2
     },
     "fieldAccuracy": 0.5833333333333334
   },
@@ -228,10 +228,10 @@
           },
           "quantity": {
             "gt": "30",
-            "ext": "",
+            "ext": "30",
             "gtNorm": "30",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -357,39 +357,39 @@
     ],
     "cellCounts": {
       "scored": 18,
-      "match": 8,
+      "match": 9,
       "mismatch": 1,
-      "ext_missing": 9,
+      "ext_missing": 8,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4444444444444444
+    "cellAccuracy": 0.5
   },
   "buckets": {
     "defects": [
       {
         "location": "field:supplierBizNumber",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "2248154571",
-        "extNorm": "1138504425",
+        "extNorm": "",
         "bucket": "structure",
-        "reason": "ext value is gt's ['field:buyerBizNumber']"
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "오스코리아제약",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "주오스코리이제약",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "field:supplierAddress",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "강원원주시문막읍문막공단길252",
-        "extNorm": "서울구로구공원로8길24",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:buyerCompany",
@@ -411,14 +411,6 @@
         "location": "row1:spec",
         "status": "ext_missing",
         "gtNorm": "30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "30",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -489,7 +481,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
+      "recognition": 4,
       "structure": 9,
       "layout": 1,
       "preprocessing": 0
@@ -510,6 +502,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.0
+    "fieldMissRate": 0.167
   }
 }

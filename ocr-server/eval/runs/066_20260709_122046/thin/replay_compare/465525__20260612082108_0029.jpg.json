@@ -125,11 +125,11 @@
       },
       "supplyAmount": {
         "gt": "3376800",
-        "ext": "",
+        "ext": "3376800",
         "gtNorm": "3376800",
-        "extNorm": "",
+        "extNorm": "3376800",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 10,
+      "match": 11,
       "mismatch": 1,
-      "ext_missing": 1,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 10,
+      "matched": 11,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.8333333333333334
+    "fieldAccuracy": 0.9166666666666666
   },
   "table": {
     "alignMode": "content",
@@ -230,17 +230,17 @@
           },
           "quantity": {
             "gt": "20",
-            "ext": "38,808",
+            "ext": "10",
             "gtNorm": "20",
-            "extNorm": "38808",
+            "extNorm": "10",
             "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "166320",
-            "ext": "10",
+            "ext": "38,808",
             "gtNorm": "166320",
-            "extNorm": "10",
+            "extNorm": "38808",
             "status": "mismatch",
             "spurious": false
           },
@@ -370,14 +370,6 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:supplyAmount",
-        "status": "ext_missing",
-        "gtNorm": "3376800",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
-      },
-      {
         "location": "field:buyerAddress",
         "status": "mismatch",
         "gtNorm": "원주시오성마을길61",
@@ -413,17 +405,17 @@
         "location": "row3:quantity",
         "status": "mismatch",
         "gtNorm": "20",
-        "extNorm": "38808",
+        "extNorm": "10",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "row3:unitPrice",
         "status": "mismatch",
         "gtNorm": "166320",
-        "extNorm": "10",
+        "extNorm": "38808",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row3:amount",
@@ -492,7 +484,7 @@
     ],
     "bucketTally": {
       "recognition": 10,
-      "structure": 5,
+      "structure": 4,
       "layout": 0,
       "preprocessing": 0
     },
@@ -512,6 +504,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

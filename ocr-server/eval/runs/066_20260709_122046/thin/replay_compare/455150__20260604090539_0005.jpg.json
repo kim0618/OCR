@@ -60,9 +60,9 @@
       },
       "supplierCompany": {
         "gt": "휴온스메디텍",
-        "ext": "백제약품(주)영등포지점",
+        "ext": "의약품윗생욕",
         "gtNorm": "휴온스메디텍",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "의약품윗생욕",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -86,11 +86,11 @@
       },
       "supplierAddress": {
         "gt": "부산 강서구 녹산산단165로 22(송정동)",
-        "ext": "서울 구로구 공원로8길 24",
+        "ext": "",
         "gtNorm": "부산강서구녹산산단165로22송정동",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "",
         "type": "address",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -142,8 +142,8 @@
     "counts": {
       "scored": 10,
       "match": 3,
-      "mismatch": 5,
-      "ext_missing": 2,
+      "mismatch": 4,
+      "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -156,7 +156,7 @@
       "gtPresent": 10,
       "matched": 3,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 3
     },
     "fieldAccuracy": 0.3
   },
@@ -167,7 +167,7 @@
     "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
-      "14",
+      "2",
       "3",
       "4",
       "5",
@@ -176,21 +176,21 @@
       "8",
       "9",
       "21",
-      "22"
+      "11"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "2",
       "10",
-      "11",
       "12",
       "13",
+      "14",
       "15",
       "16",
       "17",
       "18",
       "19",
-      "20"
+      "20",
+      "22"
     ],
     "rows": [
       {
@@ -272,7 +272,7 @@
         }
       },
       {
-        "rowIndex": "14",
+        "rowIndex": "2",
         "rowMatch": false,
         "cells": {
           "itemName": {
@@ -325,7 +325,7 @@
           },
           "expiryDate": {
             "gt": "20281102",
-            "ext": "2028-11-02",
+            "ext": "20281102",
             "gtNorm": "20281102",
             "extNorm": "20281102",
             "status": "match",
@@ -691,10 +691,10 @@
           },
           "quantity": {
             "gt": "5",
-            "ext": "",
+            "ext": "5",
             "gtNorm": "5",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "5",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -974,7 +974,7 @@
         }
       },
       {
-        "rowIndex": "22",
+        "rowIndex": "11",
         "rowMatch": false,
         "cells": {
           "itemName": {
@@ -1027,7 +1027,7 @@
           },
           "expiryDate": {
             "gt": "20280325",
-            "ext": "2028-03-25",
+            "ext": "20280325",
             "gtNorm": "20280325",
             "extNorm": "20280325",
             "status": "match",
@@ -1054,13 +1054,13 @@
     ],
     "cellCounts": {
       "scored": 99,
-      "match": 87,
+      "match": 88,
       "mismatch": 11,
-      "ext_missing": 1,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.8787878787878788
+    "cellAccuracy": 0.8888888888888888
   },
   "buckets": {
     "defects": [
@@ -1084,17 +1084,17 @@
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "휴온스메디텍",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "의약품윗생욕",
         "bucket": "structure",
         "reason": "gt value present at ['field:buyerCompany']"
       },
       {
         "location": "field:supplierAddress",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "부산강서구녹산산단165로22송정동",
-        "extNorm": "서울구로구공원로8길24",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplyAmount",
@@ -1126,7 +1126,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['2', '10', '11', '12', '13', '15', '16', '17', '18', '19', '20']"
+        "reason": "extractor invented rows ['10', '12', '13', '14', '15', '16', '17', '18', '19', '20', '22']"
       },
       {
         "location": "row1:itemName",
@@ -1137,7 +1137,7 @@
         "reason": "char-level diff (sim=0.71)"
       },
       {
-        "location": "row14:itemName",
+        "location": "row2:itemName",
         "status": "mismatch",
         "gtNorm": "라스토정10밀리그램",
         "extNorm": "20602라스토정10밀리그램",
@@ -1185,14 +1185,6 @@
         "reason": "gt cell appears in column(s) ['itemNameMaster']"
       },
       {
-        "location": "row7:quantity",
-        "status": "ext_missing",
-        "gtNorm": "5",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row8:itemName",
         "status": "mismatch",
         "gtNorm": "휴니즈에페리손염산염정",
@@ -1217,7 +1209,7 @@
         "reason": "char-level diff (sim=0.77)"
       },
       {
-        "location": "row22:itemName",
+        "location": "row11:itemName",
         "status": "mismatch",
         "gtNorm": "휴토젯정1020밀리그램",
         "extNorm": "110602휴토젯정1020밀리그램p",
@@ -1226,7 +1218,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 9,
+      "recognition": 8,
       "structure": 6,
       "layout": 5,
       "preprocessing": 0
@@ -1247,6 +1239,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.2
+    "fieldMissRate": 0.3
   }
 }

@@ -8,11 +8,11 @@
     "perField": {
       "totalAmount": {
         "gt": "8626060",
-        "ext": "22,657,476",
+        "ext": "8626060",
         "gtNorm": "8626060",
-        "extNorm": "22657476",
+        "extNorm": "8626060",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
-      "mismatch": 4,
+      "match": 9,
+      "mismatch": 3,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 9,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -201,7 +201,7 @@
       "7",
       "19",
       "20",
-      "10"
+      "21"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
@@ -213,9 +213,9 @@
       "6",
       "8",
       "9",
+      "10",
       "11",
-      "12",
-      "21"
+      "12"
     ],
     "rows": [
       {
@@ -993,14 +993,14 @@
         }
       },
       {
-        "rowIndex": "10",
+        "rowIndex": "21",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "에자)살라겐정",
-            "ext": "10 에자)살라겐정 25+4 5mg'30정",
+            "ext": "10 북부파주1/3 에자)살라겐정 25+4",
             "gtNorm": "에자살라겐정",
-            "extNorm": "10에자살라겐정2545mg30정",
+            "extNorm": "10북부파주13에자살라겐정254",
             "status": "mismatch",
             "spurious": false
           },
@@ -1022,10 +1022,10 @@
           },
           "quantity": {
             "gt": "96",
-            "ext": "",
+            "ext": "96",
             "gtNorm": "96",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "96",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -1054,10 +1054,10 @@
           },
           "manufacturingNo": {
             "gt": "CWWVM",
-            "ext": "CWWVM",
+            "ext": "CWWVM 621100040 전/보",
             "gtNorm": "CWWVM",
-            "extNorm": "CWWVM",
-            "status": "match",
+            "extNorm": "CWWVM621100040전보",
+            "status": "mismatch",
             "spurious": false
           },
           "itemCode": {
@@ -1082,8 +1082,8 @@
     "cellCounts": {
       "scored": 100,
       "match": 54,
-      "mismatch": 35,
-      "ext_missing": 11,
+      "mismatch": 36,
+      "ext_missing": 10,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -1091,14 +1091,6 @@
   },
   "buckets": {
     "defects": [
-      {
-        "location": "field:totalAmount",
-        "status": "mismatch",
-        "gtNorm": "8626060",
-        "extNorm": "22657476",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
@@ -1129,7 +1121,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '2', '3', '4', '5', '6', '8', '9', '11', '12', '21']"
+        "reason": "extractor invented rows ['1', '2', '3', '4', '5', '6', '8', '9', '10', '11', '12']"
       },
       {
         "location": "row13:itemName",
@@ -1460,15 +1452,15 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row10:itemName",
+        "location": "row21:itemName",
         "status": "mismatch",
         "gtNorm": "에자살라겐정",
-        "extNorm": "10에자살라겐정2545mg30정",
+        "extNorm": "10북부파주13에자살라겐정254",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.52)"
       },
       {
-        "location": "row10:spec",
+        "location": "row21:spec",
         "status": "mismatch",
         "gtNorm": "5mg/'30정",
         "extNorm": "5mg'30정",
@@ -1476,15 +1468,7 @@
         "reason": "char-level diff (sim=0.93)"
       },
       {
-        "location": "row10:quantity",
-        "status": "ext_missing",
-        "gtNorm": "96",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row10:expiryDate",
+        "location": "row21:expiryDate",
         "status": "mismatch",
         "gtNorm": "20300731",
         "extNorm": "300731",
@@ -1492,7 +1476,15 @@
         "reason": "char-level diff (sim=0.86)"
       },
       {
-        "location": "row10:insuranceCode",
+        "location": "row21:manufacturingNo",
+        "status": "mismatch",
+        "gtNorm": "CWWVM",
+        "extNorm": "CWWVM621100040전보",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
+      },
+      {
+        "location": "row21:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "621100040",
         "extNorm": "",
@@ -1502,7 +1494,7 @@
     ],
     "bucketTally": {
       "recognition": 39,
-      "structure": 12,
+      "structure": 11,
       "layout": 0,
       "preprocessing": 0
     },

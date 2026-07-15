@@ -235,10 +235,10 @@
           },
           "unitPrice": {
             "gt": "840730",
-            "ext": "",
+            "ext": "8407.3",
             "gtNorm": "840730",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "84073",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
@@ -287,8 +287,8 @@
     "cellCounts": {
       "scored": 10,
       "match": 4,
-      "mismatch": 1,
-      "ext_missing": 5,
+      "mismatch": 2,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -302,7 +302,7 @@
         "gtNorm": "84073",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "reason": "gt value present at ['row1:unitPrice']"
       },
       {
         "location": "field:taxAmount",
@@ -346,19 +346,19 @@
       },
       {
         "location": "row1:unitPrice",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "840730",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "84073",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.91)"
       },
       {
         "location": "row1:amount",
         "status": "mismatch",
         "gtNorm": "84073",
         "extNorm": "8407",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.89)"
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['unitPrice']"
       },
       {
         "location": "row1:expiryDate",
@@ -387,8 +387,8 @@
     ],
     "bucketTally": {
       "recognition": 3,
-      "structure": 8,
-      "layout": 0,
+      "structure": 7,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

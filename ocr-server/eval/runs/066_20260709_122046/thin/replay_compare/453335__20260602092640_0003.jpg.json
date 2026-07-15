@@ -189,32 +189,34 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 1,
-    "rowCountExt": 1,
-    "rowCountMatch": true,
+    "rowCountExt": 2,
+    "rowCountMatch": false,
     "matchedRowIdx": [
-      "1"
+      "2"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "1"
+    ],
     "rows": [
       {
-        "rowIndex": "1",
+        "rowIndex": "2",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "유진팜/징키스틴캡슐(조제용)(히스",
-            "ext": "유진팜/징키스틴캡슬(조제용)(히스",
+            "ext": "",
             "gtNorm": "유진팜징키스틴캡슐조제용히스",
-            "extNorm": "유진팜징키스틴캡슬조제용히스",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "징키스틴캡슐",
-            "ext": "징키스틴캡슐",
+            "ext": "",
             "gtNorm": "징키스틴캡슐",
-            "extNorm": "징키스틴캡슐",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "spec": {
@@ -227,26 +229,26 @@
           },
           "quantity": {
             "gt": "350",
-            "ext": "30cap 4 350",
+            "ext": "350",
             "gtNorm": "350",
-            "extNorm": "304350",
-            "status": "mismatch",
+            "extNorm": "350",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "39150",
-            "ext": "39,150 금 액 500기간 제조번호 비공",
+            "ext": "39150",
             "gtNorm": "39150",
-            "extNorm": "39150500",
-            "status": "mismatch",
+            "extNorm": "39150",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "13702500",
-            "ext": "39,150",
+            "ext": "13702500",
             "gtNorm": "13702500",
-            "extNorm": "39150",
-            "status": "mismatch",
+            "extNorm": "13702500",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -267,10 +269,10 @@
           },
           "itemCode": {
             "gt": "01010225",
-            "ext": "01010225",
+            "ext": "",
             "gtNorm": "01010225",
-            "extNorm": "01010225",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           }
         }
@@ -278,13 +280,13 @@
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 2,
-      "mismatch": 4,
-      "ext_missing": 3,
+      "match": 3,
+      "mismatch": 0,
+      "ext_missing": 6,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.2222222222222222
+    "cellAccuracy": 0.3333333333333333
   },
   "buckets": {
     "defects": [
@@ -305,15 +307,31 @@
         "reason": "char-level diff (sim=0.77)"
       },
       {
-        "location": "row1:itemName",
-        "status": "mismatch",
-        "gtNorm": "유진팜징키스틴캡슐조제용히스",
-        "extNorm": "유진팜징키스틴캡슬조제용히스",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.93)"
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['1']"
       },
       {
-        "location": "row1:spec",
+        "location": "row2:itemName",
+        "status": "ext_missing",
+        "gtNorm": "유진팜징키스틴캡슐조제용히스",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row2:itemNameMaster",
+        "status": "ext_missing",
+        "gtNorm": "징키스틴캡슐",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row2:spec",
         "status": "ext_missing",
         "gtNorm": "30cap",
         "extNorm": "",
@@ -321,31 +339,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:quantity",
-        "status": "mismatch",
-        "gtNorm": "350",
-        "extNorm": "304350",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "39150",
-        "extNorm": "39150500",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
-      },
-      {
-        "location": "row1:amount",
-        "status": "mismatch",
-        "gtNorm": "13702500",
-        "extNorm": "39150",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row1:expiryDate",
+        "location": "row2:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20280211",
         "extNorm": "",
@@ -353,18 +347,26 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:manufacturingNo",
+        "location": "row2:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "5001",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row2:itemCode",
+        "status": "ext_missing",
+        "gtNorm": "01010225",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 3,
-      "layout": 1,
+      "recognition": 2,
+      "structure": 7,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

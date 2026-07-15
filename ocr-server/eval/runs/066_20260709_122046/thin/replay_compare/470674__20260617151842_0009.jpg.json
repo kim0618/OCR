@@ -194,7 +194,7 @@
     "matchedRowIdx": [
       "7",
       "8",
-      "2",
+      "3",
       "4",
       "9",
       "6"
@@ -202,7 +202,7 @@
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
       "1",
-      "3",
+      "2",
       "5"
     ],
     "rows": [
@@ -379,23 +379,23 @@
         }
       },
       {
-        "rowIndex": "2",
+        "rowIndex": "3",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "로바젯정 10/20mg",
-            "ext": "로바젯정10/20mg",
+            "ext": "",
             "gtNorm": "로바젯정1020mg",
-            "extNorm": "로바젯정1020mg",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "로바젯정10/20mg",
-            "ext": "로바젯정10/20mg",
+            "ext": "",
             "gtNorm": "로바젯정10/20mg",
-            "extNorm": "로바젯정10/20mg",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "spec": {
@@ -408,57 +408,57 @@
           },
           "quantity": {
             "gt": "5",
-            "ext": "1",
+            "ext": "5",
             "gtNorm": "5",
-            "extNorm": "1",
-            "status": "mismatch",
+            "extNorm": "5",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "30618",
-            "ext": "40,250.00",
+            "ext": "30,618.00",
             "gtNorm": "30618",
-            "extNorm": "4025000",
+            "extNorm": "3061800",
             "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "153090",
-            "ext": "40.250",
+            "ext": "153,090",
             "gtNorm": "153090",
-            "extNorm": "40250",
-            "status": "mismatch",
+            "extNorm": "153090",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
             "gt": "20271125",
-            "ext": "2028.09.22",
+            "ext": "2027.11.25",
             "gtNorm": "20271125",
-            "extNorm": "20280922",
-            "status": "mismatch",
+            "extNorm": "20271125",
+            "status": "match",
             "spurious": false
           },
           "manufacturingNo": {
             "gt": "RZ225B0",
-            "ext": "25004",
+            "ext": "RZ225B0",
             "gtNorm": "RZ225B0",
-            "extNorm": "25004",
-            "status": "mismatch",
+            "extNorm": "RZ225B0",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
             "gt": "05002204",
-            "ext": "05002204",
+            "ext": "RZ225B0",
             "gtNorm": "05002204",
-            "extNorm": "05002204",
-            "status": "match",
+            "extNorm": "RZ225B0",
+            "status": "mismatch",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "640006970",
-            "ext": "2 625500260",
+            "ext": "3",
             "gtNorm": "640006970",
-            "extNorm": "2625500260",
+            "extNorm": "3",
             "status": "mismatch",
             "spurious": false
           }
@@ -725,13 +725,13 @@
     ],
     "cellCounts": {
       "scored": 60,
-      "match": 31,
-      "mismatch": 19,
-      "ext_missing": 10,
+      "match": 32,
+      "mismatch": 16,
+      "ext_missing": 12,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5166666666666667
+    "cellAccuracy": 0.5333333333333333
   },
   "buckets": {
     "defects": [
@@ -749,7 +749,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '3', '5']"
+        "reason": "extractor invented rows ['1', '2', '5']"
       },
       {
         "location": "row7:spec",
@@ -800,7 +800,23 @@
         "reason": "char-level diff (sim=0.75)"
       },
       {
-        "location": "row2:spec",
+        "location": "row3:itemName",
+        "status": "ext_missing",
+        "gtNorm": "로바젯정1020mg",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row3:itemNameMaster",
+        "status": "ext_missing",
+        "gtNorm": "로바젯정10/20mg",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row3:spec",
         "status": "ext_missing",
         "gtNorm": "30정",
         "extNorm": "",
@@ -808,50 +824,26 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:quantity",
-        "status": "mismatch",
-        "gtNorm": "5",
-        "extNorm": "1",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row2:unitPrice",
+        "location": "row3:unitPrice",
         "status": "mismatch",
         "gtNorm": "30618",
-        "extNorm": "4025000",
+        "extNorm": "3061800",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.83)"
+      },
+      {
+        "location": "row3:itemCode",
+        "status": "mismatch",
+        "gtNorm": "05002204",
+        "extNorm": "RZ225B0",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row2:amount",
-        "status": "mismatch",
-        "gtNorm": "153090",
-        "extNorm": "40250",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row2:expiryDate",
-        "status": "mismatch",
-        "gtNorm": "20271125",
-        "extNorm": "20280922",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
-      },
-      {
-        "location": "row2:manufacturingNo",
-        "status": "mismatch",
-        "gtNorm": "RZ225B0",
-        "extNorm": "25004",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
-      },
-      {
-        "location": "row2:insuranceCode",
+        "location": "row3:insuranceCode",
         "status": "mismatch",
         "gtNorm": "640006970",
-        "extNorm": "2625500260",
+        "extNorm": "3",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
@@ -985,8 +977,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 16,
-      "structure": 11,
+      "recognition": 13,
+      "structure": 13,
       "layout": 4,
       "preprocessing": 0
     },

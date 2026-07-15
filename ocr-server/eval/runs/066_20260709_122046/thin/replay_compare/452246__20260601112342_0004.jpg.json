@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "2208100530",
-        "ext": "085-43-76081",
+        "ext": "220-81-00530",
         "gtNorm": "2208100530",
-        "extNorm": "0854376081",
+        "extNorm": "2208100530",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -86,9 +86,9 @@
       },
       "supplierCompany": {
         "gt": "한독약품(전문)",
-        "ext": "용)",
+        "ext": "한독(전)",
         "gtNorm": "한독약품전문",
-        "extNorm": "용",
+        "extNorm": "한독",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 강남구 테헤란로 132 (역삼동)",
-        "ext": "서울시강담구테헤란로132(역삼동",
+        "ext": "서울 강남구 테헤란로 132(역삼동)",
         "gtNorm": "서울특별시강남구테헤란로132역삼동",
-        "extNorm": "서울시강담구테헤란로132역삼동",
+        "extNorm": "서울강남구테헤란로132역삼동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 3,
-      "mismatch": 6,
+      "match": 4,
+      "mismatch": 5,
       "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 3,
+      "matched": 4,
       "extNotAttempted": 0,
       "extAttemptedMiss": 3
     },
-    "fieldAccuracy": 0.25
+    "fieldAccuracy": 0.3333333333333333
   },
   "table": {
     "alignMode": "content",
@@ -502,10 +502,10 @@
           },
           "quantity": {
             "gt": "3",
-            "ext": "",
+            "ext": "3",
             "gtNorm": "3",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "3",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -1492,13 +1492,13 @@
     ],
     "cellCounts": {
       "scored": 148,
-      "match": 68,
+      "match": 69,
       "mismatch": 21,
-      "ext_missing": 59,
+      "ext_missing": 58,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4594594594594595
+    "cellAccuracy": 0.46621621621621623
   },
   "buckets": {
     "defects": [
@@ -1519,20 +1519,12 @@
         "reason": "gt value present at ['field:discountAmount']"
       },
       {
-        "location": "field:supplierBizNumber",
-        "status": "mismatch",
-        "gtNorm": "2208100530",
-        "extNorm": "0854376081",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "한독약품전문",
-        "extNorm": "용",
+        "extNorm": "한독",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "field:taxType",
@@ -1546,9 +1538,9 @@
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울특별시강남구테헤란로132역삼동",
-        "extNorm": "서울시강담구테헤란로132역삼동",
+        "extNorm": "서울강남구테헤란로132역삼동",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.88)"
+        "reason": "char-level diff (sim=0.91)"
       },
       {
         "location": "field:supplyAmount",
@@ -1757,14 +1749,6 @@
         "extNorm": "300",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.67)"
-      },
-      {
-        "location": "row14:quantity",
-        "status": "ext_missing",
-        "gtNorm": "3",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row14:insuranceCode",
@@ -2232,8 +2216,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 27,
-      "structure": 64,
+      "recognition": 26,
+      "structure": 63,
       "layout": 0,
       "preprocessing": 0
     },

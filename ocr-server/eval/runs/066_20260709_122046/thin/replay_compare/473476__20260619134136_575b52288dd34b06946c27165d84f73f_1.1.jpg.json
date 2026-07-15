@@ -189,15 +189,17 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 3,
-    "rowCountExt": 3,
-    "rowCountMatch": true,
+    "rowCountExt": 4,
+    "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
-      "2",
+      "4",
       "3"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "2"
+    ],
     "rows": [
       {
         "rowIndex": "1",
@@ -278,55 +280,55 @@
         }
       },
       {
-        "rowIndex": "2",
+        "rowIndex": "4",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "헤르벤서방정 90mg/500T",
-            "ext": "헤르벤서방정90mg/500T",
+            "ext": "백제약품(주)제주지",
             "gtNorm": "헤르벤서방정90mg500t",
-            "extNorm": "헤르벤서방정90mg500t",
-            "status": "match",
+            "extNorm": "백제약품주제주지",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "헤르벤서방정90mg",
-            "ext": "헤르벤서방정90mg",
+            "ext": "",
             "gtNorm": "헤르벤서방정90mg",
-            "extNorm": "헤르벤서방정90mg",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "spec": {
             "gt": "500T",
-            "ext": "50OT",
+            "ext": "",
             "gtNorm": "500t",
-            "extNorm": "50ot",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "quantity": {
             "gt": "5",
-            "ext": "",
+            "ext": "5",
             "gtNorm": "5",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "5",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "75280",
-            "ext": "",
+            "ext": "75280",
             "gtNorm": "75280",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "75280",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "376400",
-            "ext": "75,280",
+            "ext": "376400",
             "gtNorm": "376400",
-            "extNorm": "75280",
-            "status": "mismatch",
+            "extNorm": "376400",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -347,10 +349,10 @@
           },
           "itemCode": {
             "gt": "8806400039129",
-            "ext": "8806400039129",
+            "ext": "",
             "gtNorm": "8806400039129",
-            "extNorm": "8806400039129",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           }
         }
@@ -437,8 +439,8 @@
     "cellCounts": {
       "scored": 27,
       "match": 10,
-      "mismatch": 5,
-      "ext_missing": 12,
+      "mismatch": 4,
+      "ext_missing": 13,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -503,6 +505,14 @@
         "reason": "char-level diff (sim=0.53)"
       },
       {
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['2']"
+      },
+      {
         "location": "row1:quantity",
         "status": "ext_missing",
         "gtNorm": "5",
@@ -543,39 +553,31 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:spec",
+        "location": "row4:itemName",
         "status": "mismatch",
-        "gtNorm": "500t",
-        "extNorm": "50ot",
+        "gtNorm": "헤르벤서방정90mg500t",
+        "extNorm": "백제약품주제주지",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.75)"
+        "reason": "cell differs, low similarity"
       },
       {
-        "location": "row2:quantity",
+        "location": "row4:itemNameMaster",
         "status": "ext_missing",
-        "gtNorm": "5",
+        "gtNorm": "헤르벤서방정90mg",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:unitPrice",
+        "location": "row4:spec",
         "status": "ext_missing",
-        "gtNorm": "75280",
+        "gtNorm": "500t",
         "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:amount",
-        "status": "mismatch",
-        "gtNorm": "376400",
-        "extNorm": "75280",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row2:expiryDate",
+        "location": "row4:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20290120",
         "extNorm": "",
@@ -583,9 +585,17 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:manufacturingNo",
+        "location": "row4:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "HB926A9",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row4:itemCode",
+        "status": "ext_missing",
+        "gtNorm": "8806400039129",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -640,9 +650,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 10,
-      "structure": 11,
-      "layout": 3,
+      "recognition": 9,
+      "structure": 14,
+      "layout": 2,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

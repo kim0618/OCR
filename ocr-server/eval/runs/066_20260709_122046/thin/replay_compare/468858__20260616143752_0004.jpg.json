@@ -125,11 +125,11 @@
       },
       "supplyAmount": {
         "gt": "230509",
-        "ext": "",
+        "ext": "230509",
         "gtNorm": "230509",
-        "extNorm": "",
+        "extNorm": "230509",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 9,
+      "match": 10,
       "mismatch": 2,
-      "ext_missing": 1,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 9,
+      "matched": 10,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.75
+    "fieldAccuracy": 0.8333333333333334
   },
   "table": {
     "alignMode": "content",
@@ -228,18 +228,18 @@
           },
           "quantity": {
             "gt": "30",
-            "ext": "",
+            "ext": "30",
             "gtNorm": "30",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "3418",
-            "ext": "",
+            "ext": "3418",
             "gtNorm": "3418",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "3418",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -268,10 +268,10 @@
           },
           "itemCode": {
             "gt": "01008717",
-            "ext": "03001980",
+            "ext": "01008717",
             "gtNorm": "01008717",
-            "extNorm": "03001980",
-            "status": "mismatch",
+            "extNorm": "01008717",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -373,13 +373,13 @@
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 9,
-      "mismatch": 3,
-      "ext_missing": 8,
+      "match": 12,
+      "mismatch": 2,
+      "ext_missing": 6,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.45
+    "cellAccuracy": 0.6
   },
   "buckets": {
     "defects": [
@@ -390,14 +390,6 @@
         "extNorm": "서울동대문구장한로119장안동장안삼성쉐르빌217218호",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.83)"
-      },
-      {
-        "location": "field:supplyAmount",
-        "status": "ext_missing",
-        "gtNorm": "230509",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:buyerAddress",
@@ -424,22 +416,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:quantity",
-        "status": "ext_missing",
-        "gtNorm": "30",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "3418",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
-      },
-      {
         "location": "row2:amount",
         "status": "mismatch",
         "gtNorm": "102540",
@@ -462,14 +438,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:itemCode",
-        "status": "mismatch",
-        "gtNorm": "01008717",
-        "extNorm": "03001980",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
       },
       {
         "location": "row2:insuranceCode",
@@ -497,9 +465,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 8,
-      "layout": 1,
+      "recognition": 4,
+      "structure": 6,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,
@@ -518,6 +486,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

@@ -1,34 +1,45 @@
 # Parser-drop classification — 066_20260709_122046\study
 
-Defects scored (mismatch|ext_missing): **168**  |  parser-drop (OCR read it, recoverable): **15**  |  ambiguous_fuzzy (fuzzy-only, pending): **0**  |  recognition (OCR-bound): **153**
-Parser-recoverable share of defects: **8.9%**
+Defects scored (mismatch|ext_missing): **164**  |  parser-drop (OCR read it, recoverable): **11**  |  ambiguous_fuzzy (fuzzy-only, pending): **0**  |  recognition (OCR-bound): **153**
+Parser-recoverable share of defects: **6.7%**
 
-## Parser-drops by column × pattern — CLEAN originals  (n=3)
+Evaluation scope: **run_meta.ran 24 sources**; out-of-scope compare files excluded: **0**
+
+## Raw itemName × master itemNameMaster transitions
+
+| transition | rows |
+|---|--:|
+| rawWrong_masterCorrect | **0** |
+| rawWrong_masterWrongOrMissing | **0** |
+| rawCorrect_masterCorrect | **0** |
+| rawCorrect_masterWrong | **0** |
+| rawCorrect_masterMissing | **0** |
+
+Regression gates use the persisted row identities, not fixed bin counts: a successful raw fix may legitimately move a protected row between bins.
+
+## Parser-drops by column × pattern — CLEAN originals  (n=2)
 
 | column | drop | mislocate | wrongpick | total |
 |---|--:|--:|--:|--:|
 | supplierAddress | 0 | 0 | 1 | **1** |
 | itemName | 0 | 0 | 1 | **1** |
-| supplierCompany | 0 | 0 | 1 | **1** |
 
-## Parser-drops by column × pattern — ANGLE variants  (n=12)
+## Parser-drops by column × pattern — ANGLE variants  (n=9)
 
 | column | drop | mislocate | wrongpick | total |
 |---|--:|--:|--:|--:|
 | supplierAddress | 0 | 0 | 3 | **3** |
-| supplierCompany | 0 | 0 | 3 | **3** |
 | buyerRepresentative | 0 | 1 | 1 | **2** |
 | productCode | 1 | 0 | 0 | **1** |
 | quantity | 0 | 0 | 1 | **1** |
 | unitPrice | 1 | 0 | 0 | **1** |
 | amount | 0 | 1 | 0 | **1** |
 
-## Parser-drops by column × pattern — ALL  (n=15)
+## Parser-drops by column × pattern — ALL  (n=11)
 
 | column | drop | mislocate | wrongpick | total |
 |---|--:|--:|--:|--:|
 | supplierAddress | 0 | 0 | 4 | **4** |
-| supplierCompany | 0 | 0 | 4 | **4** |
 | buyerRepresentative | 0 | 1 | 1 | **2** |
 | itemName | 0 | 0 | 1 | **1** |
 | productCode | 1 | 0 | 0 | **1** |

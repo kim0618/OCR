@@ -189,10 +189,11 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 10,
-    "rowCountExt": 9,
-    "rowCountMatch": false,
+    "rowCountExt": 10,
+    "rowCountMatch": true,
     "matchedRowIdx": [
       "1",
+      "10",
       "2",
       "3",
       "4",
@@ -202,9 +203,7 @@
       "8",
       "9"
     ],
-    "gtOnlyRowIdx": [
-      "2"
-    ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [],
     "rows": [
       {
@@ -265,6 +264,68 @@
             "gtNorm": "05000392",
             "extNorm": "",
             "status": "ext_missing",
+            "spurious": false
+          }
+        }
+      },
+      {
+        "rowIndex": "10",
+        "rowMatch": false,
+        "cells": {
+          "itemName": {
+            "gt": "아트놀셋세미정",
+            "ext": "아트놀셋세미정",
+            "gtNorm": "아트놀셋세미정",
+            "extNorm": "아트놀셋세미정",
+            "status": "match",
+            "spurious": false
+          },
+          "itemNameMaster": {
+            "gt": "아트놀셋세미정",
+            "ext": "아트놀셋세미정",
+            "gtNorm": "아트놀셋세미정",
+            "extNorm": "아트놀셋세미정",
+            "status": "match",
+            "spurious": false
+          },
+          "spec": {
+            "gt": "500T",
+            "ext": "",
+            "gtNorm": "500t",
+            "extNorm": "",
+            "status": "ext_missing",
+            "spurious": false
+          },
+          "quantity": {
+            "gt": "10",
+            "ext": "10",
+            "gtNorm": "10",
+            "extNorm": "10",
+            "status": "match",
+            "spurious": false
+          },
+          "unitPrice": {
+            "gt": "54000",
+            "ext": "54000",
+            "gtNorm": "54000",
+            "extNorm": "54000",
+            "status": "match",
+            "spurious": false
+          },
+          "amount": {
+            "gt": "540000",
+            "ext": "540000",
+            "gtNorm": "540000",
+            "extNorm": "540000",
+            "status": "match",
+            "spurious": false
+          },
+          "itemCode": {
+            "gt": "8806545024240",
+            "ext": "8806545024240",
+            "gtNorm": "8806545024240",
+            "extNorm": "8806545024240",
+            "status": "match",
             "spurious": false
           }
         }
@@ -764,80 +825,17 @@
             "spurious": false
           }
         }
-      },
-      {
-        "rowIndex": "2",
-        "rowMatch": false,
-        "missingGtRow": true,
-        "cells": {
-          "itemName": {
-            "gt": "아트놀셋세미정",
-            "ext": "",
-            "gtNorm": "아트놀셋세미정",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "itemNameMaster": {
-            "gt": "아트놀셋세미정",
-            "ext": "",
-            "gtNorm": "아트놀셋세미정",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "spec": {
-            "gt": "500T",
-            "ext": "",
-            "gtNorm": "500t",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "quantity": {
-            "gt": "10",
-            "ext": "",
-            "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "unitPrice": {
-            "gt": "54000",
-            "ext": "",
-            "gtNorm": "54000",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "amount": {
-            "gt": "540000",
-            "ext": "",
-            "gtNorm": "540000",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "itemCode": {
-            "gt": "8806545024240",
-            "ext": "",
-            "gtNorm": "8806545024240",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          }
-        }
       }
     ],
     "cellCounts": {
       "scored": 70,
-      "match": 53,
+      "match": 59,
       "mismatch": 5,
-      "ext_missing": 12,
+      "ext_missing": 6,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.7571428571428571
+    "cellAccuracy": 0.8428571428571429
   },
   "buckets": {
     "defects": [
@@ -882,14 +880,6 @@
         "reason": "char-level diff (sim=0.92)"
       },
       {
-        "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['2']"
-      },
-      {
         "location": "row1:itemName",
         "status": "mismatch",
         "gtNorm": "아트놀셋세미정",
@@ -909,6 +899,14 @@
         "location": "row1:itemCode",
         "status": "ext_missing",
         "gtNorm": "05000392",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row10:spec",
+        "status": "ext_missing",
+        "gtNorm": "500t",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -968,67 +966,11 @@
         "extNorm": "52920",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row2:itemName",
-        "status": "ext_missing",
-        "gtNorm": "아트놀셋세미정",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "아트놀셋세미정",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:spec",
-        "status": "ext_missing",
-        "gtNorm": "500t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:quantity",
-        "status": "ext_missing",
-        "gtNorm": "10",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "54000",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:amount",
-        "status": "ext_missing",
-        "gtNorm": "540000",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "8806545024240",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
       "recognition": 7,
-      "structure": 14,
+      "structure": 7,
       "layout": 2,
       "preprocessing": 0
     },

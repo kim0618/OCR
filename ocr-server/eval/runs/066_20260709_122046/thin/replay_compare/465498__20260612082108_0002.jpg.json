@@ -243,10 +243,10 @@
           },
           "amount": {
             "gt": "833232",
-            "ext": "83,323",
+            "ext": "833232",
             "gtNorm": "833232",
-            "extNorm": "83323",
-            "status": "mismatch",
+            "extNorm": "833232",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -278,13 +278,13 @@
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 5,
-      "mismatch": 1,
+      "match": 6,
+      "mismatch": 0,
       "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5555555555555556
+    "cellAccuracy": 0.6666666666666666
   },
   "buckets": {
     "defects": [
@@ -294,7 +294,7 @@
         "gtNorm": "83323",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "gt value present at ['row1:amount']"
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:buyerBizNumber",
@@ -318,7 +318,7 @@
         "gtNorm": "833232",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "reason": "gt value present at ['row1:amount']"
       },
       {
         "location": "field:buyerCompany",
@@ -345,14 +345,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:amount",
-        "status": "mismatch",
-        "gtNorm": "833232",
-        "extNorm": "83323",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.91)"
-      },
-      {
         "location": "row1:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20280718",
@@ -370,7 +362,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 3,
+      "recognition": 2,
       "structure": 7,
       "layout": 0,
       "preprocessing": 0

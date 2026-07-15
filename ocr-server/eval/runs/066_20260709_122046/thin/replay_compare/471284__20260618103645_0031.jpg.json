@@ -191,35 +191,34 @@
     "rowCountGt": 2,
     "rowCountExt": 2,
     "rowCountMatch": true,
-    "matchedRowIdx": [],
+    "matchedRowIdx": [
+      "1"
+    ],
     "gtOnlyRowIdx": [
-      "1",
       "2"
     ],
     "extOnlyRowIdx": [
-      "1",
       "2"
     ],
     "rows": [
       {
         "rowIndex": "1",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "아스라졸캡슐",
-            "ext": "",
+            "ext": "아스라졸캡슬100/5mg300캡슬",
             "gtNorm": "아스라졸캡슐",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "아스라졸캡슬1005mg300캡슬",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "아스라졸캡슐100/5mg(영진)",
-            "ext": "",
+            "ext": "아스라졸캡슐100/5mg(영진)",
             "gtNorm": "아스라졸캡슐100/5mg(영진)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "아스라졸캡슐100/5mg(영진)",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -232,26 +231,26 @@
           },
           "quantity": {
             "gt": "3",
-            "ext": "",
+            "ext": "3",
             "gtNorm": "3",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "3",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "101700",
-            "ext": "",
+            "ext": "101700",
             "gtNorm": "101700",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "101700",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "305100",
-            "ext": "",
+            "ext": "305100",
             "gtNorm": "305100",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "305100",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -272,10 +271,10 @@
           },
           "itemCode": {
             "gt": "01014205",
-            "ext": "",
+            "ext": "01014205",
             "gtNorm": "01014205",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "01014205",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -354,13 +353,13 @@
     ],
     "cellCounts": {
       "scored": 17,
-      "match": 0,
-      "mismatch": 0,
-      "ext_missing": 17,
+      "match": 5,
+      "mismatch": 1,
+      "ext_missing": 11,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.0
+    "cellAccuracy": 0.29411764705882354
   },
   "buckets": {
     "defects": [
@@ -410,7 +409,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor missed rows ['1', '2']"
+        "reason": "extractor missed rows ['2']"
       },
       {
         "location": "table",
@@ -418,52 +417,20 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '2']"
+        "reason": "extractor invented rows ['2']"
       },
       {
         "location": "row1:itemName",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "아스라졸캡슐",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "아스라졸캡슐100/5mg(영진)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "아스라졸캡슬1005mg300캡슬",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:spec",
         "status": "ext_missing",
         "gtNorm": "100/5mg 300캡슐",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "3",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "101700",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:amount",
-        "status": "ext_missing",
-        "gtNorm": "305100",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -480,14 +447,6 @@
         "location": "row1:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "25002",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "01014205",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -558,8 +517,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 2,
-      "structure": 22,
+      "recognition": 3,
+      "structure": 16,
       "layout": 0,
       "preprocessing": 0
     },

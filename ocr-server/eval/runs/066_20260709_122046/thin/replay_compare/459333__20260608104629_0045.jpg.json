@@ -60,9 +60,9 @@
       },
       "supplierCompany": {
         "gt": "바스칸바이오제약",
-        "ext": "백제약품(주)영남본부",
+        "ext": "의약품의료기기",
         "gtNorm": "바스칸바이오제약",
-        "extNorm": "백제약품영남본부",
+        "extNorm": "의약품의료기기",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -86,11 +86,11 @@
       },
       "supplierAddress": {
         "gt": "경기 안성시 원곡면 원당로 354",
-        "ext": "경남 김해시 진례면 김해테크노벨리로 33-12 백제약품(주)영남본부",
+        "ext": "",
         "gtNorm": "경기안성시원곡면원당로354",
-        "extNorm": "경남김해시진례면김해테크노벨리로3312백제약품주영남본부",
+        "extNorm": "",
         "type": "address",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -142,8 +142,8 @@
     "counts": {
       "scored": 10,
       "match": 6,
-      "mismatch": 4,
-      "ext_missing": 0,
+      "mismatch": 3,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -156,7 +156,7 @@
       "gtPresent": 10,
       "matched": 6,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 0
+      "extAttemptedMiss": 1
     },
     "fieldAccuracy": 0.6
   },
@@ -274,25 +274,25 @@
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "바스칸바이오제약",
-        "extNorm": "백제약품영남본부",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['field:buyerCompany']"
+        "extNorm": "의약품의료기기",
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplierAddress",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "경기안성시원곡면원당로354",
-        "extNorm": "경남김해시진례면김해테크노벨리로3312백제약품주영남본부",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
         "gtNorm": "백제약품영남본부",
         "extNorm": "백제약품영남지점",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:supplierCompany']"
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.75)"
       },
       {
         "location": "field:buyerAddress",
@@ -328,8 +328,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 2,
-      "structure": 5,
+      "recognition": 3,
+      "structure": 4,
       "layout": 0,
       "preprocessing": 0
     },
@@ -349,6 +349,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.0
+    "fieldMissRate": 0.1
   }
 }

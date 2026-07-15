@@ -181,15 +181,15 @@
     "matchedRowIdx": [
       "6",
       "7",
-      "8"
+      "4"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
       "1",
       "2",
       "3",
-      "4",
-      "5"
+      "5",
+      "8"
     ],
     "rows": [
       {
@@ -349,14 +349,14 @@
         }
       },
       {
-        "rowIndex": "8",
+        "rowIndex": "4",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "휴로히알점안액0.15% 0.45mL*60",
-            "ext": "3 마더스제약 S02-19 60 휴로히알점안액0.15%0.45mL* 이하여백",
+            "ext": "휴로히알점안액0.15%0.45mL*",
             "gtNorm": "휴로히알점안액015045ml60",
-            "extNorm": "3마더스제약s021960휴로히알점안액015045ml이하여백",
+            "extNorm": "휴로히알점안액015045ml",
             "status": "mismatch",
             "spurious": false
           },
@@ -370,10 +370,10 @@
           },
           "spec": {
             "gt": "60점안액",
-            "ext": "60점안액",
+            "ext": "",
             "gtNorm": "60점안액",
-            "extNorm": "60점안액",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "quantity": {
@@ -386,15 +386,15 @@
           },
           "unitPrice": {
             "gt": "1368960",
-            "ext": "13,689.60",
+            "ext": "13689.6",
             "gtNorm": "1368960",
-            "extNorm": "1368960",
-            "status": "match",
+            "extNorm": "136896",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "2409370",
-            "ext": "2,409,370",
+            "ext": "2409370",
             "gtNorm": "2409370",
             "extNorm": "2409370",
             "status": "match",
@@ -410,10 +410,10 @@
           },
           "manufacturingNo": {
             "gt": "5004",
-            "ext": "5004 20271120",
+            "ext": "",
             "gtNorm": "5004",
-            "extNorm": "500420271120",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemCode": {
@@ -429,13 +429,13 @@
     ],
     "cellCounts": {
       "scored": 27,
-      "match": 18,
+      "match": 16,
       "mismatch": 6,
-      "ext_missing": 3,
+      "ext_missing": 5,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.6666666666666666
+    "cellAccuracy": 0.5925925925925926
   },
   "buckets": {
     "defects": [
@@ -485,7 +485,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '2', '3', '4', '5']"
+        "reason": "extractor invented rows ['1', '2', '3', '5', '8']"
       },
       {
         "location": "row6:itemName",
@@ -536,15 +536,31 @@
         "reason": "char-level diff (sim=0.50)"
       },
       {
-        "location": "row8:itemName",
+        "location": "row4:itemName",
         "status": "mismatch",
         "gtNorm": "휴로히알점안액015045ml60",
-        "extNorm": "3마더스제약s021960휴로히알점안액015045ml이하여백",
+        "extNorm": "휴로히알점안액015045ml",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.61)"
+        "reason": "char-level diff (sim=0.94)"
       },
       {
-        "location": "row8:expiryDate",
+        "location": "row4:spec",
+        "status": "ext_missing",
+        "gtNorm": "60점안액",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row4:unitPrice",
+        "status": "mismatch",
+        "gtNorm": "1368960",
+        "extNorm": "136896",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.92)"
+      },
+      {
+        "location": "row4:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20271120",
         "extNorm": "",
@@ -552,17 +568,17 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row8:manufacturingNo",
-        "status": "mismatch",
+        "location": "row4:manufacturingNo",
+        "status": "ext_missing",
         "gtNorm": "5004",
-        "extNorm": "500420271120",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
       "recognition": 9,
-      "structure": 6,
+      "structure": 8,
       "layout": 0,
       "preprocessing": 0
     },

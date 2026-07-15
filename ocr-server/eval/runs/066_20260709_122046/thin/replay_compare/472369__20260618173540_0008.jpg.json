@@ -176,7 +176,7 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 2,
-    "rowCountExt": 3,
+    "rowCountExt": 4,
     "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
@@ -184,7 +184,8 @@
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "3"
+      "3",
+      "4"
     ],
     "rows": [
       {
@@ -217,10 +218,10 @@
           },
           "quantity": {
             "gt": "240",
-            "ext": "",
+            "ext": "8",
             "gtNorm": "240",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "8",
+            "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
@@ -233,10 +234,10 @@
           },
           "amount": {
             "gt": "880320",
-            "ext": "",
+            "ext": "880,320",
             "gtNorm": "880320",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "880320",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -303,10 +304,10 @@
           },
           "quantity": {
             "gt": "150",
-            "ext": "",
+            "ext": "3",
             "gtNorm": "150",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "3",
+            "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
@@ -362,13 +363,13 @@
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 9,
-      "mismatch": 7,
-      "ext_missing": 4,
+      "match": 10,
+      "mismatch": 9,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.45
+    "cellAccuracy": 0.5
   },
   "buckets": {
     "defects": [
@@ -394,7 +395,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['3']"
+        "reason": "extractor invented rows ['3', '4']"
       },
       {
         "location": "row1:spec",
@@ -406,19 +407,11 @@
       },
       {
         "location": "row1:quantity",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "240",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:amount",
-        "status": "ext_missing",
-        "gtNorm": "880320",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "8",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:expiryDate",
@@ -462,11 +455,11 @@
       },
       {
         "location": "row2:quantity",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "150",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "3",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row2:expiryDate",
@@ -486,8 +479,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 9,
-      "structure": 5,
+      "recognition": 11,
+      "structure": 2,
       "layout": 0,
       "preprocessing": 0
     },

@@ -192,14 +192,11 @@
     "rowCountExt": 2,
     "rowCountMatch": true,
     "matchedRowIdx": [
-      "1"
-    ],
-    "gtOnlyRowIdx": [
+      "1",
       "2"
     ],
-    "extOnlyRowIdx": [
-      "2"
-    ],
+    "gtOnlyRowIdx": [],
+    "extOnlyRowIdx": [],
     "rows": [
       {
         "rowIndex": "1",
@@ -231,10 +228,10 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -290,7 +287,6 @@
       {
         "rowIndex": "2",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "바로셋정 10/16012.5mg/",
@@ -310,42 +306,42 @@
           },
           "spec": {
             "gt": "30T",
-            "ext": "",
+            "ext": "3oT",
             "gtNorm": "30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "3ot",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
             "gt": "10",
-            "ext": "",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "27072",
-            "ext": "",
+            "ext": "3oT 10 27.072",
             "gtNorm": "27072",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "31027072",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "270720",
-            "ext": "",
+            "ext": "270.720",
             "gtNorm": "270720",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "270720",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
             "gt": "20281202",
-            "ext": "",
+            "ext": "20281202",
             "gtNorm": "20281202",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20281202",
+            "status": "match",
             "spurious": false
           },
           "manufacturingNo": {
@@ -366,10 +362,10 @@
           },
           "insuranceCode": {
             "gt": "645907660",
-            "ext": "",
+            "ext": "645907660",
             "gtNorm": "645907660",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "645907660",
+            "status": "match",
             "spurious": false
           }
         }
@@ -377,13 +373,13 @@
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 7,
-      "mismatch": 1,
-      "ext_missing": 12,
+      "match": 12,
+      "mismatch": 3,
+      "ext_missing": 5,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.35
+    "cellAccuracy": 0.6
   },
   "buckets": {
     "defects": [
@@ -410,30 +406,6 @@
         "extNorm": "강원도원주시판부면오성마을길61",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.77)"
-      },
-      {
-        "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['2']"
-      },
-      {
-        "location": "table",
-        "status": "rows_extra",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor invented rows ['2']"
-      },
-      {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "10",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row1:unitPrice",
@@ -469,43 +441,19 @@
       },
       {
         "location": "row2:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:quantity",
-        "status": "ext_missing",
-        "gtNorm": "10",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "3ot",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "row2:unitPrice",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "27072",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:amount",
-        "status": "ext_missing",
-        "gtNorm": "270720",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:expiryDate",
-        "status": "ext_missing",
-        "gtNorm": "20281202",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "31027072",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.77)"
       },
       {
         "location": "row2:manufacturingNo",
@@ -522,19 +470,11 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "645907660",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 4,
-      "structure": 14,
+      "recognition": 6,
+      "structure": 5,
       "layout": 0,
       "preprocessing": 0
     },

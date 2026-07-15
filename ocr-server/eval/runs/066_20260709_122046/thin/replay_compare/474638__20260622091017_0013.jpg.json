@@ -193,17 +193,17 @@
     "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
-      "2"
+      "9"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
+      "2",
       "3",
       "4",
       "5",
       "6",
       "7",
-      "8",
-      "9"
+      "8"
     ],
     "rows": [
       {
@@ -285,15 +285,15 @@
         }
       },
       {
-        "rowIndex": "2",
+        "rowIndex": "9",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "프리스틱 50mg 28T",
-            "ext": "프리스틱 50mg 28T",
+            "ext": "I 프리스틱 50mg 28T",
             "gtNorm": "프리스틱50mg28t",
-            "extNorm": "프리스틱50mg28t",
-            "status": "match",
+            "extNorm": "i프리스틱50mg28t",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
@@ -314,18 +314,18 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "16619",
-            "ext": "10 16,619",
+            "ext": "16,619",
             "gtNorm": "16619",
-            "extNorm": "1016619",
-            "status": "mismatch",
+            "extNorm": "16619",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -354,10 +354,10 @@
           },
           "itemCode": {
             "gt": "01006695",
-            "ext": "5002490",
+            "ext": "01006695",
             "gtNorm": "01006695",
-            "extNorm": "5002490",
-            "status": "mismatch",
+            "extNorm": "01006695",
+            "status": "match",
             "spurious": false
           }
         }
@@ -365,13 +365,13 @@
     ],
     "cellCounts": {
       "scored": 18,
-      "match": 8,
-      "mismatch": 6,
-      "ext_missing": 4,
+      "match": 10,
+      "mismatch": 5,
+      "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4444444444444444
+    "cellAccuracy": 0.5555555555555556
   },
   "buckets": {
     "defects": [
@@ -413,7 +413,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['3', '4', '5', '6', '7', '8', '9']"
+        "reason": "extractor invented rows ['2', '3', '4', '5', '6', '7', '8']"
       },
       {
         "location": "row1:itemNameMaster",
@@ -464,41 +464,25 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row2:spec",
+        "location": "row9:itemName",
+        "status": "mismatch",
+        "gtNorm": "프리스틱50mg28t",
+        "extNorm": "i프리스틱50mg28t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.96)"
+      },
+      {
+        "location": "row9:spec",
         "status": "ext_missing",
         "gtNorm": "28t",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:quantity",
-        "status": "ext_missing",
-        "gtNorm": "10",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "16619",
-        "extNorm": "1016619",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.83)"
-      },
-      {
-        "location": "row2:itemCode",
-        "status": "mismatch",
-        "gtNorm": "01006695",
-        "extNorm": "5002490",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
       }
     ],
     "bucketTally": {
-      "recognition": 9,
-      "structure": 5,
+      "recognition": 8,
+      "structure": 4,
       "layout": 1,
       "preprocessing": 0
     },

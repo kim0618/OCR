@@ -60,11 +60,11 @@
       },
       "supplierCompany": {
         "gt": "휴온스메디텍",
-        "ext": "백제약품(주)영남본부",
+        "ext": "주식회사 휴온스메디텍",
         "gtNorm": "휴온스메디텍",
-        "extNorm": "백제약품영남본부",
+        "extNorm": "휴온스메디텍",
         "type": "company",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -86,11 +86,11 @@
       },
       "supplierAddress": {
         "gt": "경기 성남시 중원구 갈마치로288번길 14 (상대원동) 6층 601!607호,624~632호",
-        "ext": "경남 김해시 진례면 김해테크노벨리로 33-12 백제약품(주)영남본부",
+        "ext": "",
         "gtNorm": "경기성남시중원구갈마치로288번길14상대원동6층601607호624632호",
-        "extNorm": "경남김해시진례면김해테크노벨리로3312백제약품주영남본부",
+        "extNorm": "",
         "type": "address",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -141,9 +141,9 @@
     "profile": "thin",
     "counts": {
       "scored": 10,
-      "match": 4,
-      "mismatch": 3,
-      "ext_missing": 3,
+      "match": 5,
+      "mismatch": 1,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -154,11 +154,11 @@
     },
     "coverage": {
       "gtPresent": 10,
-      "matched": 4,
+      "matched": 5,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 3
+      "extAttemptedMiss": 4
     },
-    "fieldAccuracy": 0.4
+    "fieldAccuracy": 0.5
   },
   "table": {
     "alignMode": "content",
@@ -439,20 +439,12 @@
         "reason": "gt value not found anywhere in extraction"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "휴온스메디텍",
-        "extNorm": "백제약품영남본부",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['field:buyerCompany']"
-      },
-      {
         "location": "field:supplierAddress",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "경기성남시중원구갈마치로288번길14상대원동6층601607호624632호",
-        "extNorm": "경남김해시진례면김해테크노벨리로3312백제약품주영남본부",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplyAmount",
@@ -536,7 +528,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 8,
+      "recognition": 7,
       "structure": 6,
       "layout": 0,
       "preprocessing": 0
@@ -557,6 +549,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.3
+    "fieldMissRate": 0.4
   }
 }

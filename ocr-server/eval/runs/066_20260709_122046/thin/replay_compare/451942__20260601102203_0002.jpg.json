@@ -47,11 +47,11 @@
       },
       "supplierBizNumber": {
         "gt": "1348500765",
-        "ext": "408-85-00180",
+        "ext": "",
         "gtNorm": "1348500765",
-        "extNorm": "4088500180",
+        "extNorm": "",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -73,11 +73,11 @@
       },
       "supplierCompany": {
         "gt": "삼일제약(전)",
-        "ext": "삼진제약(전)",
+        "ext": "삼일제약주식회사",
         "gtNorm": "삼일제약",
-        "extNorm": "삼진제약",
+        "extNorm": "삼일제약",
         "type": "company",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -99,9 +99,9 @@
       },
       "supplierAddress": {
         "gt": "경기도 안산시 단원구 산단로 216 (원시동)",
-        "ext": "서울 마포구 와우산로 121 (서교동)",
+        "ext": "경기도 안산시 단원구 산단로 216(원시동 광주 동구 제봉로 200 (대인동",
         "gtNorm": "경기도안산시단원구산단로216원시동",
-        "extNorm": "서울마포구와우산로121서교동",
+        "extNorm": "경기도안산시단원구산단로216원시동광주동구제봉로200대인동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -154,9 +154,9 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 6,
-      "mismatch": 5,
-      "ext_missing": 0,
+      "match": 7,
+      "mismatch": 3,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 6,
+      "matched": 7,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 0
+      "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.5454545454545454
+    "fieldAccuracy": 0.6363636363636364
   },
   "table": {
     "alignMode": "content",
@@ -217,10 +217,10 @@
           },
           "quantity": {
             "gt": "30",
-            "ext": "",
+            "ext": "30",
             "gtNorm": "30",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -268,39 +268,31 @@
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 6,
+      "match": 7,
       "mismatch": 2,
-      "ext_missing": 1,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.6666666666666666
+    "cellAccuracy": 0.7777777777777778
   },
   "buckets": {
     "defects": [
       {
         "location": "field:supplierBizNumber",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "1348500765",
-        "extNorm": "4088500180",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
-      },
-      {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "삼일제약",
-        "extNorm": "삼진제약",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.75)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기도안산시단원구산단로216원시동",
-        "extNorm": "서울마포구와우산로121서교동",
+        "extNorm": "경기도안산시단원구산단로216원시동광주동구제봉로200대인동",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.73)"
       },
       {
         "location": "field:buyerCompany",
@@ -341,18 +333,10 @@
         "extNorm": "0 0.4ml*6",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.78)"
-      },
-      {
-        "location": "row2:quantity",
-        "status": "ext_missing",
-        "gtNorm": "30",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 7,
+      "recognition": 5,
       "structure": 2,
       "layout": 0,
       "preprocessing": 0
@@ -373,6 +357,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.0
+    "fieldMissRate": 0.091
   }
 }

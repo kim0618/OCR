@@ -73,9 +73,9 @@
       },
       "supplierCompany": {
         "gt": "JW중외신약(전)",
-        "ext": "백제약품(주)대전지점",
+        "ext": "의약의약품외수출입",
         "gtNorm": "jw중외신약",
-        "extNorm": "백제약품대전지점",
+        "extNorm": "의약의약품외수출입",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -99,11 +99,11 @@
       },
       "supplierAddress": {
         "gt": "서울시 서초구 남부순환로 2477",
-        "ext": "대전광역시 중구 보문로 235 (대흥동)",
+        "ext": "",
         "gtNorm": "서울시서초구남부순환로2477",
-        "extNorm": "대전광역시중구보문로235대흥동",
+        "extNorm": "",
         "type": "address",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -155,8 +155,8 @@
     "counts": {
       "scored": 11,
       "match": 7,
-      "mismatch": 4,
-      "ext_missing": 0,
+      "mismatch": 3,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -169,7 +169,7 @@
       "gtPresent": 11,
       "matched": 7,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 0
+      "extAttemptedMiss": 1
     },
     "fieldAccuracy": 0.6363636363636364
   },
@@ -222,18 +222,18 @@
           },
           "unitPrice": {
             "gt": "30109",
-            "ext": "",
+            "ext": "30109",
             "gtNorm": "30109",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30109",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "301090",
-            "ext": "",
+            "ext": "301090",
             "gtNorm": "301090",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "301090",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
@@ -249,13 +249,13 @@
     ],
     "cellCounts": {
       "scored": 7,
-      "match": 3,
+      "match": 5,
       "mismatch": 1,
-      "ext_missing": 3,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.42857142857142855
+    "cellAccuracy": 0.7142857142857143
   },
   "buckets": {
     "defects": [
@@ -263,25 +263,25 @@
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "jw중외신약",
-        "extNorm": "백제약품대전지점",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['field:buyerCompany']"
+        "extNorm": "의약의약품외수출입",
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplierAddress",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "서울시서초구남부순환로2477",
-        "extNorm": "대전광역시중구보문로235대흥동",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
         "gtNorm": "백제약품대전지점",
         "extNorm": "제이더블유신약",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:supplierCompany']"
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -306,27 +306,11 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "30109",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:amount",
-        "status": "ext_missing",
-        "gtNorm": "301090",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 3,
-      "structure": 5,
+      "recognition": 4,
+      "structure": 2,
       "layout": 0,
       "preprocessing": 0
     },
@@ -346,6 +330,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.0
+    "fieldMissRate": 0.091
   }
 }

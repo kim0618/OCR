@@ -192,23 +192,23 @@
     "rowCountExt": 2,
     "rowCountMatch": false,
     "matchedRowIdx": [
-      "2"
+      "1"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "1"
+      "2"
     ],
     "rows": [
       {
-        "rowIndex": "2",
+        "rowIndex": "1",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "메부틴정",
-            "ext": "메부틴정",
+            "ext": "메부틴정 30정(B",
             "gtNorm": "메부틴정",
-            "extNorm": "메부틴정",
-            "status": "match",
+            "extNorm": "메부틴정30정b",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
@@ -221,34 +221,34 @@
           },
           "spec": {
             "gt": "30정(B)",
-            "ext": "",
+            "ext": "/",
             "gtNorm": "30정(b)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "/",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
             "gt": "50",
-            "ext": "",
+            "ext": "50",
             "gtNorm": "50",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "50",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "2032",
-            "ext": "",
+            "ext": "2032",
             "gtNorm": "2032",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "2032",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "101600",
-            "ext": "2,032",
+            "ext": "101600",
             "gtNorm": "101600",
-            "extNorm": "2032",
-            "status": "mismatch",
+            "extNorm": "101600",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -280,13 +280,13 @@
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 3,
-      "mismatch": 1,
-      "ext_missing": 5,
+      "match": 5,
+      "mismatch": 2,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3333333333333333
+    "cellAccuracy": 0.5555555555555556
   },
   "buckets": {
     "defects": [
@@ -312,42 +312,26 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1']"
+        "reason": "extractor invented rows ['2']"
       },
       {
-        "location": "row2:spec",
-        "status": "ext_missing",
-        "gtNorm": "30정(b)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:quantity",
-        "status": "ext_missing",
-        "gtNorm": "50",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "2032",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
-      },
-      {
-        "location": "row2:amount",
+        "location": "row1:itemName",
         "status": "mismatch",
-        "gtNorm": "101600",
-        "extNorm": "2032",
+        "gtNorm": "메부틴정",
+        "extNorm": "메부틴정30정b",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemNameMaster']"
+      },
+      {
+        "location": "row1:spec",
+        "status": "mismatch",
+        "gtNorm": "30정(b)",
+        "extNorm": "/",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row2:expiryDate",
+        "location": "row1:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20290112",
         "extNorm": "",
@@ -355,7 +339,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:manufacturingNo",
+        "location": "row1:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "10522603A",
         "extNorm": "",
@@ -365,7 +349,7 @@
     ],
     "bucketTally": {
       "recognition": 3,
-      "structure": 5,
+      "structure": 3,
       "layout": 1,
       "preprocessing": 0
     },

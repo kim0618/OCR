@@ -191,33 +191,30 @@
     "rowCountGt": 1,
     "rowCountExt": 1,
     "rowCountMatch": true,
-    "matchedRowIdx": [],
-    "gtOnlyRowIdx": [
+    "matchedRowIdx": [
       "1"
     ],
-    "extOnlyRowIdx": [
-      "1"
-    ],
+    "gtOnlyRowIdx": [],
+    "extOnlyRowIdx": [],
     "rows": [
       {
         "rowIndex": "1",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "한국신텍스 레보세딘정",
-            "ext": "",
+            "ext": "레보세단정",
             "gtNorm": "한국신텍스레보세딘정",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "레보세단정",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "레보세딘정",
-            "ext": "",
+            "ext": "레보세탄정(제약사품절)",
             "gtNorm": "레보세딘정",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "레보세탄정(제약사품절)",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
@@ -230,26 +227,26 @@
           },
           "quantity": {
             "gt": "5",
-            "ext": "",
+            "ext": "5",
             "gtNorm": "5",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "5",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "48330",
-            "ext": "",
+            "ext": "48330",
             "gtNorm": "48330",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "48330",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "241650",
-            "ext": "",
+            "ext": "241650",
             "gtNorm": "241650",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "241650",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -270,10 +267,10 @@
           },
           "itemCode": {
             "gt": "22004274",
-            "ext": "",
+            "ext": "04002719",
             "gtNorm": "22004274",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "04002719",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -281,13 +278,13 @@
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 0,
-      "mismatch": 0,
-      "ext_missing": 9,
+      "match": 3,
+      "mismatch": 3,
+      "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.0
+    "cellAccuracy": 0.3333333333333333
   },
   "buckets": {
     "defects": [
@@ -324,65 +321,25 @@
         "reason": "char-level diff (sim=0.79)"
       },
       {
-        "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['1']"
-      },
-      {
-        "location": "table",
-        "status": "rows_extra",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor invented rows ['1']"
-      },
-      {
         "location": "row1:itemName",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "한국신텍스레보세딘정",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "레보세단정",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.53)"
       },
       {
         "location": "row1:itemNameMaster",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "레보세딘정",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "레보세탄정(제약사품절)",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:spec",
         "status": "ext_missing",
         "gtNorm": "300t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "5",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "48330",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:amount",
-        "status": "ext_missing",
-        "gtNorm": "241650",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -405,16 +362,16 @@
       },
       {
         "location": "row1:itemCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "22004274",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "04002719",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.50)"
       }
     ],
     "bucketTally": {
-      "recognition": 2,
-      "structure": 13,
+      "recognition": 5,
+      "structure": 5,
       "layout": 0,
       "preprocessing": 0
     },

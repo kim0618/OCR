@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "13381223",
-        "ext": "113-85-04425",
+        "ext": "",
         "gtNorm": "13381223",
-        "extNorm": "1138504425",
+        "extNorm": "",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "대화제약",
-        "ext": "백제약품(주)영등포지점",
+        "ext": "대화제약(주)",
         "gtNorm": "대화제약",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "대화제약",
         "type": "company",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "경기도 시흥시 정왕동 시화공단1라 603",
-        "ext": "서울 구로구 공원로8길 24",
+        "ext": "강원특별자치도 황성군 횡성읍 한우로",
         "gtNorm": "경기도시흥시정왕동시화공단1라603",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "강원특별자치도황성군횡성읍한우로",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 3,
-      "mismatch": 9,
-      "ext_missing": 0,
+      "match": 4,
+      "mismatch": 7,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 3,
+      "matched": 4,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 0
+      "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.25
+    "fieldAccuracy": 0.3333333333333333
   },
   "table": {
     "alignMode": "content",
@@ -314,11 +314,11 @@
       },
       {
         "location": "field:supplierBizNumber",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "13381223",
-        "extNorm": "1138504425",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:buyerBizNumber",
@@ -329,18 +329,10 @@
         "reason": "value differs, low similarity"
       },
       {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "대화제약",
-        "extNorm": "백제약품영등포지점",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기도시흥시정왕동시화공단1라603",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "강원특별자치도황성군횡성읍한우로",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -394,8 +386,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 10,
-      "structure": 3,
+      "recognition": 8,
+      "structure": 4,
       "layout": 0,
       "preprocessing": 0
     },
@@ -415,6 +407,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.0
+    "fieldMissRate": 0.083
   }
 }

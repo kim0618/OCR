@@ -73,11 +73,11 @@
       },
       "buyerBizNumber": {
         "gt": "6098504585",
-        "ext": "112-62-10120",
+        "ext": "609-85-04585",
         "gtNorm": "6098504585",
-        "extNorm": "1126210120",
+        "extNorm": "6098504585",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 6,
-      "mismatch": 5,
+      "match": 7,
+      "mismatch": 4,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -180,20 +180,21 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 6,
+      "matched": 7,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.5
+    "fieldAccuracy": 0.5833333333333334
   },
   "table": {
     "alignMode": "content",
     "rowCountGt": 2,
-    "rowCountExt": 3,
+    "rowCountExt": 4,
     "rowCountMatch": false,
-    "matchedRowIdx": [],
+    "matchedRowIdx": [
+      "4"
+    ],
     "gtOnlyRowIdx": [
-      "1",
       "2"
     ],
     "extOnlyRowIdx": [
@@ -203,9 +204,8 @@
     ],
     "rows": [
       {
-        "rowIndex": "1",
+        "rowIndex": "4",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "엘도인캡슐300밀리그램 300C",
@@ -233,26 +233,26 @@
           },
           "quantity": {
             "gt": "30",
-            "ext": "",
+            "ext": "30",
             "gtNorm": "30",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "58200",
-            "ext": "",
+            "ext": "58200",
             "gtNorm": "58200",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "58200",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "1746000",
-            "ext": "",
+            "ext": "1746000",
             "gtNorm": "1746000",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "1746000",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -355,13 +355,13 @@
     ],
     "cellCounts": {
       "scored": 17,
-      "match": 0,
+      "match": 3,
       "mismatch": 0,
-      "ext_missing": 17,
+      "ext_missing": 14,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.0
+    "cellAccuracy": 0.17647058823529413
   },
   "buckets": {
     "defects": [
@@ -371,7 +371,7 @@
         "gtNorm": "1746000",
         "extNorm": "643501900",
         "bucket": "structure",
-        "reason": "ext value is gt's ['row1:insuranceCode']"
+        "reason": "gt value present at ['row4:amount']"
       },
       {
         "location": "field:taxAmount",
@@ -388,14 +388,6 @@
         "extNorm": "0",
         "bucket": "structure",
         "reason": "ext value is gt's ['row2:unitPrice']"
-      },
-      {
-        "location": "field:buyerBizNumber",
-        "status": "mismatch",
-        "gtNorm": "6098504585",
-        "extNorm": "1126210120",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplyAmount",
@@ -419,7 +411,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor missed rows ['1', '2']"
+        "reason": "extractor missed rows ['2']"
       },
       {
         "location": "table",
@@ -430,7 +422,7 @@
         "reason": "extractor invented rows ['1', '6', '7']"
       },
       {
-        "location": "row1:itemName",
+        "location": "row4:itemName",
         "status": "ext_missing",
         "gtNorm": "엘도인캡슐300밀리그램300c",
         "extNorm": "",
@@ -438,7 +430,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemNameMaster",
+        "location": "row4:itemNameMaster",
         "status": "ext_missing",
         "gtNorm": "엘도인캡슐300mg",
         "extNorm": "",
@@ -446,7 +438,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:spec",
+        "location": "row4:spec",
         "status": "ext_missing",
         "gtNorm": "300c",
         "extNorm": "",
@@ -454,31 +446,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "30",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "58200",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:amount",
-        "status": "ext_missing",
-        "gtNorm": "1746000",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:expiryDate",
+        "location": "row4:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20290425",
         "extNorm": "",
@@ -486,7 +454,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:manufacturingNo",
+        "location": "row4:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "26013",
         "extNorm": "",
@@ -494,7 +462,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemCode",
+        "location": "row4:itemCode",
         "status": "ext_missing",
         "gtNorm": "8806435019059",
         "extNorm": "",
@@ -502,7 +470,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:insuranceCode",
+        "location": "row4:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "643501900",
         "extNorm": "",
@@ -567,8 +535,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 3,
-      "structure": 22,
+      "recognition": 2,
+      "structure": 19,
       "layout": 0,
       "preprocessing": 0
     },

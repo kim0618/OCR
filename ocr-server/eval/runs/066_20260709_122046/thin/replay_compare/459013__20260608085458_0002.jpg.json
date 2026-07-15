@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "3188100991",
-        "ext": "113-85-04425",
+        "ext": "",
         "gtNorm": "3188100991",
-        "extNorm": "1138504425",
+        "extNorm": "",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -86,9 +86,9 @@
       },
       "supplierCompany": {
         "gt": "휴비스트제약",
-        "ext": "백제약품(주)영등포지점",
+        "ext": "의약품외",
         "gtNorm": "휴비스트제약",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "의약품외",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울 금천구 가산디지털1로 169 (가산동)",
-        "ext": "서울 구로구 공원로8길 24",
+        "ext": "대전광역시 대덕구 신일서로104번길 46(신일동",
         "gtNorm": "서울금천구가산디지털1로169가산동",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "대전광역시대덕구신일서로104번길46신일동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 6,
-      "mismatch": 6,
-      "ext_missing": 0,
+      "mismatch": 5,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,7 +182,7 @@
       "gtPresent": 12,
       "matched": 6,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 0
+      "extAttemptedMiss": 1
     },
     "fieldAccuracy": 0.5
   },
@@ -236,10 +236,10 @@
           },
           "quantity": {
             "gt": "30",
-            "ext": "",
+            "ext": "30",
             "gtNorm": "30",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -530,13 +530,13 @@
     ],
     "cellCounts": {
       "scored": 37,
-      "match": 15,
+      "match": 16,
       "mismatch": 10,
-      "ext_missing": 12,
+      "ext_missing": 11,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.40540540540540543
+    "cellAccuracy": 0.43243243243243246
   },
   "buckets": {
     "defects": [
@@ -550,17 +550,17 @@
       },
       {
         "location": "field:supplierBizNumber",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "3188100991",
-        "extNorm": "1138504425",
+        "extNorm": "",
         "bucket": "structure",
-        "reason": "ext value is gt's ['field:buyerBizNumber']"
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "휴비스트제약",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "의약품외",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -568,7 +568,7 @@
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울금천구가산디지털1로169가산동",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "대전광역시대덕구신일서로104번길46신일동",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -608,14 +608,6 @@
         "location": "row1:spec",
         "status": "ext_missing",
         "gtNorm": "300정",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "30",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -783,7 +775,7 @@
     ],
     "bucketTally": {
       "recognition": 13,
-      "structure": 16,
+      "structure": 15,
       "layout": 1,
       "preprocessing": 0
     },
@@ -803,6 +795,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.0
+    "fieldMissRate": 0.083
   }
 }

@@ -8,11 +8,11 @@
     "perField": {
       "totalAmount": {
         "gt": "4140000",
-        "ext": "8,580,000",
+        "ext": "4140000",
         "gtNorm": "4140000",
-        "extNorm": "8580000",
+        "extNorm": "4140000",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -115,8 +115,8 @@
     "profile": "thin",
     "counts": {
       "scored": 8,
-      "match": 5,
-      "mismatch": 2,
+      "match": 6,
+      "mismatch": 1,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -128,21 +128,22 @@
     },
     "coverage": {
       "gtPresent": 8,
-      "matched": 5,
+      "matched": 6,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.625
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
     "rowCountGt": 0,
-    "rowCountExt": 1,
+    "rowCountExt": 2,
     "rowCountMatch": false,
     "matchedRowIdx": [],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "1"
+      "1",
+      "2"
     ],
     "rows": [],
     "cellCounts": {
@@ -157,14 +158,6 @@
   },
   "buckets": {
     "defects": [
-      {
-        "location": "field:totalAmount",
-        "status": "mismatch",
-        "gtNorm": "4140000",
-        "extNorm": "8580000",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.57)"
-      },
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
@@ -187,11 +180,11 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1']"
+        "reason": "extractor invented rows ['1', '2']"
       }
     ],
     "bucketTally": {
-      "recognition": 2,
+      "recognition": 1,
       "structure": 2,
       "layout": 0,
       "preprocessing": 0

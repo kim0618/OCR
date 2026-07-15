@@ -199,7 +199,7 @@
       "7",
       "8",
       "14",
-      "10",
+      "15",
       "11",
       "12"
     ],
@@ -208,8 +208,8 @@
       "2",
       "5",
       "9",
-      "13",
-      "15"
+      "10",
+      "13"
     ],
     "rows": [
       {
@@ -758,18 +758,18 @@
           },
           "quantity": {
             "gt": "100",
-            "ext": "2,938",
+            "ext": "100",
             "gtNorm": "100",
-            "extNorm": "2938",
-            "status": "mismatch",
+            "extNorm": "100",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "2938",
-            "ext": "100",
+            "ext": "2,938",
             "gtNorm": "2938",
-            "extNorm": "100",
-            "status": "mismatch",
+            "extNorm": "2938",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -815,14 +815,14 @@
         }
       },
       {
-        "rowIndex": "10",
+        "rowIndex": "15",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "히알산점안액0.18% 0.45mL 60s(1회용)",
-            "ext": "히알산점안액3.18% 0.45mL60s(1회용 // 32,16 2",
+            "ext": "// 32,16 히알산점안액3.18% 0.45mL60s(1회용) 2",
             "gtNorm": "히알산점안액018045ml60s1회용",
-            "extNorm": "히알산점안액318045ml60s1회용32162",
+            "extNorm": "3216히알산점안액318045ml60s1회용2",
             "status": "mismatch",
             "spurious": false
           },
@@ -884,18 +884,18 @@
           },
           "itemCode": {
             "gt": "22003145",
-            "ext": "11766",
+            "ext": "22003145",
             "gtNorm": "22003145",
-            "extNorm": "11766",
-            "status": "mismatch",
+            "extNorm": "22003145",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "649605761",
-            "ext": "649605761",
+            "ext": "649605761 20290412/ 26003",
             "gtNorm": "649605761",
-            "extNorm": "649605761",
-            "status": "match",
+            "extNorm": "6496057612029041226003",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -1075,13 +1075,13 @@
     ],
     "cellCounts": {
       "scored": 100,
-      "match": 54,
-      "mismatch": 27,
+      "match": 56,
+      "mismatch": 25,
       "ext_missing": 19,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.54
+    "cellAccuracy": 0.56
   },
   "buckets": {
     "defects": [
@@ -1131,7 +1131,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['2', '5', '9', '13', '15']"
+        "reason": "extractor invented rows ['2', '5', '9', '10', '13']"
       },
       {
         "location": "row1:spec",
@@ -1342,22 +1342,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row14:quantity",
-        "status": "mismatch",
-        "gtNorm": "100",
-        "extNorm": "2938",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['unitPrice']"
-      },
-      {
-        "location": "row14:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "2938",
-        "extNorm": "100",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['quantity']"
-      },
-      {
         "location": "row14:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20281102",
@@ -1382,15 +1366,15 @@
         "reason": "char-level diff (sim=0.58)"
       },
       {
-        "location": "row10:itemName",
+        "location": "row15:itemName",
         "status": "mismatch",
         "gtNorm": "히알산점안액018045ml60s1회용",
-        "extNorm": "히알산점안액318045ml60s1회용32162",
+        "extNorm": "3216히알산점안액318045ml60s1회용2",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.84)"
       },
       {
-        "location": "row10:spec",
+        "location": "row15:spec",
         "status": "mismatch",
         "gtNorm": "0.45ml",
         "extNorm": "0.45m x",
@@ -1398,7 +1382,7 @@
         "reason": "char-level diff (sim=0.77)"
       },
       {
-        "location": "row10:expiryDate",
+        "location": "row15:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20290412",
         "extNorm": "",
@@ -1406,7 +1390,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row10:manufacturingNo",
+        "location": "row15:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "26003",
         "extNorm": "",
@@ -1414,12 +1398,12 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row10:itemCode",
+        "location": "row15:insuranceCode",
         "status": "mismatch",
-        "gtNorm": "22003145",
-        "extNorm": "11766",
+        "gtNorm": "649605761",
+        "extNorm": "6496057612029041226003",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.58)"
       },
       {
         "location": "row11:itemName",
@@ -1505,7 +1489,7 @@
     "bucketTally": {
       "recognition": 29,
       "structure": 20,
-      "layout": 3,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

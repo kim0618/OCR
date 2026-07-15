@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "1098636089",
-        "ext": "609-85-04585",
+        "ext": "",
         "gtNorm": "1098636089",
-        "extNorm": "6098504585",
+        "extNorm": "",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "유진의약품",
-        "ext": "백제약품(주)영남본부",
+        "ext": "주식회사 유진의약품",
         "gtNorm": "유진의약품",
-        "extNorm": "백제약품영남본부",
+        "extNorm": "유진의약품",
         "type": "company",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울 강서구 공항대로 53가길 1,302 (등촌동 3층)",
-        "ext": "경남 김해시 진례면 김해테크노벨리로 33-12 백제약품(주)영남본부",
+        "ext": "",
         "gtNorm": "서울강서구공항대로53가길1302등촌동3층",
-        "extNorm": "경남김해시진례면김해테크노벨리로3312백제약품주영남본부",
+        "extNorm": "",
         "type": "address",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 3,
-      "mismatch": 9,
-      "ext_missing": 0,
+      "match": 4,
+      "mismatch": 6,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 3,
+      "matched": 4,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 0
+      "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.25
+    "fieldAccuracy": 0.3333333333333333
   },
   "table": {
     "alignMode": "content",
@@ -506,18 +506,18 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "8593",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "8593",
-            "status": "mismatch",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "8593",
-            "ext": "10",
+            "ext": "8593",
             "gtNorm": "8593",
-            "extNorm": "10",
-            "status": "mismatch",
+            "extNorm": "8593",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -1082,13 +1082,13 @@
     ],
     "cellCounts": {
       "scored": 100,
-      "match": 48,
-      "mismatch": 22,
+      "match": 50,
+      "mismatch": 20,
       "ext_missing": 30,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.48
+    "cellAccuracy": 0.5
   },
   "buckets": {
     "defects": [
@@ -1110,19 +1110,11 @@
       },
       {
         "location": "field:supplierBizNumber",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "1098636089",
-        "extNorm": "6098504585",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
-      },
-      {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "유진의약품",
-        "extNorm": "백제약품영남본부",
+        "extNorm": "",
         "bucket": "structure",
-        "reason": "ext value is gt's ['field:buyerCompany']"
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:taxType",
@@ -1134,11 +1126,11 @@
       },
       {
         "location": "field:supplierAddress",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "서울강서구공항대로53가길1302등촌동3층",
-        "extNorm": "경남김해시진례면김해테크노벨리로3312백제약품주영남본부",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:supplyAmount",
@@ -1153,8 +1145,8 @@
         "status": "mismatch",
         "gtNorm": "백제약품영남본부",
         "extNorm": "주백제약품영남본",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:supplierCompany']"
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.88)"
       },
       {
         "location": "field:buyerAddress",
@@ -1307,22 +1299,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row14:quantity",
-        "status": "mismatch",
-        "gtNorm": "10",
-        "extNorm": "8593",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['unitPrice']"
-      },
-      {
-        "location": "row14:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "8593",
-        "extNorm": "10",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['quantity']"
       },
       {
         "location": "row14:manufacturingNo",
@@ -1598,9 +1574,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 24,
+      "recognition": 23,
       "structure": 36,
-      "layout": 3,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,
@@ -1619,6 +1595,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.0
+    "fieldMissRate": 0.167
   }
 }

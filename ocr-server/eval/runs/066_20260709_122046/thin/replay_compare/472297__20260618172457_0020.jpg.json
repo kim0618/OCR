@@ -613,10 +613,10 @@
           },
           "itemNameMaster": {
             "gt": "스토칸정10mg",
-            "ext": "스토칸정10mg",
+            "ext": "스토칸정10mg(제약사품절)",
             "gtNorm": "스토칸정10mg",
-            "extNorm": "스토칸정10mg",
-            "status": "match",
+            "extNorm": "스토칸정10mg(제약사품절)",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
@@ -629,26 +629,26 @@
           },
           "quantity": {
             "gt": "10",
-            "ext": "",
+            "ext": "30",
             "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30",
+            "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "35244",
-            "ext": "",
+            "ext": "10680",
             "gtNorm": "35244",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10680",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "320400",
-            "ext": "",
+            "ext": "320400",
             "gtNorm": "320400",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "320400",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -1063,8 +1063,8 @@
     "cellCounts": {
       "scored": 98,
       "match": 25,
-      "mismatch": 14,
-      "ext_missing": 59,
+      "mismatch": 17,
+      "ext_missing": 56,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -1397,8 +1397,16 @@
         "status": "mismatch",
         "gtNorm": "스토칸정10mg",
         "extNorm": "스토칸정10mg300t1병",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemNameMaster']"
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.73)"
+      },
+      {
+        "location": "row6:itemNameMaster",
+        "status": "mismatch",
+        "gtNorm": "스토칸정10mg",
+        "extNorm": "스토칸정10mg(제약사품절)",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.70)"
       },
       {
         "location": "row6:spec",
@@ -1410,27 +1418,19 @@
       },
       {
         "location": "row6:quantity",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "10",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "30",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "row6:unitPrice",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "35244",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row6:amount",
-        "status": "ext_missing",
-        "gtNorm": "320400",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "10680",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row6:expiryDate",
@@ -1690,9 +1690,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 9,
-      "structure": 56,
-      "layout": 12,
+      "recognition": 13,
+      "structure": 53,
+      "layout": 11,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

@@ -189,64 +189,66 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 1,
-    "rowCountExt": 1,
-    "rowCountMatch": true,
+    "rowCountExt": 2,
+    "rowCountMatch": false,
     "matchedRowIdx": [
-      "1"
+      "2"
     ],
     "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "1"
+    ],
     "rows": [
       {
-        "rowIndex": "1",
+        "rowIndex": "2",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "인트로바이 메디브렉스캡슐100mg 30C",
-            "ext": "052400960인트로바이메디브렉스캡슐100mg",
+            "ext": "",
             "gtNorm": "인트로바이메디브렉스캡슐100mg30c",
-            "extNorm": "052400960인트로바이메디브렉스캡슐100mg",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "메디브렉스캡슐100mg(인트로바이오파마)",
-            "ext": "메디브렉스캡슐100mg(인트로바이오파마)",
+            "ext": "",
             "gtNorm": "메디브렉스캡슐100mg(인트로바이오파마)",
-            "extNorm": "메디브렉스캡슐100mg(인트로바이오파마)",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "spec": {
             "gt": "30",
-            "ext": "30C",
+            "ext": "",
             "gtNorm": "30",
-            "extNorm": "30c",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "quantity": {
             "gt": "10",
-            "ext": "30",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "30",
-            "status": "mismatch",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "9265",
-            "ext": "10",
+            "ext": "9265",
             "gtNorm": "9265",
-            "extNorm": "10",
-            "status": "mismatch",
+            "extNorm": "9265",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "92649",
-            "ext": "9,265",
+            "ext": "92649",
             "gtNorm": "92649",
-            "extNorm": "9265",
-            "status": "mismatch",
+            "extNorm": "92649",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -267,10 +269,10 @@
           },
           "itemCode": {
             "gt": "05003985",
-            "ext": "05003985",
+            "ext": "",
             "gtNorm": "05003985",
-            "extNorm": "05003985",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "insuranceCode": {
@@ -286,13 +288,13 @@
     ],
     "cellCounts": {
       "scored": 10,
-      "match": 2,
-      "mismatch": 5,
-      "ext_missing": 3,
+      "match": 3,
+      "mismatch": 0,
+      "ext_missing": 7,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.2
+    "cellAccuracy": 0.3
   },
   "buckets": {
     "defects": [
@@ -302,7 +304,7 @@
         "gtNorm": "92649",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "reason": "gt value present at ['row2:amount']"
       },
       {
         "location": "field:taxAmount",
@@ -337,47 +339,39 @@
         "reason": "value differs, low similarity"
       },
       {
-        "location": "row1:itemName",
-        "status": "mismatch",
+        "location": "table",
+        "status": "rows_extra",
+        "gtNorm": "",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "extractor invented rows ['1']"
+      },
+      {
+        "location": "row2:itemName",
+        "status": "ext_missing",
         "gtNorm": "인트로바이메디브렉스캡슐100mg30c",
-        "extNorm": "052400960인트로바이메디브렉스캡슐100mg",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.74)"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:spec",
-        "status": "mismatch",
+        "location": "row2:itemNameMaster",
+        "status": "ext_missing",
+        "gtNorm": "메디브렉스캡슐100mg(인트로바이오파마)",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row2:spec",
+        "status": "ext_missing",
         "gtNorm": "30",
-        "extNorm": "30c",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['quantity']"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:quantity",
-        "status": "mismatch",
-        "gtNorm": "10",
-        "extNorm": "30",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['unitPrice']"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "mismatch",
-        "gtNorm": "9265",
-        "extNorm": "10",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
-      },
-      {
-        "location": "row1:amount",
-        "status": "mismatch",
-        "gtNorm": "92649",
-        "extNorm": "9265",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
-      },
-      {
-        "location": "row1:expiryDate",
+        "location": "row2:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20280928",
         "extNorm": "",
@@ -385,7 +379,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:manufacturingNo",
+        "location": "row2:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "C11509",
         "extNorm": "",
@@ -393,7 +387,15 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:insuranceCode",
+        "location": "row2:itemCode",
+        "status": "ext_missing",
+        "gtNorm": "05003985",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row2:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "052400960",
         "extNorm": "",
@@ -402,9 +404,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 4,
-      "structure": 6,
-      "layout": 3,
+      "recognition": 2,
+      "structure": 11,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

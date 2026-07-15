@@ -189,36 +189,37 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 2,
-    "rowCountExt": 2,
-    "rowCountMatch": true,
+    "rowCountExt": 3,
+    "rowCountMatch": false,
     "matchedRowIdx": [
-      "1"
+      "3"
     ],
     "gtOnlyRowIdx": [
       "2"
     ],
     "extOnlyRowIdx": [
+      "1",
       "3"
     ],
     "rows": [
       {
-        "rowIndex": "1",
+        "rowIndex": "3",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "세비카정 5/20MG 28T",
-            "ext": "세비카정5/20MG28T",
+            "ext": "",
             "gtNorm": "세비카정520mg28t",
-            "extNorm": "세비카정520mg28t",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "세비카정5/20mg",
-            "ext": "세비카정5/20mg",
+            "ext": "",
             "gtNorm": "세비카정5/20mg",
-            "extNorm": "세비카정5/20mg",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "spec": {
@@ -231,26 +232,26 @@
           },
           "quantity": {
             "gt": "2",
-            "ext": "",
+            "ext": "2",
             "gtNorm": "2",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "2",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "19488",
-            "ext": "",
+            "ext": "19488",
             "gtNorm": "19488",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "19488",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "38976",
-            "ext": "",
+            "ext": "38976",
             "gtNorm": "38976",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "38976",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -271,10 +272,10 @@
           },
           "itemCode": {
             "gt": "01001516",
-            "ext": "01001516",
+            "ext": "",
             "gtNorm": "01001516",
-            "extNorm": "01001516",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "insuranceCode": {
@@ -369,7 +370,7 @@
         "gtNorm": "35858",
         "extNorm": "680900030",
         "bucket": "structure",
-        "reason": "ext value is gt's ['row1:insuranceCode']"
+        "reason": "ext value is gt's ['row3:insuranceCode']"
       },
       {
         "location": "field:taxAmount",
@@ -433,10 +434,26 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['3']"
+        "reason": "extractor invented rows ['1', '3']"
       },
       {
-        "location": "row1:spec",
+        "location": "row3:itemName",
+        "status": "ext_missing",
+        "gtNorm": "세비카정520mg28t",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row3:itemNameMaster",
+        "status": "ext_missing",
+        "gtNorm": "세비카정5/20mg",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row3:spec",
         "status": "ext_missing",
         "gtNorm": "28t",
         "extNorm": "",
@@ -444,31 +461,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "2",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "19488",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:amount",
-        "status": "ext_missing",
-        "gtNorm": "38976",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:expiryDate",
+        "location": "row3:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20300819",
         "extNorm": "",
@@ -476,7 +469,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:manufacturingNo",
+        "location": "row3:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "1000392",
         "extNorm": "",
@@ -484,7 +477,15 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:insuranceCode",
+        "location": "row3:itemCode",
+        "status": "ext_missing",
+        "gtNorm": "01001516",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row3:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "680900030",
         "extNorm": "",

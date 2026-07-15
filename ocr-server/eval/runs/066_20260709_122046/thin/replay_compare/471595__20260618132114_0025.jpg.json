@@ -231,10 +231,10 @@
           },
           "quantity": {
             "gt": "100",
-            "ext": "",
+            "ext": "100",
             "gtNorm": "100",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "100",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -247,10 +247,10 @@
           },
           "amount": {
             "gt": "577900",
-            "ext": "",
+            "ext": "577900",
             "gtNorm": "577900",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "577900",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -376,13 +376,13 @@
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 7,
+      "match": 9,
       "mismatch": 8,
-      "ext_missing": 5,
+      "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.35
+    "cellAccuracy": 0.45
   },
   "buckets": {
     "defects": [
@@ -435,28 +435,12 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "100",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row1:unitPrice",
         "status": "mismatch",
         "gtNorm": "5779",
         "extNorm": "577900",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.80)"
-      },
-      {
-        "location": "row1:amount",
-        "status": "ext_missing",
-        "gtNorm": "577900",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['unitPrice']"
       },
       {
         "location": "row1:manufacturingNo",
@@ -533,8 +517,8 @@
     ],
     "bucketTally": {
       "recognition": 10,
-      "structure": 6,
-      "layout": 2,
+      "structure": 5,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "2208100530",
-        "ext": "085-52-26617",
+        "ext": "220-81-00530",
         "gtNorm": "2208100530",
-        "extNorm": "0855226617",
+        "extNorm": "2208100530",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -86,11 +86,11 @@
       },
       "supplierCompany": {
         "gt": "한독(전)",
-        "ext": "용)",
+        "ext": "한독(전)",
         "gtNorm": "한독",
-        "extNorm": "용",
+        "extNorm": "한독",
         "type": "company",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": true,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplierAddress": {
         "gt": "서울 강남구 테헤란로 132(역삼동)",
-        "ext": "서울시강남구테해란로132(역삼동",
+        "ext": "서울 강남구 테헤란로 132(역삼동)",
         "gtNorm": "서울강남구테헤란로132역삼동",
-        "extNorm": "서울시강남구테해란로132역삼동",
+        "extNorm": "서울강남구테헤란로132역삼동",
         "type": "address",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 5,
-      "mismatch": 5,
+      "match": 8,
+      "mismatch": 2,
       "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 5,
+      "matched": 8,
       "extNotAttempted": 0,
       "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.4166666666666667
+    "fieldAccuracy": 0.6666666666666666
   },
   "table": {
     "alignMode": "content",
@@ -218,9 +218,9 @@
           },
           "itemNameMaster": {
             "gt": "센틸정5mg(향정)",
-            "ext": "스틸녹스CR정12.5mg(향정)",
+            "ext": "스틸녹스CR정12.5mg(향정)(규격변경)",
             "gtNorm": "센틸정5mg(향정)",
-            "extNorm": "스틸녹스cr정12.5mg(향정)",
+            "extNorm": "스틸녹스cr정12.5mg(향정)(규격변경)",
             "status": "mismatch",
             "spurious": false
           },
@@ -234,18 +234,18 @@
           },
           "quantity": {
             "gt": "130",
-            "ext": "",
+            "ext": "30",
             "gtNorm": "130",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30",
+            "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "8330",
-            "ext": "",
+            "ext": "8330",
             "gtNorm": "8330",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "8330",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -274,9 +274,9 @@
           },
           "itemCode": {
             "gt": "8806521005317",
-            "ext": "22003656",
+            "ext": "22001327",
             "gtNorm": "8806521005317",
-            "extNorm": "22003656",
+            "extNorm": "22001327",
             "status": "mismatch",
             "spurious": false
           },
@@ -723,13 +723,13 @@
     ],
     "cellCounts": {
       "scored": 60,
-      "match": 16,
-      "mismatch": 8,
-      "ext_missing": 36,
+      "match": 17,
+      "mismatch": 9,
+      "ext_missing": 34,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.26666666666666666
+    "cellAccuracy": 0.2833333333333333
   },
   "buckets": {
     "defects": [
@@ -748,30 +748,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt value not found anywhere in extraction"
-      },
-      {
-        "location": "field:supplierBizNumber",
-        "status": "mismatch",
-        "gtNorm": "2208100530",
-        "extNorm": "0855226617",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplierCompany",
-        "status": "mismatch",
-        "gtNorm": "한독",
-        "extNorm": "용",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplierAddress",
-        "status": "mismatch",
-        "gtNorm": "서울강남구테헤란로132역삼동",
-        "extNorm": "서울시강남구테해란로132역삼동",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.90)"
       },
       {
         "location": "field:supplyAmount",
@@ -809,9 +785,9 @@
         "location": "row7:itemNameMaster",
         "status": "mismatch",
         "gtNorm": "센틸정5mg(향정)",
-        "extNorm": "스틸녹스cr정12.5mg(향정)",
+        "extNorm": "스틸녹스cr정12.5mg(향정)(규격변경)",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
+        "reason": "char-level diff (sim=0.55)"
       },
       {
         "location": "row7:spec",
@@ -823,19 +799,11 @@
       },
       {
         "location": "row7:quantity",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "130",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row7:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "8330",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "30",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "row7:expiryDate",
@@ -857,7 +825,7 @@
         "location": "row7:itemCode",
         "status": "mismatch",
         "gtNorm": "8806521005317",
-        "extNorm": "22003656",
+        "extNorm": "22001327",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
@@ -1151,8 +1119,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 12,
-      "structure": 40,
+      "recognition": 10,
+      "structure": 38,
       "layout": 0,
       "preprocessing": 0
     },

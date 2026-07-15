@@ -60,9 +60,9 @@
       },
       "supplierCompany": {
         "gt": "에이프로젠파마(전문)",
-        "ext": "백제약품(주)영등포지점",
+        "ext": "에이치엘비제약KG5P물류지점",
         "gtNorm": "에이프로젠파마전문",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "에이치엘비제약kg5p물류지점",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -86,11 +86,11 @@
       },
       "supplierAddress": {
         "gt": "경기 화성시 양감면 두머리길 18",
-        "ext": "서울 구로구 공원로8길 24",
+        "ext": "",
         "gtNorm": "경기화성시양감면두머리길18",
-        "extNorm": "서울구로구공원로8길24",
+        "extNorm": "",
         "type": "address",
-        "status": "mismatch",
+        "status": "ext_missing",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -142,8 +142,8 @@
     "counts": {
       "scored": 10,
       "match": 6,
-      "mismatch": 4,
-      "ext_missing": 0,
+      "mismatch": 3,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -156,7 +156,7 @@
       "gtPresent": 10,
       "matched": 6,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 0
+      "extAttemptedMiss": 1
     },
     "fieldAccuracy": 0.6
   },
@@ -883,17 +883,17 @@
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "에이프로젠파마전문",
-        "extNorm": "백제약품영등포지점",
+        "extNorm": "에이치엘비제약kg5p물류지점",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplierAddress",
-        "status": "mismatch",
+        "status": "ext_missing",
         "gtNorm": "경기화성시양감면두머리길18",
-        "extNorm": "서울구로구공원로8길24",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:buyerCompany",
@@ -1177,8 +1177,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 24,
-      "structure": 13,
+      "recognition": 23,
+      "structure": 14,
       "layout": 0,
       "preprocessing": 0
     },
@@ -1198,6 +1198,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.0
+    "fieldMissRate": 0.1
   }
 }

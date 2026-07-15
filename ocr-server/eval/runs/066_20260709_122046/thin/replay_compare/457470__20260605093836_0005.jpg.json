@@ -60,11 +60,11 @@
       },
       "supplierBizNumber": {
         "gt": "2208100530",
-        "ext": "085-46-90378",
+        "ext": "220-81-00530",
         "gtNorm": "2208100530",
-        "extNorm": "0854690378",
+        "extNorm": "2208100530",
         "type": "bizno",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -86,9 +86,9 @@
       },
       "supplierCompany": {
         "gt": "한독약품(전문)",
-        "ext": "용)",
+        "ext": "한독(전)",
         "gtNorm": "한독약품전문",
-        "extNorm": "용",
+        "extNorm": "한독",
         "type": "company",
         "status": "mismatch",
         "edited": false,
@@ -112,9 +112,9 @@
       },
       "supplierAddress": {
         "gt": "서울특별시 강남구 테헤란로 132 (역삼동)",
-        "ext": "서울지강남구테헤란로 132(역삼동",
+        "ext": "서울 강남구 테헤란로 132(역삼동)",
         "gtNorm": "서울특별시강남구테헤란로132역삼동",
-        "extNorm": "서울지강남구테헤란로132역삼동",
+        "extNorm": "서울강남구테헤란로132역삼동",
         "type": "address",
         "status": "mismatch",
         "edited": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 4,
-      "mismatch": 6,
+      "match": 5,
+      "mismatch": 5,
       "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 4,
+      "matched": 5,
       "extNotAttempted": 0,
       "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.3333333333333333
+    "fieldAccuracy": 0.4166666666666667
   },
   "table": {
     "alignMode": "content",
@@ -1276,18 +1276,18 @@
           },
           "quantity": {
             "gt": "20",
-            "ext": "",
+            "ext": "20",
             "gtNorm": "20",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "24225",
-            "ext": "",
+            "ext": "24225",
             "gtNorm": "24225",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "24225",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -1346,10 +1346,10 @@
           },
           "itemNameMaster": {
             "gt": "바클로펜정10mg",
-            "ext": "바클로펜정10mg",
+            "ext": "바클로펜정10mg(생산중단)",
             "gtNorm": "바클로펜정10mg",
-            "extNorm": "바클로펜정10mg",
-            "status": "match",
+            "extNorm": "바클로펜정10mg(생산중단)",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
@@ -1362,18 +1362,18 @@
           },
           "quantity": {
             "gt": "80",
-            "ext": "",
+            "ext": "80",
             "gtNorm": "80",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "80",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "2907",
-            "ext": "",
+            "ext": "2907",
             "gtNorm": "2907",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "2907",
+            "status": "match",
             "spurious": false
           },
           "amount": {
@@ -1402,9 +1402,9 @@
           },
           "itemCode": {
             "gt": "04001021",
-            "ext": "04001082",
+            "ext": "406256",
             "gtNorm": "04001021",
-            "extNorm": "04001082",
+            "extNorm": "406256",
             "status": "mismatch",
             "spurious": false
           },
@@ -1507,13 +1507,13 @@
     ],
     "cellCounts": {
       "scored": 150,
-      "match": 68,
-      "mismatch": 27,
-      "ext_missing": 55,
+      "match": 71,
+      "mismatch": 28,
+      "ext_missing": 51,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4533333333333333
+    "cellAccuracy": 0.47333333333333333
   },
   "buckets": {
     "defects": [
@@ -1534,28 +1534,20 @@
         "reason": "gt value not found anywhere in extraction"
       },
       {
-        "location": "field:supplierBizNumber",
-        "status": "mismatch",
-        "gtNorm": "2208100530",
-        "extNorm": "0854690378",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "한독약품전문",
-        "extNorm": "용",
+        "extNorm": "한독",
         "bucket": "recognition",
-        "reason": "value differs, low similarity"
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울특별시강남구테헤란로132역삼동",
-        "extNorm": "서울지강남구테헤란로132역삼동",
+        "extNorm": "서울강남구테헤란로132역삼동",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.88)"
+        "reason": "char-level diff (sim=0.91)"
       },
       {
         "location": "field:supplyAmount",
@@ -2102,22 +2094,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row15:quantity",
-        "status": "ext_missing",
-        "gtNorm": "20",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row15:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "24225",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row15:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20280906",
@@ -2150,25 +2126,17 @@
         "reason": "gt cell absent in extracted row"
       },
       {
+        "location": "row17:itemNameMaster",
+        "status": "mismatch",
+        "gtNorm": "바클로펜정10mg",
+        "extNorm": "바클로펜정10mg(생산중단)",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.75)"
+      },
+      {
         "location": "row17:spec",
         "status": "ext_missing",
         "gtNorm": "30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row17:quantity",
-        "status": "ext_missing",
-        "gtNorm": "80",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row17:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "2907",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -2193,9 +2161,9 @@
         "location": "row17:itemCode",
         "status": "mismatch",
         "gtNorm": "04001021",
-        "extNorm": "04001082",
+        "extNorm": "406256",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.88)"
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row17:insuranceCode",
@@ -2248,7 +2216,7 @@
     ],
     "bucketTally": {
       "recognition": 33,
-      "structure": 58,
+      "structure": 54,
       "layout": 0,
       "preprocessing": 0
     },

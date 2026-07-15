@@ -1,4 +1,5 @@
 import re
+import statistics
 from dataclasses import dataclass
 from typing import Any
 
@@ -6922,6 +6923,214 @@ def _canonical_row_preview(row: dict[str, Any]) -> str:
 
 
 # ── T-25d: cell-level safe cleanup helpers ────────────────────────────────
+
+_POSTJOIN_AMOUNT_MONEY_RE = re.compile(r"^\d{1,3}(?:[,.]\d{3})+$")
+_POSTJOIN_AMOUNT_FOOTER_RE = re.compile(
+    r"\ud569\s*\uacc4|\ucd1d\s*\uacc4|\uacf5\s*\uae09\s*\uac00\s*\uc561|"
+    r"\ubd80\s*\uac00\s*\uc138|\uccad\s*\uad6c\s*\uae08\s*\uc561|"
+    r"\uc21c\s*\ub9e4\s*\ucd9c\s*\uc561|\uc5d0\s*\ub204\s*\ub9ac|VAT\s*\ud3ec\ud568",
+    re.I,
+)
+_POSTJOIN_AMOUNT_SUMMARY_ROW_RE = re.compile(
+    r"(?:\uacf5|\uad81)\s*\uae09\s*\uac00|\ubd80\s*\uac00\s*\uc138|"
+    r"\ud569\s*\uacc4|\ucd1d\s*\uacc4|\uc5d0\s*\ub204\s*\ub9ac|"
+    r"\uc21c\s*\ub9e4\s*\ucd9c",
+    re.I,
+)
+_POSTJOIN_MISPLACED_AMOUNT_TOKEN_RE = re.compile(r"\d[\d,.]*")
+
+
+def recover_postjoin_same_row_amounts(
+    rows: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Copy a misplaced same-row supply amount into a blank ``amount`` cell.
+
+    Some fallback header mappings put the row's final amount token in
+    ``supplyAmount`` while leaving canonical ``amount`` blank.  Apply only to a
+    final row set owned entirely by the fallback table parser; mixed row
+    sources can contain HA duplicates and are deliberately left untouched.
+    Existing amount cells and every non-amount field are immutable here.
+    """
+    debug: dict[str, Any] = {"attempted": True, "applied": False, "reason": ""}
+    if not rows:
+        debug["reason"] = "no_rows"
+        return rows, debug
+    if len(rows) > 13:
+        debug["reason"] = "too_many_rows_for_stable_content_alignment"
+        return rows, debug
+    if any(str(row.get("_source") or "") != "invoice_statement_table_parser" for row in rows):
+        debug["reason"] = "mixed_or_non_table_parser_rows"
+        return rows, debug
+
+    # If populated rows prove that supplyAmount and amount are separate
+    # physical columns, copying one into the other is semantically invalid.
+    for row in rows:
+        current = re.sub(r"\D", "", str(row.get("amount") or "")).lstrip("0")
+        supply_tokens = _POSTJOIN_MISPLACED_AMOUNT_TOKEN_RE.findall(
+            str(row.get("supplyAmount") or "")
+        )
+        supply = (
+            re.sub(r"\D", "", supply_tokens[-1]).lstrip("0")
+            if supply_tokens else ""
+        )
+        if current and supply and current != supply:
+            debug["reason"] = "existing_amount_proves_separate_supply_column"
+            return rows, debug
+
+    changed: list[dict[str, Any]] = []
+    for position, row in enumerate(rows, 1):
+        if str(row.get("amount") or "").strip():
+            continue
+        supply = str(row.get("supplyAmount") or "").strip()
+        tokens = _POSTJOIN_MISPLACED_AMOUNT_TOKEN_RE.findall(supply)
+        if not tokens:
+            continue
+        value = tokens[-1]
+        if len(re.sub(r"\D", "", value)) < 3:
+            continue
+        row["amount"] = value
+        changed.append({"row": position, "value": value})
+
+    if not changed:
+        debug["reason"] = "no_blank_amount_with_supply_candidate"
+        return rows, debug
+    debug.update({
+        "applied": True,
+        "reason": "same_row_supply_amount_relocation",
+        "filledCount": len(changed),
+        "filledRows": [item["row"] for item in changed],
+        "values": [item["value"] for item in changed],
+    })
+    return rows, debug
+
+
+def recover_postjoin_blank_amounts(
+    rows: list[dict[str, Any]],
+    ocr_lines_raw: list[tuple],
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Fill only blank amount cells from a proven final-row OCR amount column.
+
+    This must run after all row append/split/synthesis join-point processing.
+    It does not add/remove rows and never writes quantity or unitPrice.
+    """
+    debug: dict[str, Any] = {"attempted": True, "applied": False, "reason": ""}
+    if len(rows) < 3:
+        debug["reason"] = "fewer_than_three_rows"
+        return rows, debug
+    if any(str(row.get("_source") or "") != "invoice_statement_table_parser" for row in rows):
+        debug["reason"] = "non_fallback_table_parser_row"
+        return rows, debug
+    if any(_POSTJOIN_AMOUNT_SUMMARY_ROW_RE.search(str(row.get("_rawText") or "")) for row in rows):
+        debug["reason"] = "summary_row_present"
+        return rows, debug
+
+    lines = [line for raw in ocr_lines_raw if (line := _line_from_raw(raw))]
+    if not lines:
+        debug["reason"] = "no_ocr_lines"
+        return rows, debug
+    grouped = _group_rows(lines, tolerance_factor=0.55)
+
+    def _compact(value: Any) -> str:
+        return re.sub(r"\s+", "", str(value or "")).strip()
+
+    def _group_text(group: list["OcrLine"]) -> str:
+        return " ".join(
+            str(line.text or "").strip() for line in sorted(group, key=lambda item: item.x)
+        )
+
+    headers: list[tuple[float, float]] = []
+    for group in grouped:
+        ordered = sorted(group, key=lambda item: item.x)
+        combined = _compact(_group_text(ordered))
+        if "\uae08\uc561" not in combined:
+            continue
+        if "\uc218\ub7c9" not in combined and "\ub2e8\uac00" not in combined:
+            continue
+        exact = [line for line in ordered if _compact(line.text) == "\uae08\uc561"]
+        if exact:
+            line = exact[0]
+            headers.append((line.x + line.w, line.cy))
+            continue
+        for left, right in zip(ordered, ordered[1:]):
+            if _compact(left.text) == "\uae08" and _compact(right.text) == "\uc561":
+                headers.append((max(left.x + left.w, right.x + right.w), (left.cy + right.cy) / 2.0))
+                break
+    if len(headers) != 1:
+        debug["reason"] = "amount_header_not_unique"
+        debug["headerCount"] = len(headers)
+        return rows, debug
+
+    header_right, header_y = headers[0]
+    page_w = max(line.x + line.w for line in lines)
+    footer_y: float | None = None
+    for group in grouped:
+        group_y = sum(line.cy for line in group) / len(group)
+        if group_y > header_y and _POSTJOIN_AMOUNT_FOOTER_RE.search(_group_text(group)):
+            footer_y = group_y
+            break
+
+    candidates: list[tuple[float, float, str]] = []
+    for line in lines:
+        value = _compact(line.text)
+        if line.cy <= header_y or (footer_y is not None and line.cy >= footer_y):
+            continue
+        if not _POSTJOIN_AMOUNT_MONEY_RE.fullmatch(value):
+            continue
+        right = line.x + line.w
+        if abs(right - header_right) > page_w * 0.055:
+            continue
+        candidates.append((line.cy, right, value.replace(".", ",")))
+    candidates.sort()
+    if len(candidates) != len(rows):
+        debug.update({"reason": "candidate_row_count_mismatch", "candidateCount": len(candidates)})
+        return rows, debug
+
+    rights = [right for _, right, _ in candidates]
+    median_right = statistics.median(rights)
+    right_mad = statistics.median(abs(right - median_right) for right in rights)
+    if right_mad > page_w * 0.012:
+        debug["reason"] = "amount_column_x_inconsistent"
+        return rows, debug
+    ys = [y for y, _, _ in candidates]
+    gaps = [bottom - top for top, bottom in zip(ys, ys[1:])]
+    if gaps:
+        median_gap = statistics.median(gaps)
+        if median_gap <= 0 or max(gaps) > median_gap * 2.4:
+            debug["reason"] = "amount_column_y_inconsistent"
+            return rows, debug
+
+    values = [value for _, _, value in candidates]
+    agreement_count = 0
+    for row, value in zip(rows, values):
+        current = _compact(row.get("amount")).replace(".", ",")
+        if current and current != value:
+            debug["reason"] = "existing_amount_disagrees"
+            return rows, debug
+        if current == value:
+            agreement_count += 1
+    raw_supported_count = sum(bool(re.search(r"\d", str(row.get("_rawText") or ""))) for row in rows)
+    if raw_supported_count != len(rows) and agreement_count < 1:
+        debug["reason"] = "weak_row_evidence_without_existing_agreement"
+        return rows, debug
+
+    changed_rows: list[int] = []
+    for position, (row, value) in enumerate(zip(rows, values), 1):
+        if not _compact(row.get("amount")):
+            row["amount"] = value
+            changed_rows.append(position)
+    if not changed_rows:
+        debug["reason"] = "no_blank_amount"
+        return rows, debug
+    debug.update({
+        "applied": True,
+        "reason": "exact_final_ocr_amount_column",
+        "filledCount": len(changed_rows),
+        "filledRows": changed_rows,
+        "agreementCount": agreement_count,
+        "rawSupportedRowCount": raw_supported_count,
+    })
+    return rows, debug
+
 
 _T25D_AMOUNT_COMMA_SPACE_RE = re.compile(r"(\d),\s+(\d)")
 _T25D_AMOUNT_CLEAN_VAL_RE = re.compile(r"^\d{1,3}(?:,\d{3})*$")

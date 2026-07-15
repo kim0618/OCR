@@ -176,16 +176,15 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 4,
-    "rowCountExt": 6,
+    "rowCountExt": 7,
     "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
       "2",
-      "3"
+      "3",
+      "7"
     ],
-    "gtOnlyRowIdx": [
-      "4"
-    ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
       "4",
       "5",
@@ -427,24 +426,23 @@
         }
       },
       {
-        "rowIndex": "4",
+        "rowIndex": "7",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "에제트롤현탁액(10*14",
-            "ext": "",
+            "ext": "4메제트롤현탁액(10*14",
             "gtNorm": "에제트롤현탁액1014",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "4메제트롤현탁액1014",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "메제트롤현탁액10mL",
-            "ext": "",
+            "ext": "메제트롤현탁액10mL",
             "gtNorm": "메제트롤현탁액10ml",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "메제트롤현탁액10ml",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -457,26 +455,26 @@
           },
           "quantity": {
             "gt": "20",
-            "ext": "",
+            "ext": "10",
             "gtNorm": "20",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "0",
-            "ext": "",
+            "ext": "20",
             "gtNorm": "0",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "362200",
-            "ext": "",
+            "ext": "200",
             "gtNorm": "362200",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "200",
+            "status": "mismatch",
             "spurious": false
           },
           "expiryDate": {
@@ -497,10 +495,10 @@
           },
           "itemCode": {
             "gt": "035343",
-            "ext": "",
+            "ext": "035343",
             "gtNorm": "035343",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "035343",
+            "status": "match",
             "spurious": false
           }
         }
@@ -508,13 +506,13 @@
     ],
     "cellCounts": {
       "scored": 36,
-      "match": 10,
-      "mismatch": 10,
-      "ext_missing": 16,
+      "match": 12,
+      "mismatch": 14,
+      "ext_missing": 10,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.2777777777777778
+    "cellAccuracy": 0.3333333333333333
   },
   "buckets": {
     "defects": [
@@ -549,14 +547,6 @@
         "extNorm": "광주동구대인동31216",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
-      },
-      {
-        "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['4']"
       },
       {
         "location": "table",
@@ -703,23 +693,15 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row4:itemName",
-        "status": "ext_missing",
+        "location": "row7:itemName",
+        "status": "mismatch",
         "gtNorm": "에제트롤현탁액1014",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "4메제트롤현탁액1014",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.87)"
       },
       {
-        "location": "row4:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "메제트롤현탁액10ml",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:spec",
+        "location": "row7:spec",
         "status": "ext_missing",
         "gtNorm": "10ml*14",
         "extNorm": "",
@@ -727,31 +709,31 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row4:quantity",
-        "status": "ext_missing",
+        "location": "row7:quantity",
+        "status": "mismatch",
         "gtNorm": "20",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "10",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['unitPrice']"
       },
       {
-        "location": "row4:unitPrice",
-        "status": "ext_missing",
+        "location": "row7:unitPrice",
+        "status": "mismatch",
         "gtNorm": "0",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "20",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.67)"
       },
       {
-        "location": "row4:amount",
-        "status": "ext_missing",
+        "location": "row7:amount",
+        "status": "mismatch",
         "gtNorm": "362200",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "200",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.67)"
       },
       {
-        "location": "row4:expiryDate",
+        "location": "row7:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20280222",
         "extNorm": "",
@@ -759,26 +741,18 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row4:manufacturingNo",
+        "location": "row7:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "26A5046003",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "035343",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 13,
-      "structure": 19,
-      "layout": 0,
+      "recognition": 16,
+      "structure": 12,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

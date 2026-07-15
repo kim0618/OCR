@@ -179,27 +179,27 @@
     "rowCountExt": 4,
     "rowCountMatch": false,
     "matchedRowIdx": [
-      "4"
+      "2"
     ],
     "gtOnlyRowIdx": [
       "2"
     ],
     "extOnlyRowIdx": [
       "1",
-      "2",
+      "4",
       "4"
     ],
     "rows": [
       {
-        "rowIndex": "4",
+        "rowIndex": "2",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "대웅 졸레드론산주사액5MG/100ML",
-            "ext": "대웅 졸레드론산 주사액 5MG/100ML",
+            "ext": "대웅 졸레드론산 주사액",
             "gtNorm": "대웅졸레드론산주사액5mg100ml",
-            "extNorm": "대웅졸레드론산주사액5mg100ml",
-            "status": "match",
+            "extNorm": "대웅졸레드론산주사액",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
@@ -212,34 +212,34 @@
           },
           "spec": {
             "gt": "1V",
-            "ext": "",
+            "ext": "5MG/100ML",
             "gtNorm": "1v",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "5mg/100ml",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
             "gt": "10",
-            "ext": "",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "163259",
-            "ext": "",
+            "ext": "163259",
             "gtNorm": "163259",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "163259",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "1632590",
-            "ext": "163,259",
+            "ext": "1632590",
             "gtNorm": "1632590",
-            "extNorm": "163259",
-            "status": "mismatch",
+            "extNorm": "1632590",
+            "status": "match",
             "spurious": false
           },
           "manufacturingNo": {
@@ -334,13 +334,13 @@
     ],
     "cellCounts": {
       "scored": 16,
-      "match": 3,
-      "mismatch": 1,
-      "ext_missing": 12,
+      "match": 5,
+      "mismatch": 2,
+      "ext_missing": 9,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.1875
+    "cellAccuracy": 0.3125
   },
   "buckets": {
     "defects": [
@@ -406,42 +406,26 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '2', '4']"
+        "reason": "extractor invented rows ['1', '4', '4']"
       },
       {
-        "location": "row4:spec",
-        "status": "ext_missing",
-        "gtNorm": "1v",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:quantity",
-        "status": "ext_missing",
-        "gtNorm": "10",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "163259",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['amount']"
-      },
-      {
-        "location": "row4:amount",
+        "location": "row2:itemName",
         "status": "mismatch",
-        "gtNorm": "1632590",
-        "extNorm": "163259",
+        "gtNorm": "대웅졸레드론산주사액5mg100ml",
+        "extNorm": "대웅졸레드론산주사액",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
+        "reason": "char-level diff (sim=0.71)"
       },
       {
-        "location": "row4:manufacturingNo",
+        "location": "row2:spec",
+        "status": "mismatch",
+        "gtNorm": "1v",
+        "extNorm": "5mg/100ml",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
+      },
+      {
+        "location": "row2:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "641607231",
         "extNorm": "",
@@ -449,7 +433,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row4:insuranceCode",
+        "location": "row2:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "9301016",
         "extNorm": "",
@@ -514,9 +498,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 15,
-      "layout": 1,
+      "recognition": 6,
+      "structure": 13,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

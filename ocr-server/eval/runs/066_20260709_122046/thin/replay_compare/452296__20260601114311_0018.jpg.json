@@ -8,11 +8,11 @@
     "perField": {
       "totalAmount": {
         "gt": "373890",
-        "ext": "399,225",
+        "ext": "373890",
         "gtNorm": "373890",
-        "extNorm": "399225",
+        "extNorm": "373890",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -154,8 +154,8 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 8,
-      "mismatch": 3,
+      "match": 9,
+      "mismatch": 2,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -167,21 +167,21 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 8,
+      "matched": 9,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.7272727272727273
+    "fieldAccuracy": 0.8181818181818182
   },
   "table": {
     "alignMode": "content",
     "rowCountGt": 1,
-    "rowCountExt": 3,
+    "rowCountExt": 4,
     "rowCountMatch": false,
-    "matchedRowIdx": [],
-    "gtOnlyRowIdx": [
-      "1"
+    "matchedRowIdx": [
+      "4"
     ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
       "1",
       "2",
@@ -189,24 +189,23 @@
     ],
     "rows": [
       {
-        "rowIndex": "1",
+        "rowIndex": "4",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "삼아탄툼액(M)",
-            "ext": "",
+            "ext": "삼아탄툼액(M)",
             "gtNorm": "삼아탄툼액m",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "삼아탄툼액m",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "탄툼액100mL",
-            "ext": "",
+            "ext": "탄툼액100mL",
             "gtNorm": "탄툼액100ml",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "탄툼액100ml",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -219,34 +218,34 @@
           },
           "quantity": {
             "gt": "300",
-            "ext": "",
+            "ext": "300",
             "gtNorm": "300",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "300",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "1133",
-            "ext": "",
+            "ext": "1133",
             "gtNorm": "1133",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "1133",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "339900",
-            "ext": "",
+            "ext": "339900",
             "gtNorm": "339900",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "339900",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
             "gt": "01007187",
-            "ext": "",
+            "ext": "01007187",
             "gtNorm": "01007187",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "01007187",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -262,24 +261,16 @@
     ],
     "cellCounts": {
       "scored": 8,
-      "match": 0,
+      "match": 6,
       "mismatch": 0,
-      "ext_missing": 8,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.0
+    "cellAccuracy": 0.75
   },
   "buckets": {
     "defects": [
-      {
-        "location": "field:totalAmount",
-        "status": "mismatch",
-        "gtNorm": "373890",
-        "extNorm": "399225",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
@@ -298,14 +289,6 @@
       },
       {
         "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['1']"
-      },
-      {
-        "location": "table",
         "status": "rows_extra",
         "gtNorm": "",
         "extNorm": "",
@@ -313,23 +296,7 @@
         "reason": "extractor invented rows ['1', '2', '3']"
       },
       {
-        "location": "row1:itemName",
-        "status": "ext_missing",
-        "gtNorm": "삼아탄툼액m",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "탄툼액100ml",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:spec",
+        "location": "row4:spec",
         "status": "ext_missing",
         "gtNorm": "100ml",
         "extNorm": "",
@@ -337,39 +304,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "300",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "1133",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:amount",
-        "status": "ext_missing",
-        "gtNorm": "339900",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "01007187",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:insuranceCode",
+        "location": "row4:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "645700791",
         "extNorm": "",
@@ -378,8 +313,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 3,
-      "structure": 10,
+      "recognition": 2,
+      "structure": 3,
       "layout": 0,
       "preprocessing": 0
     },

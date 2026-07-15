@@ -411,10 +411,10 @@
           },
           "unitPrice": {
             "gt": "3703",
-            "ext": "3,703",
+            "ext": "74060",
             "gtNorm": "3703",
-            "extNorm": "3703",
-            "status": "match",
+            "extNorm": "74060",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
@@ -437,7 +437,7 @@
       },
       {
         "rowIndex": "5",
-        "rowMatch": true,
+        "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "카비드츄어블정 30T",
@@ -473,10 +473,10 @@
           },
           "unitPrice": {
             "gt": "1851",
-            "ext": "1,851",
+            "ext": "44424",
             "gtNorm": "1851",
-            "extNorm": "1851",
-            "status": "match",
+            "extNorm": "44424",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
@@ -775,10 +775,10 @@
           },
           "quantity": {
             "gt": "2",
-            "ext": "",
+            "ext": "2",
             "gtNorm": "2",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "2",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
@@ -810,13 +810,13 @@
     ],
     "cellCounts": {
       "scored": 69,
-      "match": 60,
-      "mismatch": 8,
-      "ext_missing": 1,
+      "match": 59,
+      "mismatch": 10,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.8695652173913043
+    "cellAccuracy": 0.855072463768116
   },
   "buckets": {
     "defects": [
@@ -893,12 +893,28 @@
         "reason": "char-level diff (sim=0.67)"
       },
       {
+        "location": "row4:unitPrice",
+        "status": "mismatch",
+        "gtNorm": "3703",
+        "extNorm": "74060",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
+      },
+      {
         "location": "row4:itemCode",
         "status": "mismatch",
         "gtNorm": "22006235",
         "extNorm": "22006509",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.75)"
+      },
+      {
+        "location": "row5:unitPrice",
+        "status": "mismatch",
+        "gtNorm": "1851",
+        "extNorm": "44424",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row6:itemName",
@@ -933,14 +949,6 @@
         "reason": "char-level diff (sim=0.88)"
       },
       {
-        "location": "row10:quantity",
-        "status": "ext_missing",
-        "gtNorm": "2",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row10:itemCode",
         "status": "mismatch",
         "gtNorm": "01014811",
@@ -950,8 +958,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 14,
-      "structure": 2,
+      "recognition": 16,
+      "structure": 1,
       "layout": 0,
       "preprocessing": 0
     },

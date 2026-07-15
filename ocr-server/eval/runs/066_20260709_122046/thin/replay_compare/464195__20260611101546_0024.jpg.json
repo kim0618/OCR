@@ -8,11 +8,11 @@
     "perField": {
       "totalAmount": {
         "gt": "3392235",
-        "ext": "9,462,875",
+        "ext": "3392235",
         "gtNorm": "3392235",
-        "extNorm": "9462875",
+        "extNorm": "3392235",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -154,8 +154,8 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 8,
-      "mismatch": 3,
+      "match": 9,
+      "mismatch": 2,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -167,20 +167,21 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 8,
+      "matched": 9,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.7272727272727273
+    "fieldAccuracy": 0.8181818181818182
   },
   "table": {
     "alignMode": "content",
     "rowCountGt": 2,
-    "rowCountExt": 3,
+    "rowCountExt": 4,
     "rowCountMatch": false,
-    "matchedRowIdx": [],
+    "matchedRowIdx": [
+      "4"
+    ],
     "gtOnlyRowIdx": [
-      "1",
       "2"
     ],
     "extOnlyRowIdx": [
@@ -190,9 +191,8 @@
     ],
     "rows": [
       {
-        "rowIndex": "1",
+        "rowIndex": "4",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "구구정5mg 30T (PTP)",
@@ -220,26 +220,26 @@
           },
           "quantity": {
             "gt": "150",
-            "ext": "",
+            "ext": "150",
             "gtNorm": "150",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "150",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "25410",
-            "ext": "",
+            "ext": "25410",
             "gtNorm": "25410",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "25410",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "3811500",
-            "ext": "",
+            "ext": "3811500",
             "gtNorm": "3811500",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "3811500",
+            "status": "match",
             "spurious": false
           },
           "expiryDate": {
@@ -342,24 +342,16 @@
     ],
     "cellCounts": {
       "scored": 17,
-      "match": 0,
+      "match": 3,
       "mismatch": 0,
-      "ext_missing": 17,
+      "ext_missing": 14,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.0
+    "cellAccuracy": 0.17647058823529413
   },
   "buckets": {
     "defects": [
-      {
-        "location": "field:totalAmount",
-        "status": "mismatch",
-        "gtNorm": "3392235",
-        "extNorm": "9462875",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
       {
         "location": "field:discountAmount",
         "status": "mismatch",
@@ -382,7 +374,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor missed rows ['1', '2']"
+        "reason": "extractor missed rows ['2']"
       },
       {
         "location": "table",
@@ -393,7 +385,7 @@
         "reason": "extractor invented rows ['1', '3', '5']"
       },
       {
-        "location": "row1:itemName",
+        "location": "row4:itemName",
         "status": "ext_missing",
         "gtNorm": "구구정5mg30tptp",
         "extNorm": "",
@@ -401,7 +393,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemNameMaster",
+        "location": "row4:itemNameMaster",
         "status": "ext_missing",
         "gtNorm": "구구정5mg(오남용)",
         "extNorm": "",
@@ -409,7 +401,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:spec",
+        "location": "row4:spec",
         "status": "ext_missing",
         "gtNorm": "30t",
         "extNorm": "",
@@ -417,31 +409,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "150",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "25410",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:amount",
-        "status": "ext_missing",
-        "gtNorm": "3811500",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:expiryDate",
+        "location": "row4:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20300220",
         "extNorm": "",
@@ -449,7 +417,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:manufacturingNo",
+        "location": "row4:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "093926011",
         "extNorm": "",
@@ -457,7 +425,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemCode",
+        "location": "row4:itemCode",
         "status": "ext_missing",
         "gtNorm": "07001626",
         "extNorm": "",
@@ -465,7 +433,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:insuranceCode",
+        "location": "row4:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "643507080",
         "extNorm": "",
@@ -530,8 +498,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 2,
-      "structure": 20,
+      "recognition": 1,
+      "structure": 17,
       "layout": 0,
       "preprocessing": 0
     },
