@@ -153,6 +153,16 @@ TESTSETS: dict[str, dict] = {
         gt_aggregate=os.path.join(HERE, "data", "invoice_war", "ground_truth_2606.json"),
         images_nested=True,
     ),
+    # 리키잉 18개월(2501~2606) 대량 run. GT=ground_truth_rekey.json(93,708, 월접두어 <월>/<docId>/<파일>),
+    # 이미지=prep_rekey_images.py 변환본을 images_rekey/<월>/<docId>/<파일>.jpg 로. invoice_thin(6월)은 불변.
+    "invoice_rekey": _testset(
+        os.path.join(HERE, "data", "invoice_war", "images_rekey"),
+        kind="thin",
+        run_mode="live",
+        expected={},
+        gt_aggregate=os.path.join(HERE, "data", "invoice_war", "ground_truth_rekey.json"),
+        images_nested=True,
+    ),
 }
 DEFAULT_TESTSET = "invoice_study"
 
