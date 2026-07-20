@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "145800",
-        "ext": "1,458,000",
+        "ext": "145800",
         "gtNorm": "145800",
-        "extNorm": "1458000",
+        "extNorm": "145800",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplyAmount": {
         "gt": "1458000",
-        "ext": "",
+        "ext": "1458000",
         "gtNorm": "1458000",
-        "extNorm": "",
+        "extNorm": "1458000",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -154,9 +154,9 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 6,
-      "mismatch": 4,
-      "ext_missing": 1,
+      "match": 8,
+      "mismatch": 3,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 6,
+      "matched": 8,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.5454545454545454
+    "fieldAccuracy": 0.7272727272727273
   },
   "table": {
     "alignMode": "content",
@@ -284,28 +284,12 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:taxAmount",
-        "status": "mismatch",
-        "gtNorm": "145800",
-        "extNorm": "1458000",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
-      },
-      {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "건일제약",
         "extNorm": "종료건일제약",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.80)"
-      },
-      {
-        "location": "field:supplyAmount",
-        "status": "ext_missing",
-        "gtNorm": "1458000",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:taxAmount']"
       },
       {
         "location": "field:buyerCompany",
@@ -357,8 +341,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 4,
+      "recognition": 4,
+      "structure": 3,
       "layout": 0,
       "preprocessing": 0
     },
@@ -378,6 +362,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.091
+    "fieldMissRate": 0.0
   }
 }

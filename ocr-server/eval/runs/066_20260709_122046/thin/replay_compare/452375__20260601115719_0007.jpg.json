@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "114546",
-        "ext": "1,145,454",
+        "ext": "114546",
         "gtNorm": "114546",
-        "extNorm": "1145454",
+        "extNorm": "114546",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -125,11 +125,11 @@
       },
       "supplyAmount": {
         "gt": "1145454",
-        "ext": "",
+        "ext": "1145454",
         "gtNorm": "1145454",
-        "extNorm": "",
+        "extNorm": "1145454",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 7,
-      "mismatch": 4,
-      "ext_missing": 1,
+      "match": 9,
+      "mismatch": 3,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 7,
+      "matched": 9,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.5833333333333334
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -289,28 +289,12 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:taxAmount",
-        "status": "mismatch",
-        "gtNorm": "114546",
-        "extNorm": "1145454",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.77)"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울강남구학동로170논현동3층306호논현동베터라이프빌딩",
         "extNorm": "서울강남구도산대로66길14청담동b01호",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplyAmount",
-        "status": "ext_missing",
-        "gtNorm": "1145454",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:taxAmount']"
       },
       {
         "location": "field:buyerCompany",
@@ -346,8 +330,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 4,
-      "structure": 3,
+      "recognition": 3,
+      "structure": 2,
       "layout": 0,
       "preprocessing": 0
     },
@@ -367,6 +351,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

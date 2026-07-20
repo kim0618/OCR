@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "7200",
-        "ext": "",
+        "ext": "7200",
         "gtNorm": "7200",
-        "extNorm": "",
+        "extNorm": "7200",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -125,11 +125,11 @@
       },
       "supplyAmount": {
         "gt": "72000",
-        "ext": "",
+        "ext": "72000",
         "gtNorm": "72000",
-        "extNorm": "",
+        "extNorm": "72000",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 7,
+      "match": 9,
       "mismatch": 3,
-      "ext_missing": 2,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 7,
+      "matched": 9,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.5833333333333334
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -210,28 +210,12 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:taxAmount",
-        "status": "ext_missing",
-        "gtNorm": "7200",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울동작구보라매로5길51신대방동롯데타워201호신대방동",
         "extNorm": "충남아산시선장면서부남로319마더스제약반품실t0414248511",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplyAmount",
-        "status": "ext_missing",
-        "gtNorm": "72000",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:buyerCompany",
@@ -260,7 +244,7 @@
     ],
     "bucketTally": {
       "recognition": 3,
-      "structure": 3,
+      "structure": 1,
       "layout": 0,
       "preprocessing": 0
     },
@@ -280,6 +264,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.167
+    "fieldMissRate": 0.0
   }
 }

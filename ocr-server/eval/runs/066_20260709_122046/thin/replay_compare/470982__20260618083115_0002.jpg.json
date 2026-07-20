@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "100000",
-        "ext": "",
+        "ext": "100000",
         "gtNorm": "100000",
-        "extNorm": "",
+        "extNorm": "100000",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -125,11 +125,11 @@
       },
       "supplyAmount": {
         "gt": "1000000",
-        "ext": "",
+        "ext": "1000000",
         "gtNorm": "1000000",
-        "extNorm": "",
+        "extNorm": "1000000",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 7,
+      "match": 9,
       "mismatch": 3,
-      "ext_missing": 2,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 7,
+      "matched": 9,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.5833333333333334
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -289,14 +289,6 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:taxAmount",
-        "status": "ext_missing",
-        "gtNorm": "100000",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
-      },
-      {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "대한약품",
@@ -311,14 +303,6 @@
         "extNorm": "서울특별시영등포구선유로45길3양평동4가",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplyAmount",
-        "status": "ext_missing",
-        "gtNorm": "1000000",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:buyerCompany",
@@ -363,7 +347,7 @@
     ],
     "bucketTally": {
       "recognition": 5,
-      "structure": 4,
+      "structure": 2,
       "layout": 0,
       "preprocessing": 0
     },
@@ -383,6 +367,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.167
+    "fieldMissRate": 0.0
   }
 }

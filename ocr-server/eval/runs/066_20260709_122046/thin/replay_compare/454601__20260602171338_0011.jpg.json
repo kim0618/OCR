@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "7730",
-        "ext": "",
+        "ext": "7730",
         "gtNorm": "7730",
-        "extNorm": "",
+        "extNorm": "7730",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -125,11 +125,11 @@
       },
       "supplyAmount": {
         "gt": "77309",
-        "ext": "",
+        "ext": "77309",
         "gtNorm": "77309",
-        "extNorm": "",
+        "extNorm": "77309",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
+      "match": 10,
       "mismatch": 2,
-      "ext_missing": 2,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 10,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.8333333333333334
   },
   "table": {
     "alignMode": "content",
@@ -289,28 +289,12 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:taxAmount",
-        "status": "ext_missing",
-        "gtNorm": "7730",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울서초구명달로92층방배동방배빌딩",
         "extNorm": "서울서초구명달로9방배동2층",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.75)"
-      },
-      {
-        "location": "field:supplyAmount",
-        "status": "ext_missing",
-        "gtNorm": "77309",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:buyerAddress",
@@ -363,7 +347,7 @@
     ],
     "bucketTally": {
       "recognition": 2,
-      "structure": 7,
+      "structure": 5,
       "layout": 0,
       "preprocessing": 0
     },
@@ -383,6 +367,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.167
+    "fieldMissRate": 0.0
   }
 }

@@ -8,11 +8,11 @@
     "perField": {
       "totalAmount": {
         "gt": "54552261",
-        "ext": "54,552,261",
+        "ext": "4164480",
         "gtNorm": "54552261",
-        "extNorm": "54552261",
+        "extNorm": "4164480",
         "type": "amount",
-        "status": "match",
+        "status": "mismatch",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -21,9 +21,9 @@
       },
       "taxAmount": {
         "gt": "4164480",
-        "ext": "387,781",
+        "ext": "378589",
         "gtNorm": "4164480",
-        "extNorm": "387781",
+        "extNorm": "378589",
         "type": "amount",
         "status": "mismatch",
         "edited": false,
@@ -112,9 +112,9 @@
       },
       "supplyAmount": {
         "gt": "50387781",
-        "ext": "4,164,480",
+        "ext": "3785891",
         "gtNorm": "50387781",
-        "extNorm": "4164480",
+        "extNorm": "3785891",
         "type": "amount",
         "status": "mismatch",
         "edited": false,
@@ -154,8 +154,8 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 5,
-      "mismatch": 6,
+      "match": 4,
+      "mismatch": 7,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 5,
+      "matched": 4,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.45454545454545453
+    "fieldAccuracy": 0.36363636363636365
   },
   "table": {
     "alignMode": "content",
@@ -1039,12 +1039,20 @@
   "buckets": {
     "defects": [
       {
+        "location": "field:totalAmount",
+        "status": "mismatch",
+        "gtNorm": "54552261",
+        "extNorm": "4164480",
+        "bucket": "structure",
+        "reason": "ext value is gt's ['field:taxAmount']"
+      },
+      {
         "location": "field:taxAmount",
         "status": "mismatch",
         "gtNorm": "4164480",
-        "extNorm": "387781",
+        "extNorm": "378589",
         "bucket": "structure",
-        "reason": "gt value present at ['field:supplyAmount']"
+        "reason": "gt value present at ['field:totalAmount']"
       },
       {
         "location": "field:supplierCompany",
@@ -1066,9 +1074,9 @@
         "location": "field:supplyAmount",
         "status": "mismatch",
         "gtNorm": "50387781",
-        "extNorm": "4164480",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['field:taxAmount']"
+        "extNorm": "3785891",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.53)"
       },
       {
         "location": "field:buyerCompany",
@@ -1624,7 +1632,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 23,
+      "recognition": 24,
       "structure": 47,
       "layout": 3,
       "preprocessing": 0

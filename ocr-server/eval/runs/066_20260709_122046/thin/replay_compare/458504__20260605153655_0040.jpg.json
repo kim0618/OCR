@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "84700",
-        "ext": "",
+        "ext": "84700",
         "gtNorm": "84700",
-        "extNorm": "",
+        "extNorm": "84700",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -125,11 +125,11 @@
       },
       "supplyAmount": {
         "gt": "847000",
-        "ext": "847.00",
+        "ext": "847000",
         "gtNorm": "847000",
-        "extNorm": "84700",
+        "extNorm": "847000",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 7,
-      "mismatch": 4,
-      "ext_missing": 1,
+      "match": 9,
+      "mismatch": 3,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 7,
+      "matched": 9,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.5833333333333334
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -289,28 +289,12 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:taxAmount",
-        "status": "ext_missing",
-        "gtNorm": "84700",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:supplyAmount', 'row1:amount']"
-      },
-      {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "경동제약일반",
         "extNorm": "경동제약전문",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.67)"
-      },
-      {
-        "location": "field:supplyAmount",
-        "status": "mismatch",
-        "gtNorm": "847000",
-        "extNorm": "84700",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.91)"
       },
       {
         "location": "field:buyerCompany",
@@ -370,8 +354,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 6,
-      "structure": 3,
+      "recognition": 5,
+      "structure": 2,
       "layout": 1,
       "preprocessing": 0
     },
@@ -391,6 +375,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

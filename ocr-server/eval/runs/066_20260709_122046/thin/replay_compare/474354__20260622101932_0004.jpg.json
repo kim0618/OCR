@@ -8,9 +8,9 @@
     "perField": {
       "totalAmount": {
         "gt": "145000",
-        "ext": "643,500,801",
+        "ext": "129050",
         "gtNorm": "145000",
-        "extNorm": "643500801",
+        "extNorm": "129050",
         "type": "amount",
         "status": "mismatch",
         "edited": false,
@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "11731",
-        "ext": "129,050",
+        "ext": "11731",
         "gtNorm": "11731",
-        "extNorm": "129050",
+        "extNorm": "11731",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -125,11 +125,11 @@
       },
       "supplyAmount": {
         "gt": "133269",
-        "ext": "",
+        "ext": "117319",
         "gtNorm": "133269",
-        "extNorm": "",
+        "extNorm": "117319",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 6,
+      "match": 7,
       "mismatch": 4,
-      "ext_missing": 2,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 6,
+      "matched": 7,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.5
+    "fieldAccuracy": 0.5833333333333334
   },
   "table": {
     "alignMode": "content",
@@ -365,17 +365,9 @@
         "location": "field:totalAmount",
         "status": "mismatch",
         "gtNorm": "145000",
-        "extNorm": "643500801",
+        "extNorm": "129050",
         "bucket": "structure",
         "reason": "gt value present at ['row1:amount']"
-      },
-      {
-        "location": "field:taxAmount",
-        "status": "mismatch",
-        "gtNorm": "11731",
-        "extNorm": "129050",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
       },
       {
         "location": "field:discountAmount",
@@ -395,11 +387,11 @@
       },
       {
         "location": "field:supplyAmount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "133269",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "extNorm": "117319",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "field:buyerAddress",
@@ -532,7 +524,7 @@
     ],
     "bucketTally": {
       "recognition": 6,
-      "structure": 15,
+      "structure": 14,
       "layout": 0,
       "preprocessing": 0
     },
@@ -552,6 +544,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.167
+    "fieldMissRate": 0.083
   }
 }

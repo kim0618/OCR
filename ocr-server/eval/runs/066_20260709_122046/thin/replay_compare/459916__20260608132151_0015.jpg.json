@@ -8,9 +8,9 @@
     "perField": {
       "totalAmount": {
         "gt": "9576967",
-        "ext": "8,706,336",
+        "ext": "74448",
         "gtNorm": "9576967",
-        "extNorm": "8706336",
+        "extNorm": "74448",
         "type": "amount",
         "status": "mismatch",
         "edited": false,
@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "870631",
-        "ext": "870,631",
+        "ext": "6768",
         "gtNorm": "870631",
-        "extNorm": "870631",
+        "extNorm": "6768",
         "type": "amount",
-        "status": "match",
+        "status": "mismatch",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 9,
-      "mismatch": 3,
+      "match": 8,
+      "mismatch": 4,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 9,
+      "matched": 8,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.75
+    "fieldAccuracy": 0.6666666666666666
   },
   "table": {
     "alignMode": "content",
@@ -1078,17 +1078,25 @@
         "location": "field:totalAmount",
         "status": "mismatch",
         "gtNorm": "9576967",
-        "extNorm": "8706336",
+        "extNorm": "74448",
         "bucket": "structure",
-        "reason": "ext value is gt's ['field:supplyAmount']"
+        "reason": "ext value is gt's ['row1:amount']"
+      },
+      {
+        "location": "field:taxAmount",
+        "status": "mismatch",
+        "gtNorm": "870631",
+        "extNorm": "6768",
+        "bucket": "structure",
+        "reason": "ext value is gt's ['row1:unitPrice']"
       },
       {
         "location": "field:supplyAmount",
         "status": "mismatch",
         "gtNorm": "8706336",
         "extNorm": "67680",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:totalAmount']"
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -1500,7 +1508,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 29,
+      "recognition": 30,
       "structure": 22,
       "layout": 2,
       "preprocessing": 0

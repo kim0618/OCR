@@ -193,14 +193,12 @@
     "rowCountMatch": false,
     "matchedRowIdx": [
       "4",
+      "2",
       "5"
     ],
-    "gtOnlyRowIdx": [
-      "2"
-    ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
       "1",
-      "2",
       "3"
     ],
     "rows": [
@@ -267,6 +265,68 @@
         }
       },
       {
+        "rowIndex": "2",
+        "rowMatch": false,
+        "cells": {
+          "itemName": {
+            "gt": "신신파스-Rx(소형42매)",
+            "ext": "신신파스-Rx(소형42매)",
+            "gtNorm": "신신파스rx소형42매",
+            "extNorm": "신신파스rx소형42매",
+            "status": "match",
+            "spurious": false
+          },
+          "itemNameMaster": {
+            "gt": "신신파스아렉스(소형42매/4.7cm*7cm)",
+            "ext": "신신파스에스(소형)",
+            "gtNorm": "신신파스아렉스(소형42매/4.7cm*7cm)",
+            "extNorm": "신신파스에스(소형)",
+            "status": "mismatch",
+            "spurious": false
+          },
+          "spec": {
+            "gt": "14매*3(4.7*7cm",
+            "ext": "",
+            "gtNorm": "14매*3(4.7*7cm",
+            "extNorm": "",
+            "status": "ext_missing",
+            "spurious": false
+          },
+          "quantity": {
+            "gt": "420",
+            "ext": "140H=3(4.7*76m)V 420",
+            "gtNorm": "420",
+            "extNorm": "14034776420",
+            "status": "mismatch",
+            "spurious": false
+          },
+          "unitPrice": {
+            "gt": "5140",
+            "ext": "5,140",
+            "gtNorm": "5140",
+            "extNorm": "5140",
+            "status": "match",
+            "spurious": false
+          },
+          "amount": {
+            "gt": "2158800",
+            "ext": "215,880",
+            "gtNorm": "2158800",
+            "extNorm": "215880",
+            "status": "mismatch",
+            "spurious": false
+          },
+          "itemCode": {
+            "gt": "05006018",
+            "ext": "04000659",
+            "gtNorm": "05006018",
+            "extNorm": "04000659",
+            "status": "mismatch",
+            "spurious": false
+          }
+        }
+      },
+      {
         "rowIndex": "5",
         "rowMatch": false,
         "cells": {
@@ -327,80 +387,17 @@
             "spurious": false
           }
         }
-      },
-      {
-        "rowIndex": "2",
-        "rowMatch": false,
-        "missingGtRow": true,
-        "cells": {
-          "itemName": {
-            "gt": "신신파스-Rx(소형42매)",
-            "ext": "",
-            "gtNorm": "신신파스rx소형42매",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "itemNameMaster": {
-            "gt": "신신파스아렉스(소형42매/4.7cm*7cm)",
-            "ext": "",
-            "gtNorm": "신신파스아렉스(소형42매/4.7cm*7cm)",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "spec": {
-            "gt": "14매*3(4.7*7cm",
-            "ext": "",
-            "gtNorm": "14매*3(4.7*7cm",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "quantity": {
-            "gt": "420",
-            "ext": "",
-            "gtNorm": "420",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "unitPrice": {
-            "gt": "5140",
-            "ext": "",
-            "gtNorm": "5140",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "amount": {
-            "gt": "2158800",
-            "ext": "",
-            "gtNorm": "2158800",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          },
-          "itemCode": {
-            "gt": "05006018",
-            "ext": "",
-            "gtNorm": "05006018",
-            "extNorm": "",
-            "status": "ext_missing",
-            "spurious": false
-          }
-        }
       }
     ],
     "cellCounts": {
       "scored": 21,
-      "match": 2,
-      "mismatch": 4,
-      "ext_missing": 15,
+      "match": 4,
+      "mismatch": 8,
+      "ext_missing": 9,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.09523809523809523
+    "cellAccuracy": 0.19047619047619047
   },
   "buckets": {
     "defects": [
@@ -430,19 +427,11 @@
       },
       {
         "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['2']"
-      },
-      {
-        "location": "table",
         "status": "rows_extra",
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '2', '3']"
+        "reason": "extractor invented rows ['1', '3']"
       },
       {
         "location": "row4:itemName",
@@ -493,6 +482,46 @@
         "reason": "gt cell absent in extracted row"
       },
       {
+        "location": "row2:itemNameMaster",
+        "status": "mismatch",
+        "gtNorm": "신신파스아렉스(소형42매/4.7cm*7cm)",
+        "extNorm": "신신파스에스(소형)",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.53)"
+      },
+      {
+        "location": "row2:spec",
+        "status": "ext_missing",
+        "gtNorm": "14매*3(4.7*7cm",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row2:quantity",
+        "status": "mismatch",
+        "gtNorm": "420",
+        "extNorm": "14034776420",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
+      },
+      {
+        "location": "row2:amount",
+        "status": "mismatch",
+        "gtNorm": "2158800",
+        "extNorm": "215880",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.92)"
+      },
+      {
+        "location": "row2:itemCode",
+        "status": "mismatch",
+        "gtNorm": "05006018",
+        "extNorm": "04000659",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.50)"
+      },
+      {
         "location": "row5:itemName",
         "status": "ext_missing",
         "gtNorm": "신형신신파스rx10매",
@@ -539,67 +568,11 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:itemName",
-        "status": "ext_missing",
-        "gtNorm": "신신파스rx소형42매",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "신신파스아렉스(소형42매/4.7cm*7cm)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:spec",
-        "status": "ext_missing",
-        "gtNorm": "14매*3(4.7*7cm",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:quantity",
-        "status": "ext_missing",
-        "gtNorm": "420",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "5140",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:amount",
-        "status": "ext_missing",
-        "gtNorm": "2158800",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "05006018",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 7,
-      "structure": 17,
+      "recognition": 11,
+      "structure": 10,
       "layout": 0,
       "preprocessing": 0
     },

@@ -194,14 +194,12 @@
     "matchedRowIdx": [
       "1",
       "2",
-      "3"
-    ],
-    "gtOnlyRowIdx": [
-      "4"
-    ],
-    "extOnlyRowIdx": [
-      "4",
+      "3",
       "6"
+    ],
+    "gtOnlyRowIdx": [],
+    "extOnlyRowIdx": [
+      "4"
     ],
     "rows": [
       {
@@ -463,32 +461,31 @@
         }
       },
       {
-        "rowIndex": "4",
+        "rowIndex": "6",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "피타로틴정4mg 30T",
-            "ext": "",
+            "ext": "피타로틴정4mg30T",
             "gtNorm": "피타로틴정4mg30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "피타로틴정4mg30t",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "피타로틴정4mg(한국메딕스)",
-            "ext": "",
+            "ext": "피타로틴정4mg(한국메딕스)",
             "gtNorm": "피타로틴정4mg(한국메딕스)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "피타로틴정4mg(한국메딕스)",
+            "status": "match",
             "spurious": false
           },
           "spec": {
             "gt": "4mg 30T",
-            "ext": "",
+            "ext": "A",
             "gtNorm": "4mg 30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "a",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -509,18 +506,18 @@
           },
           "amount": {
             "gt": "227070",
-            "ext": "",
+            "ext": "22,707",
             "gtNorm": "227070",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "22707",
+            "status": "mismatch",
             "spurious": false
           },
           "expiryDate": {
             "gt": "20270903",
-            "ext": "",
+            "ext": "20270903",
             "gtNorm": "20270903",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20270903",
+            "status": "match",
             "spurious": false
           },
           "manufacturingNo": {
@@ -533,10 +530,10 @@
           },
           "itemCode": {
             "gt": "05004383",
-            "ext": "",
+            "ext": "05004384",
             "gtNorm": "05004383",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "05004384",
+            "status": "mismatch",
             "spurious": false
           },
           "insuranceCode": {
@@ -552,13 +549,13 @@
     ],
     "cellCounts": {
       "scored": 40,
-      "match": 16,
-      "mismatch": 5,
-      "ext_missing": 19,
+      "match": 19,
+      "mismatch": 8,
+      "ext_missing": 13,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4
+    "cellAccuracy": 0.475
   },
   "buckets": {
     "defects": [
@@ -576,7 +573,7 @@
         "gtNorm": "854621",
         "extNorm": "22707",
         "bucket": "structure",
-        "reason": "ext value is gt's ['row4:unitPrice']"
+        "reason": "ext value is gt's ['row6:unitPrice']"
       },
       {
         "location": "field:supplierAddress",
@@ -592,7 +589,7 @@
         "gtNorm": "8546239",
         "extNorm": "227070",
         "bucket": "structure",
-        "reason": "ext value is gt's ['row4:amount']"
+        "reason": "ext value is gt's ['row6:amount']"
       },
       {
         "location": "field:buyerCompany",
@@ -612,19 +609,11 @@
       },
       {
         "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['4']"
-      },
-      {
-        "location": "table",
         "status": "rows_extra",
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['4', '6']"
+        "reason": "extractor invented rows ['4']"
       },
       {
         "location": "row1:itemName",
@@ -739,31 +728,15 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row4:itemName",
-        "status": "ext_missing",
-        "gtNorm": "피타로틴정4mg30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "피타로틴정4mg(한국메딕스)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:spec",
-        "status": "ext_missing",
+        "location": "row6:spec",
+        "status": "mismatch",
         "gtNorm": "4mg 30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "a",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
-        "location": "row4:quantity",
+        "location": "row6:quantity",
         "status": "ext_missing",
         "gtNorm": "10",
         "extNorm": "",
@@ -771,31 +744,23 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row4:unitPrice",
+        "location": "row6:unitPrice",
         "status": "ext_missing",
         "gtNorm": "22707",
         "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['amount']"
       },
       {
-        "location": "row4:amount",
-        "status": "ext_missing",
+        "location": "row6:amount",
+        "status": "mismatch",
         "gtNorm": "227070",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "22707",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.91)"
       },
       {
-        "location": "row4:expiryDate",
-        "status": "ext_missing",
-        "gtNorm": "20270903",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:manufacturingNo",
+        "location": "row6:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "CDBE014A",
         "extNorm": "",
@@ -803,15 +768,15 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row4:itemCode",
-        "status": "ext_missing",
+        "location": "row6:itemCode",
+        "status": "mismatch",
         "gtNorm": "05004383",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "05004384",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.88)"
       },
       {
-        "location": "row4:insuranceCode",
+        "location": "row6:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "693902300",
         "extNorm": "",
@@ -820,9 +785,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 9,
-      "structure": 21,
-      "layout": 2,
+      "recognition": 12,
+      "structure": 13,
+      "layout": 3,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

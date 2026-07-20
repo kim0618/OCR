@@ -8,11 +8,11 @@
     "perField": {
       "totalAmount": {
         "gt": "3129713",
-        "ext": "662,503,170",
+        "ext": "3129713",
         "gtNorm": "3129713",
-        "extNorm": "662503170",
+        "extNorm": "3129713",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "284520",
-        "ext": "",
+        "ext": "284520",
         "gtNorm": "284520",
-        "extNorm": "",
+        "extNorm": "284520",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -125,11 +125,11 @@
       },
       "supplyAmount": {
         "gt": "2845193",
-        "ext": "284,520",
+        "ext": "2845193",
         "gtNorm": "2845193",
-        "extNorm": "284520",
+        "extNorm": "2845193",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 7,
-      "mismatch": 4,
-      "ext_missing": 1,
+      "match": 10,
+      "mismatch": 2,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 7,
+      "matched": 10,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.5833333333333334
+    "fieldAccuracy": 0.8333333333333334
   },
   "table": {
     "alignMode": "content",
@@ -390,9 +390,9 @@
         "cells": {
           "itemName": {
             "gt": "몇인제약(프레갈캡슐75mg",
-            "ext": "3 651903610 명인제약( 월 프레갈캡슐75mg 30캡슐 5 11,171.40 55,857 25003 ",
+            "ext": "프레갈캡슐75mg",
             "gtNorm": "몇인제약프레갈캡슐75mg",
-            "extNorm": "3651903610명인제약월프레갈캡슐75mg30캡슐511171405585725003",
+            "extNorm": "프레갈캡슐75mg",
             "status": "mismatch",
             "spurious": false
           },
@@ -562,9 +562,9 @@
         "cells": {
           "itemName": {
             "gt": "확인제약(뉴렙톨캡슐100mg)",
-            "ext": "6 657200060 환인제약( 뉴렙돌캡슬100mg 300캡슬 5 50,688.00 253,440 AQ10A",
+            "ext": "뉴렙돌캡슬100mg",
             "gtNorm": "확인제약뉴렙톨캡슐100mg",
-            "extNorm": "6657200060환인제약뉴렙돌캡슬100mg300캡슬55068800253440aq10a",
+            "extNorm": "뉴렙돌캡슬100mg",
             "status": "mismatch",
             "spurious": false
           },
@@ -914,30 +914,6 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:totalAmount",
-        "status": "mismatch",
-        "gtNorm": "3129713",
-        "extNorm": "662503170",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['row12:insuranceCode']"
-      },
-      {
-        "location": "field:taxAmount",
-        "status": "ext_missing",
-        "gtNorm": "284520",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:supplyAmount']"
-      },
-      {
-        "location": "field:supplyAmount",
-        "status": "mismatch",
-        "gtNorm": "2845193",
-        "extNorm": "284520",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.62)"
-      },
-      {
         "location": "field:buyerCompany",
         "status": "mismatch",
         "gtNorm": "백제약품원주지점",
@@ -1077,9 +1053,9 @@
         "location": "row2:itemName",
         "status": "mismatch",
         "gtNorm": "몇인제약프레갈캡슐75mg",
-        "extNorm": "3651903610명인제약월프레갈캡슐75mg30캡슐511171405585725003",
+        "extNorm": "프레갈캡슐75mg",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.82)"
       },
       {
         "location": "row2:spec",
@@ -1165,9 +1141,9 @@
         "location": "row5:itemName",
         "status": "mismatch",
         "gtNorm": "확인제약뉴렙톨캡슐100mg",
-        "extNorm": "6657200060환인제약뉴렙돌캡슬100mg300캡슬55068800253440aq10a",
+        "extNorm": "뉴렙돌캡슬100mg",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "row5:spec",
@@ -1363,8 +1339,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 28,
-      "structure": 28,
+      "recognition": 27,
+      "structure": 26,
       "layout": 0,
       "preprocessing": 0
     },
@@ -1384,6 +1360,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

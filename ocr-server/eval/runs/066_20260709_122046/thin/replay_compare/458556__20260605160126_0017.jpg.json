@@ -191,97 +191,94 @@
     "rowCountGt": 1,
     "rowCountExt": 1,
     "rowCountMatch": true,
-    "matchedRowIdx": [],
-    "gtOnlyRowIdx": [
+    "matchedRowIdx": [
       "1"
     ],
-    "extOnlyRowIdx": [
-      "1"
-    ],
+    "gtOnlyRowIdx": [],
+    "extOnlyRowIdx": [],
     "rows": [
       {
         "rowIndex": "1",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "프로이반주",
-            "ext": "",
+            "ext": "프로이반주",
             "gtNorm": "프로이반주",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "프로이반주",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "프로이반주",
-            "ext": "",
+            "ext": "프로이반주",
             "gtNorm": "프로이반주",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "프로이반주",
+            "status": "match",
             "spurious": false
           },
           "spec": {
             "gt": "1EA",
-            "ext": "",
+            "ext": "1EA",
             "gtNorm": "1ea",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "1ea",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
             "gt": "20",
-            "ext": "",
+            "ext": "20",
             "gtNorm": "20",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "43339",
-            "ext": "",
+            "ext": "3,9",
             "gtNorm": "43339",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "39",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "866782",
-            "ext": "",
+            "ext": "953,460",
             "gtNorm": "866782",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "953460",
+            "status": "mismatch",
             "spurious": false
           },
           "expiryDate": {
             "gt": "20270819",
-            "ext": "",
+            "ext": "2027-08-19",
             "gtNorm": "20270819",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20270819",
+            "status": "match",
             "spurious": false
           },
           "manufacturingNo": {
             "gt": "AR01AA",
-            "ext": "",
+            "ext": "AROIAA",
             "gtNorm": "AR01AA",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "AROIAA",
+            "status": "mismatch",
             "spurious": false
           },
           "itemCode": {
             "gt": "04001056",
-            "ext": "",
+            "ext": "04001056",
             "gtNorm": "04001056",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "04001056",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "657202481",
-            "ext": "",
+            "ext": "657202481 프로이반주",
             "gtNorm": "657202481",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "657202481프로이반주",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -289,13 +286,13 @@
     ],
     "cellCounts": {
       "scored": 10,
-      "match": 0,
-      "mismatch": 0,
-      "ext_missing": 10,
+      "match": 6,
+      "mismatch": 4,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.0
+    "cellAccuracy": 0.6
   },
   "buckets": {
     "defects": [
@@ -324,105 +321,41 @@
         "reason": "char-level diff (sim=0.53)"
       },
       {
-        "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['1']"
-      },
-      {
-        "location": "table",
-        "status": "rows_extra",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor invented rows ['1']"
-      },
-      {
-        "location": "row1:itemName",
-        "status": "ext_missing",
-        "gtNorm": "프로이반주",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "프로이반주",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "1ea",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "20",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row1:unitPrice",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "43339",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "39",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.57)"
       },
       {
         "location": "row1:amount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "866782",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:expiryDate",
-        "status": "ext_missing",
-        "gtNorm": "20270819",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "953460",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:manufacturingNo",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "AR01AA",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "04001056",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "AROIAA",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "row1:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "657202481",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "657202481프로이반주",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.78)"
       }
     ],
     "bucketTally": {
-      "recognition": 2,
-      "structure": 13,
+      "recognition": 6,
+      "structure": 1,
       "layout": 0,
       "preprocessing": 0
     },

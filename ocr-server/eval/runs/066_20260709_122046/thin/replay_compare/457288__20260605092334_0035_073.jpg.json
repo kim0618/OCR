@@ -178,34 +178,32 @@
     "rowCountGt": 1,
     "rowCountExt": 2,
     "rowCountMatch": false,
-    "matchedRowIdx": [],
-    "gtOnlyRowIdx": [
+    "matchedRowIdx": [
       "1"
     ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "1",
       "2"
     ],
     "rows": [
       {
         "rowIndex": "1",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "메가비타민 C3000크리스탈",
-            "ext": "",
+            "ext": "메가비타민C3000크리스탈",
             "gtNorm": "메가비타민c3000크리스탈",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "메가비타민c3000크리스탈",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "메가비타민C3000(크리스탈)",
-            "ext": "",
+            "ext": "메가비타민C3000(크리스탈)",
             "gtNorm": "메가비타민c3000(크리스탈)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "메가비타민c3000(크리스탈)",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -226,42 +224,42 @@
           },
           "unitPrice": {
             "gt": "19118",
-            "ext": "",
+            "ext": "60포 19,118.00",
             "gtNorm": "19118",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "601911800",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "917664",
-            "ext": "",
+            "ext": "19,118",
             "gtNorm": "917664",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "19118",
+            "status": "mismatch",
             "spurious": false
           },
           "expiryDate": {
             "gt": "20290513",
-            "ext": "",
+            "ext": "20290513",
             "gtNorm": "20290513",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20290513",
+            "status": "match",
             "spurious": false
           },
           "manufacturingNo": {
             "gt": "26026",
-            "ext": "",
+            "ext": "917.664 26026",
             "gtNorm": "26026",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "91766426026",
+            "status": "mismatch",
             "spurious": false
           },
           "itemCode": {
             "gt": "01001994",
-            "ext": "",
+            "ext": "01001994",
             "gtNorm": "01001994",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "01001994",
+            "status": "match",
             "spurious": false
           }
         }
@@ -269,13 +267,13 @@
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 0,
-      "mismatch": 0,
-      "ext_missing": 9,
+      "match": 4,
+      "mismatch": 3,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.0
+    "cellAccuracy": 0.4444444444444444
   },
   "buckets": {
     "defects": [
@@ -313,35 +311,11 @@
       },
       {
         "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['1']"
-      },
-      {
-        "location": "table",
         "status": "rows_extra",
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '2']"
-      },
-      {
-        "location": "row1:itemName",
-        "status": "ext_missing",
-        "gtNorm": "메가비타민c3000크리스탈",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "메가비타민c3000(크리스탈)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "reason": "extractor invented rows ['2']"
       },
       {
         "location": "row1:spec",
@@ -361,49 +335,33 @@
       },
       {
         "location": "row1:unitPrice",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "19118",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "601911800",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['amount']"
       },
       {
         "location": "row1:amount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "917664",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:expiryDate",
-        "status": "ext_missing",
-        "gtNorm": "20290513",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "19118",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:manufacturingNo",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "26026",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "01001994",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "91766426026",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.62)"
       }
     ],
     "bucketTally": {
-      "recognition": 3,
-      "structure": 12,
-      "layout": 0,
+      "recognition": 5,
+      "structure": 4,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

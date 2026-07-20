@@ -192,14 +192,11 @@
     "rowCountExt": 2,
     "rowCountMatch": true,
     "matchedRowIdx": [
-      "2"
-    ],
-    "gtOnlyRowIdx": [
-      "2"
-    ],
-    "extOnlyRowIdx": [
+      "2",
       "1"
     ],
+    "gtOnlyRowIdx": [],
+    "extOnlyRowIdx": [],
     "rows": [
       {
         "rowIndex": "2",
@@ -288,24 +285,23 @@
         }
       },
       {
-        "rowIndex": "2",
+        "rowIndex": "1",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "메가솔페나정(100T)",
-            "ext": "",
+            "ext": "060500710메가솔페나정(100T)",
             "gtNorm": "메가솔페나정100t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "060500710메가솔페나정100t",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "메가솔페나정",
-            "ext": "",
+            "ext": "메가솔페나정",
             "gtNorm": "메가솔페나정",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "메가솔페나정",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -326,18 +322,18 @@
           },
           "unitPrice": {
             "gt": "40860",
-            "ext": "",
+            "ext": "204,300",
             "gtNorm": "40860",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "204300",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "204300",
-            "ext": "",
+            "ext": "40,860",
             "gtNorm": "204300",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "40860",
+            "status": "mismatch",
             "spurious": false
           },
           "expiryDate": {
@@ -350,18 +346,18 @@
           },
           "manufacturingNo": {
             "gt": "25001",
-            "ext": "",
+            "ext": "23010",
             "gtNorm": "25001",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "23010",
+            "status": "mismatch",
             "spurious": false
           },
           "itemCode": {
             "gt": "05004857",
-            "ext": "",
+            "ext": "05004857",
             "gtNorm": "05004857",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "05004857",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -377,13 +373,13 @@
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 4,
-      "mismatch": 2,
-      "ext_missing": 14,
+      "match": 6,
+      "mismatch": 6,
+      "ext_missing": 8,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.2
+    "cellAccuracy": 0.3
   },
   "buckets": {
     "defects": [
@@ -410,22 +406,6 @@
         "extNorm": "소경기도남양주시미금로143층301호다신",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
-      },
-      {
-        "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['2']"
-      },
-      {
-        "location": "table",
-        "status": "rows_extra",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor invented rows ['1']"
       },
       {
         "location": "row2:spec",
@@ -476,23 +456,15 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row2:itemName",
-        "status": "ext_missing",
+        "location": "row1:itemName",
+        "status": "mismatch",
         "gtNorm": "메가솔페나정100t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "060500710메가솔페나정100t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.69)"
       },
       {
-        "location": "row2:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "메가솔페나정",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:spec",
+        "location": "row1:spec",
         "status": "ext_missing",
         "gtNorm": "100t ptp",
         "extNorm": "",
@@ -500,7 +472,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:quantity",
+        "location": "row1:quantity",
         "status": "ext_missing",
         "gtNorm": "5",
         "extNorm": "",
@@ -508,23 +480,23 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:unitPrice",
-        "status": "ext_missing",
+        "location": "row1:unitPrice",
+        "status": "mismatch",
         "gtNorm": "40860",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "204300",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['amount']"
       },
       {
-        "location": "row2:amount",
-        "status": "ext_missing",
+        "location": "row1:amount",
+        "status": "mismatch",
         "gtNorm": "204300",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "40860",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['unitPrice']"
       },
       {
-        "location": "row2:expiryDate",
+        "location": "row1:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20281110",
         "extNorm": "",
@@ -532,23 +504,15 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:manufacturingNo",
-        "status": "ext_missing",
+        "location": "row1:manufacturingNo",
+        "status": "mismatch",
         "gtNorm": "25001",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "23010",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.60)"
       },
       {
-        "location": "row2:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "05004857",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:insuranceCode",
+        "location": "row1:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "060500710",
         "extNorm": "",
@@ -557,9 +521,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 16,
-      "layout": 0,
+      "recognition": 7,
+      "structure": 8,
+      "layout": 2,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

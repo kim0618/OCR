@@ -191,12 +191,11 @@
     "rowCountGt": 1,
     "rowCountExt": 5,
     "rowCountMatch": false,
-    "matchedRowIdx": [],
-    "gtOnlyRowIdx": [
+    "matchedRowIdx": [
       "1"
     ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "1",
       "2",
       "3",
       "4",
@@ -206,22 +205,21 @@
       {
         "rowIndex": "1",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "테로사프리필드펜 600/4g×1개",
-            "ext": "",
+            "ext": "1테로사프리필드펜 600/×개",
             "gtNorm": "테로사프리필드펜6004g1개",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "1테로사프리필드펜600개",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "테로사프리필드펜(1군/생물학)",
-            "ext": "",
+            "ext": "테로사프리필드펜(1군/생물학)",
             "gtNorm": "테로사프리필드펜(1군/생물학)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "테로사프리필드펜(1군/생물학)",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -250,18 +248,18 @@
           },
           "amount": {
             "gt": "0",
-            "ext": "",
+            "ext": "60048×17H  10 184,174.201,841,742<E5B005AA 10 2027/11/19>",
             "gtNorm": "0",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "60048171018417420184174250051020271119",
+            "status": "mismatch",
             "spurious": false
           },
           "expiryDate": {
             "gt": "20271119",
-            "ext": "",
+            "ext": "20271119",
             "gtNorm": "20271119",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20271119",
+            "status": "match",
             "spurious": false
           },
           "manufacturingNo": {
@@ -274,10 +272,10 @@
           },
           "itemCode": {
             "gt": "01014232",
-            "ext": "",
+            "ext": "01014232",
             "gtNorm": "01014232",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "01014232",
+            "status": "match",
             "spurious": false
           }
         }
@@ -285,13 +283,13 @@
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 0,
-      "mismatch": 0,
-      "ext_missing": 9,
+      "match": 3,
+      "mismatch": 2,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.0
+    "cellAccuracy": 0.3333333333333333
   },
   "buckets": {
     "defects": [
@@ -313,35 +311,19 @@
       },
       {
         "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['1']"
-      },
-      {
-        "location": "table",
         "status": "rows_extra",
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '2', '3', '4', '5']"
+        "reason": "extractor invented rows ['2', '3', '4', '5']"
       },
       {
         "location": "row1:itemName",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "테로사프리필드펜6004g1개",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "테로사프리필드펜(1군/생물학)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "1테로사프리필드펜600개",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.86)"
       },
       {
         "location": "row1:spec",
@@ -369,19 +351,11 @@
       },
       {
         "location": "row1:amount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "0",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:expiryDate",
-        "status": "ext_missing",
-        "gtNorm": "20271119",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "60048171018417420184174250051020271119",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:manufacturingNo",
@@ -390,19 +364,11 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "01014232",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 2,
-      "structure": 11,
+      "recognition": 4,
+      "structure": 5,
       "layout": 0,
       "preprocessing": 0
     },

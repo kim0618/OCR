@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "159909",
-        "ext": "",
+        "ext": "159909",
         "gtNorm": "159909",
-        "extNorm": "",
+        "extNorm": "159909",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -99,11 +99,11 @@
       },
       "supplyAmount": {
         "gt": "1599091",
-        "ext": "159,909",
+        "ext": "1599091",
         "gtNorm": "1599091",
-        "extNorm": "159909",
+        "extNorm": "1599091",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -141,9 +141,9 @@
     "profile": "thin",
     "counts": {
       "scored": 10,
-      "match": 3,
-      "mismatch": 4,
-      "ext_missing": 3,
+      "match": 5,
+      "mismatch": 3,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -154,11 +154,11 @@
     },
     "coverage": {
       "gtPresent": 10,
-      "matched": 3,
+      "matched": 5,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 3
+      "extAttemptedMiss": 2
     },
-    "fieldAccuracy": 0.3
+    "fieldAccuracy": 0.5
   },
   "table": {
     "alignMode": "content",
@@ -824,14 +824,6 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:taxAmount",
-        "status": "ext_missing",
-        "gtNorm": "159909",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:supplyAmount']"
-      },
-      {
         "location": "field:supplierBizNumber",
         "status": "mismatch",
         "gtNorm": "6038107005",
@@ -854,14 +846,6 @@
         "extNorm": "부산광역시사하구다대로3683장림통",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplyAmount",
-        "status": "mismatch",
-        "gtNorm": "1599091",
-        "extNorm": "159909",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerCompany",
@@ -1001,8 +985,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 18,
-      "structure": 4,
+      "recognition": 17,
+      "structure": 3,
       "layout": 0,
       "preprocessing": 0
     },
@@ -1022,6 +1006,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.3
+    "fieldMissRate": 0.2
   }
 }

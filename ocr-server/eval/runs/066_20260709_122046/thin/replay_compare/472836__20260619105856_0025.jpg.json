@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "9545",
-        "ext": "10,500",
+        "ext": "9545",
         "gtNorm": "9545",
-        "extNorm": "10500",
+        "extNorm": "9545",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -125,11 +125,11 @@
       },
       "supplyAmount": {
         "gt": "95455",
-        "ext": "",
+        "ext": "95455",
         "gtNorm": "95455",
-        "extNorm": "",
+        "extNorm": "95455",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 6,
-      "mismatch": 5,
-      "ext_missing": 1,
+      "match": 8,
+      "mismatch": 4,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 6,
+      "matched": 8,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.5
+    "fieldAccuracy": 0.6666666666666666
   },
   "table": {
     "alignMode": "content",
@@ -289,14 +289,6 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:taxAmount",
-        "status": "mismatch",
-        "gtNorm": "9545",
-        "extNorm": "10500",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['row1:unitPrice']"
-      },
-      {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "삼진제약",
@@ -311,14 +303,6 @@
         "extNorm": "서울마포구와우산로121서교동",
         "bucket": "structure",
         "reason": "gt value present at ['field:buyerAddress']"
-      },
-      {
-        "location": "field:supplyAmount",
-        "status": "ext_missing",
-        "gtNorm": "95455",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value present at ['row1:amount']"
       },
       {
         "location": "field:buyerCompany",
@@ -371,7 +355,7 @@
     ],
     "bucketTally": {
       "recognition": 1,
-      "structure": 9,
+      "structure": 7,
       "layout": 0,
       "preprocessing": 0
     },
@@ -391,6 +375,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

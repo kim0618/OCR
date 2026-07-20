@@ -8,11 +8,11 @@
     "perField": {
       "totalAmount": {
         "gt": "1710936",
-        "ext": "643,506,410",
+        "ext": "1710936",
         "gtNorm": "1710936",
-        "extNorm": "643506410",
+        "extNorm": "1710936",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "155539",
-        "ext": "1,710,936",
+        "ext": "155539",
         "gtNorm": "155539",
-        "extNorm": "1710936",
+        "extNorm": "155539",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -125,11 +125,11 @@
       },
       "supplyAmount": {
         "gt": "1555397",
-        "ext": "",
+        "ext": "1555397",
         "gtNorm": "1555397",
-        "extNorm": "",
+        "extNorm": "1555397",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 6,
-      "mismatch": 5,
-      "ext_missing": 1,
+      "match": 9,
+      "mismatch": 3,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 6,
+      "matched": 9,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.5
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -209,18 +209,18 @@
         "cells": {
           "itemName": {
             "gt": "페노시드캡슐 30C",
-            "ext": "",
+            "ext": "(643506410)페노시드캡슬30C",
             "gtNorm": "페노시드캡슐30c",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "643506410페노시드캡슬30c",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "페노시드캡슐(병)",
-            "ext": "",
+            "ext": "페노시드캡슐(병)",
             "gtNorm": "페노시드캡슐(병)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "페노시드캡슐(병)",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -273,10 +273,10 @@
           },
           "itemCode": {
             "gt": "04000476",
-            "ext": "",
+            "ext": "04000476",
             "gtNorm": "04000476",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "04000476",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -355,32 +355,16 @@
     ],
     "cellCounts": {
       "scored": 17,
-      "match": 3,
-      "mismatch": 0,
-      "ext_missing": 14,
+      "match": 5,
+      "mismatch": 1,
+      "ext_missing": 11,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.17647058823529413
+    "cellAccuracy": 0.29411764705882354
   },
   "buckets": {
     "defects": [
-      {
-        "location": "field:totalAmount",
-        "status": "mismatch",
-        "gtNorm": "1710936",
-        "extNorm": "643506410",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:taxAmount']"
-      },
-      {
-        "location": "field:taxAmount",
-        "status": "mismatch",
-        "gtNorm": "155539",
-        "extNorm": "1710936",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['field:totalAmount']"
-      },
       {
         "location": "field:discountAmount",
         "status": "mismatch",
@@ -396,14 +380,6 @@
         "extNorm": "20260608",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.88)"
-      },
-      {
-        "location": "field:supplyAmount",
-        "status": "ext_missing",
-        "gtNorm": "1555397",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:buyerAddress",
@@ -431,19 +407,11 @@
       },
       {
         "location": "row4:itemName",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "페노시드캡슐30c",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "페노시드캡슐(병)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "643506410페노시드캡슬30c",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.59)"
       },
       {
         "location": "row4:spec",
@@ -465,14 +433,6 @@
         "location": "row4:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "077526011",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "04000476",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -543,8 +503,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 2,
-      "structure": 20,
+      "recognition": 3,
+      "structure": 14,
       "layout": 0,
       "preprocessing": 0
     },
@@ -564,6 +524,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

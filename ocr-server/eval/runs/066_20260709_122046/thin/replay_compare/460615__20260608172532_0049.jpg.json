@@ -8,11 +8,11 @@
     "perField": {
       "totalAmount": {
         "gt": "8021423",
-        "ext": "643,309,710",
+        "ext": "8021423",
         "gtNorm": "8021423",
-        "extNorm": "643309710",
+        "extNorm": "8021423",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "729219",
-        "ext": "",
+        "ext": "729219",
         "gtNorm": "729219",
-        "extNorm": "",
+        "extNorm": "729219",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -125,11 +125,11 @@
       },
       "supplyAmount": {
         "gt": "7292204",
-        "ext": "729,219",
+        "ext": "7292204",
         "gtNorm": "7292204",
-        "extNorm": "729219",
+        "extNorm": "7292204",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 6,
-      "mismatch": 5,
-      "ext_missing": 1,
+      "match": 9,
+      "mismatch": 3,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 6,
+      "matched": 9,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.5
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -481,10 +481,10 @@
         "cells": {
           "itemName": {
             "gt": "이든)레바미정",
-            "ext": "5 628900240 이든파마 이든)레바미정 500T",
+            "ext": "이든)레바미정",
             "gtNorm": "이든레바미정",
-            "extNorm": "5628900240이든파마이든레바미정500t",
-            "status": "mismatch",
+            "extNorm": "이든레바미정",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
@@ -996,32 +996,16 @@
     ],
     "cellCounts": {
       "scored": 90,
-      "match": 45,
-      "mismatch": 13,
+      "match": 46,
+      "mismatch": 12,
       "ext_missing": 32,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5
+    "cellAccuracy": 0.5111111111111111
   },
   "buckets": {
     "defects": [
-      {
-        "location": "field:totalAmount",
-        "status": "mismatch",
-        "gtNorm": "8021423",
-        "extNorm": "643309710",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['row17:insuranceCode', 'row9:insuranceCode']"
-      },
-      {
-        "location": "field:taxAmount",
-        "status": "ext_missing",
-        "gtNorm": "729219",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:supplyAmount']"
-      },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
@@ -1029,14 +1013,6 @@
         "extNorm": "서울동대문구장한로10길9장안동1층4층물류창고",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.80)"
-      },
-      {
-        "location": "field:supplyAmount",
-        "status": "mismatch",
-        "gtNorm": "7292204",
-        "extNorm": "729219",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.62)"
       },
       {
         "location": "field:buyerCompany",
@@ -1149,14 +1125,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row5:itemName",
-        "status": "mismatch",
-        "gtNorm": "이든레바미정",
-        "extNorm": "5628900240이든파마이든레바미정500t",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
       },
       {
         "location": "row5:quantity",
@@ -1432,8 +1400,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 17,
-      "structure": 36,
+      "recognition": 15,
+      "structure": 34,
       "layout": 0,
       "preprocessing": 0
     },
@@ -1453,6 +1421,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

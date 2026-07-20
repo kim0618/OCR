@@ -564,18 +564,18 @@
         "cells": {
           "itemName": {
             "gt": "바로낙점안액",
-            "ext": "4 M0X310501 바로낙점안액 1/2 5ML 400 1,421 568,727 651205361 20280",
+            "ext": "바로낙점안액",
             "gtNorm": "바로낙점안액",
-            "extNorm": "4m0x310501바로낙점안액125ml400142156872765120536120280",
-            "status": "mismatch",
+            "extNorm": "바로낙점안액",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "바로낙점안액5mL",
-            "ext": "바로낙점안액5mL",
+            "ext": "바로낙점안액",
             "gtNorm": "바로낙점안액5ml",
-            "extNorm": "바로낙점안액5ml",
-            "status": "match",
+            "extNorm": "바로낙점안액",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
@@ -628,10 +628,10 @@
           },
           "itemCode": {
             "gt": "22002153",
-            "ext": "22002153",
+            "ext": "22005621",
             "gtNorm": "22002153",
-            "extNorm": "22002153",
-            "status": "match",
+            "extNorm": "22005621",
+            "status": "mismatch",
             "spurious": false
           },
           "insuranceCode": {
@@ -650,18 +650,18 @@
         "cells": {
           "itemName": {
             "gt": "에스솝점안액",
-            "ext": "5 BFX310501 에스솜점안액 1/ 2 5ML 40 9,168 366,690 651203651 20271",
+            "ext": "에스솜점안액",
             "gtNorm": "에스솝점안액",
-            "extNorm": "5bfx310501에스솜점안액125ml40916836669065120365120271",
+            "extNorm": "에스솜점안액",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "에스솝점안액5mL",
-            "ext": "에스솝점안액5mL",
+            "ext": "에스솝점안액",
             "gtNorm": "에스솝점안액5ml",
-            "extNorm": "에스솝점안액5ml",
-            "status": "match",
+            "extNorm": "에스솝점안액",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
@@ -714,10 +714,10 @@
           },
           "itemCode": {
             "gt": "07000728",
-            "ext": "07000728",
+            "ext": "07000611",
             "gtNorm": "07000728",
-            "extNorm": "07000728",
-            "status": "match",
+            "extNorm": "07000611",
+            "status": "mismatch",
             "spurious": false
           },
           "insuranceCode": {
@@ -1507,13 +1507,13 @@
     ],
     "cellCounts": {
       "scored": 150,
-      "match": 60,
-      "mismatch": 51,
+      "match": 57,
+      "mismatch": 54,
       "ext_missing": 39,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4
+    "cellAccuracy": 0.38
   },
   "buckets": {
     "defects": [
@@ -1758,12 +1758,12 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row5:itemName",
+        "location": "row5:itemNameMaster",
         "status": "mismatch",
-        "gtNorm": "바로낙점안액",
-        "extNorm": "4m0x310501바로낙점안액125ml400142156872765120536120280",
+        "gtNorm": "바로낙점안액5ml",
+        "extNorm": "바로낙점안액",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "row5:quantity",
@@ -1782,6 +1782,14 @@
         "reason": "gt cell absent in extracted row"
       },
       {
+        "location": "row5:itemCode",
+        "status": "mismatch",
+        "gtNorm": "22002153",
+        "extNorm": "22005621",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.75)"
+      },
+      {
         "location": "row5:insuranceCode",
         "status": "mismatch",
         "gtNorm": "651205361",
@@ -1793,9 +1801,17 @@
         "location": "row6:itemName",
         "status": "mismatch",
         "gtNorm": "에스솝점안액",
-        "extNorm": "5bfx310501에스솜점안액125ml40916836669065120365120271",
+        "extNorm": "에스솜점안액",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemNameMaster']"
+      },
+      {
+        "location": "row6:itemNameMaster",
+        "status": "mismatch",
+        "gtNorm": "에스솝점안액5ml",
+        "extNorm": "에스솝점안액",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "row6:quantity",
@@ -1812,6 +1828,14 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row6:itemCode",
+        "status": "mismatch",
+        "gtNorm": "07000728",
+        "extNorm": "07000611",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.62)"
       },
       {
         "location": "row6:insuranceCode",
@@ -2263,9 +2287,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 47,
+      "recognition": 49,
       "structure": 41,
-      "layout": 5,
+      "layout": 6,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

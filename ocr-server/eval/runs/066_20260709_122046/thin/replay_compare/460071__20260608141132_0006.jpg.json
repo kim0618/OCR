@@ -8,11 +8,11 @@
     "perField": {
       "totalAmount": {
         "gt": "109059",
-        "ext": "99,145",
+        "ext": "109059",
         "gtNorm": "109059",
-        "extNorm": "99145",
+        "extNorm": "109059",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "9914",
-        "ext": "",
+        "ext": "9914",
         "gtNorm": "9914",
-        "extNorm": "",
+        "extNorm": "9914",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -125,11 +125,11 @@
       },
       "supplyAmount": {
         "gt": "99145",
-        "ext": "",
+        "ext": "99145",
         "gtNorm": "99145",
-        "extNorm": "",
+        "extNorm": "99145",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 5,
-      "mismatch": 5,
-      "ext_missing": 2,
+      "match": 8,
+      "mismatch": 4,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 5,
+      "matched": 8,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.4166666666666667
+    "fieldAccuracy": 0.6666666666666666
   },
   "table": {
     "alignMode": "content",
@@ -203,18 +203,18 @@
         "cells": {
           "itemName": {
             "gt": "어택트라흡입용캡슐 150/80mcg",
-            "ext": "전문",
+            "ext": "어택트라흡입용캡슬150/80mcg",
             "gtNorm": "어택트라흡입용캡슐15080mcg",
-            "extNorm": "전문",
+            "extNorm": "어택트라흡입용캡슬15080mcg",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "어택트라흡입용캡슐150/80mcg(노바티스)",
-            "ext": "",
+            "ext": "어택트라흡입용캡슐150/80mcg(노바티스)",
             "gtNorm": "어택트라흡입용캡슐150/80mcg(노바티스)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "어택트라흡입용캡슐150/80mcg(노바티스)",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -267,10 +267,10 @@
           },
           "itemCode": {
             "gt": "05005308",
-            "ext": "",
+            "ext": "05005308",
             "gtNorm": "05005308",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "05005308",
+            "status": "match",
             "spurious": false
           }
         }
@@ -278,32 +278,16 @@
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 3,
+      "match": 5,
       "mismatch": 1,
-      "ext_missing": 5,
+      "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3333333333333333
+    "cellAccuracy": 0.5555555555555556
   },
   "buckets": {
     "defects": [
-      {
-        "location": "field:totalAmount",
-        "status": "mismatch",
-        "gtNorm": "109059",
-        "extNorm": "99145",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['field:supplyAmount', 'row1:amount']"
-      },
-      {
-        "location": "field:taxAmount",
-        "status": "ext_missing",
-        "gtNorm": "9914",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
-      },
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
@@ -319,14 +303,6 @@
         "extNorm": "서울강남구테헤란로132역삼동",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.91)"
-      },
-      {
-        "location": "field:supplyAmount",
-        "status": "ext_missing",
-        "gtNorm": "99145",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:totalAmount', 'row1:amount']"
       },
       {
         "location": "field:buyerCompany",
@@ -348,17 +324,9 @@
         "location": "row1:itemName",
         "status": "mismatch",
         "gtNorm": "어택트라흡입용캡슐15080mcg",
-        "extNorm": "전문",
+        "extNorm": "어택트라흡입용캡슬15080mcg",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row1:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "어택트라흡입용캡슐150/80mcg(노바티스)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "reason": "char-level diff (sim=0.94)"
       },
       {
         "location": "row1:spec",
@@ -383,19 +351,11 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "05005308",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
       "recognition": 5,
-      "structure": 8,
+      "structure": 3,
       "layout": 0,
       "preprocessing": 0
     },
@@ -415,6 +375,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.167
+    "fieldMissRate": 0.0
   }
 }

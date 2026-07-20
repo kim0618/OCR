@@ -8,11 +8,11 @@
     "perField": {
       "totalAmount": {
         "gt": "3905005",
-        "ext": "3,550,005",
+        "ext": "3905005",
         "gtNorm": "3905005",
-        "extNorm": "3550005",
+        "extNorm": "3905005",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "355000",
-        "ext": "",
+        "ext": "355000",
         "gtNorm": "355000",
-        "extNorm": "",
+        "extNorm": "355000",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -125,11 +125,11 @@
       },
       "supplyAmount": {
         "gt": "3550005",
-        "ext": "355,000",
+        "ext": "3550005",
         "gtNorm": "3550005",
-        "extNorm": "355000",
+        "extNorm": "3550005",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 6,
-      "mismatch": 5,
-      "ext_missing": 1,
+      "match": 9,
+      "mismatch": 3,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 6,
+      "matched": 9,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.5
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -525,18 +525,18 @@
         "cells": {
           "itemName": {
             "gt": "시알리스정(PTP) 5mg 14T",
-            "ext": "6전 5전문",
+            "ext": "시알리스정(PTP)5mg 14T",
             "gtNorm": "시알리스정ptp5mg14t",
-            "extNorm": "6전5전문",
-            "status": "mismatch",
+            "extNorm": "시알리스정ptp5mg14t",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "시알리스정5mg(오남용)",
-            "ext": "",
+            "ext": "시알리스정5mg(오남용)",
             "gtNorm": "시알리스정5mg(오남용)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "시알리스정5mg(오남용)",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -679,32 +679,16 @@
     ],
     "cellCounts": {
       "scored": 54,
-      "match": 18,
-      "mismatch": 14,
-      "ext_missing": 22,
+      "match": 20,
+      "mismatch": 13,
+      "ext_missing": 21,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3333333333333333
+    "cellAccuracy": 0.37037037037037035
   },
   "buckets": {
     "defects": [
-      {
-        "location": "field:totalAmount",
-        "status": "mismatch",
-        "gtNorm": "3905005",
-        "extNorm": "3550005",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.71)"
-      },
-      {
-        "location": "field:taxAmount",
-        "status": "ext_missing",
-        "gtNorm": "355000",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:supplyAmount']"
-      },
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
@@ -720,14 +704,6 @@
         "extNorm": "서울강남구테헤란로132역삼동",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.80)"
-      },
-      {
-        "location": "field:supplyAmount",
-        "status": "mismatch",
-        "gtNorm": "3550005",
-        "extNorm": "355000",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:totalAmount']"
       },
       {
         "location": "field:buyerAddress",
@@ -930,22 +906,6 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row4:itemName",
-        "status": "mismatch",
-        "gtNorm": "시알리스정ptp5mg14t",
-        "extNorm": "6전5전문",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row4:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "시알리스정5mg(오남용)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row4:spec",
         "status": "ext_missing",
         "gtNorm": "14t",
@@ -1043,8 +1003,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 17,
-      "structure": 25,
+      "recognition": 15,
+      "structure": 22,
       "layout": 2,
       "preprocessing": 0
     },
@@ -1064,6 +1024,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

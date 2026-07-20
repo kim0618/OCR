@@ -8,9 +8,9 @@
     "perField": {
       "totalAmount": {
         "gt": "1455720",
-        "ext": "657202290",
+        "ext": "159600",
         "gtNorm": "1455720",
-        "extNorm": "657202290",
+        "extNorm": "159600",
         "type": "amount",
         "status": "mismatch",
         "edited": false,
@@ -21,9 +21,9 @@
       },
       "taxAmount": {
         "gt": "132338",
-        "ext": "145,091",
+        "ext": "14509",
         "gtNorm": "132338",
-        "extNorm": "145091",
+        "extNorm": "14509",
         "type": "amount",
         "status": "mismatch",
         "edited": false,
@@ -99,11 +99,11 @@
       },
       "supplyAmount": {
         "gt": "1323382",
-        "ext": "",
+        "ext": "145091",
         "gtNorm": "1323382",
-        "extNorm": "",
+        "extNorm": "145091",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -142,8 +142,8 @@
     "counts": {
       "scored": 10,
       "match": 4,
-      "mismatch": 4,
-      "ext_missing": 2,
+      "mismatch": 5,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -156,7 +156,7 @@
       "gtPresent": 10,
       "matched": 4,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 1
     },
     "fieldAccuracy": 0.4
   },
@@ -537,15 +537,15 @@
         "location": "field:totalAmount",
         "status": "mismatch",
         "gtNorm": "1455720",
-        "extNorm": "657202290",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
+        "extNorm": "159600",
+        "bucket": "structure",
+        "reason": "ext value is gt's ['row5:amount']"
       },
       {
         "location": "field:taxAmount",
         "status": "mismatch",
         "gtNorm": "132338",
-        "extNorm": "145091",
+        "extNorm": "14509",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -559,11 +559,11 @@
       },
       {
         "location": "field:supplyAmount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "1323382",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "extNorm": "145091",
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerCompany",
@@ -772,6 +772,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.2
+    "fieldMissRate": 0.1
   }
 }

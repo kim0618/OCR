@@ -179,88 +179,88 @@
     "rowCountExt": 3,
     "rowCountMatch": false,
     "matchedRowIdx": [
-      "3",
+      "1",
       "2"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "1"
+      "3"
     ],
     "rows": [
       {
-        "rowIndex": "3",
+        "rowIndex": "1",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "헤파멜즈인퓨전주",
-            "ext": "",
+            "ext": "헤파멜즈인퓨전주",
             "gtNorm": "헤파멜즈인퓨전주",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "헤파멜즈인퓨전주",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "헤파멜즈인퓨전주",
-            "ext": "",
+            "ext": "헤파멜즈인퓨전주",
             "gtNorm": "헤파멜즈인퓨전주",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "헤파멜즈인퓨전주",
+            "status": "match",
             "spurious": false
           },
           "spec": {
             "gt": "10AMP",
-            "ext": "",
+            "ext": "10AMP V 10",
             "gtNorm": "10amp",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10amp v 10",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
             "gt": "10",
-            "ext": "10",
+            "ext": "",
             "gtNorm": "10",
-            "extNorm": "10",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "unitPrice": {
             "gt": "0",
-            "ext": "11184",
+            "ext": "111,840",
             "gtNorm": "0",
-            "extNorm": "11184",
+            "extNorm": "111840",
             "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "111840",
-            "ext": "111840",
+            "ext": "11,184",
             "gtNorm": "111840",
-            "extNorm": "111840",
-            "status": "match",
+            "extNorm": "11184",
+            "status": "mismatch",
             "spurious": false
           },
           "expiryDate": {
             "gt": "20281117",
-            "ext": "",
+            "ext": "2028-11-17",
             "gtNorm": "20281117",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20281117",
+            "status": "match",
             "spurious": false
           },
           "manufacturingNo": {
             "gt": "25054",
-            "ext": "",
+            "ext": "25054",
             "gtNorm": "25054",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "25054",
+            "status": "match",
             "spurious": false
           },
           "itemCode": {
             "gt": "152041",
-            "ext": "",
+            "ext": "152041",
             "gtNorm": "152041",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "152041",
+            "status": "match",
             "spurious": false
           }
         }
@@ -346,13 +346,13 @@
     ],
     "cellCounts": {
       "scored": 18,
-      "match": 8,
-      "mismatch": 4,
-      "ext_missing": 6,
+      "match": 11,
+      "mismatch": 6,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4444444444444444
+    "cellAccuracy": 0.6111111111111112
   },
   "buckets": {
     "defects": [
@@ -402,63 +402,39 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1']"
+        "reason": "extractor invented rows ['3']"
       },
       {
-        "location": "row3:itemName",
-        "status": "ext_missing",
-        "gtNorm": "헤파멜즈인퓨전주",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "헤파멜즈인퓨전주",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:spec",
-        "status": "ext_missing",
+        "location": "row1:spec",
+        "status": "mismatch",
         "gtNorm": "10amp",
+        "extNorm": "10amp v 10",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.67)"
+      },
+      {
+        "location": "row1:quantity",
+        "status": "ext_missing",
+        "gtNorm": "10",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row3:unitPrice",
+        "location": "row1:unitPrice",
         "status": "mismatch",
         "gtNorm": "0",
-        "extNorm": "11184",
+        "extNorm": "111840",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row3:expiryDate",
-        "status": "ext_missing",
-        "gtNorm": "20281117",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:manufacturingNo",
-        "status": "ext_missing",
-        "gtNorm": "25054",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "152041",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "location": "row1:amount",
+        "status": "mismatch",
+        "gtNorm": "111840",
+        "extNorm": "11184",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['unitPrice']"
       },
       {
         "location": "row2:spec",
@@ -486,9 +462,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 7,
-      "structure": 8,
-      "layout": 1,
+      "recognition": 8,
+      "structure": 3,
+      "layout": 2,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

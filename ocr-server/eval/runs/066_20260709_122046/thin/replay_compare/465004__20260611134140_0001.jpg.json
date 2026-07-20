@@ -8,11 +8,11 @@
     "perField": {
       "totalAmount": {
         "gt": "50202791",
-        "ext": "50,202,791",
+        "ext": "2209008",
         "gtNorm": "50202791",
-        "extNorm": "50202791",
+        "extNorm": "2209008",
         "type": "amount",
-        "status": "match",
+        "status": "mismatch",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -125,9 +125,9 @@
       },
       "supplyAmount": {
         "gt": "47993783",
-        "ext": "2,209,008",
+        "ext": "2008189",
         "gtNorm": "47993783",
-        "extNorm": "2209008",
+        "extNorm": "2008189",
         "type": "amount",
         "status": "mismatch",
         "edited": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 6,
-      "mismatch": 5,
+      "match": 5,
+      "mismatch": 6,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 6,
+      "matched": 5,
       "extNotAttempted": 0,
       "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.5
+    "fieldAccuracy": 0.4166666666666667
   },
   "table": {
     "alignMode": "content",
@@ -1091,12 +1091,20 @@
   "buckets": {
     "defects": [
       {
+        "location": "field:totalAmount",
+        "status": "mismatch",
+        "gtNorm": "50202791",
+        "extNorm": "2209008",
+        "bucket": "structure",
+        "reason": "ext value is gt's ['field:taxAmount']"
+      },
+      {
         "location": "field:taxAmount",
         "status": "mismatch",
         "gtNorm": "2209008",
         "extNorm": "200819",
         "bucket": "structure",
-        "reason": "gt value present at ['field:supplyAmount']"
+        "reason": "gt value present at ['field:totalAmount']"
       },
       {
         "location": "field:buyerBizNumber",
@@ -1126,9 +1134,9 @@
         "location": "field:supplyAmount",
         "status": "mismatch",
         "gtNorm": "47993783",
-        "extNorm": "2209008",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['field:taxAmount']"
+        "extNorm": "2008189",
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -1740,7 +1748,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 16,
+      "recognition": 17,
       "structure": 64,
       "layout": 1,
       "preprocessing": 0

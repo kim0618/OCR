@@ -8,11 +8,11 @@
     "perField": {
       "totalAmount": {
         "gt": "8928317",
-        "ext": "665,500,350",
+        "ext": "8928317",
         "gtNorm": "8928317",
-        "extNorm": "665500350",
+        "extNorm": "8928317",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "811666",
-        "ext": "",
+        "ext": "811666",
         "gtNorm": "811666",
-        "extNorm": "",
+        "extNorm": "811666",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -125,11 +125,11 @@
       },
       "supplyAmount": {
         "gt": "8116651",
-        "ext": "811,666",
+        "ext": "8116651",
         "gtNorm": "8116651",
-        "extNorm": "811666",
+        "extNorm": "8116651",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 6,
-      "mismatch": 5,
-      "ext_missing": 1,
+      "match": 9,
+      "mismatch": 3,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 6,
+      "matched": 9,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.5
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -297,17 +297,17 @@
         "cells": {
           "itemName": {
             "gt": "한국유니온 뉴코타정100mg(주)",
-            "ext": "2 665500350 한국유니온 주 뉴코타정100mg 500정 /546,350.00 231,750 2601 ",
+            "ext": "뉴코타정100mg",
             "gtNorm": "한국유니온뉴코타정100mg주",
-            "extNorm": "2665500350한국유니온주뉴코타정100mg500정546350002317502601",
+            "extNorm": "뉴코타정100mg",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "무코스타정100mg(한국오츠카)",
-            "ext": "하이온정10mg",
+            "ext": "뉴코타정",
             "gtNorm": "무코스타정100mg(한국오츠카)",
-            "extNorm": "하이온정10mg",
+            "extNorm": "뉴코타정",
             "status": "mismatch",
             "spurious": false
           },
@@ -361,9 +361,9 @@
           },
           "itemCode": {
             "gt": "01014963",
-            "ext": "01006427",
+            "ext": "8806655003524",
             "gtNorm": "01014963",
-            "extNorm": "01006427",
+            "extNorm": "8806655003524",
             "status": "mismatch",
             "spurious": false
           },
@@ -383,9 +383,9 @@
         "cells": {
           "itemName": {
             "gt": "핫림제약(가바뉴로캡슐75mg)",
-            "ext": "3 645304380 알림제약( 가바뉴로캡술75mg 30캡슐 1011,354.40 113,544 W3Y702",
+            "ext": "가바뉴로캡술75mg",
             "gtNorm": "핫림제약가바뉴로캡슐75mg",
-            "extNorm": "3645304380알림제약가바뉴로캡술75mg30캡슐101135440113544w3y702",
+            "extNorm": "가바뉴로캡술75mg",
             "status": "mismatch",
             "spurious": false
           },
@@ -477,36 +477,12 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:totalAmount",
-        "status": "mismatch",
-        "gtNorm": "8928317",
-        "extNorm": "665500350",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['row2:insuranceCode']"
-      },
-      {
-        "location": "field:taxAmount",
-        "status": "ext_missing",
-        "gtNorm": "811666",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:supplyAmount']"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "전북전주시덕진구구총목로5지하층인후동1가",
         "extNorm": "전북전주시덕진구아중로121인후동1가202호",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.64)"
-      },
-      {
-        "location": "field:supplyAmount",
-        "status": "mismatch",
-        "gtNorm": "8116651",
-        "extNorm": "811666",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.77)"
       },
       {
         "location": "field:buyerCompany",
@@ -600,15 +576,15 @@
         "location": "row2:itemName",
         "status": "mismatch",
         "gtNorm": "한국유니온뉴코타정100mg주",
-        "extNorm": "2665500350한국유니온주뉴코타정100mg500정546350002317502601",
+        "extNorm": "뉴코타정100mg",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.75)"
       },
       {
         "location": "row2:itemNameMaster",
         "status": "mismatch",
         "gtNorm": "무코스타정100mg(한국오츠카)",
-        "extNorm": "하이온정10mg",
+        "extNorm": "뉴코타정",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
@@ -648,9 +624,9 @@
         "location": "row2:itemCode",
         "status": "mismatch",
         "gtNorm": "01014963",
-        "extNorm": "01006427",
+        "extNorm": "8806655003524",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row2:insuranceCode",
@@ -664,9 +640,9 @@
         "location": "row3:itemName",
         "status": "mismatch",
         "gtNorm": "핫림제약가바뉴로캡슐75mg",
-        "extNorm": "3645304380알림제약가바뉴로캡술75mg30캡슐101135440113544w3y702",
+        "extNorm": "가바뉴로캡술75mg",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.75)"
       },
       {
         "location": "row3:spec",
@@ -718,8 +694,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 16,
-      "structure": 14,
+      "recognition": 15,
+      "structure": 12,
       "layout": 0,
       "preprocessing": 0
     },
@@ -739,6 +715,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

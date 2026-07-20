@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "48044",
-        "ext": "",
+        "ext": "48044",
         "gtNorm": "48044",
-        "extNorm": "",
+        "extNorm": "48044",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -125,11 +125,11 @@
       },
       "supplyAmount": {
         "gt": "480440",
-        "ext": "",
+        "ext": "480440",
         "gtNorm": "480440",
-        "extNorm": "",
+        "extNorm": "480440",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 6,
+      "match": 8,
       "mismatch": 4,
-      "ext_missing": 2,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 6,
+      "matched": 8,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.5
+    "fieldAccuracy": 0.6666666666666666
   },
   "table": {
     "alignMode": "content",
@@ -203,18 +203,18 @@
         "cells": {
           "itemName": {
             "gt": "솔리안정(병) 100MG/30T (H...",
-            "ext": "전문",
+            "ext": "솔리안정(병)100MG/30T(H.…",
             "gtNorm": "솔리안정병100mg30th",
-            "extNorm": "전문",
-            "status": "mismatch",
+            "extNorm": "솔리안정병100mg30th",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "솔리안정100mg",
-            "ext": "",
+            "ext": "솔리안정100mg",
             "gtNorm": "솔리안정100mg",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "솔리안정100mg",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -267,10 +267,10 @@
           },
           "itemCode": {
             "gt": "22006406",
-            "ext": "",
+            "ext": "22006406",
             "gtNorm": "22006406",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "22006406",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -286,24 +286,16 @@
     ],
     "cellCounts": {
       "scored": 10,
-      "match": 3,
-      "mismatch": 1,
-      "ext_missing": 6,
+      "match": 6,
+      "mismatch": 0,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3
+    "cellAccuracy": 0.6
   },
   "buckets": {
     "defects": [
-      {
-        "location": "field:taxAmount",
-        "status": "ext_missing",
-        "gtNorm": "48044",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
-      },
       {
         "location": "field:supplierCompany",
         "status": "mismatch",
@@ -321,14 +313,6 @@
         "reason": "char-level diff (sim=0.91)"
       },
       {
-        "location": "field:supplyAmount",
-        "status": "ext_missing",
-        "gtNorm": "480440",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value present at ['row1:amount']"
-      },
-      {
         "location": "field:buyerCompany",
         "status": "mismatch",
         "gtNorm": "백제약품북부물류센터",
@@ -343,22 +327,6 @@
         "extNorm": "서울시구로구공원로8길24구로동",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
-      },
-      {
-        "location": "row1:itemName",
-        "status": "mismatch",
-        "gtNorm": "솔리안정병100mg30th",
-        "extNorm": "전문",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row1:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "솔리안정100mg",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row1:spec",
@@ -385,14 +353,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "22006406",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row1:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "8806521005928",
@@ -402,8 +362,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 8,
+      "recognition": 4,
+      "structure": 4,
       "layout": 0,
       "preprocessing": 0
     },
@@ -423,6 +383,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.167
+    "fieldMissRate": 0.0
   }
 }

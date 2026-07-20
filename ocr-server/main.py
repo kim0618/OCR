@@ -84,6 +84,7 @@ from extractors.invoice_statement_free import (
     fill_arith_empty_quantity,
     fix_swapped_qty_unitprice,
     fix_totals_arithmetic,
+    adopt_band_names_master_gated,
     reconstruct_numeric_columns,
     refine_supplier_bizno,
     refine_buyer_bizno,
@@ -3698,6 +3699,17 @@ async def ocr_extract(
                         extract_debug["totalsArithmetic"] = _tt_dbg
             except Exception as _tt_e:
                 print(f"[totals_arithmetic] failed (response unaffected): {_tt_e}")
+            # 품명 밴드입양(마스터 게이트): 품명 빈 행에 밴드 유일 한글라인을 마스터
+            # 검증(sim>=0.5) 후 입양. ★마스터매칭 앞 — 입양된 품명이 ②G4를 받는다.
+            try:
+                if isinstance(document_fields, dict) and document_fields.get("tableRows"):
+                    _ad_rows, _ad_dbg = adopt_band_names_master_gated(
+                        document_fields["tableRows"], ocr_lines_raw)
+                    document_fields["tableRows"] = _ad_rows
+                    if _ad_dbg.get("adopted"):
+                        extract_debug["bandNameAdopt"] = _ad_dbg
+            except Exception as _ad_e:
+                print(f"[band_name_adopt] failed (response unaffected): {_ad_e}")
             # Path-agnostic 공급자/공급받는자 사업자번호 재선택: OCR 넓힌추출 + 보수적
             # 재선택. ★마스터매칭 앞이어야 교정된 supplier bizno가 itembuycust 앵커로 쓰인다.
             try:

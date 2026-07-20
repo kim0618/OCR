@@ -8,11 +8,11 @@
     "perField": {
       "totalAmount": {
         "gt": "6600705",
-        "ext": "6,694,125",
+        "ext": "6600705",
         "gtNorm": "6600705",
-        "extNorm": "6694125",
+        "extNorm": "6600705",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -125,11 +125,11 @@
       },
       "supplyAmount": {
         "gt": "6000640",
-        "ext": "",
+        "ext": "6000640",
         "gtNorm": "6000640",
-        "extNorm": "",
+        "extNorm": "6000640",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 6,
-      "mismatch": 4,
-      "ext_missing": 2,
+      "match": 8,
+      "mismatch": 3,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 6,
+      "matched": 8,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.5
+    "fieldAccuracy": 0.6666666666666666
   },
   "table": {
     "alignMode": "content",
@@ -905,20 +905,12 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:totalAmount",
-        "status": "mismatch",
-        "gtNorm": "6600705",
-        "extNorm": "6694125",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:discountAmount",
         "status": "mismatch",
         "gtNorm": "6000640",
         "extNorm": "0",
         "bucket": "structure",
-        "reason": "ext value is gt's ['row11:unitPrice']"
+        "reason": "gt value present at ['field:supplyAmount']"
       },
       {
         "location": "field:supplierAddress",
@@ -927,14 +919,6 @@
         "extNorm": "경기안산시단원구산단로68번길58초지동",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.98)"
-      },
-      {
-        "location": "field:supplyAmount",
-        "status": "ext_missing",
-        "gtNorm": "6000640",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:buyerCompany",
@@ -1034,8 +1018,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 3,
-      "structure": 12,
+      "recognition": 2,
+      "structure": 11,
       "layout": 1,
       "preprocessing": 0
     },
@@ -1055,6 +1039,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.167
+    "fieldMissRate": 0.083
   }
 }

@@ -179,14 +179,11 @@
     "rowCountExt": 2,
     "rowCountMatch": true,
     "matchedRowIdx": [
-      "1"
-    ],
-    "gtOnlyRowIdx": [
+      "1",
       "2"
     ],
-    "extOnlyRowIdx": [
-      "2"
-    ],
+    "gtOnlyRowIdx": [],
+    "extOnlyRowIdx": [],
     "rows": [
       {
         "rowIndex": "1",
@@ -269,22 +266,21 @@
       {
         "rowIndex": "2",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "헤파멜즈인퓨전주",
-            "ext": "",
+            "ext": "헤파멜즈인퓨전주",
             "gtNorm": "헤파멜즈인퓨전주",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "헤파멜즈인퓨전주",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "헤파멜즈인퓨전주",
-            "ext": "",
+            "ext": "헤파멜즈인퓨전주",
             "gtNorm": "헤파멜즈인퓨전주",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "헤파멜즈인퓨전주",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -305,26 +301,26 @@
           },
           "unitPrice": {
             "gt": "0",
-            "ext": "",
+            "ext": "671,040",
             "gtNorm": "0",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "671040",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "671040",
-            "ext": "",
+            "ext": "67,104",
             "gtNorm": "671040",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "67104",
+            "status": "mismatch",
             "spurious": false
           },
           "expiryDate": {
             "gt": "20290108",
-            "ext": "",
+            "ext": "2029-01-08",
             "gtNorm": "20290108",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20290108",
+            "status": "match",
             "spurious": false
           },
           "manufacturingNo": {
@@ -337,10 +333,10 @@
           },
           "itemCode": {
             "gt": "152041",
-            "ext": "",
+            "ext": "152041",
             "gtNorm": "152041",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "152041",
+            "status": "match",
             "spurious": false
           }
         }
@@ -348,13 +344,13 @@
     ],
     "cellCounts": {
       "scored": 18,
-      "match": 2,
-      "mismatch": 4,
-      "ext_missing": 12,
+      "match": 6,
+      "mismatch": 6,
+      "ext_missing": 6,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.1111111111111111
+    "cellAccuracy": 0.3333333333333333
   },
   "buckets": {
     "defects": [
@@ -381,22 +377,6 @@
         "extNorm": "강원도춘천시약암길",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
-      },
-      {
-        "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['2']"
-      },
-      {
-        "location": "table",
-        "status": "rows_extra",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor invented rows ['2']"
       },
       {
         "location": "row1:itemName",
@@ -455,22 +435,6 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row2:itemName",
-        "status": "ext_missing",
-        "gtNorm": "헤파멜즈인퓨전주",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "헤파멜즈인퓨전주",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row2:spec",
         "status": "ext_missing",
         "gtNorm": "10amp",
@@ -488,27 +452,19 @@
       },
       {
         "location": "row2:unitPrice",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "0",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "671040",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row2:amount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "671040",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:expiryDate",
-        "status": "ext_missing",
-        "gtNorm": "20290108",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "67104",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['unitPrice']"
       },
       {
         "location": "row2:manufacturingNo",
@@ -517,20 +473,12 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "152041",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 6,
-      "structure": 14,
-      "layout": 1,
+      "recognition": 7,
+      "structure": 6,
+      "layout": 2,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

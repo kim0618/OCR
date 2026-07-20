@@ -8,11 +8,11 @@
     "perField": {
       "totalAmount": {
         "gt": "7522560",
-        "ext": "212,412,035",
+        "ext": "7522560",
         "gtNorm": "7522560",
-        "extNorm": "212412035",
+        "extNorm": "7522560",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -21,9 +21,9 @@
       },
       "taxAmount": {
         "gt": "0",
-        "ext": "7,522,560",
+        "ext": "683869",
         "gtNorm": "0",
-        "extNorm": "7522560",
+        "extNorm": "683869",
         "type": "amount",
         "status": "mismatch",
         "edited": false,
@@ -125,11 +125,11 @@
       },
       "supplyAmount": {
         "gt": "7522560",
-        "ext": "7,522,560",
+        "ext": "6838691",
         "gtNorm": "7522560",
-        "extNorm": "7522560",
+        "extNorm": "6838691",
         "type": "amount",
-        "status": "match",
+        "status": "mismatch",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -303,18 +303,10 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:totalAmount",
-        "status": "mismatch",
-        "gtNorm": "7522560",
-        "extNorm": "212412035",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:supplyAmount', 'field:taxAmount', 'row1:amount']"
-      },
-      {
         "location": "field:taxAmount",
         "status": "mismatch",
         "gtNorm": "0",
-        "extNorm": "7522560",
+        "extNorm": "683869",
         "bucket": "structure",
         "reason": "gt value present at ['field:discountAmount']"
       },
@@ -325,6 +317,14 @@
         "extNorm": "과세",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.50)"
+      },
+      {
+        "location": "field:supplyAmount",
+        "status": "mismatch",
+        "gtNorm": "7522560",
+        "extNorm": "6838691",
+        "bucket": "structure",
+        "reason": "gt value present at ['field:totalAmount', 'row1:amount']"
       },
       {
         "location": "field:buyerAddress",

@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "3000",
-        "ext": "",
+        "ext": "3000",
         "gtNorm": "3000",
-        "extNorm": "",
+        "extNorm": "3000",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -99,11 +99,11 @@
       },
       "supplyAmount": {
         "gt": "27000",
-        "ext": "",
+        "ext": "30000",
         "gtNorm": "27000",
-        "extNorm": "",
+        "extNorm": "30000",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -141,9 +141,9 @@
     "profile": "thin",
     "counts": {
       "scored": 10,
-      "match": 5,
-      "mismatch": 3,
-      "ext_missing": 2,
+      "match": 6,
+      "mismatch": 4,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -154,11 +154,11 @@
     },
     "coverage": {
       "gtPresent": 10,
-      "matched": 5,
+      "matched": 6,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.5
+    "fieldAccuracy": 0.6
   },
   "table": {
     "alignMode": "content",
@@ -268,23 +268,15 @@
         "gtNorm": "30000",
         "extNorm": "33000",
         "bucket": "structure",
-        "reason": "gt value present at ['row1:amount']"
-      },
-      {
-        "location": "field:taxAmount",
-        "status": "ext_missing",
-        "gtNorm": "3000",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "reason": "gt value present at ['field:supplyAmount', 'row1:amount']"
       },
       {
         "location": "field:supplyAmount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "27000",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "extNorm": "30000",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.60)"
       },
       {
         "location": "field:buyerCompany",
@@ -336,8 +328,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 4,
+      "recognition": 6,
+      "structure": 2,
       "layout": 0,
       "preprocessing": 0
     },
@@ -357,6 +349,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.2
+    "fieldMissRate": 0.0
   }
 }

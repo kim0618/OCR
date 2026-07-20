@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "794182",
-        "ext": "",
+        "ext": "794182",
         "gtNorm": "794182",
-        "extNorm": "",
+        "extNorm": "794182",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -99,11 +99,11 @@
       },
       "supplyAmount": {
         "gt": "-794182",
-        "ext": "",
+        "ext": "7941818",
         "gtNorm": "794182",
-        "extNorm": "",
+        "extNorm": "7941818",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -141,9 +141,9 @@
     "profile": "thin",
     "counts": {
       "scored": 10,
-      "match": 3,
-      "mismatch": 4,
-      "ext_missing": 3,
+      "match": 4,
+      "mismatch": 5,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -154,11 +154,11 @@
     },
     "coverage": {
       "gtPresent": 10,
-      "matched": 3,
+      "matched": 4,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 3
+      "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.3
+    "fieldAccuracy": 0.4
   },
   "table": {
     "alignMode": "content",
@@ -273,14 +273,6 @@
         "reason": "gt value present at ['field:discountAmount']"
       },
       {
-        "location": "field:taxAmount",
-        "status": "ext_missing",
-        "gtNorm": "794182",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
-      },
-      {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "초당약품공업일반",
@@ -298,11 +290,11 @@
       },
       {
         "location": "field:supplyAmount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "794182",
-        "extNorm": "",
+        "extNorm": "7941818",
         "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "reason": "gt value present at ['field:taxAmount']"
       },
       {
         "location": "field:buyerCompany",
@@ -371,7 +363,7 @@
     ],
     "bucketTally": {
       "recognition": 6,
-      "structure": 7,
+      "structure": 6,
       "layout": 0,
       "preprocessing": 0
     },
@@ -391,6 +383,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.3
+    "fieldMissRate": 0.1
   }
 }

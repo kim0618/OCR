@@ -192,14 +192,11 @@
     "rowCountExt": 2,
     "rowCountMatch": true,
     "matchedRowIdx": [
-      "2"
-    ],
-    "gtOnlyRowIdx": [
-      "2"
-    ],
-    "extOnlyRowIdx": [
+      "2",
       "1"
     ],
+    "gtOnlyRowIdx": [],
+    "extOnlyRowIdx": [],
     "rows": [
       {
         "rowIndex": "2",
@@ -288,48 +285,47 @@
         }
       },
       {
-        "rowIndex": "2",
+        "rowIndex": "1",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "브레트라정(레트로졸)",
-            "ext": "",
+            "ext": "브레트라정(레트로졸)",
             "gtNorm": "브레트라정레트로졸",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "브레트라정레트로졸",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "브레트라정",
-            "ext": "",
+            "ext": "브레트라정",
             "gtNorm": "브레트라정",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "브레트라정",
+            "status": "match",
             "spurious": false
           },
           "spec": {
             "gt": "30정",
-            "ext": "",
+            "ext": "30정",
             "gtNorm": "30정",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30정",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
             "gt": "30",
-            "ext": "",
+            "ext": "30",
             "gtNorm": "30",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "0",
-            "ext": "",
+            "ext": "76,666",
             "gtNorm": "0",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "76666",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
@@ -358,10 +354,10 @@
           },
           "itemCode": {
             "gt": "8806485013113",
-            "ext": "",
+            "ext": "8806485013113",
             "gtNorm": "8806485013113",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "8806485013113",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -377,13 +373,13 @@
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 4,
-      "mismatch": 2,
-      "ext_missing": 14,
+      "match": 9,
+      "mismatch": 3,
+      "ext_missing": 8,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.2
+    "cellAccuracy": 0.45
   },
   "buckets": {
     "defects": [
@@ -418,22 +414,6 @@
         "extNorm": "광주광역시동구제봉로200대인동",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.90)"
-      },
-      {
-        "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['2']"
-      },
-      {
-        "location": "table",
-        "status": "rows_extra",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor invented rows ['1']"
       },
       {
         "location": "row2:itemName",
@@ -484,39 +464,15 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:itemName",
-        "status": "ext_missing",
-        "gtNorm": "브레트라정레트로졸",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "location": "row1:unitPrice",
+        "status": "mismatch",
+        "gtNorm": "0",
+        "extNorm": "76666",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
-        "location": "row2:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "브레트라정",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:spec",
-        "status": "ext_missing",
-        "gtNorm": "30정",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:quantity",
-        "status": "ext_missing",
-        "gtNorm": "30",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:unitPrice",
+        "location": "row1:amount",
         "status": "ext_missing",
         "gtNorm": "0",
         "extNorm": "",
@@ -524,15 +480,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:amount",
-        "status": "ext_missing",
-        "gtNorm": "0",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:expiryDate",
+        "location": "row1:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20290405",
         "extNorm": "",
@@ -540,7 +488,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:manufacturingNo",
+        "location": "row1:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "BRETTG005",
         "extNorm": "",
@@ -548,15 +496,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "8806485013113",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:insuranceCode",
+        "location": "row1:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "648501310",
         "extNorm": "",
@@ -565,8 +505,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 4,
-      "structure": 18,
+      "recognition": 5,
+      "structure": 10,
       "layout": 0,
       "preprocessing": 0
     },

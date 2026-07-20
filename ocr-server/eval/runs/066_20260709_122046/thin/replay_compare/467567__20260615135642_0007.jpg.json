@@ -8,11 +8,11 @@
     "perField": {
       "totalAmount": {
         "gt": "4805102",
-        "ext": "4,368,275",
+        "ext": "4805102",
         "gtNorm": "4805102",
-        "extNorm": "4368275",
+        "extNorm": "4805102",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "436827",
-        "ext": "",
+        "ext": "436827",
         "gtNorm": "436827",
-        "extNorm": "",
+        "extNorm": "436827",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -125,11 +125,11 @@
       },
       "supplyAmount": {
         "gt": "4368275",
-        "ext": "",
+        "ext": "4368275",
         "gtNorm": "4368275",
-        "extNorm": "",
+        "extNorm": "4368275",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
-      "mismatch": 2,
-      "ext_missing": 2,
+      "match": 11,
+      "mismatch": 1,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 11,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.9166666666666666
   },
   "table": {
     "alignMode": "content",
@@ -382,18 +382,18 @@
         "cells": {
           "itemName": {
             "gt": "스틸녹스정(PTP)(향정) 10mg...",
-            "ext": "전문",
+            "ext": "스틸녹스정(PTP)(향정)10mg",
             "gtNorm": "스틸녹스정ptp향정10mg",
-            "extNorm": "전문",
-            "status": "mismatch",
+            "extNorm": "스틸녹스정ptp향정10mg",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "스틸녹스정10mg(PTP)(향정)",
-            "ext": "",
+            "ext": "스틸녹스정10mg(PTP)(향정)",
             "gtNorm": "스틸녹스정10mg(ptp)(향정)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "스틸녹스정10mg(ptp)(향정)",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -446,10 +446,10 @@
           },
           "itemCode": {
             "gt": "22003657",
-            "ext": "",
+            "ext": "22003657",
             "gtNorm": "22003657",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "22003657",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -468,18 +468,18 @@
         "cells": {
           "itemName": {
             "gt": "시알리스정(PTP) 10mg 4T",
-            "ext": "전문",
+            "ext": "시알리스정(PTP)1Omg 4T",
             "gtNorm": "시알리스정ptp10mg4t",
-            "extNorm": "전문",
+            "extNorm": "시알리스정ptp1omg4t",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "시알리스정10mg(오남용)",
-            "ext": "",
+            "ext": "시알리스정10mg(오남용)",
             "gtNorm": "시알리스정10mg(오남용)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "시알리스정10mg(오남용)",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -532,10 +532,10 @@
           },
           "itemCode": {
             "gt": "01006554",
-            "ext": "",
+            "ext": "01006554",
             "gtNorm": "01006554",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "01006554",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -723,40 +723,16 @@
     ],
     "cellCounts": {
       "scored": 60,
-      "match": 17,
-      "mismatch": 9,
-      "ext_missing": 34,
+      "match": 22,
+      "mismatch": 8,
+      "ext_missing": 30,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.2833333333333333
+    "cellAccuracy": 0.36666666666666664
   },
   "buckets": {
     "defects": [
-      {
-        "location": "field:totalAmount",
-        "status": "mismatch",
-        "gtNorm": "4805102",
-        "extNorm": "4368275",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['field:supplyAmount']"
-      },
-      {
-        "location": "field:taxAmount",
-        "status": "ext_missing",
-        "gtNorm": "436827",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
-      },
-      {
-        "location": "field:supplyAmount",
-        "status": "ext_missing",
-        "gtNorm": "4368275",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:totalAmount']"
-      },
       {
         "location": "field:buyerAddress",
         "status": "mismatch",
@@ -894,22 +870,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:itemName",
-        "status": "mismatch",
-        "gtNorm": "스틸녹스정ptp향정10mg",
-        "extNorm": "전문",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row2:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "스틸녹스정10mg(ptp)(향정)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row2:spec",
         "status": "ext_missing",
         "gtNorm": "14t",
@@ -934,14 +894,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "22003657",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row2:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "8806521006444",
@@ -953,17 +905,9 @@
         "location": "row3:itemName",
         "status": "mismatch",
         "gtNorm": "시알리스정ptp10mg4t",
-        "extNorm": "전문",
+        "extNorm": "시알리스정ptp1omg4t",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row3:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "시알리스정10mg(오남용)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "reason": "char-level diff (sim=0.93)"
       },
       {
         "location": "row3:spec",
@@ -985,14 +929,6 @@
         "location": "row3:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "D891822",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "01006554",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -1119,8 +1055,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 10,
-      "structure": 38,
+      "recognition": 9,
+      "structure": 31,
       "layout": 0,
       "preprocessing": 0
     },
@@ -1140,6 +1076,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.167
+    "fieldMissRate": 0.0
   }
 }

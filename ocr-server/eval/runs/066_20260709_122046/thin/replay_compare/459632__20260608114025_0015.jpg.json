@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "154405",
-        "ext": "1,544,048",
+        "ext": "154405",
         "gtNorm": "154405",
-        "extNorm": "1544048",
+        "extNorm": "154405",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -99,11 +99,11 @@
       },
       "supplyAmount": {
         "gt": "1544048",
-        "ext": "",
+        "ext": "1544048",
         "gtNorm": "1544048",
-        "extNorm": "",
+        "extNorm": "1544048",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -141,9 +141,9 @@
     "profile": "thin",
     "counts": {
       "scored": 10,
-      "match": 5,
-      "mismatch": 4,
-      "ext_missing": 1,
+      "match": 7,
+      "mismatch": 3,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -154,11 +154,11 @@
     },
     "coverage": {
       "gtPresent": 10,
-      "matched": 5,
+      "matched": 7,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.5
+    "fieldAccuracy": 0.7
   },
   "table": {
     "alignMode": "content",
@@ -625,14 +625,6 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:taxAmount",
-        "status": "mismatch",
-        "gtNorm": "154405",
-        "extNorm": "1544048",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.77)"
-      },
-      {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "킵스바이오파마구한국글로벌",
@@ -647,14 +639,6 @@
         "extNorm": "충청남도서천군종천면종천공단길32번길26",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplyAmount",
-        "status": "ext_missing",
-        "gtNorm": "1544048",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:taxAmount']"
       },
       {
         "location": "field:buyerAddress",
@@ -954,8 +938,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 9,
-      "structure": 26,
+      "recognition": 8,
+      "structure": 25,
       "layout": 6,
       "preprocessing": 0
     },
@@ -975,6 +959,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.1
+    "fieldMissRate": 0.0
   }
 }

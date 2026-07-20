@@ -8,11 +8,11 @@
     "perField": {
       "totalAmount": {
         "gt": "2187690",
-        "ext": "243,656,440",
+        "ext": "2187690",
         "gtNorm": "2187690",
-        "extNorm": "243656440",
+        "extNorm": "2187690",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "198881",
-        "ext": "2,187,690",
+        "ext": "198881",
         "gtNorm": "198881",
-        "extNorm": "2187690",
+        "extNorm": "198881",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -125,11 +125,11 @@
       },
       "supplyAmount": {
         "gt": "1988809",
-        "ext": "",
+        "ext": "1988809",
         "gtNorm": "1988809",
-        "extNorm": "",
+        "extNorm": "1988809",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 5,
-      "mismatch": 6,
-      "ext_missing": 1,
+      "match": 8,
+      "mismatch": 4,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 5,
+      "matched": 8,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.4166666666666667
+    "fieldAccuracy": 0.6666666666666666
   },
   "table": {
     "alignMode": "content",
@@ -198,14 +198,14 @@
       "4",
       "5",
       "6",
-      "11"
+      "7"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "7",
       "8",
       "9",
-      "10"
+      "10",
+      "11"
     ],
     "rows": [
       {
@@ -620,10 +620,10 @@
         "cells": {
           "itemName": {
             "gt": "한토젯정",
-            "ext": "6 655605300 한올 한토젯정 10/10/30T 20 17,677 353,540 4000106 2809",
+            "ext": "한토젯정",
             "gtNorm": "한토젯정",
-            "extNorm": "6655605300한올한토젯정101030t201767735354040001062809",
-            "status": "mismatch",
+            "extNorm": "한토젯정",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
@@ -701,15 +701,15 @@
         }
       },
       {
-        "rowIndex": "11",
+        "rowIndex": "7",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "한시움정",
-            "ext": "7 655604640 한을 한시움정 20/28T Vo 19,321 193,210 4000006 280424 ",
+            "ext": "한시움정",
             "gtNorm": "한시움정",
-            "extNorm": "7655604640한을한시움정2028tvo193211932104000006280424",
-            "status": "mismatch",
+            "extNorm": "한시움정",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
@@ -722,18 +722,18 @@
           },
           "spec": {
             "gt": "20/28T",
-            "ext": "전/",
+            "ext": "",
             "gtNorm": "20/28t",
-            "extNorm": "전/",
-            "status": "mismatch",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "quantity": {
             "gt": "10",
-            "ext": "10",
+            "ext": "8",
             "gtNorm": "10",
-            "extNorm": "10",
-            "status": "match",
+            "extNorm": "8",
+            "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
@@ -789,32 +789,16 @@
     ],
     "cellCounts": {
       "scored": 67,
-      "match": 32,
-      "mismatch": 17,
-      "ext_missing": 18,
+      "match": 33,
+      "mismatch": 15,
+      "ext_missing": 19,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.47761194029850745
+    "cellAccuracy": 0.4925373134328358
   },
   "buckets": {
     "defects": [
-      {
-        "location": "field:totalAmount",
-        "status": "mismatch",
-        "gtNorm": "2187690",
-        "extNorm": "243656440",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:taxAmount']"
-      },
-      {
-        "location": "field:taxAmount",
-        "status": "mismatch",
-        "gtNorm": "198881",
-        "extNorm": "2187690",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['field:totalAmount']"
-      },
       {
         "location": "field:buyerBizNumber",
         "status": "mismatch",
@@ -840,14 +824,6 @@
         "reason": "char-level diff (sim=0.65)"
       },
       {
-        "location": "field:supplyAmount",
-        "status": "ext_missing",
-        "gtNorm": "1988809",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
-      },
-      {
         "location": "field:buyerCompany",
         "status": "mismatch",
         "gtNorm": "백제약품광주지점",
@@ -861,7 +837,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['7', '8', '9', '10']"
+        "reason": "extractor invented rows ['8', '9', '10', '11']"
       },
       {
         "location": "row1:itemName",
@@ -1056,14 +1032,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row6:itemName",
-        "status": "mismatch",
-        "gtNorm": "한토젯정",
-        "extNorm": "6655605300한올한토젯정101030t201767735354040001062809",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
         "location": "row6:spec",
         "status": "ext_missing",
         "gtNorm": "10/10/30t",
@@ -1104,23 +1072,23 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row11:itemName",
-        "status": "mismatch",
-        "gtNorm": "한시움정",
-        "extNorm": "7655604640한을한시움정2028tvo193211932104000006280424",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row11:spec",
-        "status": "mismatch",
+        "location": "row7:spec",
+        "status": "ext_missing",
         "gtNorm": "20/28t",
-        "extNorm": "전/",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row7:quantity",
+        "status": "mismatch",
+        "gtNorm": "10",
+        "extNorm": "8",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row11:expiryDate",
+        "location": "row7:expiryDate",
         "status": "mismatch",
         "gtNorm": "20280424",
         "extNorm": "280424",
@@ -1128,7 +1096,7 @@
         "reason": "char-level diff (sim=0.86)"
       },
       {
-        "location": "row11:manufacturingNo",
+        "location": "row7:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "4000006",
         "extNorm": "",
@@ -1136,7 +1104,7 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row11:insuranceCode",
+        "location": "row7:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "655604640",
         "extNorm": "",
@@ -1145,8 +1113,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 21,
-      "structure": 22,
+      "recognition": 19,
+      "structure": 20,
       "layout": 0,
       "preprocessing": 0
     },
@@ -1166,6 +1134,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

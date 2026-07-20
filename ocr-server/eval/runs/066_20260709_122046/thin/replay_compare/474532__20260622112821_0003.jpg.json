@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "58900",
-        "ext": "",
+        "ext": "58900",
         "gtNorm": "58900",
-        "extNorm": "",
+        "extNorm": "58900",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -125,11 +125,11 @@
       },
       "supplyAmount": {
         "gt": "589000",
-        "ext": "",
+        "ext": "589000",
         "gtNorm": "589000",
-        "extNorm": "",
+        "extNorm": "589000",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 7,
+      "match": 9,
       "mismatch": 2,
-      "ext_missing": 3,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 7,
+      "matched": 9,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 3
+      "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.5833333333333334
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -289,28 +289,12 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:taxAmount",
-        "status": "ext_missing",
-        "gtNorm": "58900",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "경기도안산시단원구능안로47목내동",
         "extNorm": "서울동작구상도로7대방동",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplyAmount",
-        "status": "ext_missing",
-        "gtNorm": "589000",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value present at ['row1:amount']"
       },
       {
         "location": "field:buyerCompany",
@@ -347,7 +331,7 @@
     ],
     "bucketTally": {
       "recognition": 3,
-      "structure": 4,
+      "structure": 2,
       "layout": 0,
       "preprocessing": 0
     },
@@ -367,6 +351,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.25
+    "fieldMissRate": 0.083
   }
 }

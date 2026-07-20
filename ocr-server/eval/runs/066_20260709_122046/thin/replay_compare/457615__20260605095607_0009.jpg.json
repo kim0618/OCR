@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "3214126",
-        "ext": "",
+        "ext": "3214126",
         "gtNorm": "3214126",
-        "extNorm": "",
+        "extNorm": "3214126",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -125,11 +125,11 @@
       },
       "supplyAmount": {
         "gt": "32141260",
-        "ext": "3,052,800",
+        "ext": "32141260",
         "gtNorm": "32141260",
-        "extNorm": "3052800",
+        "extNorm": "32141260",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 5,
-      "mismatch": 5,
-      "ext_missing": 2,
+      "match": 7,
+      "mismatch": 4,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 5,
+      "matched": 7,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.4166666666666667
+    "fieldAccuracy": 0.5833333333333334
   },
   "table": {
     "alignMode": "content",
@@ -485,10 +485,10 @@
         "cells": {
           "itemName": {
             "gt": "거드액",
-            "ext": "48액",
+            "ext": "거드액",
             "gtNorm": "거드액",
-            "extNorm": "48액",
-            "status": "mismatch",
+            "extNorm": "거드액",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
@@ -763,24 +763,16 @@
     ],
     "cellCounts": {
       "scored": 63,
-      "match": 42,
-      "mismatch": 9,
+      "match": 43,
+      "mismatch": 8,
       "ext_missing": 12,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.6666666666666666
+    "cellAccuracy": 0.6825396825396826
   },
   "buckets": {
     "defects": [
-      {
-        "location": "field:taxAmount",
-        "status": "ext_missing",
-        "gtNorm": "3214126",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
-      },
       {
         "location": "field:buyerBizNumber",
         "status": "mismatch",
@@ -804,14 +796,6 @@
         "extNorm": "강원도원주시문막읍동화공단로49",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplyAmount",
-        "status": "mismatch",
-        "gtNorm": "32141260",
-        "extNorm": "3052800",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['row6:amount']"
       },
       {
         "location": "field:buyerCompany",
@@ -926,14 +910,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row3:itemName",
-        "status": "mismatch",
-        "gtNorm": "거드액",
-        "extNorm": "48액",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemNameMaster']"
-      },
-      {
         "location": "row3:spec",
         "status": "mismatch",
         "gtNorm": "25mlx20",
@@ -1016,8 +992,8 @@
     ],
     "bucketTally": {
       "recognition": 11,
-      "structure": 18,
-      "layout": 1,
+      "structure": 16,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,
@@ -1036,6 +1012,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.167
+    "fieldMissRate": 0.083
   }
 }

@@ -8,11 +8,11 @@
     "perField": {
       "totalAmount": {
         "gt": "8598291",
-        "ext": "657,807,460",
+        "ext": "8598291",
         "gtNorm": "8598291",
-        "extNorm": "657807460",
+        "extNorm": "8598291",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -125,11 +125,11 @@
       },
       "supplyAmount": {
         "gt": "8598291",
-        "ext": "",
+        "ext": "7816629",
         "gtNorm": "8598291",
-        "extNorm": "",
+        "extNorm": "7816629",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 5,
+      "match": 6,
       "mismatch": 6,
-      "ext_missing": 1,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 5,
+      "matched": 6,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.4166666666666667
+    "fieldAccuracy": 0.5
   },
   "table": {
     "alignMode": "content",
@@ -986,18 +986,18 @@
         "cells": {
           "itemName": {
             "gt": "오메가원연질캡슐",
-            "ext": "",
+            "ext": "오메가원연질캡술",
             "gtNorm": "오메가원연질캡슐",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "오메가원연질캡술",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "오메가원연질캡슐",
-            "ext": "",
+            "ext": "오메가원연질캡슐",
             "gtNorm": "오메가원연질캡슐",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "오메가원연질캡슐",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -1050,10 +1050,10 @@
           },
           "itemCode": {
             "gt": "04003983",
-            "ext": "",
+            "ext": "04003983",
             "gtNorm": "04003983",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "04003983",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -1069,24 +1069,16 @@
     ],
     "cellCounts": {
       "scored": 100,
-      "match": 50,
-      "mismatch": 25,
-      "ext_missing": 25,
+      "match": 52,
+      "mismatch": 26,
+      "ext_missing": 22,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5
+    "cellAccuracy": 0.52
   },
   "buckets": {
     "defects": [
-      {
-        "location": "field:totalAmount",
-        "status": "mismatch",
-        "gtNorm": "8598291",
-        "extNorm": "657807460",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['row3:insuranceCode']"
-      },
       {
         "location": "field:taxAmount",
         "status": "mismatch",
@@ -1113,11 +1105,11 @@
       },
       {
         "location": "field:supplyAmount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "8598291",
-        "extNorm": "",
+        "extNorm": "7816629",
         "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "reason": "gt value present at ['field:totalAmount']"
       },
       {
         "location": "field:buyerCompany",
@@ -1489,19 +1481,11 @@
       },
       {
         "location": "row10:itemName",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "오메가원연질캡슐",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row10:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "오메가원연질캡슐",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "오메가원연질캡술",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemNameMaster']"
       },
       {
         "location": "row10:unitPrice",
@@ -1520,14 +1504,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row10:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "04003983",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row10:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "657807020",
@@ -1538,8 +1514,8 @@
     ],
     "bucketTally": {
       "recognition": 28,
-      "structure": 27,
-      "layout": 2,
+      "structure": 23,
+      "layout": 3,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,
@@ -1558,6 +1534,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

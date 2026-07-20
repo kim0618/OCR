@@ -5763,6 +5763,140 @@ def fill_arith_empty_amount(table_rows: Any) -> tuple[Any, dict[str, Any]]:
     return table_rows, dbg
 
 
+# ─── 품명 밴드입양·교체(마스터 게이트): 빈칸 채움 + 무매치 교체 ────────────────
+# 근거(066 공식 replay 전수 드라이런):
+#  [fill] 품명 빈 matched행 1,312. 밴드 유일 한글후보 + 마스터 검증(sim>=0.5,단가힌트)
+#    = itemCode 정밀도 90.4%(발화 250). 게이트無 유일후보 81.6%·형태소완화 63.9%·
+#    모호해소(후보2+중 마스터1) 67.8% — 전부 기각.
+#  [replace/RV1] 품명 mismatch 18,699 중 '현재이름이 마스터 무매치(=쓰레기/훼손판)'
+#    행에서 밴드 best-sim 후보(sim>=0.5)로 교체 = master code GAIN 250·REG 23·순이득
+#    +227·10.9:1(실측). RV2(sim우세 교체)/RV3(문자유사 가드)는 이미 맞는 걸 흔들어
+#    1.0~1.3:1로 붕괴 → 기각. sim>=0.65·유일후보 조임도 실익 없어 미채택.
+# 마스터 미로드 환경에서는 불활성(정밀도가 마스터 게이트에 의존).
+def adopt_band_names_master_gated(
+    table_rows: Any, ocr_lines_raw: Any,
+) -> tuple[Any, dict[str, Any]]:
+    """품명 빈 행(fill) 또는 마스터 무매치 행(replace)의 y-밴드에서 마스터 검증된
+    한글라인을 채움/교체. free+fallback 합류점, 마스터매칭 이전에 실행되어야 함.
+    현재 이름이 이미 마스터 매치면 손대지 않음(RV2/RV3 기각)."""
+    dbg: dict[str, Any] = {"adopted": 0}
+    if not isinstance(table_rows, list) or not table_rows:
+        return table_rows, dbg
+    try:
+        from .master_match import get_matcher
+    except ImportError:
+        try:
+            from master_match import get_matcher  # type: ignore
+        except ImportError:
+            return table_rows, dbg
+    matcher = get_matcher()
+    if matcher is None:
+        return table_rows, dbg
+    dbg.setdefault("replaced", 0)
+    named = [r for r in table_rows if isinstance(r, dict)]
+    if not named:
+        return table_rows, dbg
+    toks: list[tuple[float, float, str, str]] = []   # (y, h, text, digits)
+    for ln in (ocr_lines_raw or []):
+        try:
+            pts, txt = ln[0], str(ln[1] or "").strip()
+            ys = [float(p[1]) for p in pts]
+        except Exception:
+            continue
+        if not txt or not ys:
+            continue
+        toks.append((sum(ys) / len(ys), max(max(ys) - min(ys), 1.0), txt,
+                     re.sub(r"\D", "", txt)))
+    if not toks:
+        return table_rows, dbg
+    all_names = [_ADOPT_NN_RE.sub("", str(r.get("itemName") or "")).lower() for r in named]
+    used_names = {u for u in all_names if len(u) >= 3}
+
+    def price_of(row):
+        return _upa_parse_money(_UPA_SQ_RE.sub("", str(row.get("unitPrice") or "")))
+
+    for row in named:
+        cur = str(row.get("itemName") or "").strip()
+        cur_n = _ADOPT_NN_RE.sub("", cur).lower()
+        price = price_of(row)
+        # 교체 대상 판정: 빈칸이거나(fill) 현재 이름이 마스터 무매치(=쓰레기/훼손판, RV1)
+        mode = None
+        if not cur:
+            mode = "fill"
+        else:
+            try:
+                cm = matcher.match(cur, price=price)
+            except Exception:
+                cm = None
+            # 현재 이름이 마스터 무매치(=쓰레기/훼손판)면 교체 대상(RV1).
+            # 형태소 가드는 기각: 실측상 '약처럼 생긴 무매치 이름' 교체도 31:1 GAIN
+            # 이라 가드가 좋은 회수만 깎음. +20 rawCorrect_masterWrong 은 회귀가 아니라
+            # raw 개선에 따른 정상 구간이동(사전 미보유 약) — 보호행 훼손 아님.
+            if not cm or (cm.get("sim") or 0) <= 0:
+                mode = "replace"
+        if mode is None:
+            continue  # 현재 이름이 이미 마스터 매치 → 흔들지 않음(RV2/RV3 기각)
+        band_y = None
+        for k in ("amount", "unitPrice"):
+            ev = re.sub(r"\D", "", str(row.get(k) or ""))
+            if len(ev) >= 4:
+                for y, h, _txt, dg in toks:
+                    if ev in dg:
+                        band_y = (y, h)
+                        break
+            if band_y:
+                break
+        if band_y is None:
+            continue
+        y0, h0 = band_y
+        cands = []
+        for y, h, txt, _dg in toks:
+            if abs(y - y0) > max(12.0, h0 * 0.9):
+                continue
+            if not _ADOPT_HANGUL_RE.search(txt):
+                continue
+            tn = _normalize_text(txt)
+            if _is_summary_or_header_line(tn) or _metadata_negative_reason(tn):
+                continue
+            cn = _ADOPT_NN_RE.sub("", txt).lower()
+            if cn == cur_n:
+                continue  # 자기 자신
+            # 다른 행이 쓰는 이름과 겹치면 제외(행 오배정 방지)
+            if len(cn) >= 3 and any(u != cur_n and len(u) >= 4 and (cn[:6] in u or u[:6] in cn)
+                                    for u in used_names):
+                continue
+            cands.append(txt)
+        if not cands:
+            continue
+        if mode == "fill":
+            if len(cands) != 1:
+                continue  # 빈칸 채움은 유일 후보만(모호 67.8% → skip)
+            line, m = cands[0], None
+            try:
+                m = matcher.match(line, price=price)
+            except Exception:
+                m = None
+            if not m or (m.get("sim") or 0) < 0.5:
+                continue
+            row["itemName"] = line.strip()
+            dbg["adopted"] += 1
+        else:  # replace(RV1): best-sim 후보, sim>=0.5. 순이득 +227·10.9:1(실측)
+            best = None
+            for line in cands:
+                try:
+                    m = matcher.match(line, price=price)
+                except Exception:
+                    m = None
+                if m and (best is None or (m.get("sim") or 0) > (best[1].get("sim") or 0)):
+                    best = (line, m)
+            if not best or (best[1].get("sim") or 0) < 0.5:
+                continue
+            row["itemName"] = best[0].strip()
+            dbg["replaced"] += 1
+        used_names.add(_ADOPT_NN_RE.sub("", str(row.get("itemName"))).lower())
+    return table_rows, dbg
+
+
 # ─── 합계 3형제 산술 복구: 공급가액+세액=총액 ──────────────────────────────────
 # 근거(066 공식 replay 전수): GT 자기일관 100.0%(5,814/5,814) — 완전 오라클.
 # 무게이트 유도는 28%로 붕괴(존재≠정답) → 부가세 prior(세액==round(공급가액×0.1)
@@ -5809,8 +5943,7 @@ def fix_totals_arithmetic(
             if derived > 0 and _totals_vat_ok(derived, tax):
                 document_fields["supplyAmount"] = _upa_fmt(derived)
                 dbg["derived"] += 1
-        return document_fields, dbg
-    if n == 3 and tot is not None and tax is not None and sup is not None \
+    elif n == 3 and tot is not None and tax is not None and sup is not None \
             and abs(sup + tax - tot) > 1:
         # RB': 유도값이 OCR 토큰으로 실재 + 사후 10% 통과 + 유일 후보일 때만 교체
         toks: set[str] = set()
@@ -5836,6 +5969,42 @@ def fix_totals_arithmetic(
             key, dv = cands[0]
             document_fields[key] = _upa_fmt(dv)
             dbg["replaced"] += 1
+
+    # RC' 합계밴드 트리플 스캔(0of3 등 위 규칙 미해결분): 문서 money 토큰에서
+    # s+t=tot & 10%관계 & s>t 인 유일 트리플. 앵커=트리플 한 값이 현재 읽힌 합계
+    # 필드와 일치할 때만(우연 트리플 차단). 드라이런 143:1(이득1,437·REG10·spurious0).
+    tot2, tax2, sup2 = gv("totalAmount"), gv("taxAmount"), gv("supplyAmount")
+    tax2_present = _UPA_SQ_RE.sub("", str(document_fields.get("taxAmount") or "")) != ""
+    consistent = (tot2 is not None and sup2 is not None and tax2 is not None
+                  and abs(sup2 + tax2 - tot2) <= 1)
+    if not consistent:
+        vals: set[float] = set()
+        for ln in (ocr_lines_raw or []):
+            try:
+                for m in _TOTALS_NUMTOK_RE.findall(str(ln[1] or "")):
+                    v = _upa_parse_money(m)
+                    if v is not None and v >= 100 and ("," in m or v >= 1000):
+                        vals.add(v)
+            except Exception:
+                continue
+        if len(vals) >= 3:
+            present_vals = [v for v in (tot2, tax2, sup2) if v is not None and v > 0]
+            triples = set()
+            for s in vals:
+                for t in vals:
+                    if t >= s:
+                        continue  # 공급 > 세액
+                    if (s + t) in vals and (abs(t - round(s * 0.1)) <= 1 or t == 0):
+                        triples.add((s, t, s + t))
+            anchored = [tr for tr in triples
+                        if any(abs(v - p) <= 1 for v in tr for p in present_vals)]
+            if len(anchored) == 1:
+                s, t, tt = anchored[0]
+                for key, v in (("supplyAmount", s), ("taxAmount", t), ("totalAmount", tt)):
+                    cur = gv(key)
+                    if cur is None or abs(cur - v) > 1:
+                        document_fields[key] = _upa_fmt(v)
+                        dbg["derived"] += 1
     return document_fields, dbg
 
 

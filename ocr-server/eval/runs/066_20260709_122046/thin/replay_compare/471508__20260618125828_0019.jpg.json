@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "2377071",
-        "ext": "",
+        "ext": "2377071",
         "gtNorm": "2377071",
-        "extNorm": "",
+        "extNorm": "2377071",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -125,11 +125,11 @@
       },
       "supplyAmount": {
         "gt": "23770699",
-        "ext": "415,309",
+        "ext": "23770699",
         "gtNorm": "23770699",
-        "extNorm": "415309",
+        "extNorm": "23770699",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 6,
-      "mismatch": 5,
-      "ext_missing": 1,
+      "match": 8,
+      "mismatch": 4,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 6,
+      "matched": 8,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.5
+    "fieldAccuracy": 0.6666666666666666
   },
   "table": {
     "alignMode": "content",
@@ -845,14 +845,6 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:taxAmount",
-        "status": "ext_missing",
-        "gtNorm": "2377071",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
-      },
-      {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "알리코제약전문",
@@ -867,14 +859,6 @@
         "extNorm": "서울서초구바우뫼로27길721양재동알리코제약빌딩",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplyAmount",
-        "status": "mismatch",
-        "gtNorm": "23770699",
-        "extNorm": "415309",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['row3:amount']"
       },
       {
         "location": "field:buyerCompany",
@@ -1335,7 +1319,7 @@
     ],
     "bucketTally": {
       "recognition": 16,
-      "structure": 44,
+      "structure": 42,
       "layout": 1,
       "preprocessing": 0
     },
@@ -1355,6 +1339,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

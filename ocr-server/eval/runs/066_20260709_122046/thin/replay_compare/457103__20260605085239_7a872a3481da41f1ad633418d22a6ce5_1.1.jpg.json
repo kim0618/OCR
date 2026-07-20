@@ -8,11 +8,11 @@
     "perField": {
       "totalAmount": {
         "gt": "918000",
-        "ext": "50,598,546",
+        "ext": "918000",
         "gtNorm": "918000",
-        "extNorm": "50598546",
+        "extNorm": "918000",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "83455",
-        "ext": "",
+        "ext": "83455",
         "gtNorm": "83455",
-        "extNorm": "",
+        "extNorm": "83455",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 7,
-      "mismatch": 3,
-      "ext_missing": 2,
+      "match": 9,
+      "mismatch": 2,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 7,
+      "matched": 9,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.5833333333333334
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -206,18 +206,18 @@
         "cells": {
           "itemName": {
             "gt": "엔파미드서방정",
-            "ext": "",
+            "ext": "073200860엔파미드서방정",
             "gtNorm": "엔파미드서방정",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "073200860엔파미드서방정",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "엔파미드서방정(노바엠헬스케어)",
-            "ext": "",
+            "ext": "엔파미드서방정(노바엠헬스케어)",
             "gtNorm": "엔파미드서방정(노바엠헬스케어)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "엔파미드서방정(노바엠헬스케어)",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -262,10 +262,10 @@
           },
           "itemCode": {
             "gt": "05006638",
-            "ext": "",
+            "ext": "05006638",
             "gtNorm": "05006638",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "05006638",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -281,32 +281,16 @@
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 3,
-      "mismatch": 0,
-      "ext_missing": 6,
+      "match": 5,
+      "mismatch": 1,
+      "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3333333333333333
+    "cellAccuracy": 0.5555555555555556
   },
   "buckets": {
     "defects": [
-      {
-        "location": "field:totalAmount",
-        "status": "mismatch",
-        "gtNorm": "918000",
-        "extNorm": "50598546",
-        "bucket": "structure",
-        "reason": "gt value present at ['row3:amount']"
-      },
-      {
-        "location": "field:taxAmount",
-        "status": "ext_missing",
-        "gtNorm": "83455",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
-      },
       {
         "location": "field:supplierAddress",
         "status": "mismatch",
@@ -341,19 +325,11 @@
       },
       {
         "location": "row3:itemName",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "엔파미드서방정",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "엔파미드서방정(노바엠헬스케어)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "073200860엔파미드서방정",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.61)"
       },
       {
         "location": "row3:spec",
@@ -372,14 +348,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row3:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "05006638",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row3:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "073200860",
@@ -389,8 +357,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 2,
-      "structure": 10,
+      "recognition": 3,
+      "structure": 5,
       "layout": 0,
       "preprocessing": 0
     },
@@ -410,6 +378,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.167
+    "fieldMissRate": 0.083
   }
 }

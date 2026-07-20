@@ -8,11 +8,11 @@
     "perField": {
       "totalAmount": {
         "gt": "574450",
-        "ext": "522,227",
+        "ext": "574450",
         "gtNorm": "574450",
-        "extNorm": "522227",
+        "extNorm": "574450",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "52223",
-        "ext": "",
+        "ext": "52223",
         "gtNorm": "52223",
-        "extNorm": "",
+        "extNorm": "52223",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -125,11 +125,11 @@
       },
       "supplyAmount": {
         "gt": "522227",
-        "ext": "58,364",
+        "ext": "522227",
         "gtNorm": "522227",
-        "extNorm": "58364",
+        "extNorm": "522227",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 7,
-      "mismatch": 4,
-      "ext_missing": 1,
+      "match": 10,
+      "mismatch": 2,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 7,
+      "matched": 10,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.5833333333333334
+    "fieldAccuracy": 0.8333333333333334
   },
   "table": {
     "alignMode": "content",
@@ -208,18 +208,18 @@
         "cells": {
           "itemName": {
             "gt": "데파스정0.25mg/30T",
-            "ext": "백제약품(주)영등포",
+            "ext": "데파스정0.25mg/30T",
             "gtNorm": "데파스정025mg30t",
-            "extNorm": "백제약품주영등포",
-            "status": "mismatch",
+            "extNorm": "데파스정025mg30t",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "데파스정0.25mg(향정)",
-            "ext": "",
+            "ext": "데파스정0.25mg(향정)",
             "gtNorm": "데파스정0.25mg(향정)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "데파스정0.25mg(향정)",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -439,40 +439,16 @@
     ],
     "cellCounts": {
       "scored": 27,
-      "match": 17,
-      "mismatch": 9,
-      "ext_missing": 1,
+      "match": 19,
+      "mismatch": 8,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.6296296296296297
+    "cellAccuracy": 0.7037037037037037
   },
   "buckets": {
     "defects": [
-      {
-        "location": "field:totalAmount",
-        "status": "mismatch",
-        "gtNorm": "574450",
-        "extNorm": "522227",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['field:supplyAmount']"
-      },
-      {
-        "location": "field:taxAmount",
-        "status": "ext_missing",
-        "gtNorm": "52223",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
-      },
-      {
-        "location": "field:supplyAmount",
-        "status": "mismatch",
-        "gtNorm": "522227",
-        "extNorm": "58364",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:totalAmount']"
-      },
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
@@ -496,22 +472,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "extractor invented rows ['4', '5']"
-      },
-      {
-        "location": "row1:itemName",
-        "status": "mismatch",
-        "gtNorm": "데파스정025mg30t",
-        "extNorm": "백제약품주영등포",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row1:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "데파스정0.25mg(향정)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row1:expiryDate",
@@ -579,8 +539,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 9,
-      "structure": 5,
+      "recognition": 8,
+      "structure": 1,
       "layout": 2,
       "preprocessing": 0
     },
@@ -600,6 +560,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

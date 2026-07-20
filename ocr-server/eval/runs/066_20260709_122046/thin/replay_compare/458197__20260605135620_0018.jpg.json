@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "300250",
-        "ext": "",
+        "ext": "300250",
         "gtNorm": "300250",
-        "extNorm": "",
+        "extNorm": "300250",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplyAmount": {
         "gt": "3002502",
-        "ext": "300,250",
+        "ext": "3002502",
         "gtNorm": "3002502",
-        "extNorm": "300250",
+        "extNorm": "3002502",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -154,9 +154,9 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 4,
-      "mismatch": 6,
-      "ext_missing": 1,
+      "match": 6,
+      "mismatch": 5,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 4,
+      "matched": 6,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.36363636363636365
+    "fieldAccuracy": 0.5454545454545454
   },
   "table": {
     "alignMode": "content",
@@ -841,14 +841,6 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:taxAmount",
-        "status": "ext_missing",
-        "gtNorm": "300250",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:supplyAmount']"
-      },
-      {
         "location": "field:supplierBizNumber",
         "status": "mismatch",
         "gtNorm": "6038107005",
@@ -871,14 +863,6 @@
         "extNorm": "경남김해시진례면김해테크노벨리로3312백제약품주영남본부",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplyAmount",
-        "status": "mismatch",
-        "gtNorm": "3002502",
-        "extNorm": "300250",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
       },
       {
         "location": "field:buyerCompany",
@@ -1122,8 +1106,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 20,
-      "structure": 14,
+      "recognition": 19,
+      "structure": 13,
       "layout": 1,
       "preprocessing": 0
     },
@@ -1143,6 +1127,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.091
+    "fieldMissRate": 0.0
   }
 }

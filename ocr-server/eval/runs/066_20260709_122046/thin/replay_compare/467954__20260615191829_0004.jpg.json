@@ -8,11 +8,11 @@
     "perField": {
       "totalAmount": {
         "gt": "471440",
-        "ext": "23,171,774",
+        "ext": "471440",
         "gtNorm": "471440",
-        "extNorm": "23171774",
+        "extNorm": "471440",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -125,11 +125,11 @@
       },
       "supplyAmount": {
         "gt": "428582",
-        "ext": "",
+        "ext": "428582",
         "gtNorm": "428582",
-        "extNorm": "",
+        "extNorm": "428582",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 7,
-      "mismatch": 4,
-      "ext_missing": 1,
+      "match": 9,
+      "mismatch": 3,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 7,
+      "matched": 9,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.5833333333333334
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -389,28 +389,12 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:totalAmount",
-        "status": "mismatch",
-        "gtNorm": "471440",
-        "extNorm": "23171774",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "서울영등포구선유로9길10문래동6가4층417호",
         "extNorm": "서울영등포구선유로9문래동5가6번지주서울유니온약품",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.56)"
-      },
-      {
-        "location": "field:supplyAmount",
-        "status": "ext_missing",
-        "gtNorm": "428582",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:buyerCompany",
@@ -510,8 +494,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 11,
-      "structure": 4,
+      "recognition": 10,
+      "structure": 3,
       "layout": 0,
       "preprocessing": 0
     },
@@ -531,6 +515,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

@@ -8,9 +8,9 @@
     "perField": {
       "totalAmount": {
         "gt": "554050",
-        "ext": "657204230",
+        "ext": "159040",
         "gtNorm": "554050",
-        "extNorm": "657204230",
+        "extNorm": "159040",
         "type": "amount",
         "status": "mismatch",
         "edited": false,
@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "50368",
-        "ext": "",
+        "ext": "14458",
         "gtNorm": "50368",
-        "extNorm": "",
+        "extNorm": "14458",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -125,9 +125,9 @@
       },
       "supplyAmount": {
         "gt": "503682",
-        "ext": "14,458",
+        "ext": "144582",
         "gtNorm": "503682",
-        "extNorm": "14458",
+        "extNorm": "144582",
         "type": "amount",
         "status": "mismatch",
         "edited": false,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 7,
-      "mismatch": 3,
-      "ext_missing": 2,
+      "mismatch": 4,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,7 +182,7 @@
       "gtPresent": 12,
       "matched": 7,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 1
     },
     "fieldAccuracy": 0.5833333333333334
   },
@@ -389,25 +389,25 @@
         "location": "field:totalAmount",
         "status": "mismatch",
         "gtNorm": "554050",
-        "extNorm": "657204230",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['row1:insuranceCode']"
+        "extNorm": "159040",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "field:taxAmount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "50368",
-        "extNorm": "",
+        "extNorm": "14458",
         "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "reason": "ext value is gt's ['row1:unitPrice']"
       },
       {
         "location": "field:supplyAmount",
         "status": "mismatch",
         "gtNorm": "503682",
-        "extNorm": "14458",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['row1:unitPrice']"
+        "extNorm": "144582",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "field:buyerCompany",
@@ -515,8 +515,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 7,
-      "structure": 9,
+      "recognition": 9,
+      "structure": 7,
       "layout": 0,
       "preprocessing": 0
     },
@@ -536,6 +536,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.167
+    "fieldMissRate": 0.083
   }
 }

@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "5818",
-        "ext": "58,185",
+        "ext": "5818",
         "gtNorm": "5818",
-        "extNorm": "58185",
+        "extNorm": "5818",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -112,11 +112,11 @@
       },
       "supplyAmount": {
         "gt": "58185",
-        "ext": "",
+        "ext": "58185",
         "gtNorm": "58185",
-        "extNorm": "",
+        "extNorm": "58185",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -154,9 +154,9 @@
     "profile": "thin",
     "counts": {
       "scored": 11,
-      "match": 7,
-      "mismatch": 3,
-      "ext_missing": 1,
+      "match": 9,
+      "mismatch": 2,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -167,11 +167,11 @@
     },
     "coverage": {
       "gtPresent": 11,
-      "matched": 7,
+      "matched": 9,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6363636363636364
+    "fieldAccuracy": 0.8181818181818182
   },
   "table": {
     "alignMode": "content",
@@ -190,18 +190,18 @@
         "cells": {
           "itemName": {
             "gt": "티나롤네일라카",
-            "ext": "순번 약가코드 zl 품 1EA(5mL) 규 격",
+            "ext": "티나를네일라카",
             "gtNorm": "티나롤네일라카",
-            "extNorm": "순번약가코드zl품1ea5ml규격",
+            "extNorm": "티나를네일라카",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "티나롤네일라카5mL",
-            "ext": "",
+            "ext": "티나롤네일라카5mL",
             "gtNorm": "티나롤네일라카5ml",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "티나롤네일라카5ml",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -254,10 +254,10 @@
           },
           "itemCode": {
             "gt": "05002235",
-            "ext": "",
+            "ext": "05002235",
             "gtNorm": "05002235",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "05002235",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -273,32 +273,16 @@
     ],
     "cellCounts": {
       "scored": 10,
-      "match": 3,
+      "match": 5,
       "mismatch": 2,
-      "ext_missing": 5,
+      "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3
+    "cellAccuracy": 0.5
   },
   "buckets": {
     "defects": [
-      {
-        "location": "field:taxAmount",
-        "status": "mismatch",
-        "gtNorm": "5818",
-        "extNorm": "58185",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.89)"
-      },
-      {
-        "location": "field:supplyAmount",
-        "status": "ext_missing",
-        "gtNorm": "58185",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:taxAmount', 'row1:amount']"
-      },
       {
         "location": "field:buyerCompany",
         "status": "mismatch",
@@ -319,17 +303,9 @@
         "location": "row1:itemName",
         "status": "mismatch",
         "gtNorm": "티나롤네일라카",
-        "extNorm": "순번약가코드zl품1ea5ml규격",
+        "extNorm": "티나를네일라카",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row1:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "티나롤네일라카5ml",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "reason": "char-level diff (sim=0.86)"
       },
       {
         "location": "row1:spec",
@@ -356,14 +332,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "05002235",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row1:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "645906001",
@@ -373,8 +341,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 6,
+      "recognition": 4,
+      "structure": 3,
       "layout": 0,
       "preprocessing": 0
     },
@@ -394,6 +362,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.091
+    "fieldMissRate": 0.0
   }
 }

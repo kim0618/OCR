@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "169004",
-        "ext": "",
+        "ext": "169004",
         "gtNorm": "169004",
-        "extNorm": "",
+        "extNorm": "169004",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -86,11 +86,11 @@
       },
       "supplyAmount": {
         "gt": "1521036",
-        "ext": "",
+        "ext": "1690040",
         "gtNorm": "1521036",
-        "extNorm": "",
+        "extNorm": "1690040",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -128,9 +128,9 @@
     "profile": "thin",
     "counts": {
       "scored": 9,
-      "match": 3,
-      "mismatch": 4,
-      "ext_missing": 2,
+      "match": 4,
+      "mismatch": 5,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -141,11 +141,11 @@
     },
     "coverage": {
       "gtPresent": 9,
-      "matched": 3,
+      "matched": 4,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.3333333333333333
+    "fieldAccuracy": 0.4444444444444444
   },
   "table": {
     "alignMode": "content",
@@ -254,16 +254,8 @@
         "status": "mismatch",
         "gtNorm": "1690040",
         "extNorm": "1859044",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.57)"
-      },
-      {
-        "location": "field:taxAmount",
-        "status": "ext_missing",
-        "gtNorm": "169004",
-        "extNorm": "",
         "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "reason": "gt value present at ['field:supplyAmount']"
       },
       {
         "location": "field:supplierCompany",
@@ -275,11 +267,11 @@
       },
       {
         "location": "field:supplyAmount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "1521036",
-        "extNorm": "",
+        "extNorm": "1690040",
         "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "reason": "ext value is gt's ['field:totalAmount']"
       },
       {
         "location": "field:buyerCompany",
@@ -315,7 +307,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
+      "recognition": 4,
       "structure": 2,
       "layout": 1,
       "preprocessing": 0
@@ -336,6 +328,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.222
+    "fieldMissRate": 0.0
   }
 }

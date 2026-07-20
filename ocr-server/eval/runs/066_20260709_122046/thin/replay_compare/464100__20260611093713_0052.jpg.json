@@ -8,11 +8,11 @@
     "perField": {
       "totalAmount": {
         "gt": "5726867",
-        "ext": "670,104,710",
+        "ext": "5726867",
         "gtNorm": "5726867",
-        "extNorm": "670104710",
+        "extNorm": "5726867",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "520625",
-        "ext": "",
+        "ext": "520625",
         "gtNorm": "520625",
-        "extNorm": "",
+        "extNorm": "520625",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -125,11 +125,11 @@
       },
       "supplyAmount": {
         "gt": "5206242",
-        "ext": "520,625",
+        "ext": "5206242",
         "gtNorm": "5206242",
-        "extNorm": "520625",
+        "extNorm": "5206242",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 6,
-      "mismatch": 5,
-      "ext_missing": 1,
+      "match": 9,
+      "mismatch": 3,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 6,
+      "matched": 9,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.5
+    "fieldAccuracy": 0.75
   },
   "table": {
     "alignMode": "content",
@@ -904,18 +904,18 @@
         "cells": {
           "itemName": {
             "gt": "벤라팍신서방캡슐 75mg",
-            "ext": "30캡슬",
+            "ext": "벤라픽신서방캡슬75mg",
             "gtNorm": "벤라팍신서방캡슐75mg",
-            "extNorm": "30캡슬",
+            "extNorm": "벤라픽신서방캡슬75mg",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "파마벤라팍신서방캡슐75mg",
-            "ext": "",
+            "ext": "벤팍신서방캡슐75mg",
             "gtNorm": "파마벤라팍신서방캡슐75mg",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "벤팍신서방캡슐75mg",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
@@ -968,10 +968,10 @@
           },
           "itemCode": {
             "gt": "05001012",
-            "ext": "",
+            "ext": "20000393",
             "gtNorm": "05001012",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20000393",
+            "status": "mismatch",
             "spurious": false
           },
           "insuranceCode": {
@@ -1067,8 +1067,8 @@
     "cellCounts": {
       "scored": 99,
       "match": 33,
-      "mismatch": 31,
-      "ext_missing": 35,
+      "mismatch": 33,
+      "ext_missing": 33,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -1077,36 +1077,12 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:totalAmount",
-        "status": "mismatch",
-        "gtNorm": "5726867",
-        "extNorm": "670104710",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['row4:insuranceCode']"
-      },
-      {
-        "location": "field:taxAmount",
-        "status": "ext_missing",
-        "gtNorm": "520625",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:supplyAmount']"
-      },
-      {
         "location": "field:supplierAddress",
         "status": "mismatch",
         "gtNorm": "전북전주시덕진구구총목로5지하층인후동1가",
         "extNorm": "전북전주시덕진구아중로121인후동1가202호",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.64)"
-      },
-      {
-        "location": "field:supplyAmount",
-        "status": "mismatch",
-        "gtNorm": "5206242",
-        "extNorm": "520625",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.77)"
       },
       {
         "location": "field:buyerCompany",
@@ -1544,17 +1520,17 @@
         "location": "row10:itemName",
         "status": "mismatch",
         "gtNorm": "벤라팍신서방캡슐75mg",
-        "extNorm": "30캡슬",
+        "extNorm": "벤라픽신서방캡슬75mg",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.83)"
       },
       {
         "location": "row10:itemNameMaster",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "파마벤라팍신서방캡슐75mg",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "벤팍신서방캡슐75mg",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.88)"
       },
       {
         "location": "row10:spec",
@@ -1582,11 +1558,11 @@
       },
       {
         "location": "row10:itemCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "05001012",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "20000393",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row10:insuranceCode",
@@ -1670,8 +1646,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 33,
-      "structure": 39,
+      "recognition": 34,
+      "structure": 35,
       "layout": 2,
       "preprocessing": 0
     },
@@ -1691,6 +1667,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

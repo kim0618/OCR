@@ -191,12 +191,11 @@
     "rowCountGt": 1,
     "rowCountExt": 5,
     "rowCountMatch": false,
-    "matchedRowIdx": [],
-    "gtOnlyRowIdx": [
+    "matchedRowIdx": [
       "1"
     ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "1",
       "2",
       "3",
       "5",
@@ -206,22 +205,21 @@
       {
         "rowIndex": "1",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "넥사바정 200MG(PTP)",
-            "ext": "",
+            "ext": "넥사바정20OMG(PTP)60T",
             "gtNorm": "넥사바정200mgptp",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "넥사바정20omgptp60t",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "넥사바정200mg(바이엘)",
-            "ext": "",
+            "ext": "넥사바정200mg(바이엘)",
             "gtNorm": "넥사바정200mg(바이엘)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "넥사바정200mg(바이엘)",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -242,18 +240,18 @@
           },
           "unitPrice": {
             "gt": "514710",
-            "ext": "",
+            "ext": "514,710",
             "gtNorm": "514710",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "514710",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "1544130",
-            "ext": "",
+            "ext": "1,544",
             "gtNorm": "1544130",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "1544",
+            "status": "mismatch",
             "spurious": false
           },
           "expiryDate": {
@@ -274,10 +272,10 @@
           },
           "itemCode": {
             "gt": "14002988",
-            "ext": "",
+            "ext": "14002988",
             "gtNorm": "14002988",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "14002988",
+            "status": "match",
             "spurious": false
           }
         }
@@ -285,13 +283,13 @@
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 0,
-      "mismatch": 0,
-      "ext_missing": 9,
+      "match": 3,
+      "mismatch": 2,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.0
+    "cellAccuracy": 0.3333333333333333
   },
   "buckets": {
     "defects": [
@@ -329,35 +327,19 @@
       },
       {
         "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['1']"
-      },
-      {
-        "location": "table",
         "status": "rows_extra",
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '2', '3', '5', '6']"
+        "reason": "extractor invented rows ['2', '3', '5', '6']"
       },
       {
         "location": "row1:itemName",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "넥사바정200mgptp",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "넥사바정200mg(바이엘)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "넥사바정20omgptp60t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.81)"
       },
       {
         "location": "row1:spec",
@@ -376,20 +358,12 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "514710",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row1:amount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "1544130",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "1544",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.73)"
       },
       {
         "location": "row1:expiryDate",
@@ -406,19 +380,11 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "14002988",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 2,
-      "structure": 13,
+      "recognition": 4,
+      "structure": 7,
       "layout": 0,
       "preprocessing": 0
     },

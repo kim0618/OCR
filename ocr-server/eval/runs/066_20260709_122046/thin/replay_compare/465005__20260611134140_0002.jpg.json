@@ -8,11 +8,11 @@
     "perField": {
       "totalAmount": {
         "gt": "50313194",
-        "ext": "50,313,194",
+        "ext": "110403",
         "gtNorm": "50313194",
-        "extNorm": "50313194",
+        "extNorm": "110403",
         "type": "amount",
-        "status": "match",
+        "status": "mismatch",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -125,9 +125,9 @@
       },
       "supplyAmount": {
         "gt": "47993783",
-        "ext": "110,403",
+        "ext": "100366",
         "gtNorm": "47993783",
-        "extNorm": "110403",
+        "extNorm": "100366",
         "type": "amount",
         "status": "mismatch",
         "edited": false,
@@ -167,8 +167,8 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 7,
-      "mismatch": 5,
+      "match": 6,
+      "mismatch": 6,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 7,
+      "matched": 6,
       "extNotAttempted": 0,
       "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.5833333333333334
+    "fieldAccuracy": 0.5
   },
   "table": {
     "alignMode": "content",
@@ -285,6 +285,14 @@
   "buckets": {
     "defects": [
       {
+        "location": "field:totalAmount",
+        "status": "mismatch",
+        "gtNorm": "50313194",
+        "extNorm": "110403",
+        "bucket": "structure",
+        "reason": "ext value is gt's ['row1:amount']"
+      },
+      {
         "location": "field:taxAmount",
         "status": "mismatch",
         "gtNorm": "2319411",
@@ -312,9 +320,9 @@
         "location": "field:supplyAmount",
         "status": "mismatch",
         "gtNorm": "47993783",
-        "extNorm": "110403",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['row1:amount']"
+        "extNorm": "100366",
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerAddress",
@@ -406,7 +414,7 @@
       }
     ],
     "bucketTally": {
-      "recognition": 4,
+      "recognition": 5,
       "structure": 11,
       "layout": 0,
       "preprocessing": 0

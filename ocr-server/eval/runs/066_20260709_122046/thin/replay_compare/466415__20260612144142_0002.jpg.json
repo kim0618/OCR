@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "4500",
-        "ext": "45,000",
+        "ext": "4500",
         "gtNorm": "4500",
-        "extNorm": "45000",
+        "extNorm": "4500",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -125,11 +125,11 @@
       },
       "supplyAmount": {
         "gt": "45000",
-        "ext": "",
+        "ext": "45000",
         "gtNorm": "45000",
-        "extNorm": "",
+        "extNorm": "45000",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 8,
-      "mismatch": 3,
-      "ext_missing": 1,
+      "match": 10,
+      "mismatch": 2,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 8,
+      "matched": 10,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.6666666666666666
+    "fieldAccuracy": 0.8333333333333334
   },
   "table": {
     "alignMode": "content",
@@ -289,22 +289,6 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:taxAmount",
-        "status": "mismatch",
-        "gtNorm": "4500",
-        "extNorm": "45000",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.89)"
-      },
-      {
-        "location": "field:supplyAmount",
-        "status": "ext_missing",
-        "gtNorm": "45000",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:taxAmount', 'row1:amount']"
-      },
-      {
         "location": "field:buyerCompany",
         "status": "mismatch",
         "gtNorm": "백제약품동부물류센터",
@@ -330,8 +314,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 3,
-      "structure": 2,
+      "recognition": 2,
+      "structure": 1,
       "layout": 0,
       "preprocessing": 0
     },
@@ -351,6 +335,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

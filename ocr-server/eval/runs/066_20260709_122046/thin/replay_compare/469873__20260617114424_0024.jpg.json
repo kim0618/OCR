@@ -8,11 +8,11 @@
     "perField": {
       "totalAmount": {
         "gt": "4019203",
-        "ext": "",
+        "ext": "48301",
         "gtNorm": "4019203",
-        "extNorm": "",
+        "extNorm": "48301",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "365383",
-        "ext": "",
+        "ext": "4391",
         "gtNorm": "365383",
-        "extNorm": "",
+        "extNorm": "4391",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 7,
-      "mismatch": 3,
-      "ext_missing": 2,
+      "mismatch": 5,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,7 +182,7 @@
       "gtPresent": 12,
       "matched": 7,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 0
     },
     "fieldAccuracy": 0.5833333333333334
   },
@@ -466,19 +466,19 @@
     "defects": [
       {
         "location": "field:totalAmount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "4019203",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "extNorm": "48301",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "field:taxAmount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "365383",
-        "extNorm": "",
+        "extNorm": "4391",
         "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "reason": "ext value is gt's ['row2:unitPrice']"
       },
       {
         "location": "field:supplierCompany",
@@ -594,8 +594,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 9,
-      "structure": 7,
+      "recognition": 10,
+      "structure": 6,
       "layout": 0,
       "preprocessing": 0
     },
@@ -615,6 +615,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.167
+    "fieldMissRate": 0.0
   }
 }

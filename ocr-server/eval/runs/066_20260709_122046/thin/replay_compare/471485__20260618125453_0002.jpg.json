@@ -8,9 +8,9 @@
     "perField": {
       "totalAmount": {
         "gt": "3026580",
-        "ext": "657201410",
+        "ext": "12825",
         "gtNorm": "3026580",
-        "extNorm": "657201410",
+        "extNorm": "12825",
         "type": "amount",
         "status": "mismatch",
         "edited": false,
@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "275142",
-        "ext": "",
+        "ext": "1166",
         "gtNorm": "275142",
-        "extNorm": "",
+        "extNorm": "1166",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -168,8 +168,8 @@
     "counts": {
       "scored": 12,
       "match": 7,
-      "mismatch": 3,
-      "ext_missing": 2,
+      "mismatch": 4,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -182,7 +182,7 @@
       "gtPresent": 12,
       "matched": 7,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 1
     },
     "fieldAccuracy": 0.5833333333333334
   },
@@ -1336,17 +1336,17 @@
         "location": "field:totalAmount",
         "status": "mismatch",
         "gtNorm": "3026580",
-        "extNorm": "657201410",
+        "extNorm": "12825",
         "bucket": "structure",
-        "reason": "ext value is gt's ['row12:insuranceCode']"
+        "reason": "ext value is gt's ['row12:amount']"
       },
       {
         "location": "field:taxAmount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "275142",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
+        "extNorm": "1166",
+        "bucket": "recognition",
+        "reason": "value differs, low similarity"
       },
       {
         "location": "field:supplyAmount",
@@ -1654,8 +1654,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 23,
-      "structure": 14,
+      "recognition": 24,
+      "structure": 13,
       "layout": 3,
       "preprocessing": 0
     },
@@ -1675,6 +1675,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.167
+    "fieldMissRate": 0.083
   }
 }

@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "81920",
-        "ext": "",
+        "ext": "81920",
         "gtNorm": "81920",
-        "extNorm": "",
+        "extNorm": "81920",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -125,11 +125,11 @@
       },
       "supplyAmount": {
         "gt": "819205",
-        "ext": "89,861",
+        "ext": "819205",
         "gtNorm": "819205",
-        "extNorm": "89861",
+        "extNorm": "819205",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -167,9 +167,9 @@
     "profile": "thin",
     "counts": {
       "scored": 12,
-      "match": 6,
-      "mismatch": 5,
-      "ext_missing": 1,
+      "match": 8,
+      "mismatch": 4,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -180,11 +180,11 @@
     },
     "coverage": {
       "gtPresent": 12,
-      "matched": 6,
+      "matched": 8,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.5
+    "fieldAccuracy": 0.6666666666666666
   },
   "table": {
     "alignMode": "content",
@@ -297,14 +297,6 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:taxAmount",
-        "status": "ext_missing",
-        "gtNorm": "81920",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
-      },
-      {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "유진의약품",
@@ -317,14 +309,6 @@
         "status": "mismatch",
         "gtNorm": "서울강서구공항대로53가길1302등촌동3층",
         "extNorm": "서울특별시강남구역삼로226역삼동",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplyAmount",
-        "status": "mismatch",
-        "gtNorm": "819205",
-        "extNorm": "89861",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
       },
@@ -386,8 +370,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 6,
-      "structure": 5,
+      "recognition": 5,
+      "structure": 4,
       "layout": 0,
       "preprocessing": 0
     },
@@ -407,6 +391,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.083
+    "fieldMissRate": 0.0
   }
 }

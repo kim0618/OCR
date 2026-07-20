@@ -8,11 +8,11 @@
     "perField": {
       "totalAmount": {
         "gt": "30400",
-        "ext": "557,802,870",
+        "ext": "30400",
         "gtNorm": "30400",
-        "extNorm": "557802870",
+        "extNorm": "30400",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "2764",
-        "ext": "30,400",
+        "ext": "2764",
         "gtNorm": "2764",
-        "extNorm": "30400",
+        "extNorm": "2764",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -99,11 +99,11 @@
       },
       "supplyAmount": {
         "gt": "27636",
-        "ext": "",
+        "ext": "27636",
         "gtNorm": "27636",
-        "extNorm": "",
+        "extNorm": "27636",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -141,9 +141,9 @@
     "profile": "thin",
     "counts": {
       "scored": 10,
-      "match": 3,
-      "mismatch": 6,
-      "ext_missing": 1,
+      "match": 6,
+      "mismatch": 4,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -154,11 +154,11 @@
     },
     "coverage": {
       "gtPresent": 10,
-      "matched": 3,
+      "matched": 6,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 1
+      "extAttemptedMiss": 0
     },
-    "fieldAccuracy": 0.3
+    "fieldAccuracy": 0.6
   },
   "table": {
     "alignMode": "content",
@@ -266,22 +266,6 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:totalAmount",
-        "status": "mismatch",
-        "gtNorm": "30400",
-        "extNorm": "557802870",
-        "bucket": "structure",
-        "reason": "gt value present at ['field:taxAmount', 'row1:amount']"
-      },
-      {
-        "location": "field:taxAmount",
-        "status": "mismatch",
-        "gtNorm": "2764",
-        "extNorm": "30400",
-        "bucket": "structure",
-        "reason": "ext value is gt's ['field:totalAmount', 'row1:amount']"
-      },
-      {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "하나제약하길공장",
@@ -296,14 +280,6 @@
         "extNorm": "서울특별시강남구도곡로183현진빌딩4층역삼동",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
-      },
-      {
-        "location": "field:supplyAmount",
-        "status": "ext_missing",
-        "gtNorm": "27636",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
       },
       {
         "location": "field:buyerCompany",
@@ -356,7 +332,7 @@
     ],
     "bucketTally": {
       "recognition": 4,
-      "structure": 7,
+      "structure": 4,
       "layout": 0,
       "preprocessing": 0
     },
@@ -376,6 +352,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.1
+    "fieldMissRate": 0.0
   }
 }

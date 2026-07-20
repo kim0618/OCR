@@ -179,14 +179,12 @@
     "rowCountExt": 3,
     "rowCountMatch": false,
     "matchedRowIdx": [
-      "3"
-    ],
-    "gtOnlyRowIdx": [
+      "3",
       "2"
     ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "1",
-      "2"
+      "1"
     ],
     "rows": [
       {
@@ -278,46 +276,45 @@
       {
         "rowIndex": "2",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "피타로틴정4mg 30T",
-            "ext": "",
+            "ext": "피타로틴정4mg30T",
             "gtNorm": "피타로틴정4mg30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "피타로틴정4mg30t",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "피타로틴정4mg(한국메딕스)",
-            "ext": "",
+            "ext": "피타로틴정4mg(한국메딕스)",
             "gtNorm": "피타로틴정4mg(한국메딕스)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "피타로틴정4mg(한국메딕스)",
+            "status": "match",
             "spurious": false
           },
           "spec": {
             "gt": "4mg 30T",
-            "ext": "",
+            "ext": "이하여백 4mg 30T",
             "gtNorm": "4mg 30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "이하여백 4mg 30t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
             "gt": "10",
-            "ext": "",
+            "ext": "4mg 30T 10",
             "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "43010",
+            "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "22707",
-            "ext": "",
+            "ext": "22.707.00",
             "gtNorm": "22707",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "2270700",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
@@ -330,34 +327,34 @@
           },
           "expiryDate": {
             "gt": "20270903",
-            "ext": "",
+            "ext": "2027.09.03",
             "gtNorm": "20270903",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20270903",
+            "status": "match",
             "spurious": false
           },
           "manufacturingNo": {
             "gt": "CDBE013A",
-            "ext": "",
+            "ext": "227.070 CDBEO13A",
             "gtNorm": "CDBE013A",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "227070CDBEO13A",
+            "status": "mismatch",
             "spurious": false
           },
           "itemCode": {
             "gt": "05004383",
-            "ext": "",
+            "ext": "05004383",
             "gtNorm": "05004383",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "05004383",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "2693902300",
-            "ext": "",
+            "ext": "2 693902300",
             "gtNorm": "2693902300",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "2693902300",
+            "status": "match",
             "spurious": false
           }
         }
@@ -365,13 +362,13 @@
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 8,
-      "mismatch": 2,
-      "ext_missing": 10,
+      "match": 13,
+      "mismatch": 6,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4
+    "cellAccuracy": 0.65
   },
   "buckets": {
     "defects": [
@@ -425,19 +422,11 @@
       },
       {
         "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['2']"
-      },
-      {
-        "location": "table",
         "status": "rows_extra",
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '2']"
+        "reason": "extractor invented rows ['1']"
       },
       {
         "location": "row3:unitPrice",
@@ -456,44 +445,28 @@
         "reason": "char-level diff (sim=0.80)"
       },
       {
-        "location": "row2:itemName",
-        "status": "ext_missing",
-        "gtNorm": "피타로틴정4mg30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "피타로틴정4mg(한국메딕스)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row2:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "4mg 30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "이하여백 4mg 30t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.74)"
       },
       {
         "location": "row2:quantity",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "10",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "43010",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.57)"
       },
       {
         "location": "row2:unitPrice",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "22707",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "2270700",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.83)"
       },
       {
         "location": "row2:amount",
@@ -504,41 +477,17 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:expiryDate",
-        "status": "ext_missing",
-        "gtNorm": "20270903",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row2:manufacturingNo",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "CDBE013A",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "05004383",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "2693902300",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "227070CDBEO13A",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.64)"
       }
     ],
     "bucketTally": {
-      "recognition": 6,
-      "structure": 14,
+      "recognition": 10,
+      "structure": 4,
       "layout": 0,
       "preprocessing": 0
     },

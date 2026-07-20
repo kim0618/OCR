@@ -178,33 +178,30 @@
     "rowCountGt": 1,
     "rowCountExt": 1,
     "rowCountMatch": true,
-    "matchedRowIdx": [],
-    "gtOnlyRowIdx": [
+    "matchedRowIdx": [
       "1"
     ],
-    "extOnlyRowIdx": [
-      "1"
-    ],
+    "gtOnlyRowIdx": [],
+    "extOnlyRowIdx": [],
     "rows": [
       {
         "rowIndex": "1",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "티나롤네일라카",
-            "ext": "",
+            "ext": "티나롤네일라카",
             "gtNorm": "티나롤네일라카",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "티나롤네일라카",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "티나롤네일라카5mL",
-            "ext": "",
+            "ext": "티나롤네일라카5mL",
             "gtNorm": "티나롤네일라카5ml",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "티나롤네일라카5ml",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -217,26 +214,26 @@
           },
           "quantity": {
             "gt": "20",
-            "ext": "",
+            "ext": "20",
             "gtNorm": "20",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "20",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "19395",
-            "ext": "",
+            "ext": "19,395",
             "gtNorm": "19395",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "19395",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "0",
-            "ext": "",
+            "ext": "387,900",
             "gtNorm": "0",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "387900",
+            "status": "mismatch",
             "spurious": false
           },
           "expiryDate": {
@@ -257,10 +254,10 @@
           },
           "itemCode": {
             "gt": "05002235",
-            "ext": "",
+            "ext": "05002235",
             "gtNorm": "05002235",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "05002235",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -276,13 +273,13 @@
     ],
     "cellCounts": {
       "scored": 10,
-      "match": 0,
-      "mismatch": 0,
-      "ext_missing": 10,
+      "match": 5,
+      "mismatch": 1,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.0
+    "cellAccuracy": 0.5
   },
   "buckets": {
     "defects": [
@@ -303,38 +300,6 @@
         "reason": "char-level diff (sim=0.88)"
       },
       {
-        "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['1']"
-      },
-      {
-        "location": "table",
-        "status": "rows_extra",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor invented rows ['1']"
-      },
-      {
-        "location": "row1:itemName",
-        "status": "ext_missing",
-        "gtNorm": "티나롤네일라카",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "티나롤네일라카5ml",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row1:spec",
         "status": "ext_missing",
         "gtNorm": "1ea(5ml)",
@@ -343,28 +308,12 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:quantity",
-        "status": "ext_missing",
-        "gtNorm": "20",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "19395",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row1:amount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "0",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "387900",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:expiryDate",
@@ -383,14 +332,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "05002235",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row1:insuranceCode",
         "status": "ext_missing",
         "gtNorm": "645906001",
@@ -400,8 +341,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 2,
-      "structure": 12,
+      "recognition": 3,
+      "structure": 4,
       "layout": 0,
       "preprocessing": 0
     },

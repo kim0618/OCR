@@ -21,11 +21,11 @@
       },
       "taxAmount": {
         "gt": "833117",
-        "ext": "",
+        "ext": "833117",
         "gtNorm": "833117",
-        "extNorm": "",
+        "extNorm": "833117",
         "type": "amount",
-        "status": "ext_missing",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -99,11 +99,11 @@
       },
       "supplyAmount": {
         "gt": "8331159",
-        "ext": "281,124",
+        "ext": "8331159",
         "gtNorm": "8331159",
-        "extNorm": "281124",
+        "extNorm": "8331159",
         "type": "amount",
-        "status": "mismatch",
+        "status": "match",
         "edited": false,
         "difficult": false,
         "extAttempted": true,
@@ -141,9 +141,9 @@
     "profile": "thin",
     "counts": {
       "scored": 10,
-      "match": 4,
-      "mismatch": 4,
-      "ext_missing": 2,
+      "match": 6,
+      "mismatch": 3,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -154,11 +154,11 @@
     },
     "coverage": {
       "gtPresent": 10,
-      "matched": 4,
+      "matched": 6,
       "extNotAttempted": 0,
-      "extAttemptedMiss": 2
+      "extAttemptedMiss": 1
     },
-    "fieldAccuracy": 0.4
+    "fieldAccuracy": 0.6
   },
   "table": {
     "alignMode": "content",
@@ -688,14 +688,6 @@
   "buckets": {
     "defects": [
       {
-        "location": "field:taxAmount",
-        "status": "ext_missing",
-        "gtNorm": "833117",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt value not found anywhere in extraction"
-      },
-      {
         "location": "field:supplierCompany",
         "status": "mismatch",
         "gtNorm": "경보제약",
@@ -710,14 +702,6 @@
         "extNorm": "서울서대문구충정로8충정로3가",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.91)"
-      },
-      {
-        "location": "field:supplyAmount",
-        "status": "mismatch",
-        "gtNorm": "8331159",
-        "extNorm": "281124",
-        "bucket": "recognition",
-        "reason": "value differs, low similarity"
       },
       {
         "location": "field:buyerCompany",
@@ -1129,8 +1113,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 23,
-      "structure": 31,
+      "recognition": 22,
+      "structure": 30,
       "layout": 1,
       "preprocessing": 0
     },
@@ -1150,6 +1134,6 @@
       "orientFirstPassRatio": null,
       "hasSignal": false
     },
-    "fieldMissRate": 0.2
+    "fieldMissRate": 0.1
   }
 }
