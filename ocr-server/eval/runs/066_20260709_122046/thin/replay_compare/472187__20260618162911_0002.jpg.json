@@ -221,9 +221,9 @@
           "spec": {
             "gt": "50 g",
             "ext": "50g",
-            "gtNorm": "50 g",
+            "gtNorm": "50g",
             "extNorm": "50g",
-            "status": "mismatch",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -354,10 +354,10 @@
           },
           "itemCode": {
             "gt": "05003690",
-            "ext": "ER425A5B",
+            "ext": "05003690",
             "gtNorm": "05003690",
-            "extNorm": "ER425A5B",
-            "status": "mismatch",
+            "extNorm": "05003690",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -448,10 +448,10 @@
           },
           "insuranceCode": {
             "gt": "640007130",
-            "ext": "",
+            "ext": "640007130",
             "gtNorm": "640007130",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "640007130",
+            "status": "match",
             "spurious": false
           }
         }
@@ -718,13 +718,13 @@
     ],
     "cellCounts": {
       "scored": 60,
-      "match": 33,
-      "mismatch": 8,
-      "ext_missing": 19,
+      "match": 36,
+      "mismatch": 6,
+      "ext_missing": 18,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.55
+    "cellAccuracy": 0.6
   },
   "buckets": {
     "defects": [
@@ -801,14 +801,6 @@
         "reason": "char-level diff (sim=0.55)"
       },
       {
-        "location": "row8:spec",
-        "status": "mismatch",
-        "gtNorm": "50 g",
-        "extNorm": "50g",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.86)"
-      },
-      {
         "location": "row8:quantity",
         "status": "mismatch",
         "gtNorm": "60",
@@ -853,16 +845,8 @@
         "status": "ext_missing",
         "gtNorm": "ER425A5B",
         "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
-        "location": "row9:itemCode",
-        "status": "mismatch",
-        "gtNorm": "05003690",
-        "extNorm": "ER425A5B",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row3:itemName",
@@ -876,14 +860,6 @@
         "location": "row3:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "AG526A3",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "640007130",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -1010,9 +986,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 11,
+      "recognition": 9,
       "structure": 21,
-      "layout": 3,
+      "layout": 2,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

@@ -558,8 +558,8 @@
           "spec": {
             "gt": "5mL/병",
             "ext": "5mL/병 60",
-            "gtNorm": "5ml/병",
-            "extNorm": "5ml/병 60",
+            "gtNorm": "5ml병",
+            "extNorm": "5ml병60",
             "status": "mismatch",
             "spurious": false
           },
@@ -645,7 +645,7 @@
             "gt": "30T",
             "ext": "1 30T '",
             "gtNorm": "30t",
-            "extNorm": "1 30t '",
+            "extNorm": "130t",
             "status": "mismatch",
             "spurious": false
           },
@@ -699,10 +699,10 @@
           },
           "insuranceCode": {
             "gt": "673400470",
-            "ext": "6",
+            "ext": "673400470",
             "gtNorm": "673400470",
-            "extNorm": "6",
-            "status": "mismatch",
+            "extNorm": "673400470",
+            "status": "match",
             "spurious": false
           }
         }
@@ -710,13 +710,13 @@
     ],
     "cellCounts": {
       "scored": 60,
-      "match": 41,
-      "mismatch": 17,
+      "match": 42,
+      "mismatch": 16,
       "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.6833333333333333
+    "cellAccuracy": 0.7
   },
   "buckets": {
     "defects": [
@@ -851,10 +851,10 @@
       {
         "location": "row5:spec",
         "status": "mismatch",
-        "gtNorm": "5ml/병",
-        "extNorm": "5ml/병 60",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.77)"
+        "gtNorm": "5ml병",
+        "extNorm": "5ml병60",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemName']"
       },
       {
         "location": "row5:itemCode",
@@ -868,9 +868,9 @@
         "location": "row6:spec",
         "status": "mismatch",
         "gtNorm": "30t",
-        "extNorm": "1 30t '",
+        "extNorm": "130t",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.60)"
+        "reason": "char-level diff (sim=0.86)"
       },
       {
         "location": "row6:unitPrice",
@@ -887,20 +887,12 @@
         "extNorm": "2028061",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.93)"
-      },
-      {
-        "location": "row6:insuranceCode",
-        "status": "mismatch",
-        "gtNorm": "673400470",
-        "extNorm": "6",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
       }
     ],
     "bucketTally": {
-      "recognition": 19,
+      "recognition": 17,
       "structure": 3,
-      "layout": 0,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

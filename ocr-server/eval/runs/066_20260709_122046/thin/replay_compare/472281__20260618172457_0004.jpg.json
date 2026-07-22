@@ -226,10 +226,10 @@
           },
           "spec": {
             "gt": "28T",
-            "ext": "",
+            "ext": "28T",
             "gtNorm": "28t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "28t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -266,10 +266,10 @@
           },
           "insuranceCode": {
             "gt": "9308831",
-            "ext": "9308831",
+            "ext": "641608000",
             "gtNorm": "9308831",
-            "extNorm": "9308831",
-            "status": "match",
+            "extNorm": "641608000",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -368,7 +368,7 @@
           "spec": {
             "gt": "-",
             "ext": "",
-            "gtNorm": "-",
+            "gtNorm": "",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -411,8 +411,8 @@
     "cellCounts": {
       "scored": 23,
       "match": 8,
-      "mismatch": 3,
-      "ext_missing": 12,
+      "mismatch": 4,
+      "ext_missing": 11,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -485,18 +485,18 @@
         "reason": "extractor invented rows ['3', '4', '5']"
       },
       {
-        "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "28t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row1:quantity",
         "status": "mismatch",
         "gtNorm": "10",
         "extNorm": "101120001120000",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
+      },
+      {
+        "location": "row1:insuranceCode",
+        "status": "mismatch",
+        "gtNorm": "9308831",
+        "extNorm": "641608000",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
@@ -567,7 +567,7 @@
       {
         "location": "row3:spec",
         "status": "ext_missing",
-        "gtNorm": "-",
+        "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -606,8 +606,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 7,
-      "structure": 16,
+      "recognition": 8,
+      "structure": 15,
       "layout": 0,
       "preprocessing": 0
     },

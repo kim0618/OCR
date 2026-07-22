@@ -235,10 +235,10 @@
           },
           "spec": {
             "gt": "30T",
-            "ext": "",
+            "ext": "30T",
             "gtNorm": "30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -283,18 +283,18 @@
           },
           "itemCode": {
             "gt": "22003263",
-            "ext": "1 전문8806500032013 도바토정50mg/300mg 30T",
+            "ext": "22003263",
             "gtNorm": "22003263",
-            "extNorm": "1전문8806500032013도바토정50MG300MG30T",
-            "status": "mismatch",
+            "extNorm": "22003263",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "8806500032013",
-            "ext": "",
+            "ext": "650003200",
             "gtNorm": "8806500032013",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "650003200",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -302,13 +302,13 @@
     ],
     "cellCounts": {
       "scored": 10,
-      "match": 4,
+      "match": 6,
       "mismatch": 4,
-      "ext_missing": 2,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4
+    "cellAccuracy": 0.6
   },
   "buckets": {
     "defects": [
@@ -369,14 +369,6 @@
         "reason": "extractor invented rows ['2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16']"
       },
       {
-        "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row1:quantity",
         "status": "mismatch",
         "gtNorm": "10",
@@ -401,25 +393,17 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row1:itemCode",
-        "status": "mismatch",
-        "gtNorm": "22003263",
-        "extNorm": "1전문8806500032013도바토정50MG300MG30T",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
         "location": "row1:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "8806500032013",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "650003200",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.73)"
       }
     ],
     "bucketTally": {
       "recognition": 8,
-      "structure": 5,
+      "structure": 3,
       "layout": 0,
       "preprocessing": 0
     },

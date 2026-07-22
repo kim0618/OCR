@@ -200,8 +200,8 @@
           "spec": {
             "gt": "56T/ PAC",
             "ext": "56Tx1PAC 56TK PAC",
-            "gtNorm": "56t/ pac",
-            "extNorm": "56tx1pac 56tk pac",
+            "gtNorm": "56tpac",
+            "extNorm": "56tx1pac56tkpac",
             "status": "mismatch",
             "spurious": false
           },
@@ -247,10 +247,10 @@
           },
           "itemCode": {
             "gt": "03001390",
-            "ext": "ZRA26501",
+            "ext": "03001390",
             "gtNorm": "03001390",
-            "extNorm": "ZRA26501",
-            "status": "mismatch",
+            "extNorm": "03001390",
+            "status": "match",
             "spurious": false
           }
         }
@@ -278,8 +278,8 @@
           "spec": {
             "gt": "56T/\nPAC",
             "ext": "LR 제미메트서방정50/1000mg 56T(국 56T/ DACK PAC",
-            "gtNorm": "56t/ pac",
-            "extNorm": "lr 제미메트서방정50/1000mg 56t(국 56t/ dack pac",
+            "gtNorm": "56tpac",
+            "extNorm": "lr제미메트서방정501000mg56t국56tdackpac",
             "status": "mismatch",
             "spurious": false
           },
@@ -325,10 +325,10 @@
           },
           "itemCode": {
             "gt": "12000656",
-            "ext": "ZMG25719",
+            "ext": "12000656",
             "gtNorm": "12000656",
-            "extNorm": "ZMG25719",
-            "status": "mismatch",
+            "extNorm": "12000656",
+            "status": "match",
             "spurious": false
           }
         }
@@ -356,7 +356,7 @@
           "spec": {
             "gt": "56T/ PAC",
             "ext": "",
-            "gtNorm": "56t/ pac",
+            "gtNorm": "56tpac",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -414,13 +414,13 @@
     ],
     "cellCounts": {
       "scored": 27,
-      "match": 8,
-      "mismatch": 10,
+      "match": 10,
+      "mismatch": 8,
       "ext_missing": 9,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.2962962962962963
+    "cellAccuracy": 0.37037037037037035
   },
   "buckets": {
     "defects": [
@@ -499,10 +499,10 @@
       {
         "location": "row1:spec",
         "status": "mismatch",
-        "gtNorm": "56t/ pac",
-        "extNorm": "56tx1pac 56tk pac",
+        "gtNorm": "56tpac",
+        "extNorm": "56tx1pac56tkpac",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.56)"
+        "reason": "char-level diff (sim=0.57)"
       },
       {
         "location": "row1:unitPrice",
@@ -525,16 +525,8 @@
         "status": "ext_missing",
         "gtNorm": "ZRA26501",
         "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
-        "location": "row1:itemCode",
-        "status": "mismatch",
-        "gtNorm": "03001390",
-        "extNorm": "ZRA26501",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row2:itemName",
@@ -547,8 +539,8 @@
       {
         "location": "row2:spec",
         "status": "mismatch",
-        "gtNorm": "56t/ pac",
-        "extNorm": "lr 제미메트서방정50/1000mg 56t(국 56t/ dack pac",
+        "gtNorm": "56tpac",
+        "extNorm": "lr제미메트서방정501000mg56t국56tdackpac",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
@@ -581,16 +573,8 @@
         "status": "ext_missing",
         "gtNorm": "ZMG25719",
         "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
-        "location": "row2:itemCode",
-        "status": "mismatch",
-        "gtNorm": "12000656",
-        "extNorm": "ZMG25719",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row6:itemName",
@@ -611,7 +595,7 @@
       {
         "location": "row6:spec",
         "status": "ext_missing",
-        "gtNorm": "56t/ pac",
+        "gtNorm": "56tpac",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -642,9 +626,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 12,
-      "structure": 11,
-      "layout": 4,
+      "recognition": 10,
+      "structure": 13,
+      "layout": 2,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

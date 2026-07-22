@@ -209,8 +209,8 @@
             "gt": "1",
             "ext": "//1",
             "gtNorm": "1",
-            "extNorm": "//1",
-            "status": "mismatch",
+            "extNorm": "1",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -263,10 +263,10 @@
           },
           "insuranceCode": {
             "gt": "643705130",
-            "ext": "",
+            "ext": "643705130",
             "gtNorm": "643705130",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "643705130",
+            "status": "match",
             "spurious": false
           }
         }
@@ -294,7 +294,7 @@
           "spec": {
             "gt": "1T (PTP)",
             "ext": "",
-            "gtNorm": "1t (ptp)",
+            "gtNorm": "1tptp",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -349,10 +349,10 @@
           },
           "insuranceCode": {
             "gt": "643703610",
-            "ext": "",
+            "ext": "644501860",
             "gtNorm": "643703610",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "644501860",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -360,13 +360,13 @@
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 4,
+      "match": 6,
       "mismatch": 5,
-      "ext_missing": 11,
+      "ext_missing": 9,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.2
+    "cellAccuracy": 0.3
   },
   "buckets": {
     "defects": [
@@ -385,14 +385,6 @@
         "extNorm": "백제약품주제주지점",
         "bucket": "recognition",
         "reason": "value differs, low similarity"
-      },
-      {
-        "location": "row1:spec",
-        "status": "mismatch",
-        "gtNorm": "1",
-        "extNorm": "//1",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "row1:quantity",
@@ -427,14 +419,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "643705130",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row2:itemName",
         "status": "mismatch",
         "gtNorm": "이반네이트정150mg이반드론산나트륨일수화물",
@@ -453,7 +437,7 @@
       {
         "location": "row2:spec",
         "status": "ext_missing",
-        "gtNorm": "1t (ptp)",
+        "gtNorm": "1tptp",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -508,16 +492,16 @@
       },
       {
         "location": "row2:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "643703610",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "644501860",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.56)"
       }
     ],
     "bucketTally": {
       "recognition": 6,
-      "structure": 11,
+      "structure": 9,
       "layout": 1,
       "preprocessing": 0
     },

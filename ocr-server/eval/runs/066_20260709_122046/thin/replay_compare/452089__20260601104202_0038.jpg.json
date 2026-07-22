@@ -223,8 +223,8 @@
           "spec": {
             "gt": "10mL*30P",
             "ext": "15;732 1;280 20,136,960 28.03.31 LE046A99",
-            "gtNorm": "10ml*30p",
-            "extNorm": "15;732 1;280 20,136,960 28.03.31 le046a99",
+            "gtNorm": "10ml30p",
+            "extNorm": "15732128020136960280331le046a99",
             "status": "mismatch",
             "spurious": false
           },
@@ -262,18 +262,18 @@
           },
           "itemCode": {
             "gt": "8806433010034",
-            "ext": "LE046A99",
+            "ext": "8806433010034",
             "gtNorm": "8806433010034",
-            "extNorm": "LE046A99",
-            "status": "mismatch",
+            "extNorm": "8806433010034",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "LE046A99",
-            "ext": "",
+            "ext": "643301001",
             "gtNorm": "LE046A99",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "643301001",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -281,13 +281,13 @@
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 2,
+      "match": 3,
       "mismatch": 3,
-      "ext_missing": 4,
+      "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.2222222222222222
+    "cellAccuracy": 0.3333333333333333
   },
   "buckets": {
     "defects": [
@@ -358,8 +358,8 @@
       {
         "location": "row1:spec",
         "status": "mismatch",
-        "gtNorm": "10ml*30p",
-        "extNorm": "15;732 1;280 20,136,960 28.03.31 le046a99",
+        "gtNorm": "10ml30p",
+        "extNorm": "15732128020136960280331le046a99",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
@@ -388,26 +388,18 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemCode",
+        "location": "row1:insuranceCode",
         "status": "mismatch",
-        "gtNorm": "8806433010034",
-        "extNorm": "LE046A99",
+        "gtNorm": "LE046A99",
+        "extNorm": "643301001",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row1:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "LE046A99",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
       }
     ],
     "bucketTally": {
       "recognition": 5,
       "structure": 8,
-      "layout": 1,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

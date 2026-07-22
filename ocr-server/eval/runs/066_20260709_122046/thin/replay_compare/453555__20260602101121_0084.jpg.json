@@ -206,10 +206,10 @@
           },
           "spec": {
             "gt": "20mL*20P",
-            "ext": "",
-            "gtNorm": "20ml*20p",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "20포",
+            "gtNorm": "20ml20p",
+            "extNorm": "20포",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -254,10 +254,10 @@
           },
           "itemCode": {
             "gt": "01010247",
-            "ext": "F00900",
+            "ext": "01010247",
             "gtNorm": "01010247",
-            "extNorm": "F00900",
-            "status": "mismatch",
+            "extNorm": "01010247",
+            "status": "match",
             "spurious": false
           }
         }
@@ -265,13 +265,13 @@
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 3,
+      "match": 4,
       "mismatch": 1,
-      "ext_missing": 5,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3333333333333333
+    "cellAccuracy": 0.4444444444444444
   },
   "buckets": {
     "defects": [
@@ -285,11 +285,11 @@
       },
       {
         "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "20ml*20p",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "20ml20p",
+        "extNorm": "20포",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:unitPrice",
@@ -320,22 +320,14 @@
         "status": "ext_missing",
         "gtNorm": "F00900",
         "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
-        "location": "row1:itemCode",
-        "status": "mismatch",
-        "gtNorm": "01010247",
-        "extNorm": "F00900",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
       "recognition": 2,
       "structure": 4,
-      "layout": 1,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

@@ -262,18 +262,18 @@
           },
           "itemNameMaster": {
             "gt": "펜넬캡슐",
-            "ext": "펜넬캡슐",
+            "ext": "펜넬캡슐(파마킹)",
             "gtNorm": "펜넬캡슐",
-            "extNorm": "펜넬캡슐",
-            "status": "match",
+            "extNorm": "펜넬캡슐(파마킹)",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
             "gt": "100C",
-            "ext": "",
+            "ext": "100C",
             "gtNorm": "100c",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "100c",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -302,9 +302,9 @@
           },
           "itemCode": {
             "gt": "8806523007029",
-            "ext": "8806523007043",
+            "ext": "05003103",
             "gtNorm": "8806523007029",
-            "extNorm": "8806523007043",
+            "extNorm": "05003103",
             "status": "mismatch",
             "spurious": false
           }
@@ -332,10 +332,10 @@
           },
           "spec": {
             "gt": "500C",
-            "ext": "",
+            "ext": "500C",
             "gtNorm": "500c",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "500c",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -375,13 +375,13 @@
     ],
     "cellCounts": {
       "scored": 21,
-      "match": 4,
-      "mismatch": 11,
-      "ext_missing": 6,
+      "match": 5,
+      "mismatch": 12,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.19047619047619047
+    "cellAccuracy": 0.23809523809523808
   },
   "buckets": {
     "defects": [
@@ -462,16 +462,16 @@
         "status": "mismatch",
         "gtNorm": "펜넬캡슐",
         "extNorm": "펜넬캡슬",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemNameMaster']"
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.75)"
       },
       {
-        "location": "row2:spec",
-        "status": "ext_missing",
-        "gtNorm": "100c",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "location": "row2:itemNameMaster",
+        "status": "mismatch",
+        "gtNorm": "펜넬캡슐",
+        "extNorm": "펜넬캡슐(파마킹)",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.62)"
       },
       {
         "location": "row2:quantity",
@@ -501,9 +501,9 @@
         "location": "row2:itemCode",
         "status": "mismatch",
         "gtNorm": "8806523007029",
-        "extNorm": "8806523007043",
+        "extNorm": "05003103",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.85)"
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row3:itemName",
@@ -512,14 +512,6 @@
         "extNorm": "펜넬캡슬",
         "bucket": "layout",
         "reason": "gt cell appears in column(s) ['itemNameMaster']"
-      },
-      {
-        "location": "row3:spec",
-        "status": "ext_missing",
-        "gtNorm": "500c",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row3:quantity",
@@ -555,9 +547,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 11,
-      "structure": 7,
-      "layout": 3,
+      "recognition": 13,
+      "structure": 5,
+      "layout": 2,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

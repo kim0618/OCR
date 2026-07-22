@@ -206,10 +206,10 @@
           },
           "spec": {
             "gt": "1PEN",
-            "ext": "",
+            "ext": "670800291포",
             "gtNorm": "1pen",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "670800291포",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -262,10 +262,10 @@
           },
           "insuranceCode": {
             "gt": "8806708002917670800291",
-            "ext": "8806708002917/670800291",
+            "ext": "670800291",
             "gtNorm": "8806708002917670800291",
-            "extNorm": "8806708002917670800291",
-            "status": "match",
+            "extNorm": "670800291",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -273,13 +273,13 @@
     ],
     "cellCounts": {
       "scored": 10,
-      "match": 6,
-      "mismatch": 2,
-      "ext_missing": 2,
+      "match": 5,
+      "mismatch": 4,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.6
+    "cellAccuracy": 0.5
   },
   "buckets": {
     "defects": [
@@ -309,11 +309,11 @@
       },
       {
         "location": "row1:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "1pen",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "670800291포",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:amount",
@@ -330,11 +330,19 @@
         "extNorm": "19497100909643E",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.70)"
+      },
+      {
+        "location": "row1:insuranceCode",
+        "status": "mismatch",
+        "gtNorm": "8806708002917670800291",
+        "extNorm": "670800291",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.58)"
       }
     ],
     "bucketTally": {
-      "recognition": 4,
-      "structure": 2,
+      "recognition": 6,
+      "structure": 1,
       "layout": 0,
       "preprocessing": 0
     },

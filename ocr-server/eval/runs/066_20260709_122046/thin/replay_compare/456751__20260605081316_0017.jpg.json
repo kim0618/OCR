@@ -221,10 +221,10 @@
           },
           "spec": {
             "gt": "50mg 500T(병)",
-            "ext": "",
-            "gtNorm": "50mg 500t(병)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "500T",
+            "gtNorm": "50mg500t병",
+            "extNorm": "500t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -277,10 +277,10 @@
           },
           "insuranceCode": {
             "gt": "643702370",
-            "ext": "",
+            "ext": "643702370",
             "gtNorm": "643702370",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "643702370",
+            "status": "match",
             "spurious": false
           }
         }
@@ -288,13 +288,13 @@
     ],
     "cellCounts": {
       "scored": 10,
-      "match": 4,
-      "mismatch": 0,
-      "ext_missing": 6,
+      "match": 5,
+      "mismatch": 1,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4
+    "cellAccuracy": 0.5
   },
   "buckets": {
     "defects": [
@@ -332,11 +332,11 @@
       },
       {
         "location": "row2:spec",
-        "status": "ext_missing",
-        "gtNorm": "50mg 500t(병)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "50mg500t병",
+        "extNorm": "500t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.62)"
       },
       {
         "location": "row2:quantity",
@@ -369,19 +369,11 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "643702370",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 3,
-      "structure": 7,
+      "recognition": 4,
+      "structure": 5,
       "layout": 0,
       "preprocessing": 0
     },

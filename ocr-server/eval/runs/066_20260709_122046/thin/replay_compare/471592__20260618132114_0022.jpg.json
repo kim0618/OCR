@@ -229,7 +229,7 @@
           "spec": {
             "gt": "15mL*30P",
             "ext": "",
-            "gtNorm": "15ml*30p",
+            "gtNorm": "15ml30p",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -298,10 +298,10 @@
           },
           "spec": {
             "gt": "300C",
-            "ext": "",
+            "ext": "300C",
             "gtNorm": "300c",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "300c",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -338,10 +338,10 @@
           },
           "itemCode": {
             "gt": "05001465",
-            "ext": "ANDC300C",
+            "ext": "05001465",
             "gtNorm": "05001465",
-            "extNorm": "ANDC300C",
-            "status": "mismatch",
+            "extNorm": "05001465",
+            "status": "match",
             "spurious": false
           }
         }
@@ -370,7 +370,7 @@
             "gt": "500T",
             "ext": "BNT50OT V",
             "gtNorm": "500t",
-            "extNorm": "bnt50ot v",
+            "extNorm": "bnt50otv",
             "status": "mismatch",
             "spurious": false
           },
@@ -440,7 +440,7 @@
             "gt": "28T",
             "ext": "DFGT28T V",
             "gtNorm": "28t",
-            "extNorm": "dfgt28t v",
+            "extNorm": "dfgt28tv",
             "status": "mismatch",
             "spurious": false
           },
@@ -510,7 +510,7 @@
             "gt": "28T",
             "ext": "NOAT28T V",
             "gtNorm": "28t",
-            "extNorm": "noat28t v",
+            "extNorm": "noat28tv",
             "status": "mismatch",
             "spurious": false
           },
@@ -629,13 +629,13 @@
     ],
     "cellCounts": {
       "scored": 48,
-      "match": 29,
-      "mismatch": 9,
-      "ext_missing": 10,
+      "match": 31,
+      "mismatch": 8,
+      "ext_missing": 9,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.6041666666666666
+    "cellAccuracy": 0.6458333333333334
   },
   "buckets": {
     "defects": [
@@ -690,7 +690,7 @@
       {
         "location": "row1:spec",
         "status": "ext_missing",
-        "gtNorm": "15ml*30p",
+        "gtNorm": "15ml30p",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -720,36 +720,20 @@
         "reason": "char-level diff (sim=0.90)"
       },
       {
-        "location": "row2:spec",
+        "location": "row2:manufacturingNo",
         "status": "ext_missing",
-        "gtNorm": "300c",
+        "gtNorm": "ANDC300C",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:manufacturingNo",
-        "status": "ext_missing",
-        "gtNorm": "ANDC300C",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
-        "location": "row2:itemCode",
-        "status": "mismatch",
-        "gtNorm": "05001465",
-        "extNorm": "ANDC300C",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
         "location": "row3:spec",
         "status": "mismatch",
         "gtNorm": "500t",
-        "extNorm": "bnt50ot v",
+        "extNorm": "bnt50otv",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "row3:manufacturingNo",
@@ -763,9 +747,9 @@
         "location": "row4:spec",
         "status": "mismatch",
         "gtNorm": "28t",
-        "extNorm": "dfgt28t v",
+        "extNorm": "dfgt28tv",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
+        "reason": "char-level diff (sim=0.55)"
       },
       {
         "location": "row4:manufacturingNo",
@@ -795,9 +779,9 @@
         "location": "row5:spec",
         "status": "mismatch",
         "gtNorm": "28t",
-        "extNorm": "noat28t v",
+        "extNorm": "noat28tv",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
+        "reason": "char-level diff (sim=0.55)"
       },
       {
         "location": "row5:manufacturingNo",
@@ -841,9 +825,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 11,
+      "recognition": 10,
       "structure": 13,
-      "layout": 1,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

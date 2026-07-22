@@ -204,7 +204,7 @@
     "rows": [
       {
         "rowIndex": "5",
-        "rowMatch": false,
+        "rowMatch": true,
         "cells": {
           "itemName": {
             "gt": "펜디 정 PTP(주석산펜디메트라진)",
@@ -225,8 +225,8 @@
           "spec": {
             "gt": "/30Tab.",
             "ext": "/30Tab.",
-            "gtNorm": "/30tab.",
-            "extNorm": "/30tab.",
+            "gtNorm": "30tab",
+            "extNorm": "30tab",
             "status": "match",
             "spurious": false
           },
@@ -280,10 +280,10 @@
           },
           "insuranceCode": {
             "gt": "8806706023839",
-            "ext": "",
+            "ext": "8806706023839",
             "gtNorm": "8806706023839",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "8806706023839",
+            "status": "match",
             "spurious": false
           }
         }
@@ -311,7 +311,7 @@
           "spec": {
             "gt": "/30Tab.",
             "ext": "",
-            "gtNorm": "/30tab.",
+            "gtNorm": "30tab",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -358,18 +358,18 @@
           },
           "itemCode": {
             "gt": "01005705",
-            "ext": "TZA505",
+            "ext": "01005705",
             "gtNorm": "01005705",
-            "extNorm": "TZA505",
-            "status": "mismatch",
+            "extNorm": "01005705",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "8806706076316",
-            "ext": "",
+            "ext": "8806706076316",
             "gtNorm": "8806706076316",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "8806706076316",
+            "status": "match",
             "spurious": false
           }
         }
@@ -397,9 +397,9 @@
           "spec": {
             "gt": "/30 Tab.",
             "ext": "/30Tab.",
-            "gtNorm": "/30 tab.",
-            "extNorm": "/30tab.",
-            "status": "mismatch",
+            "gtNorm": "30tab",
+            "extNorm": "30tab",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -452,10 +452,10 @@
           },
           "insuranceCode": {
             "gt": "8806706081914",
-            "ext": "",
+            "ext": "670608190",
             "gtNorm": "8806706081914",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "670608190",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -463,13 +463,13 @@
     ],
     "cellCounts": {
       "scored": 30,
-      "match": 20,
-      "mismatch": 2,
-      "ext_missing": 8,
+      "match": 24,
+      "mismatch": 1,
+      "ext_missing": 5,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.6666666666666666
+    "cellAccuracy": 0.8
   },
   "buckets": {
     "defects": [
@@ -546,17 +546,9 @@
         "reason": "extractor invented rows ['1', '4']"
       },
       {
-        "location": "row5:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "8806706023839",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row2:spec",
         "status": "ext_missing",
-        "gtNorm": "/30tab.",
+        "gtNorm": "30tab",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -578,30 +570,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:itemCode",
-        "status": "mismatch",
-        "gtNorm": "01005705",
-        "extNorm": "TZA505",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row2:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "8806706076316",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:spec",
-        "status": "mismatch",
-        "gtNorm": "/30 tab.",
-        "extNorm": "/30tab.",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.93)"
-      },
-      {
         "location": "row3:quantity",
         "status": "ext_missing",
         "gtNorm": "40",
@@ -619,16 +587,16 @@
       },
       {
         "location": "row3:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "8806706081914",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "670608190",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.73)"
       }
     ],
     "bucketTally": {
-      "recognition": 7,
-      "structure": 12,
+      "recognition": 6,
+      "structure": 9,
       "layout": 0,
       "preprocessing": 0
     },

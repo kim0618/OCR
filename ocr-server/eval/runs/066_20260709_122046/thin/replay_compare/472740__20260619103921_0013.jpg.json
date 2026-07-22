@@ -207,10 +207,10 @@
           },
           "spec": {
             "gt": "125mL/1병",
-            "ext": "",
-            "gtNorm": "125ml/1병",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "1병",
+            "gtNorm": "125ml1병",
+            "extNorm": "1병",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -255,18 +255,18 @@
           },
           "itemCode": {
             "gt": "22003469",
-            "ext": "P37426001A",
+            "ext": "22003472",
             "gtNorm": "22003469",
-            "extNorm": "P37426001A",
+            "extNorm": "22003472",
             "status": "mismatch",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "073600073",
-            "ext": "",
+            "ext": "073600064",
             "gtNorm": "073600073",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "073600064",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -294,7 +294,7 @@
           "spec": {
             "gt": "125mL/1병",
             "ext": "",
-            "gtNorm": "125ml/1병",
+            "gtNorm": "125ml1병",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -349,10 +349,10 @@
           },
           "insuranceCode": {
             "gt": "073600073",
-            "ext": "",
+            "ext": "073600064",
             "gtNorm": "073600073",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "073600064",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -361,8 +361,8 @@
     "cellCounts": {
       "scored": 20,
       "match": 7,
-      "mismatch": 3,
-      "ext_missing": 10,
+      "mismatch": 6,
+      "ext_missing": 7,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -388,11 +388,11 @@
       },
       {
         "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "125ml/1병",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "125ml1병",
+        "extNorm": "1병",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:expiryDate",
@@ -407,29 +407,29 @@
         "status": "ext_missing",
         "gtNorm": "P37426001A",
         "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row1:itemCode",
         "status": "mismatch",
         "gtNorm": "22003469",
-        "extNorm": "P37426001A",
+        "extNorm": "22003472",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.75)"
       },
       {
         "location": "row1:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "073600073",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "073600064",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.78)"
       },
       {
         "location": "row2:spec",
         "status": "ext_missing",
-        "gtNorm": "125ml/1병",
+        "gtNorm": "125ml1병",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -476,17 +476,17 @@
       },
       {
         "location": "row2:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "073600073",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "073600064",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.78)"
       }
     ],
     "bucketTally": {
-      "recognition": 3,
-      "structure": 10,
-      "layout": 1,
+      "recognition": 6,
+      "structure": 8,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

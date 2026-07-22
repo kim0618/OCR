@@ -213,10 +213,10 @@
           },
           "spec": {
             "gt": "90T",
-            "ext": "",
+            "ext": "90T",
             "gtNorm": "90t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "90t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -369,10 +369,10 @@
           },
           "spec": {
             "gt": "30T(P)",
-            "ext": "",
-            "gtNorm": "30t(p)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "30T",
+            "gtNorm": "30tp",
+            "extNorm": "30t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -447,10 +447,10 @@
           },
           "spec": {
             "gt": "10/100mg 30T(PTP)",
-            "ext": "",
-            "gtNorm": "10/100mg 30t(ptp)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "30T",
+            "gtNorm": "10100mg30tptp",
+            "extNorm": "30t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -603,10 +603,10 @@
           },
           "spec": {
             "gt": "30T(PTP)",
-            "ext": "",
-            "gtNorm": "30t(ptp)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "30T",
+            "gtNorm": "30tptp",
+            "extNorm": "30t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -662,13 +662,13 @@
     ],
     "cellCounts": {
       "scored": 54,
-      "match": 35,
-      "mismatch": 13,
-      "ext_missing": 6,
+      "match": 36,
+      "mismatch": 16,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.6481481481481481
+    "cellAccuracy": 0.6666666666666666
   },
   "buckets": {
     "defects": [
@@ -721,14 +721,6 @@
         "reason": "gt cell appears in column(s) ['itemNameMaster']"
       },
       {
-        "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "90t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row1:expiryDate",
         "status": "mismatch",
         "gtNorm": "20281221",
@@ -778,11 +770,11 @@
       },
       {
         "location": "row3:spec",
-        "status": "ext_missing",
-        "gtNorm": "30t(p)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "30tp",
+        "extNorm": "30t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.86)"
       },
       {
         "location": "row3:expiryDate",
@@ -802,11 +794,11 @@
       },
       {
         "location": "row4:spec",
-        "status": "ext_missing",
-        "gtNorm": "10/100mg 30t(ptp)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "10100mg30tptp",
+        "extNorm": "30t",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row4:expiryDate",
@@ -850,11 +842,11 @@
       },
       {
         "location": "row6:spec",
-        "status": "ext_missing",
-        "gtNorm": "30t(ptp)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "30tptp",
+        "extNorm": "30t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "row6:expiryDate",
@@ -866,8 +858,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 15,
-      "structure": 7,
+      "recognition": 18,
+      "structure": 3,
       "layout": 2,
       "preprocessing": 0
     },

@@ -219,10 +219,10 @@
           },
           "spec": {
             "gt": "30T",
-            "ext": "",
+            "ext": "30T",
             "gtNorm": "30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -275,10 +275,10 @@
           },
           "insuranceCode": {
             "gt": "8806521005928",
-            "ext": "",
+            "ext": "652100590",
             "gtNorm": "8806521005928",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "652100590",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -286,13 +286,13 @@
     ],
     "cellCounts": {
       "scored": 10,
-      "match": 6,
-      "mismatch": 0,
-      "ext_missing": 4,
+      "match": 7,
+      "mismatch": 1,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.6
+    "cellAccuracy": 0.7
   },
   "buckets": {
     "defects": [
@@ -329,14 +329,6 @@
         "reason": "value differs, low similarity"
       },
       {
-        "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row1:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20280323",
@@ -354,16 +346,16 @@
       },
       {
         "location": "row1:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "8806521005928",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "652100590",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.73)"
       }
     ],
     "bucketTally": {
-      "recognition": 4,
-      "structure": 4,
+      "recognition": 5,
+      "structure": 2,
       "layout": 0,
       "preprocessing": 0
     },

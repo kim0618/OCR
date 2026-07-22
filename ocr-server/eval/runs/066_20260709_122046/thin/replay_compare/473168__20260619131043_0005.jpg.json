@@ -232,10 +232,10 @@
           },
           "spec": {
             "gt": "250mg*90T",
-            "ext": "",
-            "gtNorm": "250mg*90t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "90T",
+            "gtNorm": "250mg90t",
+            "extNorm": "90t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -319,7 +319,7 @@
           "spec": {
             "gt": "6mL/병",
             "ext": "",
-            "gtNorm": "6ml/병",
+            "gtNorm": "6ml병",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -405,7 +405,7 @@
           "spec": {
             "gt": "6mL/병",
             "ext": "",
-            "gtNorm": "6ml/병",
+            "gtNorm": "6ml병",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -460,10 +460,10 @@
           },
           "insuranceCode": {
             "gt": "690300711",
-            "ext": "3 690300711",
+            "ext": "690300711",
             "gtNorm": "690300711",
-            "extNorm": "3690300711",
-            "status": "mismatch",
+            "extNorm": "690300711",
+            "status": "match",
             "spurious": false
           }
         }
@@ -491,7 +491,7 @@
           "spec": {
             "gt": "6mL/병",
             "ext": "",
-            "gtNorm": "6ml/병",
+            "gtNorm": "6ml병",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -577,7 +577,7 @@
           "spec": {
             "gt": "0.45mL*60관",
             "ext": "",
-            "gtNorm": "0.45ml*60관",
+            "gtNorm": "045ml60관",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -632,10 +632,10 @@
           },
           "insuranceCode": {
             "gt": "690300071",
-            "ext": "5 690300071 라있듯",
+            "ext": "690300071",
             "gtNorm": "690300071",
-            "extNorm": "5690300071라있듯",
-            "status": "mismatch",
+            "extNorm": "690300071",
+            "status": "match",
             "spurious": false
           }
         }
@@ -663,7 +663,7 @@
           "spec": {
             "gt": "0.45mL*60\\pmt",
             "ext": "",
-            "gtNorm": "0.45ml*60\\pmt",
+            "gtNorm": "045ml60pmt",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -718,10 +718,10 @@
           },
           "insuranceCode": {
             "gt": "678601751",
-            "ext": "8 7 9 6 10 678601751",
+            "ext": "678601751",
             "gtNorm": "678601751",
-            "extNorm": "879610678601751",
-            "status": "mismatch",
+            "extNorm": "678601751",
+            "status": "match",
             "spurious": false
           }
         }
@@ -729,13 +729,13 @@
     ],
     "cellCounts": {
       "scored": 60,
-      "match": 43,
-      "mismatch": 7,
-      "ext_missing": 10,
+      "match": 46,
+      "mismatch": 5,
+      "ext_missing": 9,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.7166666666666667
+    "cellAccuracy": 0.7666666666666667
   },
   "buckets": {
     "defects": [
@@ -773,11 +773,11 @@
       },
       {
         "location": "row9:spec",
-        "status": "ext_missing",
-        "gtNorm": "250mg*90t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "250mg90t",
+        "extNorm": "90t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.55)"
       },
       {
         "location": "row9:insuranceCode",
@@ -806,10 +806,10 @@
       {
         "location": "row2:spec",
         "status": "ext_missing",
-        "gtNorm": "6ml/병",
+        "gtNorm": "6ml병",
         "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemName']"
       },
       {
         "location": "row2:manufacturingNo",
@@ -838,23 +838,15 @@
       {
         "location": "row10:spec",
         "status": "ext_missing",
-        "gtNorm": "6ml/병",
+        "gtNorm": "6ml병",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row10:insuranceCode",
-        "status": "mismatch",
-        "gtNorm": "690300711",
-        "extNorm": "3690300711",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.95)"
-      },
-      {
         "location": "row6:spec",
         "status": "ext_missing",
-        "gtNorm": "6ml/병",
+        "gtNorm": "6ml병",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -878,40 +870,24 @@
       {
         "location": "row12:spec",
         "status": "ext_missing",
-        "gtNorm": "0.45ml*60관",
+        "gtNorm": "045ml60관",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row12:insuranceCode",
-        "status": "mismatch",
-        "gtNorm": "690300071",
-        "extNorm": "5690300071라있듯",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.82)"
       },
       {
         "location": "row13:spec",
         "status": "ext_missing",
-        "gtNorm": "0.45ml*60\\pmt",
+        "gtNorm": "045ml60pmt",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row13:insuranceCode",
-        "status": "mismatch",
-        "gtNorm": "678601751",
-        "extNorm": "879610678601751",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.75)"
       }
     ],
     "bucketTally": {
-      "recognition": 10,
-      "structure": 11,
-      "layout": 0,
+      "recognition": 8,
+      "structure": 9,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

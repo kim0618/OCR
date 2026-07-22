@@ -227,10 +227,10 @@
           },
           "spec": {
             "gt": "500T/PE",
-            "ext": "",
-            "gtNorm": "500t/pe",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "500T",
+            "gtNorm": "500tpe",
+            "extNorm": "500t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -275,18 +275,18 @@
           },
           "itemCode": {
             "gt": "22004446",
-            "ext": "500T/PE 12X1F2",
+            "ext": "22004446",
             "gtNorm": "22004446",
-            "extNorm": "500TPE12X1F2",
-            "status": "mismatch",
+            "extNorm": "22004446",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "EPA5001B",
-            "ext": "",
+            "ext": "655403530",
             "gtNorm": "EPA5001B",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "655403530",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -314,8 +314,8 @@
           "spec": {
             "gt": "30T/PE",
             "ext": "30T/PE 1332F4",
-            "gtNorm": "30t/pe",
-            "extNorm": "30t/pe 1332f4",
+            "gtNorm": "30tpe",
+            "extNorm": "30tpe1332f4",
             "status": "mismatch",
             "spurious": false
           },
@@ -369,10 +369,10 @@
           },
           "insuranceCode": {
             "gt": "ISF508P",
-            "ext": "",
+            "ext": "655401570",
             "gtNorm": "ISF508P",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "655401570",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -400,8 +400,8 @@
           "spec": {
             "gt": "100T/PE",
             "ext": "100T/PE 1931F2",
-            "gtNorm": "100t/pe",
-            "extNorm": "100t/pe 1931f2",
+            "gtNorm": "100tpe",
+            "extNorm": "100tpe1931f2",
             "status": "mismatch",
             "spurious": false
           },
@@ -455,10 +455,10 @@
           },
           "insuranceCode": {
             "gt": "FPC6001",
-            "ext": "",
+            "ext": "655401790",
             "gtNorm": "FPC6001",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "655401790",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -486,8 +486,8 @@
           "spec": {
             "gt": "30T/PE",
             "ext": "30T/PE 1931F3",
-            "gtNorm": "30t/pe",
-            "extNorm": "30t/pe 1931f3",
+            "gtNorm": "30tpe",
+            "extNorm": "30tpe1931f3",
             "status": "mismatch",
             "spurious": false
           },
@@ -552,13 +552,13 @@
     ],
     "cellCounts": {
       "scored": 40,
-      "match": 14,
-      "mismatch": 10,
-      "ext_missing": 16,
+      "match": 15,
+      "mismatch": 13,
+      "ext_missing": 12,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.35
+    "cellAccuracy": 0.375
   },
   "buckets": {
     "defects": [
@@ -612,11 +612,11 @@
       },
       {
         "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "500t/pe",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "500tpe",
+        "extNorm": "500t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "row1:unitPrice",
@@ -643,20 +643,12 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemCode",
+        "location": "row1:insuranceCode",
         "status": "mismatch",
-        "gtNorm": "22004446",
-        "extNorm": "500TPE12X1F2",
+        "gtNorm": "EPA5001B",
+        "extNorm": "655403530",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row1:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "EPA5001B",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row3:itemNameMaster",
@@ -669,10 +661,10 @@
       {
         "location": "row3:spec",
         "status": "mismatch",
-        "gtNorm": "30t/pe",
-        "extNorm": "30t/pe 1332f4",
+        "gtNorm": "30tpe",
+        "extNorm": "30tpe1332f4",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.63)"
+        "reason": "char-level diff (sim=0.62)"
       },
       {
         "location": "row3:unitPrice",
@@ -708,17 +700,17 @@
       },
       {
         "location": "row3:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "ISF508P",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "655401570",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row5:spec",
         "status": "mismatch",
-        "gtNorm": "100t/pe",
-        "extNorm": "100t/pe 1931f2",
+        "gtNorm": "100tpe",
+        "extNorm": "100tpe1931f2",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.67)"
       },
@@ -748,11 +740,11 @@
       },
       {
         "location": "row5:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "FPC6001",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "655401790",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row7:itemName",
@@ -773,10 +765,10 @@
       {
         "location": "row7:spec",
         "status": "mismatch",
-        "gtNorm": "30t/pe",
-        "extNorm": "30t/pe 1931f3",
+        "gtNorm": "30tpe",
+        "extNorm": "30tpe1931f3",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.63)"
+        "reason": "char-level diff (sim=0.62)"
       },
       {
         "location": "row7:unitPrice",
@@ -820,8 +812,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 14,
-      "structure": 18,
+      "recognition": 17,
+      "structure": 14,
       "layout": 0,
       "preprocessing": 0
     },

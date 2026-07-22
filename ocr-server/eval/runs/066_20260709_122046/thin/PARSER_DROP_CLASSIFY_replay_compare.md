@@ -1,7 +1,7 @@
 # Parser-drop classification — 066_20260709_122046\thin
 
-Defects scored (mismatch|ext_missing): **201757**  |  parser-drop (OCR read it, recoverable): **116584**  |  ambiguous_fuzzy (fuzzy-only, pending): **1041**  |  recognition (OCR-bound): **84132**
-Parser-recoverable share of defects: **57.8%**
+Defects scored (mismatch|ext_missing): **184772**  |  parser-drop (OCR read it, recoverable): **104080**  |  ambiguous_fuzzy (fuzzy-only, pending): **1003**  |  recognition (OCR-bound): **79689**
+Parser-recoverable share of defects: **56.3%**
 
 Evaluation scope: **run_meta.ran 5964 sources**; out-of-scope compare files excluded: **49**
 
@@ -9,31 +9,31 @@ Evaluation scope: **run_meta.ran 5964 sources**; out-of-scope compare files excl
 
 | transition | rows |
 |---|--:|
-| rawWrong_masterCorrect | **14321** |
-| rawWrong_masterWrongOrMissing | **8918** |
-| rawCorrect_masterCorrect | **13140** |
-| rawCorrect_masterWrong | **928** |
+| rawWrong_masterCorrect | **14351** |
+| rawWrong_masterWrongOrMissing | **8888** |
+| rawCorrect_masterCorrect | **13176** |
+| rawCorrect_masterWrong | **892** |
 | rawCorrect_masterMissing | **39** |
 
 Regression gates use the persisted row identities, not fixed bin counts: a successful raw fix may legitimately move a protected row between bins.
 
 Clean/angle split: **unavailable for this run**. The legacy six-file study filename list is not applied to thin data.
 
-## Parser-drops by column × pattern — ALL  (n=116584)
+## Parser-drops by column × pattern — ALL  (n=104080)
 
 | column | drop | mislocate | wrongpick | total |
 |---|--:|--:|--:|--:|
-| spec | 13668 | 2694 | 5222 | **21584** |
-| manufacturingNo | 11779 | 2234 | 3079 | **17092** |
-| insuranceCode | 10458 | 1350 | 2956 | **14764** |
-| unitPrice | 4908 | 2477 | 4564 | **11949** |
-| expiryDate | 9181 | 1006 | 1433 | **11620** |
-| itemName | 1618 | 1756 | 6829 | **10203** |
-| amount | 4072 | 1120 | 4371 | **9563** |
-| quantity | 3774 | 3141 | 2536 | **9451** |
-| itemNameMaster | 781 | 573 | 575 | **1929** |
+| manufacturingNo | 12326 | 1407 | 3330 | **17063** |
+| spec | 5566 | 3748 | 6225 | **15539** |
+| unitPrice | 4881 | 2475 | 4541 | **11897** |
+| expiryDate | 9051 | 1088 | 1415 | **11554** |
+| itemName | 1614 | 1766 | 6806 | **10186** |
+| amount | 4059 | 1111 | 4339 | **9509** |
+| quantity | 3761 | 3169 | 2506 | **9436** |
+| insuranceCode | 1941 | 1089 | 5596 | **8626** |
+| itemNameMaster | 780 | 570 | 557 | **1907** |
 | totalAmount | 96 | 376 | 1102 | **1574** |
-| taxAmount | 581 | 202 | 710 | **1493** |
+| taxAmount | 580 | 203 | 710 | **1493** |
 | supplyAmount | 457 | 352 | 629 | **1438** |
 | buyerAddress | 41 | 8 | 710 | **759** |
 | supplierCompany | 8 | 69 | 628 | **705** |
@@ -41,8 +41,8 @@ Clean/angle split: **unavailable for this run**. The legacy six-file study filen
 | issueDate | 0 | 0 | 504 | **504** |
 | buyerCompany | 42 | 6 | 383 | **431** |
 | buyerBizNumber | 38 | 157 | 212 | **407** |
-| itemCode | 71 | 17 | 115 | **203** |
 | supplierBizNumber | 54 | 28 | 105 | **187** |
+| itemCode | 69 | 19 | 49 | **137** |
 | supplierAddress | 2 | 15 | 93 | **110** |
 
 ## Ambiguous fuzzy-only evidence by column
@@ -53,28 +53,28 @@ Clean/angle split: **unavailable for this run**. The legacy six-file study filen
 | buyerCompany | 347 |
 | supplierAddress | 99 |
 | itemNameMaster | 59 |
-| insuranceCode | 55 |
-| spec | 31 |
-| manufacturingNo | 27 |
+| spec | 27 |
+| insuranceCode | 25 |
+| manufacturingNo | 23 |
 | buyerAddress | 23 |
 
 ## Recognition (OCR-bound, NOT parser) by column
 
 | column | count |
 |---|--:|
-| itemCode | 14828 |
-| itemName | 12650 |
-| itemNameMaster | 7897 |
-| expiryDate | 6454 |
-| spec | 6400 |
+| itemName | 12667 |
+| itemCode | 11090 |
+| itemNameMaster | 7853 |
+| expiryDate | 6520 |
+| spec | 6315 |
 | buyerAddress | 5108 |
-| manufacturingNo | 4791 |
+| manufacturingNo | 4824 |
 | buyerCompany | 3842 |
-| quantity | 3816 |
-| insuranceCode | 3680 |
+| quantity | 3831 |
 | supplierAddress | 3162 |
-| unitPrice | 3065 |
-| amount | 2182 |
+| unitPrice | 3117 |
+| insuranceCode | 2867 |
+| amount | 2236 |
 | supplierCompany | 2151 |
 | supplyAmount | 1023 |
 | taxAmount | 864 |
@@ -93,23 +93,23 @@ recognition rate = recognition defects / scored cells. Δ = vs baseline bucket (
 
 | condition | n | cellAcc | recognition% | Δ vs base |
 |---|--:|--:|--:|--:|
-| 270° 적용 | 268 | 47.4% | 28.0% | +3.6pp |
-| 180° 적용 | 120 | 50.7% | 24.5% | +0.1pp |
-| 미적용(0°) | 5269 | 49.1% | 24.4% | — |
-| 90° 적용 | 307 | 55.5% | 21.1% | -3.3pp |
+| 270° 적용 | 268 | 52.3% | 26.9% | +3.8pp |
+| 180° 적용 | 120 | 54.6% | 23.2% | +0.1pp |
+| 미적용(0°) | 5269 | 54.1% | 23.1% | — |
+| 90° 적용 | 307 | 60.1% | 20.2% | -2.9pp |
 
 ### Deskew
 
 | condition | n | cellAcc | recognition% | Δ vs base |
 |---|--:|--:|--:|--:|
-| >2° | 80 | 42.2% | 30.9% | +7.1pp |
-| ≤2° | 672 | 45.3% | 27.7% | +3.9pp |
-| 미적용 | 5212 | 50.2% | 23.8% | — |
+| >2° | 80 | 47.4% | 29.6% | +7.2pp |
+| ≤2° | 672 | 50.3% | 26.6% | +4.1pp |
+| 미적용 | 5212 | 55.1% | 22.5% | — |
 
 ### Warp
 
 | condition | n | cellAcc | recognition% | Δ vs base |
 |---|--:|--:|--:|--:|
-| 영역50–90% | 1 | 55.6% | 33.3% | +9.0pp |
-| forcedWarpOnSkip | 5964 | 49.5% | 24.3% | +0.0pp |
-| 영역≥90% | 5963 | 49.5% | 24.3% | — |
+| 영역50–90% | 1 | 66.7% | 44.4% | +21.4pp |
+| forcedWarpOnSkip | 5964 | 54.4% | 23.0% | +0.0pp |
+| 영역≥90% | 5963 | 54.4% | 23.0% | — |

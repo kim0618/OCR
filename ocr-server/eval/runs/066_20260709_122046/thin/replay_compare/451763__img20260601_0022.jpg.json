@@ -197,8 +197,8 @@
           "spec": {
             "gt": "30T/\nBACK",
             "ext": "30T DACK PAC",
-            "gtNorm": "30t/ back",
-            "extNorm": "30t dack pac",
+            "gtNorm": "30tback",
+            "extNorm": "30tdackpac",
             "status": "mismatch",
             "spurious": false
           },
@@ -276,7 +276,7 @@
             "gt": "56TX1PA",
             "ext": "56T 56TX1PA C PAC",
             "gtNorm": "56tx1pa",
-            "extNorm": "56t 56tx1pa c pac",
+            "extNorm": "56t56tx1pacpac",
             "status": "mismatch",
             "spurious": false
           },
@@ -322,10 +322,10 @@
           },
           "itemCode": {
             "gt": "04000943",
-            "ext": "ZMJ25559",
+            "ext": "04000943",
             "gtNorm": "04000943",
-            "extNorm": "ZMJ25559",
-            "status": "mismatch",
+            "extNorm": "04000943",
+            "status": "match",
             "spurious": false
           }
         }
@@ -333,13 +333,13 @@
     ],
     "cellCounts": {
       "scored": 18,
-      "match": 7,
-      "mismatch": 9,
+      "match": 8,
+      "mismatch": 8,
       "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3888888888888889
+    "cellAccuracy": 0.4444444444444444
   },
   "buckets": {
     "defects": [
@@ -418,10 +418,10 @@
       {
         "location": "row1:spec",
         "status": "mismatch",
-        "gtNorm": "30t/ back",
-        "extNorm": "30t dack pac",
+        "gtNorm": "30tback",
+        "extNorm": "30tdackpac",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
+        "reason": "char-level diff (sim=0.71)"
       },
       {
         "location": "row1:unitPrice",
@@ -459,9 +459,9 @@
         "location": "row2:spec",
         "status": "mismatch",
         "gtNorm": "56tx1pa",
-        "extNorm": "56t 56tx1pa c pac",
+        "extNorm": "56t56tx1pacpac",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.58)"
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "row2:unitPrice",
@@ -484,22 +484,14 @@
         "status": "ext_missing",
         "gtNorm": "ZMJ25559",
         "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
-        "location": "row2:itemCode",
-        "status": "mismatch",
-        "gtNorm": "04000943",
-        "extNorm": "ZMJ25559",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 6,
-      "structure": 8,
-      "layout": 5,
+      "recognition": 5,
+      "structure": 9,
+      "layout": 4,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

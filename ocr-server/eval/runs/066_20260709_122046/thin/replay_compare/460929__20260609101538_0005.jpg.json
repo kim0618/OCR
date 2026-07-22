@@ -212,18 +212,18 @@
           },
           "itemNameMaster": {
             "gt": "비티세라캡슐",
-            "ext": "비티세라캡슐(제약사품절)",
+            "ext": "비티세라캡슐",
             "gtNorm": "비티세라캡슐",
-            "extNorm": "비티세라캡슐(제약사품절)",
-            "status": "mismatch",
+            "extNorm": "비티세라캡슐",
+            "status": "match",
             "spurious": false
           },
           "spec": {
             "gt": "30C",
-            "ext": "",
+            "ext": "30C",
             "gtNorm": "30c",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30c",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -260,18 +260,18 @@
           },
           "itemCode": {
             "gt": "22004223",
-            "ext": "22004224",
+            "ext": "22004223",
             "gtNorm": "22004223",
-            "extNorm": "22004224",
-            "status": "mismatch",
+            "extNorm": "22004223",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "26002",
-            "ext": "",
+            "ext": "656005300",
             "gtNorm": "26002",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "656005300",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -298,10 +298,10 @@
           },
           "spec": {
             "gt": "30C",
-            "ext": "",
+            "ext": "30C",
             "gtNorm": "30c",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30c",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -346,10 +346,10 @@
           },
           "insuranceCode": {
             "gt": "260058",
-            "ext": "",
+            "ext": "656004860",
             "gtNorm": "260058",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "656004860",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -357,13 +357,13 @@
     ],
     "cellCounts": {
       "scored": 18,
-      "match": 3,
+      "match": 7,
       "mismatch": 8,
-      "ext_missing": 7,
+      "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.16666666666666666
+    "cellAccuracy": 0.3888888888888889
   },
   "buckets": {
     "defects": [
@@ -404,24 +404,8 @@
         "status": "mismatch",
         "gtNorm": "비티세라캡슐",
         "extNorm": "비티세라캡슬",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.83)"
-      },
-      {
-        "location": "row1:itemNameMaster",
-        "status": "mismatch",
-        "gtNorm": "비티세라캡슐",
-        "extNorm": "비티세라캡슐(제약사품절)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.63)"
-      },
-      {
-        "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "30c",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemNameMaster']"
       },
       {
         "location": "row1:quantity",
@@ -456,20 +440,12 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemCode",
-        "status": "mismatch",
-        "gtNorm": "22004223",
-        "extNorm": "22004224",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.88)"
-      },
-      {
         "location": "row1:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "26002",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "656005300",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row2:itemName",
@@ -478,14 +454,6 @@
         "extNorm": "바실리스캡슬",
         "bucket": "layout",
         "reason": "gt cell appears in column(s) ['itemNameMaster']"
-      },
-      {
-        "location": "row2:spec",
-        "status": "ext_missing",
-        "gtNorm": "30c",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row2:unitPrice",
@@ -513,17 +481,17 @@
       },
       {
         "location": "row2:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "260058",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "656004860",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.53)"
       }
     ],
     "bucketTally": {
-      "recognition": 9,
-      "structure": 6,
-      "layout": 4,
+      "recognition": 8,
+      "structure": 2,
+      "layout": 5,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

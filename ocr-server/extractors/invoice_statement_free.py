@@ -6096,14 +6096,65 @@ def drop_boilerplate_table_rows(rows: Any) -> tuple[Any, dict[str, Any]]:
     return kept, dbg
 
 
+# ── spec(규격) 개수단위 회수 (B2, 행 _rawText 스캔) ─────────────────────────
+# war GT 의 spec 은 품목설명에 붙은 포장/개수 규격("…150mg 30T Bottle" → "30T",
+# "관류용식염-L 1000ML" → 등)인데 free 파서가 품명/행텍스트에 두고 spec 칸을 비운다.
+# 행의 **_rawText(파서가 이미 조립한 OCR 라인)** 를 스캔해 "숫자+개수단위" 토큰(정/캡/
+# T/C/P/tab/cap/ea… — dosage mg/ml/g 는 제외=품명 본체 오grab 방지)을 빈 spec 으로 COPY.
+#   ★itemName-only(구 B) 대비 ~2.4배 회수: 066 250장 replay 실측 name-scan 61 → _rawText
+#   148 FIX. spec 값이 파싱 안 된 raw 꼬리("…-L 1000ML 2029/…")에 있어 품명엔 없기 때문.
+# ★기준 = war 파리티(baseline_matrix 가 war/구글 기준). thin(5,964장) 전 변형 spurious 0.
+#   study(6장 golden)는 규격 컬럼이 아예 없는 문서(5·6.pdf: 품명|코드|수량|단가|금액)라
+#   사람이 spec 을 이름에 두고 비웠음 → 부착형 채우면 study 24~36 spurious. 이는 날조가
+#   아니라 **구글은 쪼개고 사람은 안 쪼갠 컨벤션 차이**(문서 확인 완료). 6장 프로브가
+#   5,964장을 막지 않도록 war 파리티 채택, study 발산은 컨벤션차로 문서화.
+# ★COPY(itemName 불변) — GT itemName 은 spec 을 포함하므로 split-off 하면 품명 회귀.
+# 빈칸만, 덮어쓰기 없음(wrongpick 오선택 정리는 별도 트랙).
+_SPEC_COUNT_UNIT_RE = re.compile(
+    r"(?<![A-Za-z0-9])\d+(?:\.\d+)?\s*"
+    r"(?:tab|cap|dose|box|ea|iu|t|c|p|정|캡슐|캡|포|병|매|팩|바이알|앰플|튜브)"
+    r"(?![A-Za-z0-9])",
+    re.IGNORECASE,
+)
+
+
+def fill_spec_from_item_name(rows: Any) -> tuple[Any, dict[str, Any]]:
+    """spec 빈칸 행에서 행 _rawText(폴백 itemName)의 개수/포장 규격 토큰을 spec 으로
+    복사한다. 빈칸만(덮어쓰기 없음), itemName 불변. 합류점(경로무관)에서 호출."""
+    dbg: dict[str, Any] = {"filled": 0, "samples": []}
+    if not isinstance(rows, list) or not rows:
+        return rows, dbg
+    for r in rows:
+        if not isinstance(r, dict):
+            continue
+        if _normalize_text(r.get("spec")):
+            continue
+        source = _normalize_text(r.get("_rawText")) or _normalize_text(r.get("itemName"))
+        if not source:
+            continue
+        matches = list(_SPEC_COUNT_UNIT_RE.finditer(source))
+        if not matches:
+            continue
+        token = re.sub(r"\s+", "", matches[-1].group(0))
+        r["spec"] = token
+        dbg["filled"] += 1
+        if len(dbg["samples"]) < 8:
+            dbg["samples"].append(f"{source[:36]} -> {token}")
+    return rows, dbg
+
+
 # ── 같이읽힘(blob) 분리: itemName 칸에 선행코드+품명+규격+날짜가 뭉친 행에서 ────
 # 품명 코어만 남긴다. free 경로가 라인 전체를 itemName 에 통째로 넣어(text[:60])
 # 생기는 최다 결함(062 thin: itemName wrongpick 중 merged 1,510건=22%). 예:
 #   "B2110 관류용식염-L 1000ML 2029/04/14" → "관류용식염-L"
-# 고정밀 가드: **선행 품목코드 또는 내장 만료일**(=blob 신호)이 있는 행에만 적용.
+# 고정밀 가드: **선행 품목코드/행번호/No 또는 내장 만료일**(=blob 신호)이 있는 행에만 적용.
 # 클린한 '이름+규격'(선행코드·날짜 없음) 행은 절대 안 건드림 → 규격유지 GT 회귀 방지
 # (이전 blanket token-strip 반증 회피). _rawText 는 불변(정렬/salvage 근거 보존).
-_ITEM_LEADING_CODE_RE = re.compile(r"^\s*[A-Za-z]{0,3}\d[A-Za-z0-9]{2,}\s+(?=[가-힣])")
+# 2026-07-22 확장(067 replay 선행-leak 1,389건): (1) `\s+`→`\s*` = 공백 없이 품명에
+# 붙은 코드(6649102690휴텍스…)도 절단, (2) `\d{1,3}` 브랜치 = 붙은 행번호(9메비탄·13유스틸렌),
+# (3) 선택 `No.` 접두. 가드=반드시 뒤에 한글(품명) 시작 + strip 후 base 재검증(len≥2·한글·≠원문).
+_ITEM_LEADING_CODE_RE = re.compile(
+    r"^\s*(?:[Nn][Oo]\.?\s*)?(?:[A-Za-z]{0,3}\d[A-Za-z0-9]{2,}|\d{1,3})\s*(?=[가-힣])")
 _ITEM_DATE_RE = re.compile(
     r"(?:19|20)\d{2}[.\-/]\d{1,2}[.\-/]\d{1,2}|\b\d{4}[.\-/]\d{2}[.\-/]\d{2}\b"
 )

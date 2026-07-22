@@ -222,10 +222,10 @@
           },
           "spec": {
             "gt": "50mg 500T(병)",
-            "ext": "",
-            "gtNorm": "50mg 500t(병)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "500T",
+            "gtNorm": "50mg500t병",
+            "extNorm": "500t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -278,10 +278,10 @@
           },
           "insuranceCode": {
             "gt": "643702370",
-            "ext": "",
+            "ext": "643702370",
             "gtNorm": "643702370",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "643702370",
+            "status": "match",
             "spurious": false
           }
         }
@@ -309,8 +309,8 @@
           "spec": {
             "gt": "50mg 500T(병)",
             "ext": "50mg 5e0T(병)//",
-            "gtNorm": "50mg 500t(병)",
-            "extNorm": "50mg 5e0t(병)//",
+            "gtNorm": "50mg500t병",
+            "extNorm": "50mg5e0t병",
             "status": "mismatch",
             "spurious": false
           },
@@ -364,9 +364,9 @@
           },
           "insuranceCode": {
             "gt": "643702370",
-            "ext": "20300223",
+            "ext": "651904060",
             "gtNorm": "643702370",
-            "extNorm": "20300223",
+            "extNorm": "651904060",
             "status": "mismatch",
             "spurious": false
           }
@@ -375,13 +375,13 @@
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 7,
-      "mismatch": 4,
-      "ext_missing": 9,
+      "match": 8,
+      "mismatch": 5,
+      "ext_missing": 7,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.35
+    "cellAccuracy": 0.4
   },
   "buckets": {
     "defects": [
@@ -411,11 +411,11 @@
       },
       {
         "location": "row3:spec",
-        "status": "ext_missing",
-        "gtNorm": "50mg 500t(병)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "50mg500t병",
+        "extNorm": "500t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.62)"
       },
       {
         "location": "row3:quantity",
@@ -450,14 +450,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row3:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "643702370",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row2:itemNameMaster",
         "status": "mismatch",
         "gtNorm": "트리티코정25mg(제약사품절)",
@@ -468,10 +460,10 @@
       {
         "location": "row2:spec",
         "status": "mismatch",
-        "gtNorm": "50mg 500t(병)",
-        "extNorm": "50mg 5e0t(병)//",
+        "gtNorm": "50mg500t병",
+        "extNorm": "50mg5e0t병",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.85)"
+        "reason": "char-level diff (sim=0.89)"
       },
       {
         "location": "row2:unitPrice",
@@ -509,14 +501,14 @@
         "location": "row2:insuranceCode",
         "status": "mismatch",
         "gtNorm": "643702370",
-        "extNorm": "20300223",
+        "extNorm": "651904060",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 11,
+      "recognition": 6,
+      "structure": 9,
       "layout": 0,
       "preprocessing": 0
     },

@@ -224,8 +224,8 @@
           "spec": {
             "gt": "6 ml",
             "ext": "6ml V 100",
-            "gtNorm": "6 ml",
-            "extNorm": "6ml v 100",
+            "gtNorm": "6ml",
+            "extNorm": "6mlv100",
             "status": "mismatch",
             "spurious": false
           },
@@ -279,10 +279,10 @@
           },
           "insuranceCode": {
             "gt": "671704281",
-            "ext": "671704281 파타아인점안액(6ml",
+            "ext": "671704281",
             "gtNorm": "671704281",
-            "extNorm": "671704281파타아인점안액6ML",
-            "status": "mismatch",
+            "extNorm": "671704281",
+            "status": "match",
             "spurious": false
           }
         }
@@ -311,7 +311,7 @@
             "gt": "20g",
             "ext": "20g 100",
             "gtNorm": "20g",
-            "extNorm": "20g 100",
+            "extNorm": "20g100",
             "status": "mismatch",
             "spurious": false
           },
@@ -365,10 +365,10 @@
           },
           "insuranceCode": {
             "gt": "060500791",
-            "ext": "2 060500791",
+            "ext": "060500791",
             "gtNorm": "060500791",
-            "extNorm": "2060500791",
-            "status": "mismatch",
+            "extNorm": "060500791",
+            "status": "match",
             "spurious": false
           }
         }
@@ -376,13 +376,13 @@
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 9,
-      "mismatch": 8,
+      "match": 11,
+      "mismatch": 6,
       "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.45
+    "cellAccuracy": 0.55
   },
   "buckets": {
     "defects": [
@@ -429,10 +429,10 @@
       {
         "location": "row1:spec",
         "status": "mismatch",
-        "gtNorm": "6 ml",
-        "extNorm": "6ml v 100",
+        "gtNorm": "6ml",
+        "extNorm": "6mlv100",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.60)"
       },
       {
         "location": "row1:unitPrice",
@@ -451,20 +451,12 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row1:insuranceCode",
-        "status": "mismatch",
-        "gtNorm": "671704281",
-        "extNorm": "671704281파타아인점안액6ML",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.64)"
-      },
-      {
         "location": "row3:spec",
         "status": "mismatch",
         "gtNorm": "20g",
-        "extNorm": "20g 100",
+        "extNorm": "20g100",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.60)"
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "row3:quantity",
@@ -505,18 +497,10 @@
         "extNorm": "347400엘앤씨바이2401120271222",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row3:insuranceCode",
-        "status": "mismatch",
-        "gtNorm": "060500791",
-        "extNorm": "2060500791",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.95)"
       }
     ],
     "bucketTally": {
-      "recognition": 10,
+      "recognition": 8,
       "structure": 5,
       "layout": 1,
       "preprocessing": 0

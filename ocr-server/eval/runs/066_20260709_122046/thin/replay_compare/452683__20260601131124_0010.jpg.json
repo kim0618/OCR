@@ -232,8 +232,8 @@
           "spec": {
             "gt": "8T(PTP)",
             "ext": "8T(PTP)",
-            "gtNorm": "8t(ptp)",
-            "extNorm": "8t(ptp)",
+            "gtNorm": "8tptp",
+            "extNorm": "8tptp",
             "status": "match",
             "spurious": false
           },
@@ -318,9 +318,9 @@
           "spec": {
             "gt": "30T/PTP)",
             "ext": "30T(PTP)",
-            "gtNorm": "30t/ptp)",
-            "extNorm": "30t(ptp)",
-            "status": "mismatch",
+            "gtNorm": "30tptp",
+            "extNorm": "30tptp",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -403,10 +403,10 @@
           },
           "spec": {
             "gt": "300",
-            "ext": "",
+            "ext": "30C",
             "gtNorm": "300",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30c",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -490,8 +490,8 @@
           "spec": {
             "gt": "30 g/개",
             "ext": "30 g/개",
-            "gtNorm": "30 g/개",
-            "extNorm": "30 g/개",
+            "gtNorm": "30g개",
+            "extNorm": "30g개",
             "status": "match",
             "spurious": false
           },
@@ -545,17 +545,17 @@
           },
           "insuranceCode": {
             "gt": "669605471",
-            "ext": "4 669605471",
+            "ext": "669605471",
             "gtNorm": "669605471",
-            "extNorm": "4669605471",
-            "status": "mismatch",
+            "extNorm": "669605471",
+            "status": "match",
             "spurious": false
           }
         }
       },
       {
         "rowIndex": "12",
-        "rowMatch": false,
+        "rowMatch": true,
         "cells": {
           "itemName": {
             "gt": "프레브이액20g/병",
@@ -631,10 +631,10 @@
           },
           "insuranceCode": {
             "gt": "679801451",
-            "ext": "5 679801451",
+            "ext": "679801451",
             "gtNorm": "679801451",
-            "extNorm": "5679801451",
-            "status": "mismatch",
+            "extNorm": "679801451",
+            "status": "match",
             "spurious": false
           }
         }
@@ -661,10 +661,10 @@
           },
           "spec": {
             "gt": "30T",
-            "ext": "",
+            "ext": "30T",
             "gtNorm": "30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -717,10 +717,10 @@
           },
           "insuranceCode": {
             "gt": "656205020",
-            "ext": "",
+            "ext": "656205020",
             "gtNorm": "656205020",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "656205020",
+            "status": "match",
             "spurious": false
           }
         }
@@ -814,13 +814,13 @@
     ],
     "cellCounts": {
       "scored": 70,
-      "match": 42,
-      "mismatch": 17,
-      "ext_missing": 11,
+      "match": 47,
+      "mismatch": 15,
+      "ext_missing": 8,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.6
+    "cellAccuracy": 0.6714285714285714
   },
   "buckets": {
     "defects": [
@@ -889,14 +889,6 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row3:spec",
-        "status": "mismatch",
-        "gtNorm": "30t/ptp)",
-        "extNorm": "30t(ptp)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.88)"
-      },
-      {
         "location": "row3:itemCode",
         "status": "mismatch",
         "gtNorm": "04005889",
@@ -922,9 +914,9 @@
       },
       {
         "location": "row5:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "300",
-        "extNorm": "",
+        "extNorm": "30c",
         "bucket": "layout",
         "reason": "gt cell appears in column(s) ['quantity']"
       },
@@ -969,36 +961,12 @@
         "reason": "char-level diff (sim=0.93)"
       },
       {
-        "location": "row11:insuranceCode",
-        "status": "mismatch",
-        "gtNorm": "669605471",
-        "extNorm": "4669605471",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.95)"
-      },
-      {
-        "location": "row12:insuranceCode",
-        "status": "mismatch",
-        "gtNorm": "679801451",
-        "extNorm": "5679801451",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.95)"
-      },
-      {
         "location": "row8:itemNameMaster",
         "status": "mismatch",
         "gtNorm": "피나스정5mg",
         "extNorm": "피나스테린정5mg(에이블)",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.67)"
-      },
-      {
-        "location": "row8:spec",
-        "status": "ext_missing",
-        "gtNorm": "30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row8:quantity",
@@ -1049,14 +1017,6 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row8:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "656205020",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row9:itemName",
         "status": "mismatch",
         "gtNorm": "파나에이블정5mg30t",
@@ -1082,8 +1042,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 18,
-      "structure": 13,
+      "recognition": 15,
+      "structure": 11,
       "layout": 1,
       "preprocessing": 0
     },

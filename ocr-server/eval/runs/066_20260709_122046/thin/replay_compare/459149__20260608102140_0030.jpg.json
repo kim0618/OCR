@@ -223,10 +223,10 @@
           },
           "spec": {
             "gt": "100밀리그\n램",
-            "ext": "",
-            "gtNorm": "100밀리그 램",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "100T",
+            "gtNorm": "100밀리그램",
+            "extNorm": "100t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -279,10 +279,10 @@
           },
           "insuranceCode": {
             "gt": "21073000100",
-            "ext": "",
+            "ext": "073000100",
             "gtNorm": "21073000100",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "073000100",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -291,8 +291,8 @@
     "cellCounts": {
       "scored": 10,
       "match": 4,
-      "mismatch": 3,
-      "ext_missing": 3,
+      "mismatch": 5,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -358,11 +358,11 @@
       },
       {
         "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "100밀리그 램",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "100밀리그램",
+        "extNorm": "100t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.55)"
       },
       {
         "location": "row1:quantity",
@@ -390,16 +390,16 @@
       },
       {
         "location": "row1:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "21073000100",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "073000100",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.90)"
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 7,
+      "recognition": 7,
+      "structure": 5,
       "layout": 0,
       "preprocessing": 0
     },

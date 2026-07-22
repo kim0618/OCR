@@ -271,18 +271,18 @@
           },
           "itemCode": {
             "gt": "01009078",
-            "ext": "NAE86101",
+            "ext": "01002598",
             "gtNorm": "01009078",
-            "extNorm": "NAE86101",
+            "extNorm": "01002598",
             "status": "mismatch",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "664300620",
-            "ext": "",
+            "ext": "8806581011433",
             "gtNorm": "664300620",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "8806581011433",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -309,10 +309,10 @@
           },
           "spec": {
             "gt": "30정",
-            "ext": "",
+            "ext": "30T",
             "gtNorm": "30정",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -357,18 +357,18 @@
           },
           "itemCode": {
             "gt": "01009078",
-            "ext": "NAEB6101",
+            "ext": "01009078",
             "gtNorm": "01009078",
-            "extNorm": "NAEB6101",
-            "status": "mismatch",
+            "extNorm": "01009078",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "664300620",
-            "ext": "",
+            "ext": "664300620",
             "gtNorm": "664300620",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "664300620",
+            "status": "match",
             "spurious": false
           }
         }
@@ -376,13 +376,13 @@
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 10,
-      "mismatch": 6,
-      "ext_missing": 4,
+      "match": 12,
+      "mismatch": 7,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5
+    "cellAccuracy": 0.6
   },
   "buckets": {
     "defects": [
@@ -447,32 +447,32 @@
         "status": "mismatch",
         "gtNorm": "NAE86101",
         "extNorm": "2388600NAE86101",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.70)"
       },
       {
         "location": "row1:itemCode",
         "status": "mismatch",
         "gtNorm": "01009078",
-        "extNorm": "NAE86101",
+        "extNorm": "01002598",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.75)"
+      },
+      {
+        "location": "row1:insuranceCode",
+        "status": "mismatch",
+        "gtNorm": "664300620",
+        "extNorm": "8806581011433",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row1:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "664300620",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row2:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "30정",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "30t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "row2:manufacturingNo",
@@ -481,28 +481,12 @@
         "extNorm": "21497400NAEB6101",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.58)"
-      },
-      {
-        "location": "row2:itemCode",
-        "status": "mismatch",
-        "gtNorm": "01009078",
-        "extNorm": "NAEB6101",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row2:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "664300620",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 7,
-      "structure": 6,
-      "layout": 1,
+      "recognition": 9,
+      "structure": 3,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

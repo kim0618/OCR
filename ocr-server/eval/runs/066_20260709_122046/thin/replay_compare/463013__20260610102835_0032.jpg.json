@@ -306,7 +306,7 @@
             "gt": "30T",
             "ext": "↓",
             "gtNorm": "30t",
-            "extNorm": "↓",
+            "extNorm": "",
             "status": "mismatch",
             "spurious": false
           },
@@ -382,10 +382,10 @@
           },
           "spec": {
             "gt": "60T",
-            "ext": "",
+            "ext": "60T",
             "gtNorm": "60t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "60t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -460,10 +460,10 @@
           },
           "spec": {
             "gt": "100ml",
-            "ext": "",
+            "ext": "6포",
             "gtNorm": "100ml",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "6포",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -539,8 +539,8 @@
           "spec": {
             "gt": "15ml*6포",
             "ext": "66,67",
-            "gtNorm": "15ml*6포",
-            "extNorm": "66,67",
+            "gtNorm": "15ml6포",
+            "extNorm": "6667",
             "status": "mismatch",
             "spurious": false
           },
@@ -618,7 +618,7 @@
             "gt": "200ml",
             "ext": "111,2,3,4,5,6,7,8...",
             "gtNorm": "200ml",
-            "extNorm": "111,2,3,4,5,6,7,8...",
+            "extNorm": "1112345678",
             "status": "mismatch",
             "spurious": false
           },
@@ -831,13 +831,13 @@
     ],
     "cellCounts": {
       "scored": 72,
-      "match": 49,
-      "mismatch": 20,
-      "ext_missing": 3,
+      "match": 50,
+      "mismatch": 21,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.6805555555555556
+    "cellAccuracy": 0.6944444444444444
   },
   "buckets": {
     "defects": [
@@ -861,7 +861,7 @@
         "location": "row2:spec",
         "status": "mismatch",
         "gtNorm": "30t",
-        "extNorm": "↓",
+        "extNorm": "",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
@@ -872,14 +872,6 @@
         "extNorm": "하드칼씨플러스정60t",
         "bucket": "layout",
         "reason": "gt cell appears in column(s) ['itemNameMaster']"
-      },
-      {
-        "location": "row3:spec",
-        "status": "ext_missing",
-        "gtNorm": "60t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row3:manufacturingNo",
@@ -899,11 +891,11 @@
       },
       {
         "location": "row8:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "100ml",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "6포",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row8:quantity",
@@ -956,8 +948,8 @@
       {
         "location": "row4:spec",
         "status": "mismatch",
-        "gtNorm": "15ml*6포",
-        "extNorm": "66,67",
+        "gtNorm": "15ml6포",
+        "extNorm": "6667",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
@@ -989,7 +981,7 @@
         "location": "row5:spec",
         "status": "mismatch",
         "gtNorm": "200ml",
-        "extNorm": "111,2,3,4,5,6,7,8...",
+        "extNorm": "1112345678",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
@@ -1035,8 +1027,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 16,
-      "structure": 3,
+      "recognition": 17,
+      "structure": 1,
       "layout": 5,
       "preprocessing": 0
     },

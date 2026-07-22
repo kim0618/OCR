@@ -207,7 +207,7 @@
           "spec": {
             "gt": "4mL*10A",
             "ext": "",
-            "gtNorm": "4ml*10a",
+            "gtNorm": "4ml10a",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -254,10 +254,10 @@
           },
           "itemCode": {
             "gt": "057047",
-            "ext": "FGAC003A",
+            "ext": "057047",
             "gtNorm": "057047",
-            "extNorm": "FGAC003A",
-            "status": "mismatch",
+            "extNorm": "057047",
+            "status": "match",
             "spurious": false
           }
         }
@@ -265,13 +265,13 @@
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 5,
-      "mismatch": 3,
+      "match": 6,
+      "mismatch": 2,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5555555555555556
+    "cellAccuracy": 0.6666666666666666
   },
   "buckets": {
     "defects": [
@@ -318,7 +318,7 @@
       {
         "location": "row1:spec",
         "status": "ext_missing",
-        "gtNorm": "4ml*10a",
+        "gtNorm": "4ml10a",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -328,22 +328,14 @@
         "status": "mismatch",
         "gtNorm": "FGAC003A",
         "extNorm": "전문FGAC003A",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
-        "location": "row1:itemCode",
-        "status": "mismatch",
-        "gtNorm": "057047",
-        "extNorm": "FGAC003A",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.89)"
       }
     ],
     "bucketTally": {
       "recognition": 6,
       "structure": 1,
-      "layout": 1,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

@@ -213,8 +213,8 @@
           "spec": {
             "gt": "2g*5EA",
             "ext": "2G*5 개",
-            "gtNorm": "2g*5ea",
-            "extNorm": "2g*5 개",
+            "gtNorm": "2g5ea",
+            "extNorm": "2g5개",
             "status": "mismatch",
             "spurious": false
           },
@@ -266,18 +266,18 @@
           },
           "itemNameMaster": {
             "gt": "로파인캡슐",
-            "ext": "로파인캡슐",
+            "ext": "로파인캡슐(비급여)",
             "gtNorm": "로파인캡슐",
-            "extNorm": "로파인캡슐",
-            "status": "match",
+            "extNorm": "로파인캡슐(비급여)",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
             "gt": "1000C",
-            "ext": "",
+            "ext": "10C",
             "gtNorm": "1000c",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10c",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -306,10 +306,10 @@
           },
           "itemCode": {
             "gt": "01000721",
-            "ext": "01000721",
+            "ext": "01004064",
             "gtNorm": "01000721",
-            "extNorm": "01000721",
-            "status": "match",
+            "extNorm": "01004064",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -328,18 +328,18 @@
           },
           "itemNameMaster": {
             "gt": "로파인캡슐",
-            "ext": "로파인캡슐",
+            "ext": "로파인캡슐(비급여)",
             "gtNorm": "로파인캡슐",
-            "extNorm": "로파인캡슐",
-            "status": "match",
+            "extNorm": "로파인캡슐(비급여)",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
             "gt": "1000C",
-            "ext": "",
+            "ext": "10C",
             "gtNorm": "1000c",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10c",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -368,17 +368,17 @@
           },
           "itemCode": {
             "gt": "01000721",
-            "ext": "01000721",
+            "ext": "01004064",
             "gtNorm": "01000721",
-            "extNorm": "01000721",
-            "status": "match",
+            "extNorm": "01004064",
+            "status": "mismatch",
             "spurious": false
           }
         }
       },
       {
         "rowIndex": "4",
-        "rowMatch": false,
+        "rowMatch": true,
         "cells": {
           "itemName": {
             "gt": "로파인캡슐",
@@ -398,10 +398,10 @@
           },
           "spec": {
             "gt": "1000C",
-            "ext": "",
+            "ext": "1000C",
             "gtNorm": "1000c",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "1000c",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -460,10 +460,10 @@
           },
           "spec": {
             "gt": "2T",
-            "ext": "",
+            "ext": "2T",
             "gtNorm": "2t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "2t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -524,7 +524,7 @@
           "spec": {
             "gt": "2g*5EA",
             "ext": "",
-            "gtNorm": "2g*5ea",
+            "gtNorm": "2g5ea",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -566,13 +566,13 @@
     ],
     "cellCounts": {
       "scored": 42,
-      "match": 24,
-      "mismatch": 5,
-      "ext_missing": 13,
+      "match": 22,
+      "mismatch": 11,
+      "ext_missing": 9,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5714285714285714
+    "cellAccuracy": 0.5238095238095238
   },
   "buckets": {
     "defects": [
@@ -611,8 +611,8 @@
       {
         "location": "row1:spec",
         "status": "mismatch",
-        "gtNorm": "2g*5ea",
-        "extNorm": "2g*5 개",
+        "gtNorm": "2g5ea",
+        "extNorm": "2g5개",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.67)"
       },
@@ -621,24 +621,48 @@
         "status": "mismatch",
         "gtNorm": "로파인캡슐",
         "extNorm": "로파인캡슬t",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemNameMaster']"
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.73)"
+      },
+      {
+        "location": "row2:itemNameMaster",
+        "status": "mismatch",
+        "gtNorm": "로파인캡슐",
+        "extNorm": "로파인캡슐(비급여)",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "row2:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "1000c",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "10c",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.75)"
+      },
+      {
+        "location": "row2:itemCode",
+        "status": "mismatch",
+        "gtNorm": "01000721",
+        "extNorm": "01004064",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.62)"
+      },
+      {
+        "location": "row3:itemNameMaster",
+        "status": "mismatch",
+        "gtNorm": "로파인캡슐",
+        "extNorm": "로파인캡슐(비급여)",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemName']"
       },
       {
         "location": "row3:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "1000c",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "10c",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.75)"
       },
       {
         "location": "row3:unitPrice",
@@ -657,20 +681,12 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row4:spec",
-        "status": "ext_missing",
-        "gtNorm": "1000c",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row5:spec",
-        "status": "ext_missing",
-        "gtNorm": "2t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "location": "row3:itemCode",
+        "status": "mismatch",
+        "gtNorm": "01000721",
+        "extNorm": "01004064",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.62)"
       },
       {
         "location": "row5:quantity",
@@ -715,7 +731,7 @@
       {
         "location": "row2:spec",
         "status": "ext_missing",
-        "gtNorm": "2g*5ea",
+        "gtNorm": "2g5ea",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -754,8 +770,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 6,
-      "structure": 15,
+      "recognition": 12,
+      "structure": 11,
       "layout": 1,
       "preprocessing": 0
     },

@@ -225,10 +225,10 @@
           },
           "spec": {
             "gt": "30C",
-            "ext": "",
+            "ext": "300T",
             "gtNorm": "30c",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "300t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -265,17 +265,17 @@
           },
           "insuranceCode": {
             "gt": "642901260",
-            "ext": "",
+            "ext": "642901260",
             "gtNorm": "642901260",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "642901260",
+            "status": "match",
             "spurious": false
           }
         }
       },
       {
         "rowIndex": "6",
-        "rowMatch": false,
+        "rowMatch": true,
         "cells": {
           "itemName": {
             "gt": "암로텐정 5MG (B) 30T..",
@@ -295,10 +295,10 @@
           },
           "spec": {
             "gt": "30T",
-            "ext": "",
+            "ext": "30T",
             "gtNorm": "30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -335,10 +335,10 @@
           },
           "insuranceCode": {
             "gt": "642901260",
-            "ext": "",
+            "ext": "642901260",
             "gtNorm": "642901260",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "642901260",
+            "status": "match",
             "spurious": false
           }
         }
@@ -346,13 +346,13 @@
     ],
     "cellCounts": {
       "scored": 16,
-      "match": 10,
-      "mismatch": 2,
-      "ext_missing": 4,
+      "match": 13,
+      "mismatch": 3,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.625
+    "cellAccuracy": 0.8125
   },
   "buckets": {
     "defects": [
@@ -390,11 +390,11 @@
       },
       {
         "location": "row5:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "30c",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "300t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.57)"
       },
       {
         "location": "row5:itemCode",
@@ -403,35 +403,11 @@
         "extNorm": "04000464",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row5:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "642901260",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row6:spec",
-        "status": "ext_missing",
-        "gtNorm": "30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row6:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "642901260",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 4,
-      "structure": 5,
+      "recognition": 5,
+      "structure": 1,
       "layout": 0,
       "preprocessing": 0
     },

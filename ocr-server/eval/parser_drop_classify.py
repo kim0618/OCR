@@ -434,6 +434,8 @@ def classify_sample(src: str, cmp: dict, snap: dict | None) -> list[dict]:
     for row in table["rows"]:
         yband = _row_yband(row, tokens_xy) if tokens_xy else None
         for ck, cell in row["cells"].items():
+            if ck in C.MEASUREMENT_KEYS:
+                continue  # learndata 측정 컬럼 — 정확도만 집계, defect(회수/인식)엔 불참
             if cell["status"] in ("mismatch", "ext_missing"):
                 emit(f"row{row['rowIndex']}:{ck}", ck, _cell_type(ck),
                      cell["status"], cell["gtNorm"], cell["extNorm"], yband=yband,
@@ -894,12 +896,13 @@ def main() -> int:
     # (no recursion). Flat single runs (parent == runs/) are not batches -> skip.
     # Best-effort: never break the classifier.
     try:
+        from local_summary import build as _ls_build
         batch_dir = os.path.dirname(run_dir)
-        if os.path.abspath(batch_dir) != os.path.abspath(C.RUNS_DIR):
-            from local_summary import build as _ls_build
-            _out = _ls_build(batch_dir, args.compare_dir, refresh=False)
-            if _out:
-                print(f"[written] {_out}  <- 로컬 합산뷰")
+        # batch(run_all --all)면 배치 합산, flat 단일런(invoice_replay 등)이면 런 자신을 합산
+        _target = batch_dir if os.path.abspath(batch_dir) != os.path.abspath(C.RUNS_DIR) else run_dir
+        _out = _ls_build(_target, args.compare_dir, refresh=False)
+        if _out:
+            print(f"[written] {_out}  <- 로컬 합산뷰")
     except Exception as _e:
         print(f"[local_summary skipped] {_e}")
 

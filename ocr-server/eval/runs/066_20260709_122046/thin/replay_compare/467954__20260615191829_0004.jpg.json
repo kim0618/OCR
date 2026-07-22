@@ -226,8 +226,8 @@
           "spec": {
             "gt": "5mg/30정",
             "ext": "5mg/30정",
-            "gtNorm": "5mg/30정",
-            "extNorm": "5mg/30정",
+            "gtNorm": "5mg30정",
+            "extNorm": "5mg30정",
             "status": "match",
             "spurious": false
           },
@@ -281,10 +281,10 @@
           },
           "insuranceCode": {
             "gt": "621100040",
-            "ext": "",
+            "ext": "621100040",
             "gtNorm": "621100040",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "621100040",
+            "status": "match",
             "spurious": false
           }
         }
@@ -312,8 +312,8 @@
           "spec": {
             "gt": "10mg/30매",
             "ext": "10mg/300H",
-            "gtNorm": "10mg/30매",
-            "extNorm": "10mg/300h",
+            "gtNorm": "10mg30매",
+            "extNorm": "10mg300h",
             "status": "mismatch",
             "spurious": false
           },
@@ -367,10 +367,10 @@
           },
           "insuranceCode": {
             "gt": "621100130",
-            "ext": "",
+            "ext": "621100130",
             "gtNorm": "621100130",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "621100130",
+            "status": "match",
             "spurious": false
           }
         }
@@ -378,13 +378,13 @@
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 11,
+      "match": 13,
       "mismatch": 7,
-      "ext_missing": 2,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.55
+    "cellAccuracy": 0.65
   },
   "buckets": {
     "defects": [
@@ -445,14 +445,6 @@
         "reason": "char-level diff (sim=0.86)"
       },
       {
-        "location": "row1:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "621100040",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row6:itemName",
         "status": "mismatch",
         "gtNorm": "에자아리셉트구강용해필름10mg",
@@ -463,10 +455,10 @@
       {
         "location": "row6:spec",
         "status": "mismatch",
-        "gtNorm": "10mg/30매",
-        "extNorm": "10mg/300h",
+        "gtNorm": "10mg30매",
+        "extNorm": "10mg300h",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.82)"
+        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "row6:expiryDate",
@@ -483,19 +475,11 @@
         "extNorm": "4Y11E621100130전보",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row6:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "621100130",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
       "recognition": 10,
-      "structure": 3,
+      "structure": 1,
       "layout": 0,
       "preprocessing": 0
     },

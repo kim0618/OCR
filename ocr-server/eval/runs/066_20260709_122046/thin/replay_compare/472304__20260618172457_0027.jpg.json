@@ -364,9 +364,9 @@
           },
           "insuranceCode": {
             "gt": "679801600",
-            "ext": "2 679801600",
+            "ext": "8806798016016",
             "gtNorm": "679801600",
-            "extNorm": "2679801600",
+            "extNorm": "8806798016016",
             "status": "mismatch",
             "spurious": false
           }
@@ -394,10 +394,10 @@
           },
           "spec": {
             "gt": "1명",
-            "ext": "",
+            "ext": "1병",
             "gtNorm": "1명",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "1병",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -450,17 +450,17 @@
           },
           "insuranceCode": {
             "gt": "679801501",
-            "ext": "3 679801501",
+            "ext": "679801501",
             "gtNorm": "679801501",
-            "extNorm": "3679801501",
-            "status": "mismatch",
+            "extNorm": "679801501",
+            "status": "match",
             "spurious": false
           }
         }
       },
       {
         "rowIndex": "4",
-        "rowMatch": false,
+        "rowMatch": true,
         "cells": {
           "itemName": {
             "gt": "모메코트크림15g/1튜브",
@@ -480,10 +480,10 @@
           },
           "spec": {
             "gt": "1튜브",
-            "ext": "",
+            "ext": "1튜브",
             "gtNorm": "1튜브",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "1튜브",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -528,18 +528,18 @@
           },
           "itemCode": {
             "gt": "05004677",
-            "ext": "R0901",
+            "ext": "05004677",
             "gtNorm": "05004677",
-            "extNorm": "R0901",
-            "status": "mismatch",
+            "extNorm": "05004677",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "657401502",
-            "ext": "4 657401502(주) 퍼슨",
+            "ext": "657401502",
             "gtNorm": "657401502",
-            "extNorm": "4657401502주퍼슨",
-            "status": "mismatch",
+            "extNorm": "657401502",
+            "status": "match",
             "spurious": false
           }
         }
@@ -547,13 +547,13 @@
     ],
     "cellCounts": {
       "scored": 40,
-      "match": 28,
-      "mismatch": 10,
-      "ext_missing": 2,
+      "match": 32,
+      "mismatch": 8,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.7
+    "cellAccuracy": 0.8
   },
   "buckets": {
     "defects": [
@@ -609,9 +609,9 @@
         "location": "row2:insuranceCode",
         "status": "mismatch",
         "gtNorm": "679801600",
-        "extNorm": "2679801600",
+        "extNorm": "8806798016016",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.95)"
+        "reason": "char-level diff (sim=0.73)"
       },
       {
         "location": "row3:itemName",
@@ -623,48 +623,16 @@
       },
       {
         "location": "row3:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "1명",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:insuranceCode",
-        "status": "mismatch",
-        "gtNorm": "679801501",
-        "extNorm": "3679801501",
+        "extNorm": "1병",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.95)"
-      },
-      {
-        "location": "row4:spec",
-        "status": "ext_missing",
-        "gtNorm": "1튜브",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:itemCode",
-        "status": "mismatch",
-        "gtNorm": "05004677",
-        "extNorm": "R0901",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row4:insuranceCode",
-        "status": "mismatch",
-        "gtNorm": "657401502",
-        "extNorm": "4657401502주퍼슨",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.82)"
+        "reason": "char-level diff (sim=0.50)"
       }
     ],
     "bucketTally": {
-      "recognition": 11,
-      "structure": 2,
+      "recognition": 9,
+      "structure": 0,
       "layout": 0,
       "preprocessing": 0
     },

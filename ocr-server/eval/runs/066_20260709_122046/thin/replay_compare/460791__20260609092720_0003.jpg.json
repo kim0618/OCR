@@ -233,7 +233,7 @@
             "gt": "20g",
             "ext": "실마진1%크림20g",
             "gtNorm": "20g",
-            "extNorm": "실마진1%크림20g",
+            "extNorm": "실마진1크림20g",
             "status": "mismatch",
             "spurious": false
           },
@@ -318,8 +318,8 @@
           "spec": {
             "gt": "60T(처방)",
             "ext": "알코타민정 60T(처방)",
-            "gtNorm": "60t(처방)",
-            "extNorm": "알코타민정 60t(처방)",
+            "gtNorm": "60t처방",
+            "extNorm": "알코타민정60t처방",
             "status": "mismatch",
             "spurious": false
           },
@@ -396,7 +396,7 @@
           "spec": {
             "gt": "10mg 30T",
             "ext": "30T",
-            "gtNorm": "10mg 30t",
+            "gtNorm": "10mg30t",
             "extNorm": "30t",
             "status": "mismatch",
             "spurious": false
@@ -481,10 +481,10 @@
           },
           "spec": {
             "gt": "500C",
-            "ext": "",
+            "ext": "500C",
             "gtNorm": "500c",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "500c",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -537,10 +537,10 @@
           },
           "insuranceCode": {
             "gt": "642702600",
-            "ext": "",
+            "ext": "642702610",
             "gtNorm": "642702600",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "642702610",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -569,7 +569,7 @@
             "gt": "30g",
             "ext": "칼시베타 연고30g",
             "gtNorm": "30g",
-            "extNorm": "칼시베타 연고30g",
+            "extNorm": "칼시베타연고30g",
             "status": "mismatch",
             "spurious": false
           },
@@ -732,7 +732,7 @@
           "spec": {
             "gt": "200mg 30T",
             "ext": "30T",
-            "gtNorm": "200mg 30t",
+            "gtNorm": "200mg30t",
             "extNorm": "30t",
             "status": "mismatch",
             "spurious": false
@@ -810,9 +810,9 @@
           "spec": {
             "gt": "10/500mg 30T",
             "ext": "10/500mg30T",
-            "gtNorm": "10/500mg 30t",
-            "extNorm": "10/500mg30t",
-            "status": "mismatch",
+            "gtNorm": "10500mg30t",
+            "extNorm": "10500mg30t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -887,10 +887,10 @@
           },
           "spec": {
             "gt": "100T",
-            "ext": "",
+            "ext": "100T",
             "gtNorm": "100t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "100t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -943,10 +943,10 @@
           },
           "insuranceCode": {
             "gt": "642703390",
-            "ext": "",
+            "ext": "642703390",
             "gtNorm": "642703390",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "642703390",
+            "status": "match",
             "spurious": false
           }
         }
@@ -974,7 +974,7 @@
           "spec": {
             "gt": "200mg 30C",
             "ext": "",
-            "gtNorm": "200mg 30c",
+            "gtNorm": "200mg30c",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -1029,10 +1029,10 @@
           },
           "insuranceCode": {
             "gt": "642703630",
-            "ext": "",
+            "ext": "642703630",
             "gtNorm": "642703630",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "642703630",
+            "status": "match",
             "spurious": false
           }
         }
@@ -1040,13 +1040,13 @@
     ],
     "cellCounts": {
       "scored": 96,
-      "match": 47,
+      "match": 52,
       "mismatch": 20,
-      "ext_missing": 29,
+      "ext_missing": 24,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4895833333333333
+    "cellAccuracy": 0.5416666666666666
   },
   "buckets": {
     "defects": [
@@ -1118,9 +1118,9 @@
         "location": "row1:spec",
         "status": "mismatch",
         "gtNorm": "20g",
-        "extNorm": "실마진1%크림20g",
+        "extNorm": "실마진1크림20g",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "row1:unitPrice",
@@ -1133,10 +1133,10 @@
       {
         "location": "row2:spec",
         "status": "mismatch",
-        "gtNorm": "60t(처방)",
-        "extNorm": "알코타민정 60t(처방)",
+        "gtNorm": "60t처방",
+        "extNorm": "알코타민정60t처방",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.70)"
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "row2:unitPrice",
@@ -1157,10 +1157,10 @@
       {
         "location": "row3:spec",
         "status": "mismatch",
-        "gtNorm": "10mg 30t",
+        "gtNorm": "10mg30t",
         "extNorm": "30t",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.55)"
+        "reason": "char-level diff (sim=0.60)"
       },
       {
         "location": "row3:quantity",
@@ -1219,14 +1219,6 @@
         "reason": "char-level diff (sim=0.91)"
       },
       {
-        "location": "row4:spec",
-        "status": "ext_missing",
-        "gtNorm": "500c",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row4:quantity",
         "status": "ext_missing",
         "gtNorm": "2",
@@ -1276,19 +1268,19 @@
       },
       {
         "location": "row4:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "642702600",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "642702610",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.89)"
       },
       {
         "location": "row5:spec",
         "status": "mismatch",
         "gtNorm": "30g",
-        "extNorm": "칼시베타 연고30g",
+        "extNorm": "칼시베타연고30g",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "row5:unitPrice",
@@ -1325,10 +1317,10 @@
       {
         "location": "row7:spec",
         "status": "mismatch",
-        "gtNorm": "200mg 30t",
+        "gtNorm": "200mg30t",
         "extNorm": "30t",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
+        "reason": "char-level diff (sim=0.55)"
       },
       {
         "location": "row7:unitPrice",
@@ -1371,14 +1363,6 @@
         "reason": "char-level diff (sim=0.62)"
       },
       {
-        "location": "row8:spec",
-        "status": "mismatch",
-        "gtNorm": "10/500mg 30t",
-        "extNorm": "10/500mg30t",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.96)"
-      },
-      {
         "location": "row8:unitPrice",
         "status": "ext_missing",
         "gtNorm": "7854",
@@ -1406,14 +1390,6 @@
         "location": "row8:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "2F001",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row9:spec",
-        "status": "ext_missing",
-        "gtNorm": "100t",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -1451,17 +1427,9 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row9:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "642703390",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row10:spec",
         "status": "ext_missing",
-        "gtNorm": "200mg 30c",
+        "gtNorm": "200mg30c",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -1497,19 +1465,11 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row10:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "642703630",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
       "recognition": 25,
-      "structure": 28,
+      "structure": 23,
       "layout": 4,
       "preprocessing": 0
     },

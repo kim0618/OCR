@@ -229,8 +229,8 @@
           "spec": {
             "gt": "30T(PTP)",
             "ext": "30T(PTP)",
-            "gtNorm": "30t(ptp)",
-            "extNorm": "30t(ptp)",
+            "gtNorm": "30tptp",
+            "extNorm": "30tptp",
             "status": "match",
             "spurious": false
           },
@@ -276,18 +276,18 @@
           },
           "itemCode": {
             "gt": "04002449",
-            "ext": "FTPD302",
+            "ext": "07000730",
             "gtNorm": "04002449",
-            "extNorm": "FTPD302",
+            "extNorm": "07000730",
             "status": "mismatch",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "645403930",
-            "ext": "",
+            "ext": "645403930",
             "gtNorm": "645403930",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "645403930",
+            "status": "match",
             "spurious": false
           }
         }
@@ -315,8 +315,8 @@
           "spec": {
             "gt": "60T(PTP)",
             "ext": "이하여백 60T(PTP)",
-            "gtNorm": "60t(ptp)",
-            "extNorm": "이하여백 60t(ptp)",
+            "gtNorm": "60tptp",
+            "extNorm": "이하여백60tptp",
             "status": "mismatch",
             "spurious": false
           },
@@ -370,10 +370,10 @@
           },
           "insuranceCode": {
             "gt": "653501530",
-            "ext": "5 6 8 9",
+            "ext": "653501530",
             "gtNorm": "653501530",
-            "extNorm": "5689",
-            "status": "mismatch",
+            "extNorm": "653501530",
+            "status": "match",
             "spurious": false
           }
         }
@@ -489,7 +489,7 @@
           "spec": {
             "gt": "100T(병)",
             "ext": "",
-            "gtNorm": "100t(병)",
+            "gtNorm": "100t병",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -642,13 +642,13 @@
     ],
     "cellCounts": {
       "scored": 50,
-      "match": 8,
-      "mismatch": 9,
-      "ext_missing": 33,
+      "match": 10,
+      "mismatch": 8,
+      "ext_missing": 32,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.16
+    "cellAccuracy": 0.2
   },
   "buckets": {
     "defects": [
@@ -721,24 +721,16 @@
         "status": "ext_missing",
         "gtNorm": "FTPD302",
         "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row3:itemCode",
         "status": "mismatch",
         "gtNorm": "04002449",
-        "extNorm": "FTPD302",
+        "extNorm": "07000730",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row3:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "645403930",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row5:itemName",
@@ -751,10 +743,10 @@
       {
         "location": "row5:spec",
         "status": "mismatch",
-        "gtNorm": "60t(ptp)",
-        "extNorm": "이하여백 60t(ptp)",
+        "gtNorm": "60tptp",
+        "extNorm": "이하여백60tptp",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.76)"
+        "reason": "char-level diff (sim=0.75)"
       },
       {
         "location": "row5:amount",
@@ -777,14 +769,6 @@
         "status": "mismatch",
         "gtNorm": "H13372",
         "extNorm": "20280531",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row5:insuranceCode",
-        "status": "mismatch",
-        "gtNorm": "653501530",
-        "extNorm": "5689",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
@@ -887,7 +871,7 @@
       {
         "location": "row2:spec",
         "status": "ext_missing",
-        "gtNorm": "100t(병)",
+        "gtNorm": "100t병",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -1030,9 +1014,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 12,
+      "recognition": 11,
       "structure": 33,
-      "layout": 2,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

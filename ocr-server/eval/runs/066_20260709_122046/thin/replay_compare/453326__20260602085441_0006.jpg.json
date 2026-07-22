@@ -224,10 +224,10 @@
           },
           "spec": {
             "gt": "30T(PTP)",
-            "ext": "",
-            "gtNorm": "30t(ptp)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "30T",
+            "gtNorm": "30tptp",
+            "extNorm": "30t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -280,9 +280,9 @@
           },
           "insuranceCode": {
             "gt": "052401980",
-            "ext": "052401980 바이오파마 (주)인트롬",
+            "ext": "8800524019821",
             "gtNorm": "052401980",
-            "extNorm": "052401980바이오파마주인트롬",
+            "extNorm": "8800524019821",
             "status": "mismatch",
             "spurious": false
           }
@@ -310,10 +310,10 @@
           },
           "spec": {
             "gt": "1병",
-            "ext": "",
+            "ext": "1병",
             "gtNorm": "1병",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "1병",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -366,10 +366,10 @@
           },
           "insuranceCode": {
             "gt": "679801451",
-            "ext": "6 2 679801451",
+            "ext": "679801451",
             "gtNorm": "679801451",
-            "extNorm": "62679801451",
-            "status": "mismatch",
+            "extNorm": "679801451",
+            "status": "match",
             "spurious": false
           }
         }
@@ -377,13 +377,13 @@
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 12,
+      "match": 14,
       "mismatch": 6,
-      "ext_missing": 2,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.6
+    "cellAccuracy": 0.7
   },
   "buckets": {
     "defects": [
@@ -429,11 +429,11 @@
       },
       {
         "location": "row4:spec",
-        "status": "ext_missing",
-        "gtNorm": "30t(ptp)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "30tptp",
+        "extNorm": "30t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "row4:unitPrice",
@@ -447,9 +447,9 @@
         "location": "row4:insuranceCode",
         "status": "mismatch",
         "gtNorm": "052401980",
-        "extNorm": "052401980바이오파마주인트롬",
+        "extNorm": "8800524019821",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
+        "reason": "char-level diff (sim=0.73)"
       },
       {
         "location": "row5:itemName",
@@ -460,33 +460,17 @@
         "reason": "char-level diff (sim=0.82)"
       },
       {
-        "location": "row5:spec",
-        "status": "ext_missing",
-        "gtNorm": "1병",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row5:expiryDate",
         "status": "mismatch",
         "gtNorm": "20271221",
         "extNorm": "2027122",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.93)"
-      },
-      {
-        "location": "row5:insuranceCode",
-        "status": "mismatch",
-        "gtNorm": "679801451",
-        "extNorm": "62679801451",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.90)"
       }
     ],
     "bucketTally": {
       "recognition": 9,
-      "structure": 3,
+      "structure": 1,
       "layout": 0,
       "preprocessing": 0
     },

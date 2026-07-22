@@ -207,10 +207,10 @@
           },
           "spec": {
             "gt": "30T",
-            "ext": "",
+            "ext": "30T",
             "gtNorm": "30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -263,10 +263,10 @@
           },
           "insuranceCode": {
             "gt": "24010",
-            "ext": "",
+            "ext": "656000850",
             "gtNorm": "24010",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "656000850",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -293,10 +293,10 @@
           },
           "spec": {
             "gt": "300T",
-            "ext": "",
+            "ext": "300T",
             "gtNorm": "300t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "300t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -349,10 +349,10 @@
           },
           "insuranceCode": {
             "gt": "25001A",
-            "ext": "",
+            "ext": "656005620",
             "gtNorm": "25001A",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "656005620",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -360,13 +360,13 @@
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 10,
-      "mismatch": 4,
-      "ext_missing": 6,
+      "match": 12,
+      "mismatch": 6,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5
+    "cellAccuracy": 0.6
   },
   "buckets": {
     "defects": [
@@ -377,14 +377,6 @@
         "extNorm": "경상남도김해시진례면테크노밸리로3312담안",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.72)"
-      },
-      {
-        "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row1:quantity",
@@ -412,19 +404,11 @@
       },
       {
         "location": "row1:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "24010",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:spec",
-        "status": "ext_missing",
-        "gtNorm": "300t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "656000850",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row2:quantity",
@@ -452,16 +436,16 @@
       },
       {
         "location": "row2:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "25001A",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "656005620",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 6,
+      "recognition": 7,
+      "structure": 2,
       "layout": 0,
       "preprocessing": 0
     },

@@ -225,10 +225,10 @@
           },
           "spec": {
             "gt": "100T",
-            "ext": "",
+            "ext": "100T",
             "gtNorm": "100t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "100t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -273,10 +273,10 @@
           },
           "insuranceCode": {
             "gt": "2601",
-            "ext": "",
+            "ext": "628901560",
             "gtNorm": "2601",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "628901560",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -284,13 +284,13 @@
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 3,
-      "mismatch": 3,
-      "ext_missing": 3,
+      "match": 4,
+      "mismatch": 4,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3333333333333333
+    "cellAccuracy": 0.4444444444444444
   },
   "buckets": {
     "defects": [
@@ -327,14 +327,6 @@
         "reason": "extractor invented rows ['2', '3', '4', '5', '6']"
       },
       {
-        "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "100t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row1:quantity",
         "status": "mismatch",
         "gtNorm": "10",
@@ -368,16 +360,16 @@
       },
       {
         "location": "row1:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "2601",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "628901560",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       }
     ],
     "bucketTally": {
-      "recognition": 6,
-      "structure": 4,
+      "recognition": 7,
+      "structure": 2,
       "layout": 0,
       "preprocessing": 0
     },

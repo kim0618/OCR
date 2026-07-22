@@ -256,18 +256,18 @@
           },
           "itemCode": {
             "gt": "01003601",
-            "ext": "AN007",
+            "ext": "01003601",
             "gtNorm": "01003601",
-            "extNorm": "AN007",
-            "status": "mismatch",
+            "extNorm": "01003601",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "8806932012218",
-            "ext": "",
+            "ext": "693201220",
             "gtNorm": "8806932012218",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "693201220",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -342,18 +342,18 @@
           },
           "itemCode": {
             "gt": "22004412",
-            "ext": "AP001A",
+            "ext": "16001091",
             "gtNorm": "22004412",
-            "extNorm": "AP001A",
+            "extNorm": "16001091",
             "status": "mismatch",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "8806932010719",
-            "ext": "",
+            "ext": "693201070",
             "gtNorm": "8806932010719",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "693201070",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -428,18 +428,18 @@
           },
           "itemCode": {
             "gt": "16001288",
-            "ext": "AM002",
+            "ext": "16001288",
             "gtNorm": "16001288",
-            "extNorm": "AM002",
-            "status": "mismatch",
+            "extNorm": "16001288",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "8806932015417",
-            "ext": "",
+            "ext": "693201541",
             "gtNorm": "8806932015417",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "693201541",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -447,13 +447,13 @@
     ],
     "cellCounts": {
       "scored": 30,
-      "match": 20,
-      "mismatch": 4,
-      "ext_missing": 6,
+      "match": 22,
+      "mismatch": 5,
+      "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.6666666666666666
+    "cellAccuracy": 0.7333333333333333
   },
   "buckets": {
     "defects": [
@@ -514,20 +514,12 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemCode",
-        "status": "mismatch",
-        "gtNorm": "01003601",
-        "extNorm": "AN007",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
         "location": "row1:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "8806932012218",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "693201220",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.73)"
       },
       {
         "location": "row2:expiryDate",
@@ -541,17 +533,17 @@
         "location": "row2:itemCode",
         "status": "mismatch",
         "gtNorm": "22004412",
-        "extNorm": "AP001A",
+        "extNorm": "16001091",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
       {
         "location": "row2:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "8806932010719",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "693201070",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.73)"
       },
       {
         "location": "row3:expiryDate",
@@ -562,25 +554,17 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row3:itemCode",
-        "status": "mismatch",
-        "gtNorm": "16001288",
-        "extNorm": "AM002",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
         "location": "row3:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "8806932015417",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "693201541",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.82)"
       }
     ],
     "bucketTally": {
-      "recognition": 7,
-      "structure": 7,
+      "recognition": 8,
+      "structure": 4,
       "layout": 1,
       "preprocessing": 0
     },

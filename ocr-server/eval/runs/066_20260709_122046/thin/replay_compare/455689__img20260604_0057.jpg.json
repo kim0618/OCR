@@ -209,10 +209,10 @@
           },
           "spec": {
             "gt": "300C",
-            "ext": "",
+            "ext": "00C",
             "gtNorm": "300c",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "00c",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -279,18 +279,18 @@
           },
           "itemNameMaster": {
             "gt": "페타바정(EXP:20261126)",
-            "ext": "페타바정",
+            "ext": "페타바정(EXP:20261126)",
             "gtNorm": "페타바정(exp:20261126)",
-            "extNorm": "페타바정",
-            "status": "mismatch",
+            "extNorm": "페타바정(exp:20261126)",
+            "status": "match",
             "spurious": false
           },
           "spec": {
             "gt": "BOT",
-            "ext": "",
+            "ext": "30T",
             "gtNorm": "bot",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -335,10 +335,10 @@
           },
           "itemCode": {
             "gt": "22006196",
-            "ext": "22006195",
+            "ext": "22006196",
             "gtNorm": "22006196",
-            "extNorm": "22006195",
-            "status": "mismatch",
+            "extNorm": "22006196",
+            "status": "match",
             "spurious": false
           }
         }
@@ -346,13 +346,13 @@
     ],
     "cellCounts": {
       "scored": 18,
-      "match": 3,
+      "match": 5,
       "mismatch": 6,
-      "ext_missing": 9,
+      "ext_missing": 7,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.16666666666666666
+    "cellAccuracy": 0.2777777777777778
   },
   "buckets": {
     "defects": [
@@ -398,11 +398,11 @@
       },
       {
         "location": "row1:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "300c",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "00c",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.86)"
       },
       {
         "location": "row1:unitPrice",
@@ -445,20 +445,12 @@
         "reason": "char-level diff (sim=0.85)"
       },
       {
-        "location": "row3:itemNameMaster",
+        "location": "row3:spec",
         "status": "mismatch",
-        "gtNorm": "페타바정(exp:20261126)",
-        "extNorm": "페타바정",
+        "gtNorm": "bot",
+        "extNorm": "30t",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row3:spec",
-        "status": "ext_missing",
-        "gtNorm": "bot",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row3:quantity",
@@ -499,19 +491,11 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:itemCode",
-        "status": "mismatch",
-        "gtNorm": "22006196",
-        "extNorm": "22006195",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.88)"
       }
     ],
     "bucketTally": {
       "recognition": 8,
-      "structure": 10,
+      "structure": 8,
       "layout": 1,
       "preprocessing": 0
     },

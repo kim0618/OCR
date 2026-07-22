@@ -224,10 +224,10 @@
           },
           "spec": {
             "gt": "90T(병)",
-            "ext": "",
-            "gtNorm": "90t(병)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "90T",
+            "gtNorm": "90t병",
+            "extNorm": "90t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -272,10 +272,10 @@
           },
           "itemCode": {
             "gt": "01013838",
-            "ext": "CHS0002",
+            "ext": "01013838",
             "gtNorm": "01013838",
-            "extNorm": "CHS0002",
-            "status": "mismatch",
+            "extNorm": "01013838",
+            "status": "match",
             "spurious": false
           }
         }
@@ -302,10 +302,10 @@
           },
           "spec": {
             "gt": "100T",
-            "ext": "",
+            "ext": "100T",
             "gtNorm": "100t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "100t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -350,10 +350,10 @@
           },
           "itemCode": {
             "gt": "01006263",
-            "ext": "FNI00001",
+            "ext": "01006263",
             "gtNorm": "01006263",
-            "extNorm": "FNI00001",
-            "status": "mismatch",
+            "extNorm": "01006263",
+            "status": "match",
             "spurious": false
           }
         }
@@ -380,10 +380,10 @@
           },
           "spec": {
             "gt": "300T",
-            "ext": "",
+            "ext": "300T",
             "gtNorm": "300t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "300t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -428,10 +428,10 @@
           },
           "itemCode": {
             "gt": "14002959",
-            "ext": "PPT00002",
+            "ext": "14002959",
             "gtNorm": "14002959",
-            "extNorm": "PPT00002",
-            "status": "mismatch",
+            "extNorm": "14002959",
+            "status": "match",
             "spurious": false
           }
         }
@@ -439,13 +439,13 @@
     ],
     "cellCounts": {
       "scored": 27,
-      "match": 14,
-      "mismatch": 6,
-      "ext_missing": 7,
+      "match": 19,
+      "mismatch": 4,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5185185185185185
+    "cellAccuracy": 0.7037037037037037
   },
   "buckets": {
     "defects": [
@@ -491,11 +491,11 @@
       },
       {
         "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "90t(병)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "90t병",
+        "extNorm": "90t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.86)"
       },
       {
         "location": "row1:quantity",
@@ -509,22 +509,6 @@
         "location": "row1:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "26CHS0017",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:itemCode",
-        "status": "mismatch",
-        "gtNorm": "01013838",
-        "extNorm": "CHS0002",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row2:spec",
-        "status": "ext_missing",
-        "gtNorm": "100t",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -554,22 +538,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:itemCode",
-        "status": "mismatch",
-        "gtNorm": "01006263",
-        "extNorm": "FNI00001",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row3:spec",
-        "status": "ext_missing",
-        "gtNorm": "300t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row3:quantity",
         "status": "mismatch",
         "gtNorm": "5",
@@ -584,19 +552,11 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:itemCode",
-        "status": "mismatch",
-        "gtNorm": "14002959",
-        "extNorm": "PPT00002",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
       }
     ],
     "bucketTally": {
-      "recognition": 9,
-      "structure": 9,
+      "recognition": 7,
+      "structure": 6,
       "layout": 0,
       "preprocessing": 0
     },

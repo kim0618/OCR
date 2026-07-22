@@ -234,10 +234,10 @@
           },
           "spec": {
             "gt": "250mg*30T",
-            "ext": "",
-            "gtNorm": "250mg*30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "30T",
+            "gtNorm": "250mg30t",
+            "extNorm": "30t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -399,7 +399,7 @@
           "spec": {
             "gt": "5mL/병",
             "ext": "",
-            "gtNorm": "5ml/병",
+            "gtNorm": "5ml병",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -454,10 +454,10 @@
           },
           "insuranceCode": {
             "gt": "690301991",
-            "ext": "",
+            "ext": "657800821",
             "gtNorm": "690301991",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "657800821",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -485,7 +485,7 @@
           "spec": {
             "gt": "0.3mL×10관",
             "ext": "",
-            "gtNorm": "0.3ml×10관",
+            "gtNorm": "03ml10관",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -571,7 +571,7 @@
           "spec": {
             "gt": "6mL/병",
             "ext": "",
-            "gtNorm": "6ml/병",
+            "gtNorm": "6ml병",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -657,7 +657,7 @@
           "spec": {
             "gt": "0.4mL*30관",
             "ext": "",
-            "gtNorm": "0.4ml*30관",
+            "gtNorm": "04ml30관",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -712,10 +712,10 @@
           },
           "insuranceCode": {
             "gt": "690302901",
-            "ext": "",
+            "ext": "690302901",
             "gtNorm": "690302901",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "690302901",
+            "status": "match",
             "spurious": false
           }
         }
@@ -743,7 +743,7 @@
           "spec": {
             "gt": "6mL/병",
             "ext": "",
-            "gtNorm": "6ml/병",
+            "gtNorm": "6ml병",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -829,7 +829,7 @@
           "spec": {
             "gt": "6mL/병",
             "ext": "",
-            "gtNorm": "6ml/병",
+            "gtNorm": "6ml병",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -884,10 +884,10 @@
           },
           "insuranceCode": {
             "gt": "690301372",
-            "ext": "",
+            "ext": "690300231",
             "gtNorm": "690301372",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "690300231",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -895,13 +895,13 @@
     ],
     "cellCounts": {
       "scored": 79,
-      "match": 44,
-      "mismatch": 12,
-      "ext_missing": 23,
+      "match": 45,
+      "mismatch": 15,
+      "ext_missing": 19,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5569620253164557
+    "cellAccuracy": 0.569620253164557
   },
   "buckets": {
     "defects": [
@@ -931,11 +931,11 @@
       },
       {
         "location": "row14:spec",
-        "status": "ext_missing",
-        "gtNorm": "250mg*30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "250mg30t",
+        "extNorm": "30t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.55)"
       },
       {
         "location": "row2:itemName",
@@ -980,10 +980,10 @@
       {
         "location": "row4:spec",
         "status": "ext_missing",
-        "gtNorm": "5ml/병",
+        "gtNorm": "5ml병",
         "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemName']"
       },
       {
         "location": "row4:expiryDate",
@@ -1011,11 +1011,11 @@
       },
       {
         "location": "row4:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "690301991",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "657800821",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row7:itemName",
@@ -1028,7 +1028,7 @@
       {
         "location": "row7:spec",
         "status": "ext_missing",
-        "gtNorm": "0.3ml×10관",
+        "gtNorm": "03ml10관",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -1052,7 +1052,7 @@
       {
         "location": "row8:spec",
         "status": "ext_missing",
-        "gtNorm": "6ml/병",
+        "gtNorm": "6ml병",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -1076,7 +1076,7 @@
       {
         "location": "row10:spec",
         "status": "ext_missing",
-        "gtNorm": "0.4ml*30관",
+        "gtNorm": "04ml30관",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -1093,14 +1093,6 @@
         "location": "row10:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "5006",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row10:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "690302901",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -1124,10 +1116,10 @@
       {
         "location": "row12:spec",
         "status": "ext_missing",
-        "gtNorm": "6ml/병",
+        "gtNorm": "6ml병",
         "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemName']"
       },
       {
         "location": "row12:manufacturingNo",
@@ -1164,7 +1156,7 @@
       {
         "location": "row11:spec",
         "status": "ext_missing",
-        "gtNorm": "6ml/병",
+        "gtNorm": "6ml병",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -1195,17 +1187,17 @@
       },
       {
         "location": "row11:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "690301372",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "690300231",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.67)"
       }
     ],
     "bucketTally": {
-      "recognition": 13,
-      "structure": 24,
-      "layout": 0,
+      "recognition": 16,
+      "structure": 18,
+      "layout": 2,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

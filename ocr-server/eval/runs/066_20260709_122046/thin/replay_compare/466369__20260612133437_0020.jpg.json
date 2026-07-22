@@ -295,10 +295,10 @@
           },
           "spec": {
             "gt": "28TAB",
-            "ext": "",
+            "ext": "28TAB",
             "gtNorm": "28tab",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "28tab",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -685,10 +685,10 @@
           },
           "spec": {
             "gt": "100TAB",
-            "ext": "",
+            "ext": "100TAB",
             "gtNorm": "100tab",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "100tab",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -733,10 +733,10 @@
           },
           "itemCode": {
             "gt": "05004032",
-            "ext": "05004032",
+            "ext": "01009057",
             "gtNorm": "05004032",
-            "extNorm": "05004032",
-            "status": "match",
+            "extNorm": "01009057",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -744,13 +744,13 @@
     ],
     "cellCounts": {
       "scored": 63,
-      "match": 24,
-      "mismatch": 9,
-      "ext_missing": 30,
+      "match": 25,
+      "mismatch": 10,
+      "ext_missing": 28,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.38095238095238093
+    "cellAccuracy": 0.3968253968253968
   },
   "buckets": {
     "defects": [
@@ -865,14 +865,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:spec",
-        "status": "ext_missing",
-        "gtNorm": "28tab",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemName']"
       },
       {
         "location": "row3:unitPrice",
@@ -1067,14 +1059,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row11:spec",
-        "status": "ext_missing",
-        "gtNorm": "100tab",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row11:quantity",
         "status": "ext_missing",
         "gtNorm": "5",
@@ -1113,12 +1097,20 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row11:itemCode",
+        "status": "mismatch",
+        "gtNorm": "05004032",
+        "extNorm": "01009057",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       }
     ],
     "bucketTally": {
-      "recognition": 12,
-      "structure": 32,
-      "layout": 1,
+      "recognition": 13,
+      "structure": 31,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

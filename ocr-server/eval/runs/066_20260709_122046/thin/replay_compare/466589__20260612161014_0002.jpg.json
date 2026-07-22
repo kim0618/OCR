@@ -223,10 +223,10 @@
           },
           "spec": {
             "gt": "48mg 7P Pack",
-            "ext": "",
-            "gtNorm": "48mg 7p pack",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "7P",
+            "gtNorm": "48mg7ppack",
+            "extNorm": "7p",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -279,10 +279,10 @@
           },
           "insuranceCode": {
             "gt": "02220",
-            "ext": "",
+            "ext": "8806447022214",
             "gtNorm": "02220",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "8806447022214",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -301,18 +301,18 @@
           },
           "itemNameMaster": {
             "gt": "오메드정10mg(생산중단)",
-            "ext": "오메드정10mg(규격변경)",
+            "ext": "오메드정10mg(생산중단)",
             "gtNorm": "오메드정10mg(생산중단)",
-            "extNorm": "오메드정10mg(규격변경)",
-            "status": "mismatch",
+            "extNorm": "오메드정10mg(생산중단)",
+            "status": "match",
             "spurious": false
           },
           "spec": {
             "gt": "10mg 30T Bottle",
-            "ext": "",
-            "gtNorm": "10mg 30t bottle",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "30T",
+            "gtNorm": "10mg30tbottle",
+            "extNorm": "30t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -357,18 +357,18 @@
           },
           "itemCode": {
             "gt": "03002275",
-            "ext": "8806447018538",
+            "ext": "03002275",
             "gtNorm": "03002275",
-            "extNorm": "8806447018538",
-            "status": "mismatch",
+            "extNorm": "03002275",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "01850",
-            "ext": "",
+            "ext": "644701850",
             "gtNorm": "01850",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "644701850",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -376,13 +376,13 @@
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 3,
-      "mismatch": 5,
-      "ext_missing": 12,
+      "match": 5,
+      "mismatch": 7,
+      "ext_missing": 8,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.15
+    "cellAccuracy": 0.25
   },
   "buckets": {
     "defects": [
@@ -412,11 +412,11 @@
       },
       {
         "location": "row3:spec",
-        "status": "ext_missing",
-        "gtNorm": "48mg 7p pack",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "48mg7ppack",
+        "extNorm": "7p",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row3:quantity",
@@ -468,27 +468,19 @@
       },
       {
         "location": "row3:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "02220",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:itemNameMaster",
         "status": "mismatch",
-        "gtNorm": "오메드정10mg(생산중단)",
-        "extNorm": "오메드정10mg(규격변경)",
+        "gtNorm": "02220",
+        "extNorm": "8806447022214",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.71)"
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row4:spec",
-        "status": "ext_missing",
-        "gtNorm": "10mg 30t bottle",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "10mg30tbottle",
+        "extNorm": "30t",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row4:quantity",
@@ -523,25 +515,17 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row4:itemCode",
-        "status": "mismatch",
-        "gtNorm": "03002275",
-        "extNorm": "8806447018538",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
         "location": "row4:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "01850",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "644701850",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.71)"
       }
     ],
     "bucketTally": {
-      "recognition": 6,
-      "structure": 13,
+      "recognition": 8,
+      "structure": 9,
       "layout": 0,
       "preprocessing": 0
     },

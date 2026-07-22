@@ -275,10 +275,10 @@
           },
           "itemCode": {
             "gt": "04005981",
-            "ext": "F2505042",
+            "ext": "04005981",
             "gtNorm": "04005981",
-            "extNorm": "F2505042",
-            "status": "mismatch",
+            "extNorm": "04005981",
+            "status": "match",
             "spurious": false
           }
         }
@@ -361,10 +361,10 @@
           },
           "insuranceCode": {
             "gt": "F002016",
-            "ext": "",
+            "ext": "051500021",
             "gtNorm": "F002016",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "051500021",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -459,13 +459,13 @@
     ],
     "cellCounts": {
       "scored": 29,
-      "match": 7,
+      "match": 8,
       "mismatch": 9,
-      "ext_missing": 13,
+      "ext_missing": 12,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.2413793103448276
+    "cellAccuracy": 0.27586206896551724
   },
   "buckets": {
     "defects": [
@@ -562,16 +562,8 @@
         "status": "mismatch",
         "gtNorm": "F2505042",
         "extNorm": "65590400F2505042",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
-        "location": "row1:itemCode",
-        "status": "mismatch",
-        "gtNorm": "04005981",
-        "extNorm": "F2505042",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "row6:itemName",
@@ -607,11 +599,11 @@
       },
       {
         "location": "row6:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "F002016",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "051500021",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "row2:itemName",
@@ -695,9 +687,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 10,
-      "structure": 17,
-      "layout": 1,
+      "recognition": 11,
+      "structure": 16,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

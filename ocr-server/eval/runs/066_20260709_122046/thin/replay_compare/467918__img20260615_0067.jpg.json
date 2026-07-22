@@ -308,10 +308,10 @@
           },
           "spec": {
             "gt": "BOT",
-            "ext": "",
+            "ext": "30T",
             "gtNorm": "bot",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -356,10 +356,10 @@
           },
           "itemCode": {
             "gt": "01000114",
-            "ext": "14000674",
+            "ext": "01000114",
             "gtNorm": "01000114",
-            "extNorm": "14000674",
-            "status": "mismatch",
+            "extNorm": "01000114",
+            "status": "match",
             "spurious": false
           }
         }
@@ -544,7 +544,7 @@
             "gt": "300C",
             "ext": "합 1,204,038 300c",
             "gtNorm": "300c",
-            "extNorm": "합 1,204,038 300c",
+            "extNorm": "합1204038300c",
             "status": "mismatch",
             "spurious": false
           },
@@ -601,13 +601,13 @@
     ],
     "cellCounts": {
       "scored": 45,
-      "match": 27,
+      "match": 28,
       "mismatch": 13,
-      "ext_missing": 5,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.6
+    "cellAccuracy": 0.6222222222222222
   },
   "buckets": {
     "defects": [
@@ -677,11 +677,11 @@
       },
       {
         "location": "row10:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "bot",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "30t",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row10:quantity",
@@ -722,14 +722,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row10:itemCode",
-        "status": "mismatch",
-        "gtNorm": "01000114",
-        "extNorm": "14000674",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.62)"
       },
       {
         "location": "row7:itemName",
@@ -783,9 +775,9 @@
         "location": "row9:spec",
         "status": "mismatch",
         "gtNorm": "300c",
-        "extNorm": "합 1,204,038 300c",
+        "extNorm": "합1204038300c",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "row9:manufacturingNo",
@@ -798,7 +790,7 @@
     ],
     "bucketTally": {
       "recognition": 16,
-      "structure": 7,
+      "structure": 6,
       "layout": 0,
       "preprocessing": 0
     },

@@ -225,8 +225,8 @@
           "spec": {
             "gt": "0.45mL*60EA",
             "ext": "60EA(PTP)",
-            "gtNorm": "0.45ml*60ea",
-            "extNorm": "60ea(ptp)",
+            "gtNorm": "045ml60ea",
+            "extNorm": "60eaptp",
             "status": "mismatch",
             "spurious": false
           },
@@ -280,10 +280,10 @@
           },
           "insuranceCode": {
             "gt": "654005271",
-            "ext": "",
+            "ext": "654005271",
             "gtNorm": "654005271",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "654005271",
+            "status": "match",
             "spurious": false
           }
         }
@@ -366,10 +366,10 @@
           },
           "insuranceCode": {
             "gt": "654005440",
-            "ext": "654005440 20280408/ C001896",
+            "ext": "654005440",
             "gtNorm": "654005440",
-            "extNorm": "65400544020280408C001896",
-            "status": "mismatch",
+            "extNorm": "654005440",
+            "status": "match",
             "spurious": false
           }
         }
@@ -396,10 +396,10 @@
           },
           "spec": {
             "gt": "30T",
-            "ext": "",
+            "ext": "30T",
             "gtNorm": "30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -452,10 +452,10 @@
           },
           "insuranceCode": {
             "gt": "654005540",
-            "ext": "654005540 20280707 / C002269",
+            "ext": "654005540",
             "gtNorm": "654005540",
-            "extNorm": "65400554020280707C002269",
-            "status": "mismatch",
+            "extNorm": "654005540",
+            "status": "match",
             "spurious": false
           }
         }
@@ -463,13 +463,13 @@
     ],
     "cellCounts": {
       "scored": 30,
-      "match": 15,
-      "mismatch": 6,
-      "ext_missing": 9,
+      "match": 19,
+      "mismatch": 4,
+      "ext_missing": 7,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5
+    "cellAccuracy": 0.6333333333333333
   },
   "buckets": {
     "defects": [
@@ -500,10 +500,10 @@
       {
         "location": "row1:spec",
         "status": "mismatch",
-        "gtNorm": "0.45ml*60ea",
-        "extNorm": "60ea(ptp)",
+        "gtNorm": "045ml60ea",
+        "extNorm": "60eaptp",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "row1:quantity",
@@ -538,14 +538,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "654005271",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row4:spec",
         "status": "ext_missing",
         "gtNorm": "28t",
@@ -570,22 +562,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row4:insuranceCode",
-        "status": "mismatch",
-        "gtNorm": "654005440",
-        "extNorm": "65400544020280408C001896",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.55)"
-      },
-      {
-        "location": "row5:spec",
-        "status": "ext_missing",
-        "gtNorm": "30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row5:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20280707",
@@ -600,19 +576,11 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row5:insuranceCode",
-        "status": "mismatch",
-        "gtNorm": "654005540",
-        "extNorm": "65400554020280707C002269",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.55)"
       }
     ],
     "bucketTally": {
-      "recognition": 6,
-      "structure": 10,
+      "recognition": 4,
+      "structure": 8,
       "layout": 1,
       "preprocessing": 0
     },

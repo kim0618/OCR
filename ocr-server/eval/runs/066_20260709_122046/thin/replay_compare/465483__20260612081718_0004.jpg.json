@@ -223,10 +223,10 @@
           },
           "spec": {
             "gt": "90T(병)",
-            "ext": "",
-            "gtNorm": "90t(병)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "90T",
+            "gtNorm": "90t병",
+            "extNorm": "90t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -301,10 +301,10 @@
           },
           "spec": {
             "gt": "100T",
-            "ext": "",
+            "ext": "100T",
             "gtNorm": "100t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "100t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -379,10 +379,10 @@
           },
           "spec": {
             "gt": "20/1000mg 30T",
-            "ext": "",
-            "gtNorm": "20/1000mg 30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "30T",
+            "gtNorm": "201000mg30t",
+            "extNorm": "30t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -438,13 +438,13 @@
     ],
     "cellCounts": {
       "scored": 27,
-      "match": 17,
-      "mismatch": 1,
-      "ext_missing": 9,
+      "match": 18,
+      "mismatch": 3,
+      "ext_missing": 6,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.6296296296296297
+    "cellAccuracy": 0.6666666666666666
   },
   "buckets": {
     "defects": [
@@ -490,11 +490,11 @@
       },
       {
         "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "90t(병)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "90t병",
+        "extNorm": "90t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.86)"
       },
       {
         "location": "row1:expiryDate",
@@ -508,14 +508,6 @@
         "location": "row1:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "26CHS0016",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:spec",
-        "status": "ext_missing",
-        "gtNorm": "100t",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -546,11 +538,11 @@
       },
       {
         "location": "row3:spec",
-        "status": "ext_missing",
-        "gtNorm": "20/1000mg 30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "201000mg30t",
+        "extNorm": "30t",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row3:expiryDate",
@@ -570,8 +562,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 4,
-      "structure": 11,
+      "recognition": 6,
+      "structure": 8,
       "layout": 0,
       "preprocessing": 0
     },

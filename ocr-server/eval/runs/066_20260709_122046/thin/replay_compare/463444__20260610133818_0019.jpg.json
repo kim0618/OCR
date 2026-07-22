@@ -220,10 +220,10 @@
           },
           "spec": {
             "gt": "30T",
-            "ext": "",
+            "ext": "30T",
             "gtNorm": "30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -268,10 +268,10 @@
           },
           "insuranceCode": {
             "gt": "26008",
-            "ext": "",
+            "ext": "656001880",
             "gtNorm": "26008",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "656001880",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -298,10 +298,10 @@
           },
           "spec": {
             "gt": "300T",
-            "ext": "",
+            "ext": "300T",
             "gtNorm": "300t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "300t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -357,13 +357,13 @@
     ],
     "cellCounts": {
       "scored": 18,
-      "match": 7,
-      "mismatch": 4,
-      "ext_missing": 7,
+      "match": 9,
+      "mismatch": 5,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3888888888888889
+    "cellAccuracy": 0.5
   },
   "buckets": {
     "defects": [
@@ -392,14 +392,6 @@
         "reason": "char-level diff (sim=0.90)"
       },
       {
-        "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row1:quantity",
         "status": "mismatch",
         "gtNorm": "280",
@@ -417,11 +409,11 @@
       },
       {
         "location": "row1:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "26008",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "656001880",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.57)"
       },
       {
         "location": "row2:itemName",
@@ -435,14 +427,6 @@
         "location": "row2:itemNameMaster",
         "status": "ext_missing",
         "gtNorm": "스테린정(제약사품절)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:spec",
-        "status": "ext_missing",
-        "gtNorm": "300t",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -481,8 +465,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 7,
-      "structure": 7,
+      "recognition": 8,
+      "structure": 4,
       "layout": 0,
       "preprocessing": 0
     },

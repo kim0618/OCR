@@ -766,7 +766,13 @@ def fill_master_match(rows: list, matcher: "MasterMatcher | None" = None,
         name = str(r.get("itemName") or "").strip()
         if not name:
             continue
-        if str(r.get("itemNameMaster") or "").strip() and str(r.get("itemCode") or "").strip():
+        # 문서 인쇄 공급사 코드('GMT26513' 류)는 war 마스터코드(GT 체계)가 아니다 —
+        # 066 실측: 비마스터 itemCode 가 칸을 선점해 master fill 이 막힌 행 4,588,
+        # 매칭 결과로 덮으면 FIX 3,515 / BREAK 0(인쇄코드==GT 인 행 전무=무위험).
+        # → 비마스터 코드는 '빈칸 취급'(매칭 시도+덮기), 마스터코드는 기존대로 불가침.
+        cur_code = str(r.get("itemCode") or "").strip()
+        code_is_master = bool(cur_code) and cur_code in matcher._cd2i
+        if str(r.get("itemNameMaster") or "").strip() and code_is_master:
             continue
         m = matcher.match(clean_query_name(name), parse_price(r.get("unitPrice")),
                           spec=str(r.get("spec") or ""), quantity=r.get("quantity"),
@@ -786,8 +792,106 @@ def fill_master_match(rows: list, matcher: "MasterMatcher | None" = None,
                 dbg["ibcStrictReranked"] += 1
         if not str(r.get("itemNameMaster") or "").strip():
             r["itemNameMaster"] = m["itemNameMaster"]
-        if not str(r.get("itemCode") or "").strip():
+        if not code_is_master:
             r["itemCode"] = m["itemCode"]
         dbg["filled"] += 1
     _fill_blank_master_from_rawtext(rows, matcher, dbg)
+    return rows, dbg
+
+
+# ── 보험코드 master-join 회수 ────────────────────────────────────────────────
+# 마스터 item 에 bohum(9자리 보험코드)·pyojun(13자리 표준바코드)이 있어, ②G4 가 채운
+# itemCode 로 join 하면 insuranceCode 가 공짜로 나온다. 066 전수 실측:
+#   M1 빈칸fill FIX 5,728 (bohum 4,870+pyojun 796+결합 62) · GT빈칸 조합 0건=spurious 0
+#      · BREAK 4,641 은 이미 ext_missing(셀정확도 분자 불변).
+#   M2 게이트교체 FIX 1,965 / BREAK 83 = 24:1. ★이중게이트 필수: 현재값 digits 가
+#      whitelist(전 마스터 bohum∪pyojun) 밖 **그리고** 깨끗한 9/13자리 형식도 아닐 때만
+#      교체 — whitelist 만으론 BREAK 144(마스터에 없는 신약 정답코드), 형식게이트가
+#      그중 61 을 추가 보호. 교체 대상 = '7671704820주식회사'·'16038000646801100' 류
+#      병합쓰레기.
+# bohum/pyojun 선택 = 문서 컨벤션: 이미 추출된 깨끗한 13자리 셀이 9자리보다 많으면
+# pyojun(그 문서 표가 바코드 컬럼), 아니면 bohum(9자리가 지배적, GT 6:1).
+def _insurance_whitelist(matcher: "MasterMatcher") -> tuple[set, set]:
+    ws = getattr(matcher, "_ins_whitelist", None)
+    if ws is None:
+        bset = {b for b in matcher._bohums if b}
+        pset = {p for p in matcher._pyojuns if p}
+        ws = (bset, pset)
+        matcher._ins_whitelist = ws
+    return ws
+
+
+_INS_DIGITS_RE = re.compile(r"\D")
+
+
+def _ins_digits(value: object) -> str:
+    return _INS_DIGITS_RE.sub("", str(value or ""))
+
+
+def _ins_clean_format(value: object) -> bool:
+    """깨끗한 9/13자리 코드꼴(공백·하이픈 외 잡문자 없음) — 마스터 밖 정답코드 보호."""
+    text = str(value or "").strip()
+    if re.search(r"[^\d\s\-]", text):
+        return False
+    return len(_ins_digits(text)) in (9, 13)
+
+
+def fill_insurance_from_master(rows: list, matcher: "MasterMatcher | None" = None):
+    """insuranceCode 를 master join(itemCode→bohum/pyojun)으로 빈칸fill + 쓰레기 교체.
+
+    빈칸fill 은 무조건(spurious 0 실측), 교체는 이중게이트(whitelist 밖 AND 형식불량).
+    반환 (rows, debug) — 시블링 룰과 동일 계약.
+    """
+    matcher = matcher or get_matcher()
+    dbg: dict[str, Any] = {"enabled": matcher is not None, "filled": 0, "replaced": 0}
+    if matcher is None or not isinstance(rows, list) or not rows:
+        return rows, dbg
+    bset, pset = _insurance_whitelist(matcher)
+    # 문서 컨벤션: 깨끗한 13자리 셀이 9자리보다 많으면 pyojun 우선
+    n9 = n13 = 0
+    for r in rows:
+        if isinstance(r, dict):
+            d = _ins_digits(r.get("insuranceCode"))
+            if len(d) == 9:
+                n9 += 1
+            elif len(d) == 13:
+                n13 += 1
+    prefer_pyojun = n13 > n9
+    for r in rows:
+        if not isinstance(r, dict):
+            continue
+        code = str(r.get("itemCode") or "").strip()
+        i = matcher._cd2i.get(code)
+        if i is None:
+            continue
+        bohum, pyojun = matcher._bohums[i], matcher._pyojuns[i]
+        target = (pyojun if prefer_pyojun else bohum) or (bohum if prefer_pyojun else pyojun)
+        if not target:
+            continue
+        cur = str(r.get("insuranceCode") or "").strip()
+        if not cur:
+            r["insuranceCode"] = target
+            dbg["filled"] += 1
+            continue
+        cur_d = _ins_digits(cur)
+        if cur_d in bset or cur_d in pset or _ins_clean_format(cur):
+            continue  # 정상/보호 대상 — 불가침
+        r["insuranceCode"] = target
+        dbg["replaced"] += 1
+    # P1 유일 9자리런 정규화(master join 못 받은 잔여): 행번호 접착('9 641105730')·
+    # 코드 병합('…8811/644701880') 값에서 whitelist 에 있는 유일 9자리 run 만 남긴다.
+    # 066 잔여 실측: FIX 256 / BREAK 42(그중 10은 GT 가 접착형을 보존한 노이즈) = 6:1.
+    for r in rows:
+        if not isinstance(r, dict):
+            continue
+        cur = str(r.get("insuranceCode") or "").strip()
+        if not cur:
+            continue
+        cur_d = _ins_digits(cur)
+        if cur_d in bset or cur_d in pset or _ins_clean_format(cur):
+            continue
+        runs = [x for x in re.findall(r"\d+", cur) if len(x) == 9]
+        if len(runs) == 1 and runs[0] in bset and runs[0] != cur_d:
+            r["insuranceCode"] = runs[0]
+            dbg["normalized"] = dbg.get("normalized", 0) + 1
     return rows, dbg

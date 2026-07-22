@@ -229,7 +229,7 @@
           "spec": {
             "gt": "3.5G",
             "ext": "",
-            "gtNorm": "3.5g",
+            "gtNorm": "35g",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -370,10 +370,10 @@
           },
           "insuranceCode": {
             "gt": "670607661",
-            "ext": "2 670607661 한국알콘(",
+            "ext": "670607661",
             "gtNorm": "670607661",
-            "extNorm": "2670607661한국알콘",
-            "status": "mismatch",
+            "extNorm": "670607661",
+            "status": "match",
             "spurious": false
           }
         }
@@ -400,10 +400,10 @@
           },
           "spec": {
             "gt": "60관",
-            "ext": "",
+            "ext": "6c",
             "gtNorm": "60관",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "6c",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -456,10 +456,10 @@
           },
           "insuranceCode": {
             "gt": "670607641",
-            "ext": "4 5 6 c 670607641 한국알콘(",
+            "ext": "670607641",
             "gtNorm": "670607641",
-            "extNorm": "456C670607641한국알콘",
-            "status": "mismatch",
+            "extNorm": "670607641",
+            "status": "match",
             "spurious": false
           }
         }
@@ -467,13 +467,13 @@
     ],
     "cellCounts": {
       "scored": 30,
-      "match": 20,
-      "mismatch": 7,
-      "ext_missing": 3,
+      "match": 22,
+      "mismatch": 6,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.6666666666666666
+    "cellAccuracy": 0.7333333333333333
   },
   "buckets": {
     "defects": [
@@ -504,7 +504,7 @@
       {
         "location": "row6:spec",
         "status": "ext_missing",
-        "gtNorm": "3.5g",
+        "gtNorm": "35g",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -534,14 +534,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row7:insuranceCode",
-        "status": "mismatch",
-        "gtNorm": "670607661",
-        "extNorm": "2670607661한국알콘",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.78)"
-      },
-      {
         "location": "row8:itemName",
         "status": "mismatch",
         "gtNorm": "카이닉스점안액05ml",
@@ -551,11 +543,11 @@
       },
       {
         "location": "row8:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "60관",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "6c",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row8:quantity",
@@ -572,19 +564,11 @@
         "extNorm": "132",
         "bucket": "layout",
         "reason": "gt cell appears in column(s) ['quantity']"
-      },
-      {
-        "location": "row8:insuranceCode",
-        "status": "mismatch",
-        "gtNorm": "670607641",
-        "extNorm": "456C670607641한국알콘",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.69)"
       }
     ],
     "bucketTally": {
-      "recognition": 7,
-      "structure": 4,
+      "recognition": 6,
+      "structure": 3,
       "layout": 2,
       "preprocessing": 0
     },

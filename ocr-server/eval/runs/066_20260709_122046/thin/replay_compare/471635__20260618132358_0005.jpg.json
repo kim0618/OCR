@@ -225,10 +225,10 @@
           },
           "spec": {
             "gt": "500C",
-            "ext": "",
+            "ext": "500T",
             "gtNorm": "500c",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "500t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -281,10 +281,10 @@
           },
           "insuranceCode": {
             "gt": "643702360",
-            "ext": "",
+            "ext": "643702360",
             "gtNorm": "643702360",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "643702360",
+            "status": "match",
             "spurious": false
           }
         }
@@ -313,7 +313,7 @@
             "gt": "500C",
             "ext": "25mg 500T(병)//",
             "gtNorm": "500c",
-            "extNorm": "25mg 500t(병)//",
+            "extNorm": "25mg500t병",
             "status": "mismatch",
             "spurious": false
           },
@@ -367,9 +367,9 @@
           },
           "insuranceCode": {
             "gt": "643702360",
-            "ext": "20300405",
+            "ext": "651904140",
             "gtNorm": "643702360",
-            "extNorm": "20300405",
+            "extNorm": "651904140",
             "status": "mismatch",
             "spurious": false
           }
@@ -465,13 +465,13 @@
     ],
     "cellCounts": {
       "scored": 30,
-      "match": 1,
-      "mismatch": 9,
-      "ext_missing": 20,
+      "match": 2,
+      "mismatch": 10,
+      "ext_missing": 18,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.03333333333333333
+    "cellAccuracy": 0.06666666666666667
   },
   "buckets": {
     "defects": [
@@ -533,11 +533,11 @@
       },
       {
         "location": "row4:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "500c",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "500t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.75)"
       },
       {
         "location": "row4:quantity",
@@ -580,14 +580,6 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row4:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "643702360",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row2:itemName",
         "status": "mismatch",
         "gtNorm": "트리티코정트라조돈염산염25mg500t병1",
@@ -607,7 +599,7 @@
         "location": "row2:spec",
         "status": "mismatch",
         "gtNorm": "500c",
-        "extNorm": "25mg 500t(병)//",
+        "extNorm": "25mg500t병",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
@@ -663,7 +655,7 @@
         "location": "row2:insuranceCode",
         "status": "mismatch",
         "gtNorm": "643702360",
-        "extNorm": "20300405",
+        "extNorm": "651904140",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
@@ -749,8 +741,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 11,
-      "structure": 22,
+      "recognition": 12,
+      "structure": 20,
       "layout": 1,
       "preprocessing": 0
     },

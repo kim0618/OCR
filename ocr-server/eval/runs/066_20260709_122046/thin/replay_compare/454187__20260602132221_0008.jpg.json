@@ -224,10 +224,10 @@
           },
           "spec": {
             "gt": "120T(PTP)",
-            "ext": "",
-            "gtNorm": "120t(ptp)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "120T",
+            "gtNorm": "120tptp",
+            "extNorm": "120t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -272,10 +272,10 @@
           },
           "itemCode": {
             "gt": "04002663",
-            "ext": "TRT22",
+            "ext": "04002663",
             "gtNorm": "04002663",
-            "extNorm": "TRT22",
-            "status": "mismatch",
+            "extNorm": "04002663",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -310,10 +310,10 @@
           },
           "spec": {
             "gt": "5/80mg 30T (Alu-Alu)",
-            "ext": "",
-            "gtNorm": "5/80mg 30t (alu-alu)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "30T",
+            "gtNorm": "580mg30talualu",
+            "extNorm": "30t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -358,9 +358,9 @@
           },
           "itemCode": {
             "gt": "01014957",
-            "ext": "TEY13",
+            "ext": "14001874",
             "gtNorm": "01014957",
-            "extNorm": "TEY13",
+            "extNorm": "14001874",
             "status": "mismatch",
             "spurious": false
           },
@@ -397,7 +397,7 @@
           "spec": {
             "gt": "14ML 1B",
             "ext": "",
-            "gtNorm": "14ml 1b",
+            "gtNorm": "14ml1b",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -444,10 +444,10 @@
           },
           "itemCode": {
             "gt": "12000452",
-            "ext": "EKC24",
+            "ext": "12000452",
             "gtNorm": "12000452",
-            "extNorm": "EKC24",
-            "status": "mismatch",
+            "extNorm": "12000452",
+            "status": "match",
             "spurious": false
           }
         }
@@ -455,13 +455,13 @@
     ],
     "cellCounts": {
       "scored": 29,
-      "match": 16,
+      "match": 18,
       "mismatch": 7,
-      "ext_missing": 6,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5517241379310345
+    "cellAccuracy": 0.6206896551724138
   },
   "buckets": {
     "defects": [
@@ -499,11 +499,11 @@
       },
       {
         "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "120t(ptp)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "120tptp",
+        "extNorm": "120t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.73)"
       },
       {
         "location": "row1:manufacturingNo",
@@ -512,14 +512,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:itemCode",
-        "status": "mismatch",
-        "gtNorm": "04002663",
-        "extNorm": "TRT22",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
       },
       {
         "location": "row2:itemName",
@@ -539,11 +531,11 @@
       },
       {
         "location": "row2:spec",
-        "status": "ext_missing",
-        "gtNorm": "5/80mg 30t (alu-alu)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "580mg30talualu",
+        "extNorm": "30t",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row2:manufacturingNo",
@@ -557,7 +549,7 @@
         "location": "row2:itemCode",
         "status": "mismatch",
         "gtNorm": "01014957",
-        "extNorm": "TEY13",
+        "extNorm": "14001874",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
@@ -572,7 +564,7 @@
       {
         "location": "row3:spec",
         "status": "ext_missing",
-        "gtNorm": "14ml 1b",
+        "gtNorm": "14ml1b",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -584,19 +576,11 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:itemCode",
-        "status": "mismatch",
-        "gtNorm": "12000452",
-        "extNorm": "EKC24",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
       }
     ],
     "bucketTally": {
       "recognition": 8,
-      "structure": 8,
+      "structure": 6,
       "layout": 0,
       "preprocessing": 0
     },

@@ -196,8 +196,8 @@
           "spec": {
             "gt": "30T/PAC",
             "ext": "30T 30T/PAC PAC",
-            "gtNorm": "30t/pac",
-            "extNorm": "30t 30t/pac pac",
+            "gtNorm": "30tpac",
+            "extNorm": "30t30tpacpac",
             "status": "mismatch",
             "spurious": false
           },
@@ -243,10 +243,10 @@
           },
           "itemCode": {
             "gt": "05005947",
-            "ext": "GMT26522",
+            "ext": "05005947",
             "gtNorm": "05005947",
-            "extNorm": "GMT26522",
-            "status": "mismatch",
+            "extNorm": "05005947",
+            "status": "match",
             "spurious": false
           }
         }
@@ -254,13 +254,13 @@
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 3,
-      "mismatch": 5,
+      "match": 4,
+      "mismatch": 4,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3333333333333333
+    "cellAccuracy": 0.4444444444444444
   },
   "buckets": {
     "defects": [
@@ -347,10 +347,10 @@
       {
         "location": "row1:spec",
         "status": "mismatch",
-        "gtNorm": "30t/pac",
-        "extNorm": "30t 30t/pac pac",
+        "gtNorm": "30tpac",
+        "extNorm": "30t30tpacpac",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.64)"
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "row1:unitPrice",
@@ -373,22 +373,14 @@
         "status": "ext_missing",
         "gtNorm": "GMT26522",
         "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
-        "location": "row1:itemCode",
-        "status": "mismatch",
-        "gtNorm": "05005947",
-        "extNorm": "GMT26522",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 7,
-      "layout": 3,
+      "recognition": 4,
+      "structure": 8,
+      "layout": 2,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

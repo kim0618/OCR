@@ -283,10 +283,10 @@
           },
           "insuranceCode": {
             "gt": "641906340",
-            "ext": "",
+            "ext": "641906340",
             "gtNorm": "641906340",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "641906340",
+            "status": "match",
             "spurious": false
           }
         }
@@ -314,8 +314,8 @@
           "spec": {
             "gt": "160mg/100T",
             "ext": "160mg/100T",
-            "gtNorm": "160mg/100t",
-            "extNorm": "160mg/100t",
+            "gtNorm": "160mg100t",
+            "extNorm": "160mg100t",
             "status": "match",
             "spurious": false
           },
@@ -369,10 +369,10 @@
           },
           "insuranceCode": {
             "gt": "640006040",
-            "ext": "3 640006040 이노엔 에이치케이",
+            "ext": "640006040",
             "gtNorm": "640006040",
-            "extNorm": "3640006040이노엔에이치케이",
-            "status": "mismatch",
+            "extNorm": "640006040",
+            "status": "match",
             "spurious": false
           }
         }
@@ -485,10 +485,10 @@
           },
           "spec": {
             "gt": "100T",
-            "ext": "",
+            "ext": "100T",
             "gtNorm": "100t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "100t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -533,18 +533,18 @@
           },
           "itemCode": {
             "gt": "01000238",
-            "ext": "CV826A1",
+            "ext": "01000238",
             "gtNorm": "01000238",
-            "extNorm": "CV826A1",
-            "status": "mismatch",
+            "extNorm": "01000238",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "640006050",
-            "ext": "",
+            "ext": "640006050",
             "gtNorm": "640006050",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "640006050",
+            "status": "match",
             "spurious": false
           }
         }
@@ -573,7 +573,7 @@
             "gt": "30C",
             "ext": "30C 이하요백",
             "gtNorm": "30c",
-            "extNorm": "30c 이하요백",
+            "extNorm": "30c이하요백",
             "status": "mismatch",
             "spurious": false
           },
@@ -638,13 +638,13 @@
     ],
     "cellCounts": {
       "scored": 50,
-      "match": 28,
-      "mismatch": 9,
-      "ext_missing": 13,
+      "match": 33,
+      "mismatch": 7,
+      "ext_missing": 10,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.56
+    "cellAccuracy": 0.66
   },
   "buckets": {
     "defects": [
@@ -713,14 +713,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "641906340",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row8:itemName",
         "status": "mismatch",
         "gtNorm": "에이치케이발사원정160mg100t",
@@ -737,14 +729,6 @@
         "reason": "char-level diff (sim=0.83)"
       },
       {
-        "location": "row8:insuranceCode",
-        "status": "mismatch",
-        "gtNorm": "640006040",
-        "extNorm": "3640006040이노엔에이치케이",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
-      },
-      {
         "location": "row4:itemName",
         "status": "mismatch",
         "gtNorm": "에이치케이발사원정80mg100t",
@@ -759,14 +743,6 @@
         "extNorm": "발사원정80mg100t",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.64)"
-      },
-      {
-        "location": "row5:spec",
-        "status": "ext_missing",
-        "gtNorm": "100t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row5:quantity",
@@ -805,22 +781,6 @@
         "status": "ext_missing",
         "gtNorm": "CV826A1",
         "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
-        "location": "row5:itemCode",
-        "status": "mismatch",
-        "gtNorm": "01000238",
-        "extNorm": "CV826A1",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row5:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "640006050",
-        "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
       },
@@ -836,9 +796,9 @@
         "location": "row6:spec",
         "status": "mismatch",
         "gtNorm": "30c",
-        "extNorm": "30c 이하요백",
+        "extNorm": "30c이하요백",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.55)"
+        "reason": "char-level diff (sim=0.60)"
       },
       {
         "location": "row6:unitPrice",
@@ -850,9 +810,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 11,
-      "structure": 13,
-      "layout": 1,
+      "recognition": 9,
+      "structure": 11,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

@@ -219,10 +219,10 @@
           },
           "spec": {
             "gt": "0.3mL*12EA",
-            "ext": "",
-            "gtNorm": "0.3ml*12ea",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "12EA",
+            "gtNorm": "03ml12ea",
+            "extNorm": "12ea",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -275,10 +275,10 @@
           },
           "insuranceCode": {
             "gt": "654006211",
-            "ext": "",
+            "ext": "654006211",
             "gtNorm": "654006211",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "654006211",
+            "status": "match",
             "spurious": false
           }
         }
@@ -286,13 +286,13 @@
     ],
     "cellCounts": {
       "scored": 10,
-      "match": 3,
-      "mismatch": 1,
-      "ext_missing": 6,
+      "match": 4,
+      "mismatch": 2,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3
+    "cellAccuracy": 0.4
   },
   "buckets": {
     "defects": [
@@ -314,11 +314,11 @@
       },
       {
         "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "0.3ml*12ea",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "03ml12ea",
+        "extNorm": "12ea",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "row1:quantity",
@@ -359,19 +359,11 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "654006211",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 3,
-      "structure": 6,
+      "recognition": 4,
+      "structure": 4,
       "layout": 0,
       "preprocessing": 0
     },

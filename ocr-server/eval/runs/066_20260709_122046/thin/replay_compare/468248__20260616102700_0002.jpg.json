@@ -223,7 +223,7 @@
           "spec": {
             "gt": "(레300쩡드)",
             "ext": "",
-            "gtNorm": "(레300쩡드)",
+            "gtNorm": "레300쩡드",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -278,10 +278,10 @@
           },
           "insuranceCode": {
             "gt": "643606030",
-            "ext": "",
+            "ext": "643606030",
             "gtNorm": "643606030",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "643606030",
+            "status": "match",
             "spurious": false
           }
         }
@@ -308,10 +308,10 @@
           },
           "spec": {
             "gt": "50캡슐",
-            "ext": "",
+            "ext": "50캡",
             "gtNorm": "50캡슐",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "50캡",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -364,10 +364,10 @@
           },
           "insuranceCode": {
             "gt": "657308620",
-            "ext": "",
+            "ext": "657308620",
             "gtNorm": "657308620",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "657308620",
+            "status": "match",
             "spurious": false
           }
         }
@@ -375,13 +375,13 @@
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 5,
-      "mismatch": 8,
-      "ext_missing": 7,
+      "match": 7,
+      "mismatch": 9,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.25
+    "cellAccuracy": 0.35
   },
   "buckets": {
     "defects": [
@@ -444,7 +444,7 @@
       {
         "location": "row1:spec",
         "status": "ext_missing",
-        "gtNorm": "(레300쩡드)",
+        "gtNorm": "레300쩡드",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -490,14 +490,6 @@
         "reason": "char-level diff (sim=0.88)"
       },
       {
-        "location": "row1:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "643606030",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row2:itemName",
         "status": "mismatch",
         "gtNorm": "사이크린연질캡슐50mg",
@@ -507,11 +499,11 @@
       },
       {
         "location": "row2:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "50캡슐",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "50캡",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.86)"
       },
       {
         "location": "row2:unitPrice",
@@ -544,19 +536,11 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "657308620",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 10,
-      "structure": 10,
+      "recognition": 11,
+      "structure": 7,
       "layout": 1,
       "preprocessing": 0
     },

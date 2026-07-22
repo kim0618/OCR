@@ -42,6 +42,14 @@ from compare_table import compare_table  # noqa: E402
 from buckets import tag_sample  # noqa: E402
 from gt_loader import load_gt, load_gt_aggregate  # noqa: E402
 from replay_free import _deserialize_lines, _recorded_df, _canon  # noqa: E402
+import learndata_apply as LDA  # noqa: E402
+
+# learndata itemCode 측정 컬럼: 파일 있으면 로드 → replay 때 itemCode 옆에 나란히 채점.
+#  A=held-out(9,001 제외, 비순환 효과=측정1) · B=full(9,001 포함, 순환 상한 참고)
+_LEARN_SPECS = [
+    ("itemCodeLearnA", os.path.join(HERE, "data/invoice_war/learndata_heldout.json")),
+    ("itemCodeLearnB", os.path.join(HERE, "data/invoice_war/learndata_full.json")),
+]
 
 # server post-step + free-result gate + fallback extractor — all live in extractors
 # (no main.py import => no OCR model load). Mirrors main.py ~3320-3419 dispatch.
@@ -64,6 +72,7 @@ from extractors.invoice_statement_free import (  # noqa: E402
     fix_swapped_qty_unitprice as _fix_swap_qu,
     fix_totals_arithmetic as _fix_totals,
     adopt_band_names_master_gated as _adopt_band_names,
+    fill_spec_from_item_name as _fill_spec_from_name,
     reconstruct_numeric_columns as _geo_recon,
     refine_supplier_bizno as _refine_sup_bizno,
     refine_buyer_bizno as _refine_buy_bizno,
@@ -74,6 +83,7 @@ from extractors.invoice_statement import (  # noqa: E402
     recover_postjoin_same_row_amounts as _recover_same_row_amounts,
 )
 from extractors.master_match import fill_master_match as _fill_master  # noqa: E402
+from extractors.master_match import fill_insurance_from_master as _fill_insurance  # noqa: E402
 from extractors.master_match import fill_party_match as _fill_party  # noqa: E402
 from extractors.master_match import (  # noqa: E402
     strip_trailing_item_classification as _strip_item_classification,
@@ -240,6 +250,12 @@ def replay_dispatch(snap: dict) -> tuple[dict, str]:
             df["tableRows"], _ = _adopt_band_names(df["tableRows"], lines)
         except Exception:
             pass
+    # mirror main.py spec(규격) B: itemName 꼬리 개수/포장 규격 → 빈 spec 복사
+    if APPLY_UPA and isinstance(df, dict) and df.get("tableRows"):
+        try:
+            df["tableRows"], _ = _fill_spec_from_name(df["tableRows"])
+        except Exception:
+            pass
     # mirror main.py join-point 사업자번호 재선택 (마스터매칭 앞 — itembuycust 앵커)
     if isinstance(df, dict):
         try:
@@ -252,6 +268,12 @@ def replay_dispatch(snap: dict) -> tuple[dict, str]:
         try:
             df["tableRows"], _ = _fill_master(
                 df["tableRows"], supplier_bizno=df.get("supplierBizNumber"))
+        except Exception:
+            pass
+    # mirror main.py 보험코드 master-join (itemCode→bohum/pyojun, 마스터매칭 뒤)
+    if MASTER_MATCH and isinstance(df, dict) and df.get("tableRows"):
+        try:
+            df["tableRows"], _ = _fill_insurance(df["tableRows"])
         except Exception:
             pass
     # mirror main.py join-point ④거래처/지점 매칭 (사업자번호 앵커/지점 trigram)
@@ -278,6 +300,17 @@ def replay_compare(ts: str | None, testset: str, out_subdir: str) -> int:
         print(f"no snapshots/ in {run_dir} — cannot replay (run had no OCR snapshot)."); return 2
     out_dir = os.path.join(run_dir, out_subdir)
     os.makedirs(out_dir, exist_ok=True)
+
+    # learndata 룩업 로드(있는 것만) → itemCode 옆 measurement 컬럼
+    learn_luts = []
+    for out_key, path in _LEARN_SPECS:
+        if os.path.isfile(path):
+            lut = LDA.load_lookup(path)
+            learn_luts.append((out_key, lut))
+            print(f"[learndata] {out_key} ← {os.path.basename(path)} (읽기 {len(lut):,}개, learn_count≥3)")
+    if not learn_luts:
+        print("[learndata] 룩업 파일 없음 → itemCode measurement 컬럼 생략 "
+              "(data/invoice_war/learndata_*.json 필요)")
 
     manifest = build_manifest(testset)
     kind = manifest["kind"]
@@ -324,6 +357,10 @@ def replay_compare(ts: str | None, testset: str, out_subdir: str) -> int:
         n_free += 1 if path == "free" else 0
         gt = agg[gtkey] if agg is not None else load_gt(
             os.path.normpath(os.path.join(C.HERE, gt_by_src[src])), profile=kind)
+
+        # learndata 적용: ext·gt 양쪽에 itemCodeLearn{A,B} 주입 → compare_table 동적 채점
+        for out_key, lut in learn_luts:
+            LDA.apply_to_rows(ext_df.get("tableRows"), gt.get("tableRows"), lut, out_key)
 
         fcmp = compare_fields(gt, ext_df)
         tcmp = compare_table(gt["tableRows"], ext_df.get("tableRows") or [])

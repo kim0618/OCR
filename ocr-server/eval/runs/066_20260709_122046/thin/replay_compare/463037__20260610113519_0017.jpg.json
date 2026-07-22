@@ -219,10 +219,10 @@
           },
           "spec": {
             "gt": "75MG(정규\n) (병) 100T",
-            "ext": "",
-            "gtNorm": "75mg(정규 ) (병) 100t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "100T",
+            "gtNorm": "75mg정규병100t",
+            "extNorm": "100t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -267,10 +267,10 @@
           },
           "insuranceCode": {
             "gt": "LE012BE5",
-            "ext": "",
+            "ext": "643304110",
             "gtNorm": "LE012BE5",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "643304110",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -279,8 +279,8 @@
     "cellCounts": {
       "scored": 9,
       "match": 4,
-      "mismatch": 1,
-      "ext_missing": 4,
+      "mismatch": 3,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -354,11 +354,11 @@
       },
       {
         "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "75mg(정규 ) (병) 100t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "75mg정규병100t",
+        "extNorm": "100t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.53)"
       },
       {
         "location": "row1:unitPrice",
@@ -378,16 +378,16 @@
       },
       {
         "location": "row1:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "LE012BE5",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "643304110",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 6,
+      "recognition": 7,
+      "structure": 4,
       "layout": 1,
       "preprocessing": 0
     },

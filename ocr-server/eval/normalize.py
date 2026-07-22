@@ -29,12 +29,16 @@ FIELD_TYPE = {
 }
 ROW_KEY_TYPE = {
     "rowIndex": "index",
-    "itemName": "name", "spec": "text",
+    "itemName": "name", "spec": "spec",
     "productCode": "code", "lotNo": "code",
     "expiryDate": "date",
     "quantity": "qty", "unitPrice": "amount", "amount": "amount",
     # --- thin/war new row column ---
     "manufacturingNo": "code", "serialNo": "code",
+    # itemCode 계열: itemCode 는 _infer_type 로도 'code'(끝이 code)지만, 측정컬럼
+    # itemCodeLearnA/B 는 끝이 'code' 아님 → 'text' 로 잘못 추론됨. 명시해서 itemCode 와
+    # 동일 정규화(norm_code: 비-alnum 제거+대문자) 보장 = OFF/learndata 공정 비교.
+    "itemCode": "code", "itemCodeLearnA": "code", "itemCodeLearnB": "code",
 }
 
 
@@ -114,6 +118,17 @@ def norm_name(v) -> str:
     return s.casefold()
 
 
+def norm_spec(v) -> str:
+    # 2026-07-21: 규격(spec)도 공백·괄호·마침표·체크마크가 비의미(포장/용량 서술자).
+    # war GT('100 C','(병)30T','/30Tab.')와 파서 출력('100C','병)30T','/30Tab')·검수마크
+    # 붙은 OCR('30T √')이 같은 규격인데 text 정규화는 내부공백/구두점을 남겨 오불일치.
+    # 066 실측: 전체 비-alnum 제거 시 mismatch->match +1,132(thin), 회귀 0, study 무변화,
+    # 오병합 0(전부 순수 공백/구두점/junk마크 차이). norm_name/address 와 동일 방식.
+    s = unicodedata.normalize("NFC", _s(v))
+    s = _NON_ALNUM.sub("", s)
+    return s.casefold()
+
+
 def norm_index(v) -> str:
     s = _DIGITS.sub("", _s(v))
     return str(int(s)) if s else ""
@@ -138,6 +153,7 @@ _NORMALIZERS = {
     "text": norm_text, "amount": norm_amount, "qty": norm_qty,
     "bizno": norm_bizno, "date": norm_date, "code": norm_code, "index": norm_index,
     "address": norm_address, "name": norm_name, "company": norm_company,
+    "spec": norm_spec,
 }
 
 

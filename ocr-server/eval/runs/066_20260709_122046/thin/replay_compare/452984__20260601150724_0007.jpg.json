@@ -203,10 +203,10 @@
           },
           "spec": {
             "gt": "30T",
-            "ext": "",
+            "ext": "30T",
             "gtNorm": "30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -259,10 +259,10 @@
           },
           "insuranceCode": {
             "gt": "647303960",
-            "ext": "",
+            "ext": "647303960",
             "gtNorm": "647303960",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "647303960",
+            "status": "match",
             "spurious": false
           }
         }
@@ -289,10 +289,10 @@
           },
           "spec": {
             "gt": "100T",
-            "ext": "",
+            "ext": "100T",
             "gtNorm": "100t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "100t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -345,10 +345,10 @@
           },
           "insuranceCode": {
             "gt": "647303770",
-            "ext": "",
+            "ext": "647303740",
             "gtNorm": "647303770",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "647303740",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -1052,13 +1052,13 @@
     ],
     "cellCounts": {
       "scored": 100,
-      "match": 6,
-      "mismatch": 5,
-      "ext_missing": 89,
+      "match": 9,
+      "mismatch": 6,
+      "ext_missing": 85,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.06
+    "cellAccuracy": 0.09
   },
   "buckets": {
     "defects": [
@@ -1127,14 +1127,6 @@
         "reason": "extractor missed rows ['1', '2', '3', '4', '5', '7', '8', '9']"
       },
       {
-        "location": "row2:spec",
-        "status": "ext_missing",
-        "gtNorm": "30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row2:quantity",
         "status": "ext_missing",
         "gtNorm": "10",
@@ -1175,14 +1167,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "647303960",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row1:itemName",
         "status": "mismatch",
         "gtNorm": "씨트케어정10밀리그램100t전공정위더스제약",
@@ -1197,14 +1181,6 @@
         "extNorm": "씨트리카캡슐75mg",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "100t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row1:unitPrice",
@@ -1232,11 +1208,11 @@
       },
       {
         "location": "row1:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "647303770",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "647303740",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.89)"
       },
       {
         "location": "row1:itemName",
@@ -1880,8 +1856,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 9,
-      "structure": 93,
+      "recognition": 10,
+      "structure": 89,
       "layout": 0,
       "preprocessing": 0
     },

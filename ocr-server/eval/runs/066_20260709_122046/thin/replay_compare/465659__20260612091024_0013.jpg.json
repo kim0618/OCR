@@ -209,9 +209,9 @@
           "spec": {
             "gt": "20mL/50Btl.",
             "ext": "20mL/50Btl,",
-            "gtNorm": "20ml/50btl.",
-            "extNorm": "20ml/50btl,",
-            "status": "mismatch",
+            "gtNorm": "20ml50btl",
+            "extNorm": "20ml50btl",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -256,18 +256,18 @@
           },
           "itemCode": {
             "gt": "8806706037126",
-            "ext": "BAP609",
+            "ext": "8806706037126",
             "gtNorm": "8806706037126",
-            "extNorm": "BAP609",
-            "status": "mismatch",
+            "extNorm": "8806706037126",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "8806706037126",
-            "ext": "",
+            "ext": "670603711",
             "gtNorm": "8806706037126",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "670603711",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -275,13 +275,13 @@
     ],
     "cellCounts": {
       "scored": 10,
-      "match": 5,
-      "mismatch": 2,
-      "ext_missing": 3,
+      "match": 7,
+      "mismatch": 1,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5
+    "cellAccuracy": 0.7
   },
   "buckets": {
     "defects": [
@@ -358,14 +358,6 @@
         "reason": "extractor invented rows ['2']"
       },
       {
-        "location": "row1:spec",
-        "status": "mismatch",
-        "gtNorm": "20ml/50btl.",
-        "extNorm": "20ml/50btl,",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.91)"
-      },
-      {
         "location": "row1:unitPrice",
         "status": "ext_missing",
         "gtNorm": "0",
@@ -382,26 +374,18 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemCode",
+        "location": "row1:insuranceCode",
         "status": "mismatch",
         "gtNorm": "8806706037126",
-        "extNorm": "BAP609",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row1:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "8806706037126",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "670603711",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemCode']"
       }
     ],
     "bucketTally": {
-      "recognition": 7,
-      "structure": 7,
-      "layout": 0,
+      "recognition": 5,
+      "structure": 6,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

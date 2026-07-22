@@ -266,10 +266,10 @@
           },
           "itemCode": {
             "gt": "03001632",
-            "ext": "63601",
+            "ext": "03001632",
             "gtNorm": "03001632",
-            "extNorm": "63601",
-            "status": "mismatch",
+            "extNorm": "03001632",
+            "status": "match",
             "spurious": false
           }
         }
@@ -298,7 +298,7 @@
             "gt": "30T",
             "ext": "30T 30T",
             "gtNorm": "30t",
-            "extNorm": "30t 30t",
+            "extNorm": "30t30t",
             "status": "mismatch",
             "spurious": false
           },
@@ -406,10 +406,10 @@
           },
           "itemCode": {
             "gt": "8806494029211",
-            "ext": "62507",
+            "ext": "8806494029211",
             "gtNorm": "8806494029211",
-            "extNorm": "62507",
-            "status": "mismatch",
+            "extNorm": "8806494029211",
+            "status": "match",
             "spurious": false
           }
         }
@@ -417,13 +417,13 @@
     ],
     "cellCounts": {
       "scored": 24,
-      "match": 9,
-      "mismatch": 11,
+      "match": 11,
+      "mismatch": 9,
       "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.375
+    "cellAccuracy": 0.4583333333333333
   },
   "buckets": {
     "defects": [
@@ -488,16 +488,8 @@
         "status": "ext_missing",
         "gtNorm": "63601",
         "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
-        "location": "row1:itemCode",
-        "status": "mismatch",
-        "gtNorm": "03001632",
-        "extNorm": "63601",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row6:itemName",
@@ -519,9 +511,9 @@
         "location": "row6:spec",
         "status": "mismatch",
         "gtNorm": "30t",
-        "extNorm": "30t 30t",
+        "extNorm": "30t30t",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.60)"
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "row6:manufacturingNo",
@@ -568,22 +560,14 @@
         "status": "ext_missing",
         "gtNorm": "62507",
         "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
-        "location": "row4:itemCode",
-        "status": "mismatch",
-        "gtNorm": "8806494029211",
-        "extNorm": "62507",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 12,
-      "structure": 4,
-      "layout": 3,
+      "recognition": 10,
+      "structure": 6,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

@@ -224,10 +224,10 @@
           },
           "spec": {
             "gt": "10mL",
-            "ext": "",
+            "ext": "1EA",
             "gtNorm": "10ml",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "1ea",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -282,7 +282,7 @@
       },
       {
         "rowIndex": "2",
-        "rowMatch": false,
+        "rowMatch": true,
         "cells": {
           "itemName": {
             "gt": "디쓰리베이스액 솔루션 25,000IU/2.5mL 1EA",
@@ -302,10 +302,10 @@
           },
           "spec": {
             "gt": "1EA",
-            "ext": "",
+            "ext": "1EA",
             "gtNorm": "1ea",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "1ea",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -439,13 +439,13 @@
     ],
     "cellCounts": {
       "scored": 27,
-      "match": 23,
-      "mismatch": 1,
-      "ext_missing": 3,
+      "match": 24,
+      "mismatch": 2,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.8518518518518519
+    "cellAccuracy": 0.8888888888888888
   },
   "buckets": {
     "defects": [
@@ -499,19 +499,11 @@
       },
       {
         "location": "row1:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "10ml",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:spec",
-        "status": "ext_missing",
-        "gtNorm": "1ea",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "1ea",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row3:spec",
@@ -523,8 +515,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 4,
+      "recognition": 6,
+      "structure": 2,
       "layout": 0,
       "preprocessing": 0
     },

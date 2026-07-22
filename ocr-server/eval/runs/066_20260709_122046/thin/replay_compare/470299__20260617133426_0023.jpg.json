@@ -207,18 +207,18 @@
           },
           "itemNameMaster": {
             "gt": "리토젯정10/10mg(병)",
-            "ext": "리토젯정10/10mg",
+            "ext": "리토젯정10/10mg(병)",
             "gtNorm": "리토젯정10/10mg(병)",
-            "extNorm": "리토젯정10/10mg",
-            "status": "mismatch",
+            "extNorm": "리토젯정10/10mg(병)",
+            "status": "match",
             "spurious": false
           },
           "spec": {
             "gt": "30T",
-            "ext": "",
+            "ext": "30T",
             "gtNorm": "30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -263,18 +263,18 @@
           },
           "itemCode": {
             "gt": "05004881",
-            "ext": "05005070",
+            "ext": "05004881",
             "gtNorm": "05004881",
-            "extNorm": "05005070",
-            "status": "mismatch",
+            "extNorm": "05004881",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "26001",
-            "ext": "",
+            "ext": "671807260",
             "gtNorm": "26001",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "671807260",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -301,10 +301,10 @@
           },
           "spec": {
             "gt": "84T",
-            "ext": "",
+            "ext": "84T",
             "gtNorm": "84t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "84t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -357,10 +357,10 @@
           },
           "insuranceCode": {
             "gt": "26002",
-            "ext": "",
+            "ext": "671801480",
             "gtNorm": "26002",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "671801480",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -388,8 +388,8 @@
           "spec": {
             "gt": "55G×1EA",
             "ext": "1/18>",
-            "gtNorm": "55g×1ea",
-            "extNorm": "1/18>",
+            "gtNorm": "55g1ea",
+            "extNorm": "118",
             "status": "mismatch",
             "spurious": false
           },
@@ -443,10 +443,10 @@
           },
           "insuranceCode": {
             "gt": "25011",
-            "ext": "",
+            "ext": "671801162",
             "gtNorm": "25011",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "671801162",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -454,13 +454,13 @@
     ],
     "cellCounts": {
       "scored": 30,
-      "match": 6,
-      "mismatch": 11,
-      "ext_missing": 13,
+      "match": 10,
+      "mismatch": 12,
+      "ext_missing": 8,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.2
+    "cellAccuracy": 0.3333333333333333
   },
   "buckets": {
     "defects": [
@@ -495,22 +495,6 @@
         "extNorm": "1리토젯정1010mg병포정30t",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.91)"
-      },
-      {
-        "location": "row1:itemNameMaster",
-        "status": "mismatch",
-        "gtNorm": "리토젯정10/10mg(병)",
-        "extNorm": "리토젯정10/10mg",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.88)"
-      },
-      {
-        "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row1:quantity",
@@ -553,20 +537,12 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemCode",
-        "status": "mismatch",
-        "gtNorm": "05004881",
-        "extNorm": "05005070",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
-      },
-      {
         "location": "row1:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "26001",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "671807260",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row2:itemName",
@@ -575,14 +551,6 @@
         "extNorm": "2리마프로정84t",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.94)"
-      },
-      {
-        "location": "row2:spec",
-        "status": "ext_missing",
-        "gtNorm": "84t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row2:quantity",
@@ -610,11 +578,11 @@
       },
       {
         "location": "row2:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "26002",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "671801480",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row3:itemName",
@@ -627,8 +595,8 @@
       {
         "location": "row3:spec",
         "status": "mismatch",
-        "gtNorm": "55g×1ea",
-        "extNorm": "1/18>",
+        "gtNorm": "55g1ea",
+        "extNorm": "118",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
@@ -674,16 +642,16 @@
       },
       {
         "location": "row3:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "25011",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "671801162",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       }
     ],
     "bucketTally": {
-      "recognition": 12,
-      "structure": 15,
+      "recognition": 13,
+      "structure": 10,
       "layout": 0,
       "preprocessing": 0
     },

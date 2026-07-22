@@ -275,10 +275,10 @@
           },
           "spec": {
             "gt": "PAC",
-            "ext": "",
+            "ext": "500T",
             "gtNorm": "pac",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "500t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -323,10 +323,10 @@
           },
           "itemCode": {
             "gt": "01013583",
-            "ext": "01013583",
+            "ext": "01013582",
             "gtNorm": "01013583",
-            "extNorm": "01013583",
-            "status": "match",
+            "extNorm": "01013582",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -353,10 +353,10 @@
           },
           "spec": {
             "gt": "PAC",
-            "ext": "",
+            "ext": "90T",
             "gtNorm": "pac",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "90t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -491,13 +491,13 @@
     ],
     "cellCounts": {
       "scored": 36,
-      "match": 13,
-      "mismatch": 5,
-      "ext_missing": 18,
+      "match": 12,
+      "mismatch": 8,
+      "ext_missing": 16,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3611111111111111
+    "cellAccuracy": 0.3333333333333333
   },
   "buckets": {
     "defects": [
@@ -615,11 +615,11 @@
       },
       {
         "location": "row3:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "pac",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "500t",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row3:amount",
@@ -646,6 +646,14 @@
         "reason": "gt cell absent in extracted row"
       },
       {
+        "location": "row3:itemCode",
+        "status": "mismatch",
+        "gtNorm": "01013583",
+        "extNorm": "01013582",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.88)"
+      },
+      {
         "location": "row1:itemName",
         "status": "mismatch",
         "gtNorm": "글루코파지정250mg90t",
@@ -655,11 +663,11 @@
       },
       {
         "location": "row1:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "pac",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "90t",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:quantity",
@@ -759,8 +767,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 10,
-      "structure": 22,
+      "recognition": 13,
+      "structure": 20,
       "layout": 0,
       "preprocessing": 0
     },

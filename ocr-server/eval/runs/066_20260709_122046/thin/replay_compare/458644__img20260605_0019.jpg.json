@@ -310,7 +310,7 @@
             "gt": "100T",
             "ext": "30/5MG 100T",
             "gtNorm": "100t",
-            "extNorm": "30/5mg 100t",
+            "extNorm": "305mg100t",
             "status": "mismatch",
             "spurious": false
           },
@@ -590,10 +590,10 @@
           },
           "itemCode": {
             "gt": "22005770",
-            "ext": "E05800",
+            "ext": "22005770",
             "gtNorm": "22005770",
-            "extNorm": "E05800",
-            "status": "mismatch",
+            "extNorm": "22005770",
+            "status": "match",
             "spurious": false
           }
         }
@@ -668,9 +668,9 @@
           },
           "itemCode": {
             "gt": "05006149",
-            "ext": "E00500",
+            "ext": "05005429",
             "gtNorm": "05006149",
-            "extNorm": "E00500",
+            "extNorm": "05005429",
             "status": "mismatch",
             "spurious": false
           }
@@ -700,7 +700,7 @@
             "gt": "30T",
             "ext": "10mg 30T(병",
             "gtNorm": "30t",
-            "extNorm": "10mg 30t(병",
+            "extNorm": "10mg30t병",
             "status": "mismatch",
             "spurious": false
           },
@@ -746,9 +746,9 @@
           },
           "itemCode": {
             "gt": "05005429",
-            "ext": "E00700",
+            "ext": "580100",
             "gtNorm": "05005429",
-            "extNorm": "E00700",
+            "extNorm": "580100",
             "status": "mismatch",
             "spurious": false
           }
@@ -776,10 +776,10 @@
           },
           "spec": {
             "gt": "30T",
-            "ext": "",
+            "ext": "30T",
             "gtNorm": "30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -1071,13 +1071,13 @@
     ],
     "cellCounts": {
       "scored": 99,
-      "match": 20,
-      "mismatch": 20,
-      "ext_missing": 59,
+      "match": 22,
+      "mismatch": 19,
+      "ext_missing": 58,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.20202020202020202
+    "cellAccuracy": 0.2222222222222222
   },
   "buckets": {
     "defects": [
@@ -1213,9 +1213,9 @@
         "location": "row1:spec",
         "status": "mismatch",
         "gtNorm": "100t",
-        "extNorm": "30/5mg 100t",
+        "extNorm": "305mg100t",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.53)"
+        "reason": "char-level diff (sim=0.62)"
       },
       {
         "location": "row1:unitPrice",
@@ -1406,16 +1406,8 @@
         "status": "ext_missing",
         "gtNorm": "E05800",
         "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
-        "location": "row3:itemCode",
-        "status": "mismatch",
-        "gtNorm": "22005770",
-        "extNorm": "E05800",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row4:spec",
@@ -1462,16 +1454,16 @@
         "status": "ext_missing",
         "gtNorm": "E00500",
         "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row4:itemCode",
         "status": "mismatch",
         "gtNorm": "05006149",
-        "extNorm": "E00500",
+        "extNorm": "05005429",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.57)"
+        "reason": "char-level diff (sim=0.75)"
       },
       {
         "location": "row5:itemName",
@@ -1493,9 +1485,9 @@
         "location": "row5:spec",
         "status": "mismatch",
         "gtNorm": "30t",
-        "extNorm": "10mg 30t(병",
+        "extNorm": "10mg30t병",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.55)"
       },
       {
         "location": "row5:unitPrice",
@@ -1526,14 +1518,14 @@
         "status": "ext_missing",
         "gtNorm": "E00700",
         "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row5:itemCode",
         "status": "mismatch",
         "gtNorm": "05005429",
-        "extNorm": "E00700",
+        "extNorm": "580100",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
@@ -1544,14 +1536,6 @@
         "extNorm": "트루비타정1015밀리크램30t",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.81)"
-      },
-      {
-        "location": "row6:spec",
-        "status": "ext_missing",
-        "gtNorm": "30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row6:quantity",
@@ -1787,9 +1771,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 24,
-      "structure": 61,
-      "layout": 3,
+      "recognition": 23,
+      "structure": 63,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

@@ -217,8 +217,8 @@
           "spec": {
             "gt": "90T/PE",
             "ext": "90T/PE",
-            "gtNorm": "90t/pe",
-            "extNorm": "90t/pe",
+            "gtNorm": "90tpe",
+            "extNorm": "90tpe",
             "status": "match",
             "spurious": false
           },
@@ -264,18 +264,18 @@
           },
           "itemCode": {
             "gt": "14001890",
-            "ext": "1861T2",
+            "ext": "14001890",
             "gtNorm": "14001890",
-            "extNorm": "1861T2",
-            "status": "mismatch",
+            "extNorm": "14001890",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "DOB6002",
-            "ext": "",
+            "ext": "655401340",
             "gtNorm": "DOB6002",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "655401340",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -303,8 +303,8 @@
           "spec": {
             "gt": "30T/PE",
             "ext": "30T/PE",
-            "gtNorm": "30t/pe",
-            "extNorm": "30t/pe",
+            "gtNorm": "30tpe",
+            "extNorm": "30tpe",
             "status": "match",
             "spurious": false
           },
@@ -350,18 +350,18 @@
           },
           "itemCode": {
             "gt": "01007294",
-            "ext": "14C1F1",
+            "ext": "01007294",
             "gtNorm": "01007294",
-            "extNorm": "14C1F1",
-            "status": "mismatch",
+            "extNorm": "01007294",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "REA4001",
-            "ext": "",
+            "ext": "655404000",
             "gtNorm": "REA4001",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "655404000",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -436,18 +436,18 @@
           },
           "itemCode": {
             "gt": "07001271",
-            "ext": "70PATC 12E1H1",
+            "ext": "07001271",
             "gtNorm": "07001271",
-            "extNorm": "70PATC12E1H1",
-            "status": "mismatch",
+            "extNorm": "07001271",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "COA4012",
-            "ext": "",
+            "ext": "655403060",
             "gtNorm": "COA4012",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "655403060",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -474,10 +474,10 @@
           },
           "spec": {
             "gt": "100T/PE",
-            "ext": "",
-            "gtNorm": "100t/pe",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "100T",
+            "gtNorm": "100tpe",
+            "extNorm": "100t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -522,18 +522,18 @@
           },
           "itemCode": {
             "gt": "096255",
-            "ext": "100T/PE 1931F2",
+            "ext": "096255",
             "gtNorm": "096255",
-            "extNorm": "100TPE1931F2",
-            "status": "mismatch",
+            "extNorm": "096255",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "FPC6001",
-            "ext": "",
+            "ext": "655401790",
             "gtNorm": "FPC6001",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "655401790",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -541,13 +541,13 @@
     ],
     "cellCounts": {
       "scored": 40,
-      "match": 16,
-      "mismatch": 9,
-      "ext_missing": 15,
+      "match": 20,
+      "mismatch": 10,
+      "ext_missing": 10,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4
+    "cellAccuracy": 0.5
   },
   "buckets": {
     "defects": [
@@ -620,24 +620,16 @@
         "status": "ext_missing",
         "gtNorm": "1861T2",
         "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
-        "location": "row1:itemCode",
-        "status": "mismatch",
-        "gtNorm": "14001890",
-        "extNorm": "1861T2",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row1:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "DOB6002",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "655401340",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row3:unitPrice",
@@ -660,24 +652,16 @@
         "status": "ext_missing",
         "gtNorm": "14C1F1",
         "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
-        "location": "row3:itemCode",
-        "status": "mismatch",
-        "gtNorm": "01007294",
-        "extNorm": "14C1F1",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row3:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "REA4001",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "655404000",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row7:spec",
@@ -712,28 +696,20 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row7:itemCode",
-        "status": "mismatch",
-        "gtNorm": "07001271",
-        "extNorm": "70PATC12E1H1",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
-      },
-      {
         "location": "row7:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "COA4012",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "655403060",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row9:spec",
-        "status": "ext_missing",
-        "gtNorm": "100t/pe",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "100tpe",
+        "extNorm": "100t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "row9:quantity",
@@ -768,26 +744,18 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row9:itemCode",
+        "location": "row9:insuranceCode",
         "status": "mismatch",
-        "gtNorm": "096255",
-        "extNorm": "100TPE1931F2",
+        "gtNorm": "FPC6001",
+        "extNorm": "655401790",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row9:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "FPC6001",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 13,
-      "structure": 14,
-      "layout": 2,
+      "recognition": 14,
+      "structure": 11,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

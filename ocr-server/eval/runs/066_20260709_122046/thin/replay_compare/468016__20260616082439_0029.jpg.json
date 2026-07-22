@@ -199,8 +199,8 @@
           "spec": {
             "gt": "56TX1PA\nC",
             "ext": "56TX1PA PAC",
-            "gtNorm": "56tx1pa c",
-            "extNorm": "56tx1pa pac",
+            "gtNorm": "56tx1pac",
+            "extNorm": "56tx1papac",
             "status": "mismatch",
             "spurious": false
           },
@@ -246,10 +246,10 @@
           },
           "itemCode": {
             "gt": "04000943",
-            "ext": "ZMJ26505",
+            "ext": "04000943",
             "gtNorm": "04000943",
-            "extNorm": "ZMJ26505",
-            "status": "mismatch",
+            "extNorm": "04000943",
+            "status": "match",
             "spurious": false
           }
         }
@@ -277,7 +277,7 @@
           "spec": {
             "gt": "30T/\nBACK",
             "ext": "",
-            "gtNorm": "30t/ back",
+            "gtNorm": "30tback",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -355,8 +355,8 @@
           "spec": {
             "gt": "100T/\nBACK",
             "ext": "100T 100T/ DACK PAC",
-            "gtNorm": "100t/ back",
-            "extNorm": "100t 100t/ dack pac",
+            "gtNorm": "100tback",
+            "extNorm": "100t100tdackpac",
             "status": "mismatch",
             "spurious": false
           },
@@ -402,10 +402,10 @@
           },
           "itemCode": {
             "gt": "16002759",
-            "ext": "GMT26519",
+            "ext": "16002759",
             "gtNorm": "16002759",
-            "extNorm": "GMT26519",
-            "status": "mismatch",
+            "extNorm": "16002759",
+            "status": "match",
             "spurious": false
           }
         }
@@ -413,13 +413,13 @@
     ],
     "cellCounts": {
       "scored": 27,
-      "match": 9,
-      "mismatch": 9,
+      "match": 11,
+      "mismatch": 7,
       "ext_missing": 9,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3333333333333333
+    "cellAccuracy": 0.4074074074074074
   },
   "buckets": {
     "defects": [
@@ -482,10 +482,10 @@
       {
         "location": "row1:spec",
         "status": "mismatch",
-        "gtNorm": "56tx1pa c",
-        "extNorm": "56tx1pa pac",
+        "gtNorm": "56tx1pac",
+        "extNorm": "56tx1papac",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.90)"
+        "reason": "char-level diff (sim=0.89)"
       },
       {
         "location": "row1:unitPrice",
@@ -508,16 +508,8 @@
         "status": "ext_missing",
         "gtNorm": "ZMJ26505",
         "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
-        "location": "row1:itemCode",
-        "status": "mismatch",
-        "gtNorm": "04000943",
-        "extNorm": "ZMJ26505",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row5:itemName",
@@ -538,7 +530,7 @@
       {
         "location": "row5:spec",
         "status": "ext_missing",
-        "gtNorm": "30t/ back",
+        "gtNorm": "30tback",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -578,10 +570,10 @@
       {
         "location": "row3:spec",
         "status": "mismatch",
-        "gtNorm": "100t/ back",
-        "extNorm": "100t 100t/ dack pac",
+        "gtNorm": "100tback",
+        "extNorm": "100t100tdackpac",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.62)"
+        "reason": "char-level diff (sim=0.61)"
       },
       {
         "location": "row3:quantity",
@@ -612,22 +604,14 @@
         "status": "ext_missing",
         "gtNorm": "GMT26519",
         "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
-        "location": "row3:itemCode",
-        "status": "mismatch",
-        "gtNorm": "16002759",
-        "extNorm": "GMT26519",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 7,
-      "structure": 12,
-      "layout": 6,
+      "recognition": 5,
+      "structure": 14,
+      "layout": 4,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

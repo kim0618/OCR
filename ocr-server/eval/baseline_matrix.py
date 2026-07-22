@@ -19,6 +19,8 @@ GT_PATH = os.path.join(DATA, "ground_truth_2606.json")
 MASTER_PATH = os.path.join(DATA, "master_dict.json")
 SAMPLE_PATH = os.path.join(DATA, "sample_6000.txt")
 OUT = os.path.join(HERE, "runs", "BASELINE_MATRIX.html")
+SAMPLE_LABEL = "지점 분산, 2606⊂6000"        # HTML 캡션(프리셋별 갱신)
+PADDLE_FILTER = None                          # Paddle 채점 제한용 safe-id 집합(9000 프리셋)
 
 # ocr.xml selectMasterItemLearnData: learn_count >= #{learn_count} 게이트.
 # war 실제값=3 (2606 item_match_type 최솟값이 L_3, L_1/L_2 부재) → 충실 재현.
@@ -276,11 +278,15 @@ user-select:none;background:var(--card);border:1px solid var(--line);border-radi
 
 
 def _score_compare_dir(cdir):
-    """한 compare 디렉토리의 필드·셀별 정확도 집계 → {labelEn: pct}."""
+    """한 compare 디렉토리의 필드·셀별 정확도 집계 → {labelEn: pct}.
+    PADDLE_FILTER(safe-id 집합)가 있으면 그 샘플만 채점(9000: 대량 run에서 9,001만 추림)."""
     import glob
     fcnt = {}  # labelEn -> [match, scored]
     files = [f for f in glob.glob(os.path.join(cdir, "*.json"))
              if not f.endswith("compare_summary.json")]
+    if PADDLE_FILTER is not None:
+        files = [f for f in files
+                 if os.path.basename(f)[:-5] in PADDLE_FILTER]  # <id>.json
     for f in files:
         try:
             c = json.load(open(f, encoding="utf-8"))
@@ -486,7 +492,7 @@ def build_html(ndocs, item_pct, item_ok, item_tot, paddle, paddle_run, grule, gd
         f'<div class="head"><h1>필드 × 단계 정확도</h1>'
         f'<label class="toggle"><input type="checkbox" onchange="document.body.classList.toggle(\'hidecirc\',this.checked)"> '
         f'순환 컬럼 숨기기 <span class="muted">(금액·날짜·수량 등 pass-through 제외)</span></label></div>'
-        f'<div class="gen" style="max-width:1600px;margin:0 auto 6px">샘플 {ndocs:,}장 (지점 분산, 2606⊂6000) · 구글 vs GT</div>'
+        f'<div class="gen" style="max-width:1600px;margin:0 auto 6px">샘플 {ndocs:,}장 ({SAMPLE_LABEL}) · 구글 vs GT</div>'
         f'<p class="note">탭 = 단계 · Google base = 구글 읽은 값 vs GT(값 없으면 0%) · '
         f'Paddle {("run " + paddle_run) if paddle_run else "(run 없음)"}: '
         f'<b>Base=룰전(compare)</b> → <b>Rule=룰후(replay_compare_rule, 매칭 전)</b> → '
@@ -503,7 +509,38 @@ def build_html(ndocs, item_pct, item_ok, item_tot, paddle, paddle_run, grule, gd
         f'<script>{js}</script></body></html>')
 
 
+def _apply_preset(args):
+    """프리셋/오버라이드로 경로 글로벌 재지정. 6000=기존(2606), 9000=리플레이 기준셋(18개월)."""
+    global GT_PATH, SAMPLE_PATH, MMATCH_PATH, CUST_PATH, OUT, SAMPLE_LABEL, PADDLE_FILTER
+    if args.preset == "9000":
+        SAMPLE_PATH = os.path.join(DATA, "replay_set_v1.txt")
+        GT_PATH = os.path.join(DATA, "ground_truth_replay.json")
+        MMATCH_PATH = os.path.join(DATA, "master_match_google_9000.json")
+        CUST_PATH = os.path.join(DATA, "cust_match_google_9000.json")
+        OUT = os.path.join(HERE, "runs", "BASELINE_MATRIX_9000.html")
+        SAMPLE_LABEL = "리플레이 기준셋, 18개월 월비례 held-out"
+    # 개별 오버라이드
+    if args.sample: SAMPLE_PATH = os.path.abspath(args.sample)
+    if args.gt:     GT_PATH = os.path.abspath(args.gt)
+    if args.mmatch: MMATCH_PATH = os.path.abspath(args.mmatch)
+    if args.cust:   CUST_PATH = os.path.abspath(args.cust)
+    if args.out:    OUT = os.path.abspath(args.out)
+    # Paddle 채점 제한(대량 run에서 이 샘플만 추림). 파일명 = safe_sample_id = 키의 '/'→'__'
+    keys = load_sample_keys()
+    if keys and args.preset == "9000":
+        PADDLE_FILTER = {k.replace("\\", "/").replace("/", "__") for k in keys}
+
+
 def main():
+    import argparse
+    ap = argparse.ArgumentParser(description="war GT 필드×단계 정확도 매트릭스 (구글 vs Paddle)")
+    ap.add_argument("--preset", choices=["6000", "9000"], default="6000",
+                    help="6000=2606 6천샘플(기존) / 9000=리플레이 기준셋 18개월")
+    ap.add_argument("--sample"); ap.add_argument("--gt"); ap.add_argument("--out")
+    ap.add_argument("--mmatch"); ap.add_argument("--cust")
+    args = ap.parse_args()
+    _apply_preset(args)
+
     keys = load_sample_keys()
     ndocs, item_pct, ok, tot = compute_item_baseline(keys)
     paddle, paddle_run = load_paddle()

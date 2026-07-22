@@ -214,7 +214,7 @@
           "spec": {
             "gt": "10mg 30T(병)",
             "ext": "",
-            "gtNorm": "10mg 30t(병)",
+            "gtNorm": "10mg30t병",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -269,10 +269,10 @@
           },
           "insuranceCode": {
             "gt": "88064270710",
-            "ext": "",
+            "ext": "642707100",
             "gtNorm": "88064270710",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "642707100",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -300,8 +300,8 @@
           "spec": {
             "gt": "75mg 100T",
             "ext": "75mg 100T",
-            "gtNorm": "75mg 100t",
-            "extNorm": "75mg 100t",
+            "gtNorm": "75mg100t",
+            "extNorm": "75mg100t",
             "status": "match",
             "spurious": false
           },
@@ -386,7 +386,7 @@
           "spec": {
             "gt": "25mg 30T",
             "ext": "30T",
-            "gtNorm": "25mg 30t",
+            "gtNorm": "25mg30t",
             "extNorm": "30t",
             "status": "mismatch",
             "spurious": false
@@ -463,10 +463,10 @@
           },
           "spec": {
             "gt": "100T",
-            "ext": "",
+            "ext": "100T",
             "gtNorm": "100t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "100t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -511,18 +511,18 @@
           },
           "itemCode": {
             "gt": "8806427030512",
-            "ext": "8806427030529",
+            "ext": "8806427030512",
             "gtNorm": "8806427030512",
-            "extNorm": "8806427030529",
-            "status": "mismatch",
+            "extNorm": "8806427030512",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "642703050",
-            "ext": "",
+            "ext": "642703050",
             "gtNorm": "642703050",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "642703050",
+            "status": "match",
             "spurious": false
           }
         }
@@ -530,13 +530,13 @@
     ],
     "cellCounts": {
       "scored": 39,
-      "match": 20,
+      "match": 23,
       "mismatch": 4,
-      "ext_missing": 15,
+      "ext_missing": 12,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5128205128205128
+    "cellAccuracy": 0.5897435897435898
   },
   "buckets": {
     "defects": [
@@ -599,7 +599,7 @@
       {
         "location": "row1:spec",
         "status": "ext_missing",
-        "gtNorm": "10mg 30t(병)",
+        "gtNorm": "10mg30t병",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -646,11 +646,11 @@
       },
       {
         "location": "row1:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "88064270710",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "642707100",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "row2:itemName",
@@ -679,23 +679,15 @@
       {
         "location": "row3:spec",
         "status": "mismatch",
-        "gtNorm": "25mg 30t",
+        "gtNorm": "25mg30t",
         "extNorm": "30t",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.55)"
+        "reason": "char-level diff (sim=0.60)"
       },
       {
         "location": "row3:quantity",
         "status": "ext_missing",
         "gtNorm": "5",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row7:spec",
-        "status": "ext_missing",
-        "gtNorm": "100t",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -731,27 +723,11 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row7:itemCode",
-        "status": "mismatch",
-        "gtNorm": "8806427030512",
-        "extNorm": "8806427030529",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
-      },
-      {
-        "location": "row7:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "642703050",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
       "recognition": 8,
-      "structure": 18,
+      "structure": 15,
       "layout": 0,
       "preprocessing": 0
     },

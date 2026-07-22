@@ -242,18 +242,18 @@
           },
           "itemCode": {
             "gt": "340009",
-            "ext": "AR003B",
+            "ext": "340009",
             "gtNorm": "340009",
-            "extNorm": "AR003B",
-            "status": "mismatch",
+            "extNorm": "340009",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "8806932001335",
-            "ext": "",
+            "ext": "693200130",
             "gtNorm": "8806932001335",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "693200130",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -282,7 +282,7 @@
             "gt": "30",
             "ext": "프가린캡술150밀리그램 30",
             "gtNorm": "30",
-            "extNorm": "프가린캡술150밀리그램 30",
+            "extNorm": "프가린캡술150밀리그램30",
             "status": "mismatch",
             "spurious": false
           },
@@ -328,18 +328,18 @@
           },
           "itemCode": {
             "gt": "05006402",
-            "ext": "AP001A",
+            "ext": "05006403",
             "gtNorm": "05006402",
-            "extNorm": "AP001A",
+            "extNorm": "05006403",
             "status": "mismatch",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "8806932026512",
-            "ext": "",
+            "ext": "693202650",
             "gtNorm": "8806932026512",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "693202650",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -347,13 +347,13 @@
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 9,
-      "mismatch": 8,
-      "ext_missing": 3,
+      "match": 10,
+      "mismatch": 9,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.45
+    "cellAccuracy": 0.5
   },
   "buckets": {
     "defects": [
@@ -402,24 +402,16 @@
         "status": "mismatch",
         "gtNorm": "AR003B",
         "extNorm": "AR003B20290315",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
-        "location": "row1:itemCode",
-        "status": "mismatch",
-        "gtNorm": "340009",
-        "extNorm": "AR003B",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.60)"
       },
       {
         "location": "row1:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "8806932001335",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "693200130",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.73)"
       },
       {
         "location": "row2:itemName",
@@ -433,7 +425,7 @@
         "location": "row2:spec",
         "status": "mismatch",
         "gtNorm": "30",
-        "extNorm": "프가린캡술150밀리그램 30",
+        "extNorm": "프가린캡술150밀리그램30",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
@@ -450,30 +442,30 @@
         "status": "mismatch",
         "gtNorm": "AP001A",
         "extNorm": "20280616AP001A",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.60)"
       },
       {
         "location": "row2:itemCode",
         "status": "mismatch",
         "gtNorm": "05006402",
-        "extNorm": "AP001A",
+        "extNorm": "05006403",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.88)"
       },
       {
         "location": "row2:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "8806932026512",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "693202650",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.73)"
       }
     ],
     "bucketTally": {
-      "recognition": 9,
-      "structure": 3,
-      "layout": 2,
+      "recognition": 12,
+      "structure": 1,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

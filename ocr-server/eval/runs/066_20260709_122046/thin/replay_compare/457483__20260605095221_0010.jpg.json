@@ -257,10 +257,10 @@
           },
           "itemCode": {
             "gt": "22002786",
-            "ext": "CST502",
+            "ext": "22002786",
             "gtNorm": "22002786",
-            "extNorm": "CST502",
-            "status": "mismatch",
+            "extNorm": "22002786",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
@@ -297,8 +297,8 @@
             "gt": "300T",
             "ext": "300T √",
             "gtNorm": "300t",
-            "extNorm": "300t √",
-            "status": "mismatch",
+            "extNorm": "300t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -343,18 +343,18 @@
           },
           "itemCode": {
             "gt": "01007723",
-            "ext": "TUP6022",
+            "ext": "01007723",
             "gtNorm": "01007723",
-            "extNorm": "TUP6022",
-            "status": "mismatch",
+            "extNorm": "01007723",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "642304640",
-            "ext": "2 642304640",
+            "ext": "642304640",
             "gtNorm": "642304640",
-            "extNorm": "2642304640",
-            "status": "mismatch",
+            "extNorm": "642304640",
+            "status": "match",
             "spurious": false
           }
         }
@@ -362,13 +362,13 @@
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 10,
-      "mismatch": 9,
+      "match": 14,
+      "mismatch": 5,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5
+    "cellAccuracy": 0.7
   },
   "buckets": {
     "defects": [
@@ -413,22 +413,6 @@
         "reason": "char-level diff (sim=0.83)"
       },
       {
-        "location": "row1:itemCode",
-        "status": "mismatch",
-        "gtNorm": "22002786",
-        "extNorm": "CST502",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row2:spec",
-        "status": "mismatch",
-        "gtNorm": "300t",
-        "extNorm": "300t √",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.80)"
-      },
-      {
         "location": "row2:unitPrice",
         "status": "mismatch",
         "gtNorm": "24300",
@@ -449,30 +433,14 @@
         "status": "ext_missing",
         "gtNorm": "TUP6022",
         "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
-        "location": "row2:itemCode",
-        "status": "mismatch",
-        "gtNorm": "01007723",
-        "extNorm": "TUP6022",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row2:insuranceCode",
-        "status": "mismatch",
-        "gtNorm": "642304640",
-        "extNorm": "2642304640",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.95)"
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 10,
-      "structure": 1,
-      "layout": 1,
+      "recognition": 6,
+      "structure": 2,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

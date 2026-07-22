@@ -225,10 +225,10 @@
           },
           "spec": {
             "gt": "30T(병)",
-            "ext": "",
-            "gtNorm": "30t(병)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "30T",
+            "gtNorm": "30t병",
+            "extNorm": "30t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -281,10 +281,10 @@
           },
           "insuranceCode": {
             "gt": "658600800",
-            "ext": "",
+            "ext": "658600800",
             "gtNorm": "658600800",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "658600800",
+            "status": "match",
             "spurious": false
           }
         }
@@ -311,10 +311,10 @@
           },
           "spec": {
             "gt": "84T",
-            "ext": "",
+            "ext": "30T",
             "gtNorm": "84t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -367,10 +367,10 @@
           },
           "insuranceCode": {
             "gt": "658603190",
-            "ext": "",
+            "ext": "658603190",
             "gtNorm": "658603190",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "658603190",
+            "status": "match",
             "spurious": false
           }
         }
@@ -399,7 +399,7 @@
           "spec": {
             "gt": "4mg/500T",
             "ext": "",
-            "gtNorm": "4mg/500t",
+            "gtNorm": "4mg500t",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -465,13 +465,13 @@
     ],
     "cellCounts": {
       "scored": 30,
-      "match": 5,
-      "mismatch": 7,
-      "ext_missing": 18,
+      "match": 7,
+      "mismatch": 9,
+      "ext_missing": 14,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.16666666666666666
+    "cellAccuracy": 0.23333333333333334
   },
   "buckets": {
     "defects": [
@@ -517,11 +517,11 @@
       },
       {
         "location": "row4:spec",
-        "status": "ext_missing",
-        "gtNorm": "30t(병)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "30t병",
+        "extNorm": "30t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.86)"
       },
       {
         "location": "row4:quantity",
@@ -564,14 +564,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row4:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "658600800",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row1:itemName",
         "status": "mismatch",
         "gtNorm": "잊연제약오마스트정84t",
@@ -581,11 +573,11 @@
       },
       {
         "location": "row1:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "84t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "30t",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:unitPrice",
@@ -620,14 +612,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "658603190",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row3:itemName",
         "status": "ext_missing",
         "gtNorm": "잊연제약프레디솔정500t",
@@ -646,7 +630,7 @@
       {
         "location": "row3:spec",
         "status": "ext_missing",
-        "gtNorm": "4mg/500t",
+        "gtNorm": "4mg500t",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -709,8 +693,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 8,
-      "structure": 20,
+      "recognition": 10,
+      "structure": 16,
       "layout": 1,
       "preprocessing": 0
     },

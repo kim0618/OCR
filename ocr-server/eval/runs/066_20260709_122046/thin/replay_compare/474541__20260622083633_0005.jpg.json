@@ -212,10 +212,10 @@
           },
           "spec": {
             "gt": "50mg/30정",
-            "ext": "",
-            "gtNorm": "50mg/30정",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "30정",
+            "gtNorm": "50mg30정",
+            "extNorm": "30정",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -268,10 +268,10 @@
           },
           "insuranceCode": {
             "gt": "671807230",
-            "ext": "",
+            "ext": "671807230",
             "gtNorm": "671807230",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "671807230",
+            "status": "match",
             "spurious": false
           }
         }
@@ -299,8 +299,8 @@
           "spec": {
             "gt": "0.2mg/30정",
             "ext": "0.2mg/30정",
-            "gtNorm": "0.2mg/30정",
-            "extNorm": "0.2mg/30정",
+            "gtNorm": "02mg30정",
+            "extNorm": "02mg30정",
             "status": "match",
             "spurious": false
           },
@@ -385,8 +385,8 @@
           "spec": {
             "gt": "10mg/30정",
             "ext": "10mg/30정",
-            "gtNorm": "10mg/30정",
-            "extNorm": "10mg/30정",
+            "gtNorm": "10mg30정",
+            "extNorm": "10mg30정",
             "status": "match",
             "spurious": false
           },
@@ -471,8 +471,8 @@
           "spec": {
             "gt": "25mg/100정",
             "ext": "하여백 25mg/100정",
-            "gtNorm": "25mg/100정",
-            "extNorm": "하여백 25mg/100정",
+            "gtNorm": "25mg100정",
+            "extNorm": "하여백25mg100정",
             "status": "mismatch",
             "spurious": false
           },
@@ -526,10 +526,10 @@
           },
           "insuranceCode": {
             "gt": "671806950",
-            "ext": "5 6 7 8 9 4 671806959대원제약",
+            "ext": "671806950",
             "gtNorm": "671806950",
-            "extNorm": "567894671806959대원제약",
-            "status": "mismatch",
+            "extNorm": "671806950",
+            "status": "match",
             "spurious": false
           }
         }
@@ -537,13 +537,13 @@
     ],
     "cellCounts": {
       "scored": 40,
-      "match": 30,
+      "match": 32,
       "mismatch": 6,
-      "ext_missing": 4,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.75
+    "cellAccuracy": 0.8
   },
   "buckets": {
     "defects": [
@@ -573,24 +573,16 @@
       },
       {
         "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "50mg/30정",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "50mg30정",
+        "extNorm": "30정",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.60)"
       },
       {
         "location": "row1:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "25014",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "671807230",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -622,10 +614,10 @@
       {
         "location": "row6:spec",
         "status": "mismatch",
-        "gtNorm": "25mg/100정",
-        "extNorm": "하여백 25mg/100정",
+        "gtNorm": "25mg100정",
+        "extNorm": "하여백25mg100정",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.82)"
+        "reason": "char-level diff (sim=0.84)"
       },
       {
         "location": "row6:unitPrice",
@@ -634,19 +626,11 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row6:insuranceCode",
-        "status": "mismatch",
-        "gtNorm": "671806950",
-        "extNorm": "567894671806959대원제약",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.57)"
       }
     ],
     "bucketTally": {
       "recognition": 7,
-      "structure": 5,
+      "structure": 3,
       "layout": 0,
       "preprocessing": 0
     },

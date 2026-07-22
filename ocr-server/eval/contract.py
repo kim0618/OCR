@@ -93,6 +93,11 @@ ROW_META_KEYS = (
 )
 ROW_ALIGN_KEY = "rowIndex"
 
+# Measurement-only cell keys: 비교셀로 emit(컬럼별 %는 리포트됨)되지만 헤드라인
+# cellAccuracy/spurious/rowMatch 집계에선 제외 → study/thin 회귀추적 오염 없음.
+# itemCodeLearnA(held-out 84,707=측정1 비순환)·itemCodeLearnB(full=순환 상한).
+MEASUREMENT_KEYS = ("itemCodeLearnA", "itemCodeLearnB")
+
 # Optional rich-only scalar/field keys (bonus; thin GT omits them).
 RICH_FIELD_KEYS = ("bboxRefs", "edited", "confidence", "fieldStatus")
 
@@ -161,6 +166,18 @@ TESTSETS: dict[str, dict] = {
         run_mode="live",
         expected={},
         gt_aggregate=os.path.join(HERE, "data", "invoice_war", "ground_truth_rekey.json"),
+        images_nested=True,
+    ),
+    # 룰작업 기준셋(리플레이 셋). 리키잉 18개월 풀에서 월쿼터 greedy(universe=itemCode)로
+    # 골라낸 held-out 9,001장(select_replay_set.py). itemCode 커버 95.7%, 월분포 전체풀 비례.
+    # GT=ground_truth_replay.json(filter_gt_replay.py), 이미지=images_replay/<월>/<docId>/<파일>.jpg.
+    # 2천/6천(2606 단월) 후속 = 룰 before/after 측정 + learndata 제외 목록 겸용. [[replay_set_v1.txt]]
+    "invoice_replay": _testset(
+        os.path.join(HERE, "data", "invoice_war", "images_replay"),
+        kind="thin",
+        run_mode="live",
+        expected={},
+        gt_aggregate=os.path.join(HERE, "data", "invoice_war", "ground_truth_replay.json"),
         images_nested=True,
     ),
 }

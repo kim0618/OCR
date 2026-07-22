@@ -195,7 +195,7 @@
           "spec": {
             "gt": "7.5/300격",
             "ext": "",
-            "gtNorm": "7.5/300격",
+            "gtNorm": "75300격",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -242,10 +242,10 @@
           },
           "insuranceCode": {
             "gt": "649800680",
-            "ext": "",
+            "ext": "8806697003223",
             "gtNorm": "649800680",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "8806697003223",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -272,10 +272,10 @@
           },
           "spec": {
             "gt": "250/10T",
-            "ext": "",
-            "gtNorm": "250/10t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "10T",
+            "gtNorm": "25010t",
+            "extNorm": "10t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -324,8 +324,8 @@
     "cellCounts": {
       "scored": 17,
       "match": 4,
-      "mismatch": 7,
-      "ext_missing": 6,
+      "mismatch": 9,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -400,7 +400,7 @@
       {
         "location": "row1:spec",
         "status": "ext_missing",
-        "gtNorm": "7.5/300격",
+        "gtNorm": "75300격",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -439,11 +439,11 @@
       },
       {
         "location": "row1:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "649800680",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "8806697003223",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row2:itemNameMaster",
@@ -455,11 +455,11 @@
       },
       {
         "location": "row2:spec",
-        "status": "ext_missing",
-        "gtNorm": "250/10t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "25010t",
+        "extNorm": "10t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "row2:quantity",
@@ -487,8 +487,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 13,
-      "structure": 5,
+      "recognition": 15,
+      "structure": 3,
       "layout": 1,
       "preprocessing": 0
     },

@@ -209,8 +209,8 @@
           "spec": {
             "gt": "30 T",
             "ext": "DRPTO030 30T",
-            "gtNorm": "30 t",
-            "extNorm": "drpto030 30t",
+            "gtNorm": "30t",
+            "extNorm": "drpto03030t",
             "status": "mismatch",
             "spurious": false
           },
@@ -286,10 +286,10 @@
           },
           "spec": {
             "gt": "90 C",
-            "ext": "",
-            "gtNorm": "90 c",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "90C",
+            "gtNorm": "90c",
+            "extNorm": "90c",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -334,18 +334,18 @@
           },
           "itemCode": {
             "gt": "22004187",
-            "ext": "22004188",
+            "ext": "22004187",
             "gtNorm": "22004187",
-            "extNorm": "22004188",
-            "status": "mismatch",
+            "extNorm": "22004187",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "670304810",
-            "ext": "",
+            "ext": "8806703048118",
             "gtNorm": "670304810",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "8806703048118",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -373,8 +373,8 @@
           "spec": {
             "gt": "100 C",
             "ext": "RMCC1100 100c",
-            "gtNorm": "100 c",
-            "extNorm": "rmcc1100 100c",
+            "gtNorm": "100c",
+            "extNorm": "rmcc1100100c",
             "status": "mismatch",
             "spurious": false
           },
@@ -431,13 +431,13 @@
     ],
     "cellCounts": {
       "scored": 28,
-      "match": 9,
+      "match": 11,
       "mismatch": 12,
-      "ext_missing": 7,
+      "ext_missing": 5,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.32142857142857145
+    "cellAccuracy": 0.39285714285714285
   },
   "buckets": {
     "defects": [
@@ -460,10 +460,10 @@
       {
         "location": "row1:spec",
         "status": "mismatch",
-        "gtNorm": "30 t",
-        "extNorm": "drpto030 30t",
+        "gtNorm": "30t",
+        "extNorm": "drpto03030t",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:quantity",
@@ -506,14 +506,6 @@
         "reason": "char-level diff (sim=0.92)"
       },
       {
-        "location": "row2:spec",
-        "status": "ext_missing",
-        "gtNorm": "90 c",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row2:quantity",
         "status": "mismatch",
         "gtNorm": "20",
@@ -546,20 +538,12 @@
         "reason": "char-level diff (sim=0.75)"
       },
       {
-        "location": "row2:itemCode",
-        "status": "mismatch",
-        "gtNorm": "22004187",
-        "extNorm": "22004188",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.88)"
-      },
-      {
         "location": "row2:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "670304810",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "8806703048118",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.73)"
       },
       {
         "location": "row3:itemName",
@@ -572,10 +556,10 @@
       {
         "location": "row3:spec",
         "status": "mismatch",
-        "gtNorm": "100 c",
-        "extNorm": "rmcc1100 100c",
+        "gtNorm": "100c",
+        "extNorm": "rmcc1100100c",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.56)"
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "row3:quantity",
@@ -612,7 +596,7 @@
     ],
     "bucketTally": {
       "recognition": 14,
-      "structure": 7,
+      "structure": 5,
       "layout": 0,
       "preprocessing": 0
     },

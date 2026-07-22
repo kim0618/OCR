@@ -203,7 +203,7 @@
     "rows": [
       {
         "rowIndex": "1",
-        "rowMatch": false,
+        "rowMatch": true,
         "cells": {
           "itemName": {
             "gt": "펜디 정(주석산펜디메트라진)",
@@ -224,9 +224,9 @@
           "spec": {
             "gt": "/300Tab.",
             "ext": "/300Tab",
-            "gtNorm": "/300tab.",
-            "extNorm": "/300tab",
-            "status": "mismatch",
+            "gtNorm": "300tab",
+            "extNorm": "300tab",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -271,18 +271,18 @@
           },
           "itemCode": {
             "gt": "8806706023822",
-            "ext": "TDF508",
+            "ext": "8806706023822",
             "gtNorm": "8806706023822",
-            "extNorm": "TDF508",
-            "status": "mismatch",
+            "extNorm": "8806706023822",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "8806706023822",
-            "ext": "",
+            "ext": "8806706023822",
             "gtNorm": "8806706023822",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "8806706023822",
+            "status": "match",
             "spurious": false
           }
         }
@@ -310,9 +310,9 @@
           "spec": {
             "gt": "/30Tab.",
             "ext": "/30Tab",
-            "gtNorm": "/30tab.",
-            "extNorm": "/30tab",
-            "status": "mismatch",
+            "gtNorm": "30tab",
+            "extNorm": "30tab",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -357,18 +357,18 @@
           },
           "itemCode": {
             "gt": "01007927",
-            "ext": "TYZ508",
+            "ext": "01007927",
             "gtNorm": "01007927",
-            "extNorm": "TYZ508",
-            "status": "mismatch",
+            "extNorm": "01007927",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "8806706081815",
-            "ext": "",
+            "ext": "670608180",
             "gtNorm": "8806706081815",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "670608180",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -376,13 +376,13 @@
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 14,
-      "mismatch": 4,
-      "ext_missing": 2,
+      "match": 19,
+      "mismatch": 1,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.7
+    "cellAccuracy": 0.95
   },
   "buckets": {
     "defects": [
@@ -427,57 +427,17 @@
         "reason": "extractor invented rows ['3', '4']"
       },
       {
-        "location": "row1:spec",
-        "status": "mismatch",
-        "gtNorm": "/300tab.",
-        "extNorm": "/300tab",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.93)"
-      },
-      {
-        "location": "row1:itemCode",
-        "status": "mismatch",
-        "gtNorm": "8806706023822",
-        "extNorm": "TDF508",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row1:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "8806706023822",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:spec",
-        "status": "mismatch",
-        "gtNorm": "/30tab.",
-        "extNorm": "/30tab",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
-      },
-      {
-        "location": "row2:itemCode",
-        "status": "mismatch",
-        "gtNorm": "01007927",
-        "extNorm": "TYZ508",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
         "location": "row2:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "8806706081815",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "670608180",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.73)"
       }
     ],
     "bucketTally": {
-      "recognition": 8,
-      "structure": 3,
+      "recognition": 5,
+      "structure": 1,
       "layout": 0,
       "preprocessing": 0
     },

@@ -224,8 +224,8 @@
           "spec": {
             "gt": "30T(병)",
             "ext": "영문제약 영문로젯정10/10mg 30T(병)",
-            "gtNorm": "30t(병)",
-            "extNorm": "영문제약 영문로젯정10/10mg 30t(병)",
+            "gtNorm": "30t병",
+            "extNorm": "영문제약영문로젯정1010mg30t병",
             "status": "mismatch",
             "spurious": false
           },
@@ -279,10 +279,10 @@
           },
           "insuranceCode": {
             "gt": "649807080",
-            "ext": "",
+            "ext": "648604200",
             "gtNorm": "649807080",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "648604200",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -365,10 +365,10 @@
           },
           "insuranceCode": {
             "gt": "649808350",
-            "ext": "",
+            "ext": "649808350",
             "gtNorm": "649808350",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "649808350",
+            "status": "match",
             "spurious": false
           }
         }
@@ -451,10 +451,10 @@
           },
           "insuranceCode": {
             "gt": "649806870",
-            "ext": "",
+            "ext": "649806870",
             "gtNorm": "649806870",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "649806870",
+            "status": "match",
             "spurious": false
           }
         }
@@ -483,7 +483,7 @@
             "gt": "100T",
             "ext": "4 명문제약 명문에페신에이스정/100 100T",
             "gtNorm": "100t",
-            "extNorm": "4 명문제약 명문에페신에이스정/100 100t",
+            "extNorm": "4명문제약명문에페신에이스정100100t",
             "status": "mismatch",
             "spurious": false
           },
@@ -537,10 +537,10 @@
           },
           "insuranceCode": {
             "gt": "649808060",
-            "ext": "",
+            "ext": "649808060",
             "gtNorm": "649808060",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "649808060",
+            "status": "match",
             "spurious": false
           }
         }
@@ -623,10 +623,10 @@
           },
           "insuranceCode": {
             "gt": "649808060",
-            "ext": "",
+            "ext": "649808060",
             "gtNorm": "649808060",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "649808060",
+            "status": "match",
             "spurious": false
           }
         }
@@ -634,13 +634,13 @@
     ],
     "cellCounts": {
       "scored": 50,
-      "match": 36,
-      "mismatch": 9,
-      "ext_missing": 5,
+      "match": 40,
+      "mismatch": 10,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.72
+    "cellAccuracy": 0.8
   },
   "buckets": {
     "defects": [
@@ -711,8 +711,8 @@
       {
         "location": "row1:spec",
         "status": "mismatch",
-        "gtNorm": "30t(병)",
-        "extNorm": "영문제약 영문로젯정10/10mg 30t(병)",
+        "gtNorm": "30t병",
+        "extNorm": "영문제약영문로젯정1010mg30t병",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
@@ -726,11 +726,11 @@
       },
       {
         "location": "row1:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "649807080",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "648604200",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "row2:itemName",
@@ -741,28 +741,12 @@
         "reason": "char-level diff (sim=0.74)"
       },
       {
-        "location": "row2:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "649808350",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row3:itemName",
         "status": "mismatch",
         "gtNorm": "명문에페신sr정500t",
         "extNorm": "명문에폐신sr정500t",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.92)"
-      },
-      {
-        "location": "row3:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "649806870",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row4:itemName",
@@ -776,17 +760,9 @@
         "location": "row4:spec",
         "status": "mismatch",
         "gtNorm": "100t",
-        "extNorm": "4 명문제약 명문에페신에이스정/100 100t",
+        "extNorm": "4명문제약명문에페신에이스정100100t",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row4:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "649808060",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row5:itemName",
@@ -795,19 +771,11 @@
         "extNorm": "명로에페신에이스정30t",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.83)"
-      },
-      {
-        "location": "row5:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "649808060",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 12,
-      "structure": 8,
+      "recognition": 13,
+      "structure": 3,
       "layout": 0,
       "preprocessing": 0
     },

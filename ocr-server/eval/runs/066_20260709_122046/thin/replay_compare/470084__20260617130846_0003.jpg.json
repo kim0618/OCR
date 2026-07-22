@@ -228,7 +228,7 @@
           "spec": {
             "gt": "300정/병",
             "ext": "",
-            "gtNorm": "300정/병",
+            "gtNorm": "300정병",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -305,10 +305,10 @@
           },
           "spec": {
             "gt": "300캡슐/병",
-            "ext": "",
-            "gtNorm": "300캡슐/병",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "300캡",
+            "gtNorm": "300캡슐병",
+            "extNorm": "300캡",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -384,7 +384,7 @@
           "spec": {
             "gt": "30정/케이스",
             "ext": "",
-            "gtNorm": "30정/케이스",
+            "gtNorm": "30정케이스",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -461,10 +461,10 @@
           },
           "spec": {
             "gt": "28정/케이스",
-            "ext": "",
-            "gtNorm": "28정/케이스",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "30정",
+            "gtNorm": "28정케이스",
+            "extNorm": "30정",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -509,9 +509,9 @@
           },
           "itemCode": {
             "gt": "22002190",
-            "ext": "W208",
+            "ext": "8806717011818",
             "gtNorm": "22002190",
-            "extNorm": "W208",
+            "extNorm": "8806717011818",
             "status": "mismatch",
             "spurious": false
           }
@@ -539,10 +539,10 @@
           },
           "spec": {
             "gt": "30정/케이스",
-            "ext": "",
-            "gtNorm": "30정/케이스",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "30정",
+            "gtNorm": "30정케이스",
+            "extNorm": "30정",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -587,10 +587,10 @@
           },
           "itemCode": {
             "gt": "16001442",
-            "ext": "W206",
+            "ext": "16001442",
             "gtNorm": "16001442",
-            "extNorm": "W206",
-            "status": "mismatch",
+            "extNorm": "16001442",
+            "status": "match",
             "spurious": false
           }
         }
@@ -598,13 +598,13 @@
     ],
     "cellCounts": {
       "scored": 45,
-      "match": 8,
-      "mismatch": 14,
-      "ext_missing": 23,
+      "match": 9,
+      "mismatch": 16,
+      "ext_missing": 20,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.17777777777777778
+    "cellAccuracy": 0.2
   },
   "buckets": {
     "defects": [
@@ -675,7 +675,7 @@
       {
         "location": "row1:spec",
         "status": "ext_missing",
-        "gtNorm": "300정/병",
+        "gtNorm": "300정병",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -738,11 +738,11 @@
       },
       {
         "location": "row2:spec",
-        "status": "ext_missing",
-        "gtNorm": "300캡슐/병",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "300캡슐병",
+        "extNorm": "300캡",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "row2:unitPrice",
@@ -795,7 +795,7 @@
       {
         "location": "row3:spec",
         "status": "ext_missing",
-        "gtNorm": "30정/케이스",
+        "gtNorm": "30정케이스",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -858,11 +858,11 @@
       },
       {
         "location": "row4:spec",
-        "status": "ext_missing",
-        "gtNorm": "28정/케이스",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "28정케이스",
+        "extNorm": "30정",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row4:unitPrice",
@@ -892,7 +892,7 @@
         "location": "row4:itemCode",
         "status": "mismatch",
         "gtNorm": "22002190",
-        "extNorm": "W208",
+        "extNorm": "8806717011818",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
@@ -906,11 +906,11 @@
       },
       {
         "location": "row7:spec",
-        "status": "ext_missing",
-        "gtNorm": "30정/케이스",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "30정케이스",
+        "extNorm": "30정",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "row7:quantity",
@@ -951,19 +951,11 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row7:itemCode",
-        "status": "mismatch",
-        "gtNorm": "16001442",
-        "extNorm": "W206",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
       }
     ],
     "bucketTally": {
-      "recognition": 17,
-      "structure": 24,
+      "recognition": 19,
+      "structure": 21,
       "layout": 3,
       "preprocessing": 0
     },

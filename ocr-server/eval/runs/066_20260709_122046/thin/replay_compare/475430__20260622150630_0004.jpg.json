@@ -221,10 +221,10 @@
           },
           "spec": {
             "gt": "100ML 50B(1B*50EA)",
-            "ext": "",
-            "gtNorm": "100ml 50b(1b*50ea)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "50EA",
+            "gtNorm": "100ml50b1b50ea",
+            "extNorm": "50ea",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -269,10 +269,10 @@
           },
           "itemCode": {
             "gt": "01011483",
-            "ext": "G001GL9",
+            "ext": "01011483",
             "gtNorm": "01011483",
-            "extNorm": "G001GL9",
-            "status": "mismatch",
+            "extNorm": "01011483",
+            "status": "match",
             "spurious": false
           }
         }
@@ -300,7 +300,7 @@
           "spec": {
             "gt": "1EA(쫑매트훈증기)",
             "ext": "",
-            "gtNorm": "1ea(쫑매트훈증기)",
+            "gtNorm": "1ea쫑매트훈증기",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -425,10 +425,10 @@
           },
           "insuranceCode": {
             "gt": "242437",
-            "ext": "",
+            "ext": "8806433065928",
             "gtNorm": "242437",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "8806433065928",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -436,13 +436,13 @@
     ],
     "cellCounts": {
       "scored": 27,
-      "match": 12,
-      "mismatch": 3,
-      "ext_missing": 12,
+      "match": 13,
+      "mismatch": 4,
+      "ext_missing": 10,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4444444444444444
+    "cellAccuracy": 0.48148148148148145
   },
   "buckets": {
     "defects": [
@@ -520,11 +520,11 @@
       },
       {
         "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "100ml 50b(1b*50ea)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "100ml50b1b50ea",
+        "extNorm": "50ea",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:expiryDate",
@@ -541,14 +541,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:itemCode",
-        "status": "mismatch",
-        "gtNorm": "01011483",
-        "extNorm": "G001GL9",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
       },
       {
         "location": "row3:itemName",
@@ -569,7 +561,7 @@
       {
         "location": "row3:spec",
         "status": "ext_missing",
-        "gtNorm": "1ea(쫑매트훈증기)",
+        "gtNorm": "1ea쫑매트훈증기",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -624,16 +616,16 @@
       },
       {
         "location": "row2:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "242437",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "8806433065928",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       }
     ],
     "bucketTally": {
-      "recognition": 7,
-      "structure": 15,
+      "recognition": 8,
+      "structure": 13,
       "layout": 1,
       "preprocessing": 0
     },

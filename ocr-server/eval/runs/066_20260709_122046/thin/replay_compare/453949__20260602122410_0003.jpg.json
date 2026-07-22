@@ -226,10 +226,10 @@
           },
           "spec": {
             "gt": "(P) 100T",
-            "ext": "",
-            "gtNorm": "(p) 100t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "100T",
+            "gtNorm": "p100t",
+            "extNorm": "100t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -305,7 +305,7 @@
           "spec": {
             "gt": "(P) 300T",
             "ext": "300T",
-            "gtNorm": "(p) 300t",
+            "gtNorm": "p300t",
             "extNorm": "300t",
             "status": "mismatch",
             "spurious": false
@@ -461,9 +461,9 @@
           "spec": {
             "gt": "0.05% (B) 10ML",
             "ext": "0.05%(B)10ML",
-            "gtNorm": "0.05% (b) 10ml",
-            "extNorm": "0.05%(b)10ml",
-            "status": "mismatch",
+            "gtNorm": "005b10ml",
+            "extNorm": "005b10ml",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -519,13 +519,13 @@
     ],
     "cellCounts": {
       "scored": 36,
-      "match": 23,
+      "match": 24,
       "mismatch": 8,
-      "ext_missing": 5,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.6388888888888888
+    "cellAccuracy": 0.6666666666666666
   },
   "buckets": {
     "defects": [
@@ -587,11 +587,11 @@
       },
       {
         "location": "row6:spec",
-        "status": "ext_missing",
-        "gtNorm": "(p) 100t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "p100t",
+        "extNorm": "100t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.89)"
       },
       {
         "location": "row6:expiryDate",
@@ -620,10 +620,10 @@
       {
         "location": "row2:spec",
         "status": "mismatch",
-        "gtNorm": "(p) 300t",
+        "gtNorm": "p300t",
         "extNorm": "300t",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
+        "reason": "char-level diff (sim=0.89)"
       },
       {
         "location": "row3:itemName",
@@ -658,14 +658,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row4:spec",
-        "status": "mismatch",
-        "gtNorm": "0.05% (b) 10ml",
-        "extNorm": "0.05%(b)10ml",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
-      },
-      {
         "location": "row4:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "YA6R",
@@ -676,7 +668,7 @@
     ],
     "bucketTally": {
       "recognition": 11,
-      "structure": 6,
+      "structure": 5,
       "layout": 1,
       "preprocessing": 0
     },

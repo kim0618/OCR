@@ -198,18 +198,18 @@
           },
           "itemNameMaster": {
             "gt": "텔미트렌정40mg",
-            "ext": "텔미트렌정40mg(병)",
+            "ext": "텔미트렌정40mg",
             "gtNorm": "텔미트렌정40mg",
-            "extNorm": "텔미트렌정40mg(병)",
-            "status": "mismatch",
+            "extNorm": "텔미트렌정40mg",
+            "status": "match",
             "spurious": false
           },
           "spec": {
             "gt": "40MG(정규) (병) 100T",
-            "ext": "",
-            "gtNorm": "40mg(정규) (병) 100t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "100T",
+            "gtNorm": "40mg정규병100t",
+            "extNorm": "100t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -246,18 +246,18 @@
           },
           "itemCode": {
             "gt": "01011567",
-            "ext": "18000354",
+            "ext": "01011567",
             "gtNorm": "01011567",
-            "extNorm": "18000354",
-            "status": "mismatch",
+            "extNorm": "01011567",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "LE008GS5",
-            "ext": "",
+            "ext": "643306140",
             "gtNorm": "LE008GS5",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "643306140",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -265,13 +265,13 @@
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 1,
+      "match": 3,
       "mismatch": 3,
-      "ext_missing": 5,
+      "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.1111111111111111
+    "cellAccuracy": 0.3333333333333333
   },
   "buckets": {
     "defects": [
@@ -332,20 +332,12 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row1:itemNameMaster",
-        "status": "mismatch",
-        "gtNorm": "텔미트렌정40mg",
-        "extNorm": "텔미트렌정40mg(병)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.86)"
-      },
-      {
         "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "40mg(정규) (병) 100t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "40mg정규병100t",
+        "extNorm": "100t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.53)"
       },
       {
         "location": "row1:unitPrice",
@@ -372,25 +364,17 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemCode",
+        "location": "row1:insuranceCode",
         "status": "mismatch",
-        "gtNorm": "01011567",
-        "extNorm": "18000354",
+        "gtNorm": "LE008GS5",
+        "extNorm": "643306140",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row1:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "LE008GS5",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
       "recognition": 7,
-      "structure": 7,
+      "structure": 5,
       "layout": 0,
       "preprocessing": 0
     },

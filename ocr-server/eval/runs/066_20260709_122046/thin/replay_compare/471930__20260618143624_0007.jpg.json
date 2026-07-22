@@ -302,10 +302,10 @@
           },
           "spec": {
             "gt": "20mL",
-            "ext": "",
+            "ext": "90C",
             "gtNorm": "20ml",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "90c",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -444,8 +444,8 @@
             "gt": "60g",
             "ext": "60g √",
             "gtNorm": "60g",
-            "extNorm": "60g √",
-            "status": "mismatch",
+            "extNorm": "60g",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -514,7 +514,7 @@
             "gt": "15g",
             "ext": "15g 기",
             "gtNorm": "15g",
-            "extNorm": "15g 기",
+            "extNorm": "15g기",
             "status": "mismatch",
             "spurious": false
           },
@@ -774,13 +774,13 @@
     ],
     "cellCounts": {
       "scored": 64,
-      "match": 24,
+      "match": 25,
       "mismatch": 8,
-      "ext_missing": 32,
+      "ext_missing": 31,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.375
+    "cellAccuracy": 0.390625
   },
   "buckets": {
     "defects": [
@@ -906,11 +906,11 @@
       },
       {
         "location": "row1:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "20ml",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "90c",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:quantity",
@@ -985,14 +985,6 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row2:spec",
-        "status": "mismatch",
-        "gtNorm": "60g",
-        "extNorm": "60g √",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.75)"
-      },
-      {
         "location": "row2:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "10000023",
@@ -1012,9 +1004,9 @@
         "location": "row3:spec",
         "status": "mismatch",
         "gtNorm": "15g",
-        "extNorm": "15g 기",
+        "extNorm": "15g기",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.75)"
+        "reason": "char-level diff (sim=0.86)"
       },
       {
         "location": "row3:manufacturingNo",
@@ -1171,7 +1163,7 @@
     ],
     "bucketTally": {
       "recognition": 11,
-      "structure": 37,
+      "structure": 36,
       "layout": 0,
       "preprocessing": 0
     },

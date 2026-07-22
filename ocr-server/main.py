@@ -86,11 +86,13 @@ from extractors.invoice_statement_free import (
     fix_totals_arithmetic,
     adopt_band_names_master_gated,
     reconstruct_numeric_columns,
+    fill_spec_from_item_name,
     refine_supplier_bizno,
     refine_buyer_bizno,
 )
 from extractors.master_match import (
     fill_master_match,
+    fill_insurance_from_master,
     fill_party_match,
     strip_trailing_item_classification,
 )
@@ -3710,6 +3712,17 @@ async def ocr_extract(
                         extract_debug["bandNameAdopt"] = _ad_dbg
             except Exception as _ad_e:
                 print(f"[band_name_adopt] failed (response unaffected): {_ad_e}")
+            # spec(규격) B: spec 빈칸 행에서 itemName 꼬리의 개수/포장 규격 토큰(30T/56C/
+            # PTP 등, dosage mg/ml 제외)을 spec 으로 복사. 빈칸만·itemName 불변·덮기 없음.
+            # 밴드입양 뒤 — 입양된 품명 꼬리에서도 규격 회수. spurious 0(live 빈 spec=GT 존재).
+            try:
+                if isinstance(document_fields, dict) and document_fields.get("tableRows"):
+                    _sp_rows, _sp_dbg = fill_spec_from_item_name(document_fields["tableRows"])
+                    document_fields["tableRows"] = _sp_rows
+                    if _sp_dbg.get("filled"):
+                        extract_debug["specFromItemName"] = _sp_dbg
+            except Exception as _sp_e:
+                print(f"[spec_from_item_name] failed (response unaffected): {_sp_e}")
             # Path-agnostic 공급자/공급받는자 사업자번호 재선택: OCR 넓힌추출 + 보수적
             # 재선택. ★마스터매칭 앞이어야 교정된 supplier bizno가 itembuycust 앵커로 쓰인다.
             try:
@@ -3735,6 +3748,17 @@ async def ocr_extract(
                         extract_debug["masterMatchFill"] = _mm_dbg
             except Exception as _mm_e:
                 print(f"[master_match_fill] failed (response unaffected): {_mm_e}")
+            # 보험코드 master-join: itemCode→bohum/pyojun 빈칸fill + 이중게이트(whitelist
+            # 밖 AND 형식불량) 쓰레기 교체. ★마스터매칭 뒤 — G4 가 채운 itemCode 를 쓴다.
+            try:
+                if isinstance(document_fields, dict) and document_fields.get("tableRows"):
+                    _ins_rows, _ins_dbg = fill_insurance_from_master(
+                        document_fields["tableRows"])
+                    document_fields["tableRows"] = _ins_rows
+                    if _ins_dbg.get("filled") or _ins_dbg.get("replaced"):
+                        extract_debug["insuranceFromMaster"] = _ins_dbg
+            except Exception as _ins_e:
+                print(f"[insurance_from_master] failed (response unaffected): {_ins_e}")
             # ④거래처/지점 매칭: 공급자=사업자번호 앵커→거래처 마스터, 공급받는자=지점
             # trigram. 앵커 정확할 때만 상호/주소를 마스터 정식값으로 교체(사전에 없는
             # 문서는 자동 미적용). war Master 필드 84.5~100%의 실체를 재현.

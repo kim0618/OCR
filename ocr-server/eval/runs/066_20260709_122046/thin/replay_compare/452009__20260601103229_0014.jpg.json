@@ -288,10 +288,10 @@
           },
           "spec": {
             "gt": "30T",
-            "ext": "",
+            "ext": "30T",
             "gtNorm": "30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -522,10 +522,10 @@
           },
           "spec": {
             "gt": "30T",
-            "ext": "",
+            "ext": "303.60p",
             "gtNorm": "30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30360p",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -602,7 +602,7 @@
             "gt": "28T",
             "ext": "5mg 28T(PTP)",
             "gtNorm": "28t",
-            "extNorm": "5mg 28t(ptp)",
+            "extNorm": "5mg28tptp",
             "status": "mismatch",
             "spurious": false
           },
@@ -990,13 +990,13 @@
     ],
     "cellCounts": {
       "scored": 92,
-      "match": 49,
-      "mismatch": 9,
-      "ext_missing": 34,
+      "match": 50,
+      "mismatch": 10,
+      "ext_missing": 32,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.532608695652174
+    "cellAccuracy": 0.5434782608695652
   },
   "buckets": {
     "defects": [
@@ -1057,14 +1057,6 @@
         "reason": "char-level diff (sim=0.89)"
       },
       {
-        "location": "row9:spec",
-        "status": "ext_missing",
-        "gtNorm": "30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row9:quantity",
         "status": "mismatch",
         "gtNorm": "10",
@@ -1106,11 +1098,11 @@
       },
       {
         "location": "row12:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "30360p",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row12:quantity",
@@ -1140,9 +1132,9 @@
         "location": "row6:spec",
         "status": "mismatch",
         "gtNorm": "28t",
-        "extNorm": "5mg 28t(ptp)",
+        "extNorm": "5mg28tptp",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "row6:quantity",
@@ -1394,8 +1386,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 13,
-      "structure": 36,
+      "recognition": 14,
+      "structure": 34,
       "layout": 0,
       "preprocessing": 0
     },

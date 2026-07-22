@@ -197,8 +197,8 @@
           "spec": {
             "gt": "100T/\nBACK\nPAC",
             "ext": "100T DACK 100T/ PAC",
-            "gtNorm": "100t/ back pac",
-            "extNorm": "100t dack 100t/ pac",
+            "gtNorm": "100tbackpac",
+            "extNorm": "100tdack100tpac",
             "status": "mismatch",
             "spurious": false
           },
@@ -244,10 +244,10 @@
           },
           "itemCode": {
             "gt": "16002759",
-            "ext": "GMT26517",
+            "ext": "16002759",
             "gtNorm": "16002759",
-            "extNorm": "GMT26517",
-            "status": "mismatch",
+            "extNorm": "16002759",
+            "status": "match",
             "spurious": false
           }
         }
@@ -255,13 +255,13 @@
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 3,
-      "mismatch": 5,
+      "match": 4,
+      "mismatch": 4,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3333333333333333
+    "cellAccuracy": 0.4444444444444444
   },
   "buckets": {
     "defects": [
@@ -332,10 +332,10 @@
       {
         "location": "row1:spec",
         "status": "mismatch",
-        "gtNorm": "100t/ back pac",
-        "extNorm": "100t dack 100t/ pac",
+        "gtNorm": "100tbackpac",
+        "extNorm": "100tdack100tpac",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.55)"
+        "reason": "char-level diff (sim=0.77)"
       },
       {
         "location": "row1:unitPrice",
@@ -358,22 +358,14 @@
         "status": "ext_missing",
         "gtNorm": "GMT26517",
         "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
-        "location": "row1:itemCode",
-        "status": "mismatch",
-        "gtNorm": "16002759",
-        "extNorm": "GMT26517",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 5,
-      "layout": 3,
+      "recognition": 4,
+      "structure": 6,
+      "layout": 2,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

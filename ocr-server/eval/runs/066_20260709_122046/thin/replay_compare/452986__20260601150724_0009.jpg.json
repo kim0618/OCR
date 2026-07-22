@@ -891,10 +891,10 @@
           },
           "insuranceCode": {
             "gt": "647303540",
-            "ext": "",
+            "ext": "647303540",
             "gtNorm": "647303540",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "647303540",
+            "status": "match",
             "spurious": false
           }
         }
@@ -977,10 +977,10 @@
           },
           "insuranceCode": {
             "gt": "647304450",
-            "ext": "",
+            "ext": "647304450",
             "gtNorm": "647304450",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "647304450",
+            "status": "match",
             "spurious": false
           }
         }
@@ -1007,10 +1007,10 @@
           },
           "spec": {
             "gt": "30T(PTP)",
-            "ext": "",
-            "gtNorm": "30t(ptp)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "30T",
+            "gtNorm": "30tptp",
+            "extNorm": "30t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -1063,10 +1063,10 @@
           },
           "insuranceCode": {
             "gt": "058800410",
-            "ext": "05 10 8800410 추식회사 유앤",
+            "ext": "058800410",
             "gtNorm": "058800410",
-            "extNorm": "05108800410추식회사유앤",
-            "status": "mismatch",
+            "extNorm": "058800410",
+            "status": "match",
             "spurious": false
           }
         }
@@ -1074,13 +1074,13 @@
     ],
     "cellCounts": {
       "scored": 100,
-      "match": 53,
+      "match": 56,
       "mismatch": 38,
-      "ext_missing": 9,
+      "ext_missing": 6,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.53
+    "cellAccuracy": 0.56
   },
   "buckets": {
     "defects": [
@@ -1461,28 +1461,12 @@
         "reason": "char-level diff (sim=0.63)"
       },
       {
-        "location": "row8:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "647303540",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row13:itemName",
         "status": "mismatch",
         "gtNorm": "을메로핀정540밀리그램28t전공정다산제약",
         "extNorm": "을메로편정540밀리그램28t전공정다산제약",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.95)"
-      },
-      {
-        "location": "row13:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "647304450",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row14:itemName",
@@ -1494,11 +1478,11 @@
       },
       {
         "location": "row14:spec",
-        "status": "ext_missing",
-        "gtNorm": "30t(ptp)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "30tptp",
+        "extNorm": "30t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "row14:quantity",
@@ -1515,19 +1499,11 @@
         "extNorm": "1547100",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.83)"
-      },
-      {
-        "location": "row14:insuranceCode",
-        "status": "mismatch",
-        "gtNorm": "058800410",
-        "extNorm": "05108800410추식회사유앤",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.69)"
       }
     ],
     "bucketTally": {
       "recognition": 43,
-      "structure": 12,
+      "structure": 9,
       "layout": 0,
       "preprocessing": 0
     },

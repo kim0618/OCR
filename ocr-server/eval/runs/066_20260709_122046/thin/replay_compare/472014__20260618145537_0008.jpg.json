@@ -225,7 +225,7 @@
           "spec": {
             "gt": "60mg 120T",
             "ext": "b",
-            "gtNorm": "60mg 120t",
+            "gtNorm": "60mg120t",
             "extNorm": "b",
             "status": "mismatch",
             "spurious": false
@@ -272,10 +272,10 @@
           },
           "itemCode": {
             "gt": "01011913",
-            "ext": "QJZT600",
+            "ext": "01011913",
             "gtNorm": "01011913",
-            "extNorm": "QJZT600",
-            "status": "mismatch",
+            "extNorm": "01011913",
+            "status": "match",
             "spurious": false
           }
         }
@@ -303,7 +303,7 @@
           "spec": {
             "gt": "10mg(마시텐탄) 30T",
             "ext": "P",
-            "gtNorm": "10mg(마시텐탄) 30t",
+            "gtNorm": "10mg마시텐탄30t",
             "extNorm": "p",
             "status": "mismatch",
             "spurious": false
@@ -350,10 +350,10 @@
           },
           "itemCode": {
             "gt": "22003768",
-            "ext": "YE009B0901",
+            "ext": "22003768",
             "gtNorm": "22003768",
-            "extNorm": "YE009B0901",
-            "status": "mismatch",
+            "extNorm": "22003768",
+            "status": "match",
             "spurious": false
           }
         }
@@ -381,7 +381,7 @@
           "spec": {
             "gt": "140MG 120C",
             "ext": "",
-            "gtNorm": "140mg 120c",
+            "gtNorm": "140mg120c",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -439,13 +439,13 @@
     ],
     "cellCounts": {
       "scored": 27,
-      "match": 9,
-      "mismatch": 12,
+      "match": 11,
+      "mismatch": 10,
       "ext_missing": 6,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3333333333333333
+    "cellAccuracy": 0.4074074074074074
   },
   "buckets": {
     "defects": [
@@ -492,7 +492,7 @@
       {
         "location": "row1:spec",
         "status": "mismatch",
-        "gtNorm": "60mg 120t",
+        "gtNorm": "60mg120t",
         "extNorm": "b",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
@@ -526,21 +526,13 @@
         "status": "ext_missing",
         "gtNorm": "QJZT600",
         "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
-        "location": "row1:itemCode",
-        "status": "mismatch",
-        "gtNorm": "01011913",
-        "extNorm": "QJZT600",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row2:spec",
         "status": "mismatch",
-        "gtNorm": "10mg(마시텐탄) 30t",
+        "gtNorm": "10mg마시텐탄30t",
         "extNorm": "p",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
@@ -566,16 +558,8 @@
         "status": "ext_missing",
         "gtNorm": "YE009B0901",
         "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
-        "location": "row2:itemCode",
-        "status": "mismatch",
-        "gtNorm": "22003768",
-        "extNorm": "YE009B0901",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row3:itemName",
@@ -588,7 +572,7 @@
       {
         "location": "row3:spec",
         "status": "ext_missing",
-        "gtNorm": "140mg 120c",
+        "gtNorm": "140mg120c",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -635,9 +619,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 16,
-      "structure": 5,
-      "layout": 2,
+      "recognition": 14,
+      "structure": 7,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

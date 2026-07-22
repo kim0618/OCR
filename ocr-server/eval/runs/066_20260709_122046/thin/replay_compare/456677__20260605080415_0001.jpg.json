@@ -200,8 +200,8 @@
           "spec": {
             "gt": "162.5mg/30정",
             "ext": "162.5mg/30정",
-            "gtNorm": "162.5mg/30정",
-            "extNorm": "162.5mg/30정",
+            "gtNorm": "1625mg30정",
+            "extNorm": "1625mg30정",
             "status": "match",
             "spurious": false
           },
@@ -247,18 +247,18 @@
           },
           "itemCode": {
             "gt": "07002001",
-            "ext": "ZUY604",
+            "ext": "04002427",
             "gtNorm": "07002001",
-            "extNorm": "ZUY604",
+            "extNorm": "04002427",
             "status": "mismatch",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "645305470",
-            "ext": "",
+            "ext": "645305470",
             "gtNorm": "645305470",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "645305470",
+            "status": "match",
             "spurious": false
           }
         }
@@ -372,8 +372,8 @@
           "spec": {
             "gt": "25mg/30캡슐",
             "ext": "25mg/30캠",
-            "gtNorm": "25mg/30캡슐",
-            "extNorm": "25mg/30캠",
+            "gtNorm": "25mg30캡슐",
+            "extNorm": "25mg30캠",
             "status": "mismatch",
             "spurious": false
           },
@@ -427,10 +427,10 @@
           },
           "insuranceCode": {
             "gt": "657202510",
-            "ext": "280714657202510 전/보 거래명세세는",
+            "ext": "657202510",
             "gtNorm": "657202510",
-            "extNorm": "280714657202510전보거래명세세는",
-            "status": "mismatch",
+            "extNorm": "657202510",
+            "status": "match",
             "spurious": false
           }
         }
@@ -505,18 +505,18 @@
           },
           "itemCode": {
             "gt": "03000139",
-            "ext": "B6007",
+            "ext": "03000139",
             "gtNorm": "03000139",
-            "extNorm": "B6007",
-            "status": "mismatch",
+            "extNorm": "03000139",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "644800460",
-            "ext": "44800460",
+            "ext": "644800460",
             "gtNorm": "644800460",
-            "extNorm": "44800460",
-            "status": "mismatch",
+            "extNorm": "644800460",
+            "status": "match",
             "spurious": false
           }
         }
@@ -524,13 +524,13 @@
     ],
     "cellCounts": {
       "scored": 40,
-      "match": 23,
-      "mismatch": 14,
-      "ext_missing": 3,
+      "match": 27,
+      "mismatch": 11,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.575
+    "cellAccuracy": 0.675
   },
   "buckets": {
     "defects": [
@@ -610,17 +610,9 @@
         "location": "row1:itemCode",
         "status": "mismatch",
         "gtNorm": "07002001",
-        "extNorm": "ZUY604",
+        "extNorm": "04002427",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row1:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "645305470",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "row2:expiryDate",
@@ -649,10 +641,10 @@
       {
         "location": "row6:spec",
         "status": "mismatch",
-        "gtNorm": "25mg/30캡슐",
-        "extNorm": "25mg/30캠",
+        "gtNorm": "25mg30캡슐",
+        "extNorm": "25mg30캠",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.82)"
+        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "row6:expiryDate",
@@ -671,14 +663,6 @@
         "reason": "char-level diff (sim=0.50)"
       },
       {
-        "location": "row6:insuranceCode",
-        "status": "mismatch",
-        "gtNorm": "657202510",
-        "extNorm": "280714657202510전보거래명세세는",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.56)"
-      },
-      {
         "location": "row4:expiryDate",
         "status": "mismatch",
         "gtNorm": "20280324",
@@ -693,27 +677,11 @@
         "extNorm": "B6007",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.80)"
-      },
-      {
-        "location": "row4:itemCode",
-        "status": "mismatch",
-        "gtNorm": "03000139",
-        "extNorm": "B6007",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row4:insuranceCode",
-        "status": "mismatch",
-        "gtNorm": "644800460",
-        "extNorm": "44800460",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.94)"
       }
     ],
     "bucketTally": {
-      "recognition": 17,
-      "structure": 5,
+      "recognition": 14,
+      "structure": 4,
       "layout": 0,
       "preprocessing": 0
     },

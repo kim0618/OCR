@@ -221,10 +221,10 @@
           },
           "spec": {
             "gt": "16P",
-            "ext": "",
+            "ext": "16포",
             "gtNorm": "16p",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "16포",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -269,10 +269,10 @@
           },
           "itemCode": {
             "gt": "04004738",
-            "ext": "SXN925",
+            "ext": "04004738",
             "gtNorm": "04004738",
-            "extNorm": "SXN925",
-            "status": "mismatch",
+            "extNorm": "04004738",
+            "status": "match",
             "spurious": false
           }
         }
@@ -299,10 +299,10 @@
           },
           "spec": {
             "gt": "16P",
-            "ext": "",
+            "ext": "16포",
             "gtNorm": "16p",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "16포",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -347,10 +347,10 @@
           },
           "itemCode": {
             "gt": "14002205",
-            "ext": "SXE3149",
+            "ext": "14002205",
             "gtNorm": "14002205",
-            "extNorm": "SXE3149",
-            "status": "mismatch",
+            "extNorm": "14002205",
+            "status": "match",
             "spurious": false
           }
         }
@@ -425,10 +425,10 @@
           },
           "itemCode": {
             "gt": "04004737",
-            "ext": "SX648",
+            "ext": "04004737",
             "gtNorm": "04004737",
-            "extNorm": "SX648",
-            "status": "mismatch",
+            "extNorm": "04004737",
+            "status": "match",
             "spurious": false
           }
         }
@@ -436,13 +436,13 @@
     ],
     "cellCounts": {
       "scored": 27,
-      "match": 16,
-      "mismatch": 8,
-      "ext_missing": 3,
+      "match": 19,
+      "mismatch": 7,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5925925925925926
+    "cellAccuracy": 0.7037037037037037
   },
   "buckets": {
     "defects": [
@@ -464,27 +464,19 @@
       },
       {
         "location": "row1:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "16p",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "16포",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "row1:manufacturingNo",
         "status": "mismatch",
         "gtNorm": "SXN925",
         "extNorm": "전문SXN925",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
-        "location": "row1:itemCode",
-        "status": "mismatch",
-        "gtNorm": "04004738",
-        "extNorm": "SXN925",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.86)"
       },
       {
         "location": "row2:itemName",
@@ -496,27 +488,19 @@
       },
       {
         "location": "row2:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "16p",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "16포",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "row2:manufacturingNo",
         "status": "mismatch",
         "gtNorm": "SXE3149",
         "extNorm": "전문SXE3149",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
-        "location": "row2:itemCode",
-        "status": "mismatch",
-        "gtNorm": "14002205",
-        "extNorm": "SXE3149",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.88)"
       },
       {
         "location": "row3:itemName",
@@ -539,22 +523,14 @@
         "status": "mismatch",
         "gtNorm": "SX648",
         "extNorm": "전문SX648",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
-        "location": "row3:itemCode",
-        "status": "mismatch",
-        "gtNorm": "04004737",
-        "extNorm": "SX648",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.83)"
       }
     ],
     "bucketTally": {
-      "recognition": 7,
-      "structure": 3,
-      "layout": 3,
+      "recognition": 9,
+      "structure": 1,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

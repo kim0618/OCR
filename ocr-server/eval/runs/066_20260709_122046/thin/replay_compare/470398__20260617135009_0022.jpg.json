@@ -209,7 +209,7 @@
           "spec": {
             "gt": "10mg 500T Bottle",
             "ext": "",
-            "gtNorm": "10mg 500t bottle",
+            "gtNorm": "10mg500tbottle",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -264,10 +264,10 @@
           },
           "insuranceCode": {
             "gt": "8806447018576644701850",
-            "ext": "",
+            "ext": "644701850",
             "gtNorm": "8806447018576644701850",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "644701850",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -295,8 +295,8 @@
           "spec": {
             "gt": "10 18mg 30P Pack",
             "ext": "원드론패취10 18mg 30P Pack",
-            "gtNorm": "10 18mg 30p pack",
-            "extNorm": "원드론패취10 18mg 30p pack",
+            "gtNorm": "1018mg30ppack",
+            "extNorm": "원드론패취1018mg30ppack",
             "status": "mismatch",
             "spurious": false
           },
@@ -381,7 +381,7 @@
           "spec": {
             "gt": "5 9mg 30P Pack",
             "ext": "",
-            "gtNorm": "5 9mg 30p pack",
+            "gtNorm": "59mg30ppack",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -448,8 +448,8 @@
     "cellCounts": {
       "scored": 30,
       "match": 13,
-      "mismatch": 7,
-      "ext_missing": 10,
+      "mismatch": 8,
+      "ext_missing": 9,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -484,7 +484,7 @@
       {
         "location": "row2:spec",
         "status": "ext_missing",
-        "gtNorm": "10mg 500t bottle",
+        "gtNorm": "10mg500tbottle",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -515,27 +515,27 @@
       },
       {
         "location": "row2:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "8806447018576644701850",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "644701850",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.58)"
       },
       {
         "location": "row1:itemName",
         "status": "mismatch",
         "gtNorm": "원드론패취1018mg30ppack",
         "extNorm": "028806447041529644704150원드론패취10",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['spec']"
       },
       {
         "location": "row1:spec",
         "status": "mismatch",
-        "gtNorm": "10 18mg 30p pack",
-        "extNorm": "원드론패취10 18mg 30p pack",
+        "gtNorm": "1018mg30ppack",
+        "extNorm": "원드론패취1018mg30ppack",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.86)"
+        "reason": "char-level diff (sim=0.84)"
       },
       {
         "location": "row1:manufacturingNo",
@@ -572,7 +572,7 @@
       {
         "location": "row3:spec",
         "status": "ext_missing",
-        "gtNorm": "5 9mg 30p pack",
+        "gtNorm": "59mg30ppack",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -612,8 +612,8 @@
     ],
     "bucketTally": {
       "recognition": 9,
-      "structure": 10,
-      "layout": 0,
+      "structure": 9,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

@@ -210,10 +210,10 @@
           },
           "spec": {
             "gt": "30T",
-            "ext": "",
+            "ext": "30T",
             "gtNorm": "30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -250,10 +250,10 @@
           },
           "insuranceCode": {
             "gt": "9308675",
-            "ext": "",
+            "ext": "641608090",
             "gtNorm": "9308675",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "641608090",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -320,10 +320,10 @@
           },
           "insuranceCode": {
             "gt": "9308681",
-            "ext": "",
+            "ext": "641608140",
             "gtNorm": "9308681",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "641608140",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -390,10 +390,10 @@
           },
           "insuranceCode": {
             "gt": "9308682",
-            "ext": "",
+            "ext": "641608130",
             "gtNorm": "9308682",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "641608130",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -422,7 +422,7 @@
           "spec": {
             "gt": "-",
             "ext": "",
-            "gtNorm": "-",
+            "gtNorm": "",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -464,13 +464,13 @@
     ],
     "cellCounts": {
       "scored": 31,
-      "match": 15,
-      "mismatch": 3,
-      "ext_missing": 13,
+      "match": 16,
+      "mismatch": 6,
+      "ext_missing": 9,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4838709677419355
+    "cellAccuracy": 0.5161290322580645
   },
   "buckets": {
     "defects": [
@@ -515,20 +515,12 @@
         "reason": "char-level diff (sim=0.93)"
       },
       {
-        "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row1:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "9308675",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "641608090",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row2:itemName",
@@ -548,11 +540,11 @@
       },
       {
         "location": "row2:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "9308681",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "641608140",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row3:itemName",
@@ -572,11 +564,11 @@
       },
       {
         "location": "row3:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "9308682",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "641608130",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row4:itemName",
@@ -597,7 +589,7 @@
       {
         "location": "row4:spec",
         "status": "ext_missing",
-        "gtNorm": "-",
+        "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -636,8 +628,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 15,
+      "recognition": 8,
+      "structure": 11,
       "layout": 0,
       "preprocessing": 0
     },

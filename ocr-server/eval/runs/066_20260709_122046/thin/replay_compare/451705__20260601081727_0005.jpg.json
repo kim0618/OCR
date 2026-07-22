@@ -408,10 +408,10 @@
           },
           "spec": {
             "gt": "PTP",
-            "ext": "",
+            "ext": "100T",
             "gtNorm": "ptp",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "100t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -464,10 +464,10 @@
           },
           "insuranceCode": {
             "gt": "644701930",
-            "ext": "",
+            "ext": "644701930",
             "gtNorm": "644701930",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "644701930",
+            "status": "match",
             "spurious": false
           }
         }
@@ -496,7 +496,7 @@
             "gt": "Bottle",
             "ext": "500T Bottle",
             "gtNorm": "bottle",
-            "extNorm": "500t bottle",
+            "extNorm": "500tbottle",
             "status": "mismatch",
             "spurious": false
           },
@@ -580,10 +580,10 @@
           },
           "spec": {
             "gt": "Bottle",
-            "ext": "",
+            "ext": "28T",
             "gtNorm": "bottle",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "28t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -636,10 +636,10 @@
           },
           "insuranceCode": {
             "gt": "644701860",
-            "ext": "",
+            "ext": "644701860",
             "gtNorm": "644701860",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "644701860",
+            "status": "match",
             "spurious": false
           }
         }
@@ -668,7 +668,7 @@
             "gt": "Bottle",
             "ext": "프라네어캡112.5mg 30C Bott le",
             "gtNorm": "bottle",
-            "extNorm": "프라네어캡112.5mg 30c bott le",
+            "extNorm": "프라네어캡1125mg30cbottle",
             "status": "mismatch",
             "spurious": false
           },
@@ -840,7 +840,7 @@
             "gt": "Tube",
             "ext": "5mg 50g Tube",
             "gtNorm": "tube",
-            "extNorm": "5mg 50g tube",
+            "extNorm": "5mg50gtube",
             "status": "mismatch",
             "spurious": false
           },
@@ -1077,13 +1077,13 @@
     ],
     "cellCounts": {
       "scored": 100,
-      "match": 60,
-      "mismatch": 20,
-      "ext_missing": 20,
+      "match": 62,
+      "mismatch": 22,
+      "ext_missing": 16,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.6
+    "cellAccuracy": 0.62
   },
   "buckets": {
     "defects": [
@@ -1161,11 +1161,11 @@
       },
       {
         "location": "row12:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "ptp",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "100t",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row12:expiryDate",
@@ -1184,14 +1184,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row12:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "644701930",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row4:itemName",
         "status": "mismatch",
         "gtNorm": "조인스정200mg500t",
@@ -1203,9 +1195,9 @@
         "location": "row4:spec",
         "status": "mismatch",
         "gtNorm": "bottle",
-        "extNorm": "500t bottle",
+        "extNorm": "500tbottle",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.71)"
+        "reason": "char-level diff (sim=0.75)"
       },
       {
         "location": "row4:unitPrice",
@@ -1233,11 +1225,11 @@
       },
       {
         "location": "row14:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "bottle",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "28t",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row14:expiryDate",
@@ -1256,14 +1248,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row14:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "644701860",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row6:itemName",
         "status": "mismatch",
         "gtNorm": "프라네어캡슐1125mg300",
@@ -1275,7 +1259,7 @@
         "location": "row6:spec",
         "status": "mismatch",
         "gtNorm": "bottle",
-        "extNorm": "프라네어캡112.5mg 30c bott le",
+        "extNorm": "프라네어캡1125mg30cbottle",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
@@ -1339,9 +1323,9 @@
         "location": "row8:spec",
         "status": "mismatch",
         "gtNorm": "tube",
-        "extNorm": "5mg 50g tube",
+        "extNorm": "5mg50gtube",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
+        "reason": "char-level diff (sim=0.57)"
       },
       {
         "location": "row8:itemCode",
@@ -1441,8 +1425,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 23,
-      "structure": 20,
+      "recognition": 25,
+      "structure": 16,
       "layout": 1,
       "preprocessing": 0
     },

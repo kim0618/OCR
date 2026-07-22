@@ -295,10 +295,10 @@
           },
           "spec": {
             "gt": "30T",
-            "ext": "",
+            "ext": "30T",
             "gtNorm": "30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -343,18 +343,18 @@
           },
           "itemCode": {
             "gt": "12000690",
-            "ext": "FAWD201",
+            "ext": "12000690",
             "gtNorm": "12000690",
-            "extNorm": "FAWD201",
-            "status": "mismatch",
+            "extNorm": "12000690",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "645404310",
-            "ext": "2",
+            "ext": "645404310",
             "gtNorm": "645404310",
-            "extNorm": "2",
-            "status": "mismatch",
+            "extNorm": "645404310",
+            "status": "match",
             "spurious": false
           }
         }
@@ -362,13 +362,13 @@
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 13,
-      "mismatch": 6,
-      "ext_missing": 1,
+      "match": 16,
+      "mismatch": 4,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.65
+    "cellAccuracy": 0.8
   },
   "buckets": {
     "defects": [
@@ -421,14 +421,6 @@
         "reason": "char-level diff (sim=0.82)"
       },
       {
-        "location": "row2:spec",
-        "status": "ext_missing",
-        "gtNorm": "30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row2:quantity",
         "status": "mismatch",
         "gtNorm": "50",
@@ -441,30 +433,14 @@
         "status": "mismatch",
         "gtNorm": "FAWD201",
         "extNorm": "1377285FAWD201",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
-        "location": "row2:itemCode",
-        "status": "mismatch",
-        "gtNorm": "12000690",
-        "extNorm": "FAWD201",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row2:insuranceCode",
-        "status": "mismatch",
-        "gtNorm": "645404310",
-        "extNorm": "2",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.67)"
       }
     ],
     "bucketTally": {
-      "recognition": 8,
-      "structure": 2,
-      "layout": 1,
+      "recognition": 7,
+      "structure": 1,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

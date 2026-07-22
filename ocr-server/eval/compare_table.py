@@ -150,6 +150,8 @@ def compare_table(gt_rows: list[dict[str, Any]], ext_rows: list[dict[str, Any]],
                 status = "mismatch"
             spurious = N.is_empty(gv) and not N.is_empty(ev)
             cells[key] = {"gt": gv, "ext": ev, "gtNorm": gn, "extNorm": en, "status": status, "spurious": spurious}
+            if key in C.MEASUREMENT_KEYS:
+                continue  # 컬럼별 %만 리포트, 헤드라인 cellAccuracy/spurious/rowMatch엔 불참
             if status != "gt_empty":
                 cell_counts["scored"] += 1
             cell_counts[status] = cell_counts.get(status, 0) + 1
@@ -176,6 +178,8 @@ def compare_table(gt_rows: list[dict[str, Any]], ext_rows: list[dict[str, Any]],
                 "status": status,
                 "spurious": False,
             }
+            if key in C.MEASUREMENT_KEYS:
+                continue  # 측정 컬럼은 헤드라인 집계 불참(위와 동일)
             if status != "gt_empty":
                 cell_counts["scored"] += 1
             cell_counts[status] += 1

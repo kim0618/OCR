@@ -224,10 +224,10 @@
           },
           "spec": {
             "gt": "1000C",
-            "ext": "",
+            "ext": "1000C",
             "gtNorm": "1000c",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "1000c",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -288,7 +288,7 @@
             "gt": "2T",
             "ext": "+ 2T*50 개 V",
             "gtNorm": "2t",
-            "extNorm": "+ 2t*50 개 v",
+            "extNorm": "2t50개v",
             "status": "mismatch",
             "spurious": false
           },
@@ -349,8 +349,8 @@
           "spec": {
             "gt": "2T*50",
             "ext": "2T*50 개 V",
-            "gtNorm": "2t*50",
-            "extNorm": "2t*50 개 v",
+            "gtNorm": "2t50",
+            "extNorm": "2t50개v",
             "status": "mismatch",
             "spurious": false
           },
@@ -412,7 +412,7 @@
             "gt": "60G",
             "ext": "↑ 60G 개 V",
             "gtNorm": "60g",
-            "extNorm": "↑ 60g 개 v",
+            "extNorm": "60g개v",
             "status": "mismatch",
             "spurious": false
           },
@@ -474,7 +474,7 @@
             "gt": "60G",
             "ext": "60G 개 √",
             "gtNorm": "60g",
-            "extNorm": "60g 개 √",
+            "extNorm": "60g개",
             "status": "mismatch",
             "spurious": false
           },
@@ -536,7 +536,7 @@
             "gt": "10G",
             "ext": "10G 개",
             "gtNorm": "10g",
-            "extNorm": "10g 개",
+            "extNorm": "10g개",
             "status": "mismatch",
             "spurious": false
           },
@@ -577,13 +577,13 @@
     ],
     "cellCounts": {
       "scored": 42,
-      "match": 26,
+      "match": 27,
       "mismatch": 11,
-      "ext_missing": 5,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.6190476190476191
+    "cellAccuracy": 0.6428571428571429
   },
   "buckets": {
     "defects": [
@@ -636,14 +636,6 @@
         "reason": "gt cell appears in column(s) ['itemNameMaster']"
       },
       {
-        "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "1000c",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row1:unitPrice",
         "status": "mismatch",
         "gtNorm": "17373",
@@ -663,9 +655,9 @@
         "location": "row2:spec",
         "status": "mismatch",
         "gtNorm": "2t",
-        "extNorm": "+ 2t*50 개 v",
+        "extNorm": "2t50개v",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "row2:unitPrice",
@@ -694,10 +686,10 @@
       {
         "location": "row3:spec",
         "status": "mismatch",
-        "gtNorm": "2t*50",
-        "extNorm": "2t*50 개 v",
+        "gtNorm": "2t50",
+        "extNorm": "2t50개v",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.71)"
+        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "row3:unitPrice",
@@ -719,17 +711,17 @@
         "location": "row4:spec",
         "status": "mismatch",
         "gtNorm": "60g",
-        "extNorm": "↑ 60g 개 v",
+        "extNorm": "60g개v",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
+        "reason": "char-level diff (sim=0.75)"
       },
       {
         "location": "row5:spec",
         "status": "mismatch",
         "gtNorm": "60g",
-        "extNorm": "60g 개 √",
+        "extNorm": "60g개",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.60)"
+        "reason": "char-level diff (sim=0.86)"
       },
       {
         "location": "row5:unitPrice",
@@ -751,14 +743,14 @@
         "location": "row6:spec",
         "status": "mismatch",
         "gtNorm": "10g",
-        "extNorm": "10g 개",
+        "extNorm": "10g개",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.75)"
+        "reason": "char-level diff (sim=0.86)"
       }
     ],
     "bucketTally": {
       "recognition": 9,
-      "structure": 6,
+      "structure": 5,
       "layout": 6,
       "preprocessing": 0
     },

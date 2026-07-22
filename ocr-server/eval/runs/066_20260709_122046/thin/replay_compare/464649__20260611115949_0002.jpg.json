@@ -204,10 +204,10 @@
           },
           "spec": {
             "gt": "11T(PTP)",
-            "ext": "",
-            "gtNorm": "11t(ptp)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "11T",
+            "gtNorm": "11tptp",
+            "extNorm": "11t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -283,8 +283,8 @@
           "spec": {
             "gt": "30T(병)",
             "ext": "2 10 환인)아토르스타정10mg 30T(병)",
-            "gtNorm": "30t(병)",
-            "extNorm": "2 10 환인)아토르스타정10mg 30t(병)",
+            "gtNorm": "30t병",
+            "extNorm": "210환인아토르스타정10mg30t병",
             "status": "mismatch",
             "spurious": false
           },
@@ -368,10 +368,10 @@
           },
           "spec": {
             "gt": "30T(병)",
-            "ext": "",
-            "gtNorm": "30t(병)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "30T",
+            "gtNorm": "30t병",
+            "extNorm": "30t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -424,10 +424,10 @@
           },
           "insuranceCode": {
             "gt": "657203640",
-            "ext": "",
+            "ext": "657203640",
             "gtNorm": "657203640",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "657203640",
+            "status": "match",
             "spurious": false
           }
         }
@@ -455,8 +455,8 @@
           "spec": {
             "gt": "30T(병)",
             "ext": "4 67환인)그란닥신정50mg 30T(병)",
-            "gtNorm": "30t(병)",
-            "extNorm": "4 67환인)그란닥신정50mg 30t(병)",
+            "gtNorm": "30t병",
+            "extNorm": "467환인그란닥신정50mg30t병",
             "status": "mismatch",
             "spurious": false
           },
@@ -542,7 +542,7 @@
           "spec": {
             "gt": "30T(병)",
             "ext": "",
-            "gtNorm": "30t(병)",
+            "gtNorm": "30t병",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -608,13 +608,13 @@
     ],
     "cellCounts": {
       "scored": 49,
-      "match": 14,
-      "mismatch": 15,
-      "ext_missing": 20,
+      "match": 15,
+      "mismatch": 17,
+      "ext_missing": 17,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.2857142857142857
+    "cellAccuracy": 0.30612244897959184
   },
   "buckets": {
     "defects": [
@@ -668,11 +668,11 @@
       },
       {
         "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "11t(ptp)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "11tptp",
+        "extNorm": "11t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "row1:quantity",
@@ -725,8 +725,8 @@
       {
         "location": "row2:spec",
         "status": "mismatch",
-        "gtNorm": "30t(병)",
-        "extNorm": "2 10 환인)아토르스타정10mg 30t(병)",
+        "gtNorm": "30t병",
+        "extNorm": "210환인아토르스타정10mg30t병",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
@@ -764,11 +764,11 @@
       },
       {
         "location": "row3:spec",
-        "status": "ext_missing",
-        "gtNorm": "30t(병)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "30t병",
+        "extNorm": "30t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.86)"
       },
       {
         "location": "row3:quantity",
@@ -811,14 +811,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row3:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "657203640",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row4:itemName",
         "status": "mismatch",
         "gtNorm": "환인그란닥신정50mg",
@@ -829,8 +821,8 @@
       {
         "location": "row4:spec",
         "status": "mismatch",
-        "gtNorm": "30t(병)",
-        "extNorm": "4 67환인)그란닥신정50mg 30t(병)",
+        "gtNorm": "30t병",
+        "extNorm": "467환인그란닥신정50mg30t병",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
@@ -877,7 +869,7 @@
       {
         "location": "row5:spec",
         "status": "ext_missing",
-        "gtNorm": "30t(병)",
+        "gtNorm": "30t병",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -940,8 +932,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 17,
-      "structure": 22,
+      "recognition": 19,
+      "structure": 19,
       "layout": 1,
       "preprocessing": 0
     },

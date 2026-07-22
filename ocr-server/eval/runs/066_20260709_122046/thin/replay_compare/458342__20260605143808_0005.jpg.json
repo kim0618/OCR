@@ -202,10 +202,10 @@
           },
           "spec": {
             "gt": "500T",
-            "ext": "",
+            "ext": "500T",
             "gtNorm": "500t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "500t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -242,10 +242,10 @@
           },
           "itemCode": {
             "gt": "097430",
-            "ext": "BNTS0OT",
+            "ext": "097430",
             "gtNorm": "097430",
-            "extNorm": "BNTS0OT",
-            "status": "mismatch",
+            "extNorm": "097430",
+            "status": "match",
             "spurious": false
           }
         }
@@ -272,10 +272,10 @@
           },
           "spec": {
             "gt": "30T",
-            "ext": "",
+            "ext": "30T",
             "gtNorm": "30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -312,9 +312,9 @@
           },
           "itemCode": {
             "gt": "8806417019824",
-            "ext": "FNST30T",
+            "ext": "8806437025614",
             "gtNorm": "8806417019824",
-            "extNorm": "FNST30T",
+            "extNorm": "8806437025614",
             "status": "mismatch",
             "spurious": false
           }
@@ -522,10 +522,10 @@
           },
           "itemCode": {
             "gt": "8806417029212",
-            "ext": "NOAT28T 1",
+            "ext": "8806417029212",
             "gtNorm": "8806417029212",
-            "extNorm": "NOAT28T1",
-            "status": "mismatch",
+            "extNorm": "8806417029212",
+            "status": "match",
             "spurious": false
           }
         }
@@ -592,10 +592,10 @@
           },
           "itemCode": {
             "gt": "12000391",
-            "ext": "PVTC20G",
+            "ext": "12000391",
             "gtNorm": "12000391",
-            "extNorm": "PVTC20G",
-            "status": "mismatch",
+            "extNorm": "12000391",
+            "status": "match",
             "spurious": false
           }
         }
@@ -603,13 +603,13 @@
     ],
     "cellCounts": {
       "scored": 48,
-      "match": 25,
-      "mismatch": 6,
-      "ext_missing": 17,
+      "match": 30,
+      "mismatch": 3,
+      "ext_missing": 15,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5208333333333334
+    "cellAccuracy": 0.625
   },
   "buckets": {
     "defects": [
@@ -662,28 +662,12 @@
         "reason": "extractor invented rows ['7', '8', '9']"
       },
       {
-        "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "500t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row1:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "BNT500T",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:itemCode",
-        "status": "mismatch",
-        "gtNorm": "097430",
-        "extNorm": "BNTS0OT",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
       },
       {
         "location": "row2:itemNameMaster",
@@ -694,28 +678,20 @@
         "reason": "char-level diff (sim=0.67)"
       },
       {
-        "location": "row2:spec",
+        "location": "row2:manufacturingNo",
         "status": "ext_missing",
-        "gtNorm": "30t",
+        "gtNorm": "FNST30T",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:manufacturingNo",
-        "status": "ext_missing",
-        "gtNorm": "FNST30T",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
         "location": "row2:itemCode",
         "status": "mismatch",
         "gtNorm": "8806417019824",
-        "extNorm": "FNST30T",
+        "extNorm": "8806437025614",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.69)"
       },
       {
         "location": "row3:itemName",
@@ -814,14 +790,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row5:itemCode",
-        "status": "mismatch",
-        "gtNorm": "8806417029212",
-        "extNorm": "NOAT28T1",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
         "location": "row6:spec",
         "status": "ext_missing",
         "gtNorm": "1ea",
@@ -834,22 +802,14 @@
         "status": "ext_missing",
         "gtNorm": "PVTC20G",
         "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
-        "location": "row6:itemCode",
-        "status": "mismatch",
-        "gtNorm": "12000391",
-        "extNorm": "PVTC20G",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 11,
+      "recognition": 8,
       "structure": 16,
-      "layout": 2,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

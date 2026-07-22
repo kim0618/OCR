@@ -196,8 +196,8 @@
           "spec": {
             "gt": "30T/PAC",
             "ext": "30T/PAC PAC",
-            "gtNorm": "30t/pac",
-            "extNorm": "30t/pac pac",
+            "gtNorm": "30tpac",
+            "extNorm": "30tpacpac",
             "status": "mismatch",
             "spurious": false
           },
@@ -243,10 +243,10 @@
           },
           "itemCode": {
             "gt": "05005947",
-            "ext": "GMT26523",
+            "ext": "05005947",
             "gtNorm": "05005947",
-            "extNorm": "GMT26523",
-            "status": "mismatch",
+            "extNorm": "05005947",
+            "status": "match",
             "spurious": false
           }
         }
@@ -254,13 +254,13 @@
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 4,
-      "mismatch": 4,
+      "match": 5,
+      "mismatch": 3,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4444444444444444
+    "cellAccuracy": 0.5555555555555556
   },
   "buckets": {
     "defects": [
@@ -323,10 +323,10 @@
       {
         "location": "row1:spec",
         "status": "mismatch",
-        "gtNorm": "30t/pac",
-        "extNorm": "30t/pac pac",
+        "gtNorm": "30tpac",
+        "extNorm": "30tpacpac",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.78)"
+        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "row1:unitPrice",
@@ -349,22 +349,14 @@
         "status": "ext_missing",
         "gtNorm": "GMT26523",
         "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
-        "location": "row1:itemCode",
-        "status": "mismatch",
-        "gtNorm": "05005947",
-        "extNorm": "GMT26523",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 3,
-      "structure": 6,
-      "layout": 3,
+      "recognition": 2,
+      "structure": 7,
+      "layout": 2,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

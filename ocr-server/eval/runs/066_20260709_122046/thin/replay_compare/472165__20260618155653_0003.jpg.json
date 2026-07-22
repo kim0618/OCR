@@ -206,10 +206,10 @@
           },
           "spec": {
             "gt": "5/500T",
-            "ext": "",
-            "gtNorm": "5/500t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "500T",
+            "gtNorm": "5500t",
+            "extNorm": "500t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -254,18 +254,18 @@
           },
           "itemCode": {
             "gt": "8806416000359",
-            "ext": "E07291",
+            "ext": "8806416000359",
             "gtNorm": "8806416000359",
-            "extNorm": "E07291",
-            "status": "mismatch",
+            "extNorm": "8806416000359",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "641600030",
-            "ext": "",
+            "ext": "641600030",
             "gtNorm": "641600030",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "641600030",
+            "status": "match",
             "spurious": false
           }
         }
@@ -273,13 +273,13 @@
     ],
     "cellCounts": {
       "scored": 10,
-      "match": 4,
+      "match": 6,
       "mismatch": 4,
-      "ext_missing": 2,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4
+    "cellAccuracy": 0.6
   },
   "buckets": {
     "defects": [
@@ -333,11 +333,11 @@
       },
       {
         "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "5/500t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "5500t",
+        "extNorm": "500t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.89)"
       },
       {
         "location": "row1:quantity",
@@ -360,30 +360,14 @@
         "status": "mismatch",
         "gtNorm": "E07291",
         "extNorm": "943500",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
-        "location": "row1:itemCode",
-        "status": "mismatch",
-        "gtNorm": "8806416000359",
-        "extNorm": "E07291",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row1:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "641600030",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 6,
-      "structure": 5,
-      "layout": 1,
+      "recognition": 7,
+      "structure": 3,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

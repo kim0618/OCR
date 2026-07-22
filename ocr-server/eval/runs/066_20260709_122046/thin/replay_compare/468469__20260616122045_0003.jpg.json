@@ -315,9 +315,9 @@
           "spec": {
             "gt": ":30T",
             "ext": "30T",
-            "gtNorm": ":30t",
+            "gtNorm": "30t",
             "extNorm": "30t",
-            "status": "mismatch",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -370,10 +370,10 @@
           },
           "insuranceCode": {
             "gt": "657203650",
-            "ext": "657203650 에프람정10mg",
+            "ext": "657203650",
             "gtNorm": "657203650",
-            "extNorm": "657203650에프람정10MG",
-            "status": "mismatch",
+            "extNorm": "657203650",
+            "status": "match",
             "spurious": false
           }
         }
@@ -628,10 +628,10 @@
           },
           "insuranceCode": {
             "gt": "657200880",
-            "ext": "657200880 페리올정3mg",
+            "ext": "657200880",
             "gtNorm": "657200880",
-            "extNorm": "657200880페리올정3MG",
-            "status": "mismatch",
+            "extNorm": "657200880",
+            "status": "match",
             "spurious": false
           }
         }
@@ -916,10 +916,10 @@
           },
           "spec": {
             "gt": "30C",
-            "ext": "",
+            "ext": "1430C",
             "gtNorm": "30c",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "1430c",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -1069,13 +1069,13 @@
     ],
     "cellCounts": {
       "scored": 100,
-      "match": 75,
-      "mismatch": 24,
-      "ext_missing": 1,
+      "match": 78,
+      "mismatch": 22,
+      "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.75
+    "cellAccuracy": 0.78
   },
   "buckets": {
     "defects": [
@@ -1136,28 +1136,12 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row2:spec",
-        "status": "mismatch",
-        "gtNorm": ":30t",
-        "extNorm": "30t",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.86)"
-      },
-      {
         "location": "row2:amount",
         "status": "mismatch",
         "gtNorm": "50782",
         "extNorm": "55860",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row2:insuranceCode",
-        "status": "mismatch",
-        "gtNorm": "657203650",
-        "extNorm": "657203650에프람정10MG",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.69)"
       },
       {
         "location": "row3:amount",
@@ -1206,14 +1190,6 @@
         "extNorm": "121600",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.50)"
-      },
-      {
-        "location": "row5:insuranceCode",
-        "status": "mismatch",
-        "gtNorm": "657200880",
-        "extNorm": "657200880페리올정3MG",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.72)"
       },
       {
         "location": "row6:spec",
@@ -1281,11 +1257,11 @@
       },
       {
         "location": "row9:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "30c",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "1430c",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.75)"
       },
       {
         "location": "row9:amount",
@@ -1321,8 +1297,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 25,
-      "structure": 3,
+      "recognition": 23,
+      "structure": 2,
       "layout": 2,
       "preprocessing": 0
     },

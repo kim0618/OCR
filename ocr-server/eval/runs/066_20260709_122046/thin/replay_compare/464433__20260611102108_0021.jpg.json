@@ -208,10 +208,10 @@
           },
           "spec": {
             "gt": "100C",
-            "ext": "",
+            "ext": "100C",
             "gtNorm": "100c",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "100c",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -256,10 +256,10 @@
           },
           "insuranceCode": {
             "gt": "25GDC252",
-            "ext": "",
+            "ext": "693900080",
             "gtNorm": "25GDC252",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "693900080",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -278,18 +278,18 @@
           },
           "itemNameMaster": {
             "gt": "고덱스캡슐(병)(셀트리온)",
-            "ext": "고덱스캡슐(병)(셀트리온)",
+            "ext": "고덱스캡슐(셀트리온)",
             "gtNorm": "고덱스캡슐(병)(셀트리온)",
-            "extNorm": "고덱스캡슐(병)(셀트리온)",
-            "status": "match",
+            "extNorm": "고덱스캡슐(셀트리온)",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
             "gt": "300C",
-            "ext": "",
+            "ext": "300C",
             "gtNorm": "300c",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "300c",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -326,18 +326,18 @@
           },
           "itemCode": {
             "gt": "05005969",
-            "ext": "05005969",
+            "ext": "22005376",
             "gtNorm": "05005969",
-            "extNorm": "05005969",
-            "status": "match",
+            "extNorm": "22005376",
+            "status": "mismatch",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "25GDC306",
-            "ext": "",
+            "ext": "693900080",
             "gtNorm": "25GDC306",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "693900080",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -365,7 +365,7 @@
           "spec": {
             "gt": "100C-",
             "ext": "",
-            "gtNorm": "100c-",
+            "gtNorm": "100c",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -424,8 +424,8 @@
     "cellCounts": {
       "scored": 27,
       "match": 9,
-      "mismatch": 6,
-      "ext_missing": 12,
+      "mismatch": 10,
+      "ext_missing": 8,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -490,14 +490,6 @@
         "reason": "char-level diff (sim=0.69)"
       },
       {
-        "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "100c",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row1:quantity",
         "status": "mismatch",
         "gtNorm": "60",
@@ -531,11 +523,11 @@
       },
       {
         "location": "row1:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "25GDC252",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "693900080",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row2:itemName",
@@ -546,12 +538,12 @@
         "reason": "char-level diff (sim=0.62)"
       },
       {
-        "location": "row2:spec",
-        "status": "ext_missing",
-        "gtNorm": "300c",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "location": "row2:itemNameMaster",
+        "status": "mismatch",
+        "gtNorm": "고덱스캡슐(병)(셀트리온)",
+        "extNorm": "고덱스캡슐(셀트리온)",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.88)"
       },
       {
         "location": "row2:expiryDate",
@@ -562,12 +554,20 @@
         "reason": "gt cell absent in extracted row"
       },
       {
+        "location": "row2:itemCode",
+        "status": "mismatch",
+        "gtNorm": "05005969",
+        "extNorm": "22005376",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.50)"
+      },
+      {
         "location": "row2:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "25GDC306",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "693900080",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row3:itemName",
@@ -588,7 +588,7 @@
       {
         "location": "row3:spec",
         "status": "ext_missing",
-        "gtNorm": "100c-",
+        "gtNorm": "100c",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -619,8 +619,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 8,
-      "structure": 15,
+      "recognition": 12,
+      "structure": 11,
       "layout": 0,
       "preprocessing": 0
     },

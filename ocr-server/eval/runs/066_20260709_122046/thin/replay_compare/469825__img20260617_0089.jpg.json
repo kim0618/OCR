@@ -219,10 +219,10 @@
           },
           "spec": {
             "gt": "300T",
-            "ext": "",
+            "ext": "300T",
             "gtNorm": "300t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "300t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -275,10 +275,10 @@
           },
           "insuranceCode": {
             "gt": "1671701750",
-            "ext": "1 671701750",
+            "ext": "8806717017537",
             "gtNorm": "1671701750",
-            "extNorm": "1671701750",
-            "status": "match",
+            "extNorm": "8806717017537",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -287,8 +287,8 @@
     "cellCounts": {
       "scored": 10,
       "match": 5,
-      "mismatch": 3,
-      "ext_missing": 2,
+      "mismatch": 4,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
@@ -329,14 +329,6 @@
         "reason": "char-level diff (sim=0.83)"
       },
       {
-        "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "300t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row1:quantity",
         "status": "mismatch",
         "gtNorm": "10",
@@ -359,11 +351,19 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row1:insuranceCode",
+        "status": "mismatch",
+        "gtNorm": "1671701750",
+        "extNorm": "8806717017537",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.70)"
       }
     ],
     "bucketTally": {
-      "recognition": 6,
-      "structure": 2,
+      "recognition": 7,
+      "structure": 1,
       "layout": 0,
       "preprocessing": 0
     },

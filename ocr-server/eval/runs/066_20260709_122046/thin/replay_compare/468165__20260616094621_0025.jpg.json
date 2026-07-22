@@ -200,7 +200,7 @@
     "rows": [
       {
         "rowIndex": "1",
-        "rowMatch": false,
+        "rowMatch": true,
         "cells": {
           "itemName": {
             "gt": "로티브정 10/5mg 30T(병)",
@@ -220,10 +220,10 @@
           },
           "spec": {
             "gt": "30T",
-            "ext": "",
+            "ext": "30T",
             "gtNorm": "30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -354,10 +354,10 @@
           },
           "insuranceCode": {
             "gt": "642701320",
-            "ext": "",
+            "ext": "642701320",
             "gtNorm": "642701320",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "642701320",
+            "status": "match",
             "spurious": false
           }
         }
@@ -604,10 +604,10 @@
           },
           "insuranceCode": {
             "gt": "642705730",
-            "ext": "",
+            "ext": "643505990",
             "gtNorm": "642705730",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "643505990",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -690,10 +690,10 @@
           },
           "insuranceCode": {
             "gt": "642706790",
-            "ext": "",
+            "ext": "642706790",
             "gtNorm": "642706790",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "642706790",
+            "status": "match",
             "spurious": false
           }
         }
@@ -720,10 +720,10 @@
           },
           "spec": {
             "gt": "30C",
-            "ext": "",
+            "ext": "30C",
             "gtNorm": "30c",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30c",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -776,17 +776,17 @@
           },
           "insuranceCode": {
             "gt": "642706780",
-            "ext": "",
+            "ext": "642706780",
             "gtNorm": "642706780",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "642706780",
+            "status": "match",
             "spurious": false
           }
         }
       },
       {
         "rowIndex": "11",
-        "rowMatch": false,
+        "rowMatch": true,
         "cells": {
           "itemName": {
             "gt": "시트디엠메트정 50/1000mg 30T",
@@ -806,10 +806,10 @@
           },
           "spec": {
             "gt": "30T",
-            "ext": "",
+            "ext": "30T",
             "gtNorm": "30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -886,7 +886,7 @@
             "gt": "30T",
             "ext": "거래선 코드 1020610",
             "gtNorm": "30t",
-            "extNorm": "거래선 코드 1020610",
+            "extNorm": "거래선코드1020610",
             "status": "mismatch",
             "spurious": false
           },
@@ -1022,13 +1022,13 @@
     ],
     "cellCounts": {
       "scored": 95,
-      "match": 38,
-      "mismatch": 13,
-      "ext_missing": 44,
+      "match": 44,
+      "mismatch": 14,
+      "ext_missing": 37,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4
+    "cellAccuracy": 0.4631578947368421
   },
   "buckets": {
     "defects": [
@@ -1081,14 +1081,6 @@
         "reason": "extractor invented rows ['2', '9', '11']"
       },
       {
-        "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row3:spec",
         "status": "ext_missing",
         "gtNorm": "100t",
@@ -1132,14 +1124,6 @@
         "location": "row3:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "2F001",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "642701320",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -1290,11 +1274,11 @@
       },
       {
         "location": "row6:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "642705730",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "643505990",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.56)"
       },
       {
         "location": "row7:itemName",
@@ -1353,28 +1337,12 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row7:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "642706790",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row8:itemName",
         "status": "mismatch",
         "gtNorm": "시렌탈서방캡슐200mg30c",
         "extNorm": "시렌탈서방캡술200mg",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.81)"
-      },
-      {
-        "location": "row8:spec",
-        "status": "ext_missing",
-        "gtNorm": "30c",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row8:quantity",
@@ -1417,22 +1385,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row8:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "642706780",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row11:spec",
-        "status": "ext_missing",
-        "gtNorm": "30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row12:itemName",
         "status": "mismatch",
         "gtNorm": "아토스타정20mg30t",
@@ -1444,7 +1396,7 @@
         "location": "row12:spec",
         "status": "mismatch",
         "gtNorm": "30t",
-        "extNorm": "거래선 코드 1020610",
+        "extNorm": "거래선코드1020610",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
@@ -1538,8 +1490,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 17,
-      "structure": 43,
+      "recognition": 18,
+      "structure": 36,
       "layout": 3,
       "preprocessing": 0
     },

@@ -217,8 +217,8 @@
           "spec": {
             "gt": "100T(병)",
             "ext": "100T(병)",
-            "gtNorm": "100t(병)",
-            "extNorm": "100t(병)",
+            "gtNorm": "100t병",
+            "extNorm": "100t병",
             "status": "match",
             "spurious": false
           },
@@ -303,8 +303,8 @@
           "spec": {
             "gt": "200T(병)",
             "ext": "200T(병)",
-            "gtNorm": "200t(병)",
-            "extNorm": "200t(병)",
+            "gtNorm": "200t병",
+            "extNorm": "200t병",
             "status": "match",
             "spurious": false
           },
@@ -389,7 +389,7 @@
           "spec": {
             "gt": "100T(PTP)",
             "ext": "",
-            "gtNorm": "100t(ptp)",
+            "gtNorm": "100tptp",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -444,10 +444,10 @@
           },
           "insuranceCode": {
             "gt": "651200040",
-            "ext": "",
+            "ext": "651200040",
             "gtNorm": "651200040",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "651200040",
+            "status": "match",
             "spurious": false
           }
         }
@@ -475,8 +475,8 @@
           "spec": {
             "gt": "500T(병)",
             "ext": "500T(병)",
-            "gtNorm": "500t(병)",
-            "extNorm": "500t(병)",
+            "gtNorm": "500t병",
+            "extNorm": "500t병",
             "status": "match",
             "spurious": false
           },
@@ -560,10 +560,10 @@
           },
           "spec": {
             "gt": "300T(병)",
-            "ext": "",
-            "gtNorm": "300t(병)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "300T",
+            "gtNorm": "300t병",
+            "extNorm": "300t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -608,18 +608,18 @@
           },
           "itemCode": {
             "gt": "03000127",
-            "ext": "158433",
+            "ext": "03000127",
             "gtNorm": "03000127",
-            "extNorm": "158433",
-            "status": "mismatch",
+            "extNorm": "03000127",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "657200220",
-            "ext": "",
+            "ext": "657200220",
             "gtNorm": "657200220",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "657200220",
+            "status": "match",
             "spurious": false
           }
         }
@@ -647,8 +647,8 @@
           "spec": {
             "gt": "500T(병)",
             "ext": "500T(병)",
-            "gtNorm": "500t(병)",
-            "extNorm": "500t(병)",
+            "gtNorm": "500t병",
+            "extNorm": "500t병",
             "status": "match",
             "spurious": false
           },
@@ -713,13 +713,13 @@
     ],
     "cellCounts": {
       "scored": 60,
-      "match": 24,
+      "match": 27,
       "mismatch": 16,
-      "ext_missing": 20,
+      "ext_missing": 17,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4
+    "cellAccuracy": 0.45
   },
   "buckets": {
     "defects": [
@@ -838,7 +838,7 @@
       {
         "location": "row4:spec",
         "status": "ext_missing",
-        "gtNorm": "100t(ptp)",
+        "gtNorm": "100tptp",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -879,14 +879,6 @@
         "location": "row4:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "26001",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row4:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "651200040",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -941,11 +933,11 @@
       },
       {
         "location": "row6:spec",
-        "status": "ext_missing",
-        "gtNorm": "300t(병)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "300t병",
+        "extNorm": "300t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.89)"
       },
       {
         "location": "row6:quantity",
@@ -983,22 +975,6 @@
         "location": "row6:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "HRO9BA",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row6:itemCode",
-        "status": "mismatch",
-        "gtNorm": "03000127",
-        "extNorm": "158433",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row6:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "657200220",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -1054,7 +1030,7 @@
     ],
     "bucketTally": {
       "recognition": 19,
-      "structure": 22,
+      "structure": 19,
       "layout": 0,
       "preprocessing": 0
     },

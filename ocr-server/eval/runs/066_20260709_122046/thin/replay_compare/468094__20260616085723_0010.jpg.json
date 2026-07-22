@@ -225,10 +225,10 @@
           },
           "spec": {
             "gt": "2밀리그램",
-            "ext": "",
+            "ext": "30T",
             "gtNorm": "2밀리그램",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -281,9 +281,9 @@
           },
           "insuranceCode": {
             "gt": "11073000630",
-            "ext": "11073000630 둘일딩스표",
+            "ext": "073000630",
             "gtNorm": "11073000630",
-            "extNorm": "11073000630둘일딩스표",
+            "extNorm": "073000630",
             "status": "mismatch",
             "spurious": false
           }
@@ -311,10 +311,10 @@
           },
           "spec": {
             "gt": "1정",
-            "ext": "",
+            "ext": "1정",
             "gtNorm": "1정",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "1정",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -367,9 +367,9 @@
           },
           "insuranceCode": {
             "gt": "12073000020",
-            "ext": "12073000020 (주)휴온스",
+            "ext": "073000020",
             "gtNorm": "12073000020",
-            "extNorm": "12073000020주휴온스",
+            "extNorm": "073000020",
             "status": "mismatch",
             "spurious": false
           }
@@ -398,7 +398,7 @@
           "spec": {
             "gt": "2 mL/병",
             "ext": "",
-            "gtNorm": "2 ml/병",
+            "gtNorm": "2ml병",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -453,9 +453,9 @@
           },
           "insuranceCode": {
             "gt": "13073001612",
-            "ext": "18 1 14 16 15 13073001612 그립록밖이옷 1",
+            "ext": "073001612",
             "gtNorm": "13073001612",
-            "extNorm": "18114161513073001612그립록밖이옷1",
+            "extNorm": "073001612",
             "status": "mismatch",
             "spurious": false
           }
@@ -464,13 +464,13 @@
     ],
     "cellCounts": {
       "scored": 30,
-      "match": 23,
-      "mismatch": 4,
-      "ext_missing": 3,
+      "match": 24,
+      "mismatch": 5,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.7666666666666667
+    "cellAccuracy": 0.8
   },
   "buckets": {
     "defects": [
@@ -516,19 +516,19 @@
       },
       {
         "location": "row4:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "2밀리그램",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "30t",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row4:insuranceCode",
         "status": "mismatch",
         "gtNorm": "11073000630",
-        "extNorm": "11073000630둘일딩스표",
+        "extNorm": "073000630",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.81)"
+        "reason": "char-level diff (sim=0.90)"
       },
       {
         "location": "row5:itemName",
@@ -539,25 +539,17 @@
         "reason": "char-level diff (sim=0.96)"
       },
       {
-        "location": "row5:spec",
-        "status": "ext_missing",
-        "gtNorm": "1정",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row5:insuranceCode",
         "status": "mismatch",
         "gtNorm": "12073000020",
-        "extNorm": "12073000020주휴온스",
+        "extNorm": "073000020",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.85)"
+        "reason": "char-level diff (sim=0.90)"
       },
       {
         "location": "row6:spec",
         "status": "ext_missing",
-        "gtNorm": "2 ml/병",
+        "gtNorm": "2ml병",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -566,14 +558,14 @@
         "location": "row6:insuranceCode",
         "status": "mismatch",
         "gtNorm": "13073001612",
-        "extNorm": "18114161513073001612그립록밖이옷1",
+        "extNorm": "073001612",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.58)"
+        "reason": "char-level diff (sim=0.90)"
       }
     ],
     "bucketTally": {
-      "recognition": 7,
-      "structure": 5,
+      "recognition": 8,
+      "structure": 3,
       "layout": 0,
       "preprocessing": 0
     },

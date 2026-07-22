@@ -230,9 +230,9 @@
           "spec": {
             "gt": "30 정",
             "ext": "30정",
-            "gtNorm": "30 정",
+            "gtNorm": "30정",
             "extNorm": "30정",
-            "status": "mismatch",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -285,17 +285,17 @@
           },
           "insuranceCode": {
             "gt": "647803850",
-            "ext": "1 647803850 삼진제약(",
+            "ext": "647803850",
             "gtNorm": "647803850",
-            "extNorm": "1647803850삼진제약",
-            "status": "mismatch",
+            "extNorm": "647803850",
+            "status": "match",
             "spurious": false
           }
         }
       },
       {
         "rowIndex": "8",
-        "rowMatch": false,
+        "rowMatch": true,
         "cells": {
           "itemName": {
             "gt": "에필라탐정250mg",
@@ -316,9 +316,9 @@
           "spec": {
             "gt": "30 정",
             "ext": "30정",
-            "gtNorm": "30 정",
+            "gtNorm": "30정",
             "extNorm": "30정",
-            "status": "mismatch",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -371,10 +371,10 @@
           },
           "insuranceCode": {
             "gt": "647803720",
-            "ext": "2 647803720 삼진제약(",
+            "ext": "647803720",
             "gtNorm": "647803720",
-            "extNorm": "2647803720삼진제약",
-            "status": "mismatch",
+            "extNorm": "647803720",
+            "status": "match",
             "spurious": false
           }
         }
@@ -401,10 +401,10 @@
           },
           "spec": {
             "gt": "30 정",
-            "ext": "",
-            "gtNorm": "30 정",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "30정",
+            "gtNorm": "30정",
+            "extNorm": "30정",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -457,10 +457,10 @@
           },
           "insuranceCode": {
             "gt": "647803740",
-            "ext": "",
+            "ext": "647803740",
             "gtNorm": "647803740",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "647803740",
+            "status": "match",
             "spurious": false
           }
         }
@@ -489,7 +489,7 @@
           "spec": {
             "gt": "120 정",
             "ext": "",
-            "gtNorm": "120 정",
+            "gtNorm": "120정",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -555,13 +555,13 @@
     ],
     "cellCounts": {
       "scored": 40,
-      "match": 18,
-      "mismatch": 7,
-      "ext_missing": 15,
+      "match": 24,
+      "mismatch": 3,
+      "ext_missing": 13,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.45
+    "cellAccuracy": 0.6
   },
   "buckets": {
     "defects": [
@@ -590,14 +590,6 @@
         "reason": "extractor invented rows ['1', '2', '3', '5', '6']"
       },
       {
-        "location": "row7:spec",
-        "status": "mismatch",
-        "gtNorm": "30 정",
-        "extNorm": "30정",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.86)"
-      },
-      {
         "location": "row7:manufacturingNo",
         "status": "mismatch",
         "gtNorm": "ERXA014S",
@@ -606,44 +598,12 @@
         "reason": "char-level diff (sim=0.88)"
       },
       {
-        "location": "row7:insuranceCode",
-        "status": "mismatch",
-        "gtNorm": "647803850",
-        "extNorm": "1647803850삼진제약",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.78)"
-      },
-      {
-        "location": "row8:spec",
-        "status": "mismatch",
-        "gtNorm": "30 정",
-        "extNorm": "30정",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.86)"
-      },
-      {
-        "location": "row8:insuranceCode",
-        "status": "mismatch",
-        "gtNorm": "647803720",
-        "extNorm": "2647803720삼진제약",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.78)"
-      },
-      {
         "location": "row4:itemName",
         "status": "mismatch",
         "gtNorm": "에필라탐정500mg",
         "extNorm": "4647803740삼진제약에필라탐정500mg30정",
         "bucket": "layout",
         "reason": "gt cell appears in column(s) ['itemNameMaster']"
-      },
-      {
-        "location": "row4:spec",
-        "status": "ext_missing",
-        "gtNorm": "30 정",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row4:quantity",
@@ -678,14 +638,6 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row4:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "647803740",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row3:itemName",
         "status": "ext_missing",
         "gtNorm": "에필라탐정500mg",
@@ -704,7 +656,7 @@
       {
         "location": "row3:spec",
         "status": "ext_missing",
-        "gtNorm": "120 정",
+        "gtNorm": "120정",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -767,8 +719,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 7,
-      "structure": 17,
+      "recognition": 3,
+      "structure": 15,
       "layout": 1,
       "preprocessing": 0
     },

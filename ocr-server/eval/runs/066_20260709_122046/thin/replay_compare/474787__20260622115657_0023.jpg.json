@@ -457,18 +457,18 @@
           },
           "itemCode": {
             "gt": "04002448",
-            "ext": "FTFD201",
+            "ext": "07000647",
             "gtNorm": "04002448",
-            "extNorm": "FTFD201",
+            "extNorm": "07000647",
             "status": "mismatch",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "645403890",
-            "ext": "",
+            "ext": "645403890",
             "gtNorm": "645403890",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "645403890",
+            "status": "match",
             "spurious": false
           }
         }
@@ -637,10 +637,10 @@
           },
           "insuranceCode": {
             "gt": "642100970",
-            "ext": "942100970 라제네카",
+            "ext": "642100970",
             "gtNorm": "642100970",
-            "extNorm": "942100970라제네카",
-            "status": "mismatch",
+            "extNorm": "642100970",
+            "status": "match",
             "spurious": false
           }
         }
@@ -667,10 +667,10 @@
           },
           "spec": {
             "gt": "30T",
-            "ext": "",
+            "ext": "30T",
             "gtNorm": "30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -1082,13 +1082,13 @@
     ],
     "cellCounts": {
       "scored": 100,
-      "match": 21,
-      "mismatch": 21,
-      "ext_missing": 58,
+      "match": 24,
+      "mismatch": 20,
+      "ext_missing": 56,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.21
+    "cellAccuracy": 0.24
   },
   "buckets": {
     "defects": [
@@ -1297,24 +1297,16 @@
         "status": "ext_missing",
         "gtNorm": "FTFD201",
         "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row6:itemCode",
         "status": "mismatch",
         "gtNorm": "04002448",
-        "extNorm": "FTFD201",
+        "extNorm": "07000647",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row6:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "645403890",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "row9:itemName",
@@ -1413,14 +1405,6 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row12:insuranceCode",
-        "status": "mismatch",
-        "gtNorm": "642100970",
-        "extNorm": "942100970라제네카",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.73)"
-      },
-      {
         "location": "row11:itemName",
         "status": "ext_missing",
         "gtNorm": "한국프라임프라임엠글리듀오서방정251000mg",
@@ -1432,14 +1416,6 @@
         "location": "row11:itemNameMaster",
         "status": "ext_missing",
         "gtNorm": "엠글리듀오서방정25/1000mg",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row11:spec",
-        "status": "ext_missing",
-        "gtNorm": "30t",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -1790,9 +1766,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 26,
-      "structure": 60,
-      "layout": 1,
+      "recognition": 25,
+      "structure": 59,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

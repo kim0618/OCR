@@ -221,10 +221,10 @@
           },
           "spec": {
             "gt": "30T",
-            "ext": "",
+            "ext": "30T",
             "gtNorm": "30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -269,10 +269,10 @@
           },
           "insuranceCode": {
             "gt": "T1792503A",
-            "ext": "",
+            "ext": "653103690",
             "gtNorm": "T1792503A",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "653103690",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -301,7 +301,7 @@
             "gt": "120T",
             "ext": "120T /20",
             "gtNorm": "120t",
-            "extNorm": "120t /20",
+            "extNorm": "120t20",
             "status": "mismatch",
             "spurious": false
           },
@@ -347,10 +347,10 @@
           },
           "insuranceCode": {
             "gt": "T1262520A",
-            "ext": "",
+            "ext": "653102670",
             "gtNorm": "T1262520A",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "653102670",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -425,10 +425,10 @@
           },
           "insuranceCode": {
             "gt": "T1332515A",
-            "ext": "",
+            "ext": "653102850",
             "gtNorm": "T1332515A",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "653102850",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -436,13 +436,13 @@
     ],
     "cellCounts": {
       "scored": 27,
-      "match": 11,
-      "mismatch": 4,
-      "ext_missing": 12,
+      "match": 12,
+      "mismatch": 7,
+      "ext_missing": 8,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4074074074074074
+    "cellAccuracy": 0.4444444444444444
   },
   "buckets": {
     "defects": [
@@ -495,14 +495,6 @@
         "reason": "char-level diff (sim=0.90)"
       },
       {
-        "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row1:unitPrice",
         "status": "ext_missing",
         "gtNorm": "17213",
@@ -528,19 +520,19 @@
       },
       {
         "location": "row1:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "T1792503A",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "653103690",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row2:spec",
         "status": "mismatch",
         "gtNorm": "120t",
-        "extNorm": "120t /20",
+        "extNorm": "120t20",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
+        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "row2:quantity",
@@ -576,11 +568,11 @@
       },
       {
         "location": "row2:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "T1262520A",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "653102670",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row3:quantity",
@@ -616,16 +608,16 @@
       },
       {
         "location": "row3:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "T1332515A",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "653102850",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       }
     ],
     "bucketTally": {
-      "recognition": 6,
-      "structure": 13,
+      "recognition": 9,
+      "structure": 9,
       "layout": 3,
       "preprocessing": 0
     },

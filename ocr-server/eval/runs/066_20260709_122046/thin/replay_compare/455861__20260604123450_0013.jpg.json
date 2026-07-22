@@ -206,7 +206,7 @@
     "rows": [
       {
         "rowIndex": "4",
-        "rowMatch": false,
+        "rowMatch": true,
         "cells": {
           "itemName": {
             "gt": "록소필정",
@@ -282,10 +282,10 @@
           },
           "insuranceCode": {
             "gt": "669604560",
-            "ext": "1 669604560 아이월드",
+            "ext": "669604560",
             "gtNorm": "669604560",
-            "extNorm": "1669604560아이월드",
-            "status": "mismatch",
+            "extNorm": "669604560",
+            "status": "match",
             "spurious": false
           }
         }
@@ -368,17 +368,17 @@
           },
           "insuranceCode": {
             "gt": "669604560",
-            "ext": "",
+            "ext": "669604560",
             "gtNorm": "669604560",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "669604560",
+            "status": "match",
             "spurious": false
           }
         }
       },
       {
         "rowIndex": "5",
-        "rowMatch": false,
+        "rowMatch": true,
         "cells": {
           "itemName": {
             "gt": "리유목스정 375mg",
@@ -399,8 +399,8 @@
           "spec": {
             "gt": "100T(PTP)",
             "ext": "100T(PTP)",
-            "gtNorm": "100t(ptp)",
-            "extNorm": "100t(ptp)",
+            "gtNorm": "100tptp",
+            "extNorm": "100tptp",
             "status": "match",
             "spurious": false
           },
@@ -454,10 +454,10 @@
           },
           "insuranceCode": {
             "gt": "669604730",
-            "ext": "3 669604730 아이월드",
+            "ext": "669604730",
             "gtNorm": "669604730",
-            "extNorm": "3669604730아이월드",
-            "status": "mismatch",
+            "extNorm": "669604730",
+            "status": "match",
             "spurious": false
           }
         }
@@ -540,10 +540,10 @@
           },
           "insuranceCode": {
             "gt": "698502991",
-            "ext": "",
+            "ext": "698502991",
             "gtNorm": "698502991",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "698502991",
+            "status": "match",
             "spurious": false
           }
         }
@@ -572,7 +572,7 @@
             "gt": "20g",
             "ext": "20g 이하여백",
             "gtNorm": "20g",
-            "extNorm": "20g 이하여백",
+            "extNorm": "20g이하여백",
             "status": "mismatch",
             "spurious": false
           },
@@ -626,10 +626,10 @@
           },
           "insuranceCode": {
             "gt": "698502941",
-            "ext": "7 5 6 698502941 (주)테",
+            "ext": "698502941",
             "gtNorm": "698502941",
-            "extNorm": "756698502941주테",
-            "status": "mismatch",
+            "extNorm": "698502941",
+            "status": "match",
             "spurious": false
           }
         }
@@ -637,13 +637,13 @@
     ],
     "cellCounts": {
       "scored": 50,
-      "match": 28,
-      "mismatch": 8,
-      "ext_missing": 14,
+      "match": 33,
+      "mismatch": 5,
+      "ext_missing": 12,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.56
+    "cellAccuracy": 0.66
   },
   "buckets": {
     "defects": [
@@ -670,14 +670,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "extractor invented rows ['2', '3']"
-      },
-      {
-        "location": "row4:insuranceCode",
-        "status": "mismatch",
-        "gtNorm": "669604560",
-        "extNorm": "1669604560아이월드",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.78)"
       },
       {
         "location": "row1:spec",
@@ -728,22 +720,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "669604560",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row5:insuranceCode",
-        "status": "mismatch",
-        "gtNorm": "669604730",
-        "extNorm": "3669604730아이월드",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.78)"
-      },
-      {
         "location": "row7:spec",
         "status": "ext_missing",
         "gtNorm": "60g",
@@ -792,20 +768,12 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row7:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "698502991",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row6:spec",
         "status": "mismatch",
         "gtNorm": "20g",
-        "extNorm": "20g 이하여백",
+        "extNorm": "20g이하여백",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.55)"
+        "reason": "char-level diff (sim=0.60)"
       },
       {
         "location": "row6:quantity",
@@ -838,19 +806,11 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row6:insuranceCode",
-        "status": "mismatch",
-        "gtNorm": "698502941",
-        "extNorm": "756698502941주테",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.78)"
       }
     ],
     "bucketTally": {
-      "recognition": 8,
-      "structure": 14,
+      "recognition": 5,
+      "structure": 12,
       "layout": 3,
       "preprocessing": 0
     },

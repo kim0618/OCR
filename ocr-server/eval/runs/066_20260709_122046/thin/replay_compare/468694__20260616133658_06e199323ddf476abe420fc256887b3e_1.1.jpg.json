@@ -221,10 +221,10 @@
           },
           "spec": {
             "gt": "30T(병)",
-            "ext": "",
-            "gtNorm": "30t(병)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "30T",
+            "gtNorm": "30t병",
+            "extNorm": "30t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -277,9 +277,9 @@
           },
           "insuranceCode": {
             "gt": "645401310",
-            "ext": "1",
+            "ext": "8806432000210",
             "gtNorm": "645401310",
-            "extNorm": "1",
+            "extNorm": "8806432000210",
             "status": "mismatch",
             "spurious": false
           }
@@ -307,10 +307,10 @@
           },
           "spec": {
             "gt": "100C(병)",
-            "ext": "",
-            "gtNorm": "100c(병)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "100c",
+            "gtNorm": "100c병",
+            "extNorm": "100c",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -393,10 +393,10 @@
           },
           "spec": {
             "gt": "30T(PTP)",
-            "ext": "",
-            "gtNorm": "30t(ptp)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "30T",
+            "gtNorm": "30tptp",
+            "extNorm": "30t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -449,10 +449,10 @@
           },
           "insuranceCode": {
             "gt": "645405320",
-            "ext": "2",
+            "ext": "645405320",
             "gtNorm": "645405320",
-            "extNorm": "2",
-            "status": "mismatch",
+            "extNorm": "645405320",
+            "status": "match",
             "spurious": false
           }
         }
@@ -480,7 +480,7 @@
           "spec": {
             "gt": "30T(PTP)",
             "ext": "",
-            "gtNorm": "30t(ptp)",
+            "gtNorm": "30tptp",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -567,7 +567,7 @@
           "spec": {
             "gt": "100T(병)",
             "ext": "",
-            "gtNorm": "100t(병)",
+            "gtNorm": "100t병",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -894,13 +894,13 @@
     ],
     "cellCounts": {
       "scored": 80,
-      "match": 10,
-      "mismatch": 12,
-      "ext_missing": 58,
+      "match": 11,
+      "mismatch": 14,
+      "ext_missing": 55,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.125
+    "cellAccuracy": 0.1375
   },
   "buckets": {
     "defects": [
@@ -970,11 +970,11 @@
       },
       {
         "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "30t(병)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "30t병",
+        "extNorm": "30t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.86)"
       },
       {
         "location": "row1:quantity",
@@ -1012,7 +1012,7 @@
         "location": "row1:insuranceCode",
         "status": "mismatch",
         "gtNorm": "645401310",
-        "extNorm": "1",
+        "extNorm": "8806432000210",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
@@ -1034,11 +1034,11 @@
       },
       {
         "location": "row2:spec",
-        "status": "ext_missing",
-        "gtNorm": "100c(병)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "100c병",
+        "extNorm": "100c",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.89)"
       },
       {
         "location": "row2:quantity",
@@ -1090,11 +1090,11 @@
       },
       {
         "location": "row3:spec",
-        "status": "ext_missing",
-        "gtNorm": "30t(ptp)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "30tptp",
+        "extNorm": "30t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "row3:quantity",
@@ -1129,14 +1129,6 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row3:insuranceCode",
-        "status": "mismatch",
-        "gtNorm": "645405320",
-        "extNorm": "2",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
-      },
-      {
         "location": "row10:itemName",
         "status": "ext_missing",
         "gtNorm": "제일약품주텔미칸정40mg",
@@ -1155,7 +1147,7 @@
       {
         "location": "row10:spec",
         "status": "ext_missing",
-        "gtNorm": "30t(ptp)",
+        "gtNorm": "30tptp",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -1211,7 +1203,7 @@
       {
         "location": "row4:spec",
         "status": "ext_missing",
-        "gtNorm": "100t(병)",
+        "gtNorm": "100t병",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -1514,8 +1506,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 16,
-      "structure": 60,
+      "recognition": 18,
+      "structure": 57,
       "layout": 0,
       "preprocessing": 0
     },

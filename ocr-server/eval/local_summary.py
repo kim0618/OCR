@@ -137,7 +137,9 @@ def _render(batch_name: str, compare_dir: str, per: list[dict]) -> str:
     # 품명 계열 라벨 명시: 읽기 raw vs ②마스터매칭 산출(정식명/코드) 구분이 한눈에 보이게
     _LOCAL_KO = {"itemName": "품명 — 읽기 raw",
                  "itemNameMaster": "품명 — ②마스터매칭 정식명",
-                 "itemCode": "itemCode — ②마스터매칭 채움"}
+                 "itemCode": "itemCode — ②마스터매칭 채움",
+                 "itemCodeLearnA": "itemCode — +learndata A(held-out·비순환)",
+                 "itemCodeLearnB": "itemCode — +learndata B(full·순환상한)"}
 
     def ko(col: str) -> str:
         k = _LOCAL_KO.get(col) or _FIELD_KO.get(col)
@@ -288,18 +290,20 @@ def _render(batch_name: str, compare_dir: str, per: list[dict]) -> str:
         for d in p["pdrops"]:
             agg[d["column"]][d["pattern"]] += 1
         col_class = p.get("colClass") or {}
-        # 표시 대상 = parser-drop 있는 컬럼 ∪ recognition 있는 컬럼
-        all_cols = set(agg) | {c for c, cc in col_class.items() if cc.get("recognition")}
+        col_acc = p.get("colAcc") or {}
+        # 표시 대상 = parser-drop 있는 컬럼 ∪ recognition 있는 컬럼 ∪ 측정 컬럼(learndata, 결함무)
+        _meas = {c for c in C.MEASUREMENT_KEYS if c in col_acc}
+        all_cols = set(agg) | {c for c, cc in col_class.items() if cc.get("recognition")} | _meas
         def _coltot(c):  # 그 컬럼 전체 결함(회수+인식+모호)
             return sum((col_class.get(c) or {}).values())
         ordered = sorted(all_cols, key=lambda c: -_coltot(c))
-        # 품명 3형제(읽기 raw → 매칭 정식명 → 매칭 코드)는 붙여서 보여줌 (②매칭 전후 대조)
-        _trio = [c for c in ("itemName", "itemNameMaster", "itemCode") if c in ordered]
+        # 품명·itemCode 계열(읽기 raw → 매칭 정식명 → 매칭 코드 → +learndata A/B)은 붙여서 대조
+        _trio = [c for c in ("itemName", "itemNameMaster", "itemCode",
+                             "itemCodeLearnA", "itemCodeLearnB") if c in ordered]
         if len(_trio) > 1:
             pos = min(ordered.index(c) for c in _trio)
             ordered = [c for c in ordered if c not in _trio]
             ordered[pos:pos] = _trio
-        col_acc = p.get("colAcc") or {}
         H.append(f"<section><h2>{_esc(p['testset'])} — 컬럼 × 패턴 "
                  f"<span class='muted'>(정확도 = 맞음/채점셀(주지표) · 인식% = 인식/전체결함, "
                  f"높을수록 OCR 바운드=룰 대상 아님)</span></h2>")
@@ -378,13 +382,19 @@ def build(batch_dir: str, requested_compare_dir: str, refresh: bool = True) -> s
     """
     batch_name = os.path.basename(batch_dir.rstrip(os.sep))
     subs = _subdirs(batch_dir)
-    if not subs:
-        print(f"no testset subfolders in {batch_dir}")
+    if subs:
+        sub_items = [(s, os.path.join(batch_dir, s)) for s in subs]
+    elif (os.path.isdir(os.path.join(batch_dir, requested_compare_dir))
+          or os.path.isdir(os.path.join(batch_dir, "compare"))):
+        # flat 단일런(run_all --all 아님, 예: invoice_replay 스냅샷만 반입) →
+        # 런 자신을 1개 testset 으로 취급. compare/replay_compare 가 런폴더 바로 밑.
+        sub_items = [(batch_name, batch_dir)]
+    else:
+        print(f"no testset subfolders nor compare/ in {batch_dir}")
         return None
 
     per: list[dict] = []
-    for sub in subs:
-        sub_dir = os.path.join(batch_dir, sub)
+    for sub, sub_dir in sub_items:
         testset = _testset_of(sub_dir)
         cdir = _pick_compare_dir(sub_dir, requested_compare_dir)
         if cdir is None:

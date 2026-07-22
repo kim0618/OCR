@@ -226,10 +226,10 @@
           },
           "spec": {
             "gt": "250mg/90정",
-            "ext": "",
-            "gtNorm": "250mg/90정",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "90정",
+            "gtNorm": "250mg90정",
+            "extNorm": "90정",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -282,10 +282,10 @@
           },
           "insuranceCode": {
             "gt": "629701980",
-            "ext": "",
+            "ext": "693202230",
             "gtNorm": "629701980",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "693202230",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -368,10 +368,10 @@
           },
           "insuranceCode": {
             "gt": "665506742",
-            "ext": "",
+            "ext": "665506742",
             "gtNorm": "665506742",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "665506742",
+            "status": "match",
             "spurious": false
           }
         }
@@ -454,10 +454,10 @@
           },
           "insuranceCode": {
             "gt": "665507312",
-            "ext": "",
+            "ext": "665507312",
             "gtNorm": "665507312",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "665507312",
+            "status": "match",
             "spurious": false
           }
         }
@@ -552,13 +552,13 @@
     ],
     "cellCounts": {
       "scored": 40,
-      "match": 13,
-      "mismatch": 8,
-      "ext_missing": 19,
+      "match": 15,
+      "mismatch": 10,
+      "ext_missing": 15,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.325
+    "cellAccuracy": 0.375
   },
   "buckets": {
     "defects": [
@@ -612,11 +612,11 @@
       },
       {
         "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "250mg/90정",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "250mg90정",
+        "extNorm": "90정",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.55)"
       },
       {
         "location": "row1:expiryDate",
@@ -644,11 +644,11 @@
       },
       {
         "location": "row1:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "629701980",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "693202230",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row4:itemName",
@@ -683,14 +683,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row4:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "665506742",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row5:itemName",
         "status": "mismatch",
         "gtNorm": "유니파딘점안액",
@@ -718,14 +710,6 @@
         "location": "row5:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "2501",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row5:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "665507312",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -812,8 +796,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 10,
-      "structure": 21,
+      "recognition": 12,
+      "structure": 17,
       "layout": 0,
       "preprocessing": 0
     },

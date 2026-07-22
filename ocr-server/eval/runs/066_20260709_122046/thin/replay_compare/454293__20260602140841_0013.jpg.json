@@ -215,18 +215,18 @@
           },
           "itemNameMaster": {
             "gt": "에이덱스정(지리페)",
-            "ext": "광동칼디정",
+            "ext": "광동쌍화탕(원방)",
             "gtNorm": "에이덱스정(지리페)",
-            "extNorm": "광동칼디정",
+            "extNorm": "광동쌍화탕(원방)",
             "status": "mismatch",
             "spurious": false
           },
           "spec": {
             "gt": "28정",
-            "ext": "",
+            "ext": "28정",
             "gtNorm": "28정",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "28정",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -271,18 +271,18 @@
           },
           "itemCode": {
             "gt": "8806418041411",
-            "ext": "04006963",
+            "ext": "8806418005215",
             "gtNorm": "8806418041411",
-            "extNorm": "04006963",
+            "extNorm": "8806418005215",
             "status": "mismatch",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "641804140",
-            "ext": "",
+            "ext": "8806418005215",
             "gtNorm": "641804140",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "8806418005215",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -309,10 +309,10 @@
           },
           "spec": {
             "gt": "300T",
-            "ext": "",
+            "ext": "300정",
             "gtNorm": "300t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "300정",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -365,10 +365,10 @@
           },
           "insuranceCode": {
             "gt": "620500030",
-            "ext": "",
+            "ext": "620500030",
             "gtNorm": "620500030",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "620500030",
+            "status": "match",
             "spurious": false
           }
         }
@@ -550,13 +550,13 @@
     ],
     "cellCounts": {
       "scored": 40,
-      "match": 9,
-      "mismatch": 3,
-      "ext_missing": 28,
+      "match": 11,
+      "mismatch": 5,
+      "ext_missing": 24,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.225
+    "cellAccuracy": 0.275
   },
   "buckets": {
     "defects": [
@@ -612,17 +612,9 @@
         "location": "row1:itemNameMaster",
         "status": "mismatch",
         "gtNorm": "에이덱스정(지리페)",
-        "extNorm": "광동칼디정",
+        "extNorm": "광동쌍화탕(원방)",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "28정",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       },
       {
         "location": "row1:expiryDate",
@@ -644,25 +636,25 @@
         "location": "row1:itemCode",
         "status": "mismatch",
         "gtNorm": "8806418041411",
-        "extNorm": "04006963",
+        "extNorm": "8806418005215",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.69)"
       },
       {
         "location": "row1:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "641804140",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "8806418005215",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.55)"
       },
       {
         "location": "row2:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "300t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "300정",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.75)"
       },
       {
         "location": "row2:expiryDate",
@@ -676,14 +668,6 @@
         "location": "row2:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "036004",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "620500030",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -850,8 +834,8 @@
       }
     ],
     "bucketTally": {
-      "recognition": 4,
-      "structure": 32,
+      "recognition": 6,
+      "structure": 28,
       "layout": 0,
       "preprocessing": 0
     },

@@ -224,10 +224,10 @@
           },
           "spec": {
             "gt": "5.29mg/30정",
-            "ext": "",
-            "gtNorm": "5.29mg/30정",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "30정",
+            "gtNorm": "529mg30정",
+            "extNorm": "30정",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -280,10 +280,10 @@
           },
           "insuranceCode": {
             "gt": "642300020",
-            "ext": "",
+            "ext": "642300020",
             "gtNorm": "642300020",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "642300020",
+            "status": "match",
             "spurious": false
           }
         }
@@ -311,7 +311,7 @@
           "spec": {
             "gt": "250mg/300T",
             "ext": "300T",
-            "gtNorm": "250mg/300t",
+            "gtNorm": "250mg300t",
             "extNorm": "300t",
             "status": "mismatch",
             "spurious": false
@@ -366,10 +366,10 @@
           },
           "insuranceCode": {
             "gt": "642301630",
-            "ext": "",
+            "ext": "642301630",
             "gtNorm": "642301630",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "642301630",
+            "status": "match",
             "spurious": false
           }
         }
@@ -397,7 +397,7 @@
           "spec": {
             "gt": "5ml/1개",
             "ext": "",
-            "gtNorm": "5ml/1개",
+            "gtNorm": "5ml1개",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -444,10 +444,10 @@
           },
           "insuranceCode": {
             "gt": "645303151",
-            "ext": "",
+            "ext": "645305351",
             "gtNorm": "645303151",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "645305351",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -455,13 +455,13 @@
     ],
     "cellCounts": {
       "scored": 29,
-      "match": 8,
-      "mismatch": 7,
-      "ext_missing": 14,
+      "match": 10,
+      "mismatch": 9,
+      "ext_missing": 10,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.27586206896551724
+    "cellAccuracy": 0.3448275862068966
   },
   "buckets": {
     "defects": [
@@ -515,11 +515,11 @@
       },
       {
         "location": "row2:spec",
-        "status": "ext_missing",
-        "gtNorm": "5.29mg/30정",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "529mg30정",
+        "extNorm": "30정",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.55)"
       },
       {
         "location": "row2:quantity",
@@ -570,14 +570,6 @@
         "reason": "char-level diff (sim=0.75)"
       },
       {
-        "location": "row2:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "642300020",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row3:itemName",
         "status": "mismatch",
         "gtNorm": "삼성제약시플로프록사신정300t",
@@ -588,10 +580,10 @@
       {
         "location": "row3:spec",
         "status": "mismatch",
-        "gtNorm": "250mg/300t",
+        "gtNorm": "250mg300t",
         "extNorm": "300t",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.57)"
+        "reason": "char-level diff (sim=0.62)"
       },
       {
         "location": "row3:expiryDate",
@@ -610,14 +602,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row3:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "642301630",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row4:itemName",
         "status": "mismatch",
         "gtNorm": "한림제약히아루론점안액",
@@ -628,7 +612,7 @@
       {
         "location": "row4:spec",
         "status": "ext_missing",
-        "gtNorm": "5ml/1개",
+        "gtNorm": "5ml1개",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -667,16 +651,16 @@
       },
       {
         "location": "row4:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "645303151",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "645305351",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.89)"
       }
     ],
     "bucketTally": {
-      "recognition": 11,
-      "structure": 13,
+      "recognition": 13,
+      "structure": 9,
       "layout": 2,
       "preprocessing": 0
     },

@@ -227,10 +227,10 @@
           },
           "spec": {
             "gt": "30T(병)",
-            "ext": "",
-            "gtNorm": "30t(병)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "30T",
+            "gtNorm": "30t병",
+            "extNorm": "30t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -283,10 +283,10 @@
           },
           "insuranceCode": {
             "gt": "651503480",
-            "ext": "651503480(추)하원 _ '프로페논정150mg",
+            "ext": "651503480",
             "gtNorm": "651503480",
-            "extNorm": "651503480추하원프로페논정150MG",
-            "status": "mismatch",
+            "extNorm": "651503480",
+            "status": "match",
             "spurious": false
           }
         }
@@ -313,10 +313,10 @@
           },
           "spec": {
             "gt": "30T(병)",
-            "ext": "",
-            "gtNorm": "30t(병)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "30T",
+            "gtNorm": "30t병",
+            "extNorm": "30t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -369,10 +369,10 @@
           },
           "insuranceCode": {
             "gt": "651503490",
-            "ext": "651503490(추)하원 프로페논정300mg",
+            "ext": "651503490",
             "gtNorm": "651503490",
-            "extNorm": "651503490추하원프로페논정300MG",
-            "status": "mismatch",
+            "extNorm": "651503490",
+            "status": "match",
             "spurious": false
           }
         }
@@ -401,7 +401,7 @@
           "spec": {
             "gt": "28T(PTP)",
             "ext": "",
-            "gtNorm": "28t(ptp)",
+            "gtNorm": "28tptp",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -488,7 +488,7 @@
           "spec": {
             "gt": "PTP)\n30T(",
             "ext": "",
-            "gtNorm": "ptp) 30t(",
+            "gtNorm": "ptp30t",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -554,13 +554,13 @@
     ],
     "cellCounts": {
       "scored": 40,
-      "match": 8,
+      "match": 10,
       "mismatch": 6,
-      "ext_missing": 26,
+      "ext_missing": 24,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.2
+    "cellAccuracy": 0.25
   },
   "buckets": {
     "defects": [
@@ -598,11 +598,11 @@
       },
       {
         "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "30t(병)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "30t병",
+        "extNorm": "30t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.86)"
       },
       {
         "location": "row1:quantity",
@@ -637,20 +637,12 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:insuranceCode",
-        "status": "mismatch",
-        "gtNorm": "651503480",
-        "extNorm": "651503480추하원프로페논정150MG",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.58)"
-      },
-      {
         "location": "row2:spec",
-        "status": "ext_missing",
-        "gtNorm": "30t(병)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "30t병",
+        "extNorm": "30t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.86)"
       },
       {
         "location": "row2:quantity",
@@ -685,14 +677,6 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:insuranceCode",
-        "status": "mismatch",
-        "gtNorm": "651503490",
-        "extNorm": "651503490추하원프로페논정300MG",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.58)"
-      },
-      {
         "location": "row3:itemName",
         "status": "ext_missing",
         "gtNorm": "에이알비엑스지정5160mg",
@@ -711,7 +695,7 @@
       {
         "location": "row3:spec",
         "status": "ext_missing",
-        "gtNorm": "28t(ptp)",
+        "gtNorm": "28tptp",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -791,7 +775,7 @@
       {
         "location": "row4:spec",
         "status": "ext_missing",
-        "gtNorm": "ptp) 30t(",
+        "gtNorm": "ptp30t",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -855,7 +839,7 @@
     ],
     "bucketTally": {
       "recognition": 8,
-      "structure": 28,
+      "structure": 26,
       "layout": 0,
       "preprocessing": 0
     },

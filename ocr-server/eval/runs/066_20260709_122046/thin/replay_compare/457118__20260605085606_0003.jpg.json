@@ -237,8 +237,8 @@
           "spec": {
             "gt": "1mg/100C",
             "ext": "1mg/100c",
-            "gtNorm": "1mg/100c",
-            "extNorm": "1mg/100c",
+            "gtNorm": "1mg100c",
+            "extNorm": "1mg100c",
             "status": "match",
             "spurious": false
           },
@@ -284,10 +284,10 @@
           },
           "itemCode": {
             "gt": "01010561",
-            "ext": "E005A",
+            "ext": "01010561",
             "gtNorm": "01010561",
-            "extNorm": "E005A",
-            "status": "mismatch",
+            "extNorm": "01010561",
+            "status": "match",
             "spurious": false
           }
         }
@@ -440,10 +440,10 @@
           },
           "itemCode": {
             "gt": "01004443",
-            "ext": "E006A",
+            "ext": "01004443",
             "gtNorm": "01004443",
-            "extNorm": "E006A",
-            "status": "mismatch",
+            "extNorm": "01004443",
+            "status": "match",
             "spurious": false
           }
         }
@@ -471,8 +471,8 @@
           "spec": {
             "gt": "20mg 30T",
             "ext": "20mg 30T",
-            "gtNorm": "20mg 30t",
-            "extNorm": "20mg 30t",
+            "gtNorm": "20mg30t",
+            "extNorm": "20mg30t",
             "status": "match",
             "spurious": false
           },
@@ -518,10 +518,10 @@
           },
           "itemCode": {
             "gt": "05006441",
-            "ext": "E001A",
+            "ext": "05006441",
             "gtNorm": "05006441",
-            "extNorm": "E001A",
-            "status": "mismatch",
+            "extNorm": "05006441",
+            "status": "match",
             "spurious": false
           }
         }
@@ -549,7 +549,7 @@
           "spec": {
             "gt": "5mg/30정",
             "ext": "",
-            "gtNorm": "5mg/30정",
+            "gtNorm": "5mg30정",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -627,8 +627,8 @@
           "spec": {
             "gt": "5mg/30정",
             "ext": "5mg/30정",
-            "gtNorm": "5mg/30정",
-            "extNorm": "5mg/30정",
+            "gtNorm": "5mg30정",
+            "extNorm": "5mg30정",
             "status": "match",
             "spurious": false
           },
@@ -674,9 +674,9 @@
           },
           "itemCode": {
             "gt": "14000971",
-            "ext": "E007A",
+            "ext": "01000603",
             "gtNorm": "14000971",
-            "extNorm": "E007A",
+            "extNorm": "01000603",
             "status": "mismatch",
             "spurious": false
           }
@@ -785,7 +785,7 @@
           "spec": {
             "gt": "20mg 30T",
             "ext": "",
-            "gtNorm": "20mg 30t",
+            "gtNorm": "20mg30t",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -864,7 +864,7 @@
           "spec": {
             "gt": "40mg 30T",
             "ext": "",
-            "gtNorm": "40mg 30t",
+            "gtNorm": "40mg30t",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -943,7 +943,7 @@
           "spec": {
             "gt": "80mg 30T",
             "ext": "",
-            "gtNorm": "80mg 30t",
+            "gtNorm": "80mg30t",
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
@@ -1001,13 +1001,13 @@
     ],
     "cellCounts": {
       "scored": 90,
-      "match": 25,
-      "mismatch": 24,
+      "match": 28,
+      "mismatch": 21,
       "ext_missing": 41,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.2777777777777778
+    "cellAccuracy": 0.3111111111111111
   },
   "buckets": {
     "defects": [
@@ -1104,16 +1104,8 @@
         "status": "mismatch",
         "gtNorm": "E005A",
         "extNorm": "1523700E005A",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
-        "location": "row1:itemCode",
-        "status": "mismatch",
-        "gtNorm": "01010561",
-        "extNorm": "E005A",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.59)"
       },
       {
         "location": "row3:itemNameMaster",
@@ -1168,16 +1160,8 @@
         "status": "mismatch",
         "gtNorm": "E006A",
         "extNorm": "95580E006A",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
-        "location": "row4:itemCode",
-        "status": "mismatch",
-        "gtNorm": "01004443",
-        "extNorm": "E006A",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "row5:unitPrice",
@@ -1192,16 +1176,8 @@
         "status": "mismatch",
         "gtNorm": "E001A",
         "extNorm": "104112E001A",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
-      },
-      {
-        "location": "row5:itemCode",
-        "status": "mismatch",
-        "gtNorm": "05006441",
-        "extNorm": "E001A",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.62)"
       },
       {
         "location": "row11:itemName",
@@ -1214,7 +1190,7 @@
       {
         "location": "row11:spec",
         "status": "ext_missing",
-        "gtNorm": "5mg/30정",
+        "gtNorm": "5mg30정",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -1296,16 +1272,16 @@
         "status": "mismatch",
         "gtNorm": "E007A",
         "extNorm": "1381860E007A",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.59)"
       },
       {
         "location": "row10:itemCode",
         "status": "mismatch",
         "gtNorm": "14000971",
-        "extNorm": "E007A",
+        "extNorm": "01000603",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.50)"
       },
       {
         "location": "row2:itemName",
@@ -1398,7 +1374,7 @@
       {
         "location": "row6:spec",
         "status": "ext_missing",
-        "gtNorm": "20mg 30t",
+        "gtNorm": "20mg30t",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -1470,7 +1446,7 @@
       {
         "location": "row7:spec",
         "status": "ext_missing",
-        "gtNorm": "40mg 30t",
+        "gtNorm": "40mg30t",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -1542,7 +1518,7 @@
       {
         "location": "row8:spec",
         "status": "ext_missing",
-        "gtNorm": "80mg 30t",
+        "gtNorm": "80mg30t",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
@@ -1597,9 +1573,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 24,
+      "recognition": 25,
       "structure": 45,
-      "layout": 4,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

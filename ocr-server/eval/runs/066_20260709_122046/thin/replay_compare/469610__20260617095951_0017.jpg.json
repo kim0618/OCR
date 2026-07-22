@@ -223,10 +223,10 @@
           },
           "spec": {
             "gt": "10MG 28T",
-            "ext": "",
-            "gtNorm": "10mg 28t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "28T",
+            "gtNorm": "10mg28t",
+            "extNorm": "28t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -263,18 +263,18 @@
           },
           "itemCode": {
             "gt": "05006284",
-            "ext": "E06548",
+            "ext": "05006288",
             "gtNorm": "05006284",
-            "extNorm": "E06548",
+            "extNorm": "05006288",
             "status": "mismatch",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "E06548",
-            "ext": "",
+            "ext": "641607740",
             "gtNorm": "E06548",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "641607740",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -301,10 +301,10 @@
           },
           "spec": {
             "gt": "300T",
-            "ext": "",
+            "ext": "300T",
             "gtNorm": "300t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "300t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -341,18 +341,18 @@
           },
           "itemCode": {
             "gt": "05006289",
-            "ext": "E07298",
+            "ext": "01006168",
             "gtNorm": "05006289",
-            "extNorm": "E07298",
+            "extNorm": "01006168",
             "status": "mismatch",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "E07298",
-            "ext": "",
+            "ext": "643507850",
             "gtNorm": "E07298",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "643507850",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -360,13 +360,13 @@
     ],
     "cellCounts": {
       "scored": 18,
-      "match": 7,
-      "mismatch": 5,
-      "ext_missing": 6,
+      "match": 8,
+      "mismatch": 8,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3888888888888889
+    "cellAccuracy": 0.4444444444444444
   },
   "buckets": {
     "defects": [
@@ -428,11 +428,11 @@
       },
       {
         "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "10mg 28t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "status": "mismatch",
+        "gtNorm": "10mg28t",
+        "extNorm": "28t",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.60)"
       },
       {
         "location": "row1:expiryDate",
@@ -446,17 +446,17 @@
         "location": "row1:itemCode",
         "status": "mismatch",
         "gtNorm": "05006284",
-        "extNorm": "E06548",
+        "extNorm": "05006288",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.88)"
       },
       {
         "location": "row1:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "E06548",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
+        "extNorm": "641607740",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row2:itemName",
@@ -475,14 +475,6 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row2:spec",
-        "status": "ext_missing",
-        "gtNorm": "300t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row2:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20290205",
@@ -494,23 +486,23 @@
         "location": "row2:itemCode",
         "status": "mismatch",
         "gtNorm": "05006289",
-        "extNorm": "E07298",
+        "extNorm": "01006168",
         "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "reason": "char-level diff (sim=0.62)"
       },
       {
         "location": "row2:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "E07298",
-        "extNorm": "",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemCode']"
+        "extNorm": "643507850",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       }
     ],
     "bucketTally": {
-      "recognition": 8,
-      "structure": 7,
-      "layout": 2,
+      "recognition": 11,
+      "structure": 5,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,
