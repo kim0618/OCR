@@ -168,6 +168,19 @@ def run_all(reuse: str | None, server: str, workers: int,
     r = _measure(reuse, server, workers, testset, verbose=True)
     print()
     _refresh_trend(testset)
+    # 실행 이력 장부(RUN_HISTORY): 단일 --testset 도 기록. run-rekey.sh 처럼 --all 이
+    # 아닌 단일 testset(invoice_rekey) 실행이 여기로 오는데, 예전엔 기록 훅이 run_all_multi
+    # (--all) 에만 있어 리키잉 eval 이 장부에 안 남았다 → 실데이터 testset 이면 여기서도 기록.
+    try:
+        import run_history
+        if r.get("sampleCount") and testset != C.DEFAULT_TESTSET:
+            run_history.record(
+                "eval", ts=r.get("ts"), images=r.get("sampleCount"),
+                elapsedSec=r.get("elapsedSec"),
+                field=round((r.get("fieldAcc") or 0) * 100, 1) if r.get("fieldAcc") else None,
+                cell=round((r.get("cellAcc") or 0) * 100, 1) if r.get("cellAcc") else None)
+    except Exception as exc:
+        print(f"  (run_history unavailable: {exc})")
     print()
     if r["ok"]:
         print(f"MVP GO - pipeline ran {r['ts']} (testset={testset}), checker PASS")

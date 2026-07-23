@@ -44,16 +44,23 @@ fi
 {
   echo "==================== 파인튜닝 시작 [$(date +'%F %T')] ===================="
   echo "[1/6] corpus -> rec 리스트 재빌드 (최신 크롭 반영)"
-  # ★전 필드 인쇄형 학습 (2026-07-09, 10만장 설계):
-  #  - failure(품목만+원문라벨): 인식이 약한 품목의 약점 보강 (숫자 failure 는 GT 정규화라
-  #    콤마-붕괴 유발 → 제외 유지: --columns itemName --hangul-min 2 --raw-only)
-  #  - balance(전 필드 GT-검증 인쇄형): 숫자·날짜·품목의 '인쇄형 정답'을 대량 학습 → 전 필드
-  #    인식이 올라감(cap 160/img 로 이미지당 대부분 셀 수확). balance-ratio 3 = 전필드 주도.
-  #  - max-train: 10만장 규모면 balance 수백만 → 학습시간 관리. 지금(6천장)은 0(무제한).
-  #    10만장 때 예: --max-train 400000 (failure 우선 보존 + balance 축소)
-  python eval/build_dataset.py --balance-ratio 3.0 --max-train 0 \
-      --columns itemName --min-match 0.7 --hangul-min 2 --raw-only
+  # ★★한글(품명 포함 전 한글필드) 라운드 (2026-07-23, 재검증으로 확대):
+  #  어제 전필드 학습은 숫자 58%→콤마붕괴로 net −3,524 기각. 단 한글은 +6.4%p로 올랐음.
+  #  ★재검증(2026-07-23): failure 한글 크롭이 itemName 310k 외에 회사명·주소 254k+ 있는데
+  #   itemName만 돌리면 그걸 버려 "한글 전체"가 안 됨 → 한글 필드 전체로 확대.
+  #  - failure(한글, 다양성 있는 필드만): itemName(고유 94k) + supplierCompany/supplierAddress
+  #    (고유 ~1.1k). ★buyerCompany(고유 11)·buyerAddress(고유 14) 제외 = 16.6만 크롭이 25개
+  #    문자열 반복뿐 → 암기·빈도편향 유발(학습가치 0, 실측). itemNameMaster 제외=rewrite,
+  #    spec·taxType 제외=짧고 반복.
+  #  - balance(한글만) + 숫자 앵커(소량, ~15%): 한글 망각방지 + 숫자 망각만 방지(콤마붕괴 회피).
+  #  - max-train 100만: 학습시간 관리(≈10h). 숫자 앵커 형식혼재·비율은 게이트로 튜닝.
+  #  기대 구성: 한글 ~85% / 숫자 앵커 ~15% (아래 '학습셋 구성' 로그로 반드시 확인).
+  python eval/build_dataset.py --balance-ratio 1.0 --max-train 1000000 \
+      --columns itemName,supplierCompany,supplierAddress \
+      --min-match 0.7 --hangul-min 2 --raw-only \
+      --balance-hangul-min 1 --number-anchor-ratio 0.3
   # [label-gate] 출력 확인: 공백/슬래시/대문자 보존율이 0%대면 학습 중단하고 라벨부터 볼 것
+  # [학습셋 구성] 로그 확인: 한글이 ~80% 주도해야 정상. 숫자가 다시 다수면 필터가 안 먹은 것.
   echo "[2/6] PaddleX 레이아웃 (dict.txt + 루트 리스트, 중첩 정리)"
   python eval/build_paddlex_dataset.py
   # PaddleX get_dataset_root 는 **/train.txt 가 정확히 1개여야 함. build_paddlex_dataset
