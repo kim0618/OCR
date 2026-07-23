@@ -166,30 +166,30 @@
     "rowCountExt": 2,
     "rowCountMatch": false,
     "matchedRowIdx": [
-      "2"
+      "1"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "1"
+      "2"
     ],
     "rows": [
       {
-        "rowIndex": "2",
+        "rowIndex": "1",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "넥사바정 200MG(PTP) 60T",
-            "ext": "1 넥사바정20OMG(PTP)60T 514,710 3 1,544,130 28.03.03",
+            "ext": "넥사바정20OMG(PTP)60T",
             "gtNorm": "넥사바정200mgptp60t",
-            "extNorm": "1넥사바정20omgptp60t51471031544130280303",
+            "extNorm": "넥사바정20omgptp60t",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "넥사바정200mg(바이엘)",
-            "ext": "넥사바정200mg(바이엘)",
-            "gtNorm": "넥사바정200mg(바이엘)",
-            "extNorm": "넥사바정200mg(바이엘)",
+            "ext": "넥사바정200mg",
+            "gtNorm": "넥사바정200mg",
+            "extNorm": "넥사바정200mg",
             "status": "match",
             "spurious": false
           },
@@ -247,6 +247,22 @@
             "gtNorm": "14002988",
             "extNorm": "14002988",
             "status": "match",
+            "spurious": false
+          },
+          "itemCodeLearnA": {
+            "gt": "14002988",
+            "ext": "22003963",
+            "gtNorm": "14002988",
+            "extNorm": "22003963",
+            "status": "mismatch",
+            "spurious": false
+          },
+          "itemCodeLearnB": {
+            "gt": "14002988",
+            "ext": "22003963",
+            "gtNorm": "14002988",
+            "extNorm": "22003963",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -310,7 +326,7 @@
         "gtNorm": "1544130",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "gt value present at ['row2:amount']"
+        "reason": "gt value present at ['row1:amount']"
       },
       {
         "location": "field:buyerCompany",
@@ -334,18 +350,18 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1']"
+        "reason": "extractor invented rows ['2']"
       },
       {
-        "location": "row2:itemName",
+        "location": "row1:itemName",
         "status": "mismatch",
         "gtNorm": "넥사바정200mgptp60t",
-        "extNorm": "1넥사바정20omgptp60t51471031544130280303",
+        "extNorm": "넥사바정20omgptp60t",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.55)"
+        "reason": "char-level diff (sim=0.93)"
       },
       {
-        "location": "row2:expiryDate",
+        "location": "row1:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20280303",
         "extNorm": "",
@@ -353,18 +369,34 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:manufacturingNo",
+        "location": "row1:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "BXK7ST1",
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row1:itemCodeLearnA",
+        "status": "mismatch",
+        "gtNorm": "14002988",
+        "extNorm": "22003963",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemCode']"
+      },
+      {
+        "location": "row1:itemCodeLearnB",
+        "status": "mismatch",
+        "gtNorm": "14002988",
+        "extNorm": "22003963",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemCode']"
       }
     ],
     "bucketTally": {
       "recognition": 5,
       "structure": 7,
-      "layout": 0,
+      "layout": 2,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

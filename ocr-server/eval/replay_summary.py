@@ -27,6 +27,10 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", ".."))   # git root = OCR/
+sys.path.insert(0, HERE)
+
+import contract as C  # noqa: E402
+
 OUT_MD = os.path.join(HERE, "REPLAY_SUMMARY.md")
 HISTORY_NAME = "replay_history.json"
 _MARK_A, _MARK_B = "<!--REPLAY_SUMMARY_START-->", "<!--REPLAY_SUMMARY_END-->"
@@ -53,18 +57,36 @@ def _kpi_from_blobs(get_file, rc_files: list[str], classify_path: str) -> dict |
         any_row = True
         if d.get("extractionPath") in paths:
             paths[d["extractionPath"]] += 1
-        for r in d.get("table", {}).get("rows", []):
-            for _c, cell in r.get("cells", {}).items():
-                if cell.get("spurious"):
-                    spur += 1
-                if cell.get("gtNorm"):
-                    cs += 1
-                    cm += 1 if cell.get("status") == "match" else 0
-        pf = (d.get("fields") or {}).get("perField") or {}
-        for _fn, cell in pf.items():
-            if isinstance(cell, dict) and cell.get("gtNorm"):
-                fs += 1
-                fm += 1 if cell.get("status") == "match" else 0
+        table = d.get("table") or {}
+        counts = table.get("cellCounts")
+        if isinstance(counts, dict):
+            # This is the canonical aggregate: it excludes measurement-only
+            # columns and includes cells from structurally missing GT rows.
+            cs += int(counts.get("scored") or 0)
+            cm += int(counts.get("match") or 0)
+            spur += int(counts.get("spurious") or 0)
+        else:
+            # Compatibility with old sidecars that predate cellCounts.
+            for r in table.get("rows", []):
+                for col, cell in r.get("cells", {}).items():
+                    if col in C.MEASUREMENT_KEYS:
+                        continue
+                    if cell.get("spurious"):
+                        spur += 1
+                    if cell.get("gtNorm"):
+                        cs += 1
+                        cm += 1 if cell.get("status") == "match" else 0
+        fields = d.get("fields") or {}
+        field_counts = fields.get("counts")
+        if isinstance(field_counts, dict):
+            fs += int(field_counts.get("scored") or 0)
+            fm += int(field_counts.get("match") or 0)
+        else:
+            pf = fields.get("perField") or {}
+            for _fn, cell in pf.items():
+                if isinstance(cell, dict) and cell.get("gtNorm"):
+                    fs += 1
+                    fm += 1 if cell.get("status") == "match" else 0
     if not any_row:
         return None
     pdrop = ambiguous = recog = None
@@ -140,6 +162,22 @@ def append_history(ts: str, now_str: str | None = None) -> list[dict]:
         hist = _seed_from_git(ts)
     cur = _current_kpi(ts)
     if cur:
+        for old in hist:
+            if "metricVersion" not in old:
+                old["metricVersion"] = 1
+                old["metricsComparable"] = False
+        last = hist[-1] if hist else None
+        same_current_state = bool(
+            last
+            and last.get("metricsComparable") is False
+            and all(last.get(k) == cur.get(k)
+                    for k in ("pdrop", "ambiguous", "recog"))
+            and (last.get("paths") or {}) == (cur.get("paths") or {})
+        )
+        if same_current_state:
+            last.update(cur)
+            last["metricVersion"] = 2
+            last["metricsComparable"] = True
         if now_str is None:
             now_str = _dt.datetime.now().strftime("%m-%d %H:%M")
         # 매 배치(replay 루프)마다 testset별로 한 행씩 항상 기록한다. 값이 안 바뀐
@@ -148,8 +186,14 @@ def append_history(ts: str, now_str: str | None = None) -> list[dict]:
         # (#N = 같은 replay 배치). 이전엔 동일 KPI면 skip 해서 study 행이 빠지고
         # 최신정렬 번호와 충돌 → #1이 사라진 듯 보였다. 단, 연속으로 완전히 동일한
         # 행이 2줄 이상 쌓이는 것만 막는다(같은 배치 리포트 재생성 방지).
-        if len(hist) < 2 or _tuple(hist[-1]) != _tuple(cur) or _tuple(hist[-2]) != _tuple(cur):
-            hist.append({"ts": now_str, **cur})
+        if (not same_current_state
+                and (len(hist) < 2
+                     or _tuple(hist[-1]) != _tuple(cur)
+                     or _tuple(hist[-2]) != _tuple(cur))):
+            hist.append({
+                "ts": now_str, **cur,
+                "metricVersion": 2, "metricsComparable": True,
+            })
     try:
         json.dump(hist, open(hist_path, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     except Exception:
@@ -160,6 +204,10 @@ def append_history(ts: str, now_str: str | None = None) -> list[dict]:
 def _render_rows(hist: list[dict]):
     prev = None
     for k in hist:
+        if k.get("metricsComparable") is False:
+            p = k.get("paths") or {}
+            yield k, None, None, "비교 제외", f"{p.get('free','-')}/{p.get('fallback','-')}"
+            continue
         pct = (100 * k["cm"] / k["cs"]) if k.get("cs") else 0
         d = None if prev is None else pct - prev
         prev = pct
@@ -171,6 +219,10 @@ def _render_rows(hist: list[dict]):
 def inject_html(html_path: str, hist: list[dict]) -> None:
     cells = []
     for k, pct, d, fld, paths_s in _render_rows(hist):
+        cell_text = (
+            "비교 제외 <span class='muted'>(구 집계식)</span>"
+            if pct is None else f"{k['cm']}/{k['cs']} ({pct:.1f}%)"
+        )
         if d is None:
             dcol, dtxt = "var(--muted)", "·"
         else:
@@ -179,23 +231,26 @@ def inject_html(html_path: str, hist: list[dict]) -> None:
         pending = k.get("ambiguous")
         pdrop_text = str(k.get("pdrop")) if pending is None else f"{k.get('pdrop')} (+{pending} pending)"
         cells.append(
-            f"<tr><td>{k.get('ts','')}</td><td>{k['cm']}/{k['cs']} ({pct:.1f}%)</td>"
+            f"<tr><td>{k.get('ts','')}</td><td>{cell_text}</td>"
             f"<td style='color:{dcol}'>{dtxt}</td><td>{fld}</td>"
             f"<td>{pdrop_text}</td><td>{k.get('recog')}</td>"
             f"<td>{k.get('spur')}</td><td>{paths_s}</td></tr>"
         )
     total = ""
-    if len(hist) >= 2 and hist[0].get("cs") and hist[-1].get("cs"):
-        f0 = 100 * hist[0]["cm"] / hist[0]["cs"]
-        f1 = 100 * hist[-1]["cm"] / hist[-1]["cs"]
-        taxonomy_changed = hist[0].get("ambiguous") is None and hist[-1].get("ambiguous") is not None
+    comparable = [k for k in hist
+                  if k.get("metricsComparable") is not False and k.get("cs")]
+    if len(comparable) >= 2:
+        first, last = comparable[0], comparable[-1]
+        f0 = 100 * first["cm"] / first["cs"]
+        f1 = 100 * last["cm"] / last["cs"]
+        taxonomy_changed = first.get("ambiguous") is None and last.get("ambiguous") is not None
         parser_part = (
             "parser taxonomy changed (old/new counts are not directly comparable), "
             if taxonomy_changed else
-            f"parser_drop {hist[0].get('pdrop')} &rarr; {hist[-1].get('pdrop')}, "
+            f"parser_drop {first.get('pdrop')} &rarr; {last.get('pdrop')}, "
         )
         total = (f"<p class='note'><b>총 개선: 셀 {f0:.1f}% &rarr; {f1:.1f}% ({f1-f0:+.1f}pp), "
-                 f"{parser_part}spurious {hist[0].get('spur')} &rarr; {hist[-1].get('spur')}.</b></p>")
+                 f"{parser_part}spurious {first.get('spur')} &rarr; {last.get('spur')}.</b></p>")
     legend = (
         "<p class='note'>"
         "<b>셀 정확도</b>=표 안 값(품명·규격·수량·단가·금액 등) 일치율 · "
@@ -242,14 +297,18 @@ def main() -> int:
          "|---|--:|--:|--:|--:|--:|--:|--:|"]
     for k, pct, d, fld, paths_s in _render_rows(hist):
         dtxt = "·" if d is None else f"{d:+.1f}"
-        L.append(f"| {k.get('ts','')} | {k['cm']}/{k['cs']} ({pct:.1f}%) | {dtxt} | {fld} "
+        cell_text = "비교 제외(구 집계식)" if pct is None else f"{k['cm']}/{k['cs']} ({pct:.1f}%)"
+        L.append(f"| {k.get('ts','')} | {cell_text} | {dtxt} | {fld} "
                  f"| {k.get('pdrop')} (+{k.get('ambiguous')} pending) "
                  f"| {k.get('recog')} | {k.get('spur')} | {paths_s} |")
     open(OUT_MD, "w", encoding="utf-8").write("\n".join(L) + "\n")
     html_path = os.path.join(REPO, f"ocr-server/eval/runs/{args.ts.replace(chr(92),'/')}/PARSER_DROP_CLASSIFY_replay_compare.html")
     if os.path.isfile(html_path):
         inject_html(html_path, hist)
-    print(f"history rows: {len(hist)}  (latest cell {100*hist[-1]['cm']/hist[-1]['cs']:.1f}%)")
+    latest = next((k for k in reversed(hist)
+                   if k.get("metricsComparable") is not False and k.get("cs")), None)
+    latest_text = f"{100*latest['cm']/latest['cs']:.1f}%" if latest else "-"
+    print(f"history rows: {len(hist)}  (latest cell {latest_text})")
     return 0
 
 

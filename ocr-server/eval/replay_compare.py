@@ -88,6 +88,12 @@ from extractors.master_match import fill_party_match as _fill_party  # noqa: E40
 from extractors.master_match import (  # noqa: E402
     strip_trailing_item_classification as _strip_item_classification,
 )
+from extractors.master_match import (  # noqa: E402
+    strip_leading_item_code as _strip_leading_item_code,
+)
+from extractors.master_match import (  # noqa: E402
+    strip_trailing_item_page_fraction as _strip_item_page_fraction,
+)
 
 # ②G4 마스터 매칭 포함 여부. False(--no-master-match)로 돌리면 Rule 단계(매칭 전) 사이드카가
 # 나온다 — baseline_matrix가 Rule=replay_compare_rule / Master=replay_compare로 단계 분리.
@@ -201,6 +207,12 @@ def replay_dispatch(snap: dict) -> tuple[dict, str]:
             df["tableRows"], _ = _strip_item_classification(df["tableRows"])
         except Exception:
             pass
+    # mirror main.py join-point leading barcode/row-number/date code strip
+    if isinstance(df, dict) and df.get("tableRows"):
+        try:
+            df["tableRows"], _ = _strip_leading_item_code(df["tableRows"])
+        except Exception:
+            pass
     # mirror main.py final-row same-row relocation + OCR-column recovery
     if isinstance(df, dict) and df.get("tableRows"):
         try:
@@ -270,6 +282,12 @@ def replay_dispatch(snap: dict) -> tuple[dict, str]:
                 df["tableRows"], supplier_bizno=df.get("supplierBizNumber"))
         except Exception:
             pass
+    # mirror main.py display cleanup after Master choice (itemName trailing 1/N)
+    if isinstance(df, dict) and df.get("tableRows"):
+        try:
+            df["tableRows"], _ = _strip_item_page_fraction(df["tableRows"])
+        except Exception:
+            pass
     # mirror main.py 보험코드 master-join (itemCode→bohum/pyojun, 마스터매칭 뒤)
     if MASTER_MATCH and isinstance(df, dict) and df.get("tableRows"):
         try:
@@ -291,23 +309,70 @@ def replay_dispatch(snap: dict) -> tuple[dict, str]:
     return (df if isinstance(df, dict) else {}), path
 
 
-def replay_compare(ts: str | None, testset: str, out_subdir: str) -> int:
-    run_dir = os.path.join(C.RUNS_DIR, ts) if ts else C.latest_run(testset)
+def _load_only_sources(path: str) -> set[str]:
+    """Read an exact sourceFile allow-list (one sourceFile per line)."""
+    selected: set[str] = set()
+    with open(path, encoding="utf-8-sig") as fh:
+        for raw in fh:
+            value = raw.strip()
+            if not value or value.startswith("#"):
+                continue
+            # Accept a copied sidecar filename as a convenience.
+            if value.endswith(".json"):
+                value = value[:-5]
+            selected.add(value)
+    return selected
+
+
+def _resolve_testset(run_dir: str, requested: str | None) -> str:
+    if requested:
+        return requested
+    meta_path = os.path.join(run_dir, "run_meta.json")
+    if os.path.isfile(meta_path):
+        try:
+            with open(meta_path, encoding="utf-8") as fh:
+                meta_testset = json.load(fh).get("testset")
+            if meta_testset in C.TESTSETS:
+                return meta_testset
+        except Exception:
+            pass
+    return C.DEFAULT_TESTSET
+
+
+def replay_compare(
+    ts: str | None,
+    testset: str | None,
+    out_subdir: str,
+    only_sources: set[str] | None = None,
+) -> int:
+    lookup_testset = testset or C.DEFAULT_TESTSET
+    run_dir = os.path.join(C.RUNS_DIR, ts) if ts else C.latest_run(lookup_testset)
     if not run_dir or not os.path.isdir(run_dir):
         print(f"no run dir ({run_dir})"); return 2
+    testset = _resolve_testset(run_dir, testset)
     snap_dir = os.path.join(run_dir, "snapshots")
     if not os.path.isdir(snap_dir):
         print(f"no snapshots/ in {run_dir} — cannot replay (run had no OCR snapshot)."); return 2
     out_dir = os.path.join(run_dir, out_subdir)
+    if only_sources and os.path.isdir(out_dir) and os.listdir(out_dir):
+        print(f"partial replay output is not empty: {out_dir}")
+        print("use a new --out-subdir so stale and current results cannot be mixed")
+        return 2
     os.makedirs(out_dir, exist_ok=True)
 
     # learndata 룩업 로드(있는 것만) → itemCode 옆 measurement 컬럼
+    # master_index(code→unit/bp1/nm) = 다중코드 spec-unit 해소용(있으면 자동 적용, 없으면 majority).
+    master_index = None
+    md_path = os.path.join(HERE, "data/invoice_war/master_dict.json")
+    if os.path.isfile(md_path):
+        master_index = LDA.load_master_index(md_path)
+        print(f"[learndata] master_index ← master_dict.json ({len(master_index):,} codes, spec-unit 해소 ON)")
     learn_luts = []
     for out_key, path in _LEARN_SPECS:
         if os.path.isfile(path):
-            lut = LDA.load_lookup(path)
-            learn_luts.append((out_key, lut))
-            print(f"[learndata] {out_key} ← {os.path.basename(path)} (읽기 {len(lut):,}개, learn_count≥3)")
+            dist = LDA.load_dist(path)
+            learn_luts.append((out_key, dist))
+            print(f"[learndata] {out_key} ← {os.path.basename(path)} (읽기 {len(dist):,}개, learn_count≥3)")
     if not learn_luts:
         print("[learndata] 룩업 파일 없음 → itemCode measurement 컬럼 생략 "
               "(data/invoice_war/learndata_*.json 필요)")
@@ -338,6 +403,18 @@ def replay_compare(ts: str | None, testset: str, out_subdir: str) -> int:
     else:
         sources = sorted(snapshot_sources)
         scope_label = f"legacy snapshots ({len(sources)}; no usable run_meta.ran)"
+    if only_sources is not None:
+        available = set(sources)
+        missing = sorted(only_sources - available)
+        sources = [src for src in sources if src in only_sources]
+        if missing:
+            print(f"target list has {len(missing)} source(s) outside this run")
+            for src in missing[:20]:
+                print(f"  missing target: {src}")
+        if not sources:
+            print("target list selected 0 snapshots; abort")
+            return 2
+        scope_label += f", partial target={len(sources)}"
     print(f"replay+score over {os.path.relpath(run_dir, C.RUNS_DIR)}: {scope_label} "
           f"-> {out_subdir}/\n")
     n_written = n_faithful = n_free = 0
@@ -358,9 +435,12 @@ def replay_compare(ts: str | None, testset: str, out_subdir: str) -> int:
         gt = agg[gtkey] if agg is not None else load_gt(
             os.path.normpath(os.path.join(C.HERE, gt_by_src[src])), profile=kind)
 
-        # learndata 적용: ext·gt 양쪽에 itemCodeLearn{A,B} 주입 → compare_table 동적 채점
-        for out_key, lut in learn_luts:
-            LDA.apply_to_rows(ext_df.get("tableRows"), gt.get("tableRows"), lut, out_key)
+        # learndata 적용: ext·gt 양쪽에 itemCodeLearn{A,B} + itemNameLearn{A,B} 주입
+        # → compare_table 동적 채점. 이름은 learndata 아이템의 정식명(코드→master nm).
+        for out_key, dist in learn_luts:
+            LDA.apply_to_rows(ext_df.get("tableRows"), gt.get("tableRows"), dist, out_key,
+                              master_index=master_index,
+                              name_out_key=out_key.replace("itemCode", "itemName"))
 
         fcmp = compare_fields(gt, ext_df)
         tcmp = compare_table(gt["tableRows"], ext_df.get("tableRows") or [])
@@ -393,9 +473,12 @@ def replay_compare(ts: str | None, testset: str, out_subdir: str) -> int:
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--ts", default=None, help="run dir under runs/ (default: latest study run)")
-    ap.add_argument("--testset", default=C.DEFAULT_TESTSET)
+    ap.add_argument("--testset", default=None,
+                    help="default: infer from run_meta.json, then invoice_study")
     ap.add_argument("--out-subdir", default="replay_compare",
                     help="sidecar dir under the run (NOT the checker's compare/)")
+    ap.add_argument("--only-list", default=None,
+                    help="partial replay: UTF-8 sourceFile list, one per line")
     ap.add_argument("--no-master-match", action="store_true",
                     help="②G4 마스터 매칭 없이 replay (Rule 단계 사이드카용; "
                          "관례: --out-subdir replay_compare_rule)")
@@ -407,4 +490,8 @@ if __name__ == "__main__":
         MASTER_MATCH = False
     if args.skip_upa:
         APPLY_UPA = False
-    raise SystemExit(replay_compare(args.ts, args.testset, args.out_subdir))
+    only_sources = _load_only_sources(args.only_list) if args.only_list else None
+    if args.only_list and args.out_subdir == "replay_compare":
+        ap.error("--only-list requires a distinct --out-subdir (for example replay_probe_R001)")
+    raise SystemExit(replay_compare(
+        args.ts, args.testset, args.out_subdir, only_sources=only_sources))

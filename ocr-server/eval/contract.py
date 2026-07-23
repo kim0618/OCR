@@ -96,7 +96,8 @@ ROW_ALIGN_KEY = "rowIndex"
 # Measurement-only cell keys: 비교셀로 emit(컬럼별 %는 리포트됨)되지만 헤드라인
 # cellAccuracy/spurious/rowMatch 집계에선 제외 → study/thin 회귀추적 오염 없음.
 # itemCodeLearnA(held-out 84,707=측정1 비순환)·itemCodeLearnB(full=순환 상한).
-MEASUREMENT_KEYS = ("itemCodeLearnA", "itemCodeLearnB")
+MEASUREMENT_KEYS = ("itemCodeLearnA", "itemCodeLearnB",
+                    "itemNameLearnA", "itemNameLearnB")
 
 # Optional rich-only scalar/field keys (bonus; thin GT omits them).
 RICH_FIELD_KEYS = ("bboxRefs", "edited", "confidence", "fieldStatus")

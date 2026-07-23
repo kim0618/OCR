@@ -189,16 +189,14 @@
   "table": {
     "alignMode": "content",
     "rowCountGt": 2,
-    "rowCountExt": 3,
-    "rowCountMatch": false,
+    "rowCountExt": 2,
+    "rowCountMatch": true,
     "matchedRowIdx": [
       "2",
-      "3"
-    ],
-    "gtOnlyRowIdx": [],
-    "extOnlyRowIdx": [
       "1"
     ],
+    "gtOnlyRowIdx": [],
+    "extOnlyRowIdx": [],
     "rows": [
       {
         "rowIndex": "2",
@@ -214,9 +212,9 @@
           },
           "itemNameMaster": {
             "gt": "펜디라진정(향정)",
-            "ext": "펜디라진정(향정)",
-            "gtNorm": "펜디라진정(향정)",
-            "extNorm": "펜디라진정(향정)",
+            "ext": "펜디라진정",
+            "gtNorm": "펜디라진정",
+            "extNorm": "펜디라진정",
             "status": "match",
             "spurious": false
           },
@@ -283,58 +281,74 @@
             "extNorm": "8806718033024",
             "status": "mismatch",
             "spurious": false
+          },
+          "itemCodeLearnA": {
+            "gt": "023307",
+            "ext": "023307",
+            "gtNorm": "023307",
+            "extNorm": "023307",
+            "status": "match",
+            "spurious": false
+          },
+          "itemCodeLearnB": {
+            "gt": "023307",
+            "ext": "023307",
+            "gtNorm": "023307",
+            "extNorm": "023307",
+            "status": "match",
+            "spurious": false
           }
         }
       },
       {
-        "rowIndex": "3",
+        "rowIndex": "1",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "펜키니정",
-            "ext": "펜키니정30T",
+            "ext": "향정 펜키니정30T",
             "gtNorm": "펜키니정",
-            "extNorm": "펜키니정30t",
+            "extNorm": "향정펜키니정30t",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "펜키니정(향정)",
-            "ext": "펜키니정(향정)",
-            "gtNorm": "펜키니정(향정)",
-            "extNorm": "펜키니정(향정)",
+            "ext": "펜키니정",
+            "gtNorm": "펜키니정",
+            "extNorm": "펜키니정",
             "status": "match",
             "spurious": false
           },
           "spec": {
             "gt": "30T",
-            "ext": "30T",
+            "ext": "√",
             "gtNorm": "30t",
-            "extNorm": "30t",
-            "status": "match",
+            "extNorm": "",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
             "gt": "10",
-            "ext": "",
+            "ext": "10",
             "gtNorm": "10",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "10",
+            "status": "match",
             "spurious": false
           },
           "unitPrice": {
             "gt": "1881810",
-            "ext": "",
+            "ext": "18,818.10",
             "gtNorm": "1881810",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "1881810",
+            "status": "match",
             "spurious": false
           },
           "amount": {
             "gt": "0",
-            "ext": "18,818",
+            "ext": "188181",
             "gtNorm": "0",
-            "extNorm": "18818",
+            "extNorm": "188181",
             "status": "mismatch",
             "spurious": false
           },
@@ -369,19 +383,35 @@
             "extNorm": "8806718033215",
             "status": "mismatch",
             "spurious": false
+          },
+          "itemCodeLearnA": {
+            "gt": "8806718033215",
+            "ext": "8806718033215",
+            "gtNorm": "8806718033215",
+            "extNorm": "8806718033215",
+            "status": "match",
+            "spurious": false
+          },
+          "itemCodeLearnB": {
+            "gt": "8806718033215",
+            "ext": "8806718033215",
+            "gtNorm": "8806718033215",
+            "extNorm": "8806718033215",
+            "status": "match",
+            "spurious": false
           }
         }
       }
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 6,
-      "mismatch": 6,
-      "ext_missing": 8,
+      "match": 7,
+      "mismatch": 7,
+      "ext_missing": 6,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3
+    "cellAccuracy": 0.35
   },
   "buckets": {
     "defects": [
@@ -400,14 +430,6 @@
         "extNorm": "경기도광주시초월읍경충대로1284번길5112층",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.91)"
-      },
-      {
-        "location": "table",
-        "status": "rows_extra",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor invented rows ['1']"
       },
       {
         "location": "row2:itemName",
@@ -466,39 +488,31 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row3:itemName",
+        "location": "row1:itemName",
         "status": "mismatch",
         "gtNorm": "펜키니정",
-        "extNorm": "펜키니정30t",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.73)"
+        "extNorm": "향정펜키니정30t",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemNameMaster']"
       },
       {
-        "location": "row3:quantity",
-        "status": "ext_missing",
-        "gtNorm": "10",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:unitPrice",
-        "status": "ext_missing",
-        "gtNorm": "1881810",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row3:amount",
+        "location": "row1:spec",
         "status": "mismatch",
-        "gtNorm": "0",
-        "extNorm": "18818",
+        "gtNorm": "30t",
+        "extNorm": "",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row3:expiryDate",
+        "location": "row1:amount",
+        "status": "mismatch",
+        "gtNorm": "0",
+        "extNorm": "188181",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
+      },
+      {
+        "location": "row1:expiryDate",
         "status": "ext_missing",
         "gtNorm": "20271203",
         "extNorm": "",
@@ -506,15 +520,15 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row3:manufacturingNo",
+        "location": "row1:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "10",
         "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['quantity']"
       },
       {
-        "location": "row3:insuranceCode",
+        "location": "row1:insuranceCode",
         "status": "mismatch",
         "gtNorm": "24003",
         "extNorm": "8806718033215",
@@ -524,8 +538,8 @@
     ],
     "bucketTally": {
       "recognition": 8,
-      "structure": 9,
-      "layout": 0,
+      "structure": 5,
+      "layout": 2,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

@@ -35,10 +35,11 @@ sys.path.insert(0, HERE)
 import contract as C  # noqa: E402
 import parser_drop_classify as P  # noqa: E402
 from finetune_ledger import _ocr_boxes, _best_box, BOX_MATCH_FLOOR, CORPUS_DIR  # noqa: E402
-from finetune_crops import cut_crops, load_labels, write_labels  # noqa: E402
+from finetune_crops import crop_name, cut_crops, load_labels, write_labels  # noqa: E402
 
 CROPS_CORRECT_DIR = os.path.join(CORPUS_DIR, "crops_correct")
 LABELS_CORRECT_PATH = os.path.join(CORPUS_DIR, "labels_correct.txt")
+BALANCE_META_PATH = os.path.join(CORPUS_DIR, "labels_correct.meta.jsonl")
 # 전 필드 인쇄형 학습(2026-07-09): balance = GT-검증된 '우리 읽음(인쇄형)' 크롭이 곧
 # 전 필드(숫자·날짜·품목) 인쇄형 라벨 소스. 상한을 30→160 으로 올려 이미지당 대부분의
 # 정답 셀을 담는다(문서당 ~160셀). 이걸 학습 주 데이터로 써서 전 필드 인식을 올림
@@ -126,6 +127,30 @@ def main() -> int:
     stats = cut_crops(entries, processed_dir, CROPS_CORRECT_DIR, labels, rel_prefix="crops_correct")
     write_labels(labels, LABELS_CORRECT_PATH)
 
+    # Preserve the originating column.  The old two-column label file is kept
+    # for Paddle compatibility; this small sidecar lets held-out reporting
+    # distinguish real itemName crops from company/address Hangul.
+    metadata: dict[str, dict] = {}
+    if os.path.exists(BALANCE_META_PATH):
+        for line in open(BALANCE_META_PATH, encoding="utf-8"):
+            try:
+                rec = json.loads(line)
+                metadata[rec["path"]] = rec
+            except (json.JSONDecodeError, KeyError):
+                continue
+    for entry in entries:
+        rel = f"crops_correct/{crop_name(entry)}"
+        if rel in labels:
+            metadata[rel] = {
+                "path": rel, "column": entry.get("column"),
+                "location": entry.get("location"), "source": "balance",
+            }
+    tmp = BALANCE_META_PATH + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as fh:
+        for rel in sorted(metadata):
+            fh.write(json.dumps(metadata[rel], ensure_ascii=False) + "\n")
+    os.replace(tmp, BALANCE_META_PATH)
+
     sys.stdout.reconfigure(errors="replace")
     run_label = os.path.relpath(run_dir, C.RUNS_DIR)
     print(f"[balance] {run_label}: correct candidates={len(entries)}  "
@@ -133,6 +158,7 @@ def main() -> int:
           f"{stats['missing_img']} no-image, {stats['oob']} bad-bbox")
     print(f"[balance] BALANCE crops: {len(labels)} total  ->  {CROPS_CORRECT_DIR}")
     print(f"[balance] labels: {LABELS_CORRECT_PATH}")
+    print(f"[balance] metadata: {BALANCE_META_PATH}")
     return 0
 
 

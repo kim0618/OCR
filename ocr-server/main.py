@@ -95,6 +95,8 @@ from extractors.master_match import (
     fill_insurance_from_master,
     fill_party_match,
     strip_trailing_item_classification,
+    strip_trailing_item_page_fraction,
+    strip_leading_item_code,
 )
 from utils.regex_patterns import (
     _PHONE_RE,
@@ -3620,6 +3622,17 @@ async def ocr_extract(
                         extract_debug["trailingItemClassificationStrip"] = _class_dbg
             except Exception as _class_e:
                 print(f"[item_classification_strip] failed (response unaffected): {_class_e}")
+            # A leading pure-numeric token (barcode / row index / date) glued
+            # before the drug name is OCR contamination, not part of the name.
+            try:
+                if isinstance(document_fields, dict) and document_fields.get("tableRows"):
+                    _lead_rows, _lead_dbg = strip_leading_item_code(
+                        document_fields["tableRows"])
+                    document_fields["tableRows"] = _lead_rows
+                    if _lead_dbg.get("stripped"):
+                        extract_debug["leadingItemCodeStrip"] = _lead_dbg
+            except Exception as _lead_e:
+                print(f"[item_leading_code_strip] failed (response unaffected): {_lead_e}")
             # Run only after row append/split/synthesis is complete.  This helper
             # first repairs same-row column misplacement, then uses the stricter
             # OCR-column recovery for any remaining blank amount cells.
@@ -3748,6 +3761,17 @@ async def ocr_extract(
                         extract_debug["masterMatchFill"] = _mm_dbg
             except Exception as _mm_e:
                 print(f"[master_match_fill] failed (response unaffected): {_mm_e}")
+            # Clean the displayed raw name after Master choice so the page
+            # marker cannot change the global Master candidate.
+            try:
+                if isinstance(document_fields, dict) and document_fields.get("tableRows"):
+                    _page_rows, _page_dbg = strip_trailing_item_page_fraction(
+                        document_fields["tableRows"])
+                    document_fields["tableRows"] = _page_rows
+                    if _page_dbg.get("stripped"):
+                        extract_debug["trailingItemPageFractionStrip"] = _page_dbg
+            except Exception as _page_e:
+                print(f"[item_page_fraction_strip] failed (response unaffected): {_page_e}")
             # 보험코드 master-join: itemCode→bohum/pyojun 빈칸fill + 이중게이트(whitelist
             # 밖 AND 형식불량) 쓰레기 교체. ★마스터매칭 뒤 — G4 가 채운 itemCode 를 쓴다.
             try:

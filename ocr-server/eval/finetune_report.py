@@ -17,6 +17,7 @@ import base64
 import difflib
 import glob
 import html
+import json
 import os
 import sys
 
@@ -27,6 +28,8 @@ from finetune_ledger import CORPUS_DIR  # noqa: E402
 BASE_MODEL = "korean_PP-OCRv5_mobile_rec"
 TEST_LIST = os.path.join(CORPUS_DIR, "test.txt")
 OUT = os.path.join(HERE, "finetune", "FINETUNE_REPORT.html")
+OUT_JSON = os.path.join(HERE, "finetune", "FINETUNE_REPORT.json")
+PREDICTIONS_JSONL = os.path.join(HERE, "finetune", "FINETUNE_PREDICTIONS.jsonl")
 MAX_EXAMPLES = 40          # 개선/회귀 각각 최대 표시(크롭 박음)
 
 
@@ -102,6 +105,17 @@ def main() -> int:
     ft = create_model(BASE_MODEL, ft_dir)
     ft_pred = predict_all(ft, paths)
 
+    # The slice report runs immediately after this report.  Persist predictions
+    # once so 품명/숫자 breakdown does not perform the same expensive GPU
+    # inference a second time.  Labels/paths are included for stale-cache checks.
+    os.makedirs(os.path.dirname(OUT), exist_ok=True)
+    pred_tmp = PREDICTIONS_JSONL + ".tmp"
+    with open(pred_tmp, "w", encoding="utf-8") as fh:
+        for (_, rel, gt), base_text, ft_text in zip(rows, base_pred, ft_pred):
+            fh.write(json.dumps({"path": rel, "gt": gt, "base": base_text, "finetuned": ft_text},
+                                ensure_ascii=False) + "\n")
+    os.replace(pred_tmp, PREDICTIONS_JSONL)
+
     def acc(preds):
         exact = sum(p.strip() == g.strip() for p, g in zip(preds, gts))
         char = sum(_sim(p.strip(), g.strip()) for p, g in zip(preds, gts))
@@ -130,9 +144,15 @@ def main() -> int:
              "base_ok": base_ok, "ft_ok": ft_ok, "both_ok": both_ok,
              "gains": len(gains), "regress": len(regress), "ft_dir": ft_dir}
     html_out = render(stats, gains, regress)
-    os.makedirs(os.path.dirname(OUT), exist_ok=True)
     open(OUT, "w", encoding="utf-8").write(html_out)
+    with open(OUT_JSON, "w", encoding="utf-8") as fh:
+        json.dump({"schemaVersion": "finetune-report.v1", **stats,
+                   "overallDeltaPp": f_ex - b_ex,
+                   "netChange": len(gains) - len(regress)},
+                  fh, ensure_ascii=False, indent=2)
+        fh.write("\n")
     print(f"[report] wrote {OUT}")
+    print(f"[report] wrote {OUT_JSON}")
     return 0
 
 

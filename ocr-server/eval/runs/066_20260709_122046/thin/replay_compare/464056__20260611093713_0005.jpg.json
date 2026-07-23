@@ -216,7 +216,7 @@
           "itemNameMaster": {
             "gt": "클자핀정200mg(병)",
             "ext": "옴짜라정200mg",
-            "gtNorm": "클자핀정200mg(병)",
+            "gtNorm": "클자핀정200mg",
             "extNorm": "옴짜라정200mg",
             "status": "mismatch",
             "spurious": false
@@ -231,18 +231,18 @@
           },
           "quantity": {
             "gt": "12",
-            "ext": "12",
+            "ext": "",
             "gtNorm": "12",
-            "extNorm": "12",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "unitPrice": {
             "gt": "3436783",
-            "ext": "3436783",
+            "ext": "",
             "gtNorm": "3436783",
-            "extNorm": "3436783",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "amount": {
@@ -276,19 +276,35 @@
             "extNorm": "01014972",
             "status": "mismatch",
             "spurious": false
+          },
+          "itemCodeLearnA": {
+            "gt": "03001596",
+            "ext": "01014972",
+            "gtNorm": "03001596",
+            "extNorm": "01014972",
+            "status": "mismatch",
+            "spurious": false
+          },
+          "itemCodeLearnB": {
+            "gt": "03001596",
+            "ext": "01014972",
+            "gtNorm": "03001596",
+            "extNorm": "01014972",
+            "status": "mismatch",
+            "spurious": false
           }
         }
       }
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 3,
+      "match": 1,
       "mismatch": 4,
-      "ext_missing": 2,
+      "ext_missing": 4,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3333333333333333
+    "cellAccuracy": 0.1111111111111111
   },
   "buckets": {
     "defects": [
@@ -335,10 +351,26 @@
       {
         "location": "row4:itemNameMaster",
         "status": "mismatch",
-        "gtNorm": "클자핀정200mg(병)",
+        "gtNorm": "클자핀정200mg",
         "extNorm": "옴짜라정200mg",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.57)"
+        "reason": "char-level diff (sim=0.67)"
+      },
+      {
+        "location": "row4:quantity",
+        "status": "ext_missing",
+        "gtNorm": "12",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row4:unitPrice",
+        "status": "ext_missing",
+        "gtNorm": "3436783",
+        "extNorm": "",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['amount']"
       },
       {
         "location": "row4:amount",
@@ -371,12 +403,28 @@
         "extNorm": "01014972",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
+      },
+      {
+        "location": "row4:itemCodeLearnA",
+        "status": "mismatch",
+        "gtNorm": "03001596",
+        "extNorm": "01014972",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
+      },
+      {
+        "location": "row4:itemCodeLearnB",
+        "status": "mismatch",
+        "gtNorm": "03001596",
+        "extNorm": "01014972",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       }
     ],
     "bucketTally": {
-      "recognition": 7,
-      "structure": 3,
-      "layout": 0,
+      "recognition": 9,
+      "structure": 4,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

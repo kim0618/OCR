@@ -47,13 +47,15 @@ def _add(dst: dict[str, int], src: dict[str, int]) -> None:
 def _load_compares(run_dir: str) -> list[dict[str, Any]]:
     out = []
     for p in sorted(glob.glob(os.path.join(run_dir, "compare", "*.json"))):
-        out.append(json.load(open(p, encoding="utf-8")))
+        with open(p, encoding="utf-8") as fh:
+            out.append(json.load(fh))
     return out
 
 
 def _read_testset(run_dir: str) -> str:
     try:
-        meta = json.load(open(os.path.join(run_dir, "run_meta.json"), encoding="utf-8"))
+        with open(os.path.join(run_dir, "run_meta.json"), encoding="utf-8") as fh:
+            meta = json.load(fh)
         return meta.get("testset") or C.DEFAULT_TESTSET
     except Exception:
         return C.DEFAULT_TESTSET
@@ -68,6 +70,10 @@ def compute_metrics(run_dir: str) -> dict[str, Any]:
     overall_field = _new_counts()
     overall_cell = _new_counts()
     per_field: dict[str, dict[str, int]] = {}
+    # Table cells used to be available only as one aggregate.  Keep a column
+    # breakdown as well so operational summaries can answer questions such as
+    # "did itemName improve?" without re-reading every compare file.
+    per_cell_field: dict[str, dict[str, int]] = {}
     buckets_total = {"recognition": 0, "structure": 0, "layout": 0, "preprocessing": 0}
     by_path: dict[str, dict[str, dict[str, int]]] = {}   # path -> {field, cell}
     edited_split = {"edited": _new_counts(), "nonEdited": _new_counts()}
@@ -134,6 +140,18 @@ def compute_metrics(run_dir: str) -> dict[str, Any]:
                 difficulty_split[dbucket]["scored"] += 1
             difficulty_split[dbucket][st] = difficulty_split[dbucket].get(st, 0) + 1
 
+        # Per table-column accuracy.  Include structurally missing GT rows: the
+        # comparer materializes them in table.rows with ext_missing cells.
+        for row in d["table"].get("rows", []):
+            for column, info in (row.get("cells") or {}).items():
+                pc = per_cell_field.setdefault(column, _new_counts())
+                st = info.get("status", "gt_empty")
+                if st != "gt_empty":
+                    pc["scored"] += 1
+                pc[st] = pc.get(st, 0) + 1
+                if info.get("spurious"):
+                    pc["spurious"] += 1
+
         # buckets
         for b, n in d["buckets"]["bucketTally"].items():
             buckets_total[b] = buckets_total.get(b, 0) + n
@@ -178,6 +196,7 @@ def compute_metrics(run_dir: str) -> dict[str, Any]:
             "cellMacro": _macro(macro_cell),         # macro(샘플평균)
         },
         "perField": {k: finalize(v) for k, v in sorted(per_field.items())},
+        "perCellField": {k: finalize(v) for k, v in sorted(per_cell_field.items())},
         # spurious(지어내기) = GT 빈칸인데 추출이 값을 채운 false positive. recall 과
         # 무관(채점 제외)이라 별도 노출. rate = spurious / 전체 GT-빈칸(gt_empty).
         "spurious": {

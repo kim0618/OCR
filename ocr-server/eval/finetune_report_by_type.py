@@ -1,47 +1,87 @@
-"""finetune_report_by_type — 파인튜닝 판정을 '필드 타입별'로 분해.
+"""Compare base vs fine-tuned recognition on honest held-out slices.
 
-전체 리포트(finetune_report.py)는 base vs ft 를 뭉뚱그린 exact 만 준다. 하지만
-숫자(콤마 붕괴로 회귀)와 품명(한글)은 방향이 정반대일 수 있다(이전 v-run 들에서
-품명↑·숫자↓). 이 스크립트는 held-out test 크롭을 gt 로 분류해 타입별 base vs ft
-exact / 개선·회귀를 따로 낸다.
-
-분류(gt 기준):
-  품명   = 한글 포함(itemName 계열)
-  숫자   = 한글 없음 + 숫자 포함(수량/단가/금액/코드/날짜)
-  기타   = 나머지
-
-    ../.venv/bin/python eval/finetune_report_by_type.py            # 타입별 전량
-    ../.venv/bin/python eval/finetune_report_by_type.py --sample 5000   # 타입별 표본(빠름)
+Unlike the legacy implementation, Hangul is not automatically called
+``itemName``.  ``build_dataset.py`` preserves each crop's originating column in
+``dataset/split_metadata.jsonl``; that metadata gives us a real 품명 slice while
+still reporting other Hangul and numeric preservation separately.
 """
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
 
-from finetune_report import (BASE_MODEL, CORPUS_DIR, find_ft_inference,  # noqa: E402
-                             load_test, predict_all)
+from finetune_report import (BASE_MODEL, CORPUS_DIR, PREDICTIONS_JSONL,
+                             find_ft_inference, load_test, predict_all)
 
 HANGUL = re.compile(r"[가-힣]")
 DIGIT = re.compile(r"[0-9]")
+NUMERIC_COLUMNS = {
+    "quantity", "unitPrice", "amount", "supplyAmount", "taxAmount",
+    "discountAmount", "totalAmount", "itemCode", "lotNo", "expiryDate",
+    "manufacturingNo", "buyerBizNumber", "supplierBizNumber", "issueDate",
+}
+DEFAULT_OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                           "finetune", "FINETUNE_REPORT_BY_TYPE.json")
 
 
-def _type(gt: str) -> str:
+def _load_test_metadata() -> dict[str, dict]:
+    path = os.path.join(CORPUS_DIR, "dataset", "split_metadata.jsonl")
+    result: dict[str, dict] = {}
+    if not os.path.exists(path):
+        return result
+    for line in open(path, encoding="utf-8"):
+        try:
+            rec = json.loads(line)
+            if rec.get("split") == "test":
+                result[rec["path"]] = rec
+        except (json.JSONDecodeError, KeyError):
+            continue
+    return result
+
+
+def _type(gt: str, meta: dict | None = None) -> str:
+    meta = meta or {}
+    column = meta.get("column")
+    if column in ("itemName", "itemNameMaster"):
+        return "품명"
+    if column in NUMERIC_COLUMNS or meta.get("source") == "numberAnchor":
+        return "숫자"
     if HANGUL.search(gt):
-        return "품명(한글)"
+        return "한글(기타)"
     if DIGIT.search(gt):
         return "숫자"
     return "기타"
 
 
-def _exact(preds, gts):
+def _exact(preds: list[str], gts: list[str]) -> int:
     return sum(p.strip() == g.strip() for p, g in zip(preds, gts))
 
 
+def _prediction_cache(rows: list[tuple[str, str, str]]) -> dict[str, dict] | None:
+    """Load only when it exactly matches the current held-out path+label set."""
+    if not os.path.exists(PREDICTIONS_JSONL):
+        return None
+    cached: dict[str, dict] = {}
+    try:
+        for line in open(PREDICTIONS_JSONL, encoding="utf-8"):
+            rec = json.loads(line)
+            cached[rec["path"]] = rec
+    except (OSError, json.JSONDecodeError, KeyError):
+        return None
+    if len(cached) != len(rows):
+        return None
+    if any(rel not in cached or cached[rel].get("gt") != gt for _, rel, gt in rows):
+        return None
+    return cached
+
+
 def main() -> int:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--sample", type=int, default=0, help="타입별 최대 표본(0=전량)")
-    args = ap.parse_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--sample", type=int, default=0, help="타입별 최대 표본(0=전량)")
+    parser.add_argument("--json-out", default=DEFAULT_OUT)
+    args = parser.parse_args()
 
     try:
         from paddlex import create_model
@@ -49,44 +89,83 @@ def main() -> int:
         from paddlex.inference import create_model  # type: ignore
 
     rows = load_test()
-    # 타입별 버킷
-    buckets: dict[str, list] = {}
-    for p, rel, gt in rows:
-        buckets.setdefault(_type(gt), []).append((p, gt))
-    print("=== held-out test 크롭 구성 ===")
-    for t, items in sorted(buckets.items(), key=lambda kv: -len(kv[1])):
-        print(f"  {t}: {len(items):,}")
+    cache = _prediction_cache(rows)
+    metadata = _load_test_metadata()
+    buckets: dict[str, list[tuple[str, str, str]]] = {}
+    unknown_column = 0
+    for path, rel, gt in rows:
+        meta = metadata.get(rel)
+        if not meta or not meta.get("column"):
+            unknown_column += 1
+        buckets.setdefault(_type(gt, meta), []).append((path, rel, gt))
 
-    if args.sample:  # 결정적 표본(앞에서 N개; 순서는 test.txt 고정이라 재현됨)
-        for t in buckets:
-            buckets[t] = buckets[t][: args.sample]
+    print("=== held-out test 크롭 구성 ===")
+    for label, items in sorted(buckets.items(), key=lambda pair: -len(pair[1])):
+        print(f"  {label}: {len(items):,}")
+    if unknown_column:
+        print(f"  (원본 컬럼 메타데이터 없음: {unknown_column:,} — 글자종류로 분류)")
+
+    total_rows = sum(len(items) for items in buckets.values())
+    if args.sample:
+        for label in buckets:
+            buckets[label] = buckets[label][:args.sample]
 
     ft_dir = find_ft_inference()
     if not ft_dir:
         raise SystemExit("no fine-tuned inference dir — run export first")
     print(f"\n[모델] base={BASE_MODEL}  ft={ft_dir}")
-
-    base = create_model(BASE_MODEL)
-    ft = create_model(BASE_MODEL, ft_dir)
+    base = ft = None
+    if cache:
+        print(f"[type-report] 전체 리포트 예측 캐시 재사용: {len(cache):,}장")
+    else:
+        print("[type-report] 예측 캐시 없음/불일치 — 모델 추론 실행")
+        base = create_model(BASE_MODEL)
+        ft = create_model(BASE_MODEL, ft_dir)
 
     print(f"\n{'타입':<12}{'n':>8}{'base exact':>12}{'ft exact':>12}{'Δ%p':>8}"
           f"{'개선':>8}{'회귀':>8}{'순증':>8}")
     print("-" * 76)
-    for t, items in sorted(buckets.items(), key=lambda kv: -len(kv[1])):
-        paths = [p for p, _ in items]
-        gts = [g for _, g in items]
-        bp = predict_all(base, paths)
-        fp = predict_all(ft, paths)
+    groups: dict[str, dict] = {}
+    for label, items in sorted(buckets.items(), key=lambda pair: -len(pair[1])):
+        paths = [path for path, _, _ in items]
+        rels = [rel for _, rel, _ in items]
+        gts = [gt for _, _, gt in items]
+        if cache:
+            base_preds = [cache[rel].get("base") or "" for rel in rels]
+            ft_preds = [cache[rel].get("finetuned") or "" for rel in rels]
+        else:
+            base_preds = predict_all(base, paths)
+            ft_preds = predict_all(ft, paths)
         n = len(items)
-        be = _exact(bp, gts); fe = _exact(fp, gts)
+        base_exact = _exact(base_preds, gts)
+        ft_exact = _exact(ft_preds, gts)
         gains = sum(b.strip() != g.strip() and f.strip() == g.strip()
-                    for b, f, g in zip(bp, fp, gts))
-        regr = sum(b.strip() == g.strip() and f.strip() != g.strip()
-                   for b, f, g in zip(bp, fp, gts))
-        bpct = 100 * be / n if n else 0
-        fpct = 100 * fe / n if n else 0
-        print(f"{t:<12}{n:>8,}{bpct:>11.1f}%{fpct:>11.1f}%{fpct-bpct:>+8.1f}"
-              f"{gains:>+8}{-regr:>8}{gains-regr:>+8}")
+                    for b, f, g in zip(base_preds, ft_preds, gts))
+        regressions = sum(b.strip() == g.strip() and f.strip() != g.strip()
+                          for b, f, g in zip(base_preds, ft_preds, gts))
+        base_pct = 100 * base_exact / n if n else 0.0
+        ft_pct = 100 * ft_exact / n if n else 0.0
+        groups[label] = {
+            "n": n, "baseExact": base_exact, "fineTunedExact": ft_exact,
+            "baseExactPct": base_pct, "fineTunedExactPct": ft_pct,
+            "deltaPp": ft_pct - base_pct, "gains": gains,
+            "regressions": regressions, "netChange": gains - regressions,
+        }
+        print(f"{label:<12}{n:>8,}{base_pct:>11.1f}%{ft_pct:>11.1f}%"
+              f"{ft_pct-base_pct:>+8.1f}{gains:>+8}{-regressions:>8}{gains-regressions:>+8}")
+
+    payload = {
+        "schemaVersion": "finetune-slices.v2", "baseModel": BASE_MODEL,
+        "fineTunedModel": ft_dir, "metadataCoverage": {
+            "knownColumn": total_rows - unknown_column,
+            "unknownColumn": unknown_column,
+        }, "groups": groups,
+    }
+    os.makedirs(os.path.dirname(os.path.abspath(args.json_out)), exist_ok=True)
+    with open(args.json_out, "w", encoding="utf-8") as fh:
+        json.dump(payload, fh, ensure_ascii=False, indent=2)
+        fh.write("\n")
+    print(f"[type-report] wrote {args.json_out}")
     return 0
 
 

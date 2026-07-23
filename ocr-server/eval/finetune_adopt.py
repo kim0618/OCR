@@ -59,25 +59,41 @@ def _find(root: str, name: str) -> str | None:
     return hits[0] if hits else None
 
 
-def _prev_version() -> str | None:
+def _prev_base() -> str | None:
     meta = os.path.join(ADOPTED, "META.json")
     if os.path.exists(meta):
         try:
-            return json.load(open(meta, encoding="utf-8")).get("version")
+            value = json.load(open(meta, encoding="utf-8"))
+            return value.get("runTs") or value.get("version")
         except Exception:
             return None
     return None
 
 
-def adopt(version: str | None, parent: str | None) -> int:
+def _latest_finetune() -> dict | None:
+    """The output/ directory belongs to the most recently recorded FT run."""
+    history = os.path.join(HERE, "RUN_HISTORY.jsonl")
+    try:
+        rows = [json.loads(line) for line in open(history, encoding="utf-8") if line.strip()]
+        return next((row for row in reversed(rows) if row.get("kind") == "finetune"), None)
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
+def adopt(version: str | None, parent: str | None, run_ts: str | None = None) -> int:
     if not os.path.isdir(OUT):
         print(f"[adopt] output 없음: {OUT} — 먼저 파인튜닝을 돌리세요")
         return 1
     now = datetime.datetime.now()
     version = version or now.strftime("v%y%m%d_%H%M")
-    # parent 미지정 → 직전 채택본을 이어받은 것으로 간주(트리 줄기), 없으면 official
+    latest = _latest_finetune() or {}
+    # Human version(v6) and history run id(260723_...) are separate.  The tree
+    # must link by run id; otherwise an adopt --version v6 never marks the row
+    # that actually produced the weights.
+    run_ts = run_ts or latest.get("ts") or version
+    # Prefer the base captured when training actually ran.
     if parent is None:
-        parent = _prev_version() or "official"
+        parent = latest.get("base") or _prev_base() or "official"
 
     inf = _find(OUT, "inference")
     pdp = _find(OUT, "best_accuracy.pdparams") or _find(OUT, "latest.pdparams")
@@ -105,6 +121,7 @@ def adopt(version: str | None, parent: str | None) -> int:
 
     meta = {
         "version": version,
+        "runTs": run_ts,
         "parent": parent,
         "adopted_at": now.strftime("%Y-%m-%d %H:%M"),
         "inference": os.path.relpath(os.path.join(ADOPTED, "inference"), HERE),
@@ -116,16 +133,16 @@ def adopt(version: str | None, parent: str | None) -> int:
     # 3) 계보 이벤트 기록 → 트리 화면 ★ + base 반영
     try:
         from run_history import record, render_html
-        record("adopt", ts=version, base=parent)   # ★ 표시(해당 finetune 행 adopted=1)
+        record("adopt", ts=run_ts, version=version, base=parent)
         render_html()
     except Exception as exc:
         print(f"  (run_history 기록 실패: {exc})")
 
-    print(f"[adopt] ★ 채택 완료: {version}  (부모={parent})")
+    print(f"[adopt] ★ 채택 완료: {version}  (run={run_ts}, 부모={parent})")
     print(f"        adopted/inference  → main.py 가 이걸 rec 로 로드")
     print(f"        adopted/best_accuracy.pdparams → --from-adopted 이어받기 base")
     print(f"        스냅샷: {os.path.relpath(vdir, HERE)}")
-    print(f"  다음 라운드: bash ~/OCR/run-finetune.sh --from-adopted  (부모={version} 로 이어받음)")
+    print(f"  다음 라운드: bash ~/OCR/run-finetune.sh --from-adopted  (부모 run={run_ts} 로 이어받음)")
     return 0
 
 
@@ -133,7 +150,9 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--version", default=None, help="채택 버전 태그(기본 vYYMMDD_HHMM)")
     ap.add_argument("--parent", default=None, help="이어받은 부모(기본 직전 채택본→없으면 official)")
-    return adopt(ap.parse_args().version, ap.parse_args().parent)
+    ap.add_argument("--run-ts", default=None, help="채택할 RUN_HISTORY FT run(기본 최신 run)")
+    args = ap.parse_args()
+    return adopt(args.version, args.parent, args.run_ts)
 
 
 if __name__ == "__main__":

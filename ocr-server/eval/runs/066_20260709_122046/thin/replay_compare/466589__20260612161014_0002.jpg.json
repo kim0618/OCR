@@ -215,10 +215,10 @@
           },
           "itemNameMaster": {
             "gt": "트라스트패취(제약사품절)",
-            "ext": "트라스트패취(비급여)",
-            "gtNorm": "트라스트패취(제약사품절)",
-            "extNorm": "트라스트패취(비급여)",
-            "status": "mismatch",
+            "ext": "트라스트패취",
+            "gtNorm": "트라스트패취",
+            "extNorm": "트라스트패취",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -284,6 +284,22 @@
             "extNorm": "8806447022214",
             "status": "mismatch",
             "spurious": false
+          },
+          "itemCodeLearnA": {
+            "gt": "8806447022221",
+            "ext": "8806447022221",
+            "gtNorm": "8806447022221",
+            "extNorm": "8806447022221",
+            "status": "match",
+            "spurious": false
+          },
+          "itemCodeLearnB": {
+            "gt": "8806447022221",
+            "ext": "8806447022221",
+            "gtNorm": "8806447022221",
+            "extNorm": "8806447022221",
+            "status": "match",
+            "spurious": false
           }
         }
       },
@@ -301,9 +317,9 @@
           },
           "itemNameMaster": {
             "gt": "오메드정10mg(생산중단)",
-            "ext": "오메드정10mg(생산중단)",
-            "gtNorm": "오메드정10mg(생산중단)",
-            "extNorm": "오메드정10mg(생산중단)",
+            "ext": "오메드정10mg",
+            "gtNorm": "오메드정10mg",
+            "extNorm": "오메드정10mg",
             "status": "match",
             "spurious": false
           },
@@ -370,19 +386,35 @@
             "extNorm": "644701850",
             "status": "mismatch",
             "spurious": false
+          },
+          "itemCodeLearnA": {
+            "gt": "03002275",
+            "ext": "03002275",
+            "gtNorm": "03002275",
+            "extNorm": "03002275",
+            "status": "match",
+            "spurious": false
+          },
+          "itemCodeLearnB": {
+            "gt": "03002275",
+            "ext": "03002275",
+            "gtNorm": "03002275",
+            "extNorm": "03002275",
+            "status": "match",
+            "spurious": false
           }
         }
       }
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 5,
-      "mismatch": 7,
+      "match": 6,
+      "mismatch": 6,
       "ext_missing": 8,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.25
+    "cellAccuracy": 0.3
   },
   "buckets": {
     "defects": [
@@ -401,14 +433,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "extractor invented rows ['1', '2']"
-      },
-      {
-        "location": "row3:itemNameMaster",
-        "status": "mismatch",
-        "gtNorm": "트라스트패취(제약사품절)",
-        "extNorm": "트라스트패취(비급여)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.67)"
       },
       {
         "location": "row3:spec",
@@ -463,8 +487,8 @@
         "status": "mismatch",
         "gtNorm": "8806447022221",
         "extNorm": "8806447022214",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.92)"
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemCodeLearnA', 'itemCodeLearnB']"
       },
       {
         "location": "row3:insuranceCode",
@@ -524,9 +548,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 8,
+      "recognition": 6,
       "structure": 9,
-      "layout": 0,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

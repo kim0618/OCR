@@ -198,10 +198,10 @@
           },
           "itemNameMaster": {
             "gt": "트라스트패취(비급여)",
-            "ext": "트라스트패취(비급여)(생산중단)",
-            "gtNorm": "트라스트패취(비급여)",
-            "extNorm": "트라스트패취(비급여)(생산중단)",
-            "status": "mismatch",
+            "ext": "트라스트패취",
+            "gtNorm": "트라스트패취",
+            "extNorm": "트라스트패취",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -267,19 +267,35 @@
             "extNorm": "8806447022283",
             "status": "mismatch",
             "spurious": false
+          },
+          "itemCodeLearnA": {
+            "gt": "8806447022214",
+            "ext": "8806447022221",
+            "gtNorm": "8806447022214",
+            "extNorm": "8806447022221",
+            "status": "mismatch",
+            "spurious": false
+          },
+          "itemCodeLearnB": {
+            "gt": "8806447022214",
+            "ext": "8806447022221",
+            "gtNorm": "8806447022214",
+            "extNorm": "8806447022221",
+            "status": "mismatch",
+            "spurious": false
           }
         }
       }
     ],
     "cellCounts": {
       "scored": 10,
-      "match": 0,
-      "mismatch": 7,
+      "match": 1,
+      "mismatch": 6,
       "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.0
+    "cellAccuracy": 0.1
   },
   "buckets": {
     "defects": [
@@ -304,16 +320,8 @@
         "status": "mismatch",
         "gtNorm": "트라스트패취",
         "extNorm": "트라스트패취48mg",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.75)"
-      },
-      {
-        "location": "row1:itemNameMaster",
-        "status": "mismatch",
-        "gtNorm": "트라스트패취(비급여)",
-        "extNorm": "트라스트패취(비급여)(생산중단)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.79)"
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemNameMaster']"
       },
       {
         "location": "row1:spec",
@@ -378,12 +386,28 @@
         "extNorm": "8806447022283",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.69)"
+      },
+      {
+        "location": "row1:itemCodeLearnA",
+        "status": "mismatch",
+        "gtNorm": "8806447022214",
+        "extNorm": "8806447022221",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.92)"
+      },
+      {
+        "location": "row1:itemCodeLearnB",
+        "status": "mismatch",
+        "gtNorm": "8806447022214",
+        "extNorm": "8806447022221",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.92)"
       }
     ],
     "bucketTally": {
       "recognition": 8,
       "structure": 3,
-      "layout": 1,
+      "layout": 2,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

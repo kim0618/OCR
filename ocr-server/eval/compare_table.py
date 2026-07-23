@@ -63,7 +63,14 @@ def _align_by_rowindex(gt_rows, ext_rows):
 
 
 def _row_similarity(g: dict[str, Any], e: dict[str, Any]) -> float:
-    """Content similarity for B: itemName text + amount/quantity exact signals."""
+    """Content similarity for B, with itemName as the row identity.
+
+    Amount and quantity remain useful when the parser omitted a name entirely,
+    but they must not steal a GT row from a strong name match.  In particular,
+    a shifted blank-name numeric row used to outscore the real named row
+    (0.50 versus 0.49 under the old 0.50/0.35/0.15 weights), creating a false
+    parser-drop and an ext-only row at the same time.
+    """
     name_sim = SequenceMatcher(
         None, N.norm_text(g.get("itemName", "")), N.norm_text(e.get("itemName", ""))
     ).ratio()
@@ -71,7 +78,7 @@ def _row_similarity(g: dict[str, Any], e: dict[str, Any]) -> float:
     qty_g, qty_e = N.norm_qty(g.get("quantity", "")), N.norm_qty(e.get("quantity", ""))
     amt_match = 1.0 if amt_g and amt_g == amt_e else 0.0
     qty_match = 1.0 if qty_g and qty_g == qty_e else 0.0
-    return 0.5 * name_sim + 0.35 * amt_match + 0.15 * qty_match
+    return 0.70 * name_sim + 0.20 * amt_match + 0.10 * qty_match
 
 
 def _align_by_content(gt_rows, ext_rows, threshold: float = 0.30):

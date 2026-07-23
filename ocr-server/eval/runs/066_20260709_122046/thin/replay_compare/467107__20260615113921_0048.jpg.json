@@ -178,50 +178,48 @@
     "rowCountGt": 1,
     "rowCountExt": 2,
     "rowCountMatch": false,
-    "matchedRowIdx": [],
-    "gtOnlyRowIdx": [
+    "matchedRowIdx": [
       "1"
     ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "1",
       "2"
     ],
     "rows": [
       {
         "rowIndex": "1",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "텔미트렌정",
-            "ext": "",
+            "ext": "텔미트렌정",
             "gtNorm": "텔미트렌정",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "텔미트렌정",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "텔미트렌정20mg",
-            "ext": "",
+            "ext": "텔미트렌정20mg",
             "gtNorm": "텔미트렌정20mg",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "텔미트렌정20mg",
+            "status": "match",
             "spurious": false
           },
           "spec": {
             "gt": "20MG(정규) (병) 30T",
-            "ext": "",
+            "ext": "30T",
             "gtNorm": "20mg정규병30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30t",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
             "gt": "100",
-            "ext": "",
+            "ext": "3",
             "gtNorm": "100",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "3",
+            "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
@@ -234,10 +232,10 @@
           },
           "amount": {
             "gt": "690900",
-            "ext": "",
+            "ext": "6,909",
             "gtNorm": "690900",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "6909",
+            "status": "mismatch",
             "spurious": false
           },
           "expiryDate": {
@@ -258,10 +256,26 @@
           },
           "itemCode": {
             "gt": "04005201",
-            "ext": "",
+            "ext": "22002967",
             "gtNorm": "04005201",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "22002967",
+            "status": "mismatch",
+            "spurious": false
+          },
+          "itemCodeLearnA": {
+            "gt": "04005201",
+            "ext": "22002967",
+            "gtNorm": "04005201",
+            "extNorm": "22002967",
+            "status": "mismatch",
+            "spurious": false
+          },
+          "itemCodeLearnB": {
+            "gt": "04005201",
+            "ext": "22002967",
+            "gtNorm": "04005201",
+            "extNorm": "22002967",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -269,13 +283,13 @@
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 0,
-      "mismatch": 0,
-      "ext_missing": 9,
+      "match": 2,
+      "mismatch": 4,
+      "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.0
+    "cellAccuracy": 0.2222222222222222
   },
   "buckets": {
     "defects": [
@@ -337,67 +351,43 @@
       },
       {
         "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['1']"
-      },
-      {
-        "location": "table",
         "status": "rows_extra",
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '2']"
-      },
-      {
-        "location": "row1:itemName",
-        "status": "ext_missing",
-        "gtNorm": "텔미트렌정",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "텔미트렌정20mg",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "reason": "extractor invented rows ['2']"
       },
       {
         "location": "row1:spec",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "20mg정규병30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "30t",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:quantity",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "100",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "3",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:unitPrice",
         "status": "ext_missing",
         "gtNorm": "6909",
         "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['amount']"
       },
       {
         "location": "row1:amount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "690900",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "6909",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.80)"
       },
       {
         "location": "row1:expiryDate",
@@ -417,17 +407,33 @@
       },
       {
         "location": "row1:itemCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "04005201",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "22002967",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
+      },
+      {
+        "location": "row1:itemCodeLearnA",
+        "status": "mismatch",
+        "gtNorm": "04005201",
+        "extNorm": "22002967",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
+      },
+      {
+        "location": "row1:itemCodeLearnB",
+        "status": "mismatch",
+        "gtNorm": "04005201",
+        "extNorm": "22002967",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       }
     ],
     "bucketTally": {
-      "recognition": 4,
-      "structure": 14,
-      "layout": 0,
+      "recognition": 10,
+      "structure": 6,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

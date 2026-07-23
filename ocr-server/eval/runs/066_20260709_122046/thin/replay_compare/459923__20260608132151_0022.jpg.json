@@ -211,10 +211,10 @@
           },
           "itemNameMaster": {
             "gt": "가스터주사액20mg",
-            "ext": "가스터주사액20mg(소분)",
+            "ext": "가스터주사액20mg",
             "gtNorm": "가스터주사액20mg",
-            "extNorm": "가스터주사액20mg(소분)",
-            "status": "mismatch",
+            "extNorm": "가스터주사액20mg",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -280,19 +280,35 @@
             "extNorm": "642507651",
             "status": "mismatch",
             "spurious": false
+          },
+          "itemCodeLearnA": {
+            "gt": "04005342",
+            "ext": "04005342",
+            "gtNorm": "04005342",
+            "extNorm": "04005342",
+            "status": "match",
+            "spurious": false
+          },
+          "itemCodeLearnB": {
+            "gt": "04005342",
+            "ext": "04005342",
+            "gtNorm": "04005342",
+            "extNorm": "04005342",
+            "status": "match",
+            "spurious": false
           }
         }
       }
     ],
     "cellCounts": {
       "scored": 10,
-      "match": 4,
-      "mismatch": 3,
+      "match": 5,
+      "mismatch": 2,
       "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.4
+    "cellAccuracy": 0.5
   },
   "buckets": {
     "defects": [
@@ -329,14 +345,6 @@
         "reason": "value differs, low similarity"
       },
       {
-        "location": "row1:itemNameMaster",
-        "status": "mismatch",
-        "gtNorm": "가스터주사액20mg",
-        "extNorm": "가스터주사액20mg(소분)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.83)"
-      },
-      {
         "location": "row1:spec",
         "status": "ext_missing",
         "gtNorm": "20mg",
@@ -365,8 +373,8 @@
         "status": "mismatch",
         "gtNorm": "04005342",
         "extNorm": "04006080",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemCodeLearnA', 'itemCodeLearnB']"
       },
       {
         "location": "row1:insuranceCode",
@@ -378,9 +386,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 5,
+      "recognition": 3,
       "structure": 5,
-      "layout": 0,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

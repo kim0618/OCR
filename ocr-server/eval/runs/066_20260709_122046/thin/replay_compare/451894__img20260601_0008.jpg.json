@@ -192,14 +192,12 @@
     "rowCountExt": 7,
     "rowCountMatch": false,
     "matchedRowIdx": [
-      "6"
-    ],
-    "gtOnlyRowIdx": [
+      "6",
       "2"
     ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
       "1",
-      "2",
       "3",
       "4",
       "5",
@@ -220,9 +218,9 @@
           },
           "itemNameMaster": {
             "gt": "페스틴정(향정)",
-            "ext": "페스틴정(향정)",
-            "gtNorm": "페스틴정(향정)",
-            "extNorm": "페스틴정(향정)",
+            "ext": "페스틴정",
+            "gtNorm": "페스틴정",
+            "extNorm": "페스틴정",
             "status": "match",
             "spurious": false
           },
@@ -289,36 +287,51 @@
             "extNorm": "8806699041612",
             "status": "mismatch",
             "spurious": false
+          },
+          "itemCodeLearnA": {
+            "gt": "04001968",
+            "ext": "8806699041612",
+            "gtNorm": "04001968",
+            "extNorm": "8806699041612",
+            "status": "mismatch",
+            "spurious": false
+          },
+          "itemCodeLearnB": {
+            "gt": "04001968",
+            "ext": "8806699041612",
+            "gtNorm": "04001968",
+            "extNorm": "8806699041612",
+            "status": "mismatch",
+            "spurious": false
           }
         }
       },
       {
         "rowIndex": "2",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "피티엠정(향정신성의약품)",
-            "ext": "",
+            "ext": "피티엠정(향정신성의약품)",
             "gtNorm": "피티엠정향정신성의약품",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "피티엠정향정신성의약품",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "피티엠정(향정)",
-            "ext": "",
-            "gtNorm": "피티엠정(향정)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "피티엠정",
+            "gtNorm": "피티엠정",
+            "extNorm": "피티엠정",
+            "status": "match",
             "spurious": false
           },
           "spec": {
             "gt": "30 T",
-            "ext": "",
+            "ext": "30T",
             "gtNorm": "30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -331,18 +344,18 @@
           },
           "unitPrice": {
             "gt": "11040",
-            "ext": "",
+            "ext": "220,800",
             "gtNorm": "11040",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "220800",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "220800",
-            "ext": "",
+            "ext": "22,080",
             "gtNorm": "220800",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "22080",
+            "status": "mismatch",
             "spurious": false
           },
           "expiryDate": {
@@ -363,18 +376,34 @@
           },
           "itemCode": {
             "gt": "01004623",
-            "ext": "",
+            "ext": "01004623",
             "gtNorm": "01004623",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "01004623",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "669905860",
-            "ext": "",
+            "ext": "8806699058610",
             "gtNorm": "669905860",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "8806699058610",
+            "status": "mismatch",
+            "spurious": false
+          },
+          "itemCodeLearnA": {
+            "gt": "01004623",
+            "ext": "01004623",
+            "gtNorm": "01004623",
+            "extNorm": "01004623",
+            "status": "match",
+            "spurious": false
+          },
+          "itemCodeLearnB": {
+            "gt": "01004623",
+            "ext": "01004623",
+            "gtNorm": "01004623",
+            "extNorm": "01004623",
+            "status": "match",
             "spurious": false
           }
         }
@@ -382,13 +411,13 @@
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 2,
-      "mismatch": 3,
-      "ext_missing": 15,
+      "match": 6,
+      "mismatch": 6,
+      "ext_missing": 8,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.1
+    "cellAccuracy": 0.3
   },
   "buckets": {
     "defects": [
@@ -426,19 +455,11 @@
       },
       {
         "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['2']"
-      },
-      {
-        "location": "table",
         "status": "rows_extra",
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '2', '3', '4', '5', '7']"
+        "reason": "extractor invented rows ['1', '3', '4', '5', '7']"
       },
       {
         "location": "row6:spec",
@@ -505,28 +526,20 @@
         "reason": "char-level diff (sim=0.73)"
       },
       {
-        "location": "row2:itemName",
-        "status": "ext_missing",
-        "gtNorm": "피티엠정향정신성의약품",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "location": "row6:itemCodeLearnA",
+        "status": "mismatch",
+        "gtNorm": "04001968",
+        "extNorm": "8806699041612",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
-        "location": "row2:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "피티엠정(향정)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row2:spec",
-        "status": "ext_missing",
-        "gtNorm": "30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "location": "row6:itemCodeLearnB",
+        "status": "mismatch",
+        "gtNorm": "04001968",
+        "extNorm": "8806699041612",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row2:quantity",
@@ -538,19 +551,19 @@
       },
       {
         "location": "row2:unitPrice",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "11040",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "220800",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row2:amount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "220800",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "22080",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['unitPrice']"
       },
       {
         "location": "row2:expiryDate",
@@ -569,26 +582,18 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row2:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "01004623",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row2:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "669905860",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "8806699058610",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.82)"
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 19,
-      "layout": 0,
+      "recognition": 9,
+      "structure": 11,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

@@ -206,9 +206,9 @@
         "cells": {
           "itemName": {
             "gt": "아스타틴정10mg",
-            "ext": "2예페리젠정",
+            "ext": "예페리젠정",
             "gtNorm": "아스타틴정10mg",
-            "extNorm": "2예페리젠정",
+            "extNorm": "예페리젠정",
             "status": "mismatch",
             "spurious": false
           },
@@ -259,6 +259,22 @@
             "extNorm": "466156",
             "status": "mismatch",
             "spurious": false
+          },
+          "itemCodeLearnA": {
+            "gt": "04000666",
+            "ext": "466156",
+            "gtNorm": "04000666",
+            "extNorm": "466156",
+            "status": "mismatch",
+            "spurious": false
+          },
+          "itemCodeLearnB": {
+            "gt": "04000666",
+            "ext": "466156",
+            "gtNorm": "04000666",
+            "extNorm": "466156",
+            "status": "mismatch",
+            "spurious": false
           }
         }
       },
@@ -268,10 +284,10 @@
         "cells": {
           "itemName": {
             "gt": "트리부틴정200mg",
-            "ext": "3트리부틴정200mg",
+            "ext": "트리부틴정200mg",
             "gtNorm": "트리부틴정200mg",
-            "extNorm": "3트리부틴정200mg",
-            "status": "mismatch",
+            "extNorm": "트리부틴정200mg",
+            "status": "match",
             "spurious": false
           },
           "itemNameMaster": {
@@ -315,6 +331,22 @@
             "spurious": false
           },
           "itemCode": {
+            "gt": "466158",
+            "ext": "466158",
+            "gtNorm": "466158",
+            "extNorm": "466158",
+            "status": "match",
+            "spurious": false
+          },
+          "itemCodeLearnA": {
+            "gt": "466158",
+            "ext": "466158",
+            "gtNorm": "466158",
+            "extNorm": "466158",
+            "status": "match",
+            "spurious": false
+          },
+          "itemCodeLearnB": {
             "gt": "466158",
             "ext": "466158",
             "gtNorm": "466158",
@@ -384,19 +416,35 @@
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
+          },
+          "itemCodeLearnA": {
+            "gt": "466156",
+            "ext": "",
+            "gtNorm": "466156",
+            "extNorm": "",
+            "status": "ext_missing",
+            "spurious": false
+          },
+          "itemCodeLearnB": {
+            "gt": "466156",
+            "ext": "",
+            "gtNorm": "466156",
+            "extNorm": "",
+            "status": "ext_missing",
+            "spurious": false
           }
         }
       }
     ],
     "cellCounts": {
       "scored": 21,
-      "match": 6,
-      "mismatch": 6,
+      "match": 7,
+      "mismatch": 5,
       "ext_missing": 9,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.2857142857142857
+    "cellAccuracy": 0.3333333333333333
   },
   "buckets": {
     "defects": [
@@ -452,7 +500,7 @@
         "location": "row1:itemName",
         "status": "mismatch",
         "gtNorm": "아스타틴정10mg",
-        "extNorm": "2예페리젠정",
+        "extNorm": "예페리젠정",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       },
@@ -481,12 +529,20 @@
         "reason": "char-level diff (sim=0.57)"
       },
       {
-        "location": "row2:itemName",
+        "location": "row1:itemCodeLearnA",
         "status": "mismatch",
-        "gtNorm": "트리부틴정200mg",
-        "extNorm": "3트리부틴정200mg",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemNameMaster']"
+        "gtNorm": "04000666",
+        "extNorm": "466156",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.57)"
+      },
+      {
+        "location": "row1:itemCodeLearnB",
+        "status": "mismatch",
+        "gtNorm": "04000666",
+        "extNorm": "466156",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.57)"
       },
       {
         "location": "row2:spec",
@@ -567,12 +623,28 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row2:itemCodeLearnA",
+        "status": "ext_missing",
+        "gtNorm": "466156",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row2:itemCodeLearnB",
+        "status": "ext_missing",
+        "gtNorm": "466156",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 7,
-      "structure": 13,
-      "layout": 1,
+      "recognition": 9,
+      "structure": 15,
+      "layout": 0,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

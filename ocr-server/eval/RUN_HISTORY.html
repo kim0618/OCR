@@ -1,40 +1,24 @@
 <!DOCTYPE html><html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>AWS 실행 이력 (eval / 파인튜닝)</title><style>
-:root{--bg:#f6f8fa;--card:#fff;--line:#d0d7de;--fg:#1f2328;--muted:#59636e;--up:#1a7f37;--head:#eef1f4}
-@media(prefers-color-scheme:dark){:root{--bg:#0d1117;--card:#161b22;--line:#30363d;--fg:#e6edf3;--muted:#8b949e;--head:#21262d}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);
-font-family:'Segoe UI','Malgun Gothic',system-ui,sans-serif;font-size:14px;padding:24px}
-h1{font-size:20px;margin:0 0 4px}h2{font-size:15px;margin:22px 0 8px}
-.gen{color:var(--muted);font-size:12.5px;margin-bottom:8px}
-section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 18px;
-max-width:1200px;overflow-x:auto}
-table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
-th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
-th:nth-child(-n+3),td:nth-child(-n+3){text-align:left}
-th{color:var(--muted);font-weight:600;font-size:12.5px;background:var(--head)}
-code{background:var(--head);border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:11.5px}
-.tot{font-weight:700;background:var(--head)}.up{color:var(--up);font-weight:600}.muted{color:var(--muted)}
-code.b{background:transparent;border:0;padding:0;color:var(--muted)}
-.tree .ln{font-family:'Consolas','D2Coding',monospace;font-size:12.5px;line-height:1.9;white-space:nowrap}
-.tree .adopt code{border-color:var(--up)}
+:root{--bg:#f6f8fa;--card:#fff;--line:#d0d7de;--fg:#1f2328;--muted:#59636e;--up:#1a7f37;--head:#eef1f4;--warn:#9a6700}
+@media(prefers-color-scheme:dark){:root{--bg:#0d1117;--card:#161b22;--line:#30363d;--fg:#e6edf3;--muted:#8b949e;--head:#21262d;--warn:#d29922}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font-family:'Segoe UI','Malgun Gothic',system-ui,sans-serif;font-size:14px;padding:24px}
+h1{font-size:20px;margin:0 0 4px}h2{font-size:15px;margin:22px 0 8px}.gen{color:var(--muted);font-size:12.5px;margin-bottom:8px}
+section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 18px;max-width:1600px;overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:nth-child(-n+3),td:nth-child(-n+3),td.left{text-align:left}th{color:var(--muted);font-weight:600;font-size:12.5px;background:var(--head)}
+code{background:var(--head);border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:11.5px}.tot{font-weight:700;background:var(--head)}
+.up{color:var(--up);font-weight:600}.muted{color:var(--muted)}.warn{color:var(--warn);font-weight:600;margin-top:10px}code.b{background:transparent;border:0;padding:0;color:var(--muted)}
+.tree .ln{font-family:'Consolas','D2Coding',monospace;font-size:12.5px;line-height:1.9;white-space:nowrap}.tree .meta{color:var(--muted);padding-left:1.2em}.tree .adopt>code{border-color:var(--up)}
 </style></head><body>
-<h1>AWS 실행 이력</h1><div class="gen">생성 2026-07-23 09:09 · eval 2 run · 파인튜닝 1 run · 돌릴 때마다 자동 누적</div>
-
-<h2>① eval (측정 + 크롭 수확)</h2>
-<section><table><thead><tr>
-<th>#</th><th>일시</th><th>run</th><th>처리 장수</th><th>소요 시간</th><th>시간당 처리</th>
-<th>필드</th><th>셀</th></tr></thead>
-<tbody><tr><td>1</td><td>2026-07-09 12:20</td><td><code>066_20260709_122046/thin</code></td><td>5,964장</td><td>2시간 29분</td><td>2,402 장/시간</td><td>54.5%</td><td>44.6%</td></tr><tr><td>2</td><td>2026-07-22 10:13</td><td><code>20260720_175949 (리키잉 1+2차)</code></td><td>93,708장</td><td>-</td><td>-</td><td>59.9%</td><td>44.7%</td></tr><tr class='tot'><td colspan='3'>누계 (2 run)</td><td>99,672장</td><td>2시간 29분</td><td>40,136 장/시간</td><td colspan='2'></td></tr></tbody></table></section>
-
-<h2>② 파인튜닝 (모델 학습)</h2>
-<section><table><thead><tr>
-<th>#</th><th>일시</th><th>run</th><th>base(이어받은 부모)</th><th>학습 크롭</th><th>epoch(반복)</th><th>소요 시간</th>
-<th>시간당 처리</th><th>best acc</th><th>채택</th></tr></thead>
-<tbody><tr><td>1</td><td>2026-07-23 09:00</td><td><code>260722_2109 (리키잉 92만크롭)</code></td><td><code class='b'>official</code></td><td>922,046장</td><td>2</td><td>11시간 51분</td><td>77,810 장/시간</td><td>0.638</td><td><span class='muted'>미채택</span></td></tr><tr class='tot'><td colspan='4'>누계 (1 run)</td><td>922,046장</td><td colspan='1'></td><td>11시간 51분</td><td>77,810 장/시간</td><td colspan='2'></td></tr></tbody></table></section>
-
-<h2>③ 모델 계보 (트리) — 채택★을 이어받아 쌓는 줄기</h2>
-<section class="tree"><div class='ln'><b>official</b> (공식 pretrained)</div><div class='ln rej'>&nbsp;&nbsp;&nbsp;&nbsp;└─ <span class='muted'>✗</span> <code>260722_2109 (리키잉 92만크롭)</code> <span class='muted'>(ep2 acc 0.638)</span></div>
-<div class="gen" style="margin-top:10px">★=채택(다음 학습의 base로 이어받음) · ✗=미채택(가지, 이어받지 않음). base 미지정 run 은 official(공식 pretrained)에서 시작.</div>
-</section>
+<h1>AWS 실행 이력</h1><div class="gen">생성 2026-07-23 16:40 · eval 4 run · 파인튜닝 1 run · AWS 금액은 실행시간 기준 예상요금</div>
+<h2>① eval (측정 + 크롭 수확)</h2><section><table><thead><tr>
+<th>#</th><th>일시</th><th>run</th><th>실행 유형</th><th>처리 장수</th><th>소요 시간</th><th>시간당 처리</th><th>필드</th><th>셀</th><th>품명 Base<br><span class="muted">(매칭 전)</span></th><th>품명 Master<br><span class="muted">(매칭 후)</span></th><th>LearnData A 품명<br><span class="muted">(held-out·비순환)</span></th><th>LearnData B 품명<br><span class="muted">(full·순환상한)</span></th><th>AWS 예상요금</th>
+</tr></thead><tbody><tr><td>1</td><td>2026-07-09 12:20</td><td><code>066_20260709_122046/thin</code></td><td>AWS OCR</td><td>5,964장</td><td>2시간 29분</td><td>2,402 장/시간</td><td>54.5%</td><td>44.6%</td><td title='13,584 / 37,363 일치'>36.4%</td><td title='26,746 / 37,346 일치'>71.6%</td><td>-</td><td>-</td><td>-</td></tr><tr><td>2</td><td>2026-07-22 10:13</td><td><code>20260720_175949 (리키잉 1+2차)</code></td><td>AWS OCR</td><td>93,708장</td><td>기록 없음</td><td>-</td><td>59.9%</td><td>44.7%</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr><tr><td>3</td><td>2026-07-23 12:03</td><td><code>067_20260720_175949/replay_compare</code></td><td><span class='muted'>스냅샷 재평가</span></td><td>9,001장</td><td>기록 없음</td><td>-</td><td>58.7%</td><td>51.2%</td><td title='31,447 / 84,540 일치'>37.2%</td><td title='57,670 / 83,422 일치'>69.1%</td><td title='59,168 / 83,422 품명 일치'>70.9%</td><td title='59,828 / 83,422 품명 일치'>71.7%</td><td>-</td></tr><tr><td>4</td><td>2026-07-23 16:40</td><td><code>067_20260720_175949/replay_compare</code></td><td><span class='muted'>스냅샷 재평가</span></td><td>9,001장</td><td>기록 없음</td><td>-</td><td>58.7%</td><td>51.5%</td><td title='32,884 / 84,540 일치'>38.9%</td><td title='57,943 / 83,422 일치'>69.5%</td><td title='59,418 / 83,422 품명 일치'>71.2%</td><td title='60,100 / 83,422 품명 일치'>72.0%</td><td>-</td></tr><tr class='tot'><td colspan='4'>AWS OCR 누계 (2 run) <span class='muted'>(스냅샷 재평가 2 run 제외)</span></td><td>99,672장</td><td>2시간 29분</td><td>2,402 장/시간 <span class='muted'>(시간 기록 5,964장 기준)</span></td><td colspan='6'></td><td>- <span class='muted'>(0/2 AWS run)</span></td></tr></tbody></table></section>
+<h2>② 파인튜닝 (모델 학습)</h2><section><table><thead><tr>
+<th>#</th><th>일시</th><th>run</th><th>base</th><th>학습 기준</th><th>학습 크롭</th><th>전체 반복</th><th>최고 epoch</th><th>best acc</th><th>기준 대비</th><th>소요 시간</th><th>AWS 예상요금</th><th>채택</th>
+</tr></thead><tbody><tr><td>1</td><td>2026-07-23 09:00</td><td><code>260722_2109 (리키잉 92만크롭)</code></td><td><code class='b'>official</code></td><td class='left'>전 필드 학습(학습셋 숫자 58%)</td><td>922,046장</td><td>2</td><td>2</td><td>0.638</td><td>숫자 -9.1%p · 한글 +6.4%p · 순증 -3,524건</td><td>11시간 51분</td><td>-</td><td><span class='muted'>미채택</span></td></tr><tr class='tot'><td colspan='5'>누계 (1 run)</td><td>922,046장</td><td colspan='4'></td><td>11시간 51분</td><td>- <span class='muted'>(0/1 run)</span></td><td></td></tr></tbody></table></section>
+<h2>③ 모델 계보 — 무엇을 기준으로 얼마나 변했는지</h2><section class="tree"><div class='ln'><b>official</b> (공식 pretrained)</div><div class='ln rej'>&nbsp;&nbsp;&nbsp;&nbsp;└─ <span class='muted'>✗</span> <code>260722_2109 (리키잉 92만크롭)</code> <span class='muted'>(전체 2 · 최고 ep2 · acc 0.638)</span><div class='meta'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;기준: 전 필드 학습(학습셋 숫자 58%) · 숫자 -9.1%p · 한글 +6.4%p · 순증 -3,524건</div></div>
+<div class="gen" style="margin-top:10px">★=채택 · ✗=미채택. 증감은 동일 held-out 기준 파인튜닝−base 정확일치율(%p).</div></section>
 </body></html>

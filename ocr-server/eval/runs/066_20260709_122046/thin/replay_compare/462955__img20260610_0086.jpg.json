@@ -215,10 +215,10 @@
           },
           "itemNameMaster": {
             "gt": "몰시톤정4mg(제약사품절)",
-            "ext": "몰시톤정4mg(병)",
-            "gtNorm": "몰시톤정4mg(제약사품절)",
-            "extNorm": "몰시톤정4mg(병)",
-            "status": "mismatch",
+            "ext": "몰시톤정4mg",
+            "gtNorm": "몰시톤정4mg",
+            "extNorm": "몰시톤정4mg",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -275,6 +275,22 @@
             "gtNorm": "01007008",
             "extNorm": "03001526",
             "status": "mismatch",
+            "spurious": false
+          },
+          "itemCodeLearnA": {
+            "gt": "01007008",
+            "ext": "01007008",
+            "gtNorm": "01007008",
+            "extNorm": "01007008",
+            "status": "match",
+            "spurious": false
+          },
+          "itemCodeLearnB": {
+            "gt": "01007008",
+            "ext": "01007008",
+            "gtNorm": "01007008",
+            "extNorm": "01007008",
+            "status": "match",
             "spurious": false
           }
         }
@@ -354,19 +370,35 @@
             "extNorm": "01000557",
             "status": "mismatch",
             "spurious": false
+          },
+          "itemCodeLearnA": {
+            "gt": "01000556",
+            "ext": "01000556",
+            "gtNorm": "01000556",
+            "extNorm": "01000556",
+            "status": "match",
+            "spurious": false
+          },
+          "itemCodeLearnB": {
+            "gt": "01000556",
+            "ext": "01000556",
+            "gtNorm": "01000556",
+            "extNorm": "01000556",
+            "status": "match",
+            "spurious": false
           }
         }
       }
     ],
     "cellCounts": {
       "scored": 18,
-      "match": 7,
-      "mismatch": 5,
+      "match": 8,
+      "mismatch": 4,
       "ext_missing": 6,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.3888888888888889
+    "cellAccuracy": 0.4444444444444444
   },
   "buckets": {
     "defects": [
@@ -403,14 +435,6 @@
         "reason": "extractor invented rows ['4', '4']"
       },
       {
-        "location": "row1:itemNameMaster",
-        "status": "mismatch",
-        "gtNorm": "몰시톤정4mg(제약사품절)",
-        "extNorm": "몰시톤정4mg(병)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.75)"
-      },
-      {
         "location": "row1:spec",
         "status": "ext_missing",
         "gtNorm": "300정",
@@ -439,8 +463,8 @@
         "status": "mismatch",
         "gtNorm": "01007008",
         "extNorm": "03001526",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemCodeLearnA', 'itemCodeLearnB']"
       },
       {
         "location": "row2:itemName",
@@ -487,14 +511,14 @@
         "status": "mismatch",
         "gtNorm": "01000556",
         "extNorm": "01000557",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.88)"
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemCodeLearnA', 'itemCodeLearnB']"
       }
     ],
     "bucketTally": {
-      "recognition": 7,
+      "recognition": 4,
       "structure": 7,
-      "layout": 1,
+      "layout": 3,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

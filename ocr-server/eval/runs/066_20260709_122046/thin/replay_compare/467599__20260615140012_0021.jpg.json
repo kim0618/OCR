@@ -214,10 +214,10 @@
           },
           "itemNameMaster": {
             "gt": "바로스크정5mg",
-            "ext": "바로스크정5mg(병)",
+            "ext": "바로스크정5mg",
             "gtNorm": "바로스크정5mg",
-            "extNorm": "바로스크정5mg(병)",
-            "status": "mismatch",
+            "extNorm": "바로스크정5mg",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -283,19 +283,35 @@
             "extNorm": "642000380",
             "status": "match",
             "spurious": false
+          },
+          "itemCodeLearnA": {
+            "gt": "8806420003827",
+            "ext": "8806420003810",
+            "gtNorm": "8806420003827",
+            "extNorm": "8806420003810",
+            "status": "mismatch",
+            "spurious": false
+          },
+          "itemCodeLearnB": {
+            "gt": "8806420003827",
+            "ext": "8806420003810",
+            "gtNorm": "8806420003827",
+            "extNorm": "8806420003810",
+            "status": "mismatch",
+            "spurious": false
           }
         }
       }
     ],
     "cellCounts": {
       "scored": 10,
-      "match": 5,
-      "mismatch": 4,
+      "match": 6,
+      "mismatch": 3,
       "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.5
+    "cellAccuracy": 0.6
   },
   "buckets": {
     "defects": [
@@ -328,16 +344,8 @@
         "status": "mismatch",
         "gtNorm": "바로스크정5mg",
         "extNorm": "1642000380바로스크정5mg100정",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.53)"
-      },
-      {
-        "location": "row1:itemNameMaster",
-        "status": "mismatch",
-        "gtNorm": "바로스크정5mg",
-        "extNorm": "바로스크정5mg(병)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.84)"
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemNameMaster']"
       },
       {
         "location": "row1:quantity",
@@ -362,12 +370,28 @@
         "extNorm": "8806420003810",
         "bucket": "recognition",
         "reason": "char-level diff (sim=0.85)"
+      },
+      {
+        "location": "row1:itemCodeLearnA",
+        "status": "mismatch",
+        "gtNorm": "8806420003827",
+        "extNorm": "8806420003810",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.85)"
+      },
+      {
+        "location": "row1:itemCodeLearnB",
+        "status": "mismatch",
+        "gtNorm": "8806420003827",
+        "extNorm": "8806420003810",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.85)"
       }
     ],
     "bucketTally": {
       "recognition": 6,
       "structure": 2,
-      "layout": 0,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

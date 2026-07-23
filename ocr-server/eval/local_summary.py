@@ -137,6 +137,8 @@ def _render(batch_name: str, compare_dir: str, per: list[dict]) -> str:
     # 품명 계열 라벨 명시: 읽기 raw vs ②마스터매칭 산출(정식명/코드) 구분이 한눈에 보이게
     _LOCAL_KO = {"itemName": "품명 — 읽기 raw",
                  "itemNameMaster": "품명 — ②마스터매칭 정식명",
+                 "itemNameLearnA": "품명 — ③learndata A(held-out·비순환)",
+                 "itemNameLearnB": "품명 — ③learndata B(full·순환상한)",
                  "itemCode": "itemCode — ②마스터매칭 채움",
                  "itemCodeLearnA": "itemCode — +learndata A(held-out·비순환)",
                  "itemCodeLearnB": "itemCode — +learndata B(full·순환상한)"}
@@ -258,12 +260,19 @@ def _render(batch_name: str, compare_dir: str, per: list[dict]) -> str:
             _fprev = None
             for _i, (k, pct, d, fld, paths_s) in enumerate(_rr(p["hist"])):
                 batch_no = _max_len - _hlen + 1 + _i
+                comparable = pct is not None
+                cell_text = (
+                    f"{k['cm']}/{k['cs']} ({pct:.1f}%)"
+                    if comparable else
+                    "비교 제외 <span class='muted'>(구 집계식)</span>"
+                )
                 if d is None:
                     dcol, dtxt = "var(--muted)", "·"
                 else:
                     dcol = "var(--up)" if d > 0 else ("var(--down)" if d < 0 else "var(--muted)")
                     dtxt = f"{d:+.1f}"
-                fpct = (100 * k["fm"] / k["fs"]) if k.get("fs") else None
+                fpct = ((100 * k["fm"] / k["fs"])
+                        if comparable and k.get("fs") else None)
                 if _fprev is None or fpct is None:
                     fdcol, fdtxt = "var(--muted)", "·"
                 else:
@@ -275,7 +284,7 @@ def _render(batch_name: str, compare_dir: str, per: list[dict]) -> str:
                 pending = k.get("ambiguous")
                 pdrop_text = str(k.get("pdrop")) if pending is None else f"{k.get('pdrop')} (+{pending} pending)"
                 H.append(f"<tr><td><b>{batch_no}</b></td><td>{_esc(k.get('ts', ''))}</td>"
-                         f"<td>{k['cm']}/{k['cs']} ({pct:.1f}%)</td>"
+                         f"<td>{cell_text}</td>"
                          f"<td style='color:{dcol}'>{dtxt}</td>"
                          f"<td>{_esc(fld)}</td><td style='color:{fdcol}'>{fdtxt}</td>"
                          f"<td>{pdrop_text}</td><td>{k.get('recog')}</td>"
@@ -298,7 +307,8 @@ def _render(batch_name: str, compare_dir: str, per: list[dict]) -> str:
             return sum((col_class.get(c) or {}).values())
         ordered = sorted(all_cols, key=lambda c: -_coltot(c))
         # 품명·itemCode 계열(읽기 raw → 매칭 정식명 → 매칭 코드 → +learndata A/B)은 붙여서 대조
-        _trio = [c for c in ("itemName", "itemNameMaster", "itemCode",
+        _trio = [c for c in ("itemName", "itemNameMaster",
+                             "itemNameLearnA", "itemNameLearnB", "itemCode",
                              "itemCodeLearnA", "itemCodeLearnB") if c in ordered]
         if len(_trio) > 1:
             pos = min(ordered.index(c) for c in _trio)

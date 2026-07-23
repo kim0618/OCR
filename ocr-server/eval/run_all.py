@@ -51,6 +51,13 @@ def _measure(reuse: str | None, server: str, workers: int, testset: str,
 
     res: dict[str, Any] = {"testset": testset, "ts": None, "ok": False,
                            "fieldAcc": None, "cellAcc": None,
+                           "itemNameAcc": None, "itemNameMatch": None,
+                           "itemNameScored": None,
+                           "itemNameMasterAcc": None,
+                           "itemNameMasterMatch": None,
+                           "itemNameMasterScored": None,
+                           "learnAAcc": None, "learnAMatch": None, "learnAScored": None,
+                           "learnBAcc": None, "learnBMatch": None, "learnBScored": None,
                            "fieldMacro": None, "cellMacro": None, "error": None,
                            "elapsedSec": None}
     t0 = time.perf_counter()
@@ -79,6 +86,22 @@ def _measure(reuse: str | None, server: str, workers: int, testset: str,
         m = compute_metrics(os.path.join(C.RUNS_DIR, ts))
         res["fieldAcc"] = m["overall"]["field"]["accuracy"]
         res["cellAcc"] = m["overall"]["cell"]["accuracy"]
+        _item = (m.get("perCellField") or {}).get("itemName") or {}
+        res["itemNameAcc"] = _item.get("accuracy")
+        res["itemNameMatch"] = _item.get("match")
+        res["itemNameScored"] = _item.get("scored")
+        _item_master = (m.get("perCellField") or {}).get("itemNameMaster") or {}
+        res["itemNameMasterAcc"] = _item_master.get("accuracy")
+        res["itemNameMasterMatch"] = _item_master.get("match")
+        res["itemNameMasterScored"] = _item_master.get("scored")
+        _learn_a = (m.get("perCellField") or {}).get("itemNameLearnA") or {}
+        res["learnAAcc"] = _learn_a.get("accuracy")
+        res["learnAMatch"] = _learn_a.get("match")
+        res["learnAScored"] = _learn_a.get("scored")
+        _learn_b = (m.get("perCellField") or {}).get("itemNameLearnB") or {}
+        res["learnBAcc"] = _learn_b.get("accuracy")
+        res["learnBMatch"] = _learn_b.get("match")
+        res["learnBScored"] = _learn_b.get("scored")
         res["fieldMacro"] = (m["overall"].get("fieldMacro") or {}).get("accuracy")
         res["cellMacro"] = (m["overall"].get("cellMacro") or {}).get("accuracy")
         res["sampleCount"] = m.get("sampleCount")
@@ -175,10 +198,20 @@ def run_all(reuse: str | None, server: str, workers: int,
         import run_history
         if r.get("sampleCount") and testset != C.DEFAULT_TESTSET:
             run_history.record(
-                "eval", ts=r.get("ts"), images=r.get("sampleCount"),
+                "eval", ts=r.get("ts"), runType="aws-ocr", images=r.get("sampleCount"),
                 elapsedSec=r.get("elapsedSec"),
                 field=round((r.get("fieldAcc") or 0) * 100, 1) if r.get("fieldAcc") else None,
-                cell=round((r.get("cellAcc") or 0) * 100, 1) if r.get("cellAcc") else None)
+                cell=round((r.get("cellAcc") or 0) * 100, 1) if r.get("cellAcc") else None,
+                itemName=round(r["itemNameAcc"] * 100, 1) if r.get("itemNameAcc") is not None else None,
+                itemNameMatch=r.get("itemNameMatch"), itemNameScored=r.get("itemNameScored"),
+                itemNameMaster=round(r["itemNameMasterAcc"] * 100, 1)
+                if r.get("itemNameMasterAcc") is not None else None,
+                itemNameMasterMatch=r.get("itemNameMasterMatch"),
+                itemNameMasterScored=r.get("itemNameMasterScored"),
+                learnA=round(r["learnAAcc"] * 100, 1) if r.get("learnAAcc") is not None else None,
+                learnAMatch=r.get("learnAMatch"), learnAScored=r.get("learnAScored"),
+                learnB=round(r["learnBAcc"] * 100, 1) if r.get("learnBAcc") is not None else None,
+                learnBMatch=r.get("learnBMatch"), learnBScored=r.get("learnBScored"))
     except Exception as exc:
         print(f"  (run_history unavailable: {exc})")
     print()
@@ -417,10 +450,20 @@ def run_all_multi(server: str, workers: int, testsets: list[str] | None = None) 
         for r in results:
             if r.get("sampleCount") and r["testset"] != C.DEFAULT_TESTSET:  # thin(실데이터)
                 run_history.record(
-                    "eval", ts=r.get("ts"), images=r.get("sampleCount"),
+                    "eval", ts=r.get("ts"), runType="aws-ocr", images=r.get("sampleCount"),
                     elapsedSec=r.get("elapsedSec"),
                     field=round((r.get("fieldAcc") or 0) * 100, 1) if r.get("fieldAcc") else None,
-                    cell=round((r.get("cellAcc") or 0) * 100, 1) if r.get("cellAcc") else None)
+                    cell=round((r.get("cellAcc") or 0) * 100, 1) if r.get("cellAcc") else None,
+                    itemName=round(r["itemNameAcc"] * 100, 1) if r.get("itemNameAcc") is not None else None,
+                    itemNameMatch=r.get("itemNameMatch"), itemNameScored=r.get("itemNameScored"),
+                    itemNameMaster=round(r["itemNameMasterAcc"] * 100, 1)
+                    if r.get("itemNameMasterAcc") is not None else None,
+                    itemNameMasterMatch=r.get("itemNameMasterMatch"),
+                    itemNameMasterScored=r.get("itemNameMasterScored"),
+                    learnA=round(r["learnAAcc"] * 100, 1) if r.get("learnAAcc") is not None else None,
+                    learnAMatch=r.get("learnAMatch"), learnAScored=r.get("learnAScored"),
+                    learnB=round(r["learnBAcc"] * 100, 1) if r.get("learnBAcc") is not None else None,
+                    learnBMatch=r.get("learnBMatch"), learnBScored=r.get("learnBScored"))
     except Exception as exc:
         print(f"  (run_history unavailable: {exc})")
     summary = _write_batch_summary(batch_dir, batch, results, batch_elapsed)

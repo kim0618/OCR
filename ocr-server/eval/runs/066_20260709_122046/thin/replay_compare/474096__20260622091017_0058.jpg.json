@@ -215,10 +215,10 @@
           },
           "itemNameMaster": {
             "gt": "식염포도당정",
-            "ext": "식염포도당정(PTP)",
+            "ext": "식염포도당정",
             "gtNorm": "식염포도당정",
-            "extNorm": "식염포도당정(ptp)",
-            "status": "mismatch",
+            "extNorm": "식염포도당정",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -254,6 +254,22 @@
             "spurious": false
           },
           "itemCode": {
+            "gt": "110010",
+            "ext": "01002196",
+            "gtNorm": "110010",
+            "extNorm": "01002196",
+            "status": "mismatch",
+            "spurious": false
+          },
+          "itemCodeLearnA": {
+            "gt": "110010",
+            "ext": "01002196",
+            "gtNorm": "110010",
+            "extNorm": "01002196",
+            "status": "mismatch",
+            "spurious": false
+          },
+          "itemCodeLearnB": {
             "gt": "110010",
             "ext": "01002196",
             "gtNorm": "110010",
@@ -323,19 +339,35 @@
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
+          },
+          "itemCodeLearnA": {
+            "gt": "01001257",
+            "ext": "",
+            "gtNorm": "01001257",
+            "extNorm": "",
+            "status": "ext_missing",
+            "spurious": false
+          },
+          "itemCodeLearnB": {
+            "gt": "01001257",
+            "ext": "",
+            "gtNorm": "01001257",
+            "extNorm": "",
+            "status": "ext_missing",
+            "spurious": false
           }
         }
       }
     ],
     "cellCounts": {
       "scored": 14,
-      "match": 1,
-      "mismatch": 6,
+      "match": 2,
+      "mismatch": 5,
       "ext_missing": 7,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.07142857142857142
+    "cellAccuracy": 0.14285714285714285
   },
   "buckets": {
     "defects": [
@@ -388,14 +420,6 @@
         "reason": "char-level diff (sim=0.53)"
       },
       {
-        "location": "row2:itemNameMaster",
-        "status": "mismatch",
-        "gtNorm": "식염포도당정",
-        "extNorm": "식염포도당정(ptp)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.71)"
-      },
-      {
         "location": "row2:spec",
         "status": "mismatch",
         "gtNorm": "ptp500정",
@@ -421,6 +445,22 @@
       },
       {
         "location": "row2:itemCode",
+        "status": "mismatch",
+        "gtNorm": "110010",
+        "extNorm": "01002196",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.57)"
+      },
+      {
+        "location": "row2:itemCodeLearnA",
+        "status": "mismatch",
+        "gtNorm": "110010",
+        "extNorm": "01002196",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.57)"
+      },
+      {
+        "location": "row2:itemCodeLearnB",
         "status": "mismatch",
         "gtNorm": "110010",
         "extNorm": "01002196",
@@ -482,11 +522,27 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row2:itemCodeLearnA",
+        "status": "ext_missing",
+        "gtNorm": "01001257",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row2:itemCodeLearnB",
+        "status": "ext_missing",
+        "gtNorm": "01001257",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 9,
-      "structure": 9,
+      "recognition": 10,
+      "structure": 11,
       "layout": 0,
       "preprocessing": 0
     },

@@ -178,44 +178,43 @@
     "rowCountGt": 2,
     "rowCountExt": 3,
     "rowCountMatch": false,
-    "matchedRowIdx": [],
+    "matchedRowIdx": [
+      "2"
+    ],
     "gtOnlyRowIdx": [
-      "1",
       "2"
     ],
     "extOnlyRowIdx": [
       "1",
-      "2",
       "3"
     ],
     "rows": [
       {
-        "rowIndex": "1",
+        "rowIndex": "2",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "펜넬캡슐",
-            "ext": "",
+            "ext": "펜넬캡슐 100C",
             "gtNorm": "펜넬캡슐",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "펜넬캡슐100c",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "펜넬캡슐",
-            "ext": "",
+            "ext": "펜넬캡슐",
             "gtNorm": "펜넬캡슐",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "펜넬캡슐",
+            "status": "match",
             "spurious": false
           },
           "spec": {
             "gt": "90C",
-            "ext": "",
+            "ext": "100C",
             "gtNorm": "90c",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "100c",
+            "status": "mismatch",
             "spurious": false
           },
           "quantity": {
@@ -228,26 +227,42 @@
           },
           "unitPrice": {
             "gt": "2259182",
-            "ext": "",
+            "ext": "5,020,364",
             "gtNorm": "2259182",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "5020364",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "2485100",
-            "ext": "",
+            "ext": "5,522",
             "gtNorm": "2485100",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "5522",
+            "status": "mismatch",
             "spurious": false
           },
           "itemCode": {
             "gt": "8806523007043",
-            "ext": "",
+            "ext": "05003103",
             "gtNorm": "8806523007043",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "05003103",
+            "status": "mismatch",
+            "spurious": false
+          },
+          "itemCodeLearnA": {
+            "gt": "8806523007043",
+            "ext": "8806523007029",
+            "gtNorm": "8806523007043",
+            "extNorm": "8806523007029",
+            "status": "mismatch",
+            "spurious": false
+          },
+          "itemCodeLearnB": {
+            "gt": "8806523007043",
+            "ext": "8806523007029",
+            "gtNorm": "8806523007043",
+            "extNorm": "8806523007029",
+            "status": "mismatch",
             "spurious": false
           }
         }
@@ -312,19 +327,35 @@
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
+          },
+          "itemCodeLearnA": {
+            "gt": "8806523007043",
+            "ext": "",
+            "gtNorm": "8806523007043",
+            "extNorm": "",
+            "status": "ext_missing",
+            "spurious": false
+          },
+          "itemCodeLearnB": {
+            "gt": "8806523007043",
+            "ext": "",
+            "gtNorm": "8806523007043",
+            "extNorm": "",
+            "status": "ext_missing",
+            "spurious": false
           }
         }
       }
     ],
     "cellCounts": {
       "scored": 14,
-      "match": 0,
-      "mismatch": 0,
-      "ext_missing": 14,
+      "match": 1,
+      "mismatch": 5,
+      "ext_missing": 8,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.0
+    "cellAccuracy": 0.07142857142857142
   },
   "buckets": {
     "defects": [
@@ -390,7 +421,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor missed rows ['1', '2']"
+        "reason": "extractor missed rows ['2']"
       },
       {
         "location": "table",
@@ -398,34 +429,26 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '2', '3']"
+        "reason": "extractor invented rows ['1', '3']"
       },
       {
-        "location": "row1:itemName",
-        "status": "ext_missing",
+        "location": "row2:itemName",
+        "status": "mismatch",
         "gtNorm": "펜넬캡슐",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "펜넬캡슐100c",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemNameMaster']"
       },
       {
-        "location": "row1:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "펜넬캡슐",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:spec",
-        "status": "ext_missing",
+        "location": "row2:spec",
+        "status": "mismatch",
         "gtNorm": "90c",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "100c",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.57)"
       },
       {
-        "location": "row1:quantity",
+        "location": "row2:quantity",
         "status": "ext_missing",
         "gtNorm": "100",
         "extNorm": "",
@@ -433,28 +456,44 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:unitPrice",
-        "status": "ext_missing",
+        "location": "row2:unitPrice",
+        "status": "mismatch",
         "gtNorm": "2259182",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "5020364",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
-        "location": "row1:amount",
-        "status": "ext_missing",
+        "location": "row2:amount",
+        "status": "mismatch",
         "gtNorm": "2485100",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "5522",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
-        "location": "row1:itemCode",
-        "status": "ext_missing",
+        "location": "row2:itemCode",
+        "status": "mismatch",
         "gtNorm": "8806523007043",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "05003103",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.57)"
+      },
+      {
+        "location": "row2:itemCodeLearnA",
+        "status": "mismatch",
+        "gtNorm": "8806523007043",
+        "extNorm": "8806523007029",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.85)"
+      },
+      {
+        "location": "row2:itemCodeLearnB",
+        "status": "mismatch",
+        "gtNorm": "8806523007043",
+        "extNorm": "8806523007029",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.85)"
       },
       {
         "location": "row2:itemName",
@@ -511,12 +550,28 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row2:itemCodeLearnA",
+        "status": "ext_missing",
+        "gtNorm": "8806523007043",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row2:itemCodeLearnB",
+        "status": "ext_missing",
+        "gtNorm": "8806523007043",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 18,
-      "layout": 0,
+      "recognition": 11,
+      "structure": 14,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

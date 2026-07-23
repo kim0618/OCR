@@ -202,8 +202,8 @@
           "itemNameMaster": {
             "gt": "엔블로정0.3mg",
             "ext": "엔블로정0.3mg",
-            "gtNorm": "엔블로정0.3mg",
-            "extNorm": "엔블로정0.3mg",
+            "gtNorm": "엔블로정03mg",
+            "extNorm": "엔블로정03mg",
             "status": "match",
             "spurious": false
           },
@@ -262,6 +262,22 @@
             "extNorm": "641607780",
             "status": "mismatch",
             "spurious": false
+          },
+          "itemCodeLearnA": {
+            "gt": "22004775",
+            "ext": "22004775",
+            "gtNorm": "22004775",
+            "extNorm": "22004775",
+            "status": "match",
+            "spurious": false
+          },
+          "itemCodeLearnB": {
+            "gt": "22004775",
+            "ext": "22004775",
+            "gtNorm": "22004775",
+            "extNorm": "22004775",
+            "status": "match",
+            "spurious": false
           }
         }
       },
@@ -279,10 +295,10 @@
           },
           "itemNameMaster": {
             "gt": "엔블로정0.3mg",
-            "ext": "엔블로정0.3mg(병)",
-            "gtNorm": "엔블로정0.3mg",
-            "extNorm": "엔블로정0.3mg(병)",
-            "status": "mismatch",
+            "ext": "엔블로정0.3mg",
+            "gtNorm": "엔블로정03mg",
+            "extNorm": "엔블로정03mg",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -339,6 +355,22 @@
             "gtNorm": "9304997",
             "extNorm": "641607780",
             "status": "mismatch",
+            "spurious": false
+          },
+          "itemCodeLearnA": {
+            "gt": "22004775",
+            "ext": "22004775",
+            "gtNorm": "22004775",
+            "extNorm": "22004775",
+            "status": "match",
+            "spurious": false
+          },
+          "itemCodeLearnB": {
+            "gt": "22004775",
+            "ext": "22004775",
+            "gtNorm": "22004775",
+            "extNorm": "22004775",
+            "status": "match",
             "spurious": false
           }
         }
@@ -403,19 +435,35 @@
             "extNorm": "",
             "status": "ext_missing",
             "spurious": false
+          },
+          "itemCodeLearnA": {
+            "gt": "999999",
+            "ext": "",
+            "gtNorm": "999999",
+            "extNorm": "",
+            "status": "ext_missing",
+            "spurious": false
+          },
+          "itemCodeLearnB": {
+            "gt": "999999",
+            "ext": "",
+            "gtNorm": "999999",
+            "extNorm": "",
+            "status": "ext_missing",
+            "spurious": false
           }
         }
       }
     ],
     "cellCounts": {
       "scored": 25,
-      "match": 9,
-      "mismatch": 7,
+      "match": 10,
+      "mismatch": 6,
       "ext_missing": 9,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.36
+    "cellAccuracy": 0.4
   },
   "buckets": {
     "defects": [
@@ -516,14 +564,6 @@
         "reason": "cell differs, low similarity"
       },
       {
-        "location": "row1:itemNameMaster",
-        "status": "mismatch",
-        "gtNorm": "엔블로정0.3mg",
-        "extNorm": "엔블로정0.3mg(병)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.86)"
-      },
-      {
         "location": "row1:manufacturingNo",
         "status": "ext_missing",
         "gtNorm": "641607780",
@@ -536,8 +576,8 @@
         "status": "mismatch",
         "gtNorm": "22004775",
         "extNorm": "22004776",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.88)"
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemCodeLearnA', 'itemCodeLearnB']"
       },
       {
         "location": "row1:insuranceCode",
@@ -602,12 +642,28 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row3:itemCodeLearnA",
+        "status": "ext_missing",
+        "gtNorm": "999999",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
+      },
+      {
+        "location": "row3:itemCodeLearnB",
+        "status": "ext_missing",
+        "gtNorm": "999999",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 12,
-      "structure": 9,
-      "layout": 2,
+      "recognition": 10,
+      "structure": 11,
+      "layout": 3,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

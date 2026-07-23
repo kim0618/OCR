@@ -214,10 +214,10 @@
           },
           "itemNameMaster": {
             "gt": "바클로펜정10mg",
-            "ext": "바클로펜정10mg(규격변경)",
+            "ext": "바클로펜정10mg",
             "gtNorm": "바클로펜정10mg",
-            "extNorm": "바클로펜정10mg(규격변경)",
-            "status": "mismatch",
+            "extNorm": "바클로펜정10mg",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -283,6 +283,22 @@
             "extNorm": "642301360",
             "status": "mismatch",
             "spurious": false
+          },
+          "itemCodeLearnA": {
+            "gt": "04001082",
+            "ext": "04001082",
+            "gtNorm": "04001082",
+            "extNorm": "04001082",
+            "status": "match",
+            "spurious": false
+          },
+          "itemCodeLearnB": {
+            "gt": "04001082",
+            "ext": "04001082",
+            "gtNorm": "04001082",
+            "extNorm": "04001082",
+            "status": "match",
+            "spurious": false
           }
         }
       },
@@ -300,10 +316,10 @@
           },
           "itemNameMaster": {
             "gt": "바클로펜정10mg",
-            "ext": "바클로펜정10mg(생산중단)",
+            "ext": "바클로펜정10mg",
             "gtNorm": "바클로펜정10mg",
-            "extNorm": "바클로펜정10mg(생산중단)",
-            "status": "mismatch",
+            "extNorm": "바클로펜정10mg",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -369,19 +385,35 @@
             "extNorm": "649600190",
             "status": "mismatch",
             "spurious": false
+          },
+          "itemCodeLearnA": {
+            "gt": "04001021",
+            "ext": "406256",
+            "gtNorm": "04001021",
+            "extNorm": "406256",
+            "status": "mismatch",
+            "spurious": false
+          },
+          "itemCodeLearnB": {
+            "gt": "04001021",
+            "ext": "04001021",
+            "gtNorm": "04001021",
+            "extNorm": "04001021",
+            "status": "match",
+            "spurious": false
           }
         }
       }
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 11,
-      "mismatch": 9,
+      "match": 13,
+      "mismatch": 7,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.55
+    "cellAccuracy": 0.65
   },
   "buckets": {
     "defects": [
@@ -426,14 +458,6 @@
         "reason": "extractor invented rows ['4']"
       },
       {
-        "location": "row1:itemNameMaster",
-        "status": "mismatch",
-        "gtNorm": "바클로펜정10mg",
-        "extNorm": "바클로펜정10mg(규격변경)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.75)"
-      },
-      {
         "location": "row1:unitPrice",
         "status": "mismatch",
         "gtNorm": "29070",
@@ -446,8 +470,8 @@
         "status": "mismatch",
         "gtNorm": "04001082",
         "extNorm": "07000505",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.50)"
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemCodeLearnA', 'itemCodeLearnB']"
       },
       {
         "location": "row1:insuranceCode",
@@ -456,14 +480,6 @@
         "extNorm": "642301360",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
-      },
-      {
-        "location": "row2:itemNameMaster",
-        "status": "mismatch",
-        "gtNorm": "바클로펜정10mg",
-        "extNorm": "바클로펜정10mg(생산중단)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.75)"
       },
       {
         "location": "row2:spec",
@@ -486,8 +502,8 @@
         "status": "mismatch",
         "gtNorm": "04001021",
         "extNorm": "406256",
-        "bucket": "recognition",
-        "reason": "cell differs, low similarity"
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemCodeLearnB']"
       },
       {
         "location": "row2:insuranceCode",
@@ -496,12 +512,20 @@
         "extNorm": "649600190",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
+      },
+      {
+        "location": "row2:itemCodeLearnA",
+        "status": "mismatch",
+        "gtNorm": "04001021",
+        "extNorm": "406256",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemCodeLearnB']"
       }
     ],
     "bucketTally": {
-      "recognition": 10,
+      "recognition": 6,
       "structure": 4,
-      "layout": 0,
+      "layout": 3,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

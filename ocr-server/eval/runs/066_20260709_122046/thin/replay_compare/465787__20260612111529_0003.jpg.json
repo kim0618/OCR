@@ -178,42 +178,40 @@
     "rowCountGt": 1,
     "rowCountExt": 2,
     "rowCountMatch": false,
-    "matchedRowIdx": [],
-    "gtOnlyRowIdx": [
+    "matchedRowIdx": [
       "1"
     ],
+    "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "1",
       "3"
     ],
     "rows": [
       {
         "rowIndex": "1",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "애드칼큐정",
-            "ext": "",
+            "ext": "애드칼큐정30T",
             "gtNorm": "애드칼큐정",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "애드칼큐정30t",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "애드칼큐정",
-            "ext": "",
+            "ext": "애드칼큐정",
             "gtNorm": "애드칼큐정",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "애드칼큐정",
+            "status": "match",
             "spurious": false
           },
           "spec": {
             "gt": "30T",
-            "ext": "",
+            "ext": "30T",
             "gtNorm": "30t",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "30t",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -234,10 +232,10 @@
           },
           "amount": {
             "gt": "110400",
-            "ext": "",
+            "ext": "2,208",
             "gtNorm": "110400",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "2208",
+            "status": "mismatch",
             "spurious": false
           },
           "expiryDate": {
@@ -250,18 +248,34 @@
           },
           "itemCode": {
             "gt": "05006489",
-            "ext": "",
+            "ext": "05006489",
             "gtNorm": "05006489",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "05006489",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "LG016KL4",
-            "ext": "",
+            "ext": "643309830",
             "gtNorm": "LG016KL4",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "643309830",
+            "status": "mismatch",
+            "spurious": false
+          },
+          "itemCodeLearnA": {
+            "gt": "05006489",
+            "ext": "05006489",
+            "gtNorm": "05006489",
+            "extNorm": "05006489",
+            "status": "match",
+            "spurious": false
+          },
+          "itemCodeLearnB": {
+            "gt": "05006489",
+            "ext": "05006489",
+            "gtNorm": "05006489",
+            "extNorm": "05006489",
+            "status": "match",
             "spurious": false
           }
         }
@@ -269,13 +283,13 @@
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 0,
-      "mismatch": 0,
-      "ext_missing": 9,
+      "match": 3,
+      "mismatch": 3,
+      "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.0
+    "cellAccuracy": 0.3333333333333333
   },
   "buckets": {
     "defects": [
@@ -345,43 +359,19 @@
       },
       {
         "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['1']"
-      },
-      {
-        "location": "table",
         "status": "rows_extra",
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '3']"
+        "reason": "extractor invented rows ['3']"
       },
       {
         "location": "row1:itemName",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "애드칼큐정",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "애드칼큐정",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "30t",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "애드칼큐정30t",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemNameMaster']"
       },
       {
         "location": "row1:quantity",
@@ -396,16 +386,16 @@
         "status": "ext_missing",
         "gtNorm": "2208",
         "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['amount']"
       },
       {
         "location": "row1:amount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "110400",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "2208",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:expiryDate",
@@ -416,26 +406,18 @@
         "reason": "gt cell absent in extracted row"
       },
       {
-        "location": "row1:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "05006489",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
         "location": "row1:insuranceCode",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "LG016KL4",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "643309830",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       }
     ],
     "bucketTally": {
-      "recognition": 5,
-      "structure": 14,
-      "layout": 0,
+      "recognition": 7,
+      "structure": 6,
+      "layout": 2,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

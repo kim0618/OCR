@@ -166,32 +166,32 @@
     "rowCountExt": 4,
     "rowCountMatch": false,
     "matchedRowIdx": [
-      "3"
+      "1"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
-      "1",
       "4",
+      "3",
       "4"
     ],
     "rows": [
       {
-        "rowIndex": "3",
+        "rowIndex": "1",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "시카플루이드점안겔[10G]",
-            "ext": "2 3 1 4 **이하여백* 시카플루이드점안젤[10G]",
+            "ext": "시카플루이드점안젤[10G]",
             "gtNorm": "시카플루이드점안겔10g",
-            "extNorm": "2314이하여백시카플루이드점안젤10g",
+            "extNorm": "시카플루이드점안젤10g",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "시카플루이드점안겔(제약사품절)",
-            "ext": "시카플루이드점안겔(제약사품절)",
-            "gtNorm": "시카플루이드점안겔(제약사품절)",
-            "extNorm": "시카플루이드점안겔(제약사품절)",
+            "ext": "시카플루이드점안겔",
+            "gtNorm": "시카플루이드점안겔",
+            "extNorm": "시카플루이드점안겔",
             "status": "match",
             "spurious": false
           },
@@ -205,18 +205,18 @@
           },
           "quantity": {
             "gt": "100",
-            "ext": "100",
+            "ext": "4",
             "gtNorm": "100",
-            "extNorm": "100",
-            "status": "match",
+            "extNorm": "4",
+            "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "9500",
-            "ext": "9500",
+            "ext": "",
             "gtNorm": "9500",
-            "extNorm": "9500",
-            "status": "match",
+            "extNorm": "",
+            "status": "ext_missing",
             "spurious": false
           },
           "amount": {
@@ -229,7 +229,7 @@
           },
           "expiryDate": {
             "gt": "20280730",
-            "ext": "2028.07.30",
+            "ext": "20280730",
             "gtNorm": "20280730",
             "extNorm": "20280730",
             "status": "match",
@@ -250,19 +250,35 @@
             "extNorm": "8806439007915",
             "status": "match",
             "spurious": false
+          },
+          "itemCodeLearnA": {
+            "gt": "8806439007915",
+            "ext": "8806439007915",
+            "gtNorm": "8806439007915",
+            "extNorm": "8806439007915",
+            "status": "match",
+            "spurious": false
+          },
+          "itemCodeLearnB": {
+            "gt": "8806439007915",
+            "ext": "8806439007915",
+            "gtNorm": "8806439007915",
+            "extNorm": "8806439007915",
+            "status": "match",
+            "spurious": false
           }
         }
       }
     ],
     "cellCounts": {
       "scored": 9,
-      "match": 8,
-      "mismatch": 1,
-      "ext_missing": 0,
+      "match": 6,
+      "mismatch": 2,
+      "ext_missing": 1,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.8888888888888888
+    "cellAccuracy": 0.6666666666666666
   },
   "buckets": {
     "defects": [
@@ -272,7 +288,7 @@
         "gtNorm": "950000",
         "extNorm": "1045000",
         "bucket": "structure",
-        "reason": "gt value present at ['field:supplyAmount', 'row3:amount']"
+        "reason": "gt value present at ['field:supplyAmount', 'row1:amount']"
       },
       {
         "location": "field:supplyAmount",
@@ -304,20 +320,36 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['1', '4', '4']"
+        "reason": "extractor invented rows ['4', '3', '4']"
       },
       {
-        "location": "row3:itemName",
+        "location": "row1:itemName",
         "status": "mismatch",
         "gtNorm": "시카플루이드점안겔10g",
-        "extNorm": "2314이하여백시카플루이드점안젤10g",
+        "extNorm": "시카플루이드점안젤10g",
         "bucket": "recognition",
-        "reason": "char-level diff (sim=0.69)"
+        "reason": "char-level diff (sim=0.92)"
+      },
+      {
+        "location": "row1:quantity",
+        "status": "mismatch",
+        "gtNorm": "100",
+        "extNorm": "4",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
+      },
+      {
+        "location": "row1:unitPrice",
+        "status": "ext_missing",
+        "gtNorm": "9500",
+        "extNorm": "",
+        "bucket": "structure",
+        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 4,
-      "structure": 2,
+      "recognition": 5,
+      "structure": 3,
       "layout": 0,
       "preprocessing": 0
     },

@@ -35,6 +35,9 @@ _DICT_CANDIDATES = (
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "eval", "data",
                  "invoice_war", "master_dict.json"),
 )
+_RUNTIME_LEARNDATA = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "..", "learndata_runtime.json"
+)
 
 _WORD = re.compile(r"[^\W_]+", re.UNICODE)
 _PAREN = re.compile(r"\(.*\)")          # greedy: 첫 '(' ~ 마지막 ')' (war 함수와 동일)
@@ -106,6 +109,20 @@ def _jac(a, b):
 
 
 _PAREN_TOK = re.compile(r"\(([^)]*)\)")
+_MASTER_ANNOTATION = re.compile(r"\([^)]*\)")
+
+
+def strip_master_annotations(name: object) -> str:
+    """Remove war-master parenthetical annotations from the emitted item name.
+
+    The canonical name in ``MasterMatcher._nms`` remains untouched because its
+    parenthetical tokens are useful ranking evidence for sibling SKUs.  Only
+    the user-facing ``itemNameMaster`` value is cleaned here.
+    """
+    original = str(name or "").strip()
+    cleaned = _MASTER_ANNOTATION.sub("", original)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+    return cleaned or original
 
 
 def paren_tokens(s) -> set:
@@ -211,6 +228,7 @@ def parse_price(v: Any):
 # 065 실측(빈칸-only): 0.15=master+63/spurious0, 0.10=+66(오채움↑). 0.15 채택.
 IBC_RESCUE_FLOOR = 0.15
 IBC_STRICT_RERANK_FLOOR = 0.80
+IBC_LEARN_RERANK_MARGIN = 0.10
 
 
 def _compact_alnum(value: object) -> str:
@@ -218,8 +236,34 @@ def _compact_alnum(value: object) -> str:
     return "".join(ch for ch in str(value or "").lower() if ch.isalnum())
 
 
+def _runtime_spec(value: object) -> str:
+    normalized = unicodedata.normalize("NFC", str(value or "")).lower()
+    return "".join(
+        ch for ch in normalized
+        if (ch.isascii() and ch.isalnum()) or ("가" <= ch <= "힣")
+    )
+
+
+def _runtime_char_trigrams(value: object) -> set[str]:
+    words = re.findall(r"[0-9a-zA-Z가-힣]+", str(value or "").lower())
+    out: set[str] = set()
+    for word in words:
+        padded = "  " + word + " "
+        out.update(padded[i:i + 3] for i in range(len(padded) - 2))
+    return out
+
+
+def _runtime_char_sim(left: object, right: object) -> float:
+    a, b = _runtime_char_trigrams(left), _runtime_char_trigrams(right)
+    if not a or not b:
+        return 0.0
+    inter = len(a & b)
+    return inter / (len(a) + len(b) - inter)
+
+
 class MasterMatcher:
-    def __init__(self, item_dict: dict, itembuycust: dict | None = None):
+    def __init__(self, item_dict: dict, itembuycust: dict | None = None,
+                 learndata: dict | None = None):
         # entries: (item_cd, item_nm, bp1, unit, pyojun, bohum, trigram 크기) / 역색인: trigram -> [idx]
         self._cds: list[str] = []
         self._nms: list[str] = []
@@ -262,6 +306,57 @@ class MasterMatcher:
             idxs = {self._cd2i[c] for c in (cds or []) if c in self._cd2i}
             if idxs:
                 self._ibc[b] = idxs
+        readings = (learndata or {}).get("readings") if isinstance(learndata, dict) else None
+        self._learn: dict[str, dict[str, int]] = {}
+        for reading, entries in (readings or {}).items():
+            counts = {
+                str(code): int(count)
+                for code, count in (entries or [])
+                if str(code) in self._cd2i and int(count) > 0
+            }
+            if counts:
+                self._learn[str(reading)] = counts
+
+    def resolve_learndata_code(
+        self, reading: str, spec: object = "", price: object = None,
+        quantity: object = None, amount: object = None,
+    ) -> str | None:
+        raw_reading = str(reading or "").strip()
+        counts = self._learn.get(raw_reading)
+        if not counts:
+            noise_match = (
+                _TRAILING_PAGE_FRACTION_RE.fullmatch(raw_reading)
+                or _TRAILING_COORD_111_119_RE.fullmatch(raw_reading)
+            )
+            if noise_match:
+                counts = self._learn.get(noise_match.group("base").strip())
+        if not counts:
+            return None
+        price_digits = re.sub(r"\D", "", str(price or ""))
+        parsed_price = int(price_digits) if price_digits else None
+        if parsed_price is None:
+            qdigits = re.sub(r"\D", "", str(quantity or ""))
+            amount_digits = re.sub(r"\D", "", str(amount or ""))
+            if qdigits and amount_digits and int(qdigits) > 0:
+                parsed_price = round(int(amount_digits) / int(qdigits))
+        candidates = list(counts.items())
+        normalized_spec = _runtime_spec(spec)
+        if normalized_spec:
+            matching_unit = [
+                (code, count) for code, count in candidates
+                if _runtime_spec(self._units[self._cd2i[code]]) == normalized_spec
+            ]
+            if matching_unit:
+                candidates = matching_unit
+        return min(
+            candidates,
+            key=lambda item: (
+                -item[1],
+                -_runtime_char_sim(reading, self._nms[self._cd2i[item[0]]]),
+                abs(self._bp1s[self._cd2i[item[0]]] - parsed_price)
+                if parsed_price is not None else float("inf"),
+            ),
+        )[0]
 
     def _itri(self, i: int) -> frozenset:
         t = self._itri_cache.get(i)
@@ -290,7 +385,8 @@ class MasterMatcher:
                 best, best_i = s, i
         if best_i < 0 or best < floor:
             return None
-        return {"itemCode": self._cds[best_i], "itemNameMaster": self._nms[best_i],
+        return {"itemCode": self._cds[best_i],
+                "itemNameMaster": strip_master_annotations(self._nms[best_i]),
                 "sim": round(best, 4)}
 
     def itembuycust_strict_rerank(
@@ -299,6 +395,10 @@ class MasterMatcher:
         bizno: str,
         current: dict[str, Any] | None,
         floor: float = IBC_STRICT_RERANK_FLOOR,
+        spec: object = "",
+        price: object = None,
+        quantity: object = None,
+        amount: object = None,
     ) -> dict[str, Any] | None:
         """Return an observable, high-confidence purchase-history replacement.
 
@@ -317,12 +417,15 @@ class MasterMatcher:
             return None
 
         candidates = self.top_candidates(clean_query_name(name), 30)
-        current_master_key = _compact_alnum(current.get("itemNameMaster"))
+        current_code = str(current.get("itemCode") or "")
+        current_i = self._cd2i.get(current_code)
+        if current_i is None:
+            return None
         current_candidate = next(
             (
                 (float(sim), i)
                 for sim, i in candidates
-                if _compact_alnum(self._nms[i]) == current_master_key
+                if i == current_i
             ),
             None,
         )
@@ -335,14 +438,30 @@ class MasterMatcher:
         if proposed is None:
             return None
         proposed_sim, proposed_i = proposed
-        if proposed_sim < floor or proposed_sim < current_sim:
-            return None
         if proposed_i == current_i:
+            return None
+
+        legacy_high_confidence = (
+            proposed_sim >= floor and proposed_sim >= current_sim
+        )
+        learned_code = self.resolve_learndata_code(
+            name, spec=spec, price=price, quantity=quantity, amount=amount,
+        )
+        learned_agreement = (
+            learned_code == self._cds[proposed_i]
+            and proposed_sim >= MATCH_SIM_FLOOR
+            and proposed_sim + IBC_LEARN_RERANK_MARGIN >= current_sim
+        )
+        if not legacy_high_confidence and not learned_agreement:
             return None
 
         raw_key = _compact_alnum(name)
         master_name = self._nms[proposed_i]
-        master_key = _compact_alnum(master_name)
+        master_key = _compact_alnum(
+            strip_master_annotations(master_name)
+            if learned_agreement else master_name
+        )
+        current_master_key = _compact_alnum(self._nms[current_i])
         if master_key == current_master_key:
             return None
         if not raw_key or not master_key or master_key not in raw_key:
@@ -350,12 +469,13 @@ class MasterMatcher:
         # A bare printed name does not prove that a lifecycle-qualified master
         # such as ``(...품절)`` should be replaced by its base-name SKU.  The
         # supplier history can otherwise erase a correct status-bearing code.
-        if "품절" in str(current.get("itemNameMaster") or "") and raw_key == master_key:
+        if "품절" in self._nms[current_i] and raw_key == master_key:
             return None
         return {
             "itemCode": self._cds[proposed_i],
-            "itemNameMaster": master_name,
+            "itemNameMaster": strip_master_annotations(master_name),
             "sim": round(proposed_sim, 4),
+            "learnAgreement": learned_agreement,
         }
 
     def top_candidates(self, name: str, k: int = 30):
@@ -373,7 +493,8 @@ class MasterMatcher:
             k, ((inter / (qn + self._tlens[i] - inter), i) for i, inter in counts.items()))
 
     def entry(self, i: int) -> dict:
-        return {"itemCode": self._cds[i], "itemNameMaster": self._nms[i],
+        return {"itemCode": self._cds[i],
+                "itemNameMaster": strip_master_annotations(self._nms[i]),
                 "bp1": self._bp1s[i], "unit": self._units[i],
                 "pyojun": self._pyojuns[i], "bohum": self._bohums[i]}
 
@@ -433,7 +554,8 @@ class MasterMatcher:
             best_i, best_key = low_i, low_key
         if best_i < 0:
             return None
-        return {"itemCode": self._cds[best_i], "itemNameMaster": self._nms[best_i],
+        return {"itemCode": self._cds[best_i],
+                "itemNameMaster": strip_master_annotations(self._nms[best_i]),
                 "sim": round(-best_key[0], 4)}
 
 
@@ -542,10 +664,18 @@ def get_matcher() -> "MasterMatcher | None":
             if os.path.isfile(p):
                 try:
                     d = json.load(open(p, encoding="utf-8"))
-                    _matcher = MasterMatcher(d.get("item") or {}, d.get("itembuycust"))
+                    runtime_learn = {}
+                    if os.path.isfile(_RUNTIME_LEARNDATA):
+                        runtime_learn = json.load(
+                            open(_RUNTIME_LEARNDATA, encoding="utf-8")
+                        )
+                    _matcher = MasterMatcher(
+                        d.get("item") or {}, d.get("itembuycust"), runtime_learn
+                    )
                     _party = PartyMatcher(d)
                     print(f"[master_match] loaded {p} ({len(_matcher._cds)} items, "
-                          f"{len(_party.bizno_to_cust)} bizno, {len(_party.brch)} brch)")
+                          f"{len(_party.bizno_to_cust)} bizno, {len(_party.brch)} brch, "
+                          f"{len(_matcher._learn)} learndata readings)")
                     break
                 except Exception as e:
                     print(f"[master_match] load failed {p}: {e}")
@@ -740,6 +870,91 @@ def strip_trailing_item_classification(rows: list) -> tuple[list, dict[str, Any]
     return rows, dbg
 
 
+_LEADING_CODE_HANGUL = re.compile(r"[가-힣]")
+_TRAILING_PAGE_FRACTION_RE = re.compile(
+    r"^(?P<base>.+\S)\s+1\s*/\s*[1-9]\d?\s*$"
+)
+_TRAILING_COORD_111_119_RE = re.compile(
+    r"^(?P<base>.*[^/\s])\s+11[1-9]\s*$"
+)
+
+
+def strip_trailing_item_page_fraction(rows: list) -> tuple[list, dict[str, Any]]:
+    """Remove conservative trailing page/coordinate noise from itemName.
+
+    Dose ratios glued to a product name and ambiguous ``// row`` suffixes are
+    deliberately untouched.  Accepted forms are a whitespace-delimited
+    ``1/N`` page marker or the observed coordinate family ``111..119`` when
+    not preceded by a slash.  Static 067 simulations for the two gates:
+    +739/0 and +563/0 respectively.
+    """
+    dbg: dict[str, Any] = {"stripped": 0, "samples": []}
+    if not isinstance(rows, list):
+        return rows, dbg
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        name = str(row.get("itemName") or "").strip()
+        match = (
+            _TRAILING_PAGE_FRACTION_RE.fullmatch(name)
+            or _TRAILING_COORD_111_119_RE.fullmatch(name)
+        )
+        if not match:
+            continue
+        base = match.group("base").strip()
+        if len(_compact_alnum(base)) < 3:
+            continue
+        row["itemName"] = base
+        dbg["stripped"] += 1
+        if len(dbg["samples"]) < 8:
+            dbg["samples"].append({"before": name[:100], "after": base[:100]})
+    return rows, dbg
+
+
+_LEADING_CODE_DIGITS = re.compile(r"\d{2,}")
+# 용량/농도/팩 서술자(마스터 GT가 이름의 일부로 보존): '520mg…','10%포도당','(50EA)…'
+_LEADING_CODE_DOSEISH = re.compile(
+    r"\d\s*(%|mg|mcg|㎍|㎎|ml|㎖|g|iu|ea|t|c|정|캡슐|캡|포|병|매)\b", re.I)
+
+
+def strip_leading_item_code(rows: list) -> tuple[list, dict[str, Any]]:
+    """Remove a leading barcode / row-number / date code glued before the name.
+
+    OCR often prefixes a pure-numeric token — barcode, row index, or a date —
+    in front of the drug name (``300000385가스피란에스알정``,
+    ``4 2025-01-15 레볼레이드정``, ``V 3000000232세로파질정``).  The segment
+    before the first Hangul is removed only when it contains a 2+ digit run and
+    is not a dose/concentration/pack descriptor (``520mg…``, ``10%포도당``,
+    ``(50EA)…``) — those the war master keeps as part of the name.  Names with no
+    Hangul (pure English) are left untouched.  067 전수 실측: FIX +1,460 /
+    BREAK −12 (잔여=GT가 코드를 보존하는 소수·제조일자 병합 잡행).  itemName raw 만
+    정리하며 ②master 매칭은 clean_query_name 이 이미 선두코드를 무시해 무영향.
+    """
+    dbg: dict[str, Any] = {"stripped": 0, "samples": []}
+    if not isinstance(rows, list):
+        return rows, dbg
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        name = str(row.get("itemName") or "")
+        m = _LEADING_CODE_HANGUL.search(name)
+        if not m or m.start() == 0:
+            continue
+        prefix = name[:m.start()]
+        if not _LEADING_CODE_DIGITS.search(prefix):
+            continue
+        if "%" in prefix or _LEADING_CODE_DOSEISH.search(prefix):
+            continue
+        stripped = name[m.start():].strip()
+        if len(_compact_alnum(stripped)) < 3:
+            continue
+        row["itemName"] = stripped
+        dbg["stripped"] += 1
+        if len(dbg["samples"]) < 8:
+            dbg["samples"].append({"before": name[:100], "after": stripped[:100]})
+    return rows, dbg
+
+
 def fill_master_match(rows: list, matcher: "MasterMatcher | None" = None,
                       supplier_bizno: str | None = None):
     """itemName 있는 행의 itemNameMaster/itemCode 빈칸을 매칭 결과로 채움.
@@ -756,6 +971,7 @@ def fill_master_match(rows: list, matcher: "MasterMatcher | None" = None,
         "belowFloor": 0,
         "ibcFilled": 0,
         "ibcStrictReranked": 0,
+        "ibcLearnReranked": 0,
     }
     if matcher is None or not rows:
         return rows, dbg
@@ -786,10 +1002,18 @@ def fill_master_match(rows: list, matcher: "MasterMatcher | None" = None,
                 continue
             dbg["ibcFilled"] += 1
         if len(bz) == 10:
-            reranked = matcher.itembuycust_strict_rerank(name, bz, m)
+            reranked = matcher.itembuycust_strict_rerank(
+                name, bz, m,
+                spec=r.get("spec"),
+                price=r.get("unitPrice"),
+                quantity=r.get("quantity"),
+                amount=r.get("amount"),
+            )
             if reranked is not None:
                 m = reranked
                 dbg["ibcStrictReranked"] += 1
+                if reranked.get("learnAgreement"):
+                    dbg["ibcLearnReranked"] += 1
         if not str(r.get("itemNameMaster") or "").strip():
             r["itemNameMaster"] = m["itemNameMaster"]
         if not code_is_master:

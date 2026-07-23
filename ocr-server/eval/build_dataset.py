@@ -130,8 +130,8 @@ def main() -> int:
 
     fails = load_labels(FAIL_LABELS)            # {rel_path: gt}
     bals = load_labels(BAL_LABELS)
+    cols = set(c.strip() for c in (args.columns or "").split(",") if c.strip())
     if args.columns or args.min_match is not None or args.raw_only:
-        cols = set(c.strip() for c in (args.columns or "").split(",") if c.strip())
         n0 = len(fails)
         fails = _column_filter(fails, cols, args.min_match, raw_only=args.raw_only)
         print(f"[build_dataset] column/match filter: failure {n0:,} -> {len(fails):,} "
@@ -192,6 +192,35 @@ def main() -> int:
     combined = fail_items + bal_items + anchor_items   # rel paths distinct (separate dirs)
     tr, va, te = _split(combined, args.val, args.test, args.seed)
 
+    # Build a path -> originating column map for honest held-out slices.  Failure
+    # crop names can be reconstructed from ledger identity; correctly-read
+    # balance crops carry the sidecar written by finetune_crops_balance.
+    path_meta: dict[str, dict] = {}
+    try:
+        from finetune_crops import crop_name
+        from finetune_ledger import CORPUS_PATH
+        if os.path.exists(CORPUS_PATH):
+            for line in open(CORPUS_PATH, encoding="utf-8"):
+                try:
+                    entry = json.loads(line)
+                    path_meta["crops/" + crop_name(entry)] = {
+                        "column": entry.get("column"), "source": "failure"
+                    }
+                except (json.JSONDecodeError, KeyError):
+                    continue
+        balance_meta = os.path.join(CORPUS_DIR, "labels_correct.meta.jsonl")
+        if os.path.exists(balance_meta):
+            for line in open(balance_meta, encoding="utf-8"):
+                try:
+                    entry = json.loads(line)
+                    path_meta[entry["path"]] = {
+                        "column": entry.get("column"), "source": entry.get("source", "balance")
+                    }
+                except (json.JSONDecodeError, KeyError):
+                    continue
+    except Exception as exc:
+        print(f"[build_dataset] metadata warning: {exc}")
+
     os.makedirs(DATASET_DIR, exist_ok=True)
     for name, rows in (("train", tr), ("val", va), ("test", te)):
         tmp = os.path.join(DATASET_DIR, name + ".txt.tmp")
@@ -199,6 +228,22 @@ def main() -> int:
             for rel, gt in rows:
                 fh.write(f"{rel}\t{gt}\n")
         os.replace(tmp, os.path.join(DATASET_DIR, name + ".txt"))
+
+    split_meta_path = os.path.join(DATASET_DIR, "split_metadata.jsonl")
+    tmp_meta = split_meta_path + ".tmp"
+    fail_paths = {p for p, _ in fail_items}
+    anchor_paths = {p for p, _ in anchor_items}
+    with open(tmp_meta, "w", encoding="utf-8") as fh:
+        for split, split_rows in (("train", tr), ("val", va), ("test", te)):
+            for rel, _ in split_rows:
+                meta = path_meta.get(rel, {})
+                source = ("failure" if rel in fail_paths else
+                          "numberAnchor" if rel in anchor_paths else
+                          meta.get("source", "balance"))
+                fh.write(json.dumps({"split": split, "path": rel,
+                                     "source": source, "column": meta.get("column")},
+                                    ensure_ascii=False) + "\n")
+    os.replace(tmp_meta, split_meta_path)
 
     manifest = {
         "corpusDir": CORPUS_DIR,
@@ -209,8 +254,12 @@ def main() -> int:
                    "train": len(tr), "val": len(va), "test": len(te)},
         "policy": {"balanceRatio": args.balance_ratio, "val": args.val,
                    "test": args.test, "seed": args.seed,
+                   "columns": sorted(cols), "minMatch": args.min_match,
+                   "hangulMin": args.hangul_min, "rawOnly": args.raw_only,
                    "balanceHangulMin": args.balance_hangul_min,
-                   "numberAnchorRatio": args.number_anchor_ratio},
+                   "numberAnchorRatio": args.number_anchor_ratio,
+                   "maxTrain": args.max_train},
+        "splitMetadata": os.path.basename(split_meta_path),
     }
     json.dump(manifest, open(os.path.join(DATASET_DIR, "manifest.json"), "w", encoding="utf-8"),
               ensure_ascii=False, indent=2)

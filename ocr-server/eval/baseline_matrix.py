@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import os
 import re
+from collections import Counter, defaultdict
 
 from report import _FIELD_KO
 from trend import _CSS
@@ -56,6 +57,27 @@ FIELDS = [
 ]
 
 _LOCAL_KO = {"insuranceCode": "보험코드"}   # report._FIELD_KO에 없는 라벨 보강
+
+# Google의 순환 제외 판정을 Paddle의 정확히 같은 GT 행에 적용하기 위한 안정 서명.
+# replay GT는 rowIndex가 없는 thin 데이터라 compare_table이 내용 정렬을 사용한다.
+# 따라서 화면상의 행번호가 아니라 GT 값 전체로 연결한다.
+_ROW_SIG_FIELDS = (
+    "itemName", "itemNameMaster", "spec", "quantity",
+    "unitPrice", "amount", "itemCode",
+)
+
+
+def _row_signature(row):
+    return tuple(str((row or {}).get(k) or "") for k in _ROW_SIG_FIELDS)
+
+
+def _cell_gt_signature(cells):
+    return tuple(str(((cells or {}).get(k) or {}).get("gt") or "")
+                 for k in _ROW_SIG_FIELDS)
+
+
+def _safe_sample_id(key):
+    return str(key).replace("\\", "/").replace("/", "__")
 
 
 def _clean_nm(s) -> str:
@@ -158,8 +180,15 @@ def compute_google_master(keys):
     # 통계: 전체 + 독립(순환제외). 순환 = war match_type이 우리가 쓴 방식과 같은 행.
     nm_ok = nm_tot = cd_ok = cd_tot = 0
     icd_ok = icd_tot = 0        # itemCode 독립(순환제외)
-    inm_ok = inm_tot = 0        # itemName 독립(순환제외)
+    inm_ok = inm_tot = 0        # itemName 최종 독립(순환제외)
+    inm_base_ok = 0             # 같은 독립행의 Google raw 품명 정답
     n_like = n_trg = n_rule = n_miss = 0
+    # target별 독립 행 selector. 품명/itemCode는 GT 존재 행이 달라 분리한다.
+    # Counter를 쓰므로 같은 문서 안에 완전히 같은 품목행이 반복돼도 분모가 보존된다.
+    independent = {
+        "itemName": defaultdict(Counter),
+        "itemCode": defaultdict(Counter),
+    }
     # 거래처(공급자)/지점(공급받는자) 매칭 카운터: labelEn -> [ok, tot]
     party = {k: [0, 0] for k in ("supplierCompany", "supplierAddress",
                                  "buyerCompany", "buyerAddress")}
@@ -211,6 +240,11 @@ def compute_google_master(keys):
                     nm_ok += 1
                 if not circ:                 # 독립(순환제외) 집계
                     inm_tot += 1
+                    independent["itemName"][_safe_sample_id(img_key)][
+                        _row_signature(r)
+                    ] += 1
+                    if _clean_nm(raw) == _clean_nm(gold_master):
+                        inm_base_ok += 1
                     if nm_match:
                         inm_ok += 1
             gold_code = r.get("itemCode")
@@ -221,6 +255,9 @@ def compute_google_master(keys):
                     cd_ok += 1
                 if not circ:                 # 독립(순환제외) 집계
                     icd_tot += 1
+                    independent["itemCode"][_safe_sample_id(img_key)][
+                        _row_signature(r)
+                    ] += 1
                     if ok:
                         icd_ok += 1
     out = {}
@@ -236,9 +273,15 @@ def compute_google_master(keys):
            "icd_pct": (100.0 * icd_ok / icd_tot if icd_tot else None),
            "inm_ok": inm_ok, "inm_tot": inm_tot,
            "inm_pct": (100.0 * inm_ok / inm_tot if inm_tot else None),
+           "inm_base_ok": inm_base_ok,
+           "inm_base_pct": (100.0 * inm_base_ok / inm_tot if inm_tot else None),
            "n_rule": n_rule, "n_like": n_like, "n_trg": n_trg, "n_miss": n_miss,
            "party": {k: tuple(v) for k, v in party.items()},
-           "cache_entries": len(mm)}
+           "cache_entries": len(mm),
+           # 런타임 렌더링 전용. HTML에는 selector 원문을 쓰지 않는다.
+           "independentSelectors": {
+               target: dict(by_file) for target, by_file in independent.items()
+           }}
     return out, det
 
 
@@ -252,10 +295,8 @@ def _val(b, item_pct):
 
 
 STAGES = [
-    ("base", "Base (raw OCR)"),
-    ("rule", "Rule (parser)"),
-    ("master", "Master match"),
-    ("finetune", "Fine-tune"),
+    ("base", "OCR 읽기"),
+    ("master", "최종 매칭"),   # 합본: Google=learndata→LIKE→trigram, Paddle=전체 파이프라인
 ]
 
 _TAB_CSS = """
@@ -268,7 +309,7 @@ table.matrix{table-layout:fixed}
 .v-noc{display:none}
 body.hidecirc .v-full{display:none}
 body.hidecirc .v-noc{display:inline}
-body.hidecirc tr.circ{display:none}
+body.hidecirc tr.circ,body.hidecirc tr.partcirc{display:none}
 .toggle{display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--fg);
 user-select:none;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 12px}
 .cardgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:1600px;margin:16px auto 0}
@@ -310,26 +351,76 @@ def _score_compare_dir(cdir):
     return {lab: (100.0 * m / s if s else None) for lab, (m, s) in fcnt.items()}, len(files)
 
 
-def load_paddle():
+def _score_compare_dir_subset(cdir, selectors):
+    """Google 독립 selector와 정확히 같은 GT 행만 Paddle 채점.
+
+    분모는 selector의 행 수로 먼저 고정한다. compare 파일/행/측정 셀이 없으면
+    numerator에만 들어가지 않으므로 자동으로 누락 오답이 된다.
+    """
+    outputs = {
+        "itemName": ("itemName", "itemNameMaster", "itemNameLearnA", "itemNameLearnB"),
+        "itemCode": ("itemCode", "itemCodeLearnA", "itemCodeLearnB"),
+    }
+    counts = {}
+    for target, by_file in (selectors or {}).items():
+        if target not in outputs:
+            continue
+        total = sum(sum(counter.values()) for counter in by_file.values())
+        for lab in outputs[target]:
+            counts[lab] = [0, total]
+        for safe_id, selected in by_file.items():
+            path = os.path.join(cdir, safe_id + ".json")
+            try:
+                comp = json.load(open(path, encoding="utf-8"))
+            except Exception:
+                continue
+            remaining = Counter(selected)
+            for row in comp.get("table", {}).get("rows", []):
+                cells = row.get("cells", {})
+                sig = _cell_gt_signature(cells)
+                if remaining[sig] <= 0:
+                    continue
+                remaining[sig] -= 1
+                for lab in outputs[target]:
+                    if (cells.get(lab) or {}).get("status") == "match":
+                        counts[lab][0] += 1
+    pct = {lab: (100.0 * ok / total if total else None)
+           for lab, (ok, total) in counts.items()}
+    detail = {lab: {"ok": ok, "total": total, "pct": pct.get(lab)}
+              for lab, (ok, total) in counts.items()}
+    return pct, detail
+
+
+def load_paddle(independent_selectors=None):
     """최신 run에서 우리 파이프라인 정확도를 **단계별로** 집계.
       - Base   = thin/compare/              (AWS run, 파서룰 적용 전 기준선)
       - Rule   = thin/replay_compare_rule/  (파서룰 적용, ②마스터 매칭 제외 —
                  replay_compare.py --no-master-match --out-subdir replay_compare_rule)
       - Master = thin/replay_compare/       (파서룰 + ②G4 마스터 매칭 배선)
     반환: ({'base':{lab:pct}, 'rule':{...}, 'master':{...}}, run_ts). Finetune=Master 이어받음.
-    replay_compare_rule 없으면 rule=master 폴백, compare 없으면 base=rule 폴백."""
+    replay_compare_rule 없으면 rule=master 폴백, compare 없으면 base=rule 폴백.
+    ★flat 리플레이 런(runs/<ts>/replay_compare, thin 하위폴더 없음 — invoice_replay
+    스냅샷만 반입한 067류)은 PADDLE_FILTER(9000 프리셋)일 때만 sub=런폴더로 대체."""
     import glob
+    flat_ok = PADDLE_FILTER is not None   # 9000: 리플레이 런은 flat 구조
     for d in sorted(glob.glob(os.path.join(HERE, "runs", "*")), reverse=True):
-        mdir = os.path.join(d, "thin", "replay_compare")
-        if not glob.glob(os.path.join(mdir, "*.json")):
-            continue
+        sub = os.path.join(d, "thin")
+        if not glob.glob(os.path.join(sub, "replay_compare", "*.json")):
+            if flat_ok and glob.glob(os.path.join(d, "replay_compare", "*.json")):
+                sub = d                    # flat 리플레이 런(예: 067)
+            else:
+                continue
+        mdir = os.path.join(sub, "replay_compare")
         master, _ = _score_compare_dir(mdir)
-        rdir = os.path.join(d, "thin", "replay_compare_rule")
+        master_nocirc, master_nocirc_detail = _score_compare_dir_subset(
+            mdir, independent_selectors or {}
+        )
+        rdir = os.path.join(sub, "replay_compare_rule")
         if glob.glob(os.path.join(rdir, "*.json")):
             rule, _ = _score_compare_dir(rdir)
         else:
             rule = master  # 매칭-제외 사이드카 없으면 단계 구분 불가 → 동일값
-        bdir = os.path.join(d, "thin", "compare")
+        bdir = os.path.join(sub, "compare")
         if glob.glob(os.path.join(bdir, "*.json")):
             base, _ = _score_compare_dir(bdir)
         else:
@@ -338,8 +429,17 @@ def load_paddle():
         # 교체값이므로 raw 읽기(itemName)를 그대로 두면 불공정 비교가 된다.
         if master.get("itemNameMaster") is not None:
             master = dict(master, itemName=master["itemNameMaster"])
-        return {"base": base, "rule": rule, "master": master}, os.path.basename(d)
-    return {"base": {}, "rule": {}, "master": {}}, None
+        return {
+            "base": base,
+            "rule": rule,
+            "master": master,
+            "master_nocirc": master_nocirc,
+            "master_nocirc_detail": master_nocirc_detail,
+        }, os.path.basename(d)
+    return {
+        "base": {}, "rule": {}, "master": {},
+        "master_nocirc": {}, "master_nocirc_detail": {},
+    }, None
 
 
 def _stage_value(stage, side, lab, b, item_pct, paddle, grule, gmaster):
@@ -394,8 +494,12 @@ def _render_panel(stage, active, item_pct, item_ok, item_tot, paddle, grule, gma
     grp_ko = {"head": "문서 헤더 (필드)", "row": "표 셀 (품목 행)"}
 
     def _noc_item(lab):
-        """Master 단계 품명/itemCode의 순환제외(독립) 값. 없으면 None."""
-        if stage != "master" or not mdet:
+        """동일 독립행의 Google 값. 해당 stage/컬럼 selector가 없으면 None."""
+        if not mdet:
+            return None
+        if stage == "base" and lab == "itemName":
+            return mdet.get("inm_base_pct")
+        if stage != "master":
             return None
         if lab == "itemName":
             return mdet.get("inm_pct")
@@ -403,24 +507,67 @@ def _render_panel(stage, active, item_pct, item_ok, item_tot, paddle, grule, gma
             return mdet.get("icd_pct")
         return None
 
+    def _paddle_value(lab, mode):
+        """Paddle 값. itemCode 는 learndata 적용값으로 대체 —
+        full=전체행 LearnB(순환상한) / nocirc=Google과 동일 독립행 LearnA(held-out).
+        구글의 full/독립 토글과 동일 행·동일 분모로 대응한다.
+        base/rule 단계는 learndata 전이라 그대로."""
+        pkey = {"base": "base", "rule": "rule"}.get(stage, "master")
+        same_rows = (
+            (stage == "base" and lab == "itemName")
+            or (stage == "master" and lab in {"itemName", "itemCode"})
+        )
+        if mode == "nocirc" and same_rows:
+            m = paddle.get("master_nocirc") or {}
+        else:
+            m = paddle.get(pkey) or {}
+        if stage not in ("base", "rule"):
+            learn = {"itemCode": ("itemCodeLearnB", "itemCodeLearnA"),
+                     "itemName": ("itemNameLearnB", "itemNameLearnA")}.get(lab)
+            if learn:
+                v = m.get(learn[0] if mode == "full" else learn[1])
+                if v is not None:
+                    return v
+        return m.get(lab)
+
     def _agg(side, g, mode):
         pool = FIELDS if g == "all" else [t for t in FIELDS if t[1] == g]
         if mode == "nocirc":                       # 순환 pass-through(b==100.0) 제외
             pool = [t for t in pool if t[2] != 100.0]
+            # 거래처/지점 최종값(⚑)은 부분순환인데 동일 독립행 selector가 없다.
+            # 공정 모드 평균과 표에서 제외하고, 전체 참고 모드에서만 보여준다.
+            if stage == "master":
+                pool = [t for t in pool if t[0] not in
+                        {"supplierCompany", "supplierAddress",
+                         "buyerCompany", "buyerAddress"}]
+            elif stage == "base":
+                # 067 itemCode는 OCR 원문이 아니라 후단 Master가 채운 값이다.
+                pool = [t for t in pool if t[0] != "itemCode"]
         vals = []
         for lab, gg, b in pool:
-            v = _stage_value(stage, side, lab, b, item_pct, paddle, grule, gmaster)
+            if side == "paddle":
+                v = _paddle_value(lab, mode)
+            else:
+                v = _stage_value(stage, side, lab, b, item_pct, paddle, grule, gmaster)
+                if mode == "nocirc" and _noc_item(lab) is not None:  # 품명/itemCode 독립값
+                    v = _noc_item(lab)
             if v is None:
                 continue
-            if mode == "nocirc" and side == "google":   # 품명/itemCode는 독립값으로 대체
-                nv = _noc_item(lab)
-                if nv is not None:
-                    v = nv
             vals.append(v)
         return (sum(vals) / len(vals)) if vals else None
 
     def _c(side, g, ko):
         bg = ' style="background:#f1f3f5"' if side == "google" else ''  # Google만 회색 바탕
+        if stage == "master":
+            if side == "google":
+                ko += (' <span class="v-full">(순환 포함)</span>'
+                       '<span class="v-noc">(독립 동일행)</span>')
+            else:
+                ko += (' <span class="v-full">(Learn B 상한)</span>'
+                       '<span class="v-noc">(Learn A·동일행)</span>')
+        elif stage == "base":
+            ko += (' <span class="v-full">(전체행)</span>'
+                   '<span class="v-noc">(독립 동일행)</span>')
         return (f'<div class="cardbox"{bg}><div class="cardv">'
                 f'{_dual(_agg(side, g, "full"), _agg(side, g, "nocirc"))}</div>'
                 f'<div class="cardl">{ko}</div></div>')
@@ -436,13 +583,29 @@ def _render_panel(stage, active, item_pct, item_ok, item_tot, paddle, grule, gma
                         f'font-size:12.5px;color:var(--muted)">{grp_ko[grp]}</td></tr>')
             last = grp
         gv = _stage_value(stage, "google", lab, b, item_pct, paddle, grule, gmaster)
-        pv = _stage_value(stage, "paddle", lab, b, item_pct, paddle, grule, gmaster)
+        pv_full = _paddle_value(lab, "full")
+        pv_noc = _paddle_value(lab, "nocirc")
+        pv = pv_full
         circular = (b == 100.0 and gv is not None)  # GT=구글값 → 자기비교(pass-through)
         _circ_labs = {"itemName", "itemCode", "supplierCompany", "supplierAddress",
                       "buyerCompany", "buyerAddress"}
         circ_item = (stage in ("rule", "master") and lab in _circ_labs and gv is not None)
+        partial_without_independent = (
+            stage == "master"
+            and lab in {"supplierCompany", "supplierAddress",
+                        "buyerCompany", "buyerAddress"}
+            and gv is not None
+        )
+        base_not_raw = stage == "base" and lab == "itemCode"
         if b == ITEM and gv is not None and stage == "base":
-            gcell = f'<b>{_pctcell(gv)}</b> <span class="muted">({item_ok:,}/{item_tot:,})</span>'
+            full_html = f'<b>{_pctcell(gv)}</b> <span class="muted">({item_ok:,}/{item_tot:,})</span>'
+            nv = _noc_item(lab)
+            noc_html = (
+                f'<b>{_pctcell(nv)}</b> '
+                f'<span class="muted" title="최종 탭과 같은 독립행">'
+                f'({mdet.get("inm_base_ok",0):,}/{mdet.get("inm_tot",0):,}) ◆</span>'
+            )
+            gcell = _dual_html(full_html, noc_html)
         elif circ_item:
             tip = "war 최종값과 일치율 — war가 같은 방식(learndata/LIKE/trigram)으로 맞춘 행은 부분순환"
             full_html = f'<b>{_pctcell(gv)}</b> <span class="muted" title="{tip}">⚑</span>'
@@ -457,9 +620,40 @@ def _render_panel(stage, active, item_pct, item_ok, item_tot, paddle, grule, gma
             gcell = f'<span class="muted" title="GT가 구글값이라 자기비교(=GT)">{_pctcell(gv)}</span>'
         else:
             gcell = f'<b>{_pctcell(gv)}</b>'
-        trcls = ' class="circ"' if b == 100.0 else ''   # 순환 pass-through 행 → 토글로 숨김
+        if b == 100.0:
+            trcls = ' class="circ"'                     # 완전 순환
+        elif partial_without_independent or base_not_raw:
+            trcls = ' class="partcirc"'                 # 독립 selector 없는 부분순환
+        else:
+            trcls = ''
+        # Paddle 셀·Δ: itemCode는 full(LearnB)/nocirc(LearnA) 듀얼, 그 외는 단일.
+        # Δ의 nocirc 는 구글 독립값(_noc_item)과 대조 → 토글 시 공정 비교로 전환.
+        g_noc = _noc_item(lab)
+        gv_noc = g_noc if g_noc is not None else gv
+        ndetail = paddle.get("master_nocirc_detail", {}) if stage in {"base", "master"} else {}
+        learn_noc = (
+            {"itemName": "itemNameLearnA", "itemCode": "itemCodeLearnA"}.get(lab, lab)
+            if stage == "master" else lab
+        )
+        pd = ndetail.get(learn_noc) or {}
+        noc_count = (f' <span class="muted" title="Google과 동일 독립행 · 누락 오답 포함">'
+                     f'({pd.get("ok",0):,}/{pd.get("total",0):,}) ◆</span>') if pd else ""
+        if pv_noc is not None and abs((pv_noc or 0) - (pv_full or 0)) > 0.05:
+            pcell = _dual_html(
+                f"<b>{_pctcell(pv_full)}</b>",
+                f"<b>{_pctcell(pv_noc)}</b>{noc_count}",
+            )
+        else:
+            pcell = _dual_html(
+                f"<b>{_pctcell(pv_full)}</b>",
+                f"<b>{_pctcell(pv_noc)}</b>{noc_count}",
+            ) if pd else f"<b>{_pctcell(pv_full)}</b>"
+        if g_noc is not None or (pv_noc is not None and pv_noc != pv_full):
+            dcell = _dual_html(_delta(gv, pv_full), _delta(gv_noc, pv_noc))
+        else:
+            dcell = _delta(gv, pv_full)
         rows.append(f"<tr{trcls}><td>{_ko(lab)}</td><td>{gcell}</td>"
-                    f"<td><b>{_pctcell(pv)}</b></td><td>{_delta(gv, pv)}</td></tr>")
+                    f"<td>{pcell}</td><td>{dcell}</td></tr>")
         if (i + 1 == len(FIELDS)) or FIELDS[i + 1][1] != grp:
             label = "셀 전체" if grp == "row" else "필드 전체"
             gf, gn = _agg("google", grp, "full"), _agg("google", grp, "nocirc")
@@ -488,23 +682,30 @@ def build_html(ndocs, item_pct, item_ok, item_tot, paddle, paddle_run, grule, gd
           "document.querySelectorAll('.panel').forEach((p,j)=>p.classList.toggle('active',j===i));}")
     return (
         f'<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8">'
-        f'<title>필드 × 단계 정확도</title><style>{_CSS}{_TAB_CSS}</style></head><body>'
+        f'<title>필드 × 단계 정확도</title><style>{_CSS}{_TAB_CSS}</style></head><body class="hidecirc">'
         f'<div class="head"><h1>필드 × 단계 정확도</h1>'
-        f'<label class="toggle"><input type="checkbox" onchange="document.body.classList.toggle(\'hidecirc\',this.checked)"> '
-        f'순환 컬럼 숨기기 <span class="muted">(금액·날짜·수량 등 pass-through 제외)</span></label></div>'
+        f'<label class="toggle"><input type="checkbox" checked '
+        f'onchange="document.body.classList.toggle(\'hidecirc\',this.checked)"> '
+        f'공정 비교 <span class="muted">(순환 제외·Google/Paddle 동일 행)</span></label></div>'
         f'<div class="gen" style="max-width:1600px;margin:0 auto 6px">샘플 {ndocs:,}장 ({SAMPLE_LABEL}) · 구글 vs GT</div>'
-        f'<p class="note">탭 = 단계 · Google base = 구글 읽은 값 vs GT(값 없으면 0%) · '
-        f'Paddle {("run " + paddle_run) if paddle_run else "(run 없음)"}: '
-        f'<b>Base=룰전(compare)</b> → <b>Rule=룰후(replay_compare_rule, 매칭 전)</b> → '
-        f'<b>Master=룰+②매칭(replay_compare, 품명=매칭 정식명 itemNameMaster)</b>, Finetune는 Master 이어받음 · '
-        f'Google Rule = ocr.xml learndata EXACT(min={gdet.get("learn_min","")}) · '
-        f'Master = 품목(learndata→LIKE→trigram) + 거래처(지점+사업자번호 정확일치) + 지점(brch_cd) — ocr.xml 충실재현</p>'
+        f'<p class="note" style="border-left:4px solid #d97706;padding-left:10px">'
+        f'<b>두 탭의 정답 목표는 다릅니다.</b> '
+        f'OCR 읽기 = <code>itemName</code> raw 기준값과 비교 · '
+        f'최종 매칭 = <code>itemNameMaster/itemCode</code> 정식 마스터 기준값과 비교. '
+        f'따라서 OCR 읽기 우위가 최종 품목 식별 우위를 뜻하지 않습니다.</p>'
+        f'<p class="note">탭 2단계 · <b>OCR 읽기</b> = 읽은 값 vs GT(값 없으면 0%) · '
+        f'<b>최종 매칭</b> = 룰+파서+마스터 합본: '
+        f'Google = ocr.xml 캐스케이드(learndata→LIKE→trigram) + 거래처(지점+사업자번호) + 지점(brch_cd) 충실재현, '
+        f'Paddle {("run " + paddle_run) if paddle_run else "(run 없음)"} = 전체 파이프라인(replay_compare, 품명=매칭 정식명 itemNameMaster)</p>'
         f'<div class="tabbar">{tabs}</div>{panels}'
         f'<p class="note">· <b>⚑</b> = war 최종값과 일치율(품명·코드) — war가 같은 방식으로 맞춘 행은 부분순환. '
         f'<b>◆</b> = 순환 제외(독립 행): 품명 <b>{("%.1f%%" % mdet["inm_pct"]) if mdet.get("inm_pct") is not None else "-"}</b> '
         f'({mdet.get("inm_ok",0):,}/{mdet.get("inm_tot",0):,}), '
         f'itemCode <b>{("%.1f%%" % mdet["icd_pct"]) if mdet.get("icd_pct") is not None else "-"}</b> '
         f'({mdet.get("icd_ok",0):,}/{mdet.get("icd_tot",0):,}) · '
+        f'<b>체크 상태</b>는 OCR/최종 탭 모두 같은 독립 행을 사용하고, '
+        f'최종 Paddle은 LearnData A(held-out)로 채점하며 '
+        f'행·값 누락을 오답으로 포함 · <b>체크 해제</b>는 LearnData B 순환상한 참고 · '
         f'<span class="muted">회색 100%</span> = GT가 구글값(순환) · 0% = war에 없음 → Paddle 돌리면 채워짐</p>'
         f'<script>{js}</script></body></html>')
 
@@ -543,9 +744,9 @@ def main():
 
     keys = load_sample_keys()
     ndocs, item_pct, ok, tot = compute_item_baseline(keys)
-    paddle, paddle_run = load_paddle()
     grule, gdet = compute_google_rule(keys)
     gmaster, mdet = compute_google_master(keys)
+    paddle, paddle_run = load_paddle(mdet.get("independentSelectors"))
     open(OUT, "w", encoding="utf-8").write(
         build_html(ndocs, item_pct, ok, tot, paddle, paddle_run, grule, gdet, gmaster, mdet))
     print("wrote", OUT, f"(sample docs={ndocs:,})")

@@ -46,20 +46,35 @@ def _measure(study_dir: str) -> dict:
         p = d.get("extractionPath")
         if p in paths:
             paths[p] += 1
-        for r in d.get("table", {}).get("rows", []):
-            for _col, c in r.get("cells", {}).items():
-                if c.get("spurious"):
-                    spur += 1
-                if c.get("gtNorm"):
-                    cs += 1
+        table = d.get("table") or {}
+        counts = table.get("cellCounts")
+        if isinstance(counts, dict):
+            cs += int(counts.get("scored") or 0)
+            cm += int(counts.get("match") or 0)
+            spur += int(counts.get("spurious") or 0)
+        else:
+            for r in table.get("rows", []):
+                for col, c in r.get("cells", {}).items():
+                    if col in C.MEASUREMENT_KEYS:
+                        continue
+                    if c.get("spurious"):
+                        spur += 1
+                    if c.get("gtNorm"):
+                        cs += 1
+                        if c.get("status") == "match":
+                            cm += 1
+        fields = d.get("fields") or {}
+        field_counts = fields.get("counts")
+        if isinstance(field_counts, dict):
+            fs += int(field_counts.get("scored") or 0)
+            fm += int(field_counts.get("match") or 0)
+        else:
+            pf = fields.get("perField") or {}
+            for _fn, c in pf.items():
+                if isinstance(c, dict) and c.get("gtNorm"):
+                    fs += 1
                     if c.get("status") == "match":
-                        cm += 1
-        pf = (d.get("fields") or {}).get("perField") or {}
-        for _fn, c in pf.items():
-            if isinstance(c, dict) and c.get("gtNorm"):
-                fs += 1
-                if c.get("status") == "match":
-                    fm += 1
+                        fm += 1
     pdrop = recog = None
     cls_path = os.path.join(study_dir, "PARSER_DROP_CLASSIFY_replay_compare.json")
     if os.path.isfile(cls_path):

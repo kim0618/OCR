@@ -202,10 +202,10 @@
           },
           "itemNameMaster": {
             "gt": "타미스펜이알서방정(8시간)(제약사품절)",
-            "ext": "타미스펜이알서방정(8시간)(생산중단)",
-            "gtNorm": "타미스펜이알서방정(8시간)(제약사품절)",
-            "extNorm": "타미스펜이알서방정(8시간)(생산중단)",
-            "status": "mismatch",
+            "ext": "타미스펜이알서방정",
+            "gtNorm": "타미스펜이알서방정",
+            "extNorm": "타미스펜이알서방정",
+            "status": "match",
             "spurious": false
           },
           "spec": {
@@ -271,19 +271,35 @@
             "extNorm": "693201820",
             "status": "mismatch",
             "spurious": false
+          },
+          "itemCodeLearnA": {
+            "gt": "16001993",
+            "ext": "16001993",
+            "gtNorm": "16001993",
+            "extNorm": "16001993",
+            "status": "match",
+            "spurious": false
+          },
+          "itemCodeLearnB": {
+            "gt": "16001993",
+            "ext": "16001993",
+            "gtNorm": "16001993",
+            "extNorm": "16001993",
+            "status": "match",
+            "spurious": false
           }
         }
       }
     ],
     "cellCounts": {
       "scored": 10,
-      "match": 2,
-      "mismatch": 5,
+      "match": 3,
+      "mismatch": 4,
       "ext_missing": 3,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.2
+    "cellAccuracy": 0.3
   },
   "buckets": {
     "defects": [
@@ -302,14 +318,6 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "extractor invented rows ['3', '4', '5']"
-      },
-      {
-        "location": "row1:itemNameMaster",
-        "status": "mismatch",
-        "gtNorm": "타미스펜이알서방정(8시간)(제약사품절)",
-        "extNorm": "타미스펜이알서방정(8시간)(생산중단)",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.78)"
       },
       {
         "location": "row1:spec",
@@ -356,8 +364,8 @@
         "status": "mismatch",
         "gtNorm": "16001993",
         "extNorm": "16001992",
-        "bucket": "recognition",
-        "reason": "char-level diff (sim=0.88)"
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['itemCodeLearnA', 'itemCodeLearnB']"
       },
       {
         "location": "row1:insuranceCode",
@@ -369,9 +377,9 @@
       }
     ],
     "bucketTally": {
-      "recognition": 6,
+      "recognition": 4,
       "structure": 4,
-      "layout": 0,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

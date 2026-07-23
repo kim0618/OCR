@@ -191,65 +191,62 @@
     "rowCountGt": 1,
     "rowCountExt": 1,
     "rowCountMatch": true,
-    "matchedRowIdx": [],
-    "gtOnlyRowIdx": [
+    "matchedRowIdx": [
       "1"
     ],
-    "extOnlyRowIdx": [
-      "1"
-    ],
+    "gtOnlyRowIdx": [],
+    "extOnlyRowIdx": [],
     "rows": [
       {
         "rowIndex": "1",
         "rowMatch": false,
-        "missingGtRow": true,
         "cells": {
           "itemName": {
             "gt": "인트로바이 이트코나졸캡슐",
-            "ext": "",
+            "ext": "인트로바이이트코나졸캡슬100C",
             "gtNorm": "인트로바이이트코나졸캡슐",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "인트로바이이트코나졸캡슬100c",
+            "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "이트코나졸캡슐(인트로바이오파마)",
-            "ext": "",
-            "gtNorm": "이트코나졸캡슐(인트로바이오파마)",
-            "extNorm": "",
-            "status": "ext_missing",
+            "ext": "이트코나졸캡슐",
+            "gtNorm": "이트코나졸캡슐",
+            "extNorm": "이트코나졸캡슐",
+            "status": "match",
             "spurious": false
           },
           "spec": {
             "gt": "100C",
-            "ext": "",
+            "ext": "100C",
             "gtNorm": "100c",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "100c",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
             "gt": "3",
-            "ext": "",
+            "ext": "100",
             "gtNorm": "3",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "100",
+            "status": "mismatch",
             "spurious": false
           },
           "unitPrice": {
             "gt": "111962",
-            "ext": "",
+            "ext": "3",
             "gtNorm": "111962",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "3",
+            "status": "mismatch",
             "spurious": false
           },
           "amount": {
             "gt": "335886",
-            "ext": "",
+            "ext": "111,962",
             "gtNorm": "335886",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "111962",
+            "status": "mismatch",
             "spurious": false
           },
           "expiryDate": {
@@ -270,18 +267,34 @@
           },
           "itemCode": {
             "gt": "05005247",
-            "ext": "",
+            "ext": "05005247",
             "gtNorm": "05005247",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "05005247",
+            "status": "match",
             "spurious": false
           },
           "insuranceCode": {
             "gt": "052401700",
-            "ext": "",
+            "ext": "052401700",
             "gtNorm": "052401700",
-            "extNorm": "",
-            "status": "ext_missing",
+            "extNorm": "052401700",
+            "status": "match",
+            "spurious": false
+          },
+          "itemCodeLearnA": {
+            "gt": "05005247",
+            "ext": "05005247",
+            "gtNorm": "05005247",
+            "extNorm": "05005247",
+            "status": "match",
+            "spurious": false
+          },
+          "itemCodeLearnB": {
+            "gt": "05005247",
+            "ext": "05005247",
+            "gtNorm": "05005247",
+            "extNorm": "05005247",
+            "status": "match",
             "spurious": false
           }
         }
@@ -289,13 +302,13 @@
     ],
     "cellCounts": {
       "scored": 10,
-      "match": 0,
-      "mismatch": 0,
-      "ext_missing": 10,
+      "match": 4,
+      "mismatch": 4,
+      "ext_missing": 2,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.0
+    "cellAccuracy": 0.4
   },
   "buckets": {
     "defects": [
@@ -316,68 +329,36 @@
         "reason": "char-level diff (sim=0.84)"
       },
       {
-        "location": "table",
-        "status": "rows_missed",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor missed rows ['1']"
-      },
-      {
-        "location": "table",
-        "status": "rows_extra",
-        "gtNorm": "",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "extractor invented rows ['1']"
-      },
-      {
         "location": "row1:itemName",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "인트로바이이트코나졸캡슐",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:itemNameMaster",
-        "status": "ext_missing",
-        "gtNorm": "이트코나졸캡슐(인트로바이오파마)",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:spec",
-        "status": "ext_missing",
-        "gtNorm": "100c",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "인트로바이이트코나졸캡슬100c",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.79)"
       },
       {
         "location": "row1:quantity",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "3",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "100",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['unitPrice']"
       },
       {
         "location": "row1:unitPrice",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "111962",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "3",
+        "bucket": "layout",
+        "reason": "gt cell appears in column(s) ['amount']"
       },
       {
         "location": "row1:amount",
-        "status": "ext_missing",
+        "status": "mismatch",
         "gtNorm": "335886",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
+        "extNorm": "111962",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
       },
       {
         "location": "row1:expiryDate",
@@ -394,28 +375,12 @@
         "extNorm": "",
         "bucket": "structure",
         "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:itemCode",
-        "status": "ext_missing",
-        "gtNorm": "05005247",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
-      },
-      {
-        "location": "row1:insuranceCode",
-        "status": "ext_missing",
-        "gtNorm": "052401700",
-        "extNorm": "",
-        "bucket": "structure",
-        "reason": "gt cell absent in extracted row"
       }
     ],
     "bucketTally": {
-      "recognition": 2,
-      "structure": 12,
-      "layout": 0,
+      "recognition": 4,
+      "structure": 2,
+      "layout": 2,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

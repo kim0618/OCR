@@ -193,12 +193,12 @@
     "rowCountMatch": false,
     "matchedRowIdx": [
       "1",
-      "4"
+      "3"
     ],
     "gtOnlyRowIdx": [],
     "extOnlyRowIdx": [
       "2",
-      "3",
+      "4",
       "5"
     ],
     "rows": [
@@ -285,35 +285,51 @@
             "extNorm": "657203910",
             "status": "match",
             "spurious": false
+          },
+          "itemCodeLearnA": {
+            "gt": "01011246",
+            "ext": "01011246",
+            "gtNorm": "01011246",
+            "extNorm": "01011246",
+            "status": "match",
+            "spurious": false
+          },
+          "itemCodeLearnB": {
+            "gt": "01011246",
+            "ext": "01011246",
+            "gtNorm": "01011246",
+            "extNorm": "01011246",
+            "status": "match",
+            "spurious": false
           }
         }
       },
       {
-        "rowIndex": "4",
+        "rowIndex": "3",
         "rowMatch": false,
         "cells": {
           "itemName": {
             "gt": "쿠에타핀정 300mg",
-            "ext": "2 3 4 환인제약 쿠에타핀정300mg",
+            "ext": "환인제약 쿠에타핀정300mg 200정",
             "gtNorm": "쿠에타핀정300mg",
-            "extNorm": "234환인제약쿠에타핀정300mg",
+            "extNorm": "환인제약쿠에타핀정300mg200정",
             "status": "mismatch",
             "spurious": false
           },
           "itemNameMaster": {
             "gt": "쿠에타핀정300mg",
-            "ext": "쿠에타핀정300mg",
+            "ext": "환인쿠에타핀서방정300mg",
             "gtNorm": "쿠에타핀정300mg",
-            "extNorm": "쿠에타핀정300mg",
-            "status": "match",
+            "extNorm": "환인쿠에타핀서방정300mg",
+            "status": "mismatch",
             "spurious": false
           },
           "spec": {
             "gt": "200정",
-            "ext": "200정 으으으으으요 이하여백 으으으으으으요",
+            "ext": "200정",
             "gtNorm": "200정",
-            "extNorm": "200정으으으으으요이하여백으으으으으으요",
-            "status": "mismatch",
+            "extNorm": "200정",
+            "status": "match",
             "spurious": false
           },
           "quantity": {
@@ -342,7 +358,7 @@
           },
           "expiryDate": {
             "gt": "20290106",
-            "ext": "2029-01-06",
+            "ext": "20290106",
             "gtNorm": "20290106",
             "extNorm": "20290106",
             "status": "match",
@@ -358,10 +374,10 @@
           },
           "itemCode": {
             "gt": "16000280",
-            "ext": "16000280",
+            "ext": "22005853",
             "gtNorm": "16000280",
-            "extNorm": "16000280",
-            "status": "match",
+            "extNorm": "22005853",
+            "status": "mismatch",
             "spurious": false
           },
           "insuranceCode": {
@@ -371,19 +387,35 @@
             "extNorm": "657201260",
             "status": "match",
             "spurious": false
+          },
+          "itemCodeLearnA": {
+            "gt": "16000280",
+            "ext": "22005853",
+            "gtNorm": "16000280",
+            "extNorm": "22005853",
+            "status": "mismatch",
+            "spurious": false
+          },
+          "itemCodeLearnB": {
+            "gt": "16000280",
+            "ext": "22005853",
+            "gtNorm": "16000280",
+            "extNorm": "22005853",
+            "status": "mismatch",
+            "spurious": false
           }
         }
       }
     ],
     "cellCounts": {
       "scored": 20,
-      "match": 16,
-      "mismatch": 4,
+      "match": 15,
+      "mismatch": 5,
       "ext_missing": 0,
       "gt_empty": 0,
       "spurious": 0
     },
-    "cellAccuracy": 0.8
+    "cellAccuracy": 0.75
   },
   "buckets": {
     "defects": [
@@ -393,7 +425,7 @@
         "gtNorm": "25591351",
         "extNorm": "657201260",
         "bucket": "structure",
-        "reason": "ext value is gt's ['row4:insuranceCode']"
+        "reason": "ext value is gt's ['row3:insuranceCode']"
       },
       {
         "location": "field:taxAmount",
@@ -425,7 +457,7 @@
         "gtNorm": "",
         "extNorm": "",
         "bucket": "structure",
-        "reason": "extractor invented rows ['2', '3', '5']"
+        "reason": "extractor invented rows ['2', '4', '5']"
       },
       {
         "location": "row1:itemName",
@@ -444,26 +476,50 @@
         "reason": "char-level diff (sim=0.88)"
       },
       {
-        "location": "row4:itemName",
+        "location": "row3:itemName",
         "status": "mismatch",
         "gtNorm": "쿠에타핀정300mg",
-        "extNorm": "234환인제약쿠에타핀정300mg",
-        "bucket": "layout",
-        "reason": "gt cell appears in column(s) ['itemNameMaster']"
+        "extNorm": "환인제약쿠에타핀정300mg200정",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.71)"
       },
       {
-        "location": "row4:spec",
+        "location": "row3:itemNameMaster",
         "status": "mismatch",
-        "gtNorm": "200정",
-        "extNorm": "200정으으으으으요이하여백으으으으으으요",
+        "gtNorm": "쿠에타핀정300mg",
+        "extNorm": "환인쿠에타핀서방정300mg",
+        "bucket": "recognition",
+        "reason": "char-level diff (sim=0.83)"
+      },
+      {
+        "location": "row3:itemCode",
+        "status": "mismatch",
+        "gtNorm": "16000280",
+        "extNorm": "22005853",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
+      },
+      {
+        "location": "row3:itemCodeLearnA",
+        "status": "mismatch",
+        "gtNorm": "16000280",
+        "extNorm": "22005853",
+        "bucket": "recognition",
+        "reason": "cell differs, low similarity"
+      },
+      {
+        "location": "row3:itemCodeLearnB",
+        "status": "mismatch",
+        "gtNorm": "16000280",
+        "extNorm": "22005853",
         "bucket": "recognition",
         "reason": "cell differs, low similarity"
       }
     ],
     "bucketTally": {
-      "recognition": 5,
+      "recognition": 9,
       "structure": 2,
-      "layout": 2,
+      "layout": 1,
       "preprocessing": 0
     },
     "preprocessingSuspect": false,

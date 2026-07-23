@@ -29,7 +29,9 @@ FIELD_TYPE = {
 }
 ROW_KEY_TYPE = {
     "rowIndex": "index",
-    "itemName": "name", "spec": "spec",
+    "itemName": "name", "itemNameMaster": "master_name", "spec": "spec",
+    # itemNameLearnA/B = learndata 아이템 정식명 측정컬럼 → itemNameMaster 와 동일 정규화.
+    "itemNameLearnA": "master_name", "itemNameLearnB": "master_name",
     "productCode": "code", "lotNo": "code",
     "expiryDate": "date",
     "quantity": "qty", "unitPrice": "amount", "amount": "amount",
@@ -118,6 +120,23 @@ def norm_name(v) -> str:
     return s.casefold()
 
 
+_MASTER_NAME_ANNOTATION = re.compile(r"\([^)]*\)")
+
+
+def norm_master_name(v) -> str:
+    """Neutralize war-master parenthetical annotations on both GT and output.
+
+    This is intentionally separate from ``norm_name``: raw OCR item names can
+    contain meaningful parenthetical text, while ``itemNameMaster`` is the
+    canonical display column whose parentheses are lifecycle/packaging/admin
+    metadata in the war master.
+    """
+    s = unicodedata.normalize("NFC", _s(v))
+    s = _MASTER_NAME_ANNOTATION.sub("", s)
+    s = _NON_ALNUM.sub("", s)
+    return s.casefold()
+
+
 def norm_spec(v) -> str:
     # 2026-07-21: 규격(spec)도 공백·괄호·마침표·체크마크가 비의미(포장/용량 서술자).
     # war GT('100 C','(병)30T','/30Tab.')와 파서 출력('100C','병)30T','/30Tab')·검수마크
@@ -152,7 +171,8 @@ def norm_company(v) -> str:
 _NORMALIZERS = {
     "text": norm_text, "amount": norm_amount, "qty": norm_qty,
     "bizno": norm_bizno, "date": norm_date, "code": norm_code, "index": norm_index,
-    "address": norm_address, "name": norm_name, "company": norm_company,
+    "address": norm_address, "name": norm_name, "master_name": norm_master_name,
+    "company": norm_company,
     "spec": norm_spec,
 }
 
