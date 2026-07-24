@@ -3594,7 +3594,9 @@ async def ocr_extract(
             try:
                 if isinstance(document_fields, dict) and document_fields.get("tableRows"):
                     _ad_rows, _ad_dbg = adopt_missing_item_names(
-                        document_fields["tableRows"], ocr_lines_raw)
+                        document_fields["tableRows"], ocr_lines_raw,
+                        allow_relaxed_master=True,
+                    )
                     document_fields["tableRows"] = _ad_rows
                     if _ad_dbg.get("adopted"):
                         extract_debug["itemNameAdopt"] = _ad_dbg
@@ -3605,9 +3607,12 @@ async def ocr_extract(
             try:
                 if isinstance(document_fields, dict) and document_fields.get("tableRows"):
                     _sy_rows, _sy_dbg = synthesize_missing_rows(
-                        document_fields["tableRows"], ocr_lines_raw)
+                        document_fields["tableRows"], ocr_lines_raw,
+                        prefer_arithmetic_triple=True,
+                        append_arithmetic_triple=False,
+                    )
                     document_fields["tableRows"] = _sy_rows
-                    if _sy_dbg.get("synthesized"):
+                    if _sy_dbg.get("synthesized") or _sy_dbg.get("merged"):
                         extract_debug["rowSynth"] = _sy_dbg
             except Exception as _sy_e:
                 print(f"[row_synth] failed (response unaffected): {_sy_e}")

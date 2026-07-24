@@ -844,11 +844,20 @@ def main() -> int:
             lines.append("")
 
     md = "\n".join(lines)
-    suffix = "" if args.compare_dir == "compare" else "_" + args.compare_dir
+    compare_rel = os.path.normpath(args.compare_dir)
+    compare_name = os.path.basename(compare_rel)
+    artifact_rel = os.path.dirname(compare_rel)
+    artifact_dir = (
+        os.path.join(run_dir, artifact_rel)
+        if artifact_rel and artifact_rel != "."
+        else run_dir
+    )
+    os.makedirs(artifact_dir, exist_ok=True)
+    suffix = "" if compare_rel == "compare" else "_" + compare_name
     run_label = os.path.relpath(run_dir, C.RUNS_DIR)
-    out_md = os.path.join(run_dir, f"PARSER_DROP_CLASSIFY{suffix}.md")
-    out_json = os.path.join(run_dir, f"PARSER_DROP_CLASSIFY{suffix}.json")
-    out_html = os.path.join(run_dir, f"PARSER_DROP_CLASSIFY{suffix}.html")
+    out_md = os.path.join(artifact_dir, f"PARSER_DROP_CLASSIFY{suffix}.md")
+    out_json = os.path.join(artifact_dir, f"PARSER_DROP_CLASSIFY{suffix}.json")
+    out_html = os.path.join(artifact_dir, f"PARSER_DROP_CLASSIFY{suffix}.html")
     open(out_md, "w", encoding="utf-8").write(md)
     json.dump({
         "schemaVersion": "parser-drop-classification.v2",
@@ -895,16 +904,19 @@ def main() -> int:
     # per-testset JSONs already on disk and never re-invokes this classifier
     # (no recursion). Flat single runs (parent == runs/) are not batches -> skip.
     # Best-effort: never break the classifier.
-    try:
-        from local_summary import build as _ls_build
-        batch_dir = os.path.dirname(run_dir)
-        # batch(run_all --all)면 배치 합산, flat 단일런(invoice_replay 등)이면 런 자신을 합산
-        _target = batch_dir if os.path.abspath(batch_dir) != os.path.abspath(C.RUNS_DIR) else run_dir
-        _out = _ls_build(_target, args.compare_dir, refresh=False)
-        if _out:
-            print(f"[written] {_out}  <- 로컬 합산뷰")
-    except Exception as _e:
-        print(f"[local_summary skipped] {_e}")
+    # Nested compare dirs are isolated probe workspaces. Their classifier report
+    # already lives beside the probe, so do not create another summary at run root.
+    if not artifact_rel:
+        try:
+            from local_summary import build as _ls_build
+            batch_dir = os.path.dirname(run_dir)
+            # batch(run_all --all)면 배치 합산, flat 단일런(invoice_replay 등)이면 런 자신을 합산
+            _target = batch_dir if os.path.abspath(batch_dir) != os.path.abspath(C.RUNS_DIR) else run_dir
+            _out = _ls_build(_target, args.compare_dir, refresh=False)
+            if _out:
+                print(f"[written] {_out}  <- 로컬 합산뷰")
+        except Exception as _e:
+            print(f"[local_summary skipped] {_e}")
 
     # console: ascii-safe summary (cp949 consoles mangle hangul; full table in .md/.html)
     sys.stdout.reconfigure(errors="replace")

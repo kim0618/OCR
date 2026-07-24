@@ -32,6 +32,13 @@ TRAIN_LOG="$HOME/OCR/logs/finetune_${RUN_TAG}.train.log"
 CFG=eval/finetune/config_ppocrv5_rec_finetune.yaml
 DRV=eval/finetune/paddlex_train.py
 
+# --- 라운드 선택: hangul(품명) | numeric(숫자만) | combined(품명+숫자, ★권장) ---
+#   bash run-finetune.sh                              # 품명(한글) 라운드 (1차·완료)
+#   bash run-finetune.sh --round=combined --from-adopted  # ★품명+숫자 통합(품명v1 이어받아, 구덩이없음)
+#   bash run-finetune.sh --round=numeric  --from-adopted  # 숫자만 target + 품명 앵커(순차, 18문턱)
+ROUND=hangul
+for a in "$@"; do case "$a" in --round=*) ROUND="${a#*=}" ;; --numeric) ROUND=numeric ;; esac; done
+
 # --- 이어받기(트리) 결정: --from-adopted 면 채택본을 base 로 pretrain override ---
 FROM_ADOPTED=0
 for a in "$@"; do [ "$a" = "--from-adopted" ] && FROM_ADOPTED=1; done
@@ -50,24 +57,60 @@ if [ "$FROM_ADOPTED" = "1" ]; then
 fi
 {
   echo "==================== 파인튜닝 시작 [$(date +'%F %T')] ===================="
-  echo "[1/6] corpus -> rec 리스트 재빌드 (최신 크롭 반영)"
-  # ★★한글(품명 포함 전 한글필드) 라운드 (2026-07-23, 재검증으로 확대):
-  #  어제 전필드 학습은 숫자 58%→콤마붕괴로 net −3,524 기각. 단 한글은 +6.4%p로 올랐음.
-  #  ★재검증(2026-07-23): failure 한글 크롭이 itemName 310k 외에 회사명·주소 254k+ 있는데
-  #   itemName만 돌리면 그걸 버려 "한글 전체"가 안 됨 → 한글 필드 전체로 확대.
-  #  - failure(한글, 다양성 있는 필드만): itemName(고유 94k) + supplierCompany/supplierAddress
-  #    (고유 ~1.1k). ★buyerCompany(고유 11)·buyerAddress(고유 14) 제외 = 16.6만 크롭이 25개
-  #    문자열 반복뿐 → 암기·빈도편향 유발(학습가치 0, 실측). itemNameMaster 제외=rewrite,
-  #    spec·taxType 제외=짧고 반복.
-  #  - balance(한글만) + 숫자 앵커(소량, ~15%): 한글 망각방지 + 숫자 망각만 방지(콤마붕괴 회피).
-  #  - max-train 100만: 학습시간 관리(≈10h). 숫자 앵커 형식혼재·비율은 게이트로 튜닝.
-  #  기대 구성: 한글 ~85% / 숫자 앵커 ~15% (아래 '학습셋 구성' 로그로 반드시 확인).
-  python eval/build_dataset.py --balance-ratio 1.0 --max-train 1000000 \
-      --columns itemName,supplierCompany,supplierAddress \
-      --min-match 0.7 --hangul-min 2 --raw-only \
-      --balance-hangul-min 1 --number-anchor-ratio 0.3
-  # [label-gate] 출력 확인: 공백/슬래시/대문자 보존율이 0%대면 학습 중단하고 라벨부터 볼 것
-  # [학습셋 구성] 로그 확인: 한글이 ~80% 주도해야 정상. 숫자가 다시 다수면 필터가 안 먹은 것.
+  echo "[1/6] corpus -> rec 리스트 재빌드 (라운드=$ROUND)"
+  # ★기준셋(9,001 held-out) 보호: replay eval 이 수확한 크롭도 corpus 에 쌓이는데, 그걸
+  # 학습에 쓰면 다음 replay 측정이 '본 문제로 시험'이 됨. images_replay 트리에서 소스
+  # 목록을 만들어 build_dataset 이 failure/balance 양쪽에서 제외한다(전 라운드 공통).
+  REPLAY_SRC=eval/finetune_corpus/replay_sources.txt
+  if [ -d eval/data/invoice_war/images_replay ]; then
+    find eval/data/invoice_war/images_replay -type f \( -name '*.jpg' -o -name '*.png' \) \
+      | sed -E 's#.*/images_replay/([^/]+)/([^/]+)/#\1__\2__#' > "$REPLAY_SRC"
+    echo "[기준셋 보호] 제외 소스 $(wc -l < "$REPLAY_SRC")개 -> $REPLAY_SRC"
+  else
+    : > "$REPLAY_SRC"   # 기준셋 이미지 없으면 빈 목록(제외 없음)
+  fi
+  if [ "$ROUND" = "combined" ]; then
+    # ★★통합 라운드 (2026-07-24): 품명 + 숫자를 한 번에 target. 순차의 "18 구덩이" 회피.
+    #  근거: 1차 숫자 −18.8%p 는 대부분 콤마붕괴(포맷)였음(리포트: 26,641,755→26,641.755, 자릿수는
+    #  맞음). 숫자 라벨을 인쇄형(콤마)으로 재구성하면 그 18%가 회복 → 최소 official 수준 복귀.
+    #  둘 다 target이라 서로 안 까먹음(forgetting 없음). ★--from-adopted 로 품명v1 이어받아
+    #  품명 +11.3%p 유지 + 숫자 회복. balance=전체(전필드 망각방지), 앵커 불필요(둘 다 직접 학습).
+    #  날짜·buyer번호 제외 = 콤마↔마침표 혼동(포맷 혼재) 위험 차단. hangul-min 미사용(숫자 죽음).
+    python eval/build_dataset.py --balance-ratio 1.0 --max-train 1200000 \
+        --columns itemName,supplierCompany,supplierAddress,amount,unitPrice,quantity,supplyAmount,taxAmount,totalAmount,discountAmount,itemCode,supplierBizNumber,manufacturingNo,lotNo \
+        --min-match 0.7 --raw-only --reconstruct-number-labels \
+        --exclude-sources "$REPLAY_SRC"
+    FT_CRITERIA="품명+숫자 통합(숫자 콤마재구성) — 품명v1 이어받아 품명유지+숫자회복(콤마 18%)"
+  elif [ "$ROUND" = "numeric" ]; then
+    # ★★숫자 라운드 (2026-07-24): 숫자(금액/수량/단가) 인식↑ + 품명 유지~개선.
+    #  1차(품명)에서 배운 교훈 = 반대편 앵커가 작으면(13%) 그쪽이 −18.8%p 날아감 →
+    #  이번엔 품명(한글) 앵커를 충분히 넣어 방금 얻은 품명 +11.3%p 보존. 단 숫자가 다수(target)여야
+    #  숫자가 오르므로 품명은 과반은 안 되게: balance-ratio 1.0(숫자=failure×2) + hangul-anchor 1.5
+    #  → 대략 숫자 ~57% / 품명 ~43%. (품명 깎이면 앵커↑, 숫자 안 오르면 앵커↓ — 게이트로 튜닝)
+    #  - failure(숫자 전체): 금액계열 + itemCode·사업자번호·제조번호·lotNo. 날짜·buyer번호 제외
+    #    (라벨 형식 불확실: 날짜=구분자없는 GT, buyer번호=혼재). ★핵심 --reconstruct-number-labels:
+    #    금액계열 GT(819800)를 인쇄형(819,800)으로 재구성 = 콤마붕괴(매번 실패 원인) 근본 차단.
+    #    itemCode/사업자번호 등은 GT가 이미 인쇄형(평문·하이픈)이라 그대로.
+    #  ★반드시 --from-adopted 와 함께: 품명v1 을 이어받아 그 위에 숫자를 얹어야 품명이 살아있음.
+    #  ⚠️ 확인: itemCode(38만)·제조번호(12만)가 크므로 '학습셋 구성' 로그로 숫자 다수·품명 보존
+    #    확인. 금액계열만 집중하고 싶으면 --columns 를 금액계열로 좁히면 됨.
+    python eval/build_dataset.py --balance-ratio 1.0 --max-train 1000000 \
+        --columns amount,unitPrice,quantity,supplyAmount,taxAmount,totalAmount,discountAmount,itemCode,supplierBizNumber,manufacturingNo,lotNo \
+        --min-match 0.7 --raw-only --reconstruct-number-labels \
+        --balance-digit-min 1 --hangul-anchor-ratio 1.5 \
+        --exclude-sources "$REPLAY_SRC"
+    FT_CRITERIA="숫자 전체(금액계열 콤마재구성 + itemCode/사업자/제조번호) + 품명 보존 앵커 1.5"
+  else
+    # ★★한글(품명) 라운드 — failure=한글 다양성필드(itemName+supplier), balance=한글, 숫자앵커 소량.
+    #  buyer 제외(반복만)·itemNameMaster 제외(rewrite). 1차 net +2,835·품명 +11.3%p 채택본.
+    python eval/build_dataset.py --balance-ratio 1.0 --max-train 1000000 \
+        --columns itemName,supplierCompany,supplierAddress \
+        --min-match 0.7 --hangul-min 2 --raw-only \
+        --balance-hangul-min 1 --number-anchor-ratio 0.3 \
+        --exclude-sources "$REPLAY_SRC"
+    FT_CRITERIA="품명·공급자명·주소 중심 + 숫자 보존 앵커 0.3 + 한글2자+ + 인쇄형 라벨"
+  fi
+  # [label-gate]·[학습셋 구성] 로그 확인: 타깃 글자종류가 주도해야 정상(품명=한글↑ / 숫자=숫자↑).
   echo "[2/6] PaddleX 레이아웃 (dict.txt + 루트 리스트, 중첩 정리)"
   python eval/build_paddlex_dataset.py
   # PaddleX get_dataset_root 는 **/train.txt 가 정확히 1개여야 함. build_paddlex_dataset

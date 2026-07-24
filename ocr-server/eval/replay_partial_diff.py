@@ -91,6 +91,25 @@ def _status_by_gt_identity(doc: dict) -> dict[tuple, str]:
     return out
 
 
+def _cells_by_gt_identity(doc: dict) -> dict[tuple, dict]:
+    """Index complete cell verdicts with the same immutable identity scheme."""
+    out: dict[tuple, dict] = {}
+    seen: dict[tuple, int] = defaultdict(int)
+    for row in doc.get("table", {}).get("rows") or []:
+        cells = row.get("cells") or {}
+        signature = tuple(sorted(
+            (key, str(cell.get("gtNorm") or ""))
+            for key, cell in cells.items()
+            if key not in C.MEASUREMENT_KEYS
+        ))
+        occurrence = seen[signature]
+        seen[signature] += 1
+        for key, cell in cells.items():
+            if cell.get("status") in {"match", "mismatch", "ext_missing"}:
+                out[(signature, occurrence, key)] = cell
+    return out
+
+
 def _transitions(
     baseline: dict[str, dict], candidate: dict[str, dict], sources: list[str]
 ) -> dict[str, list[int]]:
@@ -108,7 +127,39 @@ def _transitions(
     return out
 
 
-def compare(baseline_dir: str, candidate_dir: str) -> int:
+def _transition_details(
+    baseline: dict[str, dict], candidate: dict[str, dict], sources: list[str]
+) -> list[dict]:
+    """Return document-level transitions for diagnosis after the aggregate gate."""
+    details: list[dict] = []
+    for source in sources:
+        before = _cells_by_gt_identity(baseline[source])
+        after = _cells_by_gt_identity(candidate[source])
+        for identity in sorted(set(before) & set(after), key=str):
+            before_cell, after_cell = before[identity], after[identity]
+            b, a = before_cell["status"], after_cell["status"]
+            if b == a or (b != "match" and a != "match"):
+                continue
+            signature, occurrence, key = identity
+            details.append({
+                "sourceFile": source,
+                "cell": key,
+                "transition": "gain" if a == "match" else "regress",
+                "before": b,
+                "after": a,
+                "beforeExt": before_cell.get("ext"),
+                "beforeExtNorm": before_cell.get("extNorm"),
+                "afterExt": after_cell.get("ext"),
+                "afterExtNorm": after_cell.get("extNorm"),
+                "gtOccurrence": occurrence,
+                "gtRow": dict(signature),
+            })
+    return details
+
+
+def compare(
+    baseline_dir: str, candidate_dir: str, details_out: str | None = None
+) -> int:
     baseline = _load_dir(baseline_dir)
     candidate = _load_dir(candidate_dir)
     sources = sorted(candidate)
@@ -154,6 +205,13 @@ def compare(baseline_dir: str, candidate_dir: str) -> int:
         print("-" * 60)
         for key, gain, regression in changed:
             print(f"{key:32} {gain:8,d} {regression:8,d} {gain-regression:+8,d}")
+    if details_out:
+        details = _transition_details(baseline, candidate, sources)
+        os.makedirs(os.path.dirname(os.path.abspath(details_out)), exist_ok=True)
+        with open(details_out, "w", encoding="utf-8") as fh:
+            json.dump(details, fh, ensure_ascii=False, indent=2)
+            fh.write("\n")
+        print(f"\n[written] {details_out} ({len(details):,} transitions)")
     print("\nPARTIAL ONLY: use this as a regression gate, not as the 9,001-document final score.")
     return 0
 
@@ -164,6 +222,8 @@ def main() -> int:
                     help="run dir under runs/ (default: latest study run)")
     ap.add_argument("--baseline-dir", default="replay_compare")
     ap.add_argument("--candidate-dir", required=True)
+    ap.add_argument("--details-out", default=None,
+                    help="optional JSON path for document-level gain/regression rows")
     ap.add_argument("--testset", default=C.DEFAULT_TESTSET)
     args = ap.parse_args()
     run_dir = os.path.join(C.RUNS_DIR, args.ts) if args.ts else C.latest_run(args.testset)
@@ -173,6 +233,7 @@ def main() -> int:
     return compare(
         os.path.join(run_dir, args.baseline_dir),
         os.path.join(run_dir, args.candidate_dir),
+        args.details_out,
     )
 
 

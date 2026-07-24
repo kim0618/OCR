@@ -179,8 +179,16 @@ def rejection_reason(line: str | None) -> str:
 def analyze(run: str, compare_dir_name: str = "replay_compare") -> dict:
     run_dir = os.path.join(C.RUNS_DIR, run)
     compare_dir = os.path.join(run_dir, compare_dir_name)
+    compare_rel = os.path.normpath(compare_dir_name)
+    artifact_rel = os.path.dirname(compare_rel)
+    artifact_dir = (
+        os.path.join(run_dir, artifact_rel)
+        if artifact_rel and artifact_rel != "."
+        else run_dir
+    )
+    compare_name = os.path.basename(compare_rel)
     classify_path = os.path.join(
-        run_dir, f"PARSER_DROP_CLASSIFY_{compare_dir_name}.json"
+        artifact_dir, f"PARSER_DROP_CLASSIFY_{compare_name}.json"
     )
     with open(classify_path, encoding="utf-8") as fh:
         classification = json.load(fh)

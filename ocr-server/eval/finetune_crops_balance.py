@@ -144,6 +144,9 @@ def main() -> int:
             metadata[rel] = {
                 "path": rel, "column": entry.get("column"),
                 "location": entry.get("location"), "source": "balance",
+                # 출처 이미지(src): 기준셋(9,001 held-out) 이미지의 크롭을 학습에서 제외
+                # (build_dataset --exclude-sources)하려면 balance 도 출처를 알아야 한다.
+                "src": entry.get("src"),
             }
     tmp = BALANCE_META_PATH + ".tmp"
     with open(tmp, "w", encoding="utf-8") as fh:

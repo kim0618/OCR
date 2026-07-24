@@ -4,6 +4,7 @@ import tempfile
 import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
+from unittest.mock import patch
 
 import replay_compare
 import replay_partial_diff
@@ -21,6 +22,41 @@ def _sidecar(source: str, field_status: str, cell_status: str) -> dict:
 
 
 class ReplayPartialToolsTest(unittest.TestCase):
+    def test_row_synthesis_ablation_skips_only_synthesis_step(self):
+        rows = [{"itemName": "기존품명"}]
+        with patch.object(
+            replay_compare, "_synth_rows",
+            return_value=([*rows, {"itemName": "생성품명"}], {"synthesized": 1}),
+        ) as synth:
+            self.assertIs(
+                replay_compare._apply_row_synthesis(rows, [], False), rows
+            )
+            synth.assert_not_called()
+            enabled = replay_compare._apply_row_synthesis(rows, [], True)
+            synth.assert_called_once_with(
+                rows, [], prefer_rightmost_money=False,
+                prefer_arithmetic_triple=True,
+                append_arithmetic_triple=False,
+            )
+            self.assertEqual(len(enabled), 2)
+
+    def test_name_only_synthesis_removes_unverified_amount(self):
+        rows = [{"itemName": "기존품명"}]
+        generated = {
+            "itemName": "생성품명",
+            "amount": "123,000",
+            "_source": "invoice_statement_free_row_synth",
+        }
+        with patch.object(
+            replay_compare, "_synth_rows",
+            return_value=([*rows, generated], {"synthesized": 1}),
+        ):
+            result = replay_compare._apply_row_synthesis(
+                rows, [], True, keep_unverified_amount=False
+            )
+        self.assertEqual(result[-1]["itemName"], "생성품명")
+        self.assertEqual(result[-1]["amount"], "")
+
     def test_load_only_sources_accepts_comments_bom_and_sidecar_names(self):
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / "targets.txt"

@@ -124,7 +124,38 @@ def _load_recorded_run_scope(run_dir: str) -> list[str] | None:
     return list(dict.fromkeys(ran))
 
 
-def replay_dispatch(snap: dict) -> tuple[dict, str]:
+def _apply_row_synthesis(
+    rows, lines, enabled: bool, *, keep_unverified_amount: bool = True,
+    prefer_rightmost_money: bool = False,
+    prefer_arithmetic_triple: bool = True,
+    append_arithmetic_triple: bool = False,
+):
+    """Apply missing-item row creation unless this replay is an ablation arm."""
+    if not enabled:
+        return rows
+    synthesized, _ = _synth_rows(
+        rows, lines, prefer_rightmost_money=prefer_rightmost_money,
+        prefer_arithmetic_triple=prefer_arithmetic_triple,
+        append_arithmetic_triple=append_arithmetic_triple,
+    )
+    if not keep_unverified_amount:
+        for row in synthesized:
+            if (
+                isinstance(row, dict)
+                and row.get("_source") == "invoice_statement_free_row_synth"
+            ):
+                row["amount"] = ""
+    return synthesized
+
+
+def replay_dispatch(
+    snap: dict, *, enable_row_synthesis: bool = True,
+    keep_row_synthesis_amount: bool = True,
+    prefer_rightmost_row_synthesis_money: bool = False,
+    prefer_arithmetic_row_synthesis_triple: bool = True,
+    append_arithmetic_row_synthesis_triple: bool = False,
+    allow_relaxed_master_item_name_adoption: bool = True,
+) -> tuple[dict, str]:
     """Reproduce the server's free->gate->fallback choice on a snapshot envelope.
 
     Returns (document_fields, path) where path is 'free' or 'fallback'. Skips the
@@ -192,13 +223,24 @@ def replay_dispatch(snap: dict) -> tuple[dict, str]:
     # mirror main.py join-point 품명입양 (itemName 빈 행 ← y-밴드 미소비 품명전용 라인)
     if isinstance(df, dict) and df.get("tableRows"):
         try:
-            df["tableRows"], _ = _adopt_item_names(df["tableRows"], lines)
+            df["tableRows"], _ = _adopt_item_names(
+                df["tableRows"], lines,
+                allow_relaxed_master=allow_relaxed_master_item_name_adoption,
+            )
         except Exception:
             pass
     # mirror main.py join-point 행신설 (미소비 품명라인+콤마금액 y-밴드 쌍, 3중 게이트)
     if isinstance(df, dict) and df.get("tableRows"):
         try:
-            df["tableRows"], _ = _synth_rows(df["tableRows"], lines)
+            df["tableRows"] = _apply_row_synthesis(
+                df["tableRows"], lines, enable_row_synthesis,
+                keep_unverified_amount=keep_row_synthesis_amount,
+                prefer_rightmost_money=prefer_rightmost_row_synthesis_money,
+                prefer_arithmetic_triple=prefer_arithmetic_row_synthesis_triple,
+                append_arithmetic_triple=(
+                    append_arithmetic_row_synthesis_triple
+                ),
+            )
         except Exception:
             pass
     # mirror main.py join-point standalone trailing 전문/일반 cleanup
@@ -344,6 +386,12 @@ def replay_compare(
     testset: str | None,
     out_subdir: str,
     only_sources: set[str] | None = None,
+    enable_row_synthesis: bool = True,
+    keep_row_synthesis_amount: bool = True,
+    prefer_rightmost_row_synthesis_money: bool = False,
+    prefer_arithmetic_row_synthesis_triple: bool = True,
+    append_arithmetic_row_synthesis_triple: bool = False,
+    allow_relaxed_master_item_name_adoption: bool = True,
 ) -> int:
     lookup_testset = testset or C.DEFAULT_TESTSET
     run_dir = os.path.join(C.RUNS_DIR, ts) if ts else C.latest_run(lookup_testset)
@@ -430,7 +478,22 @@ def replay_compare(
         elif not gt_by_src.get(src):
             print(f"  {prog} skip {src:<10} (no GT in manifest)"); continue
         snap = json.load(open(os.path.join(snap_dir, src + ".json"), encoding="utf-8"))
-        ext_df, path = replay_dispatch(snap)            # (edited) parser, faithful dispatch
+        ext_df, path = replay_dispatch(
+            snap, enable_row_synthesis=enable_row_synthesis,
+            keep_row_synthesis_amount=keep_row_synthesis_amount,
+            prefer_rightmost_row_synthesis_money=(
+                prefer_rightmost_row_synthesis_money
+            ),
+            prefer_arithmetic_row_synthesis_triple=(
+                prefer_arithmetic_row_synthesis_triple
+            ),
+            append_arithmetic_row_synthesis_triple=(
+                append_arithmetic_row_synthesis_triple
+            ),
+            allow_relaxed_master_item_name_adoption=(
+                allow_relaxed_master_item_name_adoption
+            ),
+        )                                               # (edited) parser, faithful dispatch
         n_free += 1 if path == "free" else 0
         gt = agg[gtkey] if agg is not None else load_gt(
             os.path.normpath(os.path.join(C.HERE, gt_by_src[src])), profile=kind)
@@ -449,6 +512,22 @@ def replay_compare(
             "sourceFile": src, "profile": gt["profile"],
             "extractionPath": path,                     # free | fallback (classifier reads this)
             "pageCount": None, "multiPage": None,
+            "replayOptions": {
+                "rowSynthesis": enable_row_synthesis,
+                "rowSynthesisAmount": keep_row_synthesis_amount,
+                "rowSynthesisRightmostMoney": (
+                    prefer_rightmost_row_synthesis_money
+                ),
+                "rowSynthesisArithmeticTriple": (
+                    prefer_arithmetic_row_synthesis_triple
+                ),
+                "rowSynthesisAppendArithmeticTriple": (
+                    append_arithmetic_row_synthesis_triple
+                ),
+                "relaxedMasterItemNameAdoption": (
+                    allow_relaxed_master_item_name_adoption
+                ),
+            },
             "fields": fcmp, "table": tcmp, "buckets": tags,
         }
         with open(os.path.join(out_dir, src + ".json"), "w", encoding="utf-8") as fh:
@@ -476,7 +555,8 @@ if __name__ == "__main__":
     ap.add_argument("--testset", default=None,
                     help="default: infer from run_meta.json, then invoice_study")
     ap.add_argument("--out-subdir", default="replay_compare",
-                    help="sidecar dir under the run (NOT the checker's compare/)")
+                    help="sidecar dir under the run (NOT the checker's compare/). "
+                         "Partial replay convention: replay_lab/replay_probe_<name>")
     ap.add_argument("--only-list", default=None,
                     help="partial replay: UTF-8 sourceFile list, one per line")
     ap.add_argument("--no-master-match", action="store_true",
@@ -485,6 +565,31 @@ if __name__ == "__main__":
     ap.add_argument("--skip-upa", action="store_true",
                     help="금액P1 단가·금액 열복구 없이 replay (P1 전 base 사이드카용; "
                          "관례: --out-subdir replay_compare_base)")
+    ap.add_argument("--disable-row-synth", action="store_true",
+                    help="ablation only: disable missing-item row creation while "
+                         "keeping every other parser and matcher step identical")
+    ap.add_argument("--row-synth-name-only", action="store_true",
+                    help="candidate only: create the missing item-name row but do "
+                         "not trust its single unverified comma-number as amount")
+    ap.add_argument("--row-synth-rightmost-money", action="store_true",
+                    help="candidate only: when multiple comma-numbers share the "
+                         "name row, use the rightmost one instead of the first")
+    ap.add_argument("--row-synth-arithmetic-triple", action="store_true",
+                    help="candidate only: fill quantity, unit price and amount "
+                         "only when one q*u=amount triple exists in the row band")
+    ap.add_argument("--row-synth-arithmetic-merge-only", action="store_true",
+                    help="explicitly select the adopted default: use a unique "
+                         "q*u=amount triple only to fill an existing empty-name row")
+    ap.add_argument("--disable-row-synth-arithmetic-merge", action="store_true",
+                    help="ablation only: disable the adopted arithmetic merge while "
+                         "keeping ordinary missing-row synthesis enabled")
+    ap.add_argument("--adopt-relaxed-master-name", action="store_true",
+                    help="explicitly select the adopted default: allow a generic "
+                         "Korean/English line to fill an existing empty-name row "
+                         "at Master similarity >=0.70")
+    ap.add_argument("--disable-relaxed-master-name-adoption", action="store_true",
+                    help="ablation only: disable the adopted relaxed Master-name "
+                         "adoption while keeping ordinary item-name adoption enabled")
     args = ap.parse_args()
     if args.no_master_match:
         MASTER_MATCH = False
@@ -492,6 +597,23 @@ if __name__ == "__main__":
         APPLY_UPA = False
     only_sources = _load_only_sources(args.only_list) if args.only_list else None
     if args.only_list and args.out_subdir == "replay_compare":
-        ap.error("--only-list requires a distinct --out-subdir (for example replay_probe_R001)")
+        ap.error("--only-list requires a distinct --out-subdir "
+                 "(for example replay_lab/replay_probe_R001)")
     raise SystemExit(replay_compare(
-        args.ts, args.testset, args.out_subdir, only_sources=only_sources))
+        args.ts, args.testset, args.out_subdir, only_sources=only_sources,
+        enable_row_synthesis=not args.disable_row_synth,
+        keep_row_synthesis_amount=not args.row_synth_name_only,
+        prefer_rightmost_row_synthesis_money=args.row_synth_rightmost_money,
+        prefer_arithmetic_row_synthesis_triple=(
+            not args.disable_row_synth_arithmetic_merge
+            or args.row_synth_arithmetic_triple
+            or args.row_synth_arithmetic_merge_only
+        ),
+        append_arithmetic_row_synthesis_triple=(
+            args.row_synth_arithmetic_triple
+            and not args.row_synth_arithmetic_merge_only
+        ),
+        allow_relaxed_master_item_name_adoption=(
+            not args.disable_relaxed_master_name_adoption
+            or args.adopt_relaxed_master_name
+        )))

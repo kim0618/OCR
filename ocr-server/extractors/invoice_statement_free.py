@@ -4824,7 +4824,8 @@ def _synth_relaxed_name_line_ok(text: str) -> bool:
 
 
 def adopt_missing_item_names(
-    table_rows: Any, ocr_lines_raw: Any,
+    table_rows: Any, ocr_lines_raw: Any, *,
+    allow_relaxed_master: bool = False,
 ) -> tuple[Any, dict[str, Any]]:
     """itemName 빈 행에 같은 y-밴드의 미소비 품명전용 OCR 라인을 입양(빈칸만, 추가·수정 없음).
 
@@ -4854,6 +4855,14 @@ def adopt_missing_item_names(
     def _n(s: Any) -> str:
         return re.sub(r"[^\w가-힣]", "", str(s or "").lower())
 
+    matcher = None
+    if allow_relaxed_master:
+        try:
+            from extractors.master_match import get_matcher, clean_query_name
+            matcher = get_matcher()
+        except Exception:
+            matcher = None
+
     used = {_n(r.get("itemName")) for r in table_rows
             if isinstance(r, dict) and str(r.get("itemName") or "").strip()}
     used.discard("")
@@ -4874,8 +4883,21 @@ def adopt_missing_item_names(
         band = max(ah * 1.2, 14.0)
         best = None
         for cy, lh, txt in lines:
-            if abs(cy - ay) > band or not _adopt_name_line_ok(txt):
+            if abs(cy - ay) > band:
                 continue
+            legacy_name_gate = _adopt_name_line_ok(txt)
+            if not legacy_name_gate:
+                if (
+                    matcher is None
+                    or not _synth_relaxed_name_line_ok(txt)
+                ):
+                    continue
+                try:
+                    candidates = matcher.top_candidates(clean_query_name(txt), 1)
+                except Exception:
+                    candidates = []
+                if not candidates or candidates[0][0] < 0.70:
+                    continue
             n = _n(txt)
             if not n or n in used:
                 continue
@@ -4905,13 +4927,16 @@ _SYNTH_SIM_FLOOR = 0.45
 
 
 def synthesize_missing_rows(
-    table_rows: Any, ocr_lines_raw: Any,
+    table_rows: Any, ocr_lines_raw: Any, *,
+    prefer_rightmost_money: bool = False,
+    prefer_arithmetic_triple: bool = False,
+    append_arithmetic_triple: bool = True,
 ) -> tuple[Any, dict[str, Any]]:
     """미소비 품명라인+콤마금액 y-밴드 쌍으로 누락 품목행을 신설(추가만, 기존 불변).
 
     adopt_missing_item_names 뒤·fill_master_match 앞에서 호출 — 입양이 품명라인을
     먼저 소비하고, 신설 행이 마스터 매칭을 탄다. master_dict 없으면 자동 비활성."""
-    dbg: dict[str, Any] = {"synthesized": 0, "reason": ""}
+    dbg: dict[str, Any] = {"synthesized": 0, "merged": 0, "reason": ""}
     if not isinstance(table_rows, list):
         return table_rows, dbg
     try:
@@ -4923,16 +4948,22 @@ def synthesize_missing_rows(
         dbg["reason"] = "no_matcher"
         return table_rows, dbg
     import difflib
-    lines: list[tuple[float, float, str]] = []
+    lines: list[tuple[float, float, float, str]] = []
     for ln in (ocr_lines_raw or []):
         try:
             pts, txt = ln[0], str(ln[1] or "")
+            xs = [float(p[0]) for p in pts]
             ys = [float(p[1]) for p in pts]
         except Exception:
             continue
-        if not ys:
+        if not xs or not ys:
             continue
-        lines.append((sum(ys) / len(ys), max(max(ys) - min(ys), 1.0), txt))
+        lines.append((
+            sum(xs) / len(xs),
+            sum(ys) / len(ys),
+            max(max(ys) - min(ys), 1.0),
+            txt,
+        ))
     if not lines:
         dbg["reason"] = "no_lines"
         return table_rows, dbg
@@ -4957,7 +4988,7 @@ def synthesize_missing_rows(
                 used_amts.add(d)
     used_money_lines: set[int] = set()
     next_idx = len(table_rows) + 1
-    for idx, (cy, lh, txt) in enumerate(lines):
+    for idx, (_cx, cy, lh, txt) in enumerate(lines):
         legacy_name_gate = _adopt_name_line_ok(txt)
         if not legacy_name_gate and not _synth_relaxed_name_line_ok(txt):
             continue
@@ -4975,16 +5006,103 @@ def synthesize_missing_rows(
             continue
         band = max(lh * 1.2, 14.0)
         money = None
-        for j, (cy2, _lh2, txt2) in enumerate(lines):
+        triple_values: tuple[float, float, float] | None = None
+        money_candidates: list[tuple[float, int, str]] = []
+        for j, (cx2, cy2, _lh2, txt2) in enumerate(lines):
             if j == idx or j in used_money_lines or abs(cy2 - cy) > band:
                 continue
             for v in _SYNTH_MONEY_RE.findall(txt2):
                 dd = _digits(v)
                 if len(dd) >= 4 and dd not in used_amts:
-                    money = (j, v)
+                    money_candidates.append((cx2, j, v))
                     break
-            if money:
+            if money_candidates and not prefer_rightmost_money:
                 break
+        if prefer_arithmetic_triple:
+            vals: set[float] = set()
+            value_sources: dict[float, tuple[int, str]] = {}
+            for j, (_cx2, cy2, _lh2, txt2) in enumerate(lines):
+                if j == idx or j in used_money_lines or abs(cy2 - cy) > band:
+                    continue
+                for raw_value in _TRIPLE_MONEY_RE.findall(txt2):
+                    parsed = _upa_parse_money(raw_value)
+                    if parsed is not None and parsed > 0:
+                        vals.add(parsed)
+                        value_sources.setdefault(parsed, (j, raw_value))
+            found: set[tuple[float, frozenset[float]]] = set()
+            for q in vals:
+                if not (float(q).is_integer() and 2 <= q <= 9999):
+                    continue
+                for u in vals:
+                    if u < 10 or u == q:
+                        continue
+                    for a in vals:
+                        if a < 100 or a in (q, u):
+                            continue
+                        if abs(q * u - a) <= 1:
+                            found.add((a, frozenset((q, u))))
+            if len(found) == 1:
+                a, qu = next(iter(found))
+                q, u = sorted(qu)
+                amount_source = value_sources.get(a)
+                if amount_source is not None:
+                    money = amount_source
+                    triple_values = (q, u, a)
+        if triple_values is not None:
+            q, u, a = triple_values
+
+            def _row_num(row: dict, key: str) -> float | None:
+                return _upa_parse_money(
+                    _UPA_SQ_RE.sub("", str(row.get(key) or ""))
+                )
+
+            empty_name_targets = []
+            for row in table_rows:
+                if (
+                    not isinstance(row, dict)
+                    or str(row.get("itemName") or "").strip()
+                    or _row_num(row, "amount") != a
+                ):
+                    continue
+                rq = _row_num(row, "quantity")
+                ru = _row_num(row, "unitPrice")
+                known = [(rq, q), (ru, u)]
+                if any(value is not None and value != expected
+                       for value, expected in known):
+                    continue
+                # Amount plus one matching numeric column is sufficient.  The
+                # remaining quantity/unit price is often recovered later in the
+                # pipeline, so requiring all three here prevents safe adoption.
+                if not any(value == expected for value, expected in known):
+                    continue
+                empty_name_targets.append(row)
+            if len(empty_name_targets) == 1:
+                target = empty_name_targets[0]
+                target["itemName"] = txt.strip()
+                target["_itemNameSource"] = (
+                    "invoice_statement_free_row_synth_arithmetic_merge"
+                )
+                used_money_lines.add(money[0])
+                used_names.add(n)
+                exist_names.append(n)
+                dbg["merged"] += 1
+                continue
+            if not append_arithmetic_triple:
+                money = None
+                triple_values = None
+            # The amount already belongs to an existing parsed row.  Without one
+            # unique empty-name target, appending a second row would duplicate the
+            # transaction and steal alignment from its spec/expiry/lot fields.
+            elif _digits(_upa_fmt(a)) in used_amts:
+                money = None
+                triple_values = None
+        if money is None and money_candidates:
+            _money_x, money_j, money_value = (
+                max(money_candidates, key=lambda candidate: candidate[0])
+                if prefer_rightmost_money
+                else money_candidates[0]
+            )
+            money = (money_j, money_value)
         if money is None:
             continue
         used_money_lines.add(money[0])
@@ -4993,7 +5111,9 @@ def synthesize_missing_rows(
         used_amts.add(_digits(money[1]))
         table_rows.append({
             "rowIndex": str(next_idx), "itemName": txt.strip(), "spec": "",
-            "quantity": "", "unitPrice": "", "amount": money[1],
+            "quantity": _upa_fmt(triple_values[0]) if triple_values else "",
+            "unitPrice": _upa_fmt(triple_values[1]) if triple_values else "",
+            "amount": _upa_fmt(triple_values[2]) if triple_values else money[1],
             "_source": "invoice_statement_free_row_synth",
         })
         next_idx += 1
