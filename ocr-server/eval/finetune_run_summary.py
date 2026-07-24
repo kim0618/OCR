@@ -24,6 +24,7 @@ RE_CONFIG_EPOCHS = re.compile(r"^\s*epochs_iters:\s*(\d+)", re.MULTILINE)
 RE_PROGRESS_EPOCH = re.compile(r"(?:epoch:\s*\[|\[ep\s+)(\d+)\s*/\s*(\d+)", re.I)
 RE_ANY_EPOCH = re.compile(r"\bepoch\D{0,8}(\d+)\b", re.I)
 RE_BEST = re.compile(r"best\s+metric.*?\bacc:\s*([0-9]*\.?[0-9]+)", re.I)
+RE_BEST_EPOCH = re.compile(r"\bbest_epoch:\s*(\d+)", re.I)
 
 
 def _read_json(path: str, not_older_than: float | None = None) -> dict[str, Any]:
@@ -56,9 +57,13 @@ def parse_training_log(text: str) -> dict[str, Any]:
         metric = RE_BEST.search(line)
         if metric:
             acc = float(metric.group(1))
+            explicit_epoch = RE_BEST_EPOCH.search(line)
             if best_acc is None or acc > best_acc:
                 best_acc = acc
-                best_epoch = current_epoch or None
+                best_epoch = (int(explicit_epoch.group(1)) if explicit_epoch
+                              else current_epoch or None)
+            elif acc == best_acc and explicit_epoch:
+                best_epoch = int(explicit_epoch.group(1))
     return {"epochsCompleted": completed or None, "bestEpoch": best_epoch, "bestAcc": best_acc}
 
 

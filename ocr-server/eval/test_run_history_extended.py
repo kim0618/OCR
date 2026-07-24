@@ -25,6 +25,7 @@ class RunHistoryExtendedTest(unittest.TestCase):
                                    itemNameMasterScored=100)
                 run_history.record("eval", ts="legacy", images=900)
                 run_history.record("eval", ts="replay", runType="snapshot-replay",
+                                   model="PP-OCRv5 official",
                                    images=500, itemName=70.0, itemNameMaster=80.0,
                                    learnA=70.9, learnAMatch=71, learnAScored=100,
                                    learnB=71.7, learnBMatch=72, learnBScored=100)
@@ -35,8 +36,15 @@ class RunHistoryExtendedTest(unittest.TestCase):
                 self.assertIn("Base", rendered)
                 self.assertIn("Master", rendered)
                 self.assertIn("80.0%", rendered)
-                self.assertIn("스냅샷 재평가", rendered)
+                self.assertIn("REPLAY(1)", rendered)
                 self.assertIn("AWS OCR 누계 (2 run)", rendered)
+                self.assertIn("① AWS eval", rendered)
+                self.assertIn("② REPLAY", rendered)
+                self.assertIn("③ 파인튜닝", rendered)
+                self.assertIn("④ 모델 계보", rendered)
+                self.assertIn("AWS eval 2 run · REPLAY 1회", rendered)
+                self.assertIn("<th>모델</th>", rendered)
+                self.assertIn("<td>official</td>", rendered)
                 self.assertIn("Learn A 품명", rendered)
                 self.assertIn("Learn B 품명", rendered)
                 self.assertIn("71.7%", rendered)
@@ -46,6 +54,26 @@ class RunHistoryExtendedTest(unittest.TestCase):
                 self.assertIn("200장/h", rendered)
                 self.assertNotIn("<th>학습 기준</th>", rendered)
                 self.assertNotIn("<th>기준 대비</th>", rendered)
+
+    def test_replay_updates_same_run_and_increments_count(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            log = os.path.join(tmp, "history.jsonl")
+            out = os.path.join(tmp, "history.html")
+            with patch.object(run_history, "LOG", log), patch.object(run_history, "OUT", out):
+                run_history.record("eval", ts="067/replay_compare",
+                                   runType="snapshot-replay",
+                                   model="PP-OCRv5 official", field=50.0)
+                run_history.record("eval", ts="067/replay_compare",
+                                   runType="snapshot-replay", field=58.7)
+                rows = run_history._load()
+                self.assertEqual(len(rows), 1)
+                self.assertEqual(rows[0]["replayCount"], 2)
+                self.assertEqual(rows[0]["field"], 58.7)
+                self.assertEqual(rows[0]["model"], "PP-OCRv5 official")
+                with open(out, encoding="utf-8") as fh:
+                    rendered = fh.read()
+                self.assertIn("REPLAY(2)", rendered)
+                self.assertIn("AWS eval 0 run · REPLAY 2회", rendered)
 
     def test_training_log_extracts_completed_and_best_epoch(self):
         text = """
@@ -60,6 +88,15 @@ epoch: [3/4], global_step: 30
         self.assertEqual(parsed["bestEpoch"], 2)
         self.assertEqual(parsed["bestAcc"], 0.638)
 
+    def test_training_log_prefers_explicit_best_epoch(self):
+        parsed = finetune_run_summary.parse_training_log("""
+epoch: [4/4], global_step: 40
+best metric, acc: 0.532193910694478, best_epoch: 3
+""")
+        self.assertEqual(parsed["epochsCompleted"], 4)
+        self.assertEqual(parsed["bestEpoch"], 3)
+        self.assertEqual(parsed["bestAcc"], 0.532193910694478)
+
     def test_criteria_describes_columns_and_numeric_anchor(self):
         criteria = finetune_run_summary.describe_criteria({"policy": {
             "columns": ["itemName"], "hangulMin": 2,
@@ -73,6 +110,12 @@ epoch: [3/4], global_step: 30
         self.assertEqual(run_history._best_acc("0.532193910694478"), "0.532")
         self.assertEqual(run_history._best_acc(0.638), "0.638")
         self.assertEqual(run_history._best_acc(None), "-")
+
+    def test_finetune_base_uses_same_model_label(self):
+        self.assertEqual(run_history._base_model({"base": "official"}),
+                         "official")
+        self.assertEqual(run_history._base_model({"base": "260724_0415"}),
+                         "FT 260724_0415")
 
     def test_type_uses_column_metadata_not_every_hangul_as_item_name(self):
         self.assertEqual(finetune_report_by_type._type("가나다", {"column": "itemName"}), "품명")

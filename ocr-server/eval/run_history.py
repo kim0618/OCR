@@ -1,7 +1,9 @@
-"""AWS eval / fine-tune run history (append-only JSONL -> self-contained HTML).
+"""AWS eval / fine-tune run history (JSONL -> self-contained HTML).
 
-The JSONL is the source of truth.  Producers may omit fields they cannot know;
-the renderer keeps old rows compatible and never invents missing duration/cost.
+The JSONL is the source of truth.  AWS and fine-tune runs are append-only;
+replays update the row for the same run and increment ``replayCount``.
+Producers may omit fields they cannot know; the renderer keeps old rows
+compatible and never invents missing duration/cost.
 
 Cost is an *execution estimate*, not the AWS invoice:
 
@@ -23,6 +25,20 @@ from typing import Any
 HERE = os.path.dirname(os.path.abspath(__file__))
 LOG = os.path.join(HERE, "RUN_HISTORY.jsonl")
 OUT = os.path.join(HERE, "RUN_HISTORY.html")
+
+
+def active_ocr_model() -> str:
+    """Return the recognition model currently selected by main.py."""
+    adopted_dir = os.path.join(HERE, "finetune", "adopted")
+    if os.path.isfile(os.path.join(adopted_dir, "inference", "inference.yml")):
+        try:
+            with open(os.path.join(adopted_dir, "META.json"), encoding="utf-8") as fh:
+                meta = json.load(fh)
+            version = meta.get("runTs") or meta.get("version")
+        except (OSError, json.JSONDecodeError, AttributeError):
+            version = None
+        return f"PP-OCRv5 FT {version}" if version else "PP-OCRv5 FT"
+    return "PP-OCRv5 official"
 
 
 def _now() -> str:
@@ -55,13 +71,46 @@ def _enrich_aws(fields: dict[str, Any]) -> None:
 
 
 def record(kind: str, **fields: Any) -> None:
-    """Append one event and refresh HTML.  History failure never breaks a run."""
+    """Record one event and refresh HTML.  History failure never breaks a run."""
     try:
+        if (kind == "eval" and fields.get("runType") != "snapshot-replay"
+                and not fields.get("model")):
+            fields["model"] = active_ocr_model()
         _enrich_aws(fields)
         row = {"kind": kind, "when": _now()}
         row.update({k: v for k, v in fields.items() if v is not None})
-        with open(LOG, "a", encoding="utf-8") as fh:
-            fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+        is_replay_update = (
+            kind == "eval"
+            and row.get("runType") == "snapshot-replay"
+            and bool(row.get("ts"))
+        )
+        if is_replay_update:
+            rows = _load()
+            matches = [
+                old for old in rows
+                if old.get("kind") == "eval"
+                and old.get("runType") == "snapshot-replay"
+                and old.get("ts") == row.get("ts")
+            ]
+            replay_count = 1
+            if matches:
+                if not row.get("model"):
+                    row["model"] = next(
+                        (old.get("model") for old in reversed(matches) if old.get("model")),
+                        None,
+                    )
+                replay_count += sum(_replay_count(old) for old in matches)
+                rows = [old for old in rows if old not in matches]
+            row["replayCount"] = replay_count
+            rows.append(row)
+            temp_log = LOG + ".tmp"
+            with open(temp_log, "w", encoding="utf-8") as fh:
+                for old in rows:
+                    fh.write(json.dumps(old, ensure_ascii=False) + "\n")
+            os.replace(temp_log, LOG)
+        else:
+            with open(LOG, "a", encoding="utf-8") as fh:
+                fh.write(json.dumps(row, ensure_ascii=False) + "\n")
         render_html()
     except Exception as exc:
         print(f"  (run_history 기록 실패: {exc})")
@@ -82,6 +131,15 @@ def _load() -> list[dict[str, Any]]:
 
 def _h(value: Any) -> str:
     return html.escape(str(value), quote=True)
+
+
+def _replay_count(row: dict[str, Any]) -> int:
+    if row.get("runType") != "snapshot-replay":
+        return 1
+    try:
+        return max(1, int(row.get("replayCount") or 1))
+    except (TypeError, ValueError):
+        return 1
 
 
 def _dur(sec: Any) -> str:
@@ -137,6 +195,26 @@ def _cost(row: dict[str, Any]) -> str:
     return f"<span{title}>${value:,.2f}</span>"
 
 
+def _model(row: dict[str, Any]) -> str:
+    model = str(row.get("model") or "기록 없음")
+    if model == "PP-OCRv5 official":
+        return "official"
+    if model.startswith("PP-OCRv5 FT"):
+        return _h(model.removeprefix("PP-OCRv5 ").strip())
+    return _h(model)
+
+
+def _base_model(row: dict[str, Any]) -> str:
+    base = str(row.get("base") or "official")
+    if base.lower() == "official":
+        return "official"
+    if base.startswith("PP-OCRv5 FT"):
+        return _h(base.removeprefix("PP-OCRv5 ").strip())
+    if base.startswith("FT "):
+        return _h(base)
+    return f"FT {_h(base)}"
+
+
 def _criteria(row: dict[str, Any]) -> str:
     return _h(row.get("criteria") or "기록 없음")
 
@@ -175,6 +253,8 @@ def _delta_summary(row: dict[str, Any], compact: bool = False) -> str:
 def render_html() -> str:
     rows = _load()
     ev = [r for r in rows if r.get("kind") == "eval"]
+    replay_ev = [r for r in ev if r.get("runType") == "snapshot-replay"]
+    aws_ev = [r for r in ev if r.get("runType") != "snapshot-replay"]
     ft = [r for r in rows if r.get("kind") == "finetune"]
     adopted_ts = {r.get("ts") for r in rows if r.get("kind") == "adopt"}
     for row in ft:
@@ -188,26 +268,18 @@ def render_html() -> str:
         total_seconds = 0.0
         known_cost = 0.0
         cost_runs = 0
-        aws_runs = 0
-        replay_runs = 0
-        for index, row in enumerate(ev, 1):
+        aws_runs = len(aws_ev)
+        for index, row in enumerate(aws_ev, 1):
             images = int(row.get("images") or 0)
             seconds = _float(row.get("elapsedSec"))
-            is_replay = row.get("runType") == "snapshot-replay"
-            if is_replay:
-                replay_runs += 1
-                type_text = "<span class='muted'>스냅샷 재평가</span>"
-            else:
-                aws_runs += 1
-                type_text = "AWS OCR"
-                total_images += images
-                if seconds is not None:
-                    timed_images += images
-                    total_seconds += seconds
-                cost = _float(row.get("estimatedCostUsd"))
-                if cost is not None:
-                    known_cost += cost
-                    cost_runs += 1
+            total_images += images
+            if seconds is not None:
+                timed_images += images
+                total_seconds += seconds
+            cost = _float(row.get("estimatedCostUsd"))
+            if cost is not None:
+                known_cost += cost
+                cost_runs += 1
             item_title = ""
             if row.get("itemNameScored") is not None:
                 item_title = (f" title='{_num(row.get('itemNameMatch'))} / "
@@ -227,7 +299,7 @@ def render_html() -> str:
             out.append(
                 f"<tr><td>{index}</td><td>{_h(row.get('when','-'))}</td>"
                 f"<td><code>{_h(row.get('ts','-'))}</code></td>"
-                f"<td>{type_text}</td>"
+                f"<td>{_model(row)}</td>"
                 f"<td>{_num(row.get('images'),'장')}</td><td>{_dur(seconds)}</td>"
                 f"<td>{_rate(images,seconds)}</td><td>{_pct(row.get('field'))}</td>"
                 f"<td>{_pct(row.get('cell'))}</td>"
@@ -238,13 +310,45 @@ def render_html() -> str:
                 f"<td>{_cost(row)}</td></tr>")
         rate_note = "" if timed_images == total_images else f" <span class='muted'>(시간 기록 {timed_images:,}장 기준)</span>"
         cost_note = "" if cost_runs == aws_runs else f" <span class='muted'>({cost_runs}/{aws_runs} AWS run)</span>"
-        replay_note = (f" <span class='muted'>(스냅샷 재평가 {replay_runs} run 제외)</span>"
-                       if replay_runs else "")
         out.append(
-            f"<tr class='tot'><td colspan='4'>AWS OCR 누계 ({aws_runs} run){replay_note}</td><td>{total_images:,}장</td>"
+            f"<tr class='tot'><td colspan='4'>AWS OCR 누계 ({aws_runs} run)</td><td>{total_images:,}장</td>"
             f"<td>{_dur(total_seconds) if total_seconds else '-'}</td>"
             f"<td>{_rate(timed_images,total_seconds)}{rate_note}</td><td colspan='6'></td>"
             f"<td>{('$' + format(known_cost, ',.2f')) if cost_runs else '-'}{cost_note}</td></tr>")
+        return "".join(out)
+
+    def replay_rows() -> str:
+        out: list[str] = []
+        for index, row in enumerate(replay_ev, 1):
+            item_title = ""
+            if row.get("itemNameScored") is not None:
+                item_title = (f" title='{_num(row.get('itemNameMatch'))} / "
+                              f"{_num(row.get('itemNameScored'))} 일치'")
+            master_title = ""
+            if row.get("itemNameMasterScored") is not None:
+                master_title = (f" title='{_num(row.get('itemNameMasterMatch'))} / "
+                                f"{_num(row.get('itemNameMasterScored'))} 일치'")
+            learn_a_title = ""
+            if row.get("learnAScored") is not None:
+                learn_a_title = (f" title='{_num(row.get('learnAMatch'))} / "
+                                 f"{_num(row.get('learnAScored'))} 품명 일치'")
+            learn_b_title = ""
+            if row.get("learnBScored") is not None:
+                learn_b_title = (f" title='{_num(row.get('learnBMatch'))} / "
+                                 f"{_num(row.get('learnBScored'))} 품명 일치'")
+            out.append(
+                f"<tr><td>{index}</td><td>{_h(row.get('when','-'))}</td>"
+                f"<td><code>{_h(row.get('ts','-'))}</code></td>"
+                f"<td>{_model(row)}</td>"
+                f"<td><span class='muted'>REPLAY({_replay_count(row)})</span></td>"
+                f"<td>{_num(row.get('images'),'장')}</td>"
+                f"<td>{_pct(row.get('field'))}</td><td>{_pct(row.get('cell'))}</td>"
+                f"<td{item_title}>{_pct(row.get('itemName'))}</td>"
+                f"<td{master_title}>{_pct(row.get('itemNameMaster'))}</td>"
+                f"<td{learn_a_title}>{_pct(row.get('learnA'))}</td>"
+                f"<td{learn_b_title}>{_pct(row.get('learnB'))}</td></tr>")
+        if not out:
+            out.append("<tr><td colspan='12' class='muted'>아직 replay 기록 없음</td></tr>")
         return "".join(out)
 
     def ft_rows() -> str:
@@ -269,7 +373,7 @@ def render_html() -> str:
             out.append(
                 f"<tr><td>{index}</td><td>{_h(row.get('when','-'))}</td>"
                 f"<td><code>{_h(row.get('ts','-'))}</code></td>"
-                f"<td><code class='b'>{_h(row.get('base','official'))}</code></td>"
+                f"<td><code class='b'>{_base_model(row)}</code></td>"
                 f"<td>{_num(row.get('images'),'장')}</td>"
                 f"<td>{total_ep}</td><td>{best_ep}</td>"
                 f"<td>{_best_acc(row.get('bestAcc'))}</td>"
@@ -339,17 +443,21 @@ code{background:var(--head);border:1px solid var(--line);border-radius:5px;paddi
 .up{color:var(--up);font-weight:600}.muted{color:var(--muted)}.warn{color:var(--warn);font-weight:600;margin-top:10px}code.b{background:transparent;border:0;padding:0;color:var(--muted)}
 .tree .ln{font-family:'Consolas','D2Coding',monospace;font-size:12.5px;line-height:1.9;white-space:nowrap}.tree .meta{color:var(--muted);padding-left:1.2em}.tree .adopt>code{border-color:var(--up)}
 """
+    replay_run_count = sum(_replay_count(row) for row in replay_ev)
     document = f"""<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>AWS 실행 이력 (eval / 파인튜닝)</title><style>{css}</style></head><body>
-<h1>AWS 실행 이력</h1><div class="gen">생성 {_now()} · eval {len(ev)} run · 파인튜닝 {len(ft)} run · AWS 금액은 실행시간 기준 예상요금</div>
-<h2>① eval (측정 + 크롭 수확)</h2><section><table class="eval-table"><thead><tr>
-<th>#</th><th>일시</th><th>run</th><th>실행 유형</th><th>처리 장수</th><th>소요 시간</th><th>처리/h</th><th>필드</th><th>셀</th><th>품명 Base<br><span class="muted">(매칭 전)</span></th><th>품명 Master<br><span class="muted">(매칭 후)</span></th><th>Learn A 품명<br><span class="muted">(held-out)</span></th><th>Learn B 품명<br><span class="muted">(full 상한)</span></th><th>AWS 요금</th>
+<h1>AWS 실행 이력</h1><div class="gen">생성 {_now()} · AWS eval {len(aws_ev)} run · REPLAY {replay_run_count}회 · 파인튜닝 {len(ft)} run · AWS 금액은 실행시간 기준 예상요금</div>
+<h2>① AWS eval (측정 + 크롭 수확)</h2><section><table class="eval-table"><thead><tr>
+<th>#</th><th>일시</th><th>run</th><th>모델</th><th>처리 장수</th><th>소요 시간</th><th>처리/h</th><th>필드</th><th>셀</th><th>품명 Base<br><span class="muted">(매칭 전)</span></th><th>품명 Master<br><span class="muted">(매칭 후)</span></th><th>Learn A 품명<br><span class="muted">(held-out)</span></th><th>Learn B 품명<br><span class="muted">(full 상한)</span></th><th>AWS 요금</th>
 </tr></thead><tbody>{eval_rows()}</tbody></table></section>
-<h2>② 파인튜닝 (모델 학습)</h2><section><table><thead><tr>
-<th>#</th><th>일시</th><th>run</th><th>base</th><th>학습 크롭</th><th>전체 반복</th><th>최고 epoch</th><th>best acc</th><th>소요 시간</th><th>AWS 예상요금</th><th>채택</th>
+<h2>② REPLAY (최신 결과)</h2><section><table class="eval-table"><thead><tr>
+<th>#</th><th>일시</th><th>run</th><th>모델</th><th>실행 횟수</th><th>처리 장수</th><th>필드</th><th>셀</th><th>품명 Base<br><span class="muted">(매칭 전)</span></th><th>품명 Master<br><span class="muted">(매칭 후)</span></th><th>Learn A 품명<br><span class="muted">(held-out)</span></th><th>Learn B 품명<br><span class="muted">(full 상한)</span></th>
+</tr></thead><tbody>{replay_rows()}</tbody></table></section>
+<h2>③ 파인튜닝 (모델 학습)</h2><section><table><thead><tr>
+<th>#</th><th>일시</th><th>run</th><th>모델</th><th>학습 크롭</th><th>전체 반복</th><th>최고 epoch</th><th>best acc</th><th>소요 시간</th><th>AWS 예상요금</th><th>채택</th>
 </tr></thead><tbody>{ft_rows()}</tbody></table></section>
-<h2>③ 모델 계보 — 무엇을 기준으로 얼마나 변했는지</h2><section class="tree">{lineage()}
+<h2>④ 모델 계보 — 무엇을 기준으로 얼마나 변했는지</h2><section class="tree">{lineage()}
 <div class="gen" style="margin-top:10px">★=채택 · ✗=미채택. 증감은 동일 held-out 기준 파인튜닝−base 정확일치율(%p).</div></section>
 </body></html>"""
     with open(OUT, "w", encoding="utf-8") as fh:
@@ -362,6 +470,7 @@ def main() -> int:
     parser.add_argument("--record", choices=["eval", "finetune"], default=None)
     parser.add_argument("--ts", default=None)
     parser.add_argument("--run-type", default=None, choices=["aws-ocr", "snapshot-replay"])
+    parser.add_argument("--model", default=None)
     parser.add_argument("--images", type=int, default=None)
     parser.add_argument("--elapsed", type=float, default=None)
     parser.add_argument("--field", type=float, default=None)
@@ -398,7 +507,8 @@ def main() -> int:
     if args.record:
         deltas = json.loads(args.slice_deltas) if args.slice_deltas else None
         record(
-            args.record, ts=args.ts, runType=args.run_type, images=args.images, elapsedSec=args.elapsed,
+            args.record, ts=args.ts, runType=args.run_type, model=args.model,
+            images=args.images, elapsedSec=args.elapsed,
             field=args.field, cell=args.cell, itemName=args.item_name,
             itemNameMatch=args.item_name_match, itemNameScored=args.item_name_scored,
             itemNameMaster=args.item_name_master,
