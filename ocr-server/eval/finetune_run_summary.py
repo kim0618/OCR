@@ -91,6 +91,8 @@ def describe_criteria(manifest: dict[str, Any]) -> str:
         parts.append("·".join(names.get(column, column) for column in columns) + " 중심")
     else:
         parts.append("전 필드")
+    if policy.get("minMatch") is not None:
+        parts.append(f"GT 일치도 {float(policy['minMatch']):g}+")
     if policy.get("hangulMin"):
         parts.append(f"한글 {policy['hangulMin']}자+")
     anchor = policy.get("numberAnchorRatio")

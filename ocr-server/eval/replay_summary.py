@@ -31,6 +31,11 @@ sys.path.insert(0, HERE)
 
 import contract as C  # noqa: E402
 
+# v3: thin content alignment makes itemName the primary row identity
+# (0.70 name / 0.20 amount / 0.10 quantity).  v2 used amount-heavy alignment,
+# so cell totals across the boundary are not directly comparable.
+CURRENT_METRIC_VERSION = 3
+
 OUT_MD = os.path.join(HERE, "REPLAY_SUMMARY.md")
 HISTORY_NAME = "replay_history.json"
 _MARK_A, _MARK_B = "<!--REPLAY_SUMMARY_START-->", "<!--REPLAY_SUMMARY_END-->"
@@ -176,10 +181,25 @@ def append_history(ts: str, now_str: str | None = None) -> list[dict]:
         )
         if same_current_state:
             last.update(cur)
-            last["metricVersion"] = 2
+            last["metricVersion"] = CURRENT_METRIC_VERSION
             last["metricsComparable"] = True
+        elif (
+            last
+            and _tuple(last) == _tuple(cur)
+            and last.get("metricVersion") != CURRENT_METRIC_VERSION
+        ):
+            # The just-written replay row already uses the current scorer but
+            # may have been appended by an older replay_summary process.
+            last["metricVersion"] = CURRENT_METRIC_VERSION
+            last["metricsComparable"] = True
+            same_current_state = True
         if now_str is None:
             now_str = _dt.datetime.now().strftime("%m-%d %H:%M")
+        current_row_already_recorded = bool(
+            last
+            and _tuple(last) == _tuple(cur)
+            and last.get("metricVersion") == CURRENT_METRIC_VERSION
+        )
         # 매 배치(replay 루프)마다 testset별로 한 행씩 항상 기록한다. 값이 안 바뀐
         # testset(예: 이번 룰이 thin만 건드려 study 동일)도 carry-forward 로 남겨야
         # study·thin 행 수가 어긋나지 않아 배치번호(#)가 lockstep 정렬된다
@@ -187,12 +207,14 @@ def append_history(ts: str, now_str: str | None = None) -> list[dict]:
         # 최신정렬 번호와 충돌 → #1이 사라진 듯 보였다. 단, 연속으로 완전히 동일한
         # 행이 2줄 이상 쌓이는 것만 막는다(같은 배치 리포트 재생성 방지).
         if (not same_current_state
+                and not current_row_already_recorded
                 and (len(hist) < 2
                      or _tuple(hist[-1]) != _tuple(cur)
                      or _tuple(hist[-2]) != _tuple(cur))):
             hist.append({
                 "ts": now_str, **cur,
-                "metricVersion": 2, "metricsComparable": True,
+                "metricVersion": CURRENT_METRIC_VERSION,
+                "metricsComparable": True,
             })
     try:
         json.dump(hist, open(hist_path, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
@@ -203,14 +225,17 @@ def append_history(ts: str, now_str: str | None = None) -> list[dict]:
 
 def _render_rows(hist: list[dict]):
     prev = None
+    prev_version = None
     for k in hist:
         if k.get("metricsComparable") is False:
             p = k.get("paths") or {}
             yield k, None, None, "비교 제외", f"{p.get('free','-')}/{p.get('fallback','-')}"
             continue
         pct = (100 * k["cm"] / k["cs"]) if k.get("cs") else 0
-        d = None if prev is None else pct - prev
+        version = k.get("metricVersion", 1)
+        d = None if prev is None or version != prev_version else pct - prev
         prev = pct
+        prev_version = version
         fld = f"{100*k['fm']/k['fs']:.1f}%" if k.get("fs") else "-"
         p = k.get("paths") or {}
         yield k, pct, d, fld, f"{p.get('free','-')}/{p.get('fallback','-')}"
@@ -237,8 +262,17 @@ def inject_html(html_path: str, hist: list[dict]) -> None:
             f"<td>{k.get('spur')}</td><td>{paths_s}</td></tr>"
         )
     total = ""
-    comparable = [k for k in hist
-                  if k.get("metricsComparable") is not False and k.get("cs")]
+    latest_version = next(
+        (k.get("metricVersion", 1) for k in reversed(hist)
+         if k.get("metricsComparable") is not False and k.get("cs")),
+        None,
+    )
+    comparable = [
+        k for k in hist
+        if k.get("metricsComparable") is not False
+        and k.get("cs")
+        and k.get("metricVersion", 1) == latest_version
+    ]
     if len(comparable) >= 2:
         first, last = comparable[0], comparable[-1]
         f0 = 100 * first["cm"] / first["cs"]

@@ -4803,6 +4803,26 @@ def _adopt_name_line_ok(text: str) -> bool:
     return True
 
 
+def _synth_relaxed_name_line_ok(text: str) -> bool:
+    """Broad product-name gate used only with a stronger Master score.
+
+    The legacy adoption gate recognizes a fixed list of Korean drug suffixes.
+    That is precise, but it excludes ordinary supply names and English product
+    names even when the Master dictionary strongly identifies them.  Keep the
+    generic metadata/header exclusions here; ``synthesize_missing_rows`` adds
+    the stronger Master similarity requirement before emitting any row.
+    """
+    value = _normalize_text(text)
+    if not value:
+        return False
+    if _is_summary_or_header_line(value) or _metadata_negative_reason(value):
+        return False
+    return bool(
+        re.search(r"[가-힣]{2,}", value)
+        or re.search(r"[A-Za-z]{4,}", value)
+    )
+
+
 def adopt_missing_item_names(
     table_rows: Any, ocr_lines_raw: Any,
 ) -> tuple[Any, dict[str, Any]]:
@@ -4938,7 +4958,8 @@ def synthesize_missing_rows(
     used_money_lines: set[int] = set()
     next_idx = len(table_rows) + 1
     for idx, (cy, lh, txt) in enumerate(lines):
-        if not _adopt_name_line_ok(txt):
+        legacy_name_gate = _adopt_name_line_ok(txt)
+        if not legacy_name_gate and not _synth_relaxed_name_line_ok(txt):
             continue
         n = _n(txt)
         if not n or n in used_names:
@@ -4949,7 +4970,8 @@ def synthesize_missing_rows(
             cands = matcher.top_candidates(clean_query_name(txt), 1)
         except Exception:
             continue
-        if not cands or cands[0][0] < _SYNTH_SIM_FLOOR:
+        match_floor = _SYNTH_SIM_FLOOR if legacy_name_gate else 0.70
+        if not cands or cands[0][0] < match_floor:
             continue
         band = max(lh * 1.2, 14.0)
         money = None

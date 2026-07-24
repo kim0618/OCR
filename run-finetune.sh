@@ -21,6 +21,13 @@ source ~/OCR/ocr-server/.venv/bin/activate
 cd ~/OCR/ocr-server
 mkdir -p ~/OCR/logs
 _FT_START=$SECONDS   # 실행 이력 장부용 타이머
+RUN_TAG="$(date +%y%m%d_%H%M)"
+TRAIN_LOG="$HOME/OCR/logs/finetune_${RUN_TAG}.train.log"
+
+# RUN_HISTORY의 AWS 예상요금은 실행시간×시간당 단가다. 서버별 실제 계약 단가를
+# 환경변수로 한 번만 지정하면 이후 eval/FT 모두 자동 기록한다.
+#   export AWS_INSTANCE_TYPE=g6.xlarge AWS_REGION=ap-northeast-2
+#   export AWS_PURCHASE_OPTION=OnDemand AWS_EC2_HOURLY_USD=<현재 시간당 USD>
 
 CFG=eval/finetune/config_ppocrv5_rec_finetune.yaml
 DRV=eval/finetune/paddlex_train.py
@@ -35,7 +42,7 @@ BASE_TAG="official"    # run_history 계보에 남길 부모
 if [ "$FROM_ADOPTED" = "1" ]; then
   if [ -f "$ADOPTED_PDP" ]; then
     TRAIN_OVERRIDE="-o Train.pretrain_weight_path=$PWD/$ADOPTED_PDP"
-    BASE_TAG=$(python -c "import json;print(json.load(open('$ADOPTED_META')).get('version','adopted'))" 2>/dev/null || echo adopted)
+    BASE_TAG=$(python -c "import json;m=json.load(open('$ADOPTED_META'));print(m.get('runTs') or m.get('version','adopted'))" 2>/dev/null || echo adopted)
     echo "[이어받기] 채택본을 base 로 학습: $ADOPTED_PDP  (부모=$BASE_TAG)"
   else
     echo "[이어받기] 아직 채택본 없음($ADOPTED_PDP) → official pretrained 로 시작(트리 뿌리)"
@@ -73,23 +80,25 @@ fi
   echo "[4/6] 학습"
   # 학습 출력을 진행 정리기로 통과 → 왼쪽에 '전체 대비 진행/​%' 카운터로 깔끔하게.
   # (에러·다운로드·평가결과 줄은 그대로 통과하니 문제 생기면 그대로 보임)
-  python "$DRV" -c "$CFG" -o Global.mode=train $TRAIN_OVERRIDE 2>&1 | python eval/finetune_progress.py
+  # 원본 학습 로그를 run별로 따로 보존해야 최고 epoch를 정확히 복원할 수 있다.
+  python "$DRV" -c "$CFG" -o Global.mode=train $TRAIN_OVERRIDE 2>&1 \
+    | tee "$TRAIN_LOG" | python eval/finetune_progress.py
   echo "[5/6] export (서버가 읽는 inference 형식으로 변환)"
   python "$DRV" -c "$CFG" -o Global.mode=export
   echo "[6/6] 인식 비교 리포트 (base vs 파인튜닝, held-out test 크롭 직접)"
   python eval/finetune_report.py || echo "  (리포트 생성 실패 — 로그 확인)"
+  python eval/finetune_report_by_type.py || echo "  (타입별 리포트 생성 실패 — 로그 확인)"
   echo "==================== 파인튜닝 끝 [$(date +'%F %T')] ===================="
   echo "best 가중치: eval/finetune/output/best_accuracy/"
   echo "인식 리포트: eval/finetune/FINETUNE_REPORT.html  (← 로컬에서 열면 됨)"
   echo "--- 채택하려면(게이트 통과 시): 트리 줄기로 승격 + main.py 반영 ---"
   echo "  python eval/finetune_adopt.py --version v6      # 부모=직전 채택본(없으면 official)"
   echo "  이후 이어받아 학습: bash ~/OCR/run-finetune.sh --from-adopted"
-  # 실행 이력 장부 기록: 학습 크롭 수 · epoch · 소요 시간 · best acc
-  _ft_imgs=$(wc -l < eval/finetune_corpus/train.txt 2>/dev/null || echo 0)
-  _ft_ep=$(grep -oE 'epochs_iters: [0-9]+' "$CFG" | grep -oE '[0-9]+' | head -1)
-  _ft_acc=$(grep -a 'best metric' ~/OCR/logs/finetune.log 2>/dev/null | tail -1 | grep -oE 'acc: [0-9.]+' | grep -oE '[0-9.]+' | head -1)
-  python eval/run_history.py --record finetune --ts "$(date +%y%m%d_%H%M)" \
-    --base "$BASE_TAG" \
-    --images "$_ft_imgs" --epochs "${_ft_ep:-0}" --elapsed "$((SECONDS - _FT_START))" \
-    --best-acc "${_ft_acc:-0}" --adopted 0 || true
+  # 실행 이력: 실제 완료/최고 epoch, 학습 기준, 전체·품명·숫자 증감, AWS 예상요금.
+  _summary_args=(--ts "$RUN_TAG" --base "$BASE_TAG" --elapsed "$((SECONDS - _FT_START))" \
+    --log "$TRAIN_LOG" --config "$CFG")
+  if [ -n "${FT_CRITERIA:-}" ]; then
+    _summary_args+=(--criteria "$FT_CRITERIA")
+  fi
+  python eval/finetune_run_summary.py "${_summary_args[@]}" || true
 } 2>&1 | stdbuf -oL -eL tee -a ~/OCR/logs/finetune.log

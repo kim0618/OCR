@@ -72,6 +72,42 @@ def _fmt(pair: list[int]) -> str:
     return "-" if pct is None else f"{pct:7.3f}% ({pair[0]:,}/{pair[1]:,})"
 
 
+def _status_by_gt_identity(doc: dict) -> dict[tuple, str]:
+    """Index cell verdicts by immutable GT row content, not aligned ext index."""
+    out: dict[tuple, str] = {}
+    seen: dict[tuple, int] = defaultdict(int)
+    for row in doc.get("table", {}).get("rows") or []:
+        cells = row.get("cells") or {}
+        signature = tuple(sorted(
+            (key, str(cell.get("gtNorm") or ""))
+            for key, cell in cells.items()
+            if key not in C.MEASUREMENT_KEYS
+        ))
+        occurrence = seen[signature]
+        seen[signature] += 1
+        for key, cell in cells.items():
+            if cell.get("status") in {"match", "mismatch", "ext_missing"}:
+                out[(signature, occurrence, key)] = cell["status"]
+    return out
+
+
+def _transitions(
+    baseline: dict[str, dict], candidate: dict[str, dict], sources: list[str]
+) -> dict[str, list[int]]:
+    """Return metric -> [gain, regression] on the same GT cells."""
+    out: dict[str, list[int]] = defaultdict(lambda: [0, 0])
+    for source in sources:
+        before = _status_by_gt_identity(baseline[source])
+        after = _status_by_gt_identity(candidate[source])
+        for identity in set(before) & set(after):
+            b, a = before[identity], after[identity]
+            if b != "match" and a == "match":
+                out[identity[2]][0] += 1
+            elif b == "match" and a != "match":
+                out[identity[2]][1] += 1
+    return out
+
+
 def compare(baseline_dir: str, candidate_dir: str) -> int:
     baseline = _load_dir(baseline_dir)
     candidate = _load_dir(candidate_dir)
@@ -105,6 +141,19 @@ def compare(baseline_dir: str, candidate_dir: str) -> int:
         important = key in priority or b != a
         if important:
             print(f"{key:32} {_fmt(b):24} {_fmt(a):24} {delta:>10}")
+    transitions = _transitions(baseline, candidate, sources)
+    changed = [
+        (key, gain, regression)
+        for key, (gain, regression) in transitions.items()
+        if gain or regression
+    ]
+    changed.sort(key=lambda item: (-(item[1] + item[2]), item[0]))
+    if changed:
+        print("\nSame-GT-cell transitions (alignment-index changes excluded)")
+        print(f"{'cell':32} {'gain':>8} {'regress':>8} {'net':>8}")
+        print("-" * 60)
+        for key, gain, regression in changed:
+            print(f"{key:32} {gain:8,d} {regression:8,d} {gain-regression:+8,d}")
     print("\nPARTIAL ONLY: use this as a regression gate, not as the 9,001-document final score.")
     return 0
 

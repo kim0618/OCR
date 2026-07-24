@@ -99,7 +99,7 @@ def _rate(images: Any, sec: Any) -> str:
     count = _float(images)
     if count is None or seconds is None or seconds <= 0:
         return "-"
-    return f"{count / (seconds / 3600):,.0f} 장/시간"
+    return f"{count / (seconds / 3600):,.0f}장/h"
 
 
 def _num(value: Any, suffix: str = "") -> str:
@@ -113,6 +113,12 @@ def _num(value: Any, suffix: str = "") -> str:
 def _pct(value: Any) -> str:
     number = _float(value)
     return "-" if number is None else f"{number:.1f}%"
+
+
+def _best_acc(value: Any) -> str:
+    """Render validation accuracy consistently without changing stored precision."""
+    number = _float(value)
+    return "-" if number is None else f"{number:.3f}"
 
 
 def _signed(value: Any, suffix: str = "%p") -> str:
@@ -264,14 +270,14 @@ def render_html() -> str:
                 f"<tr><td>{index}</td><td>{_h(row.get('when','-'))}</td>"
                 f"<td><code>{_h(row.get('ts','-'))}</code></td>"
                 f"<td><code class='b'>{_h(row.get('base','official'))}</code></td>"
-                f"<td class='left'>{_criteria(row)}</td><td>{_num(row.get('images'),'장')}</td>"
+                f"<td>{_num(row.get('images'),'장')}</td>"
                 f"<td>{total_ep}</td><td>{best_ep}</td>"
-                f"<td>{_h(row.get('bestAcc','-'))}</td><td>{_delta_summary(row)}</td>"
+                f"<td>{_best_acc(row.get('bestAcc'))}</td>"
                 f"<td>{_dur(seconds)}</td><td>{_cost(row)}</td><td>{adopted_text}</td></tr>")
         cost_note = "" if cost_runs == len(ft) else f" <span class='muted'>({cost_runs}/{len(ft)} run)</span>"
         out.append(
-            f"<tr class='tot'><td colspan='5'>누계 ({len(ft)} run)</td><td>{total_images:,}장</td>"
-            f"<td colspan='4'></td><td>{_dur(total_seconds) if total_seconds else '-'}</td>"
+            f"<tr class='tot'><td colspan='4'>누계 ({len(ft)} run)</td><td>{total_images:,}장</td>"
+            f"<td colspan='3'></td><td>{_dur(total_seconds) if total_seconds else '-'}</td>"
             f"<td>{('$' + format(known_cost, ',.2f')) if cost_runs else '-'}{cost_note}</td><td></td></tr>")
         return "".join(out)
 
@@ -297,7 +303,7 @@ def render_html() -> str:
                 css_class = "adopt" if adopted else "rej"
                 pad = "&nbsp;&nbsp;&nbsp;&nbsp;" * depth
                 total_ep, best_ep = _epoch_text(row)
-                ep = f"전체 {total_ep} · 최고 ep{best_ep} · acc {_h(row.get('bestAcc','-'))}"
+                ep = f"전체 {total_ep} · 최고 ep{best_ep} · acc {_best_acc(row.get('bestAcc'))}"
                 detail = f"기준: {_criteria(row)}"
                 delta = _delta_summary(row, compact=True)
                 if delta != "-":
@@ -329,6 +335,7 @@ section{background:var(--card);border:1px solid var(--line);border-radius:10px;p
 table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
 th:nth-child(-n+3),td:nth-child(-n+3),td.left{text-align:left}th{color:var(--muted);font-weight:600;font-size:12.5px;background:var(--head)}
 code{background:var(--head);border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:11.5px}.tot{font-weight:700;background:var(--head)}
+.eval-table th,.eval-table td{padding-left:7px;padding-right:7px}.eval-table code{font-size:11px}
 .up{color:var(--up);font-weight:600}.muted{color:var(--muted)}.warn{color:var(--warn);font-weight:600;margin-top:10px}code.b{background:transparent;border:0;padding:0;color:var(--muted)}
 .tree .ln{font-family:'Consolas','D2Coding',monospace;font-size:12.5px;line-height:1.9;white-space:nowrap}.tree .meta{color:var(--muted);padding-left:1.2em}.tree .adopt>code{border-color:var(--up)}
 """
@@ -336,11 +343,11 @@ code{background:var(--head);border:1px solid var(--line);border-radius:5px;paddi
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>AWS 실행 이력 (eval / 파인튜닝)</title><style>{css}</style></head><body>
 <h1>AWS 실행 이력</h1><div class="gen">생성 {_now()} · eval {len(ev)} run · 파인튜닝 {len(ft)} run · AWS 금액은 실행시간 기준 예상요금</div>
-<h2>① eval (측정 + 크롭 수확)</h2><section><table><thead><tr>
-<th>#</th><th>일시</th><th>run</th><th>실행 유형</th><th>처리 장수</th><th>소요 시간</th><th>시간당 처리</th><th>필드</th><th>셀</th><th>품명 Base<br><span class="muted">(매칭 전)</span></th><th>품명 Master<br><span class="muted">(매칭 후)</span></th><th>LearnData A 품명<br><span class="muted">(held-out·비순환)</span></th><th>LearnData B 품명<br><span class="muted">(full·순환상한)</span></th><th>AWS 예상요금</th>
+<h2>① eval (측정 + 크롭 수확)</h2><section><table class="eval-table"><thead><tr>
+<th>#</th><th>일시</th><th>run</th><th>실행 유형</th><th>처리 장수</th><th>소요 시간</th><th>처리/h</th><th>필드</th><th>셀</th><th>품명 Base<br><span class="muted">(매칭 전)</span></th><th>품명 Master<br><span class="muted">(매칭 후)</span></th><th>Learn A 품명<br><span class="muted">(held-out)</span></th><th>Learn B 품명<br><span class="muted">(full 상한)</span></th><th>AWS 요금</th>
 </tr></thead><tbody>{eval_rows()}</tbody></table></section>
 <h2>② 파인튜닝 (모델 학습)</h2><section><table><thead><tr>
-<th>#</th><th>일시</th><th>run</th><th>base</th><th>학습 기준</th><th>학습 크롭</th><th>전체 반복</th><th>최고 epoch</th><th>best acc</th><th>기준 대비</th><th>소요 시간</th><th>AWS 예상요금</th><th>채택</th>
+<th>#</th><th>일시</th><th>run</th><th>base</th><th>학습 크롭</th><th>전체 반복</th><th>최고 epoch</th><th>best acc</th><th>소요 시간</th><th>AWS 예상요금</th><th>채택</th>
 </tr></thead><tbody>{ft_rows()}</tbody></table></section>
 <h2>③ 모델 계보 — 무엇을 기준으로 얼마나 변했는지</h2><section class="tree">{lineage()}
 <div class="gen" style="margin-top:10px">★=채택 · ✗=미채택. 증감은 동일 held-out 기준 파인튜닝−base 정확일치율(%p).</div></section>

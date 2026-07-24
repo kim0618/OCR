@@ -37,12 +37,15 @@ class RunHistoryExtendedTest(unittest.TestCase):
                 self.assertIn("80.0%", rendered)
                 self.assertIn("스냅샷 재평가", rendered)
                 self.assertIn("AWS OCR 누계 (2 run)", rendered)
-                self.assertIn("LearnData A", rendered)
-                self.assertIn("LearnData B", rendered)
+                self.assertIn("Learn A 품명", rendered)
+                self.assertIn("Learn B 품명", rendered)
                 self.assertIn("71.7%", rendered)
                 self.assertIn("기록 없음", rendered)
                 self.assertIn("시간 기록 100장 기준", rendered)
                 self.assertNotIn("2,000 장/시간", rendered)  # must not mix untimed 900 images
+                self.assertIn("200장/h", rendered)
+                self.assertNotIn("<th>학습 기준</th>", rendered)
+                self.assertNotIn("<th>기준 대비</th>", rendered)
 
     def test_training_log_extracts_completed_and_best_epoch(self):
         text = """
@@ -60,10 +63,16 @@ epoch: [3/4], global_step: 30
     def test_criteria_describes_columns_and_numeric_anchor(self):
         criteria = finetune_run_summary.describe_criteria({"policy": {
             "columns": ["itemName"], "hangulMin": 2,
-            "numberAnchorRatio": 0.3, "rawOnly": True,
+            "minMatch": 0.7, "numberAnchorRatio": 0.3, "rawOnly": True,
         }})
         self.assertIn("품명 중심", criteria)
+        self.assertIn("GT 일치도 0.7+", criteria)
         self.assertIn("숫자 보존 앵커 0.3", criteria)
+
+    def test_best_acc_is_rendered_to_three_decimal_places(self):
+        self.assertEqual(run_history._best_acc("0.532193910694478"), "0.532")
+        self.assertEqual(run_history._best_acc(0.638), "0.638")
+        self.assertEqual(run_history._best_acc(None), "-")
 
     def test_type_uses_column_metadata_not_every_hangul_as_item_name(self):
         self.assertEqual(finetune_report_by_type._type("가나다", {"column": "itemName"}), "품명")
