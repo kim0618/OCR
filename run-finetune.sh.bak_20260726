@@ -35,7 +35,6 @@ DRV=eval/finetune/paddlex_train.py
 # --- 라운드 선택: hangul(품명) | numeric(숫자만) | combined(품명+숫자, ★권장) ---
 #   bash run-finetune.sh                              # 품명(한글) 라운드 (1차·완료)
 #   bash run-finetune.sh --round=combined --from-adopted  # ★품명+숫자 통합(품명v1 이어받아, 구덩이없음)
-#   bash run-finetune.sh --round=fields   --from-adopted  # ★★실필드(combined−itemCode바코드) 2026-07-26
 #   bash run-finetune.sh --round=numeric  --from-adopted  # 숫자만 target + 품명 앵커(순차, 18문턱)
 ROUND=hangul
 for a in "$@"; do case "$a" in --round=*) ROUND="${a#*=}" ;; --numeric) ROUND=numeric ;; esac; done
@@ -82,21 +81,6 @@ fi
         --min-match 0.7 --raw-only --reconstruct-number-labels \
         --exclude-sources "$REPLAY_SRC"
     FT_CRITERIA="품명+숫자 통합(숫자 콤마재구성) — 품명v1 이어받아 품명유지+숫자회복(콤마 18%)"
-  elif [ "$ROUND" = "fields" ]; then
-    # ★★실필드 라운드 (2026-07-26): combined 에서 itemCode(바코드)만 뺀 것 — same-crop 실측 근거.
-    #  COMPARE_V1_SUBCOL(120k 동일크롭, combined vs V1): 금액 +1.2pp·코드날짜 +1.0 은 올랐지만
-    #  쉬운숫자(컬럼미상) −4.7·한글기타 −4.5 broad forgetting 으로 전체 net −1,295 상쇄.
-    #  주범 = failure 의 itemCode 바코드 27만장(8자리+ 90%, base 정답률 6.6%=원래 못읽는 하드케이스,
-    #  그래디언트가 바코드에 쏠려 딴 걸 까먹음). ★itemCode 는 OCR 산출이 아니라 품명→마스터매칭
-    #  산출(top1+가격 87.9%, master_match)이므로 학습 불필요 = 제외가 맞다.
-    #  balance=전체(char-type 무필터): 구세대 balance 는 컬럼 미상이지만 match-검증된 정답 크롭
-    #  (라벨 건전)이라 일반 망각방지 앵커로 유지. 기준셋 수확분(src 없는 meta행)은 자동 제외됨.
-    #  ★반드시 --from-adopted(품명v1) 와 함께.
-    python eval/build_dataset.py --balance-ratio 1.0 --max-train 1000000 \
-        --columns itemName,supplierCompany,supplierAddress,amount,unitPrice,quantity,supplyAmount,taxAmount,totalAmount,discountAmount,supplierBizNumber,manufacturingNo,lotNo \
-        --min-match 0.7 --raw-only --reconstruct-number-labels \
-        --exclude-sources "$REPLAY_SRC"
-    FT_CRITERIA="실필드 전용(combined−itemCode바코드): 품명유지+직접읽기 숫자, 콤마재구성"
   elif [ "$ROUND" = "numeric" ]; then
     # ★★숫자 라운드 (2026-07-24): 숫자(금액/수량/단가) 인식↑ + 품명 유지~개선.
     #  1차(품명)에서 배운 교훈 = 반대편 앵커가 작으면(13%) 그쪽이 −18.8%p 날아감 →
