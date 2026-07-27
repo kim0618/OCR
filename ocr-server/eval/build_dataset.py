@@ -168,6 +168,10 @@ def main() -> int:
     ap.add_argument("--balance-digit-min", type=int, default=0,
                     help="★숫자 라운드용(품명 라운드의 --balance-hangul-min 대칭): balance(정답) 크롭을 "
                          "숫자만(한글無+숫자유) 남김. 품명은 --hangul-anchor-ratio 로만 앵커 추가")
+    ap.add_argument("--short-num-anchor-ratio", type=float, default=0.0,
+                    help="짧은숫자(1~3자리) balance 앵커를 failure×ratio 만큼 추가. "
+                         "긴 문자열(콤마금액·품명) 위주 학습 시 짧은 시퀀스 출력 붕괴"
+                         "(probe1 실측: 수량 끝자리 탈락 '10'→'1', −5.4pp) 방지용")
     ap.add_argument("--hangul-anchor-ratio", type=float, default=0.0,
                     help="★품명(한글) 망각 방지 앵커 = failure 수 × 이 비율 만큼 '한글 balance 크롭' 추가. "
                          "숫자 라운드에서 품명 보존용 — 1차 교훈(앵커 13%→반대편 −18.8%p)상 크게(예: 2~4) "
@@ -262,11 +266,31 @@ def main() -> int:
         return items[:int(len(fail_items) * ratio)]
     num_anchor = _sample(num_bal, args.number_anchor_ratio, 2)
     hangul_anchor = _sample(kor_bal, args.hangul_anchor_ratio, 3)
-    anchor_items = num_anchor + hangul_anchor
+    # 짧은숫자(1~3자리) 앵커 — probe1 실측: 긴 문자열 위주 학습 시 짧은 시퀀스 출력이
+    # 붕괴(수량 "10"→"1", UNSEEN −5.4pp). num_bal 중 자릿수 3 이하만 별도 보강.
+    short_pool = {p: g for p, g in num_bal.items()
+                  if len(_digit.findall(g)) <= 3}
+    short_anchor = _sample(short_pool, args.short_num_anchor_ratio, 4)
+    # 앵커 간·앵커↔balance 중복 제거 — 같은 크롭이 두 번 들어가면 _split 셔플로
+    # train 과 test 양쪽에 떨어질 수 있음(누출). 앵커 우선, balance 에서 빼는 쪽으로.
+    _seen_anchor: set = set()
+    anchor_items = []
+    for it in num_anchor + hangul_anchor + short_anchor:
+        if it[0] not in _seen_anchor:
+            _seen_anchor.add(it[0])
+            anchor_items.append(it)
+    if _seen_anchor:
+        n0_bal = len(bal_items)
+        bal_items = [(p, g) for p, g in bal_items if p not in _seen_anchor]
+        if len(bal_items) != n0_bal:
+            print(f"[build_dataset] balance↔앵커 중복 제거: balance {n0_bal:,} -> {len(bal_items):,}")
     if num_anchor:
         print(f"[build_dataset] 숫자 앵커: {len(num_anchor):,} (failure×{args.number_anchor_ratio})")
     if hangul_anchor:
         print(f"[build_dataset] 품명(한글) 앵커: {len(hangul_anchor):,} (failure×{args.hangul_anchor_ratio})")
+    if short_anchor:
+        print(f"[build_dataset] 짧은숫자 앵커: {len(short_anchor):,} "
+              f"(failure×{args.short_num_anchor_ratio}, 풀 {len(short_pool):,})")
 
     # 총량 상한: failure·앵커 보존, base balance 를 줄여 상한 맞춤.
     if args.max_train and len(fail_items) + len(bal_items) + len(anchor_items) > args.max_train:
@@ -321,6 +345,7 @@ def main() -> int:
     fail_paths = {p for p, _ in fail_items}
     num_anchor_paths = {p for p, _ in num_anchor}
     hangul_anchor_paths = {p for p, _ in hangul_anchor}
+    short_anchor_paths = {p for p, _ in short_anchor}
     with open(tmp_meta, "w", encoding="utf-8") as fh:
         for split, split_rows in (("train", tr), ("val", va), ("test", te)):
             for rel, _ in split_rows:
@@ -328,6 +353,7 @@ def main() -> int:
                 source = ("failure" if rel in fail_paths else
                           "numberAnchor" if rel in num_anchor_paths else
                           "hangulAnchor" if rel in hangul_anchor_paths else
+                          "shortNumAnchor" if rel in short_anchor_paths else
                           meta.get("source", "balance"))
                 fh.write(json.dumps({"split": split, "path": rel,
                                      "source": source, "column": meta.get("column")},
@@ -339,7 +365,8 @@ def main() -> int:
         "dataDirForPaddle": CORPUS_DIR,
         "counts": {"failure": len(fail_items), "balanceAvailable": len(bals),
                    "balanceUsed": len(bal_items), "numberAnchor": len(num_anchor),
-                   "hangulAnchor": len(hangul_anchor), "combined": len(combined),
+                   "hangulAnchor": len(hangul_anchor), "shortNumAnchor": len(short_anchor),
+                   "combined": len(combined),
                    "train": len(tr), "val": len(va), "test": len(te)},
         "policy": {"balanceRatio": args.balance_ratio, "val": args.val,
                    "test": args.test, "seed": args.seed,
@@ -350,6 +377,7 @@ def main() -> int:
                    "balanceDigitMin": args.balance_digit_min,
                    "numberAnchorRatio": args.number_anchor_ratio,
                    "hangulAnchorRatio": args.hangul_anchor_ratio,
+                   "shortNumAnchorRatio": args.short_num_anchor_ratio,
                    "maxTrain": args.max_train},
         "splitMetadata": os.path.basename(split_meta_path),
     }

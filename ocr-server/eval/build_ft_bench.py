@@ -49,7 +49,12 @@ GT_REPLAY = os.path.join(HERE, "data", "invoice_war", "ground_truth_replay.json"
 
 OUT_UNSEEN = os.path.join(CORPUS_DIR, "bench_unseen.txt")
 OUT_SEEN = os.path.join(CORPUS_DIR, "bench_seen.txt")
+OUT_RETAIN = os.path.join(CORPUS_DIR, "bench_retain.txt")
 OUT_REPORT = os.path.join(CORPUS_DIR, "bench_report.md")
+
+BAL_LABELS = os.path.join(CORPUS_DIR, "labels_correct.txt")
+CROPS_CORRECT_DIR = os.path.join(CORPUS_DIR, "crops_correct")
+RETAIN_PER_BUCKET = 10_000
 
 NUM_COLS = {"quantity", "unitPrice", "amount"}
 SEED = 42
@@ -167,11 +172,44 @@ def main() -> int:
     write_list(OUT_UNSEEN, unseen)
     write_list(OUT_SEEN, seen)
 
+    # RETAIN = base 가 원래 맞게 읽던 크롭(정답풀) 중 학습에 안 쓴 것 → "까먹음" 감시.
+    # probe1 교훈: 실패크롭 벤치(회복)만으론 기존 셀 붕괴(수량 끝자리 탈락)를 못 봄.
+    # 컬럼 메타 없는 구세대 풀이라 글자종류 버킷: 짧은숫자(1~3자리)가 붕괴 조기경보.
+    import re as _re
+    _hang = _re.compile(r"[가-힣]")
+    retain_pool: dict[str, list[tuple[str, str, str]]] = defaultdict(list)
+    if os.path.exists(BAL_LABELS):
+        cc_existing = set(os.listdir(CROPS_CORRECT_DIR)) if os.path.isdir(CROPS_CORRECT_DIR) else set()
+        for ln in open(BAL_LABELS, encoding="utf-8"):
+            ln = ln.rstrip("\n")
+            if "\t" not in ln:
+                continue
+            rel, gt = ln.split("\t", 1)
+            if rel in trained or rel.split("/", 1)[-1] not in cc_existing:
+                continue
+            digits = sum(ch.isdigit() for ch in gt)
+            if _hang.search(gt):
+                bucket = "한글"
+            elif digits and digits == sum(not ch.isspace() for ch in gt.replace(",", "")):
+                bucket = "짧은숫자" if digits <= 3 else "숫자"
+            else:
+                bucket = "기타"
+            retain_pool[bucket].append((rel, gt, bucket))
+    retain: list[tuple[str, str, str]] = []
+    for bucket, pool in sorted(retain_pool.items()):
+        take = pool if len(pool) <= RETAIN_PER_BUCKET else \
+            random.Random(args.seed + hash(bucket) % 1000).sample(pool, RETAIN_PER_BUCKET)
+        retain.extend(take)
+    write_list(OUT_RETAIN, retain)
+
     seen_by_col = Counter(c for _, _, c in seen)
-    lines = ["# FT 인식 벤치 (SEEN / UNSEEN) — freeze 요약", "",
+    retain_by_bucket = Counter(c for _, _, c in retain)
+    lines = ["# FT 인식 벤치 (SEEN / UNSEEN / RETAIN) — freeze 요약", "",
              f"- 바코드(itemCode) 제외: {drop_barcode}   seed={args.seed}",
              f"- UNSEEN(9,001 held-out 실패 크롭): **{len(unseen):,}**",
              f"- SEEN(학습에 쓴 실패 크롭, UNSEEN 분포 매칭): **{len(seen):,}**",
+             f"- RETAIN(base 정답 크롭·학습 제외 = 까먹음 감시): **{len(retain):,}** "
+             f"({', '.join(f'{b} {n:,}' for b, n in retain_by_bucket.most_common())})",
              f"- drop: {dict(dropped)}", "",
              "| 컬럼 | UNSEEN | SEEN |", "|---|--:|--:|"]
     for col, n in unseen_by_col.most_common():
@@ -184,6 +222,8 @@ def main() -> int:
 
     print(f"[out] UNSEEN {len(unseen):,} -> {OUT_UNSEEN}")
     print(f"[out] SEEN   {len(seen):,} -> {OUT_SEEN}")
+    print(f"[out] RETAIN {len(retain):,} -> {OUT_RETAIN}  "
+          f"({', '.join(f'{b} {n:,}' for b, n in retain_by_bucket.most_common())})")
     print(f"[out] report -> {OUT_REPORT}")
     print(f"[drop] {dict(dropped)}")
     return 0

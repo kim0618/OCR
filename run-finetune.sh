@@ -97,6 +97,18 @@ fi
         --min-match 0.7 --raw-only --reconstruct-number-labels \
         --exclude-sources "$REPLAY_SRC"
     FT_CRITERIA="실필드 전용(combined−itemCode바코드): 품명유지+직접읽기 숫자, 콤마재구성"
+  elif [ "$ROUND" = "fields2" ]; then
+    # ★★2차 프로브 (2026-07-27): base 재시작 probe1(품명+5.7·금액+4.4·단가+3.4) 의 두 회귀 교정.
+    #  ①spec −5.6 = 학습컬럼 미포함 부수망각 → spec 추가.
+    #  ②수량 −5.4 = 긴 문자열(콤마금액·품명) 위주라 1~3자리 짧은숫자가 1%뿐 → 짧은시퀀스
+    #    출력붕괴("10"→"1" 끝자리 탈락, 라벨은 정상 확인). --short-num-anchor-ratio 로 보강.
+    #  lr 3e-5(config)·바코드 제외·콤마재구성은 probe1 그대로. base 재시작 = --from-adopted 없이.
+    python eval/build_dataset.py --balance-ratio 1.0 --max-train 1000000 \
+        --columns itemName,spec,supplierCompany,supplierAddress,amount,unitPrice,quantity,supplyAmount,taxAmount,totalAmount,discountAmount,supplierBizNumber,manufacturingNo,lotNo \
+        --min-match 0.7 --raw-only --reconstruct-number-labels \
+        --short-num-anchor-ratio 0.15 \
+        --exclude-sources "$REPLAY_SRC"
+    FT_CRITERIA="2차 프로브: fields+spec, 짧은숫자 앵커 0.15 (수량붕괴·spec망각 교정), base 재시작"
   elif [ "$ROUND" = "numeric" ]; then
     # ★★숫자 라운드 (2026-07-24): 숫자(금액/수량/단가) 인식↑ + 품명 유지~개선.
     #  1차(품명)에서 배운 교훈 = 반대편 앵커가 작으면(13%) 그쪽이 −18.8%p 날아감 →
@@ -147,8 +159,16 @@ fi
   echo "[6/6] 인식 비교 리포트 (base vs 파인튜닝, held-out test 크롭 직접)"
   python eval/finetune_report.py --run-tag "$RUN_TAG" || echo "  (리포트 생성 실패 — 로그 확인)"
   python eval/finetune_report_by_type.py || echo "  (타입별 리포트 생성 실패 — 로그 확인)"
+  # ★판정용 3탭 벤치(처음/유지/포함) 자동 생성 — 학습 직후 별도 수동실행 없이 바로 판정.
+  #  순서 중요: build_ft_bench 가 방금 갱신된 train.txt 로 포함(SEEN)/유지(RETAIN)를 재빌드
+  #  한 뒤 채점해야 "이 run 이 실제 학습한 것" 기준이 맞는다. (~70분, 362k 크롭×2모델)
+  echo "[벤치] 고정 벤치 재빌드 + 3탭 벤치 리포트 (판정용)"
+  python eval/build_ft_bench.py || echo "  (벤치 빌드 실패 — 수동: python eval/build_ft_bench.py)"
+  python eval/finetune_report.py --bench --run-tag "$RUN_TAG" \
+    || echo "  (벤치 리포트 실패 — 수동: python eval/finetune_report.py --bench --run-tag $RUN_TAG)"
   echo "==================== 파인튜닝 끝 [$(date +'%F %T')] ===================="
   echo "best 가중치: eval/finetune/output/best_accuracy/"
+  echo "★판정 리포트(벤치 3탭): eval/finetune/FINETUNE_BENCH_${RUN_TAG}.html"
   echo "인식 리포트: eval/finetune/FINETUNE_REPORT_${RUN_TAG}.html"
   echo "최신 리포트: eval/finetune/FINETUNE_REPORT.html"
   echo "--- 채택하려면(게이트 통과 시): 트리 줄기로 승격 + main.py 반영 ---"
