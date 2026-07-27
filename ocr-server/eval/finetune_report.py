@@ -160,6 +160,19 @@ BENCH_UNSEEN = os.path.join(CORPUS_DIR, "bench_unseen.txt")
 BENCH_SEEN = os.path.join(CORPUS_DIR, "bench_seen.txt")
 BENCH_OUT = os.path.join(HERE, "finetune", "FINETUNE_REPORT.html")  # overwritten below per run-tag
 
+# 금액계열은 학습라벨=콤마 인쇄형(819,800), 벤치GT=war 원본(819800)이라 포맷이 어긋난다.
+# 문자 그대로 비교하면 배운 대로 콤마 찍은 정답이 오답 처리됨(probe1 실측: 금액 base 0.4%
+# 로 보였으나 콤마무시 시 31.1%). 숫자 컬럼은 콤마·공백 무시 자릿수 비교로 채점한다.
+BENCH_NUM_COLS = {"quantity", "unitPrice", "amount", "supplyAmount",
+                  "taxAmount", "totalAmount", "discountAmount"}
+
+
+def _bench_ok(pred: str, gt: str, col: str) -> bool:
+    if col in BENCH_NUM_COLS:
+        strip = lambda s: s.replace(",", "").replace(" ", "").strip()
+        return strip(pred) == strip(gt)
+    return pred.strip() == gt.strip()
+
 
 def load_bench(path):
     """bench 파일(rel \\t gt \\t column) -> [(abspath, rel, gt, column)]. 없으면 []."""
@@ -185,8 +198,8 @@ def _bench_tab_stats(rows, base_pred, ft_pred, max_examples):
     gains, regress = [], []
     base_ok = ft_ok = both_ok = 0
     for (p, _rel, gt, col), bp, fp in zip(rows, base_pred, ft_pred):
-        b_ok = bp.strip() == gt.strip()
-        f_ok = fp.strip() == gt.strip()
+        b_ok = _bench_ok(bp, gt, col)
+        f_ok = _bench_ok(fp, gt, col)
         base_ok += b_ok
         ft_ok += f_ok
         both_ok += b_ok and f_ok
@@ -342,6 +355,13 @@ def main_bench(run_tag, max_examples):
         paths = [p for p, _, _, _ in rows]
         bp = predict_all(base, paths)
         fp = predict_all(ft, paths)
+        # 예측 보존: 채점 방식이 바뀌어도 GPU 재추론 없이 재채점 가능하게.
+        pred_path = os.path.join(HERE, "finetune", f"BENCH_PREDICTIONS_{run_tag}_{key}.jsonl")
+        with open(pred_path + ".tmp", "w", encoding="utf-8") as fh:
+            for (_, rel, gt, col), b, f in zip(rows, bp, fp):
+                fh.write(json.dumps({"path": rel, "col": col, "gt": gt, "base": b, "ft": f},
+                                    ensure_ascii=False) + "\n")
+        os.replace(pred_path + ".tmp", pred_path)
         st = _bench_tab_stats(rows, bp, fp, max_examples)
         print(f"[bench] {key}: base {st['b_ex']:.1f}% -> ft {st['f_ex']:.1f}%  "
               f"(Δ{st['f_ex']-st['b_ex']:+.1f})  net {st['gains']-st['regress']:+,}")
