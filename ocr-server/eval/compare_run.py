@@ -21,6 +21,19 @@ from compare_fields import compare_fields
 from compare_table import compare_table
 from buckets import tag_sample
 from gt_loader import load_gt, load_gt_aggregate
+import learndata_apply as LDA
+
+
+_LEARN_SPECS = [
+    ("itemCodeLearnA", os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "data", "invoice_war", "learndata_heldout.json",
+    )),
+    ("itemCodeLearnB", os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "data", "invoice_war", "learndata_full.json",
+    )),
+]
 
 
 def _latest_run() -> str | None:
@@ -47,6 +60,21 @@ def compare_run(ts: str | None = None, testset: str = C.DEFAULT_TESTSET) -> dict
     if manifest.get("gtAggregate"):
         agg = load_gt_aggregate(os.path.normpath(os.path.join(C.HERE, manifest["gtAggregate"])), profile=kind)
 
+    # Apply the same LearnData A/B measurement columns used by snapshot replay.
+    # This is measurement-only: values are injected into the loaded result/GT
+    # copies immediately before compare_table and never written back to samples.
+    learn_luts = []
+    master_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "data", "invoice_war", "master_dict.json",
+    )
+    master_index = (
+        LDA.load_master_index(master_path) if os.path.isfile(master_path) else None
+    )
+    for out_key, path in _LEARN_SPECS:
+        if os.path.isfile(path):
+            learn_luts.append((out_key, LDA.load_dist(path)))
+
     rows_summary: list[dict[str, Any]] = []
     for s in runnable:
         src = s["sourceFile"]
@@ -54,6 +82,13 @@ def compare_run(ts: str | None = None, testset: str = C.DEFAULT_TESTSET) -> dict
         res_path = os.path.join(samples_dir, src + ".json")
         result = json.load(open(res_path, encoding="utf-8"))
         ext_df = result.get("documentFields") or {}
+
+        for out_key, dist in learn_luts:
+            LDA.apply_to_rows(
+                ext_df.get("tableRows"), gt.get("tableRows"), dist, out_key,
+                master_index=master_index,
+                name_out_key=out_key.replace("itemCode", "itemName"),
+            )
 
         fcmp = compare_fields(gt, ext_df)
         tcmp = compare_table(gt["tableRows"], ext_df.get("tableRows") or [])

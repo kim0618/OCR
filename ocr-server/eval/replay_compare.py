@@ -83,6 +83,9 @@ from extractors.invoice_statement import (  # noqa: E402
     recover_postjoin_same_row_amounts as _recover_same_row_amounts,
 )
 from extractors.master_match import fill_master_match as _fill_master  # noqa: E402
+from extractors.master_match import (  # noqa: E402
+    apply_learndata_dominance_override as _apply_learn_dominance,
+)
 from extractors.master_match import fill_insurance_from_master as _fill_insurance  # noqa: E402
 from extractors.master_match import fill_party_match as _fill_party  # noqa: E402
 from extractors.master_match import (  # noqa: E402
@@ -93,6 +96,9 @@ from extractors.master_match import (  # noqa: E402
 )
 from extractors.master_match import (  # noqa: E402
     strip_trailing_item_page_fraction as _strip_item_page_fraction,
+)
+from extractors.master_match import (  # noqa: E402
+    strip_duplicate_item_pack_tail as _strip_duplicate_item_pack,
 )
 
 # ②G4 마스터 매칭 포함 여부. False(--no-master-match)로 돌리면 Rule 단계(매칭 전) 사이드카가
@@ -155,6 +161,7 @@ def replay_dispatch(
     prefer_arithmetic_row_synthesis_triple: bool = True,
     append_arithmetic_row_synthesis_triple: bool = False,
     allow_relaxed_master_item_name_adoption: bool = True,
+    apply_master_learn_dom80_count5: bool = False,
 ) -> tuple[dict, str]:
     """Reproduce the server's free->gate->fallback choice on a snapshot envelope.
 
@@ -324,6 +331,23 @@ def replay_dispatch(
                 df["tableRows"], supplier_bizno=df.get("supplierBizNumber"))
         except Exception:
             pass
+    if (
+        apply_master_learn_dom80_count5
+        and isinstance(df, dict)
+        and df.get("tableRows")
+    ):
+        try:
+            df["tableRows"], _ = _apply_learn_dominance(
+                df["tableRows"], min_count=5, min_dominance=0.80
+            )
+        except Exception:
+            pass
+    # mirror main.py display cleanup after Master choice (duplicate pack tail)
+    if isinstance(df, dict) and df.get("tableRows"):
+        try:
+            df["tableRows"], _ = _strip_duplicate_item_pack(df["tableRows"])
+        except Exception:
+            pass
     # mirror main.py display cleanup after Master choice (itemName trailing 1/N)
     if isinstance(df, dict) and df.get("tableRows"):
         try:
@@ -392,6 +416,7 @@ def replay_compare(
     prefer_arithmetic_row_synthesis_triple: bool = True,
     append_arithmetic_row_synthesis_triple: bool = False,
     allow_relaxed_master_item_name_adoption: bool = True,
+    apply_master_learn_dom80_count5: bool = False,
 ) -> int:
     lookup_testset = testset or C.DEFAULT_TESTSET
     run_dir = os.path.join(C.RUNS_DIR, ts) if ts else C.latest_run(lookup_testset)
@@ -493,6 +518,7 @@ def replay_compare(
             allow_relaxed_master_item_name_adoption=(
                 allow_relaxed_master_item_name_adoption
             ),
+            apply_master_learn_dom80_count5=apply_master_learn_dom80_count5,
         )                                               # (edited) parser, faithful dispatch
         n_free += 1 if path == "free" else 0
         gt = agg[gtkey] if agg is not None else load_gt(
@@ -527,6 +553,7 @@ def replay_compare(
                 "relaxedMasterItemNameAdoption": (
                     allow_relaxed_master_item_name_adoption
                 ),
+                "masterLearnDom80Count5": apply_master_learn_dom80_count5,
             },
             "fields": fcmp, "table": tcmp, "buckets": tags,
         }
@@ -590,6 +617,9 @@ if __name__ == "__main__":
     ap.add_argument("--disable-relaxed-master-name-adoption", action="store_true",
                     help="ablation only: disable the adopted relaxed Master-name "
                          "adoption while keeping ordinary item-name adoption enabled")
+    ap.add_argument("--master-learn-dom80-count5", action="store_true",
+                    help="candidate only: override Master with an exact runtime "
+                         "LearnData key when count>=5 and chosen-code dominance>=80%%")
     args = ap.parse_args()
     if args.no_master_match:
         MASTER_MATCH = False
@@ -616,4 +646,6 @@ if __name__ == "__main__":
         allow_relaxed_master_item_name_adoption=(
             not args.disable_relaxed_master_name_adoption
             or args.adopt_relaxed_master_name
-        )))
+        ),
+        apply_master_learn_dom80_count5=args.master_learn_dom80_count5,
+    ))

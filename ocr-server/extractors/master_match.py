@@ -358,6 +358,40 @@ class MasterMatcher:
             ),
         )[0]
 
+    def learndata_dominant_match(
+        self, reading: str, spec: object = "", price: object = None,
+        quantity: object = None, amount: object = None, *,
+        min_count: int = 5, min_dominance: float = 0.80,
+    ) -> dict[str, Any] | None:
+        """Return a Master entry only for a repeatedly dominant LearnData key.
+
+        This is intentionally stricter than ``resolve_learndata_code`` and is
+        used only by an experimental replay gate.  The reading must be an exact
+        runtime LearnData key, have enough observations, and the context-chosen
+        code must own the requested share of all observations for that key.
+        """
+        raw_reading = str(reading or "").strip()
+        counts = self._learn.get(raw_reading)
+        if not counts:
+            return None
+        total = sum(counts.values())
+        if total < min_count:
+            return None
+        code = self.resolve_learndata_code(
+            raw_reading, spec=spec, price=price, quantity=quantity, amount=amount
+        )
+        if not code or counts.get(code, 0) / total < min_dominance:
+            return None
+        idx = self._cd2i.get(code)
+        if idx is None:
+            return None
+        return {
+            "itemCode": code,
+            "itemNameMaster": strip_master_annotations(self._nms[idx]),
+            "learnCount": total,
+            "learnDominance": counts.get(code, 0) / total,
+        }
+
     def _itri(self, i: int) -> frozenset:
         t = self._itri_cache.get(i)
         if t is None:
@@ -877,6 +911,83 @@ _TRAILING_PAGE_FRACTION_RE = re.compile(
 _TRAILING_COORD_111_119_RE = re.compile(
     r"^(?P<base>.*[^/\s])\s+11[1-9]\s*$"
 )
+_TRAILING_PACK_TOKEN_RE = re.compile(
+    r"(?i)(\d+(?:[.,]\d+)?)\s*(t|tab|정|c|cap|캡슐|ea|포|병|v|a|amp)"
+)
+
+
+def _pack_family(unit: str) -> str:
+    normalized = unit.lower()
+    if normalized in {"t", "tab", "정"}:
+        return "tablet"
+    if normalized in {"c", "cap", "캡슐"}:
+        return "capsule"
+    if normalized in {"v", "a", "amp"}:
+        return "container"
+    return normalized
+
+
+def _balanced_parentheses(value: str) -> bool:
+    depth = 0
+    for ch in value:
+        if ch == "(":
+            depth += 1
+        elif ch == ")":
+            depth -= 1
+            if depth < 0:
+                return False
+    return depth == 0
+
+
+def strip_duplicate_item_pack_tail(rows: list) -> tuple[list, dict[str, Any]]:
+    """Remove a structurally duplicated pack token from the item-name tail.
+
+    The trailing token is removed only when the same count and compatible unit
+    already appears in structured notation inside the base name: parenthesized,
+    slash-prefixed, or followed by a parenthesized annotation.  This preserves
+    a single intentional ``30T`` suffix and ambiguous free-text repetitions.
+
+    Full 9,001-document offline scoring:
+      067: +99 / regress 0, 068: +201 / regress 0.
+    The cleanup runs after Master choice, so it cannot alter itemCode ranking.
+    """
+    dbg: dict[str, Any] = {"stripped": 0, "samples": []}
+    if not isinstance(rows, list):
+        return rows, dbg
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        name = str(row.get("itemName") or "").strip()
+        tail = re.fullmatch(r"(?P<base>.+\S)\s+(?P<tail>\S+)\s*", name)
+        if not tail:
+            continue
+        tail_pack = _TRAILING_PACK_TOKEN_RE.fullmatch(tail.group("tail"))
+        if not tail_pack:
+            continue
+        base = tail.group("base").strip()
+        if len(_compact_alnum(base)) < 3 or not _balanced_parentheses(base):
+            continue
+        number = tail_pack.group(1).replace(",", "").lstrip("0") or "0"
+        family = _pack_family(tail_pack.group(2))
+        duplicate = None
+        for match in _TRAILING_PACK_TOKEN_RE.finditer(base):
+            base_number = match.group(1).replace(",", "").lstrip("0") or "0"
+            if base_number == number and _pack_family(match.group(2)) == family:
+                duplicate = match
+        if duplicate is None:
+            continue
+        prefix = base[:duplicate.start()]
+        suffix = base[duplicate.end():]
+        inside_parentheses = prefix.count("(") > prefix.count(")")
+        slash_prefixed = bool(re.search(r"/\s*$", prefix))
+        annotation_follows = bool(re.match(r"\s*\([^)]*\)\s*$", suffix))
+        if not (inside_parentheses or slash_prefixed or annotation_follows):
+            continue
+        row["itemName"] = base
+        dbg["stripped"] += 1
+        if len(dbg["samples"]) < 8:
+            dbg["samples"].append({"before": name[:100], "after": base[:100]})
+    return rows, dbg
 
 
 def strip_trailing_item_page_fraction(rows: list) -> tuple[list, dict[str, Any]]:
@@ -1020,6 +1131,40 @@ def fill_master_match(rows: list, matcher: "MasterMatcher | None" = None,
             r["itemCode"] = m["itemCode"]
         dbg["filled"] += 1
     _fill_blank_master_from_rawtext(rows, matcher, dbg)
+    return rows, dbg
+
+
+def apply_learndata_dominance_override(
+    rows: list, matcher: "MasterMatcher | None" = None, *,
+    min_count: int = 5, min_dominance: float = 0.80,
+) -> tuple[list, dict[str, Any]]:
+    """Experimental post-Master override for dominant held-out LearnData keys."""
+    matcher = matcher or get_matcher()
+    dbg: dict[str, Any] = {"enabled": matcher is not None, "changed": 0}
+    if matcher is None or not rows:
+        return rows, dbg
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        name = str(row.get("itemName") or "").strip()
+        if not name:
+            continue
+        match = matcher.learndata_dominant_match(
+            name, spec=row.get("spec"), price=row.get("unitPrice"),
+            quantity=row.get("quantity"), amount=row.get("amount"),
+            min_count=min_count, min_dominance=min_dominance,
+        )
+        if match is None:
+            continue
+        if (
+            str(row.get("itemCode") or "") == match["itemCode"]
+            and str(row.get("itemNameMaster") or "") == match["itemNameMaster"]
+        ):
+            continue
+        row["itemCode"] = match["itemCode"]
+        row["itemNameMaster"] = match["itemNameMaster"]
+        row["_masterSource"] = "learndata_dominance_override"
+        dbg["changed"] += 1
     return rows, dbg
 
 

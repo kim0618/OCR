@@ -10,7 +10,9 @@ sys.path.insert(0, SERVER)
 
 from extractors.master_match import (  # noqa: E402
     MasterMatcher,
+    apply_learndata_dominance_override,
     fill_master_match,
+    strip_duplicate_item_pack_tail,
     strip_master_annotations,
     strip_trailing_item_classification,
     strip_trailing_item_page_fraction,
@@ -109,6 +111,28 @@ class TrailingItemPageFractionTests(unittest.TestCase):
         self.assertEqual(
             matcher.resolve_learndata_code("약품정 10mg 116"), "code-a"
         )
+
+
+class DuplicateItemPackTailTests(unittest.TestCase):
+    def test_strips_only_structured_duplicate_pack_tail(self):
+        rows = [
+            {"itemName": "카나펜정(500T) 500정"},
+            {"itemName": "라베프졸정10mg/28T 28정"},
+            {"itemName": "베시나정5밀리그램100T(BTL) 100정"},
+            {"itemName": "트윈다운정80/5mg30정 30정"},
+            {"itemName": "나프토엠정75mg 30정(나프 30정"},
+            {"itemName": "아클란정625mg 40T"},
+        ]
+
+        output, debug = strip_duplicate_item_pack_tail(rows)
+
+        self.assertEqual(output[0]["itemName"], "카나펜정(500T)")
+        self.assertEqual(output[1]["itemName"], "라베프졸정10mg/28T")
+        self.assertEqual(output[2]["itemName"], "베시나정5밀리그램100T(BTL)")
+        self.assertEqual(output[3]["itemName"], "트윈다운정80/5mg30정 30정")
+        self.assertEqual(output[4]["itemName"], "나프토엠정75mg 30정(나프 30정")
+        self.assertEqual(output[5]["itemName"], "아클란정625mg 40T")
+        self.assertEqual(debug["stripped"], 3)
 
 
 class StrictPurchaseHistoryRerankTests(unittest.TestCase):
@@ -214,6 +238,39 @@ class StrictPurchaseHistoryRerankTests(unittest.TestCase):
         self.assertEqual(
             matcher.resolve_learndata_code("Printed Drug", spec="100T"), "unit"
         )
+
+    def test_dominant_learndata_override_requires_count_and_dominance(self):
+        matcher = MasterMatcher(
+            {
+                "old": {"nm": "Old Drug", "bp1": 100},
+                "right": {"nm": "Right Drug", "bp1": 100},
+                "other": {"nm": "Other Drug", "bp1": 100},
+            },
+            None,
+            {"readings": {
+                "Stable Reading": [["right", 8], ["other", 2]],
+                "Weak Reading": [["right", 3], ["other", 2]],
+            }},
+        )
+        rows = [
+            {
+                "itemName": "Stable Reading",
+                "itemCode": "old",
+                "itemNameMaster": "Old Drug",
+            },
+            {
+                "itemName": "Weak Reading",
+                "itemCode": "old",
+                "itemNameMaster": "Old Drug",
+            },
+        ]
+
+        output, debug = apply_learndata_dominance_override(rows, matcher)
+
+        self.assertEqual(debug["changed"], 1)
+        self.assertEqual(output[0]["itemCode"], "right")
+        self.assertEqual(output[0]["itemNameMaster"], "Right Drug")
+        self.assertEqual(output[1]["itemCode"], "old")
 
     def test_rejects_candidate_not_explicitly_present_in_raw_name(self):
         matcher, wrong_i, right_i = self._matcher()

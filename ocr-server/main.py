@@ -96,6 +96,7 @@ from extractors.master_match import (
     fill_party_match,
     strip_trailing_item_classification,
     strip_trailing_item_page_fraction,
+    strip_duplicate_item_pack_tail,
     strip_leading_item_code,
 )
 from utils.regex_patterns import (
@@ -3766,6 +3767,17 @@ async def ocr_extract(
                         extract_debug["masterMatchFill"] = _mm_dbg
             except Exception as _mm_e:
                 print(f"[master_match_fill] failed (response unaffected): {_mm_e}")
+            # Remove only a second, structurally duplicated pack token from the
+            # displayed raw name. Master choice is intentionally already done.
+            try:
+                if isinstance(document_fields, dict) and document_fields.get("tableRows"):
+                    _pack_rows, _pack_dbg = strip_duplicate_item_pack_tail(
+                        document_fields["tableRows"])
+                    document_fields["tableRows"] = _pack_rows
+                    if _pack_dbg.get("stripped"):
+                        extract_debug["duplicateItemPackStrip"] = _pack_dbg
+            except Exception as _pack_e:
+                print(f"[item_duplicate_pack_strip] failed (response unaffected): {_pack_e}")
             # Clean the displayed raw name after Master choice so the page
             # marker cannot change the global Master candidate.
             try:

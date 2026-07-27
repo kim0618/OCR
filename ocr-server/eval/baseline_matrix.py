@@ -22,6 +22,7 @@ SAMPLE_PATH = os.path.join(DATA, "sample_6000.txt")
 OUT = os.path.join(HERE, "runs", "BASELINE_MATRIX.html")
 SAMPLE_LABEL = "지점 분산, 2606⊂6000"        # HTML 캡션(프리셋별 갱신)
 PADDLE_FILTER = None                          # Paddle 채점 제한용 safe-id 집합(9000 프리셋)
+PADDLE_RUN = None                             # explicit run; otherwise latest
 
 # ocr.xml selectMasterItemLearnData: learn_count >= #{learn_count} 게이트.
 # war 실제값=3 (2606 item_match_type 최솟값이 L_3, L_1/L_2 부재) → 충실 재현.
@@ -295,7 +296,7 @@ def _val(b, item_pct):
 
 
 STAGES = [
-    ("base", "OCR 읽기"),
+    ("base", "raw 품명→정식명"),
     ("master", "최종 매칭"),   # 합본: Google=learndata→LIKE→trigram, Paddle=전체 파이프라인
 ]
 
@@ -309,7 +310,7 @@ table.matrix{table-layout:fixed}
 .v-noc{display:none}
 body.hidecirc .v-full{display:none}
 body.hidecirc .v-noc{display:inline}
-body.hidecirc tr.circ,body.hidecirc tr.partcirc{display:none}
+body.hidecirc tr.circ,body.hidecirc tr.partcirc,body.hidecirc tr.noncomp{display:none}
 .toggle{display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--fg);
 user-select:none;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 12px}
 .cardgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:1600px;margin:16px auto 0}
@@ -391,6 +392,66 @@ def _score_compare_dir_subset(cdir, selectors):
     return pct, detail
 
 
+def _score_raw_itemname_vs_master(cdir, selectors=None):
+    """Score Paddle raw itemName against canonical itemNameMaster.
+
+    Ordinary ``itemName.status`` uses GT ``itemName`` (the recorded Google raw
+    reading), so it cannot be compared with Google's raw-vs-master metric.
+    """
+    import glob
+
+    if selectors is not None:
+        by_file = selectors.get("itemName") or {}
+        total = sum(sum(counter.values()) for counter in by_file.values())
+        ok = 0
+        for safe_id, selected in by_file.items():
+            path = os.path.join(cdir, safe_id + ".json")
+            try:
+                comp = json.load(open(path, encoding="utf-8"))
+            except Exception:
+                continue
+            remaining = Counter(selected)
+            for row in comp.get("table", {}).get("rows", []):
+                cells = row.get("cells", {})
+                sig = _cell_gt_signature(cells)
+                if remaining[sig] <= 0:
+                    continue
+                remaining[sig] -= 1
+                raw_ext = (cells.get("itemName") or {}).get("ext")
+                master_gt = (cells.get("itemNameMaster") or {}).get("gt")
+                if master_gt and _clean_nm(raw_ext) == _clean_nm(master_gt):
+                    ok += 1
+        pct = 100.0 * ok / total if total else None
+        return pct, {"ok": ok, "total": total, "pct": pct}
+
+    files = [
+        path for path in glob.glob(os.path.join(cdir, "*.json"))
+        if not path.endswith("compare_summary.json")
+    ]
+    if PADDLE_FILTER is not None:
+        files = [
+            path for path in files
+            if os.path.basename(path)[:-5] in PADDLE_FILTER
+        ]
+    ok = total = 0
+    for path in files:
+        try:
+            comp = json.load(open(path, encoding="utf-8"))
+        except Exception:
+            continue
+        for row in comp.get("table", {}).get("rows", []):
+            cells = row.get("cells", {})
+            raw_ext = (cells.get("itemName") or {}).get("ext")
+            master_gt = (cells.get("itemNameMaster") or {}).get("gt")
+            if not master_gt:
+                continue
+            total += 1
+            if _clean_nm(raw_ext) == _clean_nm(master_gt):
+                ok += 1
+    pct = 100.0 * ok / total if total else None
+    return pct, {"ok": ok, "total": total, "pct": pct}
+
+
 def load_paddle(independent_selectors=None):
     """최신 run에서 우리 파이프라인 정확도를 **단계별로** 집계.
       - Base   = thin/compare/              (AWS run, 파서룰 적용 전 기준선)
@@ -403,7 +464,12 @@ def load_paddle(independent_selectors=None):
     스냅샷만 반입한 067류)은 PADDLE_FILTER(9000 프리셋)일 때만 sub=런폴더로 대체."""
     import glob
     flat_ok = PADDLE_FILTER is not None   # 9000: 리플레이 런은 flat 구조
-    for d in sorted(glob.glob(os.path.join(HERE, "runs", "*")), reverse=True):
+    run_dirs = (
+        [os.path.join(HERE, "runs", PADDLE_RUN)]
+        if PADDLE_RUN
+        else sorted(glob.glob(os.path.join(HERE, "runs", "*")), reverse=True)
+    )
+    for d in run_dirs:
         sub = os.path.join(d, "thin")
         if not glob.glob(os.path.join(sub, "replay_compare", "*.json")):
             if flat_ok and glob.glob(os.path.join(d, "replay_compare", "*.json")):
@@ -427,17 +493,33 @@ def load_paddle(independent_selectors=None):
             base = rule  # AWS compare 없으면 룰전 기준선 없음 → 동일값
         # Master 단계 품명 = 매칭된 정식명(itemNameMaster). 구글 Master 99.4%도 매칭
         # 교체값이므로 raw 읽기(itemName)를 그대로 두면 불공정 비교가 된다.
+        raw_dir = bdir if glob.glob(os.path.join(bdir, "*.json")) else mdir
+        base_raw_master, base_raw_master_detail = _score_raw_itemname_vs_master(
+            raw_dir
+        )
+        base_nocirc_raw, base_nocirc_detail = _score_raw_itemname_vs_master(
+            raw_dir, independent_selectors or {}
+        )
+        if base_raw_master is not None:
+            base = dict(base, itemName=base_raw_master)
+        base_nocirc = (
+            {"itemName": base_nocirc_raw}
+            if base_nocirc_raw is not None else {}
+        )
         if master.get("itemNameMaster") is not None:
             master = dict(master, itemName=master["itemNameMaster"])
         return {
             "base": base,
+            "base_nocirc": base_nocirc,
+            "base_nocirc_detail": {"itemName": base_nocirc_detail},
             "rule": rule,
             "master": master,
             "master_nocirc": master_nocirc,
             "master_nocirc_detail": master_nocirc_detail,
         }, os.path.basename(d)
     return {
-        "base": {}, "rule": {}, "master": {},
+        "base": {}, "base_nocirc": {}, "base_nocirc_detail": {},
+        "rule": {}, "master": {},
         "master_nocirc": {}, "master_nocirc_detail": {},
     }, None
 
@@ -518,7 +600,8 @@ def _render_panel(stage, active, item_pct, item_ok, item_tot, paddle, grule, gma
             or (stage == "master" and lab in {"itemName", "itemCode"})
         )
         if mode == "nocirc" and same_rows:
-            m = paddle.get("master_nocirc") or {}
+            subset_key = "base_nocirc" if stage == "base" else "master_nocirc"
+            m = paddle.get(subset_key) or {}
         else:
             m = paddle.get(pkey) or {}
         if stage not in ("base", "rule"):
@@ -545,6 +628,10 @@ def _render_panel(stage, active, item_pct, item_ok, item_tot, paddle, grule, gma
                 pool = [t for t in pool if t[0] != "itemCode"]
         vals = []
         for lab, gg, b in pool:
+            # A fair aggregate requires an independent selector on both sides.
+            # Do not mix legacy 0/67.5/100 constants into same-row results.
+            if mode == "nocirc" and _noc_item(lab) is None:
+                continue
             if side == "paddle":
                 v = _paddle_value(lab, mode)
             else:
@@ -579,7 +666,13 @@ def _render_panel(stage, active, item_pct, item_ok, item_tot, paddle, grule, gma
     rows, last = [], None
     for i, (lab, grp, b) in enumerate(FIELDS):
         if grp != last:
-            rows.append(f'<tr><td colspan="4" style="background:#eef1f4;font-weight:700;'
+            group_has_fair = any(
+                _noc_item(group_lab) is not None
+                for group_lab, group_name, _ in FIELDS
+                if group_name == grp
+            )
+            group_cls = "" if group_has_fair else ' class="noncomp"'
+            rows.append(f'<tr{group_cls}><td colspan="4" style="background:#eef1f4;font-weight:700;'
                         f'font-size:12.5px;color:var(--muted)">{grp_ko[grp]}</td></tr>')
             last = grp
         gv = _stage_value(stage, "google", lab, b, item_pct, paddle, grule, gmaster)
@@ -620,17 +713,24 @@ def _render_panel(stage, active, item_pct, item_ok, item_tot, paddle, grule, gma
             gcell = f'<span class="muted" title="GT가 구글값이라 자기비교(=GT)">{_pctcell(gv)}</span>'
         else:
             gcell = f'<b>{_pctcell(gv)}</b>'
+        row_classes = []
+        if _noc_item(lab) is None:
+            row_classes.append("noncomp")
         if b == 100.0:
-            trcls = ' class="circ"'                     # 완전 순환
+            row_classes.append("circ")
         elif partial_without_independent or base_not_raw:
-            trcls = ' class="partcirc"'                 # 독립 selector 없는 부분순환
-        else:
-            trcls = ''
+            row_classes.append("partcirc")
+        trcls = f' class="{" ".join(row_classes)}"' if row_classes else ""
         # Paddle 셀·Δ: itemCode는 full(LearnB)/nocirc(LearnA) 듀얼, 그 외는 단일.
         # Δ의 nocirc 는 구글 독립값(_noc_item)과 대조 → 토글 시 공정 비교로 전환.
         g_noc = _noc_item(lab)
         gv_noc = g_noc if g_noc is not None else gv
-        ndetail = paddle.get("master_nocirc_detail", {}) if stage in {"base", "master"} else {}
+        if stage == "base":
+            ndetail = paddle.get("base_nocirc_detail", {})
+        elif stage == "master":
+            ndetail = paddle.get("master_nocirc_detail", {})
+        else:
+            ndetail = {}
         learn_noc = (
             {"itemName": "itemNameLearnA", "itemCode": "itemCodeLearnA"}.get(lab, lab)
             if stage == "master" else lab
@@ -658,7 +758,13 @@ def _render_panel(stage, active, item_pct, item_ok, item_tot, paddle, grule, gma
             label = "셀 전체" if grp == "row" else "필드 전체"
             gf, gn = _agg("google", grp, "full"), _agg("google", grp, "nocirc")
             pf, pn = _agg("paddle", grp, "full"), _agg("paddle", grp, "nocirc")
-            rows.append(f'<tr style="background:#f0f6ff;font-weight:700">'
+            subtotal_has_fair = any(
+                _noc_item(group_lab) is not None
+                for group_lab, group_name, _ in FIELDS
+                if group_name == grp
+            )
+            subtotal_cls = "" if subtotal_has_fair else ' class="noncomp"'
+            rows.append(f'<tr{subtotal_cls} style="background:#f0f6ff;font-weight:700">'
                         f'<td>{label} <span class="muted" style="font-weight:400">(컬럼 평균)</span></td>'
                         f'<td>{_dual(gf, gn)}</td><td>{_dual(pf, pn)}</td>'
                         f'<td>{_dual_html(_delta(gf, pf), _delta(gn, pn))}</td></tr>')
@@ -668,6 +774,95 @@ def _render_panel(stage, active, item_pct, item_ok, item_tot, paddle, grule, gma
             f'<thead><tr><th>컬럼</th><th>Google</th><th>Paddle (우리)</th>'
             f'<th>비교 Δ</th></tr></thead><tbody>{"".join(rows)}</tbody></table></section>')
     return f'<div class="panel{" active" if active else ""}">{cards}{body}</div>'
+
+
+def build_direct_fair_html(ndocs, paddle, paddle_run, mdet) -> str:
+    """Render only metrics that are genuinely comparable on identical rows.
+
+    The 9,001 replay corpus has independent gold only for canonical item
+    identity. Header/numeric values are recorded Google outputs, not independent
+    Google GT, so they must not appear in a Google-vs-Paddle score table.
+    """
+    pbase = (paddle.get("base_nocirc_detail") or {}).get("itemName") or {}
+    pmaster = paddle.get("master_nocirc_detail") or {}
+    pname = pmaster.get("itemNameLearnA") or {}
+    pcode = pmaster.get("itemCodeLearnA") or {}
+
+    def metric(label, target, gok, gtotal, pok, ptotal):
+        if int(gtotal or 0) != int(ptotal or 0):
+            raise ValueError(
+                f"fair comparison denominator mismatch for {label}: "
+                f"Google={gtotal}, Paddle={ptotal}"
+            )
+        total = int(gtotal or 0)
+        gpct = 100.0 * int(gok or 0) / total if total else 0.0
+        ppct = 100.0 * int(pok or 0) / total if total else 0.0
+        delta = ppct - gpct
+        dcls = "up" if delta >= 0 else "down"
+        arrow = "▲" if delta >= 0 else "▼"
+        return (
+            f"<tr><td><b>{label}</b><div class='muted'>{target}</div></td>"
+            f"<td><b>{gpct:.1f}%</b> <span class='muted'>"
+            f"({int(gok or 0):,}/{total:,})</span></td>"
+            f"<td><b>{ppct:.1f}%</b> <span class='muted'>"
+            f"({int(pok or 0):,}/{total:,})</span></td>"
+            f"<td><span class='{dcls}'>{arrow} {abs(delta):.1f}%p</span></td></tr>"
+        )
+
+    raw_row = metric(
+        "raw 품명 정확 일치",
+        "마스터 매칭 전 itemName → 검증 정답 itemNameMaster",
+        mdet.get("inm_base_ok"), mdet.get("inm_tot"),
+        pbase.get("ok"), pbase.get("total"),
+    )
+    final_name_row = metric(
+        "최종 품명 식별",
+        "매칭 후 정식명 → 검증 정답 itemNameMaster",
+        mdet.get("inm_ok"), mdet.get("inm_tot"),
+        pname.get("ok"), pname.get("total"),
+    )
+    final_code_row = metric(
+        "최종 품목코드 식별",
+        "매칭 후 코드 → 검증 정답 itemCode",
+        mdet.get("icd_ok"), mdet.get("icd_tot"),
+        pcode.get("ok"), pcode.get("total"),
+    )
+
+    def panel(active, rows):
+        return (
+            f'<div class="panel{" active" if active else ""}"><section>'
+            '<table class="matrix"><colgroup><col style="width:40%">'
+            '<col style="width:22%"><col style="width:22%">'
+            '<col style="width:16%"></colgroup><thead><tr>'
+            '<th>측정 항목</th><th>Google</th><th>Paddle (우리)</th>'
+            f'<th>우리−Google</th></tr></thead><tbody>{rows}</tbody></table>'
+            '</section></div>'
+        )
+
+    js = (
+        "function showTab(i){"
+        "document.querySelectorAll('.tab').forEach((t,j)=>t.classList.toggle('active',j===i));"
+        "document.querySelectorAll('.panel').forEach((p,j)=>p.classList.toggle('active',j===i));}"
+    )
+    return (
+        '<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8">'
+        f'<title>Google vs Paddle 공정 비교</title><style>{_CSS}{_TAB_CSS}</style>'
+        '</head><body><div class="head"><h1>Google vs Paddle 공정 비교</h1></div>'
+        f'<div class="gen" style="max-width:1600px;margin:0 auto 6px">'
+        f'문서 {ndocs:,}장 · Paddle run {paddle_run} · 순환 제외 · 동일 독립행</div>'
+        '<p class="note" style="border-left:4px solid #2563eb;padding-left:10px">'
+        '<b>이 표는 품목 식별만 비교합니다.</b> Google과 독립된 정답이 있는 '
+        '<code>itemNameMaster</code>/<code>itemCode</code> 행만 사용합니다. '
+        'Google 출력 자체가 GT인 헤더·숫자 필드는 비교 대상에서 제외했습니다.</p>'
+        '<div class="tabbar"><div class="tab active" onclick="showTab(0)">'
+        '① OCR raw 품명</div><div class="tab" onclick="showTab(1)">'
+        '② 최종 품목 식별</div></div>'
+        f'{panel(True, raw_row)}{panel(False, final_name_row + final_code_row)}'
+        '<p class="note">모든 행은 Google/Paddle의 분모가 같지 않으면 리포트 생성을 '
+        '중단하도록 검증됩니다. 누락된 출력은 오답으로 포함합니다. '
+        '①은 문자 단위 OCR 정확도가 아니라 raw 품명과 검증 정식명의 정확 일치율입니다.</p>'
+        f'<script>{js}</script></body></html>'
+    )
 
 
 def build_html(ndocs, item_pct, item_ok, item_tot, paddle, paddle_run, grule, gdet, gmaster, mdet) -> str:
@@ -690,10 +885,12 @@ def build_html(ndocs, item_pct, item_ok, item_tot, paddle, paddle_run, grule, gd
         f'<div class="gen" style="max-width:1600px;margin:0 auto 6px">샘플 {ndocs:,}장 ({SAMPLE_LABEL}) · 구글 vs GT</div>'
         f'<p class="note" style="border-left:4px solid #d97706;padding-left:10px">'
         f'<b>두 탭의 정답 목표는 다릅니다.</b> '
-        f'OCR 읽기 = <code>itemName</code> raw 기준값과 비교 · '
+        f'OCR 읽기 = 양쪽 raw <code>itemName</code>을 같은 '
+        f'<code>itemNameMaster</code> 정식명과 비교 · '
         f'최종 매칭 = <code>itemNameMaster/itemCode</code> 정식 마스터 기준값과 비교. '
         f'따라서 OCR 읽기 우위가 최종 품목 식별 우위를 뜻하지 않습니다.</p>'
-        f'<p class="note">탭 2단계 · <b>OCR 읽기</b> = 읽은 값 vs GT(값 없으면 0%) · '
+        f'<p class="note">탭 2단계 · <b>OCR 읽기</b> = 양쪽 raw 품명 vs 같은 정식명 GT '
+        f'(값 없으면 0%) · '
         f'<b>최종 매칭</b> = 룰+파서+마스터 합본: '
         f'Google = ocr.xml 캐스케이드(learndata→LIKE→trigram) + 거래처(지점+사업자번호) + 지점(brch_cd) 충실재현, '
         f'Paddle {("run " + paddle_run) if paddle_run else "(run 없음)"} = 전체 파이프라인(replay_compare, 품명=매칭 정식명 itemNameMaster)</p>'
@@ -712,7 +909,7 @@ def build_html(ndocs, item_pct, item_ok, item_tot, paddle, paddle_run, grule, gd
 
 def _apply_preset(args):
     """프리셋/오버라이드로 경로 글로벌 재지정. 6000=기존(2606), 9000=리플레이 기준셋(18개월)."""
-    global GT_PATH, SAMPLE_PATH, MMATCH_PATH, CUST_PATH, OUT, SAMPLE_LABEL, PADDLE_FILTER
+    global GT_PATH, SAMPLE_PATH, MMATCH_PATH, CUST_PATH, OUT, SAMPLE_LABEL, PADDLE_FILTER, PADDLE_RUN
     if args.preset == "9000":
         SAMPLE_PATH = os.path.join(DATA, "replay_set_v1.txt")
         GT_PATH = os.path.join(DATA, "ground_truth_replay.json")
@@ -726,6 +923,8 @@ def _apply_preset(args):
     if args.mmatch: MMATCH_PATH = os.path.abspath(args.mmatch)
     if args.cust:   CUST_PATH = os.path.abspath(args.cust)
     if args.out:    OUT = os.path.abspath(args.out)
+    if getattr(args, "paddle_run", None):
+        PADDLE_RUN = args.paddle_run
     # Paddle 채점 제한(대량 run에서 이 샘플만 추림). 파일명 = safe_sample_id = 키의 '/'→'__'
     keys = load_sample_keys()
     if keys and args.preset == "9000":
@@ -739,6 +938,8 @@ def main():
                     help="6000=2606 6천샘플(기존) / 9000=리플레이 기준셋 18개월")
     ap.add_argument("--sample"); ap.add_argument("--gt"); ap.add_argument("--out")
     ap.add_argument("--mmatch"); ap.add_argument("--cust")
+    ap.add_argument("--paddle-run",
+                    help="pin the Paddle run under eval/runs instead of auto-latest")
     args = ap.parse_args()
     _apply_preset(args)
 
@@ -747,8 +948,14 @@ def main():
     grule, gdet = compute_google_rule(keys)
     gmaster, mdet = compute_google_master(keys)
     paddle, paddle_run = load_paddle(mdet.get("independentSelectors"))
-    open(OUT, "w", encoding="utf-8").write(
-        build_html(ndocs, item_pct, ok, tot, paddle, paddle_run, grule, gdet, gmaster, mdet))
+    if args.preset == "9000":
+        html = build_direct_fair_html(ndocs, paddle, paddle_run, mdet)
+    else:
+        html = build_html(
+            ndocs, item_pct, ok, tot, paddle, paddle_run,
+            grule, gdet, gmaster, mdet,
+        )
+    open(OUT, "w", encoding="utf-8").write(html)
     print("wrote", OUT, f"(sample docs={ndocs:,})")
     if grule:
         print(f"  Google Rule (learndata EXACT, min={gdet['learn_min']}): "

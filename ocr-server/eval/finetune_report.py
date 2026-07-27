@@ -7,18 +7,23 @@
     - 파인튜닝이 맞히고 base 가 틀린 크롭(개선) + 그 반대(회귀) 를 크롭 이미지째
   를 하나의 HTML 로 낸다. 크롭은 base64 로 박아 넣어 로컬에서 파일만 열면 보인다.
 
-run-finetune.sh 의 마지막 단계로 자동 실행. 출력: eval/finetune/FINETUNE_REPORT.html
+run-finetune.sh 의 마지막 단계로 자동 실행.
+출력: eval/finetune/FINETUNE_REPORT_<실행번호>.html
+      eval/finetune/FINETUNE_REPORT.html (후속 도구 호환용 최신본)
 
-    .venv/bin/python eval/finetune_report.py
+    .venv/bin/python eval/finetune_report.py --run-tag 260727_1200
 """
 from __future__ import annotations
 
+import argparse
 import base64
+from datetime import datetime
 import difflib
 import glob
 import html
 import json
 import os
+import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -31,6 +36,76 @@ OUT = os.path.join(HERE, "finetune", "FINETUNE_REPORT.html")
 OUT_JSON = os.path.join(HERE, "finetune", "FINETUNE_REPORT.json")
 PREDICTIONS_JSONL = os.path.join(HERE, "finetune", "FINETUNE_PREDICTIONS.jsonl")
 MAX_EXAMPLES = 40          # 개선/회귀 각각 최대 표시(크롭 박음)
+SCROLL_AFTER = 30          # 이 행 이후는 같은 표 안에서 세로 스크롤
+SPLIT_METADATA = os.path.join(CORPUS_DIR, "dataset", "split_metadata.jsonl")
+
+
+def _report_id(value: str | None) -> str:
+    """파일명에 안전한 실행번호. 직접 실행할 때는 생성 시각을 쓴다."""
+    raw = value or datetime.now().strftime("%y%m%d_%H%M%S")
+    safe = re.sub(r"[^0-9A-Za-z._-]+", "_", raw).strip("._-")
+    return safe or datetime.now().strftime("%y%m%d_%H%M%S")
+
+
+def _numbered_paths(run_tag: str) -> tuple[str, str]:
+    out_dir = os.path.dirname(OUT)
+    return (
+        os.path.join(out_dir, f"FINETUNE_REPORT_{run_tag}.html"),
+        os.path.join(out_dir, f"FINETUNE_REPORT_{run_tag}.json"),
+    )
+
+
+def _write_text(path: str, content: str) -> None:
+    """중간에 프로세스가 끊겨도 기존 최신본이 반쪽 파일이 되지 않게 쓴다."""
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as fh:
+        fh.write(content)
+    os.replace(tmp, path)
+
+
+def _load_test_metadata() -> dict[str, dict]:
+    result: dict[str, dict] = {}
+    if not os.path.exists(SPLIT_METADATA):
+        return result
+    with open(SPLIT_METADATA, encoding="utf-8") as fh:
+        for line in fh:
+            try:
+                rec = json.loads(line)
+                if rec.get("split") == "test" and rec.get("path"):
+                    result[rec["path"]] = rec
+            except (json.JSONDecodeError, KeyError):
+                continue
+    return result
+
+
+def _column_stats(rows, base_pred, ft_pred, metadata: dict[str, dict]) -> list[dict]:
+    """held-out 각 크롭을 원본 컬럼별로 빠짐없이 집계한다."""
+    buckets: dict[str, dict] = {}
+    for (_, rel, gt), bp, fp in zip(rows, base_pred, ft_pred):
+        column = metadata.get(rel, {}).get("column") or "(미분류)"
+        bucket = buckets.setdefault(column, {
+            "column": column, "total": 0, "baseCorrect": 0,
+            "finetunedCorrect": 0, "bothCorrect": 0,
+            "gains": 0, "regressions": 0,
+        })
+        b_ok = bp.strip() == gt.strip()
+        f_ok = fp.strip() == gt.strip()
+        bucket["total"] += 1
+        bucket["baseCorrect"] += int(b_ok)
+        bucket["finetunedCorrect"] += int(f_ok)
+        bucket["bothCorrect"] += int(b_ok and f_ok)
+        bucket["gains"] += int(f_ok and not b_ok)
+        bucket["regressions"] += int(b_ok and not f_ok)
+
+    result = []
+    for bucket in buckets.values():
+        total = bucket["total"]
+        bucket["netChange"] = bucket["gains"] - bucket["regressions"]
+        bucket["baseExactPct"] = 100.0 * bucket["baseCorrect"] / total
+        bucket["finetunedExactPct"] = 100.0 * bucket["finetunedCorrect"] / total
+        bucket["deltaPp"] = bucket["finetunedExactPct"] - bucket["baseExactPct"]
+        result.append(bucket)
+    return sorted(result, key=lambda item: (-item["total"], item["column"]))
 
 
 def load_test():
@@ -80,7 +155,236 @@ def _b64(path):
         return ""
 
 
+# ── 고정 벤치 (SEEN / UNSEEN 탭) ────────────────────────────────────────────
+BENCH_UNSEEN = os.path.join(CORPUS_DIR, "bench_unseen.txt")
+BENCH_SEEN = os.path.join(CORPUS_DIR, "bench_seen.txt")
+BENCH_OUT = os.path.join(HERE, "finetune", "FINETUNE_REPORT.html")  # overwritten below per run-tag
+
+
+def load_bench(path):
+    """bench 파일(rel \\t gt \\t column) -> [(abspath, rel, gt, column)]. 없으면 []."""
+    rows = []
+    if not os.path.exists(path):
+        return rows
+    for ln in open(path, encoding="utf-8"):
+        ln = ln.rstrip("\n")
+        parts = ln.split("\t")
+        if len(parts) < 2:
+            continue
+        rel, gt = parts[0], parts[1]
+        col = parts[2] if len(parts) > 2 else "(미분류)"
+        p = os.path.join(CORPUS_DIR, rel)
+        if os.path.isfile(p):
+            rows.append((p, rel, gt, col))
+    return rows
+
+
+def _bench_tab_stats(rows, base_pred, ft_pred, max_examples):
+    """한 탭(seen/unseen)의 집계 + 컬럼 분해 + 개선/회귀 예시."""
+    buckets = {}
+    gains, regress = [], []
+    base_ok = ft_ok = both_ok = 0
+    for (p, _rel, gt, col), bp, fp in zip(rows, base_pred, ft_pred):
+        b_ok = bp.strip() == gt.strip()
+        f_ok = fp.strip() == gt.strip()
+        base_ok += b_ok
+        ft_ok += f_ok
+        both_ok += b_ok and f_ok
+        bk = buckets.setdefault(col, {"column": col, "total": 0, "baseCorrect": 0,
+                                      "finetunedCorrect": 0, "bothCorrect": 0,
+                                      "gains": 0, "regressions": 0})
+        bk["total"] += 1
+        bk["baseCorrect"] += int(b_ok)
+        bk["finetunedCorrect"] += int(f_ok)
+        bk["bothCorrect"] += int(b_ok and f_ok)
+        bk["gains"] += int(f_ok and not b_ok)
+        bk["regressions"] += int(b_ok and not f_ok)
+        if f_ok and not b_ok:
+            gains.append((p, gt, bp, fp))
+        elif b_ok and not f_ok:
+            regress.append((p, gt, bp, fp))
+    columns = []
+    for bk in buckets.values():
+        t = bk["total"]
+        bk["netChange"] = bk["gains"] - bk["regressions"]
+        bk["baseExactPct"] = 100.0 * bk["baseCorrect"] / t
+        bk["finetunedExactPct"] = 100.0 * bk["finetunedCorrect"] / t
+        bk["deltaPp"] = bk["finetunedExactPct"] - bk["baseExactPct"]
+        columns.append(bk)
+    columns.sort(key=lambda it: (-it["total"], it["column"]))
+    n = len(rows)
+    b_ex = 100.0 * base_ok / n if n else 0.0
+    f_ex = 100.0 * ft_ok / n if n else 0.0
+    return {"n": n, "base_ok": base_ok, "ft_ok": ft_ok, "both_ok": both_ok,
+            "b_ex": b_ex, "f_ex": f_ex, "gains": len(gains), "regress": len(regress),
+            "columns": columns, "gainsEx": gains[:max_examples],
+            "regressEx": regress[:max_examples]}
+
+
+def render_bench(tabs, run_tag, ft_dir):
+    """seen/unseen 두 탭을 한 HTML 로. tabs = {'unseen': stats, 'seen': stats}."""
+    style = """
+:root{--bg:#f6f8fa;--card:#fff;--line:#d0d7de;--fg:#1f2328;--muted:#59636e;--up:#1a7f37;--down:#cf222e;--accent:#0969da}
+*{box-sizing:border-box}html,body{max-width:100%;overflow-x:hidden}body{margin:0;background:var(--bg);color:var(--fg);
+font-family:'Segoe UI','Malgun Gothic',system-ui,sans-serif;font-size:14px;padding:24px}
+h1{font-size:20px;margin:0 0 4px}.gen{color:var(--muted);font-size:12.5px;margin-bottom:14px}
+.tabbar{display:flex;gap:8px;border-bottom:2px solid var(--line);margin-bottom:16px}
+.tabbtn{background:none;border:none;padding:10px 18px;font-size:14px;font-weight:600;color:var(--muted);
+cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px}
+.tabbtn.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tabpane{display:none}.tabpane.active{display:block}
+.banner{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--up);
+border-radius:10px;padding:14px 18px;width:100%;margin-bottom:16px;font-size:15px}.banner b{font-size:22px}
+.cardgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;width:100%;margin-bottom:16px}
+.cardbox{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 18px}
+.cardv{font-size:26px;font-weight:700}.cardl{color:var(--muted);font-size:12.5px}
+section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;
+margin:16px 0;width:100%;min-width:0}h2{font-size:15px;margin:0 0 10px}
+table{border-collapse:collapse;width:100%}th,td{padding:6px 10px;border-bottom:1px solid var(--line);
+text-align:left;font-size:13px}th{color:var(--muted);font-weight:600;font-size:12px}
+.up{color:var(--up);font-weight:600}.down{color:var(--down);font-weight:600}.muted{color:var(--muted)}
+.hl{background:#ffd7d5;border-radius:2px}
+.note{width:100%;color:var(--muted);font-size:12.5px;line-height:1.7;overflow-wrap:anywhere}.note b{color:var(--fg)}
+.table-scroll{width:100%;overflow:auto}.column-table{min-width:880px}
+.column-table th,.column-table td{white-space:nowrap}.total-row{background:#f0f4f8}
+.example-scroll{width:100%;overflow:auto;border:1px solid var(--line);border-radius:6px}
+.example-table{width:100%;min-width:900px;table-layout:fixed}
+.example-table th:nth-child(1){width:27%}.example-table th:nth-child(2){width:24%}
+.example-table th:nth-child(3),.example-table th:nth-child(4){width:24.5%}
+.example-table th{position:sticky;top:0;z-index:1;background:var(--card)}
+.example-table td{white-space:normal;overflow-wrap:anywhere;word-break:break-word;vertical-align:middle}
+.example-table .crop img{display:block;max-width:100%;max-height:42px;border:1px solid var(--line)}
+@media(max-width:760px){body{padding:12px}.cardgrid{grid-template-columns:1fr}section{padding:12px}}
+"""
+    order = [("unseen", "UNSEEN · 처음 보는 송장 (9,001 held-out 실패셀)"),
+             ("seen", "SEEN · 학습에 쓴 셀 (외운 것 재현 상한)")]
+    btns, panes = [], []
+    for i, (key, title) in enumerate(order):
+        st = tabs.get(key)
+        active = " active" if i == 0 else ""
+        if not st or st["n"] == 0:
+            btns.append(f'<button class="tabbtn{active}" data-tab="{key}">{html.escape(title)} <span class="muted">(0)</span></button>')
+            panes.append(f'<div class="tabpane{active}" id="pane-{key}"><section><div class="note">이 탭은 크롭이 없습니다. '
+                         f'(SEEN 은 해당 run 의 train.txt 에 그 컬럼 실패 크롭이 있어야 채워집니다 — build_ft_bench.py 재실행 필요.)</div></section></div>')
+            continue
+        d_ex = st["f_ex"] - st["b_ex"]
+        dcls = "up" if d_ex >= 0 else "down"
+        arrow = "▲" if d_ex >= 0 else "▼"
+        net = st["gains"] - st["regress"]
+        btns.append(f'<button class="tabbtn{active}" data-tab="{key}">{html.escape(title)} '
+                    f'<span class="muted">({st["n"]:,})</span></button>')
+        pane = f"""<div class="tabpane{active}" id="pane-{key}">
+<div class="banner">정확일치율 <span class="muted">(Exact)</span>: <b>{st["b_ex"]:.1f}% → {st["f_ex"]:.1f}%</b>
+<span class="{dcls}">{arrow} {abs(d_ex):.1f}%p</span> &nbsp;·&nbsp; 크롭 {st["n"]:,}장 · 순증 <span class="{"up" if net>=0 else "down"}">{net:+,}</span></div>
+<div class="cardgrid">
+{_card(f'{st["b_ex"]:.1f}%', 'base 정확일치', 'Base Exact')}
+{_card(f'{st["f_ex"]:.1f}%', '파인튜닝 정확일치', 'Fine-tuned Exact')}
+{_card(f'<span class="{dcls}">{arrow} {abs(d_ex):.1f}</span>', '정확일치 개선', 'Exact Δ %p')}
+</div>
+<section><h2>컬럼별 변화 <span class="muted">(원본 컬럼 기준 · 개선/회귀/순증)</span></h2>
+<div class="table-scroll"><table class="column-table"><thead><tr>
+<th>컬럼</th><th>전체</th><th>base 정답</th><th>파인튜닝 정답</th>
+<th>개선</th><th>회귀</th><th>순증</th><th>정확일치 Δ</th></tr></thead>
+<tbody>{_column_rows(st["columns"], st)}</tbody></table></div></section>
+<section><h2>✅ 개선 사례 <span class="muted">(Gains)</span> · {st["gains"]:,}건 중 상위 {len(st["gainsEx"])}</h2>
+<div class="example-scroll" data-scroll-after="{SCROLL_AFTER}"><table class="example-table"><thead>{_TH}</thead>
+<tbody>{_ex_rows(st["gainsEx"], len(st["gainsEx"]))}</tbody></table></div></section>
+<section><h2>⚠️ 회귀 사례 <span class="muted">(Regressions)</span> · {st["regress"]:,}건 중 상위 {len(st["regressEx"])}</h2>
+<div class="example-scroll" data-scroll-after="{SCROLL_AFTER}"><table class="example-table"><thead>{_TH}</thead>
+<tbody>{_ex_rows(st["regressEx"], len(st["regressEx"]))}</tbody></table></div></section>
+</div>"""
+        panes.append(pane)
+    return f"""<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8">
+<title>인식 파인튜닝 벤치 (SEEN / UNSEEN)</title><style>{style}</style></head><body>
+<h1>인식 파인튜닝 벤치 <span class="muted" style="font-size:14px">Recognition Fine-tune Bench</span></h1>
+<div class="gen">실행번호 {html.escape(run_tag)} · base vs 파인튜닝 · 고정 크롭 벤치(순수 인식) · 파인튜닝 모델 = {html.escape(ft_dir)}</div>
+<section><h2>기준·용어 <span class="muted">(Basis)</span></h2><div class="note">
+<b>UNSEEN</b> = 9,001 held-out 문서의 실패 크롭 — <b>학습에 안 쓴</b> 것. "처음 보는 송장의 안 읽히던 셀을 FT가 얼마나 읽게 되나" = 회사 답.<br>
+<b>SEEN</b> = 이 run 이 학습에 실제로 쓴 실패 크롭(UNSEEN 컬럼 분포 매칭 샘플). "외운 걸 재현하는 상한". <b>SEEN↔UNSEEN 간격 = 일반화</b>(간격 크면 암기, 작으면 진짜 실력).<br>
+<b>구성</b> = 양쪽 다 <b>실패 크롭</b>(base 가 틀린 셀)만 — balance 정답크롭은 src 메타가 없어 9,001 식별 불가라 이 벤치 스코프 밖. 절대% 아니라 <b>base→FT 델타</b>가 핵심.<br>
+<b>숫자</b>(수량·단가·금액) = <b>산술앵커</b>(수량×단가=금액) 통과 행의 값만 채점(war 숫자 GT 순환 차단). <b>바코드(itemCode) 제외</b>(broad-forgetting 독).<br>
+</div></section>
+<div class="tabbar">{"".join(btns)}</div>
+{"".join(panes)}
+<script>
+document.querySelectorAll('.tabbtn').forEach(function(b){{b.addEventListener('click',function(){{
+  document.querySelectorAll('.tabbtn').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.tabpane').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  document.getElementById('pane-'+b.dataset.tab).classList.add('active');
+}});}});
+document.querySelectorAll('.example-scroll').forEach(function(box){{
+  var rows=box.querySelectorAll('tbody tr');var after=Number(box.dataset.scrollAfter||30);
+  if(rows.length>after){{var lv=rows[after-1];box.style.maxHeight=(lv.offsetTop+lv.offsetHeight+1)+'px';box.style.overflowY='auto';}}
+}});
+</script></body></html>"""
+
+
+def main_bench(run_tag, max_examples):
+    """--bench: 고정 SEEN/UNSEEN 벤치에 base vs FT 채점 → 탭 리포트."""
+    try:
+        from paddlex import create_model
+    except ImportError:
+        from paddlex.inference import create_model  # type: ignore
+    ft_dir = find_ft_inference()
+    if not ft_dir:
+        raise SystemExit("no fine-tuned inference dir under eval/finetune/output — run export first")
+    base = create_model(BASE_MODEL)
+    ft = create_model(BASE_MODEL, ft_dir)
+
+    tabs = {}
+    for key, path in (("unseen", BENCH_UNSEEN), ("seen", BENCH_SEEN)):
+        rows = load_bench(path)
+        print(f"[bench] {key}: {len(rows):,} crops ({path})")
+        if not rows:
+            tabs[key] = {"n": 0}
+            continue
+        paths = [p for p, _, _, _ in rows]
+        bp = predict_all(base, paths)
+        fp = predict_all(ft, paths)
+        st = _bench_tab_stats(rows, bp, fp, max_examples)
+        print(f"[bench] {key}: base {st['b_ex']:.1f}% -> ft {st['f_ex']:.1f}%  "
+              f"(Δ{st['f_ex']-st['b_ex']:+.1f})  net {st['gains']-st['regress']:+,}")
+        tabs[key] = st
+
+    html_out = render_bench(tabs, run_tag, ft_dir)
+    out_dir = os.path.join(HERE, "finetune")
+    os.makedirs(out_dir, exist_ok=True)
+    numbered = os.path.join(out_dir, f"FINETUNE_BENCH_{run_tag}.html")
+    latest = os.path.join(out_dir, "FINETUNE_BENCH.html")
+    _write_text(numbered, html_out)
+    _write_text(latest, html_out)
+    summary = {"schemaVersion": "finetune-bench.v1", "runTag": run_tag, "ftDir": ft_dir,
+               "tabs": {k: {kk: v[kk] for kk in ("n", "b_ex", "f_ex", "gains", "regress")
+                            if kk in v} for k, v in tabs.items()}}
+    _write_text(os.path.join(out_dir, f"FINETUNE_BENCH_{run_tag}.json"),
+                json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
+    print(f"[bench] wrote {numbered}")
+    print(f"[bench] updated {latest}")
+    return 0
+
+
 def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--run-tag", "--report-id", dest="run_tag",
+        help="파일명 뒤에 붙일 실행번호(미지정 시 현재시각 YYMMDD_HHMMSS)",
+    )
+    parser.add_argument(
+        "--max-examples", type=int, default=MAX_EXAMPLES,
+        help=f"개선/회귀 표에 포함할 최대 행 수(기본 {MAX_EXAMPLES})",
+    )
+    parser.add_argument(
+        "--bench", action="store_true",
+        help="고정 SEEN/UNSEEN 벤치(bench_unseen.txt/bench_seen.txt)에 채점, 탭 리포트 출력",
+    )
+    args = parser.parse_args()
+    if args.bench:
+        return main_bench(_report_id(args.run_tag), max(0, args.max_examples))
+    run_tag = _report_id(args.run_tag)
+    numbered_out, numbered_json = _numbered_paths(run_tag)
+    max_examples = max(0, args.max_examples)
+
     try:
         from paddlex import create_model
     except ImportError:
@@ -137,22 +441,35 @@ def main() -> int:
         elif b_ok and not f_ok:
             regress.append((p, gt, bp, fp))
 
+    metadata = _load_test_metadata()
+    columns = _column_stats(rows, base_pred, ft_pred, metadata)
+    metadata_matched = sum(
+        bool(metadata.get(rel, {}).get("column")) for _, rel, _ in rows
+    )
     print(f"[report] exact: base {b_ex:.1f}% -> ft {f_ex:.1f}%  (Δ{f_ex - b_ex:+.1f})")
     print(f"[report] gains {len(gains)} / regress {len(regress)}")
 
     stats = {"n": len(rows), "b_ex": b_ex, "f_ex": f_ex, "b_ch": b_ch, "f_ch": f_ch,
              "base_ok": base_ok, "ft_ok": ft_ok, "both_ok": both_ok,
-             "gains": len(gains), "regress": len(regress), "ft_dir": ft_dir}
-    html_out = render(stats, gains, regress)
-    open(OUT, "w", encoding="utf-8").write(html_out)
-    with open(OUT_JSON, "w", encoding="utf-8") as fh:
-        json.dump({"schemaVersion": "finetune-report.v1", **stats,
-                   "overallDeltaPp": f_ex - b_ex,
-                   "netChange": len(gains) - len(regress)},
-                  fh, ensure_ascii=False, indent=2)
-        fh.write("\n")
-    print(f"[report] wrote {OUT}")
-    print(f"[report] wrote {OUT_JSON}")
+             "gains": len(gains), "regress": len(regress), "ft_dir": ft_dir,
+             "runTag": run_tag, "columnMetadataMatched": metadata_matched,
+             "columns": columns}
+    html_out = render(stats, gains, regress, max_examples=max_examples)
+    json_out = json.dumps({
+        "schemaVersion": "finetune-report.v2", **stats,
+        "overallDeltaPp": f_ex - b_ex,
+        "netChange": len(gains) - len(regress),
+    }, ensure_ascii=False, indent=2) + "\n"
+
+    # 실행별 번호 파일은 보존하고, 고정 파일은 기존 후속 집계용 최신본으로 유지한다.
+    _write_text(numbered_out, html_out)
+    _write_text(numbered_json, json_out)
+    _write_text(OUT, html_out)
+    _write_text(OUT_JSON, json_out)
+    print(f"[report] wrote numbered {numbered_out}")
+    print(f"[report] wrote numbered {numbered_json}")
+    print(f"[report] updated latest {OUT}")
+    print(f"[report] updated latest {OUT_JSON}")
     return 0
 
 
@@ -171,11 +488,11 @@ def _diff(pred, gt):
     return "".join(out) or '<span class="muted">(빈칸)</span>'
 
 
-def _ex_rows(items):
+def _ex_rows(items, limit=MAX_EXAMPLES):
     out = []
-    for p, gt, bp, fp in items[:MAX_EXAMPLES]:
+    for p, gt, bp, fp in items[:limit]:
         out.append(
-            f'<tr><td><img src="{_b64(p)}" style="max-height:36px;border:1px solid var(--line)"></td>'
+            f'<tr><td class="crop"><img src="{_b64(p)}" alt="평가 크롭"></td>'
             f'<td><b>{html.escape(gt)}</b></td>'
             f'<td class="down">{_diff(bp, gt)}</td>'
             f'<td class="up">{_diff(fp, gt)}</td></tr>')
@@ -188,7 +505,35 @@ _TH = ('<tr><th>크롭 <span class="muted">(Crop)</span></th>'
        '<th>파인튜닝 읽음 <span class="muted">(Fine-tuned OCR)</span></th></tr>')
 
 
-def render(stats, gains, regress):
+def _column_rows(columns: list[dict], stats: dict) -> str:
+    rows = []
+    for item in columns:
+        net = item["netChange"]
+        rows.append(
+            f'<tr><td><b>{html.escape(item["column"])}</b></td>'
+            f'<td>{item["total"]:,}</td>'
+            f'<td>{item["baseCorrect"]:,} <span class="muted">({item["baseExactPct"]:.1f}%)</span></td>'
+            f'<td>{item["finetunedCorrect"]:,} <span class="muted">({item["finetunedExactPct"]:.1f}%)</span></td>'
+            f'<td class="up">+{item["gains"]:,}</td>'
+            f'<td class="down">-{item["regressions"]:,}</td>'
+            f'<td class="{"up" if net >= 0 else "down"}">{net:+,}</td>'
+            f'<td class="{"up" if item["deltaPp"] >= 0 else "down"}">{item["deltaPp"]:+.1f}%p</td></tr>'
+        )
+    net = stats["gains"] - stats["regress"]
+    rows.append(
+        f'<tr class="total-row"><td><b>Total</b></td><td><b>{stats["n"]:,}</b></td>'
+        f'<td><b>{stats["base_ok"]:,}</b> <span class="muted">({stats["b_ex"]:.1f}%)</span></td>'
+        f'<td><b>{stats["ft_ok"]:,}</b> <span class="muted">({stats["f_ex"]:.1f}%)</span></td>'
+        f'<td class="up"><b>+{stats["gains"]:,}</b></td>'
+        f'<td class="down"><b>-{stats["regress"]:,}</b></td>'
+        f'<td class="{"up" if net >= 0 else "down"}"><b>{net:+,}</b></td>'
+        f'<td class="{"up" if stats["f_ex"] >= stats["b_ex"] else "down"}">'
+        f'<b>{stats["f_ex"] - stats["b_ex"]:+.1f}%p</b></td></tr>'
+    )
+    return "".join(rows)
+
+
+def render(stats, gains, regress, max_examples=MAX_EXAMPLES):
     n, b_ex, f_ex = stats["n"], stats["b_ex"], stats["f_ex"]
     b_ch, f_ch = stats["b_ch"], stats["f_ch"]
     d_ex, d_ch = f_ex - b_ex, f_ch - b_ch
@@ -197,28 +542,39 @@ def render(stats, gains, regress):
     net = stats["gains"] - stats["regress"]
     style = """
 :root{--bg:#f6f8fa;--card:#fff;--line:#d0d7de;--fg:#1f2328;--muted:#59636e;--up:#1a7f37;--down:#cf222e}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);
+*{box-sizing:border-box}html,body{max-width:100%;overflow-x:hidden}body{margin:0;background:var(--bg);color:var(--fg);
 font-family:'Segoe UI','Malgun Gothic',system-ui,sans-serif;font-size:14px;padding:24px}
 h1{font-size:20px;margin:0 0 4px}.gen{color:var(--muted);font-size:12.5px;margin-bottom:14px}
 .banner{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--up);
-border-radius:10px;padding:14px 18px;max-width:1100px;margin-bottom:16px;font-size:15px}
+border-radius:10px;padding:14px 18px;width:100%;margin-bottom:16px;font-size:15px}
 .banner b{font-size:22px}
-.cardgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:1100px;margin-bottom:16px}
+.cardgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;width:100%;margin-bottom:16px}
 .cardbox{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 18px}
 .cardv{font-size:26px;font-weight:700}.cardl{color:var(--muted);font-size:12.5px}
 section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;
-margin:16px 0;max-width:1100px;overflow-x:auto}h2{font-size:15px;margin:0 0 10px}
+margin:16px 0;width:100%;min-width:0}h2{font-size:15px;margin:0 0 10px}
 table{border-collapse:collapse;width:100%}th,td{padding:6px 10px;border-bottom:1px solid var(--line);
-text-align:left;font-size:13px;white-space:nowrap}th{color:var(--muted);font-weight:600;font-size:12px}
+text-align:left;font-size:13px}th{color:var(--muted);font-weight:600;font-size:12px}
 .up{color:var(--up);font-weight:600}.down{color:var(--down);font-weight:600}.muted{color:var(--muted)}
 .hl{background:#ffd7d5;border-radius:2px}
-.note{max-width:1100px;color:var(--muted);font-size:12.5px;line-height:1.7}
+.note{width:100%;color:var(--muted);font-size:12.5px;line-height:1.7;overflow-wrap:anywhere}
 .note b{color:var(--fg)}.kv td:first-child{color:var(--muted)}.kv td{border:none;padding:3px 14px 3px 0}
+.table-scroll{width:100%;overflow:auto}.column-table{min-width:880px}
+.column-table th,.column-table td{white-space:nowrap}.total-row{background:#f0f4f8}
+.example-scroll{width:100%;overflow:auto;border:1px solid var(--line);border-radius:6px}
+.example-table{width:100%;min-width:900px;table-layout:fixed}
+.example-table th:nth-child(1){width:27%}.example-table th:nth-child(2){width:24%}
+.example-table th:nth-child(3),.example-table th:nth-child(4){width:24.5%}
+.example-table th{position:sticky;top:0;z-index:1;background:var(--card)}
+.example-table td{white-space:normal;overflow-wrap:anywhere;word-break:break-word;vertical-align:middle}
+.example-table .crop img{display:block;max-width:100%;max-height:42px;border:1px solid var(--line)}
+@media(max-width:760px){body{padding:12px}.cardgrid{grid-template-columns:1fr}
+section{padding:12px}.banner b{font-size:18px}}
 """
     return f"""<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8">
 <title>인식 파인튜닝 리포트 (Recognition Fine-tune Report)</title><style>{style}</style></head><body>
 <h1>인식 파인튜닝 리포트 <span class="muted" style="font-size:14px">Recognition Fine-tune Report</span></h1>
-<div class="gen">base 모델 vs 파인튜닝 모델 · held-out test {n:,}장 · 크롭 직접 인식 비교 (파서·룰·매칭 무관, 순수 인식)</div>
+<div class="gen">실행번호 {html.escape(stats.get("runTag", "-"))} · base 모델 vs 파인튜닝 모델 · held-out test {n:,}장 · 크롭 직접 인식 비교 (파서·룰·매칭 무관, 순수 인식)</div>
 
 <div class="banner">정확일치율 <span class="muted">(Exact Match)</span>:
 <b>{b_ex:.1f}% → {f_ex:.1f}%</b>
@@ -246,6 +602,13 @@ text-align:left;font-size:13px;white-space:nowrap}th{color:var(--muted);font-wei
 <tr><td>순증 (Net = gains − regressions)</td><td class="{"up" if net>=0 else "down"}"><b>{net:+,}</b></td></tr>
 </tbody></table></section>
 
+<section><h2>컬럼별 변화 <span class="muted">(원본 컬럼 기준 · 개선/회귀/순증 · 메타데이터 {stats.get("columnMetadataMatched", 0):,}/{n:,})</span></h2>
+<div class="table-scroll"><table class="column-table"><thead><tr>
+<th>컬럼</th><th>전체</th><th>base 정답</th><th>파인튜닝 정답</th>
+<th>개선</th><th>회귀</th><th>순증</th><th>정확일치 Δ</th>
+</tr></thead><tbody>{_column_rows(stats.get("columns", []), stats)}</tbody></table></div>
+</section>
+
 <section><h2>기준·용어 <span class="muted">(Basis & Definitions)</span></h2>
 <div class="note">
 <b>base 모델 (Base)</b> = <code>{html.escape(BASE_MODEL)}</code> — 현재 서버가 쓰는 원본 PP-OCRv5 mobile 한국어 rec<br>
@@ -256,11 +619,22 @@ text-align:left;font-size:13px;white-space:nowrap}th{color:var(--muted);font-wei
 <b>Δ (개선폭)</b> = 파인튜닝 − base (%p). 아래 표에서 <span class="hl">빨강 배경</span> = 정답과 다른 글자<br>
 </div></section>
 
-<section><h2>✅ 개선 사례 <span class="muted">(Gains — 파인튜닝이 맞히고 base 가 틀림)</span> · {stats["gains"]:,}건 중 상위 {min(stats["gains"],MAX_EXAMPLES)}</h2>
-<table><thead>{_TH}</thead><tbody>{_ex_rows(gains)}</tbody></table></section>
+<section><h2>✅ 개선 사례 <span class="muted">(Gains — 파인튜닝이 맞히고 base 가 틀림)</span> · {stats["gains"]:,}건 중 상위 {min(stats["gains"],max_examples)} <span class="muted">(30행 이후 스크롤)</span></h2>
+<div class="example-scroll" data-scroll-after="{SCROLL_AFTER}"><table class="example-table"><thead>{_TH}</thead><tbody>{_ex_rows(gains, max_examples)}</tbody></table></div></section>
 
-<section><h2>⚠️ 회귀 사례 <span class="muted">(Regressions — base 가 맞혔는데 파인튜닝이 틀림)</span> · {stats["regress"]:,}건 중 상위 {min(stats["regress"],MAX_EXAMPLES)}</h2>
-<table><thead>{_TH}</thead><tbody>{_ex_rows(regress)}</tbody></table></section>
+<section><h2>⚠️ 회귀 사례 <span class="muted">(Regressions — base 가 맞혔는데 파인튜닝이 틀림)</span> · {stats["regress"]:,}건 중 상위 {min(stats["regress"],max_examples)} <span class="muted">(30행 이후 스크롤)</span></h2>
+<div class="example-scroll" data-scroll-after="{SCROLL_AFTER}"><table class="example-table"><thead>{_TH}</thead><tbody>{_ex_rows(regress, max_examples)}</tbody></table></div></section>
+<script>
+document.querySelectorAll('.example-scroll').forEach(function(box) {{
+  var rows = box.querySelectorAll('tbody tr');
+  var after = Number(box.dataset.scrollAfter || 30);
+  if (rows.length > after) {{
+    var lastVisible = rows[after - 1];
+    box.style.maxHeight = (lastVisible.offsetTop + lastVisible.offsetHeight + 1) + 'px';
+    box.style.overflowY = 'auto';
+  }}
+}});
+</script>
 </body></html>"""
 
 
