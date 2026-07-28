@@ -35,7 +35,10 @@ TEST_LIST = os.path.join(CORPUS_DIR, "test.txt")
 OUT = os.path.join(HERE, "finetune", "FINETUNE_REPORT.html")
 OUT_JSON = os.path.join(HERE, "finetune", "FINETUNE_REPORT.json")
 PREDICTIONS_JSONL = os.path.join(HERE, "finetune", "FINETUNE_PREDICTIONS.jsonl")
-MAX_EXAMPLES = 0           # 0=개선/회귀 전체 표시, 양수=해당 건수까지만
+# 개선/회귀 표에 실을 사례 수. 크롭이 base64 로 박히므로 전체(0)로 두면 HTML 이 150MB+
+# 가 되어 브라우저가 멈춘다(실측: 벤치 25만 크롭 → 152MB). HTML=샘플 확인용으로 제한하고,
+# 전수 분석은 같은 폴더의 BENCH_PREDICTIONS_*.jsonl(경로·정답·base·ft) 로 한다.
+MAX_EXAMPLES = 500         # 0=전체(비권장), 양수=해당 건수까지만. --max-examples 로 조절
 SCROLL_AFTER = 20          # 이 행 이후는 같은 표 안에서 세로 스크롤
 
 # 컬럼별 변화 표에 병기할 한글 이름 (원본 컬럼 id → 한글)
@@ -264,6 +267,24 @@ def load_bench(path):
     return rows
 
 
+def _balanced_examples(items, limit):
+    """(p, gt, base, ft, column) 목록에서 컬럼 라운드로빈으로 limit 개 — 한 컬럼이
+    표를 독점하지 않게. limit<=0 이면 전체(HTML 이 매우 커지므로 비권장)."""
+    if limit <= 0 or len(items) <= limit:
+        return [it[:4] for it in items]
+    from collections import defaultdict, deque
+    by_col = defaultdict(deque)
+    for it in items:
+        by_col[it[4]].append(it)
+    queues = list(by_col.values())
+    out = []
+    while len(out) < limit and any(queues):
+        for q in queues:
+            if q and len(out) < limit:
+                out.append(q.popleft()[:4])
+    return out
+
+
 def _bench_tab_stats(rows, base_pred, ft_pred, max_examples):
     """한 탭(seen/unseen)의 집계 + 컬럼 분해 + 개선/회귀 예시."""
     buckets = {}
@@ -287,9 +308,9 @@ def _bench_tab_stats(rows, base_pred, ft_pred, max_examples):
         bk["gains"] += int(f_ok and not b_ok)
         bk["regressions"] += int(b_ok and not f_ok)
         if f_ok and not b_ok:
-            gains.append((p, gt, bp, fp))
+            gains.append((p, gt, bp, fp, col))
         elif b_ok and not f_ok:
-            regress.append((p, gt, bp, fp))
+            regress.append((p, gt, bp, fp, col))
     columns = []
     for bk in buckets.values():
         t = bk["total"]
@@ -302,8 +323,8 @@ def _bench_tab_stats(rows, base_pred, ft_pred, max_examples):
     n = len(rows)
     b_ex = 100.0 * base_ok / n if n else 0.0
     f_ex = 100.0 * ft_ok / n if n else 0.0
-    gains_ex = gains if max_examples <= 0 else gains[:max_examples]
-    regress_ex = regress if max_examples <= 0 else regress[:max_examples]
+    gains_ex = _balanced_examples(gains, max_examples)
+    regress_ex = _balanced_examples(regress, max_examples)
     return {"n": n, "base_ok": base_ok, "ft_ok": ft_ok, "both_ok": both_ok,
             "b_ex": b_ex, "f_ex": f_ex, "gains": len(gains), "regress": len(regress),
             "columns": columns, "scripts": _script_stats(outcomes), "gainsEx": gains_ex,
@@ -311,7 +332,11 @@ def _bench_tab_stats(rows, base_pred, ft_pred, max_examples):
 
 
 def _example_caption(total: int, shown: int) -> str:
-    return f"전체 {shown:,}" if shown == total else f"상위 {shown:,}"
+    if shown == total:
+        return f"전체 {shown:,}"
+    # 표본만 싣는 이유·전수 위치를 리포트 안에서 바로 알 수 있게 명시.
+    return (f'{shown:,}건 표본 <span class="muted">(컬럼 균등 · 전수는 같은 폴더 '
+            f'BENCH_PREDICTIONS_*.jsonl)</span>')
 
 
 def _script_card(script: dict, label: str) -> str:
