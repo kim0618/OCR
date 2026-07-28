@@ -189,6 +189,12 @@ fi
     | tee "$TRAIN_LOG" | python eval/finetune_progress.py
   echo "[5/6] export (서버가 읽는 inference 형식으로 변환)"
   python "$DRV" -c "$CFG" -o Global.mode=export
+  # ★run별 모델 자동 보존: output/ 은 다음 run 이 덮어쓰므로(probe1 모델 소실 사고),
+  #  best 를 versions/run_<tag>/ 에 복사(~30MB, versions/ 는 gitignore). 채택과 무관하게 항상.
+  echo "[모델 보존] eval/finetune/versions/run_${RUN_TAG}/best_accuracy"
+  mkdir -p "eval/finetune/versions/run_${RUN_TAG}"
+  cp -r eval/finetune/output/best_accuracy "eval/finetune/versions/run_${RUN_TAG}/" 2>/dev/null \
+    || echo "  (best_accuracy 복사 실패 — output 확인)"
   echo "[6/6] 인식 비교 리포트 (base vs 파인튜닝, held-out test 크롭 직접)"
   python eval/finetune_report.py --run-tag "$RUN_TAG" || echo "  (리포트 생성 실패 — 로그 확인)"
   python eval/finetune_report_by_type.py || echo "  (타입별 리포트 생성 실패 — 로그 확인)"
