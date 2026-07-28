@@ -63,8 +63,30 @@ def _report_id(value: str | None) -> str:
     return safe or datetime.now().strftime("%y%m%d_%H%M%S")
 
 
+REPORTS_DIR = os.path.join(HERE, "finetune", "reports")
+
+
+def _run_report_dir(run_tag: str) -> str:
+    """run별 산출물 폴더 `reports/NNN_<tag>/` — git 제외, scp 로 폴더째 반출.
+
+    같은 run 에서 리포트/벤치가 따로 실행돼도 한 폴더를 쓰도록, 이미 이 태그로
+    만든 폴더가 있으면 재사용하고 없을 때만 다음 순번(NNN)을 새로 딴다.
+    """
+    os.makedirs(REPORTS_DIR, exist_ok=True)
+    existing = os.listdir(REPORTS_DIR)
+    for name in sorted(existing):
+        if re.fullmatch(r"\d{3}_" + re.escape(run_tag), name):
+            d = os.path.join(REPORTS_DIR, name)
+            break
+    else:
+        nums = [int(m.group(1)) for n in existing if (m := re.match(r"(\d{3})_", n))]
+        d = os.path.join(REPORTS_DIR, f"{max(nums, default=0) + 1:03d}_{run_tag}")
+    os.makedirs(d, exist_ok=True)
+    return d
+
+
 def _numbered_paths(run_tag: str) -> tuple[str, str]:
-    out_dir = os.path.dirname(OUT)
+    out_dir = _run_report_dir(run_tag)
     return (
         os.path.join(out_dir, f"FINETUNE_REPORT_{run_tag}.html"),
         os.path.join(out_dir, f"FINETUNE_REPORT_{run_tag}.json"),
@@ -475,7 +497,7 @@ def main_bench(run_tag, max_examples):
         bp = predict_all(base, paths)
         fp = predict_all(ft, paths)
         # 예측 보존: 채점 방식이 바뀌어도 GPU 재추론 없이 재채점 가능하게.
-        pred_path = os.path.join(HERE, "finetune", f"BENCH_PREDICTIONS_{run_tag}_{key}.jsonl")
+        pred_path = os.path.join(_run_report_dir(run_tag), f"BENCH_PREDICTIONS_{run_tag}_{key}.jsonl")
         with open(pred_path + ".tmp", "w", encoding="utf-8") as fh:
             for (_, rel, gt, col), b, f in zip(rows, bp, fp):
                 fh.write(json.dumps({"path": rel, "col": col, "gt": gt, "base": b, "ft": f},
@@ -487,16 +509,16 @@ def main_bench(run_tag, max_examples):
         tabs[key] = st
 
     html_out = render_bench(tabs, run_tag, ft_dir)
-    out_dir = os.path.join(HERE, "finetune")
-    os.makedirs(out_dir, exist_ok=True)
-    numbered = os.path.join(out_dir, f"FINETUNE_BENCH_{run_tag}.html")
-    latest = os.path.join(out_dir, "FINETUNE_BENCH.html")
+    run_dir = _run_report_dir(run_tag)               # run별 아카이브(git 제외, scp 반출)
+    latest_dir = os.path.join(HERE, "finetune")      # 최신 포인터(후속 도구 호환)
+    numbered = os.path.join(run_dir, f"FINETUNE_BENCH_{run_tag}.html")
+    latest = os.path.join(latest_dir, "FINETUNE_BENCH.html")
     _write_text(numbered, html_out)
     _write_text(latest, html_out)
     summary = {"schemaVersion": "finetune-bench.v1", "runTag": run_tag, "ftDir": ft_dir,
                "tabs": {k: {kk: v[kk] for kk in ("n", "b_ex", "f_ex", "gains", "regress")
                             if kk in v} for k, v in tabs.items()}}
-    _write_text(os.path.join(out_dir, f"FINETUNE_BENCH_{run_tag}.json"),
+    _write_text(os.path.join(run_dir, f"FINETUNE_BENCH_{run_tag}.json"),
                 json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
     print(f"[bench] wrote {numbered}")
     print(f"[bench] updated {latest}")
