@@ -36,9 +36,9 @@ OUT = os.path.join(HERE, "finetune", "FINETUNE_REPORT.html")
 OUT_JSON = os.path.join(HERE, "finetune", "FINETUNE_REPORT.json")
 PREDICTIONS_JSONL = os.path.join(HERE, "finetune", "FINETUNE_PREDICTIONS.jsonl")
 # 개선/회귀 표에 실을 사례 수. 크롭이 base64 로 박히므로 전체(0)로 두면 HTML 이 150MB+
-# 가 되어 브라우저가 멈춘다(실측: 벤치 25만 크롭 → 152MB). HTML=샘플 확인용으로 제한하고,
-# 전수 분석은 같은 폴더의 BENCH_PREDICTIONS_*.jsonl(경로·정답·base·ft) 로 한다.
-MAX_EXAMPLES = 500         # 0=전체(비권장), 양수=해당 건수까지만. --max-examples 로 조절
+# 가 되어 브라우저가 멈춘다(실측: 벤치 25만 크롭 → 152MB, 500개도 랙). HTML=상위 50개
+# 샘플 확인용, 전수 분석은 같은 폴더의 BENCH_PREDICTIONS_*.jsonl(경로·정답·base·ft) 로.
+MAX_EXAMPLES = 50          # 0=전체(비권장), 양수=해당 건수까지만. --max-examples 로 조절
 SCROLL_AFTER = 20          # 이 행 이후는 같은 표 안에서 세로 스크롤
 
 # 컬럼별 변화 표에 병기할 한글 이름 (원본 컬럼 id → 한글)

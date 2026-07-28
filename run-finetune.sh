@@ -126,6 +126,22 @@ fi
         --short-num-anchor-ratio 0.15 \
         --exclude-sources "$REPLAY_SRC"
     FT_CRITERIA="3차 프로브: fields(spec 제외 원복)+짧은숫자 앵커 0.15, base 재시작"
+  elif [ "$ROUND" = "clean" ]; then
+    # ★★clean-core (2026-07-28, probe2 예측원본 재검증 기반): 측정가능·검증된 핵심 7컬럼만.
+    #  제거 근거(전부 probe2 실측):
+    #   - spec: unverified 라벨 노이즈(SEEN조차 −10.8 = 암기불가) → 학습 금지
+    #   - supplierAddress: base 0%→ft 0% = 바코드와 같은 하드케이스 그래디언트 독 패턴
+    #   - supplyAmount/taxAmount/totalAmount/discountAmount: base ~0%·n 소수·GT 신뢰 낮음
+    #   - lotNo: 벤치에 없어 측정 불가(효과 검증 수단 없음)
+    #  보존 강화: balance 2.0(까먹음이 주병목) + 짧은숫자 앵커 0.5(수량 붕괴 방어).
+    #  failure ~19만 추정 → 총 ~66만, max-train 여유. base 재시작, lr 3e-5, 1ep 프로브.
+    #  게이트: 품명 +5↑ AND 금액·단가 ≥0 AND 수량 −2 이내 AND RETAIN 전체·짧은숫자 −5 이내.
+    python eval/build_dataset.py --balance-ratio 2.0 --max-train 1000000 \
+        --columns itemName,supplierCompany,amount,unitPrice,quantity,supplierBizNumber,manufacturingNo \
+        --min-match 0.7 --raw-only --reconstruct-number-labels \
+        --short-num-anchor-ratio 0.5 \
+        --exclude-sources "$REPLAY_SRC"
+    FT_CRITERIA="clean-core 7컬럼(측정가능·검증만)+balance 2.0+짧은숫자 앵커 0.5, base 재시작"
   elif [ "$ROUND" = "numeric" ]; then
     # ★★숫자 라운드 (2026-07-24): 숫자(금액/수량/단가) 인식↑ + 품명 유지~개선.
     #  1차(품명)에서 배운 교훈 = 반대편 앵커가 작으면(13%) 그쪽이 −18.8%p 날아감 →
