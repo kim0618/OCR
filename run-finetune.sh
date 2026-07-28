@@ -109,6 +109,23 @@ fi
         --short-num-anchor-ratio 0.15 \
         --exclude-sources "$REPLAY_SRC"
     FT_CRITERIA="2차 프로브: fields+spec, 짧은숫자 앵커 0.15 (수량붕괴·spec망각 교정), base 재시작"
+  elif [ "$ROUND" = "fields3" ]; then
+    # ★★3차 (2026-07-28): probe2(fields2) 실패 부검 반영. 먼저 1ep 프로브(config)로
+    #  이 구성이 먹히는지 확인사격 → 게이트 통과 시 epochs 3 으로 본판(프로브 표준).
+    #  ①spec 제외 원복 — spec 라벨=gt_trust unverified(구글 raw 노이즈). 학습에 쓴 크롭조차
+    #    spec 12.2→1.3% = 암기불가 노이즈 실증, 224k가 그래디언트 오염(val acc 0.41→0.17).
+    #    ★미검증 라벨 컬럼은 학습 금지 원칙.
+    #  ②balance(망각방지) 비중 복원 — spec 제거로 failure 414k → balance ~49% 회복.
+    #  ③짧은숫자 앵커 유지(0.15) — 검증된 정답 라벨이라 무해, balance와 dedup됨.
+    #  1ep 게이트: 품명·금액·단가 probe1 수준(+5.7/+4.4/+3.4 근방) AND 유지탭 probe2(−39.8)
+    #  대비 완만 AND 수량이 probe1(−5.4)보다 악화 없음 → 본판 3ep(짧은숫자 과도기 회복 검증).
+    #  base 재시작(--from-adopted 없이), lr 3e-5, 바코드 제외, 콤마재구성 유지.
+    python eval/build_dataset.py --balance-ratio 1.0 --max-train 1000000 \
+        --columns itemName,supplierCompany,supplierAddress,amount,unitPrice,quantity,supplyAmount,taxAmount,totalAmount,discountAmount,supplierBizNumber,manufacturingNo,lotNo \
+        --min-match 0.7 --raw-only --reconstruct-number-labels \
+        --short-num-anchor-ratio 0.15 \
+        --exclude-sources "$REPLAY_SRC"
+    FT_CRITERIA="3차 프로브: fields(spec 제외 원복)+짧은숫자 앵커 0.15, base 재시작"
   elif [ "$ROUND" = "numeric" ]; then
     # ★★숫자 라운드 (2026-07-24): 숫자(금액/수량/단가) 인식↑ + 품명 유지~개선.
     #  1차(품명)에서 배운 교훈 = 반대편 앵커가 작으면(13%) 그쪽이 −18.8%p 날아감 →
