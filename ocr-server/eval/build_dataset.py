@@ -114,6 +114,34 @@ def _column_filter(fails: dict, columns: set, min_match: float | None,
     return label_by_path
 
 
+def _jpg_size(path: str):
+    """jpg 헤더에서 (w, h)만 읽음 — 디코딩 없이 파일당 수 KB, 9만 장도 ~1분.
+    SOF 마커를 못 찾거나 파일이 없으면 None(필터는 보수적으로 통과시킴)."""
+    import struct
+    try:
+        with open(path, "rb") as fh:
+            if fh.read(2) != b"\xff\xd8":
+                return None
+            while True:
+                b = fh.read(2)
+                if len(b) < 2:
+                    return None
+                while b[0] != 0xFF:
+                    nxt = fh.read(1)
+                    if not nxt:
+                        return None
+                    b = b[1:] + nxt
+                marker = b[1]
+                if marker in (0xC0, 0xC1, 0xC2, 0xC3):
+                    fh.read(3)
+                    h, w = struct.unpack(">HH", fh.read(4))
+                    return w, h
+                seg = struct.unpack(">H", fh.read(2))[0]
+                fh.read(seg - 2)
+    except (OSError, struct.error):
+        return None
+
+
 def _label_gate(fails: dict, n_sample: int = 12) -> None:
     """학습 전 라벨 육안 게이트: 인쇄형 보존 신호(공백/슬래시/대문자/괄호) 통계 + 샘플.
 
@@ -176,6 +204,13 @@ def main() -> int:
                     help="★품명(한글) 망각 방지 앵커 = failure 수 × 이 비율 만큼 '한글 balance 크롭' 추가. "
                          "숫자 라운드에서 품명 보존용 — 1차 교훈(앵커 13%→반대편 −18.8%p)상 크게(예: 2~4) "
                          "넣어 방금 얻은 품명 +11.3%p 를 지킴. 품명 회귀 0 게이트로 튜닝")
+    ap.add_argument("--max-failure", type=int, default=0,
+                    help="failure(하드) 크롭 상한. 0=무제한(구 동작). max-train 은 balance 만 깎아 "
+                         "failure 비중이 계속 커지므로 소규모 프로브 등에서 비중을 직접 통제할 때 사용")
+    ap.add_argument("--numeric-feasible-min-width", type=float, default=0.0,
+                    help="숫자 failure 라벨 실현성 필터: 크롭 w/h < 자릿수×이 값 이면 드랍. "
+                         "0=끄기. 권장 0.45 (2026-07-29 부검: 숫자 failure 의 79%가 모순 라벨 — "
+                         "크롭 한 글자에 6자리 라벨 등 수확 정렬 오류. 004 숫자붕괴의 근본원인)")
     ap.add_argument("--max-train", type=int, default=0,
                     help="총 학습 크롭 상한(0=무제한). 10만장 규모에서 balance 가 수백만이 되므로 "
                          "학습시간 관리용. failure(품목)는 우선 보존하고 balance 를 줄여 맞춤")
@@ -226,11 +261,50 @@ def main() -> int:
         fails = {p: gt for p, gt in fails.items() if len(_hang.findall(gt)) >= args.hangul_min}
         print(f"[build_dataset] hangul filter(>= {args.hangul_min}자): "
               f"failure {n0:,} -> {len(fails):,}")
+    if args.numeric_feasible_min_width > 0:
+        # ★라벨-크롭 실현성 필터 (2026-07-29 부검, 004 기각의 근본원인 차단):
+        #  숫자 failure 크롭 전수 측정 결과 79%(4~6자리는 87%)가 "라벨 자릿수가 크롭 폭에
+        #  물리적으로 들어갈 수 없는" 모순 라벨이었다(크롭='2' 한 글자, 라벨='250010' 등 —
+        #  수확 시 bbox↔GT 정렬 오류). 이런 라벨은 암기 자체가 불가능하고(004 는 학습에 쓴
+        #  1자리 크롭 재현 6.7%) CTC 를 blank 선호로 몰아 짧은숫자 빈출력·선두탈락을 만든다.
+        #  숫자 1자 최소폭 ≈ 높이 × factor(권장 0.45, 보수적) — 라벨이 그보다 길면 드랍.
+        #  balance/anchor 는 모델 자신이 읽은 값=라벨이라 정합이 보장돼 필터 불필요.
+        n0 = len(fails)
+        _numre = re.compile(r"^[0-9][0-9,.]*$")
+        drop_by = {}
+        kept = {}
+        for p, gt in fails.items():
+            if not _numre.match(gt):
+                kept[p] = gt
+                continue
+            wh = _jpg_size(os.path.join(CORPUS_DIR, p))
+            if wh is None:
+                kept[p] = gt
+                continue
+            w, h = wh
+            ndig = len(gt.replace(",", "").replace(".", ""))
+            if w / max(h, 1) < ndig * args.numeric_feasible_min_width:
+                k = "1" if ndig == 1 else "2-3" if ndig <= 3 else "4-6" if ndig <= 6 else "7+"
+                drop_by[k] = drop_by.get(k, 0) + 1
+            else:
+                kept[p] = gt
+        fails = kept
+        print(f"[build_dataset] 숫자 실현성 필터(min_width={args.numeric_feasible_min_width}): "
+              f"failure {n0:,} -> {len(fails):,} (드랍 {n0 - len(fails):,} = "
+              + ", ".join(f"{k}자리 {v:,}" for k, v in sorted(drop_by.items())) + ")")
     _label_gate(fails)   # 학습 전 육안 게이트: 인쇄형 보존율 0%대면 돌리지 말 것
     if not fails and not bals:
         print(f"no labels in {CORPUS_DIR} (run finetune_crops[_balance] first)"); return 2
 
     fail_items = list(fails.items())
+    # ★failure 상한 (2026-07-29 부검): failure(=base 가 못 읽은 하드 크롭)가 학습의 46% 를
+    #  차지하면 CTC 가 수렴하지 못하고(CTCLoss 23 유지·best=warmup ep1) 불확실할 때 blank 를
+    #  안전선택 → 짧은 시퀀스부터 소멸(004 는 학습에 쓴 1자리 크롭조차 재현 6.7%).
+    #  balance 는 max-train 캡에 밀려 줄지만 failure 는 전량 보존되던 구조라 별도 상한이 필요.
+    if args.max_failure and len(fail_items) > args.max_failure:
+        random.Random(args.seed + 5).shuffle(fail_items)
+        fail_items = fail_items[:args.max_failure]
+        print(f"[build_dataset] max-failure {args.max_failure:,}: failure {len(fails):,} -> {len(fail_items):,}")
     # ★balance/anchor 를 글자종류로 구성 — 라운드에 따라 base balance 와 반대편 앵커가 뒤바뀜:
     #  품명 라운드: balance=한글(--balance-hangul-min), 앵커=숫자 소량(--number-anchor-ratio)
     #  숫자 라운드: balance=숫자(--balance-digit-min),  앵커=한글 크게(--hangul-anchor-ratio=품명보존)

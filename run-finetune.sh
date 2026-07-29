@@ -142,6 +142,28 @@ fi
         --short-num-anchor-ratio 0.5 \
         --exclude-sources "$REPLAY_SRC"
     FT_CRITERIA="clean-core 7컬럼(측정가능·검증만)+balance 2.0+짧은숫자 앵커 0.5, base 재시작"
+  elif [ "$ROUND" = "clean2" ]; then
+    # ★★★clean2 = clean + 숫자 라벨 실현성 필터 "단 한 변수" (2026-07-29 부검 확정 처방).
+    #  004(clean 레시피) E2E 기각의 근본원인이 전수 측정으로 확정됨:
+    #   ★숫자 failure 학습크롭의 79%(4~6자리는 87%)가 "라벨이 크롭에 물리적으로 안 들어가는"
+    #    모순 라벨(크롭='2' 한 글자·라벨='250010', 크롭='공'·라벨='41,201' — 수확 bbox↔GT
+    #    정렬 오류). 육안 30장 검증에서도 2/3 불일치. 9만 장의 거짓 라벨을 학습한 결과:
+    #   - 모델이 학습에 쓴 크롭조차 재현 실패(라벨 0=6.7%, 8=10%) = 암기 불가능한 모순
+    #   - CTC 는 모순 앞에서 blank 를 선택 → 1자리 빈출력 51.5%·선두탈락 → 수량 공백
+    #     → 행 산술·정렬 붕괴 → E2E 셀 −43,012 연쇄
+    #   - 품명만 오른 이유: 한글 라벨은 정합 86%라 제대로 배움(문자수 61% 지배)
+    #  처방 = --numeric-feasible-min-width 0.45 (자릿수×0.45 > w/h 면 드랍).
+    #  나머지는 clean 과 동일(같은 컬럼·balance 2.0·짧은숫자 앵커 0.5·base 재시작·1ep)
+    #  → 기존 003/004 가 같은 스케일 대조군이라 필터 효과가 그대로 분리됨.
+    #  ★판정 순서(새 표준): ①로컬 조기게이트 = 학습에 쓴 1자리 크롭 재현율 ≥90%(004=6.7%)
+    #    → ②벤치(UNSEEN 숫자탭도 같은 오염이 있으니 참고만) → ③E2E(최종심).
+    python eval/build_dataset.py --balance-ratio 2.0 --max-train 1000000 \
+        --columns itemName,supplierCompany,amount,unitPrice,quantity,supplierBizNumber,manufacturingNo \
+        --min-match 0.7 --raw-only --reconstruct-number-labels \
+        --short-num-anchor-ratio 0.5 \
+        --numeric-feasible-min-width 0.45 \
+        --exclude-sources "$REPLAY_SRC"
+    FT_CRITERIA="clean2: clean + 숫자 라벨 실현성 필터 0.45 (모순라벨 79% 제거), base 재시작"
   elif [ "$ROUND" = "numeric" ]; then
     # ★★숫자 라운드 (2026-07-24): 숫자(금액/수량/단가) 인식↑ + 품명 유지~개선.
     #  1차(품명)에서 배운 교훈 = 반대편 앵커가 작으면(13%) 그쪽이 −18.8%p 날아감 →
