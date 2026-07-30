@@ -164,6 +164,24 @@ fi
         --numeric-feasible-min-width 0.45 \
         --exclude-sources "$REPLAY_SRC"
     FT_CRITERIA="clean2: clean + 숫자 라벨 실현성 필터 0.45 (모순라벨 79% 제거), base 재시작"
+  elif [ "$ROUND" = "clean3" ]; then
+    # ★★★clean3 = clean2 + 짧은숫자 라벨 self-verify "단 한 변수" (2026-07-30 clean2 부검).
+    #  clean2 결과: 실현성 필터가 4+자리를 살림(RETAIN +2.6, UNSEEN 전컬럼 +) — 그러나
+    #  1자리 RETAIN -38.1 로 더 붕괴. 원인 실측: 1자리 '정답풀' 크롭의 34%(육안 137/400)가
+    #  도장·바코드·표머리글·한글에 숫자 라벨 — 수확 정렬 버그가 balance 에도 있고,
+    #  1자리는 길이-실현성 검사의 사각지대(어떤 크롭이든 1자는 '들어가므로').
+    #  처방 = 학습 목록의 1~3자리 숫자 라벨을 base 로 재판독해 출력==라벨만 남김(self-verify).
+    #  1자리 목표는 '유지'이므로 base 가 읽는 크롭만으로 충분, 오염 1/3 이 직접 제거됨.
+    #  게이트(로컬): 학습에 쓴 1자리 크롭 재현율 ≥90% AND RETAIN 1자리 -5 이내.
+    python eval/build_dataset.py --balance-ratio 2.0 --max-train 1000000 \
+        --columns itemName,supplierCompany,amount,unitPrice,quantity,supplierBizNumber,manufacturingNo \
+        --min-match 0.7 --raw-only --reconstruct-number-labels \
+        --short-num-anchor-ratio 0.5 \
+        --numeric-feasible-min-width 0.45 \
+        --exclude-sources "$REPLAY_SRC"
+    echo "[clean3] 짧은숫자 라벨 self-verify (base 재판독, GPU ~수분)"
+    python eval/verify_short_num_labels.py
+    FT_CRITERIA="clean3: clean2 + 짧은숫자(1~3자리) 라벨 self-verify (1자리 정답풀 오염 34% 제거)"
   elif [ "$ROUND" = "numeric" ]; then
     # ★★숫자 라운드 (2026-07-24): 숫자(금액/수량/단가) 인식↑ + 품명 유지~개선.
     #  1차(품명)에서 배운 교훈 = 반대편 앵커가 작으면(13%) 그쪽이 −18.8%p 날아감 →
