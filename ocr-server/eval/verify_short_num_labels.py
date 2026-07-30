@@ -95,6 +95,11 @@ def main() -> int:
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--corpus-dir", default=CORPUS_DIR,
                     help="크롭 rel 경로의 루트(기본=finetune_corpus). 로컬 검증 시 지정")
+    ap.add_argument("--oversample-onedigit", type=int, default=0,
+                    help="검증 통과한 1자리 라벨 줄을 N 회 추가 복제(train 전용). "
+                         "근거(2026-07-30 clean3 부검): 라벨을 깨끗이 해도(official 99.5%) 1자리 "
+                         "재현 61.5%에 그침 — CTC 그래디언트가 문자수 비례라 1자리는 신호 점유가 "
+                         "~1.5%뿐. 검증된 깨끗한 크롭만 복제하므로 오염 증폭 없음. 권장 3(=4배)")
     args = ap.parse_args()
 
     if not os.path.isfile(os.path.join(args.model_dir, "inference.pdiparams")):
@@ -161,11 +166,19 @@ def main() -> int:
         return 0
     bak = args.list + ".preverify"
     os.replace(args.list, bak)
+    dup = 0
     with open(args.list, "w", encoding="utf-8") as fh:
         for i, parts in enumerate(rows):
             if i in drop:
                 continue
-            fh.write("\t".join(parts) + "\n")
+            line = "\t".join(parts) + "\n"
+            fh.write(line)
+            if (args.oversample_onedigit > 0 and len(parts) >= 2
+                    and len(_norm(parts[1])) == 1 and NUM.match(parts[1].strip())):
+                fh.write(line * args.oversample_onedigit)
+                dup += args.oversample_onedigit
+    if dup:
+        print(f"[verify] 1자리 오버샘플 x{args.oversample_onedigit + 1}: 복제 {dup:,}줄 추가")
     print(f"[verify] 재작성 완료: {args.list} (원본={os.path.basename(bak)})")
     return 0
 

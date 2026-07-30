@@ -182,6 +182,24 @@ fi
     echo "[clean3] 짧은숫자 라벨 self-verify (base 재판독, GPU ~수분)"
     python eval/verify_short_num_labels.py
     FT_CRITERIA="clean3: clean2 + 짧은숫자(1~3자리) 라벨 self-verify (1자리 정답풀 오염 34% 제거)"
+  elif [ "$ROUND" = "clean4" ]; then
+    # ★★★clean4 = clean3 + 1자리 오버샘플 x4 "단 한 변수" (2026-07-30 clean3 부검).
+    #  clean3 결과: 라벨 정화 성공(검증크롭 official 99.5%)·역대 최고 val 0.5865·RETAIN 전체 -2.6·
+    #  한글 -0.2·2-3자리 +2.7·4+ +0.6 — 그러나 1자리 재현 61.5%(게이트 90% 미달)·
+    #  base정답 1자리 유지 79.6%. 라벨은 이제 깨끗하므로 남은 원인 = 그래디언트 점유:
+    #  CTC 학습신호는 문자수 비례인데 1자리는 전체 문자의 ~1.5%뿐(한글 61% 지배).
+    #  처방 = 검증 통과한 1자리 줄만 3회 추가 복제(4배, 문자점유 ~1.5%→~5.5%).
+    #  깨끗한 카드만 복제하므로 오염 증폭 없음. 나머지는 clean3 과 완전 동일.
+    #  게이트: 1자리 재현 ≥90% AND RETAIN(clean subset) 1자리 유지 ≥95% AND 나머지 버킷 무손상.
+    python eval/build_dataset.py --balance-ratio 2.0 --max-train 1000000 \
+        --columns itemName,supplierCompany,amount,unitPrice,quantity,supplierBizNumber,manufacturingNo \
+        --min-match 0.7 --raw-only --reconstruct-number-labels \
+        --short-num-anchor-ratio 0.5 \
+        --numeric-feasible-min-width 0.45 \
+        --exclude-sources "$REPLAY_SRC"
+    echo "[clean4] 짧은숫자 라벨 self-verify + 1자리 오버샘플 x4"
+    python eval/verify_short_num_labels.py --oversample-onedigit 3
+    FT_CRITERIA="clean4: clean3 + 검증된 1자리 오버샘플 x4 (문자점유 1.5%→5.5%, blank 도피 차단)"
   elif [ "$ROUND" = "numeric" ]; then
     # ★★숫자 라운드 (2026-07-24): 숫자(금액/수량/단가) 인식↑ + 품명 유지~개선.
     #  1차(품명)에서 배운 교훈 = 반대편 앵커가 작으면(13%) 그쪽이 −18.8%p 날아감 →
