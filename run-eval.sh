@@ -9,6 +9,6 @@ mkdir -p ~/OCR/logs
 # 기준셋 = invoice_replay(9,001 held-out). thin(6월 6천장)/study 는 안 돎(2026-07-24 결정:
 # thin=옛 6월 회귀감시용, 이제 9천 replay 가 표준 측정셋). study 회귀 보려면 아래 줄 뒤에
 # `python -u eval/run_all.py --testset invoice_study` 한 줄 추가하면 됨.
-stdbuf -oL -eL python -u eval/run_all.py --testset invoice_replay 2>&1 | tee -a ~/OCR/logs/eval.log
+stdbuf -oL -eL python -u eval/run_all.py --testset invoice_replay --stop-server-before-analysis 2>&1 | tee -a ~/OCR/logs/eval.log
 echo "==================== 학습 끝 [$(date +'%F %T')] ===================="
 echo "최신 결과: $(ls -1dt eval/runs/*/ | head -1)"

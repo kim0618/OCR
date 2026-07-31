@@ -38,8 +38,26 @@ from report import render_report, render_report_html
 from run_batch import run_batch
 
 
+def _stop_local_server(server: str) -> None:
+    """[analysis] 직전 로컬 백엔드 종료로 RAM ~8GB 회수 (069·070 행업 재발 방지).
+
+    eval 의 OCR 호출은 [2/6]에서 끝나고 [analysis] 수확 단계는 파일만 읽는데,
+    g6.xlarge(16GB)에서 uvicorn 워커 3개(~8GB)가 상주한 채 수확이 겹치면 스왑 없는
+    인스턴스가 메모리 스래싱으로 통째로 행업(두 run 연속 같은 지점에서 실측).
+    로컬(127.0.0.1) 서버일 때만, 명시 플래그로만 동작 — 원격 서버는 건드리지 않음."""
+    from urllib.parse import urlparse
+    parsed = urlparse(server)
+    if parsed.hostname not in ("127.0.0.1", "localhost"):
+        print(f"   (stop-server: 원격 서버 {parsed.hostname} — 건너뜀)")
+        return
+    port = parsed.port or 9099
+    rc = subprocess.run(["fuser", "-k", f"{port}/tcp"], capture_output=True).returncode
+    print(f"   (stop-server: 백엔드 {port} 종료 {'OK' if rc == 0 else '대상 없음'} — 수확 단계 RAM 확보)")
+
+
 def _measure(reuse: str | None, server: str, workers: int, testset: str,
-             verbose: bool = True, run_id: str | None = None) -> dict[str, Any]:
+             verbose: bool = True, run_id: str | None = None,
+             stop_server_before_analysis: bool = False) -> dict[str, Any]:
     """Run steps 1–6 for one testset. Returns a result dict; never raises.
 
     run_id (e.g. "<batch>/study") forces the run dir, used by --all to nest both
@@ -143,6 +161,11 @@ def _measure(reuse: str | None, server: str, workers: int, testset: str,
         # never raises, never touches res["ok"] (not a gate). finetune_ledger runs
         # only on LIVE runs — canned thin is a mock, not real recognition to bank.
         log("== [analysis] finetune ledger + crops + table-align + parser-drop(전처리) ==")
+        if stop_server_before_analysis:
+            try:
+                _stop_local_server(server)
+            except Exception as exc:
+                log(f"   (stop-server 실패 — 계속 진행: {exc})")
         try:
             # live only (real recognition + real images): ledger first (writes
             # FINETUNE_LEDGER.json), then crops (reads it + processed/). table-align
@@ -185,10 +208,12 @@ def _refresh_trend(testset_for_line: str | None = None) -> None:
 
 
 def run_all(reuse: str | None, server: str, workers: int,
-            testset: str = C.DEFAULT_TESTSET) -> int:
+            testset: str = C.DEFAULT_TESTSET,
+            stop_server_before_analysis: bool = False) -> int:
     """Single testset, verbose (the classic entry point)."""
     print(f"== [1/6] manifest (testset={testset}) ==")
-    r = _measure(reuse, server, workers, testset, verbose=True)
+    r = _measure(reuse, server, workers, testset, verbose=True,
+                 stop_server_before_analysis=stop_server_before_analysis)
     print()
     _refresh_trend(testset)
     # 실행 이력 장부(RUN_HISTORY): 단일 --testset 도 기록. run-rekey.sh 처럼 --all 이
@@ -564,6 +589,9 @@ if __name__ == "__main__":
     ap.add_argument("--workers", type=int, default=3)
     ap.add_argument("--testset", default=C.DEFAULT_TESTSET)
     ap.add_argument("--all", action="store_true", help="run every registered testset in one shot")
+    ap.add_argument("--stop-server-before-analysis", action="store_true",
+                    help="[analysis] 수확 단계 전 로컬 백엔드 종료(RAM 회수). AWS 16GB에서 "
+                         "수확+백엔드 동시 상주로 인스턴스 행업 2회 실측(069·070) → run-eval.sh 가 사용")
     ap.add_argument("--summary-only", default=None,
                     help="재-OCR 없이 배치 SUMMARY/TREND만 재생성 (배치 폴더명, 예: 061_20260702_111643)")
     args = ap.parse_args()
@@ -571,4 +599,5 @@ if __name__ == "__main__":
         sys.exit(summarize_batch(args.summary_only))
     if args.all:
         sys.exit(run_all_multi(args.server, args.workers))
-    sys.exit(run_all(args.reuse, args.server, args.workers, args.testset))
+    sys.exit(run_all(args.reuse, args.server, args.workers, args.testset,
+                     stop_server_before_analysis=args.stop_server_before_analysis))
