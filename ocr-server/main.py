@@ -1188,6 +1188,39 @@ def get_ocr_engine():
     return _ocr_engine
 
 
+# ORIENT-PIN(2026-08-02): 방향 판정 전용 엔진 — rec 을 official 로 '고정'.
+# detect_orientation/ORIENT_KOREAN_REVERIFY 의 점수(한글수·avg_conf·줄수)가 서빙 rec 모델
+# 산출물이라, FT 채택 시 경계선 문서의 회전 판정이 뒤집혔다(071vs070 실측 267장, 뒤집힘
+# 집합 겹침 82/64/54 vs 랜덤기대 3~5 = 모델-경계선 확증; 한글우세 official 47:0 clean4).
+# 판정=고정 모델(이 엔진), 최종 인식=라이브 모델(get_ocr_engine) 로 분리해 FT 교체가
+# 회전 판정에 영향을 주지 않게 한다. adopted 가 없으면 두 엔진이 같은 모델 = 동작 불변.
+_orient_engine = None
+
+
+def get_orient_engine():
+    """orientation 판정 전용 PaddleOCR (rec=official 고정, lazy). adopted 스왑 미적용."""
+    global _orient_engine
+    if _orient_engine is None:
+        import os
+        from paddleocr import PaddleOCR
+        print("[ocr] orient engine = official korean_PP-OCRv5_mobile_rec (pinned)")
+        _orient_engine = PaddleOCR(
+            lang="korean",
+            text_detection_model_name=RT.DET_MODEL,
+            text_recognition_model_name="korean_PP-OCRv5_mobile_rec",  # ★고정: adopted 미적용
+            device=RT.DEVICE,
+            use_textline_orientation=getattr(RT, "TEXTLINE_ORIENTATION", False),
+            use_doc_orientation_classify=False,
+            use_doc_unwarping=False,  # 판정용 썸네일/후보 채점엔 불필요(비용 절감)
+            enable_mkldnn=False,
+            cpu_threads=os.cpu_count() or 4,
+            text_recognition_batch_size=30,
+            text_det_limit_type="max",
+            text_det_limit_side_len=RT.DET_LIMIT_SIDE_LEN,
+        )
+    return _orient_engine
+
+
 _unwarp_model = None
 
 
@@ -2577,18 +2610,19 @@ async def ocr_extract(
         if _orient_is_invoice and getattr(RT, "ORIENT_FULL_4WAY_512", False):
             # P1(GPU): invoice 무조건 4방향 + 512 썸네일. '확신하며 틀린 방향'(6-2/3-2 0°→실제90°)
             # 까지 첫 패스에서 교정. CPU 는 28행 4방향 타임아웃이라 플래그 OFF(아래 조건부 경로 유지).
+            # ORIENT-PIN: 판정은 고정(official rec) 엔진으로 — FT 교체가 회전 판정 못 흔들게.
             doc_img, orient_meta = detect_orientation(
-                doc_img, ocr, original_wh=(orig_w, orig_h),
+                doc_img, get_orient_engine(), original_wh=(orig_w, orig_h),
                 target_short=512, force_full_eval=True,
             )
             _orient_forced = True
             _orient_escalated_512 = True
         else:
-            doc_img, orient_meta = detect_orientation(doc_img, ocr, original_wh=(orig_w, orig_h))
+            doc_img, orient_meta = detect_orientation(doc_img, get_orient_engine(), original_wh=(orig_w, orig_h))
         _orient_bail = (orient_meta.get("bailout_reason") or "") if isinstance(orient_meta, dict) else ""
         if (not _orient_forced) and _orient_is_invoice and _orient_bail.startswith("low_signal"):
             doc_img, orient_meta = detect_orientation(
-                _doc_img_before_orientation, ocr, original_wh=(orig_w, orig_h),
+                _doc_img_before_orientation, get_orient_engine(), original_wh=(orig_w, orig_h),
                 force_full_eval=True,
             )
             _orient_forced = True
@@ -2888,14 +2922,22 @@ async def ocr_extract(
                 # 견고성: 후보 재-OCR(3방향) 중 하나라도 예외/실패해도 요청이 죽지 않게 방어.
                 # 실패 시 원본 orientation 유지(미채택). 재-OCR 부하로 인한 드문 커넥션 드롭 대비.
                 try:
-                    _best_kr, _best_rot, _best_lines, _best_img = _kr0, 0, ocr_lines_raw, None
-                    _best_ar = _ar0
-                    _best_sc = _orient_score(_kr0, _ar0)
+                    # ORIENT-PIN: 판정 비교는 전부 고정(official rec) 엔진으로 통일.
+                    # 트리거(_garbage/_sideways)는 라이브 출력으로 열되, rot0 기준선도 고정
+                    # 엔진으로 재채점해 후보(고정 엔진)와 같은 저울에서 비교한다 — 모델이
+                    # 섞이면 한글수 비교가 불공정해져 FT 교체가 판정을 뒤집는다(267장 실측).
+                    _pin = get_orient_engine()
+                    _base_lines_pin, _ = _prep_and_ocr_lines(doc_deskewed, _pin, ocr_max_w, ocr_min_w)
+                    _kr0p, _ = _korean_char_count(_base_lines_pin)
+                    _ar0p = _median_box_aspect(_base_lines_pin)
+                    _best_kr, _best_rot = _kr0p, 0
+                    _best_ar = _ar0p
+                    _best_sc = _orient_score(_kr0p, _ar0p)
                     for _rot, _cvrot in ((90, cv2.ROTATE_90_CLOCKWISE), (180, cv2.ROTATE_180),
                                          (270, cv2.ROTATE_90_COUNTERCLOCKWISE)):
                         try:
                             _cand_img = cv2.rotate(doc_deskewed, _cvrot)
-                            _cand_lines, _cand_prepped = _prep_and_ocr_lines(_cand_img, ocr, ocr_max_w, ocr_min_w)
+                            _cand_lines, _cand_prepped = _prep_and_ocr_lines(_cand_img, _pin, ocr_max_w, ocr_min_w)
                         except Exception:
                             continue  # 이 후보만 스킵(다른 방향은 계속 평가)
                         _ckr, _ = _korean_char_count(_cand_lines)
@@ -2903,18 +2945,22 @@ async def ocr_extract(
                         _csc = _orient_score(_ckr, _car)
                         if _csc > _best_sc:
                             _best_sc, _best_kr, _best_rot = _csc, _ckr, _rot
-                            _best_lines, _best_img, _best_ar = _cand_lines, _cand_prepped, _car
+                            _best_ar = _car
                     # 채택 조건(둘 중 하나): (1) 한글이 *현저히* ↑(2배+ & ≥20, 기존 가드) 또는
                     # (2) 세로트리거였고 회전이 박스를 가로로 되돌리며(AR<1→≥1.5) 한글 손실 없음.
-                    _korean_win = _best_kr >= max(20, _kr0 * 2)
+                    # (기준선/후보 모두 고정 엔진 산출 = 같은 저울)
+                    _korean_win = _best_kr >= max(20, _kr0p * 2)
                     _horizontal_win = (
                         _sideways and _best_ar is not None and _best_ar >= 1.5
-                        and _ar0 is not None and _ar0 < 1.0 and _best_kr >= _kr0
+                        and _ar0p is not None and _ar0p < 1.0 and _best_kr >= _kr0p
                     )
                     if _best_rot != 0 and (_korean_win or _horizontal_win):
                         doc_deskewed = cv2.rotate(doc_deskewed,
                                                   {90: cv2.ROTATE_90_CLOCKWISE, 180: cv2.ROTATE_180,
                                                    270: cv2.ROTATE_90_COUNTERCLOCKWISE}[_best_rot])
+                        # ORIENT-PIN: 최종 인식은 라이브(FT 포함) 엔진으로 재-OCR —
+                        # 판정만 고정 모델, 인식 품질은 채택 모델의 몫(FT 이득 보존).
+                        _best_lines, _best_img = _prep_and_ocr_lines(doc_deskewed, ocr, ocr_max_w, ocr_min_w)
                         ocr_lines_raw = _best_lines
                         ocr_img = _best_img
                         ocr_h, ocr_w = _best_img.shape[:2]
