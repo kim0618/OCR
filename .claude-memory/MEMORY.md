@@ -2,13 +2,87 @@
 
 ## Entries
 
-- [OCR Workspace Hygiene](feedback_workspace_hygiene.md) — 2026-05-21 대규모 정리 후 파일/폴더 위치 규약. 새 백업/로그/산출물을 어디에 두어야 하는지
-- [OCR Project Focus](feedback_focus_ocr.md) — OCR 코드만 보기, 시스템 PATH/history 탐색 금지
-- [Server Startup with .venv](feedback_server_startup.md) — .venv 자동 사용, pip install 제안 금지
-- [Server Restart Command](feedback_server_restart.md) — uvicorn 실행 방법 (포트 9099 --reload, PowerShell 백그라운드 포함)
-- [OCR Servers](project_ocr_servers.md) — 백엔드 9099 / 프론트 8089 실행 방법
-- [Finance Validation Round-1 Complete](project_finance_validation_round1.md) — finance 3-image set verified: 9.jpg+finance_001 selected, finance_002 review (parser limit)
-- [Invoice Statement 1차 준비 완료](project_invoice_statement_prep.md) — 2026-04-29 설계 완료. 샘플 4종 분류, 필드 확정, manifest 초안, extractor 구현 범위 정리
-- [AWS Setup Decision](project_aws_setup.md) — g4dn.xlarge GPU + Deep Learning AMI + 최소→최적 점진 확장. 2026-05-21 결정
-- [AWS-Local Divergence (Demo Prep)](project_aws_local_divergence.md) — 1차 발표 종료까지 AWS 직접 수정, 로컬 sync 보류. 2026-05-21 시작
-- [Data Storage Architecture (Current)](project_data_storage_architecture.md) — 템플릿/이미지/history는 브라우저 localStorage/IndexedDB. AWS는 OCR API + 모델/로그만. DB 마이그레이션 예정
+- [FT 발표자료 FT_BRIEFING.html](reference_ft_briefing_html.md) — eval/finetune/ 위치, probe1~clean4 타임라인 카드+운영모델 도식. 071 판정 후 clean4 카드 갱신 필요
+
+- [FT 판정은 base만, V1 안 봄](feedback_ft_judge_base_only.md) — 현 라운드 판정=base→새FT 순증(품명+ AND 숫자+)뿐. V1 무관(base 재시작). 옛 'vs V1' 끌고오지 말 것(사용자 3회 정정)
+- [★★오회전 근본수리 orient-pin 배포완료, 072 대기](project_orient_conf_pin.md) — 2026-08-02. 원인확증(뒤집힘 겹침 82/64/54 vs 랜덤 3~5=13~16배, 한글우세 47:0)→get_orient_engine(official 고정)으로 판정/인식 분리. 커밋 e2af3a5ea AWS pull 완료. 다음: restart→스모크(pinned 로그)→072 official(~$3.3)→071 대비 net≈0이면 새 기준선→clean5. ★이 PC 레포=C:\OCR\OCR
+- [★★★★★FT 071 파리티 최종판정=clean4 채택 불합격](project_ft_seen_unseen_bench.md) — 2026-08-02 전수 심층분석. 070vs071 동일저울 **cell −30,341 → 게이트(품명+ AND 숫자+) 불합격**: 품명 +7,626(+9.0pp)·Master +1k 실재 / 수량 −7.4k·단가 −7.1k·제조 −11.1k. 분해=오회전 267장 −7.6k(25%, 파이프라인 결함)+순수 모델 −22.7k(75%, rec 잔여 4~6%×연쇄). 프로덕션=official 유지, 071=영구 새 기준선(리네임 완료). clean4=인식 완치 실증(1자리 46→96%)·폐기 아님. 다음: ①orientation conf-독립화 ②수확 정렬 픽스→clean5. 071 이전 맥락(기준선 무효 발견·행업 수리)도 같은 파일
+- [★★FT 4차 fields 프로브 STOP+same-crop 방법론](project_finetune_fields_round.md) — 2026-07-26. combined 기각 확정(vs V1 net −1,295), fields 프로브(1ep $3.6)도 STOP: 바코드 제거로도 쉬운숫자 V1보다 −7·한글 −5.3 → "바코드=유일한 독" 반증, 원인후보=하드failure 그래디언트/lr 과격. V1 실측 확정(품명+12.0/쉬운숫자−18.7/수량−26.8/금액+2.7, 숫자가중 −12.4). 판정은 항상 같은크롭 vs V1. 다음=lr 3e-5 재프로브 or V1 확정
+- [★★리플레이 기준셋+learndata 실행계획](project_replay_set_and_learndata_plan.md) — 2026-07-21 확정. 9,001장 held-out 기준셋(월쿼터 greedy)+측정2벌(held-out 84,707=learndata효과 / full 93,708=對Google벤치). 실행순서 P0~7, learndata_build.py 미구축=첫작업
+- [eval 새 기준셋 invoice_replay(9,001) 워크플로우](project_eval_replay_testset_workflow.md) — 왜 새 testset인지, study/thin은 회귀감시 유지, 로컬replay 실행법
+- [★067 replay 품명+learndata 심층검증](project_invoice_replay_itemname_analysis.md) — 2026-07-23 룰재정렬: 괄호주석 중립화 master +3.55pp / learndata spec-unit필터 +935 / 선두코드strip +999. 꼬리pack strip 기각(net −6,907). FT몫=recognition 32,540
+- [★★FT 트리 라운드 진행상황](project_finetune_tree_rounds.md) — 2026-07-24. ✗1차 전필드→★2차 품명 itemname_V1 채택(+11.3%p)→3차 combined(이후 기각). 콤마붕괴 해결=--reconstruct-number-labels, 기준셋 오염차단=--exclude-sources. 운영: FT 전 백엔드 내리기·bash 필수·epochs 상한=시간만
+- [FT processed 로컬백업+AWS삭제](project_finetune_processed_backup.md) — processed 17G=로컬 tar 백업 후 AWS삭제(29G확보). 라운드마다 rejected output 청소
+- [★리키잉 10.5만장 파이프라인](project_rekey_105k_batches.md) — g6.xlarge(L4) 전환·1차 28,005장. 2차(65,703장)는 run_batch --resume + run_all --reuse로 1차 폴더에 통합. SSH ubuntu@3.37.51.240
+- [★★war 숫자GT 신뢰도(순환)](project_war_gt_numeric_reliability.md) — 숫자GT=구글OCR원본(순환), 산술=유일 오라클. 신뢰: 수량77·단가76·금액82%. 룰은 산술앵커만
+- [다음 룰작업 계획](project_invoice_next_rule_plan.md) — ①합계 3형제 산술이식 ②품명/master 트랙(81.2% 목표) ③spec
+- [★★숫자열 룰트랙 7층 마감](project_invoice_numeric_rules_p1p2p3.md) — 2026-07-15 완결·커밋 9bfe304e6. 금액 68.4·수량 64.4·단가 59.7%. 기각 9접근 기록(재론금지). 잔여=회색+recognition(FT몫)
+- [★★066 raw×master 교차 재우선순위](project_invoice_066_master_reprioritization.md) — drop 1,953=1순위, raw오답 59.5%는 master 흡수, oracle 83.0%
+- [★run063 품목표 병목+P1 게이트 진단](project_invoice_item_table_p1_gate.md) — 8패치 누적 master 50→72%(+22pp). FT 1차 기각+품명 +6.9pp 실증. base=063 replay
+- [OCR Workspace Hygiene](feedback_workspace_hygiene.md) — 파일/폴더 위치 규약
+- [로컬↔AWS 이동은 git이 기본 파이프](feedback_git_as_transport.md) — scp 일회성 금지. git 금지=모델 가중치·크롭 대량뿐. commit/push 실행은 사용자 몫
+- [eval/runs/ git 추적 안 함](project_eval_runs_untracked_scp.md) — 필요한 run만 scp, 영속이력=RUN_HISTORY.jsonl만 git
+- [OCR Project Focus](feedback_focus_ocr.md) — OCR 코드만, 시스템 PATH/history 탐색 금지
+- [User Runs, Not Me](feedback_user_runs_not_me.md) — 실행은 사용자가. 나는 준비+명령 전달
+- [No Env Flags](feedback_no_env_flags.md) — env 플래그 게이트 금지, 코드 게이트로
+- [Local CPU vs GPU Prod](feedback_local_cpu_vs_gpu_prod.md) — 로컬=CPU 프로덕션=GPU. 파서는 CPU서 다 됨. 한국어 server rec 없음
+- [No Speculation, Use Run Data](feedback_no_speculation_use_run_data.md) — 추측·하향결론 금지, 실제 run 리포트로
+- [Systematic Report Analysis](feedback_systematic_report_analysis.md) — 결론 전 전수 분해·분류표 필수, 조기단정 금지
+- [Server Startup with .venv](feedback_server_startup.md) — .venv 자동, pip install 제안 금지
+- [Server Restart Command](feedback_server_restart.md) — uvicorn 9099 --reload
+- [OCR Servers](project_ocr_servers.md) — 백엔드 9099 / 프론트 8089
+- [Finance Validation Round-1](project_finance_validation_round1.md) — 9.jpg+finance_001 선정
+- [Invoice Statement 1차 준비](project_invoice_statement_prep.md) — 2026-04-29 설계 완료
+- [AWS Setup Decision](project_aws_setup.md) — g4dn→(현 g6) GPU + DLAMI
+- [AWS-Local Divergence](project_aws_local_divergence.md) — 발표까지 AWS 직접수정, 로컬 sync 보류
+- [Data Storage Architecture](project_data_storage_architecture.md) — 템플릿/이미지=브라우저 저장, AWS=API+모델. GT 규약 포함(public/data 수정 금지)
+- [Invoice Unstructured Roadmap](project_invoice_unstructured_roadmap.md) — 비정형 6단계 로드맵
+- [Planning Style](feedback_planning_style.md) — 게이트 달린 단계별 플랜, 측정 우선
+- [No Model Discussion](feedback_no_model_discussion.md) — 먼저 묻지 않으면 모델 얘기 금지(파인튜닝은 사용자 직접 요청으로 예외 중)
+- [Invoice 1Q→1S Column Mapping](project_invoice_1q_column_mapping.md) — 1.jpg 컬럼섞임 해소, HOLD 해제
+- [Invoice 5.pdf Orientation](project_invoice_5pdf_orientation.md) — 90° misrotation 1U patch 해소
+- [Invoice GT Draft Workflow](project_invoice_gt_draft_workflow.md) — draft-gt-document.v1 스키마
+- [Deskew Over-Apply Chain (DONE)](project_deskew_overapply_chain.md) — 7.pdf 회전 해결. GT 재개조건=사용자 실제 GT 입력/승인 시에만
+- [Invoice 3BD 4.pdf supply_tax reconstructor](project_invoice_3bd_4pdf_supply_tax.md) — 컬럼 scramble 수정 완료
+- [Invoice Column Gaps](project_invoice_column_gaps.md) — documentNumber/taxType/discountAmount 추가 필요
+- [LEARN-LOOP-INFRA](project_learn_loop_infra_plan.md) — Phase 0~5 완료=MVP GO
+- [평가루프: 6장은 probe](feedback_eval_loop_probe_not_perfect.md) — 수천장 전 가늠용, 간결히
+- [분석 요청 = 우선순위 표+추천](feedback_analysis_prioritize.md) — 선택지 떠넘기지 말 것
+- [평가루프 운용 전략](project_eval_loop_strategy.md) — 일반/오버핏 판정은 룰 성격으로
+- [free vs template 파서 격차](project_free_vs_template_gaps.md) — free=950px 저해상, 사전/마스터 교정 없음
+- [전처리 deskew 각도오판](project_preprocess_image_deskew_gap.md) — 표테두리 락온→0°오판이 변주실패 근본원인
+- [Invoice 대표/상호 블록 분리](project_invoice_repblock_company_split.md) — run031, supplierRep 천장=OCR바운드
+- [CPU 파서 최적화 종료 게이트](project_cpu_phase_exhausted.md) — 잔여 355결함=recognition195+variant134+clean26, 더 밀면 오버핏
+- [평가루프 spurious 측정](project_eval_spurious_metric.md) — false positive 측정, 가드는 main.py 합류점에
+- [분석=부류·측정, 개별수정 금지](feedback_class_not_per_case.md) — 오류를 부류로, 두더지잡기 금지
+- [OCR 스냅샷+replay 하네스](project_ocr_snapshot_replay.md) — replay_compare+parser_drop_classify 로컬 루프 완전폐쇄. LOCAL_SUMMARY 합산뷰 포함
+- [트리거 '최신 리포트 분석해' 표준 흐름](feedback_latest_report_analyze_flow.md) — PARSER_DROP_CLASSIFY.md 전수분해→우선순위
+- [GPU 전환 운영상태](project_gpu_transition_state.md) — main.py=source(repo cpu, AWS만 sed gpu), push서 main.py 제외
+- [학습루프 전수 감사](project_learn_loop_audit.md) — 필드측정 견고·표측정 약함, GPU 블로커 아님
+- [전처리 완료(24장 베이스)](project_preprocess_complete_24base.md) — 셀손실 98%=파서. KEEP=P3deskew·P1orient·조건부UVDoc
+- [6천장 전처리 재방문](project_preprocess_scale_revisit_6k.md) — deskew −5.9pp=각도오판, AWS재run으로만 검증
+- [★전처리 orientation 수정+오회전 버그](project_preprocess_orientation_fix.md) — 90/270 오회전 수정(base=062). 067 전수: 전처리귀책 3.4%, 오회전 53장=정상문서 깨는 버그(AWS측, 룰/FT 먼저)
+- [★룰 base=062 + R1 재해석](project_invoice_rule_work_priorities.md) — 보일러플레이트 DROP이 정답, 최대레버=itemName-blob. 2026-07-03 대성과: thin 셀 13.4→22.7%
+- [학습 룰 vs 파인튜닝 전략](project_finetune_strategy_and_corpus.md) — 2층(인식/파서), 순서 룰→마스터매칭→FT(마지막 카드)
+- [파인튜닝 코퍼스/크롭 인프라](project_finetune_ledger_infra.md) — ledger+crops+table_align_diag, 적립처=eval/finetune_corpus/
+- [★파인튜닝 v1~v4 완주→주차](project_finetune_pipeline_runnable.md) — 인프라 완성(run-finetune 1/6~6/6, label-gate). v4 net−74=데이터 한계 → corpus 스케일업 후 재시도(이후 리키잉으로 해소)
+- [오프라인 재현 말고 기존 데이터 써라](feedback_no_offline_rederive_use_response.md) — "이미 어디 흘러나오나"부터, 로컬 재구성은 최후
+- [Invoice war DB ETL 계획](project_invoice_war_etl_plan.md) — pg_dump→로컬복원→ETL, eval/data/invoice_war
+- [★war DB 로컬 복원+6월 GT](project_invoice_war_db_restored.md) — bjocr PG17(root123), ground_truth_2606.json
+- [war GT 재작성(thin 호환)](project_invoice_war_gt_reshape.md) — build_gt.sql v2, 재발행 -o 필수
+- [★war 사람노동 전수실측](project_war_labor_measurement.md) — 노동 5% plateau, 성능 메리트 소진 → 메리트=제품통제/UX/데이터소유
+- [요금 논거 금지](feedback_no_cost_argument.md) — 메리트 논증은 정확도/제품통제/UX/데이터소유로만
+- [마스터매칭 baseline+로드맵](project_master_match_baseline.md) — itemCode=품명→마스터매칭 산출(유사도+가격 tiebreak 87.9%). 로드맵: 품명클린→랭킹(+20 최대레버)→learndata 부트스트랩→게이트→FT
+- [★★②매칭+③행검출+④거래처 완료](project_matching_bench_handoff.md) — thin 셀 24.2→37.9%. master_match.py(pg_trgm+rerank)+HA행복원+PartyMatcher
+- [★컬럼 매칭 완성(C1+C2)](project_invoice_column_matching_complete.md) — thin 필드 31→46.5%
+- [경쟁사 OCR엔진=구글 Document AI 커스텀](project_war_ocr_engine.md) — 학습된 커스텀 프로세서+learndata 2겹
+- [baseline_matrix 단계↔ocr.xml 매핑](project_baseline_matrix_stages.md) — 9000 preset: Google 독립=품명74.7/코드54.1=파리티 목표선. war 재현율 98~99% 검증. 6천: Master품명99.4/itemCode98.7
+
+## 로컬 전용 — 이전 invoice GT 핸드오프 작업 (2026-06-08 완료 시리즈, 병합 요약)
+
+- [T-10-fix header-skip 완료](project_t10_header_skip.md) — 6.pdf rowCount 6/6, E2E 7/7 exact
+- [Invoice free parser 3A~4B 시리즈](project_invoice_3i_closeout.md) — free 2/7 안정(1.jpg+5.pdf), 회귀0·fakeRow0. 상세: [free parser](project_invoice_free_parser.md)·[3A](project_invoice_3a_baseline.md)~[3G](project_invoice_3g_quality_hardcase.md)·[4A](project_invoice_4a_2pdf_segmentation.md)/[4B](project_invoice_4b_2pdf_overlay.md)(2.pdf cy overlap=패치 비권장)
+- [Invoice 2G~2S GT 핸드오프 시리즈](project_invoice_2s_original7_closeout.md) — 원본7 전부 GT-writable·블로커0, 핸드오프 완료(2.pdf 스켈레톤13행 UI 포함, 2H/2I 프론트 미커밋). 상세: [2G](project_invoice_2g_gt_skeleton_ui_contract.md)·[2H](project_invoice_2h_custom_tab_gt_skeleton_table.md)·[2K](project_invoice_2k_gt_handoff.md)·[2M](project_invoice_2m_6pdf_gt_handoff.md)·[2O](project_invoice_2o_3pdf_gt_handoff.md)·[2Q](project_invoice_2q_7pdf_gt_handoff.md)·[2S](project_invoice_2s_4pdf_gt_handoff.md)
+- [Invoice 2T~2Y 5.pdf 멀티페이지](project_invoice_2y_multipage_patch.md) — 5.pdf=22페이지 번들 확인→유저 승인 하에 main.py에 read_images_for_ocr 헬퍼+디버그 게이트(기본 OFF) 패치 완료. 상세: [2T](project_invoice_2t_1jpg_5pdf_gap_check.md)·[2U](project_invoice_2u_5pdf_recreate.md)·[2V](project_invoice_2v_5pdf_multipage_precheck.md)·[2X](project_invoice_2x_approval_handoff.md)
+- [Invoice 3BM 4.pdf promotion check](project_invoice_3bm_4pdf_promotion_check.md) — NEEDS_MINOR_USER_FIX: LOT 2세그 오류+로→토, 유저 수정+재export 대기
+- [Frontend build before typecheck](feedback_frontend_build_before_typecheck.md) — standalone typecheck 전 `next build` 먼저
