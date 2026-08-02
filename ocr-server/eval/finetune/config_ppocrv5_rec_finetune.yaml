@@ -42,7 +42,7 @@ CheckDataset:
     val_percent: null
 
 Train:
-  epochs_iters: 1                   # ★1로 원복(2026-07-29): 3ep 실측 val 0.531→0.403→0.384 = 2ep부터 붕괴.
+  epochs_iters: 3                   # 에폭사다리(2026-08-02): clean4 레시피+3ep. "1ep=정점"은 오염데이터(004) 측정이라 무효 후보 — 깨끗한 데이터로 ep2~3 수렴 검증. best_accuracy 자동선택.
                                     #   이 레시피(clean)의 정점은 1에폭 — 에폭 늘리기는 이득 없음(004 run 실측).
                                     # 정점 ep2~3 + 여유1 = 4로 상한(≈8h). best_accuracy 자동저장이라
                                     # 상한은 시간만 정함(품질 무관). 마지막 에폭까지 계속 오르면 다시 올릴 것.
