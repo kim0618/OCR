@@ -38,7 +38,8 @@ DRV=eval/finetune/paddlex_train.py
 #   bash run-finetune.sh --round=fields   --from-adopted  # ★★실필드(combined−itemCode바코드) 2026-07-26
 #   bash run-finetune.sh --round=numeric  --from-adopted  # 숫자만 target + 품명 앵커(순차, 18문턱)
 ROUND=hangul
-for a in "$@"; do case "$a" in --round=*) ROUND="${a#*=}" ;; --numeric) ROUND=numeric ;; esac; done
+TARGETS=""
+for a in "$@"; do case "$a" in --round=*) ROUND="${a#*=}" ;; --numeric) ROUND=numeric ;; --targets=*) TARGETS="${a#*=}" ;; esac; done
 
 # --- 이어받기(트리) 결정: --from-adopted 면 채택본을 base 로 pretrain override ---
 FROM_ADOPTED=0
@@ -200,6 +201,56 @@ fi
     echo "[clean4] 짧은숫자 라벨 self-verify + 1자리 오버샘플 x4"
     python eval/verify_short_num_labels.py --oversample-onedigit 3
     FT_CRITERIA="clean4: clean3 + 검증된 1자리 오버샘플 x4 (문자점유 1.5%→5.5%, blank 도피 차단)"
+  elif [ "$ROUND" = "demo" ]; then
+    # ★★소생 데모 라운드 (2026-08-03, 리뷰 합의). 못 읽는 품명을 파인튜닝으로 '살리는'
+    #  것만 증명한다. 부수 회귀(그 외 셀)는 이 데모의 판정 대상이 아님.
+    #
+    #  ★한 회차 = 품명 2개 = 파인튜닝 2번, 4회차 = 모델 8개
+    #    1단계: <직전 모델>이 못 읽던 품명 1개를 살린다.
+    #    2단계: 1단계 모델이 새로 잃어버린 품명 1개를 --targets 에 추가해 둘 다 읽게.
+    #  ★★모델 체인(트리 줄기): 모든 단계가 <바로 앞 단계 모델> 위에서 이어 학습한다.
+    #    base → m1(1차1단계) → m2(1차2단계) → m3(2차1단계) → ... → m8(4차2단계)
+    #    누적 타깃도 같이 늘어(1→2→3…→8) 마지막 m8 이 8개 전부 읽으면 그게 채택본이다.
+    #    각 단계 모델은 demo/models/step<N>/ 에 보관(다음 단계의 시작점).
+    #  판정: demo_report 가 test.txt(학습 안 쓴 같은 품명 크롭)를 직전 모델 vs 새 모델로
+    #    채점 → 직전 모델 0%, 새 모델 전부 정답이면 소생 성공.
+    #  사용: bash run-finetune.sh --round=demo --targets="디아세렌캡슐"            # 1차 1단계
+    #        bash run-finetune.sh --round=demo --targets="디아세렌캡슐,<잃은품명>"  # 1차 2단계
+    #        bash run-finetune.sh --round=demo --targets="...,...,<새타깃>"        # 2차 1단계
+    if [ -z "$TARGETS" ]; then echo "★demo 라운드는 --targets=\"품명1,품명2\" 필수"; exit 1; fi
+    DEMO_N=$(python - "$TARGETS" <<'PY'
+import sys
+print(len([t for t in sys.argv[1].split(",") if t.strip()]))
+PY
+)
+    DEMO_ROUND=$(( (DEMO_N + 1) / 2 ))
+    if [ $((DEMO_N % 2)) -eq 1 ]; then DEMO_STEP=1; else DEMO_STEP=2; fi
+    DEMO_MODELS=eval/finetune/demo/models
+    DEMO_PREV="$DEMO_MODELS/step$((DEMO_N - 1))"    # 바로 앞 단계 모델 = 이번 시작점
+    DEMO_CMP_ARGS=""
+    if [ "$DEMO_N" -ge 2 ]; then
+      if [ ! -f "$DEMO_PREV/best_accuracy.pdparams" ]; then
+        echo "★${DEMO_N}번째 단계인데 직전 단계 모델이 없습니다: $DEMO_PREV/best_accuracy.pdparams"
+        echo "  (단계는 순서대로 이어져야 합니다 - 직전 단계를 먼저 완료하세요)"; exit 1
+      fi
+      TRAIN_OVERRIDE="-o Train.pretrain_weight_path=$PWD/$DEMO_PREV/best_accuracy.pdparams"
+      BASE_TAG="demo_step$((DEMO_N - 1))"
+      DEMO_CMP_ARGS="--compare-dir $PWD/$DEMO_PREV/inference --compare-step $((DEMO_N - 1))"
+      echo "[데모] ${DEMO_ROUND}회차 ${DEMO_STEP}단계 (통산 ${DEMO_N}번째 모델) - 시작 모델 = 직전 $((DEMO_N - 1))번째 모델"
+    else
+      echo "[데모] 1회차 1단계 (통산 1번째 모델) - 시작 모델 = official base"
+    fi
+    # 기준셋(9,001) 소스 목록은 '학습 금지'인 동시에 '판정셋 식별자'다:
+    #  그 문서에서 온 크롭 = 판정셋, 나머지(코퍼스) = 학습셋. 홀드아웃 불필요.
+    python eval/build_demo_dataset.py --targets "$TARGETS" \
+        --replay-sources "$REPLAY_SRC"
+    # ★에폭 = "같은 타깃 크롭을 몇 번 보여주나". 데이터가 고정된 소량이라 과하게 반복하면
+    #  글자 모양이 아니라 그 크롭을 외워 판정(다른 문서의 같은 품명)에서 되레 떨어진다.
+    #  20회면 충분하고(≈200스텝, 2~3분), best_accuracy 가 매 에폭 검증으로 정점을 잡는다.
+    #  안 붙으면 에폭이 아니라 lr(3e-5→1e-4)을 올린다 — 반복만 늘리는 건 암기 쪽으로 감.
+    DEMO_EPOCHS=${DEMO_EPOCHS:-20}
+    TRAIN_OVERRIDE="$TRAIN_OVERRIDE -o Train.epochs_iters=$DEMO_EPOCHS"
+    FT_CRITERIA="소생 데모 ${DEMO_ROUND}회차 ${DEMO_STEP}단계: 타깃[$TARGETS] held-out 동일품명 재현"
   elif [ "$ROUND" = "numeric" ]; then
     # ★★숫자 라운드 (2026-07-24): 숫자(금액/수량/단가) 인식↑ + 품명 유지~개선.
     #  1차(품명)에서 배운 교훈 = 반대편 앵커가 작으면(13%) 그쪽이 −18.8%p 날아감 →
@@ -256,6 +307,67 @@ fi
   echo "[6/6] 인식 비교 리포트 (base vs 파인튜닝, held-out test 크롭 직접)"
   python eval/finetune_report.py --run-tag "$RUN_TAG" || echo "  (리포트 생성 실패 — 로그 확인)"
   python eval/finetune_report_by_type.py || echo "  (타입별 리포트 생성 실패 — 로그 확인)"
+  if [ "$ROUND" = "demo" ]; then
+    # ★소생 데모 판정 리포트 — 처음 보는 사람용(기준 문서수·컬럼·선정근거·크롭별 판정·누적 현황).
+    #  재료는 방금 [6/6] 이 남긴 FINETUNE_PREDICTIONS.jsonl — 추가 GPU 작업 없음.
+    echo "[데모 리포트] 소생 판정 리포트 (eval/finetune/demo/${RUN_TAG}/DEMO_REPORT_${RUN_TAG}.html)"
+    python eval/demo_report.py --run-tag "$RUN_TAG" $DEMO_CMP_ARGS \
+      || echo "  (데모 리포트 실패 - 수동: python eval/demo_report.py --run-tag $RUN_TAG)"
+    # ★★판정 먼저, 저장은 통과했을 때만.
+    #  실패한 모델이 step<N>/ 에 박히면 다음 단계가 실패본 위에서 출발해버린다.
+    #  실패면 저장하지 않으므로 시작 모델(=직전 단계 모델)이 그대로 유지되고, 같은 단계를
+    #  조건 바꿔 다시 돌리면 된다(그 재시도는 '${DEMO_N}-1 모델'로 이력에 카운트).
+    DEMO_PASS=$(python - "eval/finetune/demo/${RUN_TAG}/DEMO_REPORT_${RUN_TAG}.json" <<'PY'
+import json, sys
+try:
+    print("1" if (json.load(open(sys.argv[1], encoding="utf-8"))
+                  .get("summary", {}).get("allPass")) else "0")
+except Exception:
+    print("0")
+PY
+)
+    if [ "$DEMO_PASS" = "1" ]; then
+      echo "[데모] 판정 통과 → ${DEMO_N}번째 모델 보관: $DEMO_MODELS/step${DEMO_N}/"
+      mkdir -p "$DEMO_MODELS/step${DEMO_N}"
+      cp eval/finetune/output/best_accuracy/best_accuracy.pdparams \
+         "$DEMO_MODELS/step${DEMO_N}/" 2>/dev/null \
+        || echo "  (가중치 복사 실패 - output 확인)"
+      rm -rf "$DEMO_MODELS/step${DEMO_N}/inference"
+      cp -r eval/finetune/output/best_accuracy/inference \
+            "$DEMO_MODELS/step${DEMO_N}/" 2>/dev/null \
+        || echo "  (inference 복사 실패 - export 확인)"
+    else
+      echo "[데모] ★판정 실패 → 체인에 넣지 않습니다(step${DEMO_N}/ 미갱신)."
+      echo "       시작 모델은 그대로이니, 조건(에폭·크롭 수)을 바꿔 같은 --targets 로 재실행하세요."
+      echo "       (재시도는 '${DEMO_N}-1 모델'로 실행 이력에 남습니다)"
+    fi
+    # 회차 탭(요약·실행 이력·1차~4차) 종합본 - 지금까지의 run JSON 을 모아 매번 갱신.
+    python eval/demo_summary.py \
+      || echo "  (종합 리포트 실패 - 수동: python eval/demo_summary.py)"
+  fi
+  if [ "$ROUND" = "demo" ]; then
+    # ★데모는 3탭 벤치(38만 크롭×2모델 ~70분)도, 문서 단위 eval 도 돌리지 않는다.
+    #  기준셋(9,001)의 품명 크롭은 이미 코퍼스에 수확돼 있으므로, 같은 고정 집합을
+    #  이번 모델로 한 번 읽히면(인식만) 그 모델의 판독이 나온다 = 다음 타깃 근거.
+    #  '무엇을 잃었나'는 직전 스캔(demo/scans/)과 대조 — 모델 하나만 새로 읽으면 된다.
+    #  ★판정 통과 시에만 스캔한다: 실패 모델의 판독이 demo/scans/ 에 남으면 다음 단계가
+    #   그걸 '직전 모델'로 잘못 대조한다(체인에는 통과본만 들어가야 함).
+    if [ "$DEMO_PASS" = "1" ]; then
+      echo "[다음 타깃 스캔] 기준셋 품명 크롭 판독 → 잃어버린 품명 / 못 읽는 품명 후보"
+      python eval/demo_next_target.py --run-tag "$RUN_TAG" --exclude "$TARGETS" \
+        || echo "  (타깃 스캔 실패 - 수동: python eval/demo_next_target.py --run-tag $RUN_TAG)"
+    else
+      echo "[다음 타깃 스캔] 건너뜀 - 판정 실패 모델은 체인/스캔에 넣지 않습니다"
+    fi
+    echo "==================== 파인튜닝 끝 [$(date +'%F %T')] ===================="
+    echo "★★소생 데모 리포트(이번 단계): eval/finetune/demo/${RUN_TAG}/DEMO_REPORT_${RUN_TAG}.html"
+    echo "★★회차 종합(회사 제출용): eval/finetune/demo/DEMO_SUMMARY.html"
+    echo "★다음 타깃 후보: eval/finetune/demo/${RUN_TAG}/NEXT_TARGETS.json"
+    _summary_args=(--ts "$RUN_TAG" --base "$BASE_TAG" --elapsed "$((SECONDS - _FT_START))" \
+      --log "$TRAIN_LOG" --config "$CFG" --criteria "$FT_CRITERIA")
+    python eval/finetune_run_summary.py "${_summary_args[@]}" || true
+    exit 0
+  fi
   # ★판정용 3탭 벤치(처음/유지/포함) 자동 생성 — 학습 직후 별도 수동실행 없이 바로 판정.
   #  순서 중요: build_ft_bench 가 방금 갱신된 train.txt 로 포함(SEEN)/유지(RETAIN)를 재빌드
   #  한 뒤 채점해야 "이 run 이 실제 학습한 것" 기준이 맞는다. (~70분, 362k 크롭×2모델)
@@ -268,6 +380,10 @@ fi
   echo "★run 아카이브(git 제외, scp 반출): eval/finetune/reports/${RUN_TAG}/"
   echo "★판정 리포트(벤치 3탭): eval/finetune/reports/${RUN_TAG}/FINETUNE_BENCH_${RUN_TAG}.html"
   echo "최신 포인터: eval/finetune/FINETUNE_BENCH.html · FINETUNE_REPORT.html"
+  if [ "$ROUND" = "demo" ]; then
+    echo "★★소생 데모 리포트(이번 차수): eval/finetune/demo/${RUN_TAG}/DEMO_REPORT_${RUN_TAG}.html"
+    echo "★★차수 종합(회사 제출용, 요약·1차~4차 탭): eval/finetune/demo/DEMO_SUMMARY.html"
+  fi
   echo "--- 채택하려면(게이트 통과 시): 트리 줄기로 승격 + main.py 반영 ---"
   echo "  python eval/finetune_adopt.py --version v6      # 부모=직전 채택본(없으면 official)"
   echo "  이후 이어받아 학습: bash ~/OCR/run-finetune.sh --from-adopted"
