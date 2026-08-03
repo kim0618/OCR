@@ -16,8 +16,9 @@
   src 를 모르는 정답 크롭은 기준셋 여부를 확인할 수 없으므로 <판정에 쓰지 않고>
   학습에만 쓴다(오염 위험은 manifest 에 기록해 리포트가 표기).
 
-anchor: 타깃 크롭 수십 장만으로 학습하면 모델이 아무 크롭에나 타깃 문자열을 뱉는
-  출력붕괴가 온다. 무관한 정답 크롭을 섞어 그걸 막는다(--anchor 0 = 순수 타깃만).
+anchor: 기본 0 - 타깃 크롭만 학습한다. 이 데모가 증명하는 것은 '타깃 품명을 살리고
+  누적 유지한다'뿐이고, 타깃 외 품명이 흔들리는 것은 실패가 아니라 다음 단계의 타깃이
+  된다. 타깃 외 보호가 필요해지면 --anchor 로 정답 크롭을 섞을 수 있다.
 
     python eval/build_demo_dataset.py --targets "디아세렌캡슐" \
         --replay-sources eval/finetune_corpus/replay_sources.txt
@@ -108,13 +109,15 @@ def main() -> int:
                     help="기준셋(9,001) 소스 목록 — 이 문서에서 온 크롭이 판정셋이 된다")
     ap.add_argument("--oversample-to", type=int, default=0,
                     help="타깃 학습 줄 복제 상한. 0=복제 안 함(권장 - 반복 노출은 에폭이 담당)")
-    ap.add_argument("--anchor", type=int, default=500,
-                    help="labels_correct 랜덤 앵커 수(출력붕괴 보험). 0=순수 타깃만. "
-                         "타깃의 3배 정도가 출발점(보호 대상이 다수여야 함)")
+    ap.add_argument("--anchor", type=int, default=0,
+                    help="labels_correct 랜덤 앵커 수. 기본 0 = 타깃 크롭만 학습. "
+                         "이 데모의 판정 대상은 타깃 품명뿐이라 앵커를 쓰지 않는다 "
+                         "(부수 회귀는 다음 단계 타깃이 될 뿐 실패가 아님). "
+                         "타깃 외 품명 보호가 필요해지면 그때 값을 준다")
     ap.add_argument("--val-target", type=int, default=20,
                     help="검증용으로 <학습 크롭에서> 뺄 장수. 판정셋(기준셋)은 val 에도 쓰지 않는다")
-    ap.add_argument("--val-anchor", type=int, default=100,
-                    help="검증에 섞을 앵커 수(붕괴 조기경보)")
+    ap.add_argument("--val-anchor", type=int, default=0,
+                    help="검증에 섞을 앵커 수. 기본 0 = 검증도 타깃 크롭만")
     ap.add_argument("--min-match", type=float, default=0.7)
     ap.add_argument("--fallback-holdout", type=float, default=0.25,
                     help="기준셋 크롭이 하나도 없을 때만 쓰는 무작위 홀드아웃 비율")

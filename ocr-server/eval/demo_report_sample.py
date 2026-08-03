@@ -184,3 +184,18 @@ ds._run_history_index = lambda: _FAKE_HIST
 sys.argv = ["demo_summary.py", "--input-dir", OUT_DIR, "--rounds", "4",
             "--out", os.path.join(OUT_DIR, "DEMO_SUMMARY_샘플.html")]
 ds.main()
+
+# ★샘플임을 화면에 박는다 — 실제 결과(demo/DEMO_SUMMARY.html)와 혼동 방지.
+_BANNER = ('<div style="background:#fff3cd;border:1px solid #e0c76b;border-radius:8px;'
+           'padding:10px 16px;margin:0 0 14px;font-weight:700">★ 미리보기 샘플입니다 - '
+           '가짜 데이터(SAMPLE_*). 실제 결과는 demo/DEMO_SUMMARY.html</div>')
+import io as _io
+for fn in os.listdir(OUT_DIR):
+    if not fn.endswith(".html"):
+        continue
+    fp = os.path.join(OUT_DIR, fn)
+    h = _io.open(fp, encoding="utf-8").read()
+    h = h.replace("<title>파인튜닝", "<title>[샘플] 파인튜닝", 1)
+    h = h.replace("<body>", "<body>" + _BANNER, 1)
+    _io.open(fp, "w", encoding="utf-8").write(h)
+print("[샘플] 배너 부착 완료")

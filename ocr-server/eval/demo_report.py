@@ -27,6 +27,7 @@ import glob
 import html
 import json
 import os
+import re
 import sys
 from datetime import datetime
 
@@ -48,7 +49,20 @@ LATEST_OUT = os.path.join(DEMO_DIR, "DEMO_REPORT.html")
 
 
 def _demo_run_dir(run_tag: str) -> str:
-    d = os.path.join(DEMO_DIR, run_tag)
+    """run별 산출물 폴더 `demo/NNN_<tag>/` — reports 폴더와 같은 순번 규약.
+
+    같은 run 에서 리포트/스캔이 따로 실행돼도 한 폴더를 쓰도록, 이미 이 태그로
+    만든 폴더가 있으면 재사용하고 없을 때만 다음 순번(NNN)을 새로 딴다.
+    """
+    os.makedirs(DEMO_DIR, exist_ok=True)
+    existing = os.listdir(DEMO_DIR)
+    for name in sorted(existing):
+        if re.fullmatch(r"\d{3}_" + re.escape(run_tag), name):
+            d = os.path.join(DEMO_DIR, name)
+            break
+    else:
+        nums = [int(m.group(1)) for n in existing if (m := re.match(r"(\d{3})_", n))]
+        d = os.path.join(DEMO_DIR, f"{max(nums, default=0) + 1:03d}_{run_tag}")
     os.makedirs(d, exist_ok=True)
     return d
 
@@ -280,7 +294,7 @@ th{{background:#f2f6fa}}
  f"타깃 품명 크롭 <b>{c['targetTrainUnique']}</b>장(코퍼스, 기준셋과 다른 문서)"
  + (f" ×복제 {c.get('oversampledTo', 0):,}줄"
     if (c.get('oversampledTo') or 0) > (c.get('targetTrainUnique') or 0) else " (복제 없음)")
- + f" + 일반 정답 크롭 앵커 {c.get('anchor', 0):,}장(출력붕괴 방지용)"
+ + (f" + 일반 정답 크롭 앵커 {c['anchor']:,}장" if c.get('anchor') else " · 앵커 없음")
  if c.get('targetTrainUnique') is not None else
  '<span class="muted">미측정 - 코퍼스 집계(demo_corpus_count.py) 후 확정</span>'}</td></tr>
 <tr><th>판정 데이터</th><td>학습에서 제외한 같은 품명 크롭 <b>{c.get('test', '?')}장</b> (held-out)</td></tr>

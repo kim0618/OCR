@@ -27,6 +27,7 @@ import glob
 import html
 import json
 import os
+import re
 import sys
 from datetime import datetime
 
@@ -50,6 +51,9 @@ def _load_attempts(input_dir: str) -> dict[tuple[int, int], list[dict]]:
     out: dict[tuple[int, int], list[dict]] = {}
     for fp in sorted(glob.glob(os.path.join(input_dir, "**", "DEMO_REPORT_*.json"),
                                recursive=True)):
+        # 미리보기 샘플(demo/samples/)은 실적이 아니다 — 집계 제외.
+        if "samples" in os.path.normpath(fp).split(os.sep):
+            continue
         try:
             with open(fp, encoding="utf-8") as f:
                 j = json.load(f)
@@ -57,6 +61,10 @@ def _load_attempts(input_dir: str) -> dict[tuple[int, int], list[dict]]:
             continue
         if j.get("schemaVersion") != "demo-report.v1":
             continue
+        # 산출물 폴더 순번(001_260803_1508)을 실행번호에 함께 보여준다 — 폴더를 바로 찾게.
+        folder = os.path.basename(os.path.dirname(fp))
+        if (m := re.match(r"(\d{3})_", folder)):
+            j["runSeq"] = m.group(1)
         cyc = int(j.get("cycle") or len(j.get("targets") or []))
         key = (int(j.get("roundNo") or (cyc + 1) // 2),
                int(j.get("step") or (1 if cyc % 2 else 2)))
@@ -82,6 +90,13 @@ def _chain_view(attempts: dict[tuple[int, int], list[dict]]) -> dict[tuple[int, 
 def _attempt_label(step_index: int, i: int) -> str:
     """시도 표기 - 첫 시도는 'N', 재시도는 'N-1', 'N-2' …"""
     return f"{step_index}" if i == 0 else f"{step_index}-{i}"
+
+
+def _run_id(run: dict) -> str:
+    """실행번호 표기 - 산출물 폴더 순번이 있으면 붙인다(001_260803_1508)."""
+    tag = run.get("runTag") or ""
+    seq = run.get("runSeq")
+    return f"{seq}_{tag}" if seq else tag
 
 
 def _run_history_index() -> dict[str, dict]:
@@ -136,22 +151,9 @@ def _step_body(run: dict, esc) -> str:
     c = run.get("counts") or {}
     basis = run.get("basisDocs")
     n_docs = f"{basis:,}장" if basis else "(리플레이 폴더 없음)"
-    p = [f"""<table>
-<tr><th style="width:30%">기준 문서셋</th><td>거래명세서 {n_docs} — held-out 리플레이 기준셋
- (학습에 절대 쓰지 않는 측정 전용 문서. 타깃 선정과 "못 읽는다"의 근거)</td></tr>
-<tr><th>대상 컬럼</th><td>품목표의 <b>품명 ({esc(run.get('column') or 'itemName')})</b></td></tr>
-<tr><th>시작 모델</th><td><b>{esc(run.get('compareLabel') or run.get('baseModel') or '')}</b>
- {'(직전 회차 결과 모델 위에서 이어 학습)' if run.get('compareDir') else '(official, 파인튜닝 없음)'}</td></tr>
-<tr><th>학습 데이터</th><td>{
- f"타깃 품명 크롭 <b>{c['targetTrainUnique']}</b>장"
- + (f" ×복제 {c.get('oversampledTo', 0):,}줄"
-    if (c.get('oversampledTo') or 0) > (c.get('targetTrainUnique') or 0) else " (복제 없음)")
- + f" + 일반 정답 크롭 앵커 {c.get('anchor', 0):,}장"
- if c.get('targetTrainUnique') is not None else
- '<span class="muted">미측정 - 코퍼스 집계(demo_corpus_count.py) 후 확정</span>'}</td></tr>
-<tr><th>판정 데이터</th><td>학습에서 제외한 같은 품명 크롭 <b>{c.get('test', '?')}장</b> (held-out)</td></tr>
-<tr><th>실행번호</th><td>{esc(run.get('runTag') or '')} · {esc(run.get('generatedAt') or '')}</td></tr>
-</table>"""]
+    # 기준 정보(문서셋·컬럼·시작 모델·크롭 수·실행번호)는 실행 이력 탭에 있으므로
+    # 회차 탭에서는 반복하지 않는다 — 여기서는 타깃별 판정만 본다.
+    p: list[str] = []
     n = len(run.get("targets") or [])
     for i, t in enumerate(run.get("targets") or [], 1):
         v = t.get("verdict") or {}
@@ -227,7 +229,7 @@ def _round_body(round_no: int, tries: dict[int, list[dict]], esc,
             inner = (f'<h3 style="border-bottom:2px solid #dde5ec;padding-bottom:6px">'
                      f'{_sub_label(round_no, st, i)} '
                      f'<span class="muted">→ {_model_name(round_no, st, run, esc)}</span></h3>'
-                     f'<p class="muted">{step_desc[st]}</p>' + _step_body(run, esc))
+                     + _step_body(run, esc))
             subs.append((label, inner, bool(ok)))
     if not subs:
         return "\n".join(p + ['<div class="box muted">아직 실행 전입니다.</div>'])
@@ -288,8 +290,13 @@ def _history(attempts: dict[tuple[int, int], list[dict]], esc) -> str:
         total_sec += sec
         total_usd += usd
         train = []
+        # epochsPlanned 는 config 파일 값이라 -o 오버라이드(DEMO_EPOCHS)를 모른다 → 표기 안 함.
+        # 대신 best 에폭을 보여준다: "ep 20 (best 13)" = 20 돌렸고 13에서 정점(자동 선택).
         if h.get("epochsCompleted"):
-            train.append(f"ep {h['epochsCompleted']}/{h.get('epochsPlanned', '?')}")
+            ep = f"ep {h['epochsCompleted']}"
+            if h.get("bestEpoch"):
+                ep += f" (best {h['bestEpoch']})"
+            train.append(ep)
         if h.get("bestAcc") is not None:
             train.append(f"acc {float(h['bestAcc']):.3f}")
         if sec:
@@ -304,7 +311,8 @@ def _history(attempts: dict[tuple[int, int], list[dict]], esc) -> str:
         crop_train = (f'타깃 <b>{uniq}</b>장'
                       + (f' <span class="muted">({over:,}줄 복제)</span>'
                          if over and over > (uniq or 0) else "")
-                      + (f'<br><span class="muted">+ 앵커 {anchor:,}장</span>' if anchor else "")
+                      + (f'<br><span class="muted">+ 앵커 {anchor:,}장</span>'
+                         if anchor else '<br><span class="muted">앵커 없음</span>')
                       ) if uniq is not None else '<span class="muted">미측정</span>'
         cost = f"${usd:.2f}" if usd else "-"
         p.append(f'<tr><td><b>{ORD[r_no - 1]} {st}단계</b>{retry}</td>'
@@ -313,7 +321,7 @@ def _history(attempts: dict[tuple[int, int], list[dict]], esc) -> str:
                  f'<td>{crop_train}</td>'
                  f'<td>{test if test is not None else "-"}장</td>'
                  f'<td>{s.get("pass", 0)}/{s.get("total", 0)}</td>'
-                 f'<td class="muted">{esc(run.get("runTag") or "")}</td>'
+                 f'<td class="muted">{esc(_run_id(run))}</td>'
                  f'<td class="muted">{" · ".join(train) or "-"}</td>'
                  f'<td>{cost}</td>'
                  f'<td>{badge}</td></tr>')
@@ -341,7 +349,7 @@ def _model_name(r_no: int, step: int, run: dict, esc) -> str:
     (run-finetune 이 demo/models/round<N>/ 에 보관).
     """
     name = (f"{ORD[r_no - 1]} 결과 모델" if step == 2 else f"{ORD[r_no - 1]} 1단계 모델")
-    tag = esc(run.get("runTag") or "")
+    tag = esc(_run_id(run))
     return f"<b>{name}</b>" + (f' <span class="muted">({tag})</span>' if tag else "")
 
 
@@ -411,21 +419,21 @@ def _overview(runs: dict, rounds: int, esc) -> str:
     # ---- 최종 채택 게이트 ----
     last_n = rounds * 2
     last = runs.get((rounds, 2))
-    p.append(f'<h3>최종 채택</h3>')
+    p.append(f'<h3>최종 목표</h3>')
     if not last:
-        p.append(f'<p class="muted">채택 조건: 마지막 <b>{last_n}번째 모델</b>'
+        p.append(f'<p class="muted">목표: 마지막 <b>{last_n}번째 모델</b>'
                  f'({ORD[rounds - 1]} 2단계)이 누적 <b>{last_n}개 품명 전부</b>를 읽는 상태. '
                  f'아직 진행 중입니다.</p>')
     else:
         s = last.get("summary") or {}
         okall = s.get("allPass") and s.get("total") == last_n
-        badge = (f'<span class="badge pass big">채택 가능 - {last_n}번째 모델이 '
+        badge = (f'<span class="badge pass big">목표 달성 - {last_n}번째 모델이 '
                  f'{last_n}개 전부 읽음</span>' if okall
-                 else f'<span class="badge fail big">채택 불가 - '
+                 else f'<span class="badge fail big">미달 - '
                       f'{s.get("pass", 0)}/{s.get("total", 0)}만 읽음</span>')
         p.append(f'<p class="big">{badge}</p>')
-        p.append(f'<p class="muted">채택 후보 = {esc(last.get("modelName") or "")} '
-                 f'({esc(last.get("runTag") or "")}) · 보관 위치 '
+        p.append(f'<p class="muted">최종 모델 = {esc(last.get("modelName") or "")} '
+                 f'({esc(_run_id(last))}) · 보관 위치 '
                  f'<code>eval/finetune/demo/models/step{last_n}/</code></p>')
     return "\n".join(p)
 

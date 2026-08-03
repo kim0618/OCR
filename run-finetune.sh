@@ -310,14 +310,15 @@ PY
   if [ "$ROUND" = "demo" ]; then
     # ★소생 데모 판정 리포트 — 처음 보는 사람용(기준 문서수·컬럼·선정근거·크롭별 판정·누적 현황).
     #  재료는 방금 [6/6] 이 남긴 FINETUNE_PREDICTIONS.jsonl — 추가 GPU 작업 없음.
-    echo "[데모 리포트] 소생 판정 리포트 (eval/finetune/demo/${RUN_TAG}/DEMO_REPORT_${RUN_TAG}.html)"
+    echo "[데모 리포트] 소생 판정 리포트 (eval/finetune/demo/<NNN>_${RUN_TAG}/)"
     python eval/demo_report.py --run-tag "$RUN_TAG" $DEMO_CMP_ARGS \
       || echo "  (데모 리포트 실패 - 수동: python eval/demo_report.py --run-tag $RUN_TAG)"
     # ★★판정 먼저, 저장은 통과했을 때만.
     #  실패한 모델이 step<N>/ 에 박히면 다음 단계가 실패본 위에서 출발해버린다.
     #  실패면 저장하지 않으므로 시작 모델(=직전 단계 모델)이 그대로 유지되고, 같은 단계를
     #  조건 바꿔 다시 돌리면 된다(그 재시도는 '${DEMO_N}-1 모델'로 이력에 카운트).
-    DEMO_PASS=$(python - "eval/finetune/demo/${RUN_TAG}/DEMO_REPORT_${RUN_TAG}.json" <<'PY'
+    DEMO_OUT=$(ls -d eval/finetune/demo/[0-9][0-9][0-9]_"${RUN_TAG}" 2>/dev/null | head -1)
+    DEMO_PASS=$(python - "$DEMO_OUT/DEMO_REPORT_${RUN_TAG}.json" <<'PY'
 import json, sys
 try:
     print("1" if (json.load(open(sys.argv[1], encoding="utf-8"))
@@ -346,23 +347,26 @@ PY
       || echo "  (종합 리포트 실패 - 수동: python eval/demo_summary.py)"
   fi
   if [ "$ROUND" = "demo" ]; then
-    # ★데모는 3탭 벤치(38만 크롭×2모델 ~70분)도, 문서 단위 eval 도 돌리지 않는다.
-    #  기준셋(9,001)의 품명 크롭은 이미 코퍼스에 수확돼 있으므로, 같은 고정 집합을
-    #  이번 모델로 한 번 읽히면(인식만) 그 모델의 판독이 나온다 = 다음 타깃 근거.
-    #  '무엇을 잃었나'는 직전 스캔(demo/scans/)과 대조 — 모델 하나만 새로 읽으면 된다.
-    #  ★판정 통과 시에만 스캔한다: 실패 모델의 판독이 demo/scans/ 에 남으면 다음 단계가
-    #   그걸 '직전 모델'로 잘못 대조한다(체인에는 통과본만 들어가야 함).
-    if [ "$DEMO_PASS" = "1" ]; then
+    # ★다음 타깃 스캔(기준셋 품명 크롭 ~9만 장 판독, 십몇 분)은 기본으로 돌리지 않는다.
+    #  판정과 달리 '다음 타깃을 정할 때만' 필요하므로, 결과를 보고 따로 돌린다:
+    #    python eval/demo_next_target.py --run-tag <실행번호> --exclude "<현재 타깃들>"
+    #  (스캔은 반드시 판정 통과 run 에서만 — 실패 모델 판독이 demo/scans/ 에 남으면
+    #   다음 단계가 그걸 '직전 모델'로 잘못 대조한다.)
+    #  붙여서 돌리고 싶으면 DEMO_SCAN=1 로 실행.
+    if [ "$DEMO_PASS" = "1" ] && [ "${DEMO_SCAN:-0}" = "1" ]; then
       echo "[다음 타깃 스캔] 기준셋 품명 크롭 판독 → 잃어버린 품명 / 못 읽는 품명 후보"
       python eval/demo_next_target.py --run-tag "$RUN_TAG" --exclude "$TARGETS" \
         || echo "  (타깃 스캔 실패 - 수동: python eval/demo_next_target.py --run-tag $RUN_TAG)"
+    elif [ "$DEMO_PASS" = "1" ]; then
+      echo "[다음 타깃 스캔] 생략(기본). 결과 확인 후 수동 실행:"
+      echo "  python eval/demo_next_target.py --run-tag $RUN_TAG --exclude \"$TARGETS\""
     else
       echo "[다음 타깃 스캔] 건너뜀 - 판정 실패 모델은 체인/스캔에 넣지 않습니다"
     fi
     echo "==================== 파인튜닝 끝 [$(date +'%F %T')] ===================="
-    echo "★★소생 데모 리포트(이번 단계): eval/finetune/demo/${RUN_TAG}/DEMO_REPORT_${RUN_TAG}.html"
+    echo "★★소생 데모 리포트(이번 단계): ${DEMO_OUT:-eval/finetune/demo}/DEMO_REPORT_${RUN_TAG}.html"
     echo "★★회차 종합(회사 제출용): eval/finetune/demo/DEMO_SUMMARY.html"
-    echo "★다음 타깃 후보: eval/finetune/demo/${RUN_TAG}/NEXT_TARGETS.json"
+    echo "★다음 타깃 후보: ${DEMO_OUT:-eval/finetune/demo}/NEXT_TARGETS.json"
     _summary_args=(--ts "$RUN_TAG" --base "$BASE_TAG" --elapsed "$((SECONDS - _FT_START))" \
       --log "$TRAIN_LOG" --config "$CFG" --criteria "$FT_CRITERIA")
     python eval/finetune_run_summary.py "${_summary_args[@]}" || true
@@ -381,7 +385,7 @@ PY
   echo "★판정 리포트(벤치 3탭): eval/finetune/reports/${RUN_TAG}/FINETUNE_BENCH_${RUN_TAG}.html"
   echo "최신 포인터: eval/finetune/FINETUNE_BENCH.html · FINETUNE_REPORT.html"
   if [ "$ROUND" = "demo" ]; then
-    echo "★★소생 데모 리포트(이번 차수): eval/finetune/demo/${RUN_TAG}/DEMO_REPORT_${RUN_TAG}.html"
+    echo "★★소생 데모 리포트(이번 차수): eval/finetune/demo/<NNN>_${RUN_TAG}/"
     echo "★★차수 종합(회사 제출용, 요약·1차~4차 탭): eval/finetune/demo/DEMO_SUMMARY.html"
   fi
   echo "--- 채택하려면(게이트 통과 시): 트리 줄기로 승격 + main.py 반영 ---"
