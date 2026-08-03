@@ -244,11 +244,13 @@ PY
     #  그 문서에서 온 크롭 = 판정셋, 나머지(코퍼스) = 학습셋. 홀드아웃 불필요.
     python eval/build_demo_dataset.py --targets "$TARGETS" \
         --replay-sources "$REPLAY_SRC"
-    # ★에폭 = "같은 타깃 크롭을 몇 번 보여주나". 데이터가 고정된 소량이라 과하게 반복하면
-    #  글자 모양이 아니라 그 크롭을 외워 판정(다른 문서의 같은 품명)에서 되레 떨어진다.
-    #  20회면 충분하고(≈200스텝, 2~3분), best_accuracy 가 매 에폭 검증으로 정점을 잡는다.
+    # ★에폭 = "같은 타깃 크롭을 몇 번 보여주나". 앵커를 빼서 학습셋이 타깃 크롭뿐이라
+    #  (1차1단계 기준 167장 ≈ 3스텝/에폭) 에폭 수가 곧 스텝 수를 좌우한다.
+    #  기본 40 ≈ 120스텝. 근거: 앵커 500장이 있던 첫 실행(667줄·20에폭·200스텝)에서
+    #  best 가 13에폭(≈130스텝)이었다 — 비슷한 스텝을 확보하는 값이 40.
+    #  매 에폭 검증 → best_accuracy 자동 선택이라 넉넉히 잡아도 손해는 시간뿐.
     #  안 붙으면 에폭이 아니라 lr(3e-5→1e-4)을 올린다 — 반복만 늘리는 건 암기 쪽으로 감.
-    DEMO_EPOCHS=${DEMO_EPOCHS:-20}
+    DEMO_EPOCHS=${DEMO_EPOCHS:-40}
     TRAIN_OVERRIDE="$TRAIN_OVERRIDE -o Train.epochs_iters=$DEMO_EPOCHS"
     FT_CRITERIA="소생 데모 ${DEMO_ROUND}회차 ${DEMO_STEP}단계: 타깃[$TARGETS] held-out 동일품명 재현"
   elif [ "$ROUND" = "numeric" ]; then
