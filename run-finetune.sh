@@ -246,12 +246,16 @@ PY
         --replay-sources "$REPLAY_SRC"
     # ★에폭 = "같은 타깃 크롭을 몇 번 보여주나". 앵커를 빼서 학습셋이 타깃 크롭뿐이라
     #  (1차1단계 기준 167장 ≈ 3스텝/에폭) 에폭 수가 곧 스텝 수를 좌우한다.
-    #  기본 40 ≈ 120스텝. 근거: 앵커 500장이 있던 첫 실행(667줄·20에폭·200스텝)에서
-    #  best 가 13에폭(≈130스텝)이었다 — 비슷한 스텝을 확보하는 값이 40.
-    #  매 에폭 검증 → best_accuracy 자동 선택이라 넉넉히 잡아도 손해는 시간뿐.
-    #  안 붙으면 에폭이 아니라 lr(3e-5→1e-4)을 올린다 — 반복만 늘리는 건 암기 쪽으로 감.
-    DEMO_EPOCHS=${DEMO_EPOCHS:-40}
+    #  기본 20 = 타깃 크롭을 20번 본다. 매 에폭 검증 → best_accuracy 자동 선택이라
+    #  정점이 20 안에 들면 그걸로 끝. 안 붙으면 에폭이 아니라 lr(3e-5→1e-4)을 올린다
+    #  — 같은 크롭 반복만 늘리는 건 학습이 아니라 암기 쪽으로 간다.
+    DEMO_EPOCHS=${DEMO_EPOCHS:-20}
+    # ★중간 체크포인트 저장 끄기(save_interval=에폭수). config 기본 1 이면 에폭마다
+    #  iter_epoch_N/ 을 통째로 남겨 316MB×에폭수를 먹는다(2026-08-03: 40에폭에 9.5GB →
+    #  디스크 100% 로 28에폭에서 학습 중단). 우리가 쓰는 건 best_accuracy 뿐이고
+    #  그건 eval_interval(매 에폭 검증)로 따로 갱신되므로 중간본은 필요 없다.
     TRAIN_OVERRIDE="$TRAIN_OVERRIDE -o Train.epochs_iters=$DEMO_EPOCHS"
+    TRAIN_OVERRIDE="$TRAIN_OVERRIDE -o Train.save_interval=$DEMO_EPOCHS"
     FT_CRITERIA="소생 데모 ${DEMO_ROUND}회차 ${DEMO_STEP}단계: 타깃[$TARGETS] held-out 동일품명 재현"
   elif [ "$ROUND" = "numeric" ]; then
     # ★★숫자 라운드 (2026-07-24): 숫자(금액/수량/단가) 인식↑ + 품명 유지~개선.

@@ -123,32 +123,48 @@ def main() -> int:
     ap.add_argument("--min-match", type=float, default=0.7)
     ap.add_argument("--limit", type=int, default=0, help="스캔 크롭 상한(0=전부)")
     ap.add_argument("--min-count", type=int, default=3, help="후보 품명의 최소 출현 크롭 수")
+    ap.add_argument("--use-base", action="store_true",
+                    help="파인튜닝 모델 대신 official base 로 스캔 - 최초 1회 기준선 만들기")
+    ap.add_argument("--scan-tag", default=None,
+                    help="스캔 파일 이름(기본: --run-tag). base 기준선은 000_base 권장 "
+                         "- 파일명 정렬이 곧 시간 순서라 000_ 이 항상 첫 기준선이 된다")
+    ap.add_argument("--scan-only", action="store_true",
+                    help="스캔만 하고 잃음/못읽음 후보 계산은 건너뜀(base 기준선용)")
     args = ap.parse_args()
     run_tag = _report_id(args.run_tag)
+    scan_tag = args.scan_tag or run_tag
     already = {t.strip().replace(" ", "") for t in args.exclude.split(",") if t.strip()}
 
     rows = basis_crops(args.min_match, args.limit)
     if not rows:
         raise SystemExit("기준셋 품명 크롭을 찾지 못했습니다(코퍼스/replay_sources 확인)")
-    print(f"[스캔] 기준셋 품명 크롭 {len(rows):,}장 — 이번 모델로 판독")
+    who = "official base" if args.use_base else "이번 파인튜닝 모델"
+    print(f"[스캔] 기준셋 품명 크롭 {len(rows):,}장 — {who} 로 판독")
 
     try:
         from paddlex import create_model
     except ImportError:
         from paddlex.inference import create_model  # type: ignore
-    ft_dir = find_ft_inference()
-    if not ft_dir:
-        raise SystemExit("파인튜닝 inference 디렉터리 없음 — export 먼저")
-    preds = predict_all(create_model(BASE_MODEL, ft_dir),
-                        [os.path.join(CORPUS_DIR, r) for r, _ in rows])
+    if args.use_base:
+        model = create_model(BASE_MODEL)          # 기준선: 파인튜닝 없는 원본
+    else:
+        ft_dir = find_ft_inference()
+        if not ft_dir:
+            raise SystemExit("파인튜닝 inference 디렉터리 없음 — export 먼저")
+        model = create_model(BASE_MODEL, ft_dir)
+    preds = predict_all(model, [os.path.join(CORPUS_DIR, r) for r, _ in rows])
 
     os.makedirs(SCANS_DIR, exist_ok=True)
-    scan_path = os.path.join(SCANS_DIR, f"{run_tag}.jsonl")
+    scan_path = os.path.join(SCANS_DIR, f"{scan_tag}.jsonl")
     with open(scan_path, "w", encoding="utf-8") as f:
         for (rel, gt), p in zip(rows, preds):
             f.write(json.dumps({"path": rel, "gt": gt, "pred": p,
                                 "ok": p.strip() == gt.strip()}, ensure_ascii=False) + "\n")
-    print(f"[스캔] 저장: {scan_path}")
+    ok_n = sum(1 for p, (_, gt) in zip(preds, rows) if p.strip() == gt.strip())
+    print(f"[스캔] 저장: {scan_path}  (정답 {ok_n:,} / {len(rows):,} = {100.0 * ok_n / len(rows):.1f}%)")
+    if args.scan_only:
+        print("[스캔] --scan-only: 후보 계산 없이 종료(기준선 저장 완료)")
+        return 0
 
     prev_path = args.prev_scan or _latest_scan(scan_path)
     prev = _load_scan(prev_path) if prev_path else {}
