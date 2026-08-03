@@ -242,13 +242,20 @@ PY
     fi
     # 기준셋(9,001) 소스 목록은 '학습 금지'인 동시에 '판정셋 식별자'다:
     #  그 문서에서 온 크롭 = 판정셋, 나머지(코퍼스) = 학습셋. 홀드아웃 불필요.
+    # ★앵커 조절: DEMO_ANCHOR_RATIO(타깃 대비 배수) 또는 DEMO_ANCHOR(절대값).
+    #  기본 3.0 = 타깃의 3배 — 유일하게 검증된 값(2026-08-03 실측):
+    #    앵커 0   → 판정 22/26 실패 (타깃 글자는 고쳤지만 주변이 삽입·삭제·치환으로 흔들림)
+    #    앵커 500 → 판정 26/26 성공 (타깃 167장 기준 ≈ 3배)
+    #  단계가 갈수록 타깃이 늘어나므로 절대값 대신 비율이 기본 — 조건이 일정하게 유지된다.
+    DEMO_ANCHOR_ARGS="--anchor-ratio ${DEMO_ANCHOR_RATIO:-3.0}"
+    [ -n "${DEMO_ANCHOR:-}" ] && DEMO_ANCHOR_ARGS="--anchor $DEMO_ANCHOR"
     python eval/build_demo_dataset.py --targets "$TARGETS" \
-        --replay-sources "$REPLAY_SRC"
-    # ★에폭 = "같은 타깃 크롭을 몇 번 보여주나". 앵커를 빼서 학습셋이 타깃 크롭뿐이라
-    #  (1차1단계 기준 167장 ≈ 3스텝/에폭) 에폭 수가 곧 스텝 수를 좌우한다.
-    #  기본 20 = 타깃 크롭을 20번 본다. 매 에폭 검증 → best_accuracy 자동 선택이라
-    #  정점이 20 안에 들면 그걸로 끝. 안 붙으면 에폭이 아니라 lr(3e-5→1e-4)을 올린다
-    #  — 같은 크롭 반복만 늘리는 건 학습이 아니라 암기 쪽으로 간다.
+        --replay-sources "$REPLAY_SRC" $DEMO_ANCHOR_ARGS
+    # ★에폭 = "같은 타깃 크롭을 몇 번 보여주나". 기본 20 — 앵커 500 + 타깃 167 = 667줄
+    #  기준 약 200스텝이고, 실측에서 정점(best)이 13에폭이라 20이면 충분히 여유가 있다.
+    #  매 에폭 검증 → best_accuracy 자동 선택이므로 정점을 지나쳐도 손해는 시간뿐.
+    #  안 붙으면 에폭이 아니라 lr(3e-5→1e-4)을 올린다 — 같은 크롭 반복만 늘리는 건
+    #  학습이 아니라 암기 쪽으로 간다.
     DEMO_EPOCHS=${DEMO_EPOCHS:-20}
     # ★중간 체크포인트 저장 끄기(save_interval=에폭수). config 기본 1 이면 에폭마다
     #  iter_epoch_N/ 을 통째로 남겨 316MB×에폭수를 먹는다(2026-08-03: 40에폭에 9.5GB →
@@ -348,9 +355,6 @@ PY
       echo "       시작 모델은 그대로이니, 조건(에폭·크롭 수)을 바꿔 같은 --targets 로 재실행하세요."
       echo "       (재시도는 '${DEMO_N}-1 모델'로 실행 이력에 남습니다)"
     fi
-    # 회차 탭(요약·실행 이력·1차~4차) 종합본 - 지금까지의 run JSON 을 모아 매번 갱신.
-    python eval/demo_summary.py \
-      || echo "  (종합 리포트 실패 - 수동: python eval/demo_summary.py)"
   fi
   if [ "$ROUND" = "demo" ]; then
     # ★다음 타깃 스캔(기준셋 품명 크롭 ~9만 장 판독, 십몇 분)은 기본으로 돌리지 않는다.
@@ -376,6 +380,11 @@ PY
     _summary_args=(--ts "$RUN_TAG" --base "$BASE_TAG" --elapsed "$((SECONDS - _FT_START))" \
       --log "$TRAIN_LOG" --config "$CFG" --criteria "$FT_CRITERIA")
     python eval/finetune_run_summary.py "${_summary_args[@]}" || true
+    # ★종합본은 RUN_HISTORY 기록 뒤에 생성한다 - 학습(에폭·acc)·AWS 비용 열을 그 파일에서
+    #  읽어오기 때문. 먼저 만들면 이번 run 기록이 아직 없어 두 열이 비어 나온다.
+    echo "[종합] 회차 탭 리포트 갱신"
+    python eval/demo_summary.py \
+      || echo "  (종합 리포트 실패 - 수동: python eval/demo_summary.py)"
     exit 0
   fi
   # ★판정용 3탭 벤치(처음/유지/포함) 자동 생성 — 학습 직후 별도 수동실행 없이 바로 판정.

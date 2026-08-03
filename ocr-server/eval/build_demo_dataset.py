@@ -16,9 +16,11 @@
   src 를 모르는 정답 크롭은 기준셋 여부를 확인할 수 없으므로 <판정에 쓰지 않고>
   학습에만 쓴다(오염 위험은 manifest 에 기록해 리포트가 표기).
 
-anchor: 기본 0 - 타깃 크롭만 학습한다. 이 데모가 증명하는 것은 '타깃 품명을 살리고
-  누적 유지한다'뿐이고, 타깃 외 품명이 흔들리는 것은 실패가 아니라 다음 단계의 타깃이
-  된다. 타깃 외 보호가 필요해지면 --anchor 로 정답 크롭을 섞을 수 있다.
+anchor: 타깃과 무관한 정답 크롭을 섞는다. 수량은 타깃 크롭 × --anchor-ratio(기본 1.2)
+  로 자동 산정 — 단계마다 타깃이 늘어나므로 절대값으로 두면 조건이 계속 달라진다.
+  ★없으면 안 되는 이유(2026-08-03 실측): 앵커 0 으로 돌린 1차 1단계는 판정 22/26 실패.
+  '슐'은 다 고쳤지만 주변 글자가 흔들려 삽입("캡슐건")·치환("겁슐")·삭제("세파록캡슐")이
+  났다. 학습 신호가 전부 같은 정답 하나뿐이면 글자/공백 판정 기준까지 함께 밀리기 때문.
 
     python eval/build_demo_dataset.py --targets "디아세렌캡슐" \
         --replay-sources eval/finetune_corpus/replay_sources.txt
@@ -109,11 +111,12 @@ def main() -> int:
                     help="기준셋(9,001) 소스 목록 — 이 문서에서 온 크롭이 판정셋이 된다")
     ap.add_argument("--oversample-to", type=int, default=0,
                     help="타깃 학습 줄 복제 상한. 0=복제 안 함(권장 - 반복 노출은 에폭이 담당)")
+    ap.add_argument("--anchor-ratio", type=float, default=3.0,
+                    help="앵커 수 = 타깃 학습 크롭 × 이 배수(기본 3.0 = 검증된 값). "
+                         "단계가 갈수록 타깃이 늘어나므로 절대값 대신 비율로 잡아야 조건이 "
+                         "일정하게 유지된다. 0 = 앵커 없음(2026-08-03 실측: 판정 22/26 실패)")
     ap.add_argument("--anchor", type=int, default=0,
-                    help="labels_correct 랜덤 앵커 수. 기본 0 = 타깃 크롭만 학습. "
-                         "이 데모의 판정 대상은 타깃 품명뿐이라 앵커를 쓰지 않는다 "
-                         "(부수 회귀는 다음 단계 타깃이 될 뿐 실패가 아님). "
-                         "타깃 외 품명 보호가 필요해지면 그때 값을 준다")
+                    help="앵커 수 절대값. 주면 --anchor-ratio 를 덮어쓴다")
     ap.add_argument("--val-target", type=int, default=20,
                     help="검증용으로 <학습 크롭에서> 뺄 장수. 판정셋(기준셋)은 val 에도 쓰지 않는다")
     ap.add_argument("--val-anchor", type=int, default=0,
@@ -192,9 +195,12 @@ def main() -> int:
     # 앵커: 정답풀 랜덤(타깃과 무관한 크롭 유지 신호). 타깃·판정·검증과 겹치지 않게 제외.
     # ★기준셋(9,001) 출처 크롭은 앵커에서도 제외 — 기준셋은 어떤 형태로든 학습 금지.
     #  (다음 회차 타깃의 판정 크롭이 앵커로 흘러들면 그 판정이 오염된다)
+    # ★수량은 타깃 크롭 수에 비례(--anchor-ratio). 단계마다 타깃이 늘어나는데 앵커를
+    #  절대값으로 두면 비율이 계속 달라져 조건 비교가 안 된다.
+    n_anchor = args.anchor if args.anchor > 0 else int(len(train_t) * args.anchor_ratio)
     anchors: list = []
     n_anchor_replay_skip = 0
-    if args.anchor > 0:
+    if n_anchor > 0:
         bal_src = _bal_src()
         used = ({p for p, _ in judge_t} | {p for p, _ in train_t} | {p for p, _ in val_t})
         bal = []
@@ -206,7 +212,7 @@ def main() -> int:
                 continue
             bal.append((p, g))
         rnd.shuffle(bal)
-        anchors = bal[:args.anchor + args.val_anchor]
+        anchors = bal[:n_anchor + args.val_anchor]
 
     val_anchor = anchors[:args.val_anchor]
     train_anchor = anchors[args.val_anchor:]

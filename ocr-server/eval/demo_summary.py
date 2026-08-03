@@ -266,10 +266,7 @@ def _history(attempts: dict[tuple[int, int], list[dict]], esc) -> str:
     if not rows:
         return '<p class="muted">아직 실행 기록이 없습니다.</p>'
 
-    p = ['<p class="muted">파인튜닝을 돌린 <b>모든 시도</b>입니다 - 실패해서 다시 돌린 것도 '
-         '번호를 먹습니다(2번째 모델이 실패하면 다음이 <b>2-1</b>). 체인에 들어가는 건 '
-         '통과한 시도이고, 실패 시도는 시작 모델을 바꾸지 않습니다.</p>',
-         '<table><tr><th style="width:150px">회차·단계</th><th>타깃 품명 (누적)</th>'
+    p = ['<table><tr><th style="width:150px">회차·단계</th><th>타깃 품명 (누적)</th>'
          '<th style="width:130px">시작 모델</th><th>학습 크롭</th><th style="width:80px">판정 크롭</th>'
          '<th style="width:90px">누적 판정</th><th>실행번호</th><th>학습</th>'
          '<th style="width:90px">AWS 비용</th><th style="width:80px">결과</th></tr>']
@@ -325,6 +322,13 @@ def _history(attempts: dict[tuple[int, int], list[dict]], esc) -> str:
                  f'<td class="muted">{" · ".join(train) or "-"}</td>'
                  f'<td>{cost}</td>'
                  f'<td>{badge}</td></tr>')
+        if not ok:
+            # 실패 사유 펼침 — 접혀 있다가 ▸ 를 누르면 실제 오답이 보인다(JS 불필요).
+            p.append(f'<tr><td colspan="10" style="background:#fdf7f7">'
+                     f'<details><summary style="cursor:pointer;color:#c0392b;font-weight:700">'
+                     f'▸ 실패 사유</summary>'
+                     f'<div style="padding:8px 4px 2px">{_why_fail(run, esc)}</div>'
+                     f'</details></td></tr>')
     p.append("</table>")
     tail = [f"총 {len(rows)}회 실행"]
     if total_sec:
@@ -334,7 +338,101 @@ def _history(attempts: dict[tuple[int, int], list[dict]], esc) -> str:
     p.append(f'<p class="muted">{" · ".join(tail)} '
              f'(학습·요금은 RUN_HISTORY.jsonl 의 파인튜닝 기록, 크롭 수는 각 실행의 학습셋 '
              f'manifest 에서 가져옵니다.)</p>')
+    p.append(_lineage(attempts, esc))
     return "\n".join(p)
+
+
+def _why_fail(run: dict, esc) -> str:
+    """실패 run 의 근거 — 어떤 타깃이 몇 장 틀렸고 <실제로 뭐라고 읽었는지>.
+
+    '앵커가 없어서'처럼 단정하지 않고, 오류의 종류(삽입/삭제/치환)와 학습 조건
+    (앵커 수·정점 에폭)을 같이 보여줘 읽는 사람이 연결하게 한다.
+    """
+    c = run.get("counts") or {}
+    lines = []
+    for t in run.get("targets") or []:
+        v = t.get("verdict") or {}
+        if v.get("pass"):
+            continue
+        bad = [r for r in (t.get("rows") or []) if not r.get("ok")]
+        lines.append(f'<b>{esc(t["name"])}</b> - 판정 {v.get("n", 0)}장 중 '
+                     f'<b>{len(bad)}장 실패</b> (시작 모델은 {v.get("base", 0)}장 정답)')
+        if bad:
+            items = "".join(
+                f'<li>정답 <b>{esc(r["gt"])}</b> → 이 모델 '
+                f'<span class="bad">{esc(r["finetuned"]) or "(빈칸)"}</span>'
+                f' <span class="muted">(시작 모델: {esc(r["base"]) or "(빈칸)"})</span></li>'
+                for r in bad[:6])
+            lines.append(f'<ul style="margin:6px 0 10px">{items}</ul>')
+    cond = []
+    if c.get("targetTrainUnique") is not None:
+        cond.append(f'타깃 {c["targetTrainUnique"]}장')
+        cond.append("앵커 없음" if not c.get("anchor") else f'앵커 {c["anchor"]:,}장')
+    if cond:
+        lines.append(f'<p class="muted">이 실행의 학습 조건: {" · ".join(cond)}. '
+                     f'타깃 글자는 고쳐졌는데 주변 글자가 삽입·삭제·치환으로 흔들린다면, '
+                     f'학습 신호가 타깃 하나로 쏠려 글자/공백 판정 기준이 함께 밀린 것이다 '
+                     f'— 앵커(타깃과 무관한 정답 크롭)를 섞으면 그 기준이 유지된다.</p>')
+    return "\n".join(lines)
+
+
+def _step_model_name_ko(r_no: int, step: int) -> str:
+    """그 단계가 만든 모델 이름(실행번호 없이) — 계보 트리에서 중복 표기를 피한다."""
+    return f"{ORD[r_no - 1]} 결과 모델" if step == 2 else f"{ORD[r_no - 1]} 1단계 모델"
+
+
+def _lineage(attempts: dict[tuple[int, int], list[dict]], esc) -> str:
+    """모델 계보 트리 — base 에서 시작해 통과한 단계만 줄기로 이어진다.
+
+    실패 시도는 같은 자리에서 갈라진 가지(✗)로 표시하고 줄기를 잇지 않는다
+    (run-finetune 이 통과본만 demo/models/step<N>/ 에 보관하기 때문).
+    마지막 통과본이 곧 '현재 모델' = 다음 단계의 시작점.
+    """
+    keys = sorted(attempts)
+    if not keys:
+        return ""
+    max_n = max(_step_index(*k) for k in keys)
+    rows = ['<b>base</b> <span class="muted">(official pretrained · 파인튜닝 없음)</span>']
+    depth, current = 0, None
+    for n in range(1, max_n + 1):
+        r_no, st = (n + 1) // 2, (1 if n % 2 else 2)
+        lst = attempts.get((r_no, st)) or []
+        for i, run in enumerate(lst):
+            sm = run.get("summary") or {}
+            ok = sm.get("allPass")
+            tgt = next((t["name"] for t in run.get("targets") or [] if t.get("isNew")), "-")
+            pad = "&nbsp;" * (depth * 4)
+            mark = ('<span class="ok">★</span>' if ok else '<span class="bad">✗</span>')
+            # 실행번호를 단계 라벨 바로 뒤에 둔다 — 폴더(demo/<실행번호>/)를 바로 찾게.
+            head = (f'<b>{_sub_label(r_no, st, i)}</b> '
+                    f'<span class="muted">[{esc(_run_id(run))}]</span>')
+            # 통과한 것만 결과 모델 이름이 생긴다(체인에 들어간 모델).
+            made = (f' → <b>{_step_model_name_ko(r_no, st)}</b>' if ok else "")
+            note = "" if ok else ' <span class="muted">(체인 미반영 - 시작 모델 그대로)</span>'
+            rows.append(f'{pad}└ {mark} {head}{made} '
+                        f'<span class="muted">· 타깃 +{esc(tgt)} · '
+                        f'판정 {sm.get("pass", 0)}/{sm.get("total", 0)}</span>{note}')
+            if ok:
+                current = (run, r_no, st)
+        if any((x.get("summary") or {}).get("allPass") for x in lst):
+            depth += 1        # 통과했을 때만 줄기가 한 칸 내려간다
+    if current:
+        run, r_no, st = current
+        sm = run.get("summary") or {}
+        rows.append(f'<p class="big" style="margin-top:14px">현재 모델 = '
+                    f'<b>{_step_model_name_ko(r_no, st)}</b> '
+                    f'<span class="muted">[{esc(_run_id(run))}] · 누적 '
+                    f'{sm.get("pass", 0)}개 품명을 읽음 · 보관 '
+                    f'<code>demo/models/step{_step_index(r_no, st)}/</code></span></p>')
+    else:
+        rows.append('<p class="big" style="margin-top:14px">현재 모델 = <b>base</b> '
+                    '<span class="muted">(아직 통과한 단계가 없어 체인이 비어 있음)</span></p>')
+    body = "<br>".join(rows[:-1]) + rows[-1]
+    return ('<h3>모델 계보</h3>'
+            '<div class="box" style="font-family:Consolas,monospace;font-size:13px;'
+            'line-height:1.9">' + body + '</div>'
+            '<p class="muted">★ = 판정 통과(체인에 반영) · ✗ = 실패(같은 자리에서 재시도). '
+            '단계마다 바로 앞 모델 위에서 학습하므로 줄기가 한 줄로 이어진다.</p>')
 
 
 def _final_run(runs: dict, r_no: int) -> dict | None:
