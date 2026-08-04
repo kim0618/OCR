@@ -35,6 +35,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
 from finetune_report import _write_text  # noqa: E402
+from demo_next_target import is_item_name  # noqa: E402
 
 DEMO_DIR = os.path.join(HERE, "finetune", "demo")
 DEFAULT_OUT = os.path.join(DEMO_DIR, "DEMO_SUMMARY.html")
@@ -90,6 +91,63 @@ def _chain_view(attempts: dict[tuple[int, int], list[dict]]) -> dict[tuple[int, 
 def _attempt_label(step_index: int, i: int) -> str:
     """시도 표기 - 첫 시도는 'N', 재시도는 'N-1', 'N-2' …"""
     return f"{step_index}" if i == 0 else f"{step_index}-{i}"
+
+
+_SCAN_CACHE: dict[str, int | None] = {}
+
+
+def _scan_fail_count(tag: str) -> int | None:
+    """demo/scans/<tag>.jsonl 에서 '못 읽은 크롭' 수. 파일 없으면 None.
+
+    스캔은 기준셋 품명 크롭 전량을 그 모델로 읽은 결과다 - 여기서 오답 수가
+    곧 '그 모델이 못 읽는 품명 크롭' 규모다(1단계 타깃은 이 안에서 고른다).
+
+    ★품명 칸이어도 할인·집계 행(매입에누리 등)과 표 헤더 조각이 섞여 들어온다.
+      후보 표에서 그걸 빼는데 요약 숫자에는 남으면 둘이 안 맞는다 - 같이 뺀다.
+    """
+    if tag in _SCAN_CACHE:
+        return _SCAN_CACHE[tag]
+    path = os.path.join(DEMO_DIR, "scans", f"{tag}.jsonl")
+    n = None
+    if os.path.exists(path):
+        n = 0
+        for ln in open(path, encoding="utf-8"):
+            ln = ln.strip()
+            if not ln:
+                continue
+            try:
+                r = json.loads(ln)
+            except json.JSONDecodeError:
+                continue
+            if not r.get("ok") and is_item_name(r.get("gt") or ""):
+                n += 1
+    _SCAN_CACHE[tag] = n
+    return n
+
+
+def _start_scan_tag(attempts: dict, run: dict) -> str:
+    """이 run 의 <시작 모델>에 해당하는 스캔 파일 태그.
+
+    1단계째면 base 기준선(000_base), 그 외에는 직전 단계 통과본의 실행번호.
+    """
+    prev_n = int(run.get("compareStep") or 0)
+    if prev_n <= 0:
+        return "000_base"
+    key = ((prev_n + 1) // 2, 1 if prev_n % 2 else 2)
+    for r in reversed(attempts.get(key) or []):
+        if (r.get("summary") or {}).get("allPass"):
+            return str(r.get("runTag") or "")
+    return ""
+
+
+def _fmt_crops(n: int | None) -> str:
+    """크롭 수 표기 - 반올림 없이 있는 그대로."""
+    return f"{n:,} 크롭" if n else "-"
+
+
+def _fmt_docs(n: int | None) -> str:
+    """문서(원본 이미지) 수 표기."""
+    return f"{n:,}장" if n else "-"
 
 
 def _run_id(run: dict) -> str:
@@ -159,14 +217,23 @@ def _step_body(run: dict, esc) -> str:
         v = t.get("verdict") or {}
         badge = ('<span class="badge pass">성공</span>' if v.get("pass")
                  else '<span class="badge fail">실패</span>')
-        p.append(f'<h3>[{i}/{n}] {esc(t["name"])} '
-                 f'<span class="muted">({esc(t.get("role") or "")})</span> {badge}</h3>')
-        p.append(_sel_line(t.get("selection"), basis, esc))
         cmp_l = esc(run.get("compareLabel") or "base")
+        # 한 줄 요약 — 실행 이력과 같은 크롭 단위로만 말한다(셀·문서 수는 여기서 안 씀).
+        pool_item = (run.get("pool") or {}).get("judgeItem")
+        from_pool = (f' <span class="muted">(기준셋 품명 {_fmt_crops(pool_item)} 중)</span>'
+                     if pool_item else "")
+        # 품명이 8개까지 늘어나므로 각 표를 접을 수 있게 한다. 기본은 펼침.
+        p.append(f'<details open style="margin:10px 0"><summary class="big" '
+                 f'style="cursor:pointer;list-style:none">'
+                 f'{esc(t["name"])} {badge} '
+                 f'<span class="muted">· 판정 {v.get("n", 0)} 크롭</span>{from_pool}'
+                 f'<span class="muted"> · {cmp_l} {v.get("base", 0)} 크롭 정답 → '
+                 f'이 모델 {v.get("ft", 0)} 크롭 정답</span></summary>')
         p.append(f'<table><tr><th style="width:220px">크롭 (판정용 held-out)</th><th>정답</th>'
                  f'<th>{cmp_l} 읽음</th><th>파인튜닝 읽음</th>'
                  f'<th style="width:70px">판정</th></tr>')
-        for r in t.get("rows") or []:
+        # 실패 크롭을 위로 — 26장이든 260장이든 스크롤 없이 문제부터 보이게.
+        for r in sorted(t.get("rows") or [], key=lambda r: bool(r.get("ok"))):
             img = (f'<img src="data:image/jpeg;base64,{r["imgB64"]}" style="max-height:34px">'
                    if r.get("imgB64") else "")
             b_cls = "ok" if r["base"] == r["gt"] else "bad"
@@ -175,20 +242,25 @@ def _step_body(run: dict, esc) -> str:
             p.append(f"<tr><td>{img}</td><td><b>{esc(r['gt'])}</b></td>"
                      f"<td class='{b_cls}'>{esc(r['base']) or '(빈칸)'}</td>"
                      f"<td class='{f_cls}'>{esc(r['finetuned']) or '(빈칸)'}</td><td>{mark}</td></tr>")
-        p.append(f"</table><p class='muted'>{cmp_l} {v.get('base', 0)}/{v.get('n', 0)} 정답 → "
-                 f"파인튜닝 <b>{v.get('ft', 0)}/{v.get('n', 0)}</b> 정답</p>")
-    s = run.get("summary") or {}
-    ov = ('<span class="badge pass big">이 단계 판정: 성공</span>' if s.get("allPass")
-          else '<span class="badge fail big">이 단계 판정: 실패</span>')
-    p.append(f"<p class='big'>누적 성공 <b>{s.get('pass', 0)}개</b> / 시도 "
-             f"{s.get('total', 0)}개 &nbsp; {ov}</p>")
+        p.append("</table></details>")
     return "\n".join(p)
 
 
 def _sub_label(round_no: int, step: int, attempt: int) -> str:
-    """하위 탭 이름 - 1-1차 / 1-2차, 재시도는 1-1-1차, 1-1-2차 …"""
-    return (f"{round_no}-{step}차" if attempt == 0
-            else f"{round_no}-{step}-{attempt}차")
+    """모델 이름 = 회차-단계-버전. 1차 1단계 첫 시도면 1-1-v1, 재시도는 1-1-v2 …"""
+    return f"{round_no}-{step}-v{attempt + 1}"
+
+
+def _passing_tag(attempts: dict, step_index: int) -> str | None:
+    """통산 N번째 단계에서 <통과한> 시도의 모델 이름. 없으면 None."""
+    if step_index < 1:
+        return None
+    key = ((step_index + 1) // 2, 1 if step_index % 2 else 2)
+    out = None
+    for i, run in enumerate(attempts.get(key) or []):
+        if (run.get("summary") or {}).get("allPass"):
+            out = _sub_label(key[0], key[1], i)
+    return out
 
 
 def _round_body(round_no: int, tries: dict[int, list[dict]], esc,
@@ -204,17 +276,7 @@ def _round_body(round_no: int, tries: dict[int, list[dict]], esc,
         2: (f"1단계 모델({starts.get(2, '')})이 새로 틀리게 된 품명 1개를 타깃에 추가해, "
             f"누적 품명을 <b>모두</b> 읽게 만든다. (통과하면 회차 완료)"),
     }
-    last = (tries.get(2) or tries.get(1) or [])
-    passed2 = [r for r in (tries.get(2) or []) if (r.get("summary") or {}).get("allPass")]
-    if passed2:
-        s = passed2[-1].get("summary") or {}
-        head = (f'<span class="badge pass">성공 · 타깃 품명 모두 읽음 '
-                f'(누적 {s.get("pass", 0)}개)</span>')
-    elif tries.get(2):
-        head = '<span class="badge fail">실패 · 재실행 필요</span>'
-    else:
-        head = '<span class="badge wait">1단계까지 진행 · 2단계(잃어버린 품명 회수) 남음</span>'
-    p = [f'<p class="big">{ORD[round_no - 1]} {head}</p>']
+    p: list[str] = []
 
     # 하위 탭 구성: (라벨, 본문, 통과여부)
     subs: list[tuple[str, str, bool]] = []
@@ -222,13 +284,10 @@ def _round_body(round_no: int, tries: dict[int, list[dict]], esc,
         for i, run in enumerate(tries.get(st) or []):
             ok = (run.get("summary") or {}).get("allPass")
             label = _sub_label(round_no, st, i)
-            if not ok:
-                label += ' <span class="bad">실패</span>'
-            elif i:
-                label += ' <span class="muted">(재시도)</span>'
+            label += (' <span class="ok">성공</span>' if ok
+                      else ' <span class="bad">실패</span>')
             inner = (f'<h3 style="border-bottom:2px solid #dde5ec;padding-bottom:6px">'
-                     f'{_sub_label(round_no, st, i)} '
-                     f'<span class="muted">→ {_model_name(round_no, st, run, esc)}</span></h3>'
+                     f'{_sub_label(round_no, st, i)}</h3>'
                      + _step_body(run, esc))
             subs.append((label, inner, bool(ok)))
     if not subs:
@@ -244,9 +303,6 @@ def _round_body(round_no: int, tries: dict[int, list[dict]], esc,
     p.append("</div>")
     for i, (_, inner, _ok) in enumerate(subs):
         p.append(f'<div id="p{g}_{i}" class="pane{" on" if i == default else ""}">{inner}</div>')
-    if not tries.get(2):
-        p.append('<div class="box muted">2단계는 아직 실행 전입니다. 1단계 모델이 새로 틀리게 된 '
-                 '품명(스캔 결과 NEXT_TARGETS)에서 대표 1개를 골라 진행합니다.</div>')
     return "\n".join(p)
 
 
@@ -266,12 +322,29 @@ def _history(attempts: dict[tuple[int, int], list[dict]], esc) -> str:
     if not rows:
         return '<p class="muted">아직 실행 기록이 없습니다.</p>'
 
-    p = ['<table><tr><th style="width:150px">회차·단계</th><th>타깃 품명 (누적)</th>'
-         '<th style="width:130px">시작 모델</th><th>학습 크롭</th><th style="width:80px">판정 크롭</th>'
-         '<th style="width:90px">누적 판정</th><th>실행번호</th><th>학습</th>'
-         '<th style="width:90px">AWS 비용</th><th style="width:80px">결과</th></tr>']
+    p = ['<table><tr><th style="width:44px">#</th>'
+         '<th style="width:56px">회차</th><th style="width:66px">단계</th>'
+         '<th style="width:56px">버전</th><th style="width:150px">타깃 품명</th>'
+         '<th style="width:88px">모델</th>'
+         # 앞 3개는 '가진 것'(풀 모수), 네 번째가 '이번에 실제로 쓴 것'이다.
+         # 헤더에 근거를 달아둬야 470만이 '학습에 쓴 장수'로 오해되지 않는다.
+         '<th style="width:96px" title="그 학습 크롭이 나온 원본 문서 수 - 리키잉한 이미지 중 기준셋(9,001)이 아닌 것. 출처 메타가 있는 크롭으로만 세므로 최소치다">학습 문서</th>'
+         '<th style="width:118px" title="학습에 쓸 수 있는 크롭 전량 = (실패풀+정답풀) − 판정풀. '
+         '정답풀 상당수가 출처 메타 없이 수확돼, 정확히는 &quot;기준셋임이 확인되지 않은 나머지&quot;다. '
+         '이번에 실제로 학습한 장수는 오른쪽 &quot;학습 크롭&quot; 열이다">학습 총크롭</th>'
+         '<th style="width:112px" title="그중 품명 컬럼 크롭(matchRatio≥0.7). 출처·컬럼이 확인되는 것만 '
+         '센 최소치 — 메타 없는 정답 크롭은 빠져 있다">품명 크롭</th>'
+         '<th title="이번 run 이 실제로 학습한 크롭 = 타깃 + 앵커 (검증용 20장 제외)">학습 크롭</th>'
+         '<th style="width:88px" title="판정 크롭이 나온 기준셋 문서 수 - 학습 금지 대상이라 이 문서들이 곧 판정 대상이다">판정 문서</th>'
+         '<th style="width:112px" title="기준셋(9,001 문서)에서 온 크롭 전량 — 학습 금지 대상이라 '
+         '이게 곧 판정 풀이다">판정 총크롭</th>'
+         '<th style="width:108px" title="그중 품명 컬럼 크롭(matchRatio≥0.7). 다음 타깃 스캔이 '
+         "읽는 장수와 같은 수다\">품명 크롭</th>"
+         '<th style="width:104px" title="이 run 이 만든 모델이 기준셋 품명 크롭 전량을 다시 읽어 틀린 수(스캔 실측). 다음 단계 타깃은 이 안에서 고른다. 스캔은 판정 통과 run 에서만 돌므로 실패 행은 비어 있다">실패 크롭</th>'
+         '<th style="width:72px" title="이번 단계에서 실제로 채점한 크롭 = 타깃 품명의 기준셋 출신 크롭">판정 크롭</th>'
+                  '<th style="width:90px">AWS 비용</th><th style="width:80px">결과</th></tr>']
     total_sec = total_usd = 0.0
-    for _, n, i, r_no, st, run in rows:
+    for seq, (_, n, i, r_no, st, run) in enumerate(rows, 1):
         s = run.get("summary") or {}
         ok = s.get("allPass")
         # ★타깃은 누적이다 - 1차 2단계면 1단계 품명 + 이번 신규 품명 둘 다 학습·판정 대상.
@@ -279,7 +352,7 @@ def _history(attempts: dict[tuple[int, int], list[dict]], esc) -> str:
         tl = []
         for t in run.get("targets") or []:
             nm = esc(t["name"])
-            tl.append(f"<b>{nm}</b> <span class='muted'>(신규)</span>" if t.get("isNew") else nm)
+            tl.append(f"<b>{nm}</b>" if t.get("isNew") else nm)
         tgt = " · ".join(tl) or "-"
         h = hist.get(str(run.get("runTag") or ""), {})
         sec = float(h.get("elapsedSec") or 0)
@@ -294,52 +367,183 @@ def _history(attempts: dict[tuple[int, int], list[dict]], esc) -> str:
             if h.get("bestEpoch"):
                 ep += f" (best {h['bestEpoch']})"
             train.append(ep)
-        if h.get("bestAcc") is not None:
-            train.append(f"acc {float(h['bestAcc']):.3f}")
-        if sec:
-            train.append(f"{sec / 60:.0f}분")
         badge = ('<span class="badge pass">성공</span>' if ok
                  else '<span class="badge fail">실패</span>')
-        retry = '' if i == 0 else f' <span class="muted">(재시도 {i})</span>'
+        # 버전 = 그 단계의 시도 순번. 첫 시도 v1, 재시도부터 v2·v3 …
+        ver = f"v{i + 1}"
+        retry = ''
         # 크롭 수 — 타깃 고유 크롭(복제 줄) + 망각방지 앵커 / 판정용 홀드아웃
         c = run.get("counts") or {}
         uniq, over = c.get("targetTrainUnique"), c.get("oversampledTo")
         anchor, test = c.get("anchor"), c.get("test")
-        crop_train = (f'타깃 <b>{uniq}</b>장'
+        mix = c.get("anchorMix") or {}
+        mix_t = (f' (품명 {mix.get("item", 0):,} · 짧은숫자 {mix.get("shortNum", 0):,})'
+                 if mix else "")
+        crop_train = (f'타깃 <b>{uniq}</b>'
                       + (f' <span class="muted">({over:,}줄 복제)</span>'
                          if over and over > (uniq or 0) else "")
-                      + (f'<br><span class="muted">+ 앵커 {anchor:,}장</span>'
-                         if anchor else '<br><span class="muted">앵커 없음</span>')
+                      + (f' <span class="muted" title="앵커 구성{mix_t}">· 앵커 {anchor:,}</span>'
+                         if anchor else ' <span class="muted">· 앵커 없음</span>')
                       ) if uniq is not None else '<span class="muted">미측정</span>'
+        # 총크롭 = 그 타깃이 코퍼스/기준셋에 가지고 있던 크롭 전량("가진 것").
+        # 옆의 학습·판정 크롭은 그중 실제로 쓴 것 — 학습분은 검증용 20장을 뺀 수치다.
+        pool = run.get("pool") or {}
+        train_total = pool.get("train")
+        train_item = pool.get("trainItem")
+        basis = run.get("basisDocs")
+        judge_total = pool.get("judge")
+        judge_item = pool.get("judgeItem")
+        judge_fail = _scan_fail_count(str(run.get("runTag") or ""))
         cost = f"${usd:.2f}" if usd else "-"
-        p.append(f'<tr><td><b>{ORD[r_no - 1]} {st}단계</b>{retry}</td>'
+        p.append(f'<tr><td class="muted">{seq}</td>'
+                 f'<td><b>{ORD[r_no - 1]}</b></td>'
+                 f'<td><b>{st}단계</b></td>'
+                 f'<td><b>{ver}</b>{retry}</td>'
                  f'<td>{tgt}</td>'
-                 f'<td class="muted">{esc(run.get("compareLabel") or "base")}</td>'
-                 f'<td>{crop_train}</td>'
-                 f'<td>{test if test is not None else "-"}장</td>'
-                 f'<td>{s.get("pass", 0)}/{s.get("total", 0)}</td>'
-                 f'<td class="muted">{esc(_run_id(run))}</td>'
-                 f'<td class="muted">{" · ".join(train) or "-"}</td>'
+                 f'<td class="muted nw">{esc(_passing_tag(attempts, n - 1) or "base")}</td>'
+                 f'<td class="nw">{_fmt_docs(pool.get("trainDocs"))}</td>'
+                 f'<td class="nw">{_fmt_crops(train_total)}</td>'
+                 f'<td class="nw">{_fmt_crops(train_item)}</td>'
+                 f'<td class="nw">{crop_train}</td>'
+                 f'<td class="nw">{_fmt_docs(pool.get("judgeDocs") or basis)}</td>'
+                 f'<td class="nw">{_fmt_crops(judge_total)}</td>'
+                 f'<td class="nw">{_fmt_crops(judge_item)}</td>'
+                 f'<td class="nw">{_fmt_crops(judge_fail)}</td>'
+                 f'<td class="nw">{test if test is not None else "-"} 크롭</td>'
                  f'<td>{cost}</td>'
                  f'<td>{badge}</td></tr>')
         if not ok:
             # 실패 사유 펼침 — 접혀 있다가 ▸ 를 누르면 실제 오답이 보인다(JS 불필요).
-            p.append(f'<tr><td colspan="10" style="background:#fdf7f7">'
+            p.append(f'<tr><td colspan="17" style="background:#fdf7f7">'
                      f'<details><summary style="cursor:pointer;color:#c0392b;font-weight:700">'
                      f'▸ 실패 사유</summary>'
                      f'<div style="padding:8px 4px 2px">{_why_fail(run, esc)}</div>'
                      f'</details></td></tr>')
+        else:
+            nxt = _next_block(run, esc)
+            if nxt:
+                p.append(f'<tr><td colspan="17" style="background:#f6faf7">'
+                         f'<details><summary style="cursor:pointer;color:#0a7a3d;'
+                         f'font-weight:700">▸ 다음 타깃 후보</summary>'
+                         f'<div style="padding:8px 4px 2px">{nxt}</div>'
+                         f'</details></td></tr>')
+    # 합계는 표의 마지막 행으로 — AWS 비용 열 아래에 정렬돼야 읽기 쉽다.
+    if total_usd:
+        p.append(f'<tr style="background:#f2f6fa"><td colspan="15" '
+                 f'style="text-align:right"><b>합계</b></td>'
+                 f'<td><b>${total_usd:.2f}</b></td><td></td></tr>')
     p.append("</table>")
-    tail = [f"총 {len(rows)}회 실행"]
-    if total_sec:
-        tail.append(f"학습 누적 {total_sec / 3600:.1f}시간")
-    tail.append(f"AWS 예상 요금 합계 <b>${total_usd:.2f}</b>" if total_usd
-                else "AWS 비용 기록 없음")
-    p.append(f'<p class="muted">{" · ".join(tail)} '
-             f'(학습·요금은 RUN_HISTORY.jsonl 의 파인튜닝 기록, 크롭 수는 각 실행의 학습셋 '
-             f'manifest 에서 가져옵니다.)</p>')
     p.append(_lineage(attempts, esc))
     return "\n".join(p)
+
+
+def _next_targets(run: dict) -> dict | None:
+    """그 run 폴더의 NEXT_TARGETS.json(스캔 결과). 스캔 전이면 None."""
+    seq, tag = run.get("runSeq"), run.get("runTag")
+    if not tag:
+        return None
+    folder = f"{seq}_{tag}" if seq else tag
+    path = os.path.join(DEMO_DIR, folder, "NEXT_TARGETS.json")
+    if not os.path.exists(path):
+        return None
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
+def _cand_table(items: list, esc, empty: str) -> str:
+    """후보 목록 표 - 크롭 많은 순으로 보여 타깃을 바로 고를 수 있게."""
+    if not items:
+        return f'<p class="muted">{empty}</p>'
+    # 품명이 아닌 것(할인·집계 행, 표 헤더 조각)은 후보에서 뺀다.
+    # 스캔 시점에도 같은 규칙이 걸리지만, 그 전에 만든 JSON 도 여기서 걸러진다.
+    rows = [c for c in items if is_item_name(c.get("name") or "")]
+    if not rows:
+        return f'<p class="muted">{empty}</p>'
+    rows.sort(key=lambda c: (-c.get("crops", 0), -c.get("rate", 0)))
+    out = ['<table style="margin:6px 0 12px"><tr><th style="width:44px">#</th>'
+           '<th>품명</th><th style="width:90px">크롭</th>'
+           '<th style="width:110px">틀린 크롭</th><th>대표 오독</th></tr>']
+    for i, c in enumerate(rows[:10], 1):
+        w = " · ".join(f'"{esc(k)}" {n}' for k, n in (c.get("wrong") or [])[:2]) or "-"
+        out.append(f'<tr><td class="muted">{i}</td><td><b>{esc(c["name"])}</b></td>'
+                   f'<td>{c.get("crops", 0)} 크롭</td>'
+                   f'<td><span class="bad">{c.get("hits", 0)}</span> '
+                   f'<span class="muted">({c.get("rate", 0)}%)</span></td>'
+                   f'<td class="muted">{w}</td></tr>')
+    out.append("</table>")
+    return "\n".join(out)
+
+
+def _scan_delta(tag: str, prev_name: str) -> dict | None:
+    """이 모델 스캔 vs 직전 모델 스캔 - 잃은 크롭 / 못 읽는 크롭을 비율까지.
+
+    두 표(① 잃음 ② 못 읽음)가 각각 몇 %인지가 한 줄로 안 보이면, 표만 보고는
+    "많은 건가 적은 건가"를 판단할 수 없다.
+    """
+    d = os.path.join(DEMO_DIR, "scans")
+    cur, prev = os.path.join(d, f"{tag}.jsonl"), os.path.join(d, prev_name or "")
+    if not (tag and os.path.exists(cur) and prev_name and os.path.exists(prev)):
+        return None
+
+    def _ok(path: str) -> dict[str, bool]:
+        """품명이 아닌 항목(할인·집계 행, 헤더 조각)은 빼고 읽는다 - 후보 표와 같은 모집단."""
+        out = {}
+        for ln in open(path, encoding="utf-8"):
+            ln = ln.strip()
+            if not ln:
+                continue
+            try:
+                r = json.loads(ln)
+            except json.JSONDecodeError:
+                continue
+            if r.get("path") and is_item_name(r.get("gt") or ""):
+                out[r["path"]] = bool(r.get("ok"))
+        return out
+
+    a, b = _ok(prev), _ok(cur)
+    keys = a.keys() & b.keys()
+    if not keys:
+        return None
+    prev_ok = sum(1 for k in keys if a[k])
+    lost = sum(1 for k in keys if a[k] and not b[k])
+    gained = sum(1 for k in keys if not a[k] and b[k])
+    unread = sum(1 for k in keys if not b[k])
+    return {"n": len(keys), "prevOk": prev_ok, "lost": lost,
+            "gained": gained, "unread": unread}
+
+
+def _next_block(run: dict, esc) -> str:
+    """다음 타깃 후보 — 이 모델이 잃은 품명 / 아직 못 읽는 품명."""
+    nt = _next_targets(run)
+    if not nt:
+        return ""
+    d = _scan_delta(str(run.get("runTag") or ""), nt.get("prevScan") or "")
+    if d:
+        lost_pct = 100.0 * d["lost"] / d["prevOk"] if d["prevOk"] else 0.0
+        unread_pct = 100.0 * d["unread"] / d["n"] if d["n"] else 0.0
+        net = d["gained"] - d["lost"]
+        summary = (
+            f'<p class="big">① 잃어버림 <b>{d["lost"]:,} 크롭</b> '
+            f'<span class="muted">(직전 모델이 읽던 {d["prevOk"]:,} 중 </span>'
+            f'<b>{lost_pct:.1f}%</b><span class="muted">)</span> &nbsp;·&nbsp; '
+            f'② 못 읽음 <b>{d["unread"]:,} 크롭</b> '
+            f'<span class="muted">(전체 {d["n"]:,} 중 </span>'
+            f'<b>{unread_pct:.1f}%</b><span class="muted">)</span><br>'
+            f'<span class="muted">되살린 크롭 {d["gained"]:,} - 잃은 크롭 {d["lost"]:,} = '
+            f'순증 {net:+,} 크롭</span></p>')
+    else:
+        summary = ""
+    return (
+        summary +
+        f'<p><b>① 이번 회차 2단계 타깃 후보</b> '
+        f'<span class="muted">- 직전 모델은 읽던 품명을 이 모델이 잃었다</span></p>'
+        + _cand_table(nt.get("lost") or [], esc, "잃어버린 품명이 없습니다.")
+        + f'<p><b>② 다음 회차 1단계 타깃 후보</b> '
+          f'<span class="muted">- 이 모델도 여전히 못 읽는 품명</span></p>'
+        + _cand_table(nt.get("unread") or [], esc, "해당 품명이 없습니다."))
 
 
 def _why_fail(run: dict, esc) -> str:
@@ -355,8 +559,8 @@ def _why_fail(run: dict, esc) -> str:
         if v.get("pass"):
             continue
         bad = [r for r in (t.get("rows") or []) if not r.get("ok")]
-        lines.append(f'<b>{esc(t["name"])}</b> - 판정 {v.get("n", 0)}장 중 '
-                     f'<b>{len(bad)}장 실패</b> (시작 모델은 {v.get("base", 0)}장 정답)')
+        lines.append(f'<b>{esc(t["name"])}</b> - 판정 {v.get("n", 0)} 크롭 중 '
+                     f'<b>{len(bad)} 크롭 실패</b> (시작 모델은 {v.get("base", 0)} 크롭 정답)')
         if bad:
             items = "".join(
                 f'<li>정답 <b>{esc(r["gt"])}</b> → 이 모델 '
@@ -366,8 +570,8 @@ def _why_fail(run: dict, esc) -> str:
             lines.append(f'<ul style="margin:6px 0 10px">{items}</ul>')
     cond = []
     if c.get("targetTrainUnique") is not None:
-        cond.append(f'타깃 {c["targetTrainUnique"]}장')
-        cond.append("앵커 없음" if not c.get("anchor") else f'앵커 {c["anchor"]:,}장')
+        cond.append(f'타깃 {c["targetTrainUnique"]} 크롭')
+        cond.append("앵커 없음" if not c.get("anchor") else f'앵커 {c["anchor"]:,} 크롭')
     if cond:
         lines.append(f'<p class="muted">이 실행의 학습 조건: {" · ".join(cond)}. '
                      f'타깃 글자는 고쳐졌는데 주변 글자가 삽입·삭제·치환으로 흔들린다면, '
@@ -391,9 +595,10 @@ def _lineage(attempts: dict[tuple[int, int], list[dict]], esc) -> str:
     keys = sorted(attempts)
     if not keys:
         return ""
+    hist = _run_history_index()      # 에폭·정점은 여기(계보)에만 적는다
     max_n = max(_step_index(*k) for k in keys)
     rows = ['<b>base</b> <span class="muted">(official pretrained · 파인튜닝 없음)</span>']
-    depth, current = 0, None
+    depth, current, _cur_tag = 0, None, ""
     for n in range(1, max_n + 1):
         r_no, st = (n + 1) // 2, (1 if n % 2 else 2)
         lst = attempts.get((r_no, st)) or []
@@ -407,20 +612,27 @@ def _lineage(attempts: dict[tuple[int, int], list[dict]], esc) -> str:
             head = (f'<b>{_sub_label(r_no, st, i)}</b> '
                     f'<span class="muted">[{esc(_run_id(run))}]</span>')
             # 통과한 것만 결과 모델 이름이 생긴다(체인에 들어간 모델).
-            made = (f' → <b>{_step_model_name_ko(r_no, st)}</b>' if ok else "")
+            made = ""   # 라벨 자체가 모델 이름이므로 '→ …모델' 중복 표기는 생략
             note = "" if ok else ' <span class="muted">(체인 미반영 - 시작 모델 그대로)</span>'
+            h = hist.get(str(run.get("runTag") or ""), {})
+            ep = ""
+            if h.get("epochsCompleted"):
+                ep = f' · ep {h["epochsCompleted"]}'
+                if h.get("bestEpoch"):
+                    ep += f' (best {h["bestEpoch"]})'
             rows.append(f'{pad}└ {mark} {head}{made} '
                         f'<span class="muted">· 타깃 +{esc(tgt)} · '
-                        f'판정 {sm.get("pass", 0)}/{sm.get("total", 0)}</span>{note}')
+                        f'판정 {sm.get("pass", 0)}/{sm.get("total", 0)}{ep}</span>{note}')
             if ok:
                 current = (run, r_no, st)
+                _cur_tag = _sub_label(r_no, st, i)
         if any((x.get("summary") or {}).get("allPass") for x in lst):
             depth += 1        # 통과했을 때만 줄기가 한 칸 내려간다
     if current:
         run, r_no, st = current
         sm = run.get("summary") or {}
         rows.append(f'<p class="big" style="margin-top:14px">현재 모델 = '
-                    f'<b>{_step_model_name_ko(r_no, st)}</b> '
+                    f'<b>{_cur_tag}</b> '
                     f'<span class="muted">[{esc(_run_id(run))}] · 누적 '
                     f'{sm.get("pass", 0)}개 품명을 읽음 · 보관 '
                     f'<code>demo/models/step{_step_index(r_no, st)}/</code></span></p>')
@@ -468,71 +680,71 @@ def _start_model(runs: dict, r_no: int, step: int, esc) -> str:
     return f"{(prev + 1) // 2}차 {1 if prev % 2 else 2}단계 모델"
 
 
-def _overview(runs: dict, rounds: int, esc) -> str:
-    """전체 탭 - 누적 매트릭스 + 최종 채택.
+def _overview(runs: dict, rounds: int, esc, attempts: dict | None = None) -> str:
+    """전체 탭 - 시도(파인튜닝 1회)를 행으로, 누적 품명을 열로 둔 판정 표.
 
-    회차별 상세(단계·타깃·판정)는 회차 탭에 있으므로 여기서 반복하지 않는다.
+    회차 단위로 합치지 않는다: 실패한 시도도 그 자리에 한 줄로 남아야
+    "무엇을 몇 번 만에 통과시켰는지"와 "그때 다른 품명은 어땠는지"가 같이 보인다.
     """
-    p = [f'<p class="muted">모델은 단계마다 이어집니다 - base → 1차 1단계 → 1차 2단계 → '
-         f'2차 1단계 → … → {ORD[rounds - 1]} 2단계(통산 {rounds * 2}번째). '
-         f'각 단계는 <b>바로 앞 단계 모델</b> 위에서 학습하고, 누적 타깃도 함께 늘어납니다. '
-         f'회차별 상세는 위의 회차 탭에서 봅니다.</p>']
+    attempts = attempts or {}
+    p: list[str] = []
 
-    # 품명 × 회차 유지 매트릭스 — "살린 게 계속 읽히는가"를 한 장으로
+    # 행 = 시도(시간순), 열 = 그때까지 등장한 품명 전부
+    rows = []
+    for (r_no, st), lst in attempts.items():
+        for i, run in enumerate(lst):
+            rows.append((run.get("generatedAt") or "", r_no, st, i, run))
+    rows.sort()
+    if not rows:
+        return "\n".join(p)
+
     names: list[str] = []
-    for key in sorted(runs):
-        for t in runs[key].get("targets") or []:
+    for _, _, _, _, run in rows:
+        for t in run.get("targets") or []:
             if t["name"] not in names:
                 names.append(t["name"])
-    if names:
-        p.append('<h3>누적 - 살린 품명이 회차를 넘어 유지되는가</h3>'
-                 '<p class="muted">회차마다 이전에 살린 품명을 학습에 계속 포함하고, 다음 회차는 '
-                 '그 결과 모델 위에서 시작한다. 그래도 새 학습이 이전 품명을 다시 깨뜨릴 수 있으므로 '
-                 '<b>매 회차 누적 품명 전부를 같은 판정셋으로 다시 채점</b>한다 - 아래 한 칸이라도 '
-                 '하나라도 실패면 그 회차는 미완료.</p>'
-                 '<table><tr><th>품명</th><th>도입</th>'
-                 + "".join(f"<th>{ORD[i - 1]}</th>" for i in range(1, rounds + 1)) + "</tr>")
-        for nm in names:
-            intro, cells = "", []
-            for i in range(1, rounds + 1):
-                run = _final_run(runs, i)
-                t = next((x for x in (run.get("targets") if run else []) or []
-                          if x["name"] == nm), None)
-                if not t:
-                    cells.append('<td class="muted">-</td>')
-                    continue
-                if not intro:
-                    intro = (f'{ORD[(t.get("introducedRound") or i) - 1]} '
-                             f'{t.get("introducedStep") or "?"}단계')
-                v = t.get("verdict") or {}
-                mark = ('<span class="ok">성공</span>' if v.get("pass")
-                        else '<span class="bad">실패</span>')
-                cells.append(f"<td>{mark} <span class='muted'>{v.get('ft', 0)}/"
-                             f"{v.get('n', 0)}</span></td>")
-            p.append(f"<tr><td><b>{esc(nm)}</b></td>"
-                     f"<td class='muted'>{intro or '-'}</td>{''.join(cells)}</tr>")
-        p.append('</table><p class="muted">성공 = 그 회차의 최종 모델이 held-out 크롭을 전부 정답으로 '
-                 '읽음. “-” = 그 회차에서는 아직 타깃이 아니었음.</p>')
+    # ★자리 미리 확보 — 최종적으로 품명 8개(4회차×2)가 들어온다. 아직 안 정해진 칸은
+    #   회차·단계 번호만 적어 비워 둔다(표 폭이 중간에 바뀌지 않게).
+    n_slots = rounds * 2
+    slots = list(names) + [None] * max(0, n_slots - len(names))
 
-    # ---- 최종 채택 게이트 ----
-    last_n = rounds * 2
-    last = runs.get((rounds, 2))
-    p.append(f'<h3>최종 목표</h3>')
-    if not last:
-        p.append(f'<p class="muted">목표: 마지막 <b>{last_n}번째 모델</b>'
-                 f'({ORD[rounds - 1]} 2단계)이 누적 <b>{last_n}개 품명 전부</b>를 읽는 상태. '
-                 f'아직 진행 중입니다.</p>')
-    else:
-        s = last.get("summary") or {}
-        okall = s.get("allPass") and s.get("total") == last_n
-        badge = (f'<span class="badge pass big">목표 달성 - {last_n}번째 모델이 '
-                 f'{last_n}개 전부 읽음</span>' if okall
-                 else f'<span class="badge fail big">미달 - '
-                      f'{s.get("pass", 0)}/{s.get("total", 0)}만 읽음</span>')
-        p.append(f'<p class="big">{badge}</p>')
-        p.append(f'<p class="muted">최종 모델 = {esc(last.get("modelName") or "")} '
-                 f'({esc(_run_id(last))}) · 보관 위치 '
-                 f'<code>eval/finetune/demo/models/step{last_n}/</code></p>')
+    p.append('<table><tr><th style="width:56px">회차</th>'
+             '<th style="width:66px">단계</th><th style="width:56px">버전</th>'
+             '<th style="width:110px">시작 모델</th>'
+             + "".join(
+                 f'<th>{esc(n)}</th>' if n else
+                 f'<th class="muted" style="font-weight:400">'
+                 f'{(k // 2) + 1}-{(k % 2) + 1} <span style="font-size:11.5px">예정</span></th>'
+                 for k, n in enumerate(slots))
+             + '<th style="width:80px">결과</th></tr>')
+    for _, r_no, st, i, run in rows:
+        sm = run.get("summary") or {}
+        ok = sm.get("allPass")
+        cells = []
+        for nm in slots:
+            if nm is None:
+                cells.append('<td class="muted"></td>')
+                continue
+            t = next((x for x in run.get("targets") or [] if x["name"] == nm), None)
+            if not t:
+                cells.append('<td class="muted">-</td>')
+                continue
+            v = t.get("verdict") or {}
+            mark = ('<span class="ok">성공</span>' if v.get("pass")
+                    else '<span class="bad">실패</span>')
+            new = ' <span class="muted">(신규)</span>' if t.get("isNew") else ""
+            cells.append(f'<td>{mark} <span class="muted">{v.get("ft", 0)}/'
+                         f'{v.get("n", 0)}</span>{new}</td>')
+        badge = ('<span class="badge pass">성공</span>' if ok
+                 else '<span class="badge fail">실패</span>')
+        n_idx = _step_index(r_no, st)
+        p.append(f'<tr><td><b>{ORD[r_no - 1]}</b></td>'
+                 f'<td><b>{st}단계</b></td>'
+                 f'<td><b>v{i + 1}</b></td>'
+                 f'<td class="muted nw">{esc(_passing_tag(attempts, n_idx - 1) or "base")}</td>'
+                 f'{"".join(cells)}<td>{badge}</td></tr>')
+    p.append('</table><p class="muted">"-" = 그 시도에서는 아직 타깃이 아니었음. '
+             '(신규) = 그 시도에서 새로 추가된 타깃.</p>')
     return "\n".join(p)
 
 
@@ -562,8 +774,8 @@ h1{{font-size:22px}} h3{{font-size:16px;margin-top:26px}}
 /* 표는 화면 폭을 다 쓰고, 좁아지면 표 안에서만 가로 스크롤(본문은 안 밀림) */
 .tw{{overflow-x:auto;-webkit-overflow-scrolling:touch}}
 table{{border-collapse:collapse;width:100%;margin:10px 0;min-width:640px}}
-th,td{{border:1px solid #d7dee5;padding:6px 10px;font-size:13.5px;text-align:left;vertical-align:middle}}
-th{{background:#f2f6fa}}
+th,td{{border:1px solid #d7dee5;padding:6px 8px;font-size:13px;text-align:left;vertical-align:middle}}
+th{{background:#f2f6fa;white-space:nowrap}}
 @media (max-width:820px){{
  body{{padding:14px 12px}}
  th,td{{padding:5px 7px;font-size:12.5px}}
@@ -575,6 +787,14 @@ th{{background:#f2f6fa}}
 .badge.pass{{background:#e3f6ea;color:#0a7a3d}} .badge.fail{{background:#fdeceb;color:#c0392b}}
 .badge.wait{{background:#eef1f4;color:#5b6b7b}}
 .muted{{color:#5b6b7b;font-size:12.5px}} .big{{font-size:16px}}
+.nw{{white-space:nowrap}}
+details>summary::-webkit-details-marker{{display:none}}
+details>summary.big{{padding:7px 10px;background:#f7fafd;border:1px solid #e3eaf1;
+ border-radius:7px;user-select:none}}
+details>summary.big:hover{{background:#eef4fa}}
+details>summary.big::before{{content:"\\25B8 ";color:#5b6b7b;font-weight:700}}
+details[open]>summary.big::before{{content:"\\25BE "}}
+details[open]>summary.big{{border-radius:7px 7px 0 0;margin-bottom:-1px}}
 .tabs{{display:flex;flex-wrap:wrap;gap:4px;border-bottom:2px solid #dde5ec;margin:18px 0 4px}}
 .tabs button{{border:1px solid #dde5ec;border-bottom:none;background:#f2f6fa;color:#37485a;
  padding:8px 20px;font-size:14px;font-weight:600;cursor:pointer;border-radius:8px 8px 0 0}}
@@ -584,13 +804,12 @@ th{{background:#f2f6fa}}
 .tabs.sub button{{padding:6px 14px;font-size:13px}}
 .pane{{display:none}} .pane.on{{display:block}}
 </style></head><body>
-<h1>파인튜닝 <span class="muted">- {datetime.now().strftime('%Y-%m-%d %H:%M')}
- · 완료 {n_done}회차 / 계획 {rounds}회차 (한 회차 = 품명 2개) · 총 {n_try}회 실행</span></h1>
+<h1>파인튜닝</h1>
 <div class="tabs">"""]
     # 탭 = 실행 이력(기본) · 전체(누적·채택) · 1차~N차(회차 상세)
     panes: list[tuple[str, str, bool]] = [
         ("실행 이력", _history(attempts, esc), True),
-        ("전체", _overview(runs, rounds, esc), True),
+        ("전체", _overview(runs, rounds, esc, attempts), True),
     ]
     for i in range(1, rounds + 1):
         tries = {st: attempts[(i, st)] for st in (1, 2) if (i, st) in attempts}

@@ -415,6 +415,7 @@ base 정답 {s['exactMatch']}셀</b>. 대표 오독: {wrong_s}{variants}</div>""
         "basisDocs": sel["nDocs"] if sel else None,
         "column": "itemName",
         "counts": mf.get("counts", {}),
+        "pool": mf.get("pool", {}),
         "targets": j_targets,
         "summary": {"pass": n_pass, "total": cyc, "allPass": all_pass},
     }

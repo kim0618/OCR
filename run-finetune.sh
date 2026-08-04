@@ -249,6 +249,11 @@ PY
     #  단계가 갈수록 타깃이 늘어나므로 절대값 대신 비율이 기본 — 조건이 일정하게 유지된다.
     DEMO_ANCHOR_ARGS="--anchor-ratio ${DEMO_ANCHOR_RATIO:-3.0}"
     [ -n "${DEMO_ANCHOR:-}" ] && DEMO_ANCHOR_ARGS="--anchor $DEMO_ANCHOR"
+    # ★앵커 <구성>: 총량과 별개로 '무엇으로 채우나'. 깨지는 건 품명(한 글자 치환)인데
+    #  무작위로 뽑으면 품명이 8% 안팎뿐이라 정작 지킬 쪽 앵커가 얇다.
+    #  DEMO_ANCHOR_ITEM=0 으로 두면 예전(무작위) 동작으로 돌아간다 - A/B 용.
+    DEMO_ANCHOR_ARGS="$DEMO_ANCHOR_ARGS --anchor-item-ratio ${DEMO_ANCHOR_ITEM:-0.6}"
+    DEMO_ANCHOR_ARGS="$DEMO_ANCHOR_ARGS --anchor-shortnum-ratio ${DEMO_ANCHOR_SHORTNUM:-0.2}"
     python eval/build_demo_dataset.py --targets "$TARGETS" \
         --replay-sources "$REPLAY_SRC" $DEMO_ANCHOR_ARGS
     # ★에폭 = "같은 타깃 크롭을 몇 번 보여주나". 기본 20 — 앵커 500 + 타깃 167 = 667줄
@@ -341,15 +346,25 @@ except Exception:
 PY
 )
     if [ "$DEMO_PASS" = "1" ]; then
-      echo "[데모] 판정 통과 → ${DEMO_N}번째 모델 보관: $DEMO_MODELS/step${DEMO_N}/"
-      mkdir -p "$DEMO_MODELS/step${DEMO_N}"
-      cp eval/finetune/output/best_accuracy/best_accuracy.pdparams \
-         "$DEMO_MODELS/step${DEMO_N}/" 2>/dev/null \
-        || echo "  (가중치 복사 실패 - output 확인)"
-      rm -rf "$DEMO_MODELS/step${DEMO_N}/inference"
-      cp -r eval/finetune/output/best_accuracy/inference \
-            "$DEMO_MODELS/step${DEMO_N}/" 2>/dev/null \
-        || echo "  (inference 복사 실패 - export 확인)"
+      # ★모델을 복사하지 않고 versions/run_<tag>/ 를 가리키는 심링크로 둔다.
+      #  ①재시도(v2·v3…)가 이전 통과본을 덮어써 지워버리는 사고를 원천 차단 - 실물은
+      #    run 별로 그대로 남고, step<N> 은 '지금 체인에 쓰는 게 누구냐'만 가리킨다.
+      #  ②복사본이 안 생기니 디스크도 아낀다(모델 1개 119MB, 디스크 93% 사용 중).
+      _SRC="$PWD/eval/finetune/versions/run_${RUN_TAG}/best_accuracy"
+      if [ -f "$_SRC/best_accuracy.pdparams" ] && [ -d "$_SRC/inference" ]; then
+        _PREVLINK=$(readlink "$DEMO_MODELS/step${DEMO_N}" 2>/dev/null || true)
+        mkdir -p "$DEMO_MODELS"
+        rm -rf "$DEMO_MODELS/step${DEMO_N}"
+        ln -sfn "$_SRC" "$DEMO_MODELS/step${DEMO_N}"
+        echo "[데모] 판정 통과 → step${DEMO_N} = run_${RUN_TAG} (심링크)"
+        if [ -n "$_PREVLINK" ] && [ "$_PREVLINK" != "$_SRC" ]; then
+          echo "       직전 통과본도 그대로 남아 있습니다: $_PREVLINK"
+          echo "       되돌리려면: ln -sfn \"$_PREVLINK\" $DEMO_MODELS/step${DEMO_N}"
+        fi
+      else
+        echo "  ★모델 보존본을 찾지 못했습니다: $_SRC"
+        echo "   step${DEMO_N} 을 갱신하지 않았습니다(체인은 직전 통과본 유지)."
+      fi
     else
       echo "[데모] ★판정 실패 → 체인에 넣지 않습니다(step${DEMO_N}/ 미갱신)."
       echo "       시작 모델은 그대로이니, 조건(에폭·크롭 수)을 바꿔 같은 --targets 로 재실행하세요."
@@ -357,18 +372,18 @@ PY
     fi
   fi
   if [ "$ROUND" = "demo" ]; then
-    # ★다음 타깃 스캔(기준셋 품명 크롭 ~9만 장 판독, 십몇 분)은 기본으로 돌리지 않는다.
-    #  판정과 달리 '다음 타깃을 정할 때만' 필요하므로, 결과를 보고 따로 돌린다:
-    #    python eval/demo_next_target.py --run-tag <실행번호> --exclude "<현재 타깃들>"
+    # ★다음 타깃 스캔(기준셋 품명 크롭 ~9만 장 판독, 20분 안팎)은 기본으로 이어서 돌린다.
+    #  통과하면 어차피 다음 단계 타깃이 필요하고, 실패하면 아래 조건에서 자동으로 건너뛰므로
+    #  낭비가 없다. 판정만 보고 싶으면 DEMO_SCAN=0 으로 끈다.
     #  (스캔은 반드시 판정 통과 run 에서만 — 실패 모델 판독이 demo/scans/ 에 남으면
     #   다음 단계가 그걸 '직전 모델'로 잘못 대조한다.)
-    #  붙여서 돌리고 싶으면 DEMO_SCAN=1 로 실행.
-    if [ "$DEMO_PASS" = "1" ] && [ "${DEMO_SCAN:-0}" = "1" ]; then
+    if [ "$DEMO_PASS" = "1" ] && [ "${DEMO_SCAN:-1}" = "1" ]; then
       echo "[다음 타깃 스캔] 기준셋 품명 크롭 판독 → 잃어버린 품명 / 못 읽는 품명 후보"
-      python eval/demo_next_target.py --run-tag "$RUN_TAG" --exclude "$TARGETS" \
+      # -u : 진행률 로그가 버퍼에 갇히지 않고 바로 보이게(20분짜리라 무소식이면 불안하다).
+      python -u eval/demo_next_target.py --run-tag "$RUN_TAG" --exclude "$TARGETS" \
         || echo "  (타깃 스캔 실패 - 수동: python eval/demo_next_target.py --run-tag $RUN_TAG)"
     elif [ "$DEMO_PASS" = "1" ]; then
-      echo "[다음 타깃 스캔] 생략(기본). 결과 확인 후 수동 실행:"
+      echo "[다음 타깃 스캔] DEMO_SCAN=0 으로 껐습니다. 나중에 돌리려면:"
       echo "  python eval/demo_next_target.py --run-tag $RUN_TAG --exclude \"$TARGETS\""
     else
       echo "[다음 타깃 스캔] 건너뜀 - 판정 실패 모델은 체인/스캔에 넣지 않습니다"

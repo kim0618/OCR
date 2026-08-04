@@ -44,6 +44,26 @@ REPLAY_SRC = os.path.join(CORPUS_DIR, "replay_sources.txt")
 SCANS_DIR = os.path.join(DEMO_DIR, "scans")
 HANGUL = re.compile(r"[가-힣]")
 
+# 후보에는 실제 품명만 남긴다. 거래명세서의 품명 컬럼에는 약품명 말고도
+# 할인·집계 행과 표 헤더 조각이 섞여 들어오는데, 이런 건 학습 타깃이 될 수 없다.
+# 특히 '매입에누리(OCR)' 류는 이미지마다 글자가 다른데 라벨만 하나로 뭉쳐 있어
+# 타깃으로 삼으면 서로 다른 글자를 같은 문자열로 읽으라고 가르치는 셈이 된다.
+_NOT_ITEM_EXACT = {"품명", "규격", "수량", "단가", "금액", "비고", "명", "계",
+                   "소계", "합계", "총계", "이월", "잔액", "전잔", "당잔"}
+_NOT_ITEM_PART = ("에누리", "할인", "부가세", "부가가치세", "공급가", "매출", "매입",
+                  "반품", "미수", "수금", "운임", "배송비", "택배비", "(OCR)")
+
+
+def is_item_name(name: str) -> bool:
+    """후보로 쓸 수 있는 실제 품명인가."""
+    s = (name or "").strip()
+    if not HANGUL.search(s):
+        return False
+    flat = s.replace(" ", "")
+    if flat in _NOT_ITEM_EXACT or len(flat) < 3:
+        return False
+    return not any(k in s for k in _NOT_ITEM_PART)
+
 
 def basis_crops(min_match: float, limit: int = 0) -> list[tuple[str, str]]:
     """기준셋(9,001) 문서에서 수확한 품명 크롭 = 고정 판독 대상.
@@ -128,13 +148,25 @@ def main() -> int:
     ap.add_argument("--scan-tag", default=None,
                     help="스캔 파일 이름(기본: --run-tag). base 기준선은 000_base 권장 "
                          "- 파일명 정렬이 곧 시간 순서라 000_ 이 항상 첫 기준선이 된다")
+    ap.add_argument("--progress-every", type=int, default=2000,
+                    help="진행 로그를 찍는 간격(크롭 수). 기본 2,000")
     ap.add_argument("--scan-only", action="store_true",
                     help="스캔만 하고 잃음/못읽음 후보 계산은 건너뜀(base 기준선용)")
     args = ap.parse_args()
     run_tag = _report_id(args.run_tag)
     scan_tag = args.scan_tag or run_tag
     already = {t.strip().replace(" ", "") for t in args.exclude.split(",") if t.strip()}
+    scan_path = os.path.join(SCANS_DIR, f"{scan_tag}.jsonl")
+    # ★덮어쓰기 금지 — 판독(20분) 시작 전에 막는다.
+    #  모델 선택은 output/best_accuracy(=마지막 학습본)를 따르므로, 나중에 옛 --run-tag 로
+    #  다시 돌리면 '그 단계 모델' 이름표를 단 채 최신 모델 판독이 저장돼 다음 대조가 틀어진다.
+    if os.path.exists(scan_path):
+        raise SystemExit(
+            f"★{scan_path} 가 이미 있습니다 - 그 단계 모델의 판독 결과이므로 덮어쓰지 않습니다.\n"
+            f"  정말 다시 만들 거라면 먼저 지우세요:  rm {scan_path}\n"
+            f"  (단, 그 사이 다른 파인튜닝을 돌렸다면 지금 모델은 그 단계 모델이 아닙니다)")
 
+    print("[스캔] 기준셋 품명 크롭 목록 만드는 중 (ledger 1.7GB 훑기, 1~3분)…", flush=True)
     rows = basis_crops(args.min_match, args.limit)
     if not rows:
         raise SystemExit("기준셋 품명 크롭을 찾지 못했습니다(코퍼스/replay_sources 확인)")
@@ -152,10 +184,23 @@ def main() -> int:
         if not ft_dir:
             raise SystemExit("파인튜닝 inference 디렉터리 없음 — export 먼저")
         model = create_model(BASE_MODEL, ft_dir)
-    preds = predict_all(model, [os.path.join(CORPUS_DIR, r) for r, _ in rows])
+    # 8만 장을 한 번에 넘기면 10분 넘게 아무 출력이 없다 → 덩어리로 나눠 진행률을 찍는다.
+    import time
+    paths = [os.path.join(CORPUS_DIR, r) for r, _ in rows]
+    chunk = max(500, args.progress_every)
+    preds: list[str] = []
+    t0 = time.time()
+    for i in range(0, len(paths), chunk):
+        preds += predict_all(model, paths[i:i + chunk])
+        done = len(preds)
+        ok_so_far = sum(1 for p, (_, gt) in zip(preds, rows) if p.strip() == gt.strip())
+        el = time.time() - t0
+        eta = el / done * (len(paths) - done) if done else 0
+        print(f"[스캔] {done:,}/{len(paths):,} ({100.0 * done / len(paths):5.1f}%) · "
+              f"정답 {ok_so_far:,} ({100.0 * ok_so_far / done:.1f}%) · "
+              f"경과 {el / 60:.1f}분 · 남은 예상 {eta / 60:.1f}분", flush=True)
 
     os.makedirs(SCANS_DIR, exist_ok=True)
-    scan_path = os.path.join(SCANS_DIR, f"{scan_tag}.jsonl")
     with open(scan_path, "w", encoding="utf-8") as f:
         for (rel, gt), p in zip(rows, preds):
             f.write(json.dumps({"path": rel, "gt": gt, "pred": p,
@@ -204,7 +249,7 @@ def main() -> int:
         out = []
         for gt, s in stat.items():
             if (gt.replace(" ", "") in already or s["n"] < args.min_count
-                    or not s["hit"] or not HANGUL.search(gt)):
+                    or not s["hit"] or not is_item_name(gt)):
                 continue
             out.append({"name": gt, "crops": s["n"], "hits": s["hit"],
                         "rate": round(100.0 * s["hit"] / s["n"], 1),

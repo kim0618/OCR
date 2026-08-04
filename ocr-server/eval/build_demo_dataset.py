@@ -47,6 +47,31 @@ DATASET_DIR = os.path.join(CORPUS_DIR, "dataset")
 MIN_TRAIN_TARGET = 10   # 학습용 타깃 크롭 최소치 — 미달이면 후보 차순위로 (abort)
 
 
+def _bal_meta_rows() -> list[dict]:
+    """정답 풀 사이드카를 행째로 — src 와 column 을 함께 봐야 하는 집계용."""
+    if not os.path.exists(BAL_META):
+        return []
+    out = []
+    for ln in open(BAL_META, encoding="utf-8"):
+        try:
+            out.append(json.loads(ln))
+        except json.JSONDecodeError:
+            continue
+    return out
+
+
+_ANCHOR_MIX: dict[str, int] = {}
+
+
+def _bal_col() -> dict[str, str | None]:
+    """정답 풀 사이드카: crops_correct/<hash>.jpg → column. 사이드카가 없으면 알 수 없다."""
+    out: dict[str, str | None] = {}
+    for rec in _bal_meta_rows():
+        if rec.get("path"):
+            out[rec["path"]] = rec.get("column")
+    return out
+
+
 def _bal_src() -> dict[str, str | None]:
     """정답 풀 사이드카: crops_correct/<hash>.jpg → src(출처 이미지). 없으면 빈 dict."""
     out: dict[str, str | None] = {}
@@ -62,7 +87,12 @@ def _bal_src() -> dict[str, str | None]:
     return out
 
 
-def _target_crops(targets: list[str], min_match: float) -> dict[str, dict]:
+_POOL = {"failBasis": 0, "failBasisItem": 0, "failItem": 0, "failUniq": 0}
+_SRC = {"train": set(), "judge": set()}   # 크롭이 나온 원본 문서(이미지) — 몇 장을 돌렸나   # ledger 1패스에서 같이 세는 풀 통계
+
+
+def _target_crops(targets: list[str], min_match: float,
+                  replay: set | None = None) -> dict[str, dict]:
     """타깃 품명의 크롭을 두 풀에서 모아 {path: {label, src, pool}} 로 돌려준다.
 
     라벨 매칭은 공백 제거 후 부분일치 — 크롭 라벨에 회사명·수량 꼬리가 붙은 변형까지
@@ -72,6 +102,7 @@ def _target_crops(targets: list[str], min_match: float) -> dict[str, dict]:
     out: dict[str, dict] = {}
 
     fails = load_labels(FAIL_LABELS)
+    _POOL["failUniq"] = len(fails)   # 2M줄짜리 파일을 main 에서 또 읽지 않도록 여기서 보관
     for ln in open(CORPUS_PATH, encoding="utf-8"):
         ln = ln.strip()
         if not ln:
@@ -80,12 +111,27 @@ def _target_crops(targets: list[str], min_match: float) -> dict[str, dict]:
             e = json.loads(ln)
         except json.JSONDecodeError:
             continue
+        # ★풀 집계는 '크롭 실물이 있는 것'만 — ledger 에는 박스를 못 잡아 크롭이
+        #  안 잘린 엔트리도 남아 있다(2026-08-04 실측: 기준셋 415,843줄 중 실물 364,054).
+        path = "crops/" + crop_name(e)
+        label = fails.get(path)
+        # ★품명 풀은 matchRatio 게이트를 통과한 것만 센다 - 그 아래는 라벨(정답) 자체를
+        #  못 믿는 크롭이라 채점에 못 쓴다. demo_next_target.basis_crops 와 같은 기준이라야
+        #  리포트의 '판정 품명 크롭' 과 스캔이 읽는 장수가 한 숫자로 떨어진다.
+        item_ok = (e.get("column") == "itemName"
+                   and (e.get("matchRatio") or 0) >= min_match)
+        if label and item_ok:
+            _POOL["failItem"] += 1            # 실패풀 품명 크롭 전체
+        if label and e.get("src"):
+            (_SRC["judge"] if replay and e["src"] in replay else _SRC["train"]).add(e["src"])
+        if replay is not None and e.get("src") in replay and label:
+            _POOL["failBasis"] += 1       # 컬럼 무관 - 실패풀의 기준셋 출처 총량
+            if item_ok:
+                _POOL["failBasisItem"] += 1   # 그중 품명 크롭만
         if e.get("column") != "itemName" or e.get("labelForm") != "raw":
             continue
         if (e.get("matchRatio") or 0) < min_match:
             continue
-        path = "crops/" + crop_name(e)
-        label = fails.get(path)
         if not label:
             continue
         if any(k in label.replace(" ", "") for k in keys):
@@ -117,6 +163,14 @@ def main() -> int:
                          "일정하게 유지된다. 0 = 앵커 없음(2026-08-03 실측: 판정 22/26 실패)")
     ap.add_argument("--anchor", type=int, default=0,
                     help="앵커 수 절대값. 주면 --anchor-ratio 를 덮어쓴다")
+    # ★앵커 구성 - 무작위로 뽑으면 정답풀 컬럼 분포를 그대로 따라가 품명이 8% 안팎뿐이다.
+    #  그런데 파인튜닝이 깨뜨리는 건 품명(한 글자 치환)이라, 정작 지켜야 할 쪽 앵커가 얇다.
+    #  clean4(2026-07-30)에서 '짧은 숫자'를 겨냥해 앵커를 채우자 숫자 -8.8 -> +2.0 으로
+    #  뒤집힌 전례가 있다. 같은 수법을 품명에 적용한다.
+    ap.add_argument("--anchor-item-ratio", type=float, default=0.6,
+                    help="앵커 중 품명 크롭 비중(0~1). 기본 0.6")
+    ap.add_argument("--anchor-shortnum-ratio", type=float, default=0.2,
+                    help="앵커 중 짧은 숫자(1~3자리) 비중. 숫자 붕괴 방어용. 기본 0.2")
     ap.add_argument("--val-target", type=int, default=20,
                     help="검증용으로 <학습 크롭에서> 뺄 장수. 판정셋(기준셋)은 val 에도 쓰지 않는다")
     ap.add_argument("--val-anchor", type=int, default=0,
@@ -135,7 +189,7 @@ def main() -> int:
         print("[demo] ★replay_sources 가 비어 있습니다 — 기준셋 식별 불가. "
               "무작위 홀드아웃으로 대체합니다(권장하지 않음).", file=sys.stderr)
 
-    tmap = _target_crops(targets, args.min_match)
+    tmap = _target_crops(targets, args.min_match, replay)
     rnd = random.Random(args.seed)
 
     # 타깃별로 학습(기준셋 아님) / 판정(기준셋) 분리
@@ -202,17 +256,38 @@ def main() -> int:
     n_anchor_replay_skip = 0
     if n_anchor > 0:
         bal_src = _bal_src()
+        bal_col = _bal_col()          # 정답풀 컬럼(사이드카에 있는 24% 만 알 수 있음)
         used = ({p for p, _ in judge_t} | {p for p, _ in train_t} | {p for p, _ in val_t})
-        bal = []
+        item_pool, num_pool, rest_pool = [], [], []
         for p, g in sorted(load_labels(BAL_LABELS).items()):
             if p in used:
                 continue
             if replay and bal_src.get(p) in replay:
                 n_anchor_replay_skip += 1
                 continue
-            bal.append((p, g))
-        rnd.shuffle(bal)
-        anchors = bal[:n_anchor + args.val_anchor]
+            flat = g.strip()
+            if bal_col.get(p) == "itemName":
+                item_pool.append((p, g))
+            elif flat.isdigit() and len(flat) <= 3:
+                num_pool.append((p, g))     # 라벨만 보면 되니 사이드카가 없어도 잡힌다
+            else:
+                rest_pool.append((p, g))
+        for pool in (item_pool, num_pool, rest_pool):
+            rnd.shuffle(pool)
+        want = n_anchor + args.val_anchor
+        n_item = int(want * args.anchor_item_ratio)
+        n_num = int(want * args.anchor_shortnum_ratio)
+        picked = item_pool[:n_item] + num_pool[:n_num]
+        # 어느 한 풀이 모자라면 나머지 풀에서 채운다 - 총량은 항상 맞춘다.
+        leftover = (item_pool[n_item:] + num_pool[n_num:] + rest_pool)
+        rnd.shuffle(leftover)
+        picked += leftover[:max(0, want - len(picked))]
+        rnd.shuffle(picked)
+        anchors = picked
+        _ANCHOR_MIX.update(item=sum(1 for p, _ in anchors if bal_col.get(p) == "itemName"),
+                           shortNum=sum(1 for _, g in anchors
+                                        if g.strip().isdigit() and len(g.strip()) <= 3),
+                           itemPool=len(item_pool), numPool=len(num_pool))
 
     val_anchor = anchors[:args.val_anchor]
     train_anchor = anchors[args.val_anchor:]
@@ -226,13 +301,52 @@ def main() -> int:
         with open(os.path.join(DATASET_DIR, f"{name}.txt"), "w", encoding="utf-8") as f:
             for p, g in rows:
                 f.write(f"{p}\t{g}\n")
+    # ★풀 모수 — "이 전체에서 타깃 N장을 뽑았다"를 리포트가 말할 수 있게 세어 둔다.
+    #   학습 풀 = 기준셋이 아닌 크롭(학습에 쓸 수 있는 전량)
+    #   판정 풀 = 기준셋(9,001) 문서에서 온 크롭 전량
+    # ★실패풀 쪽은 '라벨이 있는 것'만 세는데(=크롭 실물이 잘린 것), 정답풀도 같은 잣대를
+    #  써야 한쪽만 부풀지 않는다. 사이드카에 행은 있는데 라벨이 없는 크롭은 채점 불가다.
+    _corr_lbl = load_labels(BAL_LABELS) if os.path.exists(BAL_LABELS) else {}
+    # ★줄 수가 아니라 고유 경로 수로 센다 - labels.txt 에 같은 크롭이 두 번 적힌 줄이
+    #  있어(2026-08-04 실측 1,069줄) 줄 수로 세면 없는 크롭만큼 풀이 부푼다.
+    n_fail_total = _POOL["failUniq"]
+    n_corr_total = len(_corr_lbl)
+    # 정답풀의 기준셋 출처는 사이드카(src)로 센다. 실패풀 쪽은 _target_crops 가
+    # ledger 를 훑을 때 함께 세어 둔 값(_POOL)을 쓴다 — 1.7GB 파일을 두 번 읽지 않으려고.
+    _bs = [r for r in _bal_meta_rows() if r.get("path") in _corr_lbl]
+    for r in _bs:                       # 정답풀 쪽 출처도 합친다(메타 없는 크롭은 셀 수 없음)
+        if r.get("src"):
+            (_SRC["judge"] if r["src"] in replay else _SRC["train"]).add(r["src"])
+    n_corr_basis = sum(1 for r in _bs if r.get("src") in replay)
+    n_corr_basis_item = sum(1 for r in _bs
+                            if r.get("src") in replay and r.get("column") == "itemName")
+    pool_judge = _POOL["failBasis"] + n_corr_basis
+    pool_judge_item = _POOL["failBasisItem"] + n_corr_basis_item
+    pool_train = (n_fail_total + n_corr_total) - pool_judge
+    # 학습 풀의 품명 크롭 — 출처·컬럼이 확인되는 것만 센 <최소치>다.
+    # 정답풀 상당수가 메타 없이 수확돼 컬럼을 알 수 없어 그만큼은 빠진다.
+    n_corr_item_train = sum(1 for r in _bs
+                            if r.get("column") == "itemName" and r.get("src") not in replay)
+    pool_train_item_fail = _POOL["failItem"] - _POOL["failBasisItem"]
+    pool_train_item = pool_train_item_fail + n_corr_item_train
+
     manifest = {
         "mode": "demo",
         "targets": targets,
+        # trainNote: 학습 풀은 (전체 − 판정 풀)이라 '기준셋이 아님이 확인된' 수가 아니다.
+        #  정답풀 상당수가 출처 메타 없이 수확돼 기준셋 여부를 알 수 없기 때문.
+        "pool": {"train": pool_train, "judge": pool_judge,
+                 "trainItem": pool_train_item, "judgeItem": pool_judge_item,
+                 "trainItemFail": pool_train_item_fail,
+                 "failTotal": n_fail_total, "correctTotal": n_corr_total,
+                 # 몇 장(문서)을 돌려서 저 크롭이 나왔는지. 출처 메타가 있는 크롭만 세므로 최소치.
+                 "trainDocs": len(_SRC["train"]), "judgeDocs": len(_SRC["judge"]),
+                 "trainNote": "기준셋으로 확인되지 않은 나머지(출처 메타 없는 크롭 포함)"},
         "targetCrops": {t: detail[t]["train"] + detail[t]["judge"] for t in targets},
         "byTarget": detail,
         "judgeBasis": "기준셋(9,001) 문서에서 수확한 같은 품명 크롭",
         "counts": {"train": len(train), "val": len(val), "test": len(judge_t),
+                   "anchorMix": dict(_ANCHOR_MIX),
                    "targetTrainUnique": len(train_t), "oversampledTo": len(over),
                    "anchor": len(train_anchor), "valTarget": len(val_t),
                    "valAnchor": len(val_anchor)},
