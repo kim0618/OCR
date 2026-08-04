@@ -65,6 +65,20 @@ def is_item_name(name: str) -> bool:
     return not any(k in s for k in _NOT_ITEM_PART)
 
 
+def same_text(gt: str, pred: str) -> bool:
+    """손실 집계용 비교 - 공백 차이는 같은 것으로 본다.
+
+    ★2026-08-04 실측: '잃어버림' 4,084 중 1,961(48%)이 글자는 전부 맞고 띄어쓰기만
+      다른 건이었다("더모픽스크림 30g" -> "더모픽스크림30g").
+      ①GT(구글 OCR 원본)의 띄어쓰기가 인쇄를 정확히 반영한다는 보장이 없고
+       (모델이 없는 공백을 넣은 반대 사례도 나온다),
+      ②품명은 마스터 매칭(유사도)으로 넘어가므로 공백 하나로 매칭이 갈리지 않는다.
+      제품 기준으로 이미 성공한 건을 실패로 세면 앵커 실험의 신호가 흐려진다.
+    ★단, 소생 판정(demo_report)은 엄격한 완전일치를 그대로 쓴다.
+    """
+    return "".join(gt.split()) == "".join(pred.split())
+
+
 def basis_crops(min_match: float, limit: int = 0) -> list[tuple[str, str]]:
     """기준셋(9,001) 문서에서 수확한 품명 크롭 = 고정 판독 대상.
 
@@ -150,6 +164,9 @@ def main() -> int:
                          "- 파일명 정렬이 곧 시간 순서라 000_ 이 항상 첫 기준선이 된다")
     ap.add_argument("--progress-every", type=int, default=2000,
                     help="진행 로그를 찍는 간격(크롭 수). 기본 2,000")
+    ap.add_argument("--from-scan", action="store_true",
+                    help="이미 있는 스캔 파일을 그대로 쓰고 판독은 건너뜀 - 대조 상대(--prev-scan)만 "
+                         "바꿔 후보를 다시 뽑을 때. GPU 안 씀")
     ap.add_argument("--scan-only", action="store_true",
                     help="스캔만 하고 잃음/못읽음 후보 계산은 건너뜀(base 기준선용)")
     args = ap.parse_args()
@@ -160,56 +177,67 @@ def main() -> int:
     # ★덮어쓰기 금지 — 판독(20분) 시작 전에 막는다.
     #  모델 선택은 output/best_accuracy(=마지막 학습본)를 따르므로, 나중에 옛 --run-tag 로
     #  다시 돌리면 '그 단계 모델' 이름표를 단 채 최신 모델 판독이 저장돼 다음 대조가 틀어진다.
-    if os.path.exists(scan_path):
+    if os.path.exists(scan_path) and not args.from_scan:
         raise SystemExit(
             f"★{scan_path} 가 이미 있습니다 - 그 단계 모델의 판독 결과이므로 덮어쓰지 않습니다.\n"
             f"  정말 다시 만들 거라면 먼저 지우세요:  rm {scan_path}\n"
             f"  (단, 그 사이 다른 파인튜닝을 돌렸다면 지금 모델은 그 단계 모델이 아닙니다)")
 
-    print("[스캔] 기준셋 품명 크롭 목록 만드는 중 (ledger 1.7GB 훑기, 1~3분)…", flush=True)
-    rows = basis_crops(args.min_match, args.limit)
+    if args.from_scan:
+        # 판독 결과를 그대로 재사용 - 대조 상대만 바꿔 후보를 다시 뽑는 경로(GPU 0분).
+        if not os.path.exists(scan_path):
+            raise SystemExit(f"--from-scan 인데 스캔 파일이 없습니다: {scan_path}")
+        cur = _load_scan(scan_path)
+        rows = [(p, r["gt"]) for p, r in cur.items()]
+        preds = [r["pred"] for r in cur.values()]
+        print(f"[스캔] 기존 결과 재사용: {scan_path} ({len(rows):,}장) - 판독 건너뜀")
+    else:
+        print("[스캔] 기준셋 품명 크롭 목록 만드는 중 (ledger 1.7GB 훑기, 1~3분)…", flush=True)
+        rows = basis_crops(args.min_match, args.limit)
     if not rows:
         raise SystemExit("기준셋 품명 크롭을 찾지 못했습니다(코퍼스/replay_sources 확인)")
-    who = "official base" if args.use_base else "이번 파인튜닝 모델"
-    print(f"[스캔] 기준셋 품명 크롭 {len(rows):,}장 — {who} 로 판독")
 
-    try:
-        from paddlex import create_model
-    except ImportError:
-        from paddlex.inference import create_model  # type: ignore
-    if args.use_base:
-        model = create_model(BASE_MODEL)          # 기준선: 파인튜닝 없는 원본
-    else:
-        ft_dir = find_ft_inference()
-        if not ft_dir:
-            raise SystemExit("파인튜닝 inference 디렉터리 없음 — export 먼저")
-        model = create_model(BASE_MODEL, ft_dir)
-    # 8만 장을 한 번에 넘기면 10분 넘게 아무 출력이 없다 → 덩어리로 나눠 진행률을 찍는다.
-    import time
-    paths = [os.path.join(CORPUS_DIR, r) for r, _ in rows]
-    chunk = max(500, args.progress_every)
-    preds: list[str] = []
-    t0 = time.time()
-    for i in range(0, len(paths), chunk):
-        preds += predict_all(model, paths[i:i + chunk])
-        done = len(preds)
-        ok_so_far = sum(1 for p, (_, gt) in zip(preds, rows) if p.strip() == gt.strip())
-        el = time.time() - t0
-        eta = el / done * (len(paths) - done) if done else 0
-        print(f"[스캔] {done:,}/{len(paths):,} ({100.0 * done / len(paths):5.1f}%) · "
-              f"정답 {ok_so_far:,} ({100.0 * ok_so_far / done:.1f}%) · "
-              f"경과 {el / 60:.1f}분 · 남은 예상 {eta / 60:.1f}분", flush=True)
+    if not args.from_scan:
+        who = "official base" if args.use_base else "이번 파인튜닝 모델"
+        print(f"[스캔] 기준셋 품명 크롭 {len(rows):,}장 — {who} 로 판독")
+        try:
+            from paddlex import create_model
+        except ImportError:
+            from paddlex.inference import create_model  # type: ignore
+        if args.use_base:
+            model = create_model(BASE_MODEL)          # 기준선: 파인튜닝 없는 원본
+        else:
+            ft_dir = find_ft_inference()
+            if not ft_dir:
+                raise SystemExit("파인튜닝 inference 디렉터리 없음 — export 먼저")
+            model = create_model(BASE_MODEL, ft_dir)
+        # 8만 장을 한 번에 넘기면 10분 넘게 아무 출력이 없다 → 덩어리로 나눠 진행률을 찍는다.
+        import time
+        paths = [os.path.join(CORPUS_DIR, r) for r, _ in rows]
+        chunk = max(500, args.progress_every)
+        preds = []
+        t0 = time.time()
+        for i in range(0, len(paths), chunk):
+            preds += predict_all(model, paths[i:i + chunk])
+            done = len(preds)
+            ok_so_far = sum(1 for p, (_, gt) in zip(preds, rows) if p.strip() == gt.strip())
+            el = time.time() - t0
+            eta = el / done * (len(paths) - done) if done else 0
+            print(f"[스캔] {done:,}/{len(paths):,} ({100.0 * done / len(paths):5.1f}%) · "
+                  f"정답 {ok_so_far:,} ({100.0 * ok_so_far / done:.1f}%) · "
+                  f"경과 {el / 60:.1f}분 · 남은 예상 {eta / 60:.1f}분", flush=True)
 
-    os.makedirs(SCANS_DIR, exist_ok=True)
-    with open(scan_path, "w", encoding="utf-8") as f:
-        for (rel, gt), p in zip(rows, preds):
-            f.write(json.dumps({"path": rel, "gt": gt, "pred": p,
-                                "ok": p.strip() == gt.strip()}, ensure_ascii=False) + "\n")
-    ok_n = sum(1 for p, (_, gt) in zip(preds, rows) if p.strip() == gt.strip())
-    print(f"[스캔] 저장: {scan_path}  (정답 {ok_n:,} / {len(rows):,} = {100.0 * ok_n / len(rows):.1f}%)")
-    if args.scan_only:
-        print("[스캔] --scan-only: 후보 계산 없이 종료(기준선 저장 완료)")
-        return 0
+        os.makedirs(SCANS_DIR, exist_ok=True)
+        with open(scan_path, "w", encoding="utf-8") as f:
+            for (rel, gt), p in zip(rows, preds):
+                f.write(json.dumps({"path": rel, "gt": gt, "pred": p,
+                                    "ok": p.strip() == gt.strip()}, ensure_ascii=False) + "\n")
+        ok_n = sum(1 for p, (_, gt) in zip(preds, rows) if p.strip() == gt.strip())
+        print(f"[스캔] 저장: {scan_path}  "
+              f"(정답 {ok_n:,} / {len(rows):,} = {100.0 * ok_n / len(rows):.1f}%)")
+        if args.scan_only:
+            print("[스캔] --scan-only: 후보 계산 없이 종료(기준선 저장 완료)")
+            return 0
 
     prev_path = args.prev_scan or _latest_scan(scan_path)
     prev = _load_scan(prev_path) if prev_path else {}
@@ -231,14 +259,14 @@ def main() -> int:
     lost = defaultdict(lambda: {"n": 0, "hit": 0, "wrong": {}})
     unread = defaultdict(lambda: {"n": 0, "hit": 0, "wrong": {}})
     for (rel, gt), p in zip(rows, preds):
-        ok = p.strip() == gt.strip()
+        ok = same_text(gt, p)          # 공백 차이는 실패로 세지 않는다
         u = unread[gt]
         u["n"] += 1
         if not ok:
             u["hit"] += 1
             u["wrong"][p.strip() or "(빈칸)"] = u["wrong"].get(p.strip() or "(빈칸)", 0) + 1
         pv = prev.get(rel)
-        if pv and pv.get("ok"):
+        if pv and same_text(pv.get("gt") or "", pv.get("pred") or ""):
             l = lost[gt]
             l["n"] += 1
             if not ok:

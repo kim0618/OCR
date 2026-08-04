@@ -35,7 +35,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
 from finetune_report import _write_text  # noqa: E402
-from demo_next_target import is_item_name  # noqa: E402
+from demo_next_target import is_item_name, same_text  # noqa: E402
 
 DEMO_DIR = os.path.join(HERE, "finetune", "demo")
 DEFAULT_OUT = os.path.join(DEMO_DIR, "DEMO_SUMMARY.html")
@@ -119,7 +119,9 @@ def _scan_fail_count(tag: str) -> int | None:
                 r = json.loads(ln)
             except json.JSONDecodeError:
                 continue
-            if not r.get("ok") and is_item_name(r.get("gt") or ""):
+            # 공백만 다른 건 실패로 세지 않는다(demo_next_target.same_text 와 같은 잣대).
+            if (is_item_name(r.get("gt") or "")
+                    and not same_text(r.get("gt") or "", r.get("pred") or "")):
                 n += 1
     _SCAN_CACHE[tag] = n
     return n
@@ -420,7 +422,7 @@ def _history(attempts: dict[tuple[int, int], list[dict]], esc) -> str:
                      f'<div style="padding:8px 4px 2px">{_why_fail(run, esc)}</div>'
                      f'</details></td></tr>')
         else:
-            nxt = _next_block(run, esc)
+            nxt = _next_block(run, esc, attempts)
             if nxt:
                 p.append(f'<tr><td colspan="17" style="background:#f6faf7">'
                          f'<details><summary style="cursor:pointer;color:#0a7a3d;'
@@ -500,7 +502,7 @@ def _scan_delta(tag: str, prev_name: str) -> dict | None:
             except json.JSONDecodeError:
                 continue
             if r.get("path") and is_item_name(r.get("gt") or ""):
-                out[r["path"]] = bool(r.get("ok"))
+                out[r["path"]] = same_text(r.get("gt") or "", r.get("pred") or "")
         return out
 
     a, b = _ok(prev), _ok(cur)
@@ -515,12 +517,17 @@ def _scan_delta(tag: str, prev_name: str) -> dict | None:
             "gained": gained, "unread": unread}
 
 
-def _next_block(run: dict, esc) -> str:
+def _next_block(run: dict, esc, attempts: dict | None = None) -> str:
     """다음 타깃 후보 — 이 모델이 잃은 품명 / 아직 못 읽는 품명."""
     nt = _next_targets(run)
     if not nt:
         return ""
-    d = _scan_delta(str(run.get("runTag") or ""), nt.get("prevScan") or "")
+    # ★대조 상대는 이 run 의 <시작 모델>이다. NEXT_TARGETS.json 의 prevScan 은 파일명
+    #  순서로 고른 값이라, 재시도(v2·v3)에서는 형제 시도를 부모로 잡을 수 있다.
+    #  체인 정보(compareStep)로 다시 구해 쓰고, 그게 없을 때만 JSON 값을 쓴다.
+    prev_tag = _start_scan_tag(attempts, run) if attempts is not None else ""
+    prev_name = f"{prev_tag}.jsonl" if prev_tag else (nt.get("prevScan") or "")
+    d = _scan_delta(str(run.get("runTag") or ""), prev_name)
     if d:
         lost_pct = 100.0 * d["lost"] / d["prevOk"] if d["prevOk"] else 0.0
         unread_pct = 100.0 * d["unread"] / d["n"] if d["n"] else 0.0

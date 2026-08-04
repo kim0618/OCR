@@ -243,11 +243,15 @@ PY
     # 기준셋(9,001) 소스 목록은 '학습 금지'인 동시에 '판정셋 식별자'다:
     #  그 문서에서 온 크롭 = 판정셋, 나머지(코퍼스) = 학습셋. 홀드아웃 불필요.
     # ★앵커 조절: DEMO_ANCHOR_RATIO(타깃 대비 배수) 또는 DEMO_ANCHOR(절대값).
-    #  기본 3.0 = 타깃의 3배 — 유일하게 검증된 값(2026-08-03 실측):
-    #    앵커 0   → 판정 22/26 실패 (타깃 글자는 고쳤지만 주변이 삽입·삭제·치환으로 흔들림)
-    #    앵커 500 → 판정 26/26 성공 (타깃 167장 기준 ≈ 3배)
-    #  단계가 갈수록 타깃이 늘어나므로 절대값 대신 비율이 기본 — 조건이 일정하게 유지된다.
-    DEMO_ANCHOR_ARGS="--anchor-ratio ${DEMO_ANCHOR_RATIO:-3.0}"
+    #  단계가 갈수록 타깃이 늘어나므로 절대값 대신 비율이 기본 - 조건이 일정하게 유지된다.
+    #  실측 이력(타깃=세파록스캡슐 167장 고정, base 대비 · 공백 차이는 손실로 안 셈):
+    #    배수  앵커   품명앵커  판정    잃어버림
+    #     0     0       0      22/26 ✗   -        주변 글자가 삽입·삭제·치환으로 붕괴
+    #     3    501      40     26/26 ✓  6,211     앵커 무작위(품명이 8%뿐)
+    #     3    501     302     26/26 ✓  2,693     ★앵커 구성만 품명 위주로 → 57% 감소
+    #     6   1002     601      ?         ?       진행 중
+    #  ★판정이 26/26 아래로 떨어지면 앵커가 타깃을 묻은 것 = 그 직전 배수가 상한선.
+    DEMO_ANCHOR_ARGS="--anchor-ratio ${DEMO_ANCHOR_RATIO:-6.0}"
     [ -n "${DEMO_ANCHOR:-}" ] && DEMO_ANCHOR_ARGS="--anchor $DEMO_ANCHOR"
     # ★앵커 <구성>: 총량과 별개로 '무엇으로 채우나'. 깨지는 건 품명(한 글자 치환)인데
     #  무작위로 뽑으면 품명이 8% 안팎뿐이라 정작 지킬 쪽 앵커가 얇다.
@@ -379,8 +383,24 @@ PY
     #   다음 단계가 그걸 '직전 모델'로 잘못 대조한다.)
     if [ "$DEMO_PASS" = "1" ] && [ "${DEMO_SCAN:-1}" = "1" ]; then
       echo "[다음 타깃 스캔] 기준셋 품명 크롭 판독 → 잃어버린 품명 / 못 읽는 품명 후보"
+      # 대조 상대 = 이 run 의 <시작 모델> 스캔. 파일명 순서로 고르면 안 된다 -
+      # 재시도(1-1-v2, v3...)는 서로 형제라 직전 시도가 부모가 아니다(둘 다 base 출발).
+      # 1단계면 base 기준선, 그 외에는 step<N-1> 심링크가 가리키는 run 의 스캔.
+      if [ "$DEMO_N" -le 1 ]; then
+        _PREV_SCAN="eval/finetune/demo/scans/000_base.jsonl"
+      else
+        _PREV_TAG=$(readlink "$DEMO_MODELS/step$((DEMO_N - 1))" 2>/dev/null | sed -E 's#.*/versions/run_([^/]+)/.*#\1#')
+        _PREV_SCAN="eval/finetune/demo/scans/${_PREV_TAG}.jsonl"
+      fi
+      if [ -f "$_PREV_SCAN" ]; then
+        echo "  대조 상대(시작 모델): $_PREV_SCAN"
+        _PREV_ARG="--prev-scan $_PREV_SCAN"
+      else
+        echo "  ★시작 모델 스캔이 없습니다: $_PREV_SCAN (대조 없이 진행)"
+        _PREV_ARG=""
+      fi
       # -u : 진행률 로그가 버퍼에 갇히지 않고 바로 보이게(20분짜리라 무소식이면 불안하다).
-      python -u eval/demo_next_target.py --run-tag "$RUN_TAG" --exclude "$TARGETS" \
+      python -u eval/demo_next_target.py --run-tag "$RUN_TAG" --exclude "$TARGETS" $_PREV_ARG \
         || echo "  (타깃 스캔 실패 - 수동: python eval/demo_next_target.py --run-tag $RUN_TAG)"
     elif [ "$DEMO_PASS" = "1" ]; then
       echo "[다음 타깃 스캔] DEMO_SCAN=0 으로 껐습니다. 나중에 돌리려면:"
