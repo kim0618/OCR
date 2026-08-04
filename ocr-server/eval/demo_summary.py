@@ -502,19 +502,23 @@ def _scan_delta(tag: str, prev_name: str) -> dict | None:
             except json.JSONDecodeError:
                 continue
             if r.get("path") and is_item_name(r.get("gt") or ""):
-                out[r["path"]] = same_text(r.get("gt") or "", r.get("pred") or "")
+                gt, pr = r.get("gt") or "", r.get("pred") or ""
+                # (관대, 엄격) - 둘이 갈리는 게 곧 '글자는 맞는데 표기만 다른' 건이다.
+                out[r["path"]] = (same_text(gt, pr), gt.strip() == pr.strip())
         return out
 
     a, b = _ok(prev), _ok(cur)
     keys = a.keys() & b.keys()
     if not keys:
         return None
-    prev_ok = sum(1 for k in keys if a[k])
-    lost = sum(1 for k in keys if a[k] and not b[k])
-    gained = sum(1 for k in keys if not a[k] and b[k])
-    unread = sum(1 for k in keys if not b[k])
+    prev_ok = sum(1 for k in keys if a[k][0])
+    lost = sum(1 for k in keys if a[k][0] and not b[k][0])
+    gained = sum(1 for k in keys if not a[k][0] and b[k][0])
+    unread = sum(1 for k in keys if not b[k][0])
+    # 글자는 다 맞는데 공백·앞뒤 잡문자 때문에 엄격 비교로는 오답인 것 = 집계에서 뺀 몫.
+    notation = sum(1 for k in keys if b[k][0] and not b[k][1])
     return {"n": len(keys), "prevOk": prev_ok, "lost": lost,
-            "gained": gained, "unread": unread}
+            "gained": gained, "unread": unread, "notation": notation}
 
 
 def _next_block(run: dict, esc, attempts: dict | None = None) -> str:
@@ -538,7 +542,10 @@ def _next_block(run: dict, esc, attempts: dict | None = None) -> str:
             f'<b>{lost_pct:.1f}%</b><span class="muted">)</span> &nbsp;·&nbsp; '
             f'② 못 읽음 <b>{d["unread"]:,} 크롭</b> '
             f'<span class="muted">(전체 {d["n"]:,} 중 </span>'
-            f'<b>{unread_pct:.1f}%</b><span class="muted">)</span><br>'
+            f'<b>{unread_pct:.1f}%</b><span class="muted">)</span>'
+            f' &nbsp;·&nbsp; ③ 표기만 다름 <b>{d["notation"]:,} 크롭</b> '
+            f'<span class="muted">(글자는 맞게 읽었으나 공백·표 테두리 차이 - '
+            f'집계에서 제외)</span><br>'
             f'<span class="muted">되살린 크롭 {d["gained"]:,} - 잃은 크롭 {d["lost"]:,} = '
             f'순증 {net:+,} 크롭</span></p>')
     else:

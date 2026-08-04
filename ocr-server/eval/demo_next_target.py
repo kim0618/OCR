@@ -62,7 +62,19 @@ def is_item_name(name: str) -> bool:
     flat = s.replace(" ", "")
     if flat in _NOT_ITEM_EXACT or len(flat) < 3:
         return False
+    if flat != flat.strip(_EDGE_JUNK):
+        return False          # 앞뒤에 표 테두리가 붙은 오염 라벨 - 학습 타깃으로 부적합
     return not any(k in s for k in _NOT_ITEM_PART)
+
+
+# 표 테두리·얼룩을 글자로 읽은 흔적. 원문 GT(구글 OCR)에는 이런 게 그대로 남는다
+# (build_gt.sql: itemName = 원문 description, 마스터 정식명은 itemNameMaster 로 따로).
+# ★'%'는 뺀다 - "헥사메딘액0.12%"처럼 품명의 일부인 경우가 많다(후행 448건 중 대부분).
+_EDGE_JUNK = r"""|[]_?$><~`^\!@#&*=+{};:"'‘’“”"""
+
+
+def _strip_edge(s: str) -> str:
+    return "".join(s.split()).strip(_EDGE_JUNK)
 
 
 def same_text(gt: str, pred: str) -> bool:
@@ -74,9 +86,12 @@ def same_text(gt: str, pred: str) -> bool:
        (모델이 없는 공백을 넣은 반대 사례도 나온다),
       ②품명은 마스터 매칭(유사도)으로 넘어가므로 공백 하나로 매칭이 갈리지 않는다.
       제품 기준으로 이미 성공한 건을 실패로 세면 앵커 실험의 신호가 흐려진다.
+    ★앞뒤 잡문자(| [ ] _ ? …)도 같이 뺀다. 이 GT 는 상대 시스템의 <원문 OCR>이라
+      표 세로선을 글자로 읽은 "|스파로드정" 같은 오염이 1.9% 섞여 있다. 우리 모델이
+      선을 안 읽은 것은 오답이 아니라 더 정확히 읽은 것이다.
     ★단, 소생 판정(demo_report)은 엄격한 완전일치를 그대로 쓴다.
     """
-    return "".join(gt.split()) == "".join(pred.split())
+    return _strip_edge(gt) == _strip_edge(pred)
 
 
 def basis_crops(min_match: float, limit: int = 0) -> list[tuple[str, str]]:
