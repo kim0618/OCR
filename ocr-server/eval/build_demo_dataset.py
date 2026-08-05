@@ -38,6 +38,7 @@ sys.path.insert(0, HERE)
 
 from finetune_ledger import CORPUS_DIR, CORPUS_PATH  # noqa: E402
 from finetune_crops import load_labels, crop_name  # noqa: E402
+from demo_next_target import basis_keep  # noqa: E402  (기준셋 확정 목록 - 조각 크롭 제외)
 
 FAIL_LABELS = os.path.join(CORPUS_DIR, "labels.txt")
 BAL_LABELS = os.path.join(CORPUS_DIR, "labels_correct.txt")
@@ -198,9 +199,17 @@ def main() -> int:
     val_t: list[tuple[str, str]] = []
     judge_t: list[tuple[str, str]] = []
     detail: dict[str, dict] = {}
+    _keep = basis_keep()
     for t in targets:
         mine = [(p, m) for p, m in sorted(tmap.items()) if keys[t] in m["label"].replace(" ", "")]
         judge = [(p, m) for p, m in mine if m["src"] and m["src"] in replay]
+        if _keep is not None:
+            # ★판정은 확정 목록 크롭만 - 조각 크롭(라벨과 다른 칸)이 판정셋에 끼면
+            #  그 크롭은 영원히 오답이라 소생 판정이 성립할 수 없다(2026-08-04 실증).
+            n_junk = sum(1 for p, _ in judge if p not in _keep)
+            judge = [(p, m) for p, m in judge if p in _keep]
+            if n_junk:
+                print(f"[demo] '{t}': 판정 후보 중 조각 크롭 {n_junk}장 제외(basis_keep)")
         train = [(p, m) for p, m in mine if not (m["src"] and m["src"] in replay)]
         unknown = sum(1 for _, m in train if not m["src"])
         if not judge:
@@ -322,6 +331,9 @@ def main() -> int:
                             if r.get("src") in replay and r.get("column") == "itemName")
     pool_judge = _POOL["failBasis"] + n_corr_basis
     pool_judge_item = _POOL["failBasisItem"] + n_corr_basis_item
+    _bk = basis_keep()
+    if _bk is not None:
+        pool_judge_item = len(_bk)   # 확정 목록이 곧 판정 품명 풀(45,617)
     pool_train = (n_fail_total + n_corr_total) - pool_judge
     # 학습 풀의 품명 크롭 — 출처·컬럼이 확인되는 것만 센 <최소치>다.
     # 정답풀 상당수가 메타 없이 수확돼 컬럼을 알 수 없어 그만큼은 빠진다.

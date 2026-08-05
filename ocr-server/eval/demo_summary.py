@@ -35,10 +35,11 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
 from finetune_report import _write_text  # noqa: E402
-from demo_next_target import is_item_name, same_text  # noqa: E402
+from demo_next_target import is_item_name, same_text, basis_keep, gt_bad  # noqa: E402
 
 DEMO_DIR = os.path.join(HERE, "finetune", "demo")
 DEFAULT_OUT = os.path.join(DEMO_DIR, "DEMO_SUMMARY.html")
+REVIEW_RECOUNT = os.path.join(DEMO_DIR, "GT_REVIEW_RECOUNT.json")
 ORD = ["1차", "2차", "3차", "4차", "5차", "6차", "7차", "8차"]
 
 
@@ -107,9 +108,23 @@ def _scan_fail_count(tag: str) -> int | None:
     """
     if tag in _SCAN_CACHE:
         return _SCAN_CACHE[tag]
+    # ★재검수 재집계본이 있으면 그 값을 쓴다. 아래 요약(못 읽음)과 같은 잣대여야 한다 -
+    #  여기서 따로 세면 검수로 고친 GT(217장 override)와 제외 정책이 반영되지 않아
+    #  같은 화면에 다른 숫자가 뜬다(2026-08-05: v5 기준 7,541 vs 7,615 로 74 차이).
+    if os.path.exists(REVIEW_RECOUNT):
+        try:
+            with open(REVIEW_RECOUNT, encoding="utf-8") as handle:
+                _run = (json.load(handle).get("runs") or {}).get(tag)
+            if _run and "incorrect" in _run:
+                _SCAN_CACHE[tag] = int(_run["incorrect"])
+                return _SCAN_CACHE[tag]
+        except (OSError, json.JSONDecodeError, ValueError):
+            pass
     path = os.path.join(DEMO_DIR, "scans", f"{tag}.jsonl")
     n = None
     if os.path.exists(path):
+        keep = basis_keep()
+        _bad = gt_bad()
         n = 0
         for ln in open(path, encoding="utf-8"):
             ln = ln.strip()
@@ -119,6 +134,11 @@ def _scan_fail_count(tag: str) -> int | None:
                 r = json.loads(ln)
             except json.JSONDecodeError:
                 continue
+            # 확정 목록(basis_keep) 밖 조각 크롭은 세지 않는다.
+            if keep is not None and r.get("path") not in keep:
+                continue
+            if (r.get("gt") or "").replace(" ", "") in _bad:
+                continue               # 실물 확인된 GT 오독 - 집계 제외
             # 공백만 다른 건 실패로 세지 않는다(demo_next_target.same_text 와 같은 잣대).
             if (is_item_name(r.get("gt") or "")
                     and not same_text(r.get("gt") or "", r.get("pred") or "")):
@@ -464,13 +484,26 @@ def _cand_table(items: list, esc, empty: str) -> str:
     rows = [c for c in items if is_item_name(c.get("name") or "")]
     if not rows:
         return f'<p class="muted">{empty}</p>'
-    rows.sort(key=lambda c: (-c.get("crops", 0), -c.get("rate", 0)))
+    # ★정렬 기준은 <틀린 크롭> 수다. 총 크롭으로 줄 세우면 23크롭 중 2개만 틀린 품명이
+    #  10크롭 중 9개 틀린 품명보다 위로 올라온다 - 타깃으로는 후자가 맞다.
+    #  (소생 판정은 그 품명 전량 정답이라, 이미 대부분 읽는 품명은 타깃 가치가 없다)
+    rows.sort(key=lambda c: (-c.get("hits", 0), -c.get("crops", 0), c.get("name") or ""))
     out = ['<table style="margin:6px 0 12px"><tr><th style="width:44px">#</th>'
-           '<th>품명</th><th style="width:90px">크롭</th>'
+           '<th>품명</th>'
+           '<th style="width:250px" title="틀리게 읽힌 크롭의 실물. GT 가 맞는지, 진짜 '
+           '오독인지 눈으로 판단하는 근거 - 사전 같은 간접 증거보다 이미지가 우선">크롭 실물</th>'
+           '<th style="width:90px">크롭</th>'
            '<th style="width:110px">틀린 크롭</th><th>대표 오독</th></tr>']
     for i, c in enumerate(rows[:10], 1):
         w = " · ".join(f'"{esc(k)}" {n}' for k, n in (c.get("wrong") or [])[:2]) or "-"
+        # crops64 는 data:URI 와 순수 base64 가 섞여 들어온다(감사 압축본 vs 옛 캐시).
+        # 접두사를 무조건 붙이면 data:...data:... 가 되어 이미지가 전부 깨진다.
+        imgs = "".join(
+            f'<img src="{b if b.startswith("data:") else "data:image/jpeg;base64," + b}" '
+            f'style="max-height:30px;margin:1px 4px 1px 0;vertical-align:middle">'
+            for b in (c.get("crops64") or [])) or '<span class="muted">-</span>'
         out.append(f'<tr><td class="muted">{i}</td><td><b>{esc(c["name"])}</b></td>'
+                   f'<td>{imgs}</td>'
                    f'<td>{c.get("crops", 0)} 크롭</td>'
                    f'<td><span class="bad">{c.get("hits", 0)}</span> '
                    f'<span class="muted">({c.get("rate", 0)}%)</span></td>'
@@ -485,6 +518,33 @@ def _scan_delta(tag: str, prev_name: str) -> dict | None:
     두 표(① 잃음 ② 못 읽음)가 각각 몇 %인지가 한 줄로 안 보이면, 표만 보고는
     "많은 건가 적은 건가"를 판단할 수 없다.
     """
+    # A completed human GT review supersedes the original pseudo-GT recount.
+    # All scan predictions are already local, so no AWS re-inference is needed.
+    if prev_name == "000_base.jsonl" and os.path.exists(REVIEW_RECOUNT):
+        try:
+            with open(REVIEW_RECOUNT, encoding="utf-8") as handle:
+                reviewed = json.load(handle)
+            run = (reviewed.get("runs") or {}).get(tag)
+            if run:
+                return {
+                    "n": reviewed["evaluatedCrops"],
+                    "correct": run.get("correct"),
+                    "notationOnly": run.get("notationOnly"),
+                    "charWrong": run.get("charWrong"),
+                    "prevOk": reviewed["baseCorrect"],
+                    "lost": run["lost"],
+                    "gained": run["revived"],
+                    "unread": run.get("unread", run["incorrect"]),
+                    "fail": run["incorrect"],
+                    "notation": run.get("notationOnly", run.get("formatting", 0)),
+                    "reviewed": True,
+                    "reviewRows": reviewed.get("reviewRows", 0),
+                    "approvedRows": reviewed.get("approvedRows", 0),
+                    "excludedRows": reviewed.get("excludedRows", 0),
+                }
+        except (OSError, KeyError, TypeError, json.JSONDecodeError):
+            pass
+
     d = os.path.join(DEMO_DIR, "scans")
     cur, prev = os.path.join(d, f"{tag}.jsonl"), os.path.join(d, prev_name or "")
     if not (tag and os.path.exists(cur) and prev_name and os.path.exists(prev)):
@@ -493,6 +553,8 @@ def _scan_delta(tag: str, prev_name: str) -> dict | None:
     def _ok(path: str) -> dict[str, bool]:
         """품명이 아닌 항목(할인·집계 행, 헤더 조각)은 빼고 읽는다 - 후보 표와 같은 모집단."""
         out = {}
+        keep = basis_keep()
+        _bad2 = gt_bad()
         for ln in open(path, encoding="utf-8"):
             ln = ln.strip()
             if not ln:
@@ -501,6 +563,10 @@ def _scan_delta(tag: str, prev_name: str) -> dict | None:
                 r = json.loads(ln)
             except json.JSONDecodeError:
                 continue
+            if keep is not None and r.get("path") not in keep:
+                continue
+            if (r.get("gt") or "").replace(" ", "") in _bad2:
+                continue               # 실물 확인된 GT 오독 - 집계 제외
             if r.get("path") and is_item_name(r.get("gt") or ""):
                 gt, pr = r.get("gt") or "", r.get("pred") or ""
                 # (관대, 엄격) - 둘이 갈리는 게 곧 '글자는 맞는데 표기만 다른' 건이다.
@@ -536,6 +602,9 @@ def _next_block(run: dict, esc, attempts: dict | None = None) -> str:
         lost_pct = 100.0 * d["lost"] / d["prevOk"] if d["prevOk"] else 0.0
         unread_pct = 100.0 * d["unread"] / d["n"] if d["n"] else 0.0
         net = d["gained"] - d["lost"]
+        # ★판정은 표기 차이(공백·표 테두리)를 무시하고 글자만 본다.
+        #  ③은 글자를 맞게 읽었으나 표기가 GT 와 다른 몫으로, ①②(실패)에는 넣지 않는다.
+        nota = d.get("notationOnly", d.get("notation"))
         summary = (
             f'<p class="big">① 잃어버림 <b>{d["lost"]:,} 크롭</b> '
             f'<span class="muted">(직전 모델이 읽던 {d["prevOk"]:,} 중 </span>'
@@ -543,21 +612,45 @@ def _next_block(run: dict, esc, attempts: dict | None = None) -> str:
             f'② 못 읽음 <b>{d["unread"]:,} 크롭</b> '
             f'<span class="muted">(전체 {d["n"]:,} 중 </span>'
             f'<b>{unread_pct:.1f}%</b><span class="muted">)</span>'
-            f' &nbsp;·&nbsp; ③ 표기만 다름 <b>{d["notation"]:,} 크롭</b> '
-            f'<span class="muted">(글자는 맞게 읽었으나 공백·표 테두리 차이 - '
-            f'집계에서 제외)</span><br>'
+            f' &nbsp;·&nbsp; ③ 표기만 다름 <b>{nota:,} 크롭</b> '
+            f'<span class="muted">(글자는 맞게 읽었으나 공백·표 테두리 차이)</span><br>'
+            f'<span class="muted">실패 크롭 {d.get("fail", 0):,} = ① {d["lost"]:,} + '
+            f'② {d["unread"]:,} + ③ {nota:,} &nbsp;·&nbsp; </span>'
             f'<span class="muted">되살린 크롭 {d["gained"]:,} - 잃은 크롭 {d["lost"]:,} = '
-            f'순증 {net:+,} 크롭</span></p>')
+            f'순증 {net:+,} 크롭</span>'
+            + '</p>')
     else:
         summary = ""
+    lost_items = nt.get("lost") or []
+    unread_items = nt.get("unread") or []
+    # 재검수 재집계본이 있으면 모든 run 의 후보를 거기서 가져온다(썸네일 포함).
+    _tag = str(run.get("runTag") or "")
+    if os.path.exists(REVIEW_RECOUNT):
+        try:
+            with open(REVIEW_RECOUNT, encoding="utf-8") as handle:
+                _rc = json.load(handle)
+            _cand = (_rc.get("candidates") or {}).get(_tag)
+            if _cand:
+                lost_items = _cand.get("lost") or lost_items
+                unread_items = _cand.get("unread") or unread_items
+        except (OSError, json.JSONDecodeError, KeyError):
+            pass
+    if _tag == "260804_1623" and os.path.exists(REVIEW_RECOUNT):
+        try:
+            with open(REVIEW_RECOUNT, encoding="utf-8") as handle:
+                reviewed = json.load(handle)
+            lost_items = reviewed.get("v5LostCandidates") or lost_items
+            unread_items = reviewed.get("v5UnreadCandidates") or unread_items
+        except (OSError, json.JSONDecodeError):
+            pass
     return (
         summary +
         f'<p><b>① 이번 회차 2단계 타깃 후보</b> '
         f'<span class="muted">- 직전 모델은 읽던 품명을 이 모델이 잃었다</span></p>'
-        + _cand_table(nt.get("lost") or [], esc, "잃어버린 품명이 없습니다.")
+        + _cand_table(lost_items, esc, "잃어버린 품명이 없습니다.")
         + f'<p><b>② 다음 회차 1단계 타깃 후보</b> '
           f'<span class="muted">- 이 모델도 여전히 못 읽는 품명</span></p>'
-        + _cand_table(nt.get("unread") or [], esc, "해당 품명이 없습니다."))
+        + _cand_table(unread_items, esc, "해당 품명이 없습니다."))
 
 
 def _why_fail(run: dict, esc) -> str:

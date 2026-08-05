@@ -42,6 +42,33 @@ BAL_LABELS = os.path.join(CORPUS_DIR, "labels_correct.txt")
 BAL_META = os.path.join(CORPUS_DIR, "labels_correct.meta.jsonl")
 REPLAY_SRC = os.path.join(CORPUS_DIR, "replay_sources.txt")
 SCANS_DIR = os.path.join(DEMO_DIR, "scans")
+# ★기준셋 확정 목록(2026-08-04 전수 검증). 87,316 중 46%가 품명이 아닌 조각 크롭
+#  (검출 실패 박스에 셀 전체 라벨이 붙은 것 - base·FT 모두 정답 0.00%로 실증,
+#   표본 40장 육안 판독 40/40 조각). 폭/(글자수*높이) >= 0.30 만 남긴 45,617장.
+#  남김 구간은 표본 40/40 전부 진짜 품명으로 확인됨.
+BASIS_KEEP = os.path.join(DEMO_DIR, "basis_keep.txt")
+
+
+_GT_BAD_PATH = os.path.join(DEMO_DIR, "gt_bad.txt")
+
+
+def gt_bad() -> set[str]:
+    """크롭 실물로 확인된 GT 오독 품명(공백 제거). 후보·손실 집계에서 뺀다.
+    모델이 틀린 게 아니라 정답 라벨이 틀린 건이라, 세면 실험 신호가 흐려진다."""
+    out: set[str] = set()
+    if os.path.exists(_GT_BAD_PATH):
+        for ln in open(_GT_BAD_PATH, encoding="utf-8"):
+            ln = ln.strip()
+            if ln and not ln.startswith("#"):
+                out.add(ln.split("\t")[0].replace(" ", ""))
+    return out
+
+
+def basis_keep() -> set[str] | None:
+    """확정 목록. 없으면 None(필터 없이 동작 - 구버전 호환)."""
+    if not os.path.exists(BASIS_KEEP):
+        return None
+    return {ln.strip() for ln in open(BASIS_KEEP, encoding="utf-8") if ln.strip()}
 HANGUL = re.compile(r"[가-힣]")
 
 # 후보에는 실제 품명만 남긴다. 거래명세서의 품명 컬럼에는 약품명 말고도
@@ -74,6 +101,13 @@ _EDGE_JUNK = r"""|[]_?$><~`^\!@#&*=+{};:"'‘’“”"""
 
 
 def _strip_edge(s: str) -> str:
+    # NFKC: ㈜→(주), ㎎→mg, 전각→반각 등 합자·폭 변형을 풀어서 비교한다.
+    # 2026-08-04 실증: GT "㈜이든파마" vs 모델 "(주이든파마" - 같은 표기가 다른
+    # 문자 코드라는 이유로 13크롭이 통째로 '못 읽음' 후보 1위에 올랐다.
+    import unicodedata
+    s = unicodedata.normalize("NFKC", s)
+    # ㈜는 NFKC 가 (주) 로 풀므로 인코딩 차이까지만 등가로 본다.
+    # 모델이 닫는 괄호를 빠뜨린 "(주" 는 실제 한 글자 삭제 = 인식 결함으로 남긴다(학습 대상).
     return "".join(s.split()).strip(_EDGE_JUNK)
 
 
@@ -106,6 +140,7 @@ def basis_crops(min_match: float, limit: int = 0) -> list[tuple[str, str]]:
     if not replay:
         raise SystemExit(f"기준셋 소스 목록이 없습니다: {REPLAY_SRC}")
 
+    keep = basis_keep()
     rows: list[tuple[str, str]] = []
     fails = load_labels(FAIL_LABELS)
     for ln in open(CORPUS_PATH, encoding="utf-8"):
@@ -121,6 +156,8 @@ def basis_crops(min_match: float, limit: int = 0) -> list[tuple[str, str]]:
         if (e.get("matchRatio") or 0) < min_match:
             continue
         rel = "crops/" + crop_name(e)
+        if keep is not None and rel not in keep:
+            continue
         gt = fails.get(rel)
         if gt and os.path.exists(os.path.join(CORPUS_DIR, rel)):
             rows.append((rel, gt))
@@ -135,6 +172,8 @@ def basis_crops(min_match: float, limit: int = 0) -> list[tuple[str, str]]:
             if rec.get("column") != "itemName" or rec.get("src") not in replay:
                 continue
             rel = rec.get("path")
+            if keep is not None and rel not in keep:
+                continue
             gt = bal.get(rel)
             if gt and os.path.exists(os.path.join(CORPUS_DIR, rel)):
                 rows.append((rel, gt))
@@ -143,17 +182,49 @@ def basis_crops(min_match: float, limit: int = 0) -> list[tuple[str, str]]:
     return rows
 
 
+def _thumbs(rels: list[str], max_n: int = 3) -> list[str]:
+    """후보 크롭 실물을 base64 JPEG 로 - 표에서 눈으로 GT/오독을 판단하는 근거.
+    마스터 사전 같은 간접 증거는 쓰지 않는다: 사전에 없는 정상 품명이 많고(포장 변형·
+    비의약품), 사전에 있어도 그 크롭에 그 글자가 인쇄됐다는 보장이 없다. 실물이 유일한 증거."""
+    import base64
+    import io as _io
+    out: list[str] = []
+    try:
+        from PIL import Image
+    except ImportError:
+        return out
+    for rel in rels[:max_n]:
+        p = os.path.join(CORPUS_DIR, rel)
+        if not os.path.exists(p):
+            continue
+        try:
+            im = Image.open(p).convert("RGB")
+            if im.height > 34:
+                im = im.resize((max(1, im.width * 34 // im.height), 34))
+            buf = _io.BytesIO()
+            im.save(buf, "JPEG", quality=75)
+            out.append(base64.b64encode(buf.getvalue()).decode())
+        except OSError:
+            continue
+    return out
+
+
 def _load_scan(path: str) -> dict[str, dict]:
+    """스캔 결과 로드 - 확정 목록(basis_keep)이 있으면 그 크롭만.
+    옛 스캔 파일에는 조각 크롭 판독이 그대로 남아 있어 여기서 걸러야
+    새 스캔(처음부터 45,617장만 읽음)과 같은 모집단이 된다."""
     out: dict[str, dict] = {}
     if not path or not os.path.exists(path):
         return out
+    keep = basis_keep()
     for ln in open(path, encoding="utf-8"):
         try:
             d = json.loads(ln)
         except json.JSONDecodeError:
             continue
-        if d.get("path"):
-            out[d["path"]] = d
+        p = d.get("path")
+        if p and (keep is None or p in keep):
+            out[p] = d
     return out
 
 
@@ -188,6 +259,7 @@ def main() -> int:
     run_tag = _report_id(args.run_tag)
     scan_tag = args.scan_tag or run_tag
     already = {t.strip().replace(" ", "") for t in args.exclude.split(",") if t.strip()}
+    already |= gt_bad()          # 실물 확인된 GT 오독은 후보로 다시 올라오지 않게
     scan_path = os.path.join(SCANS_DIR, f"{scan_tag}.jsonl")
     # ★덮어쓰기 금지 — 판독(20분) 시작 전에 막는다.
     #  모델 선택은 output/best_accuracy(=마지막 학습본)를 따르므로, 나중에 옛 --run-tag 로
@@ -271,15 +343,20 @@ def main() -> int:
         print(f"[대조] 직전 스캔 없음 → base 는 크롭 풀로 대체 "
               f"(정답 {n_ok:,} / 오답 {len(prev) - n_ok:,})")
 
-    lost = defaultdict(lambda: {"n": 0, "hit": 0, "wrong": {}})
-    unread = defaultdict(lambda: {"n": 0, "hit": 0, "wrong": {}})
+    lost = defaultdict(lambda: {"n": 0, "hit": 0, "wrong": {}, "paths": []})
+    unread = defaultdict(lambda: {"n": 0, "hit": 0, "wrong": {}, "paths": []})
+    _bad = gt_bad()
     for (rel, gt), p in zip(rows, preds):
+        if gt.replace(" ", "") in _bad:
+            continue                   # GT 오독 확정 건 - 모델 잘못이 아니므로 집계 제외
         ok = same_text(gt, p)          # 공백 차이는 실패로 세지 않는다
         u = unread[gt]
         u["n"] += 1
         if not ok:
             u["hit"] += 1
             u["wrong"][p.strip() or "(빈칸)"] = u["wrong"].get(p.strip() or "(빈칸)", 0) + 1
+            if len(u["paths"]) < 3:
+                u["paths"].append(rel)
         pv = prev.get(rel)
         if pv and same_text(pv.get("gt") or "", pv.get("pred") or ""):
             l = lost[gt]
@@ -287,6 +364,8 @@ def main() -> int:
             if not ok:
                 l["hit"] += 1
                 l["wrong"][p.strip() or "(빈칸)"] = l["wrong"].get(p.strip() or "(빈칸)", 0) + 1
+                if len(l["paths"]) < 3:
+                    l["paths"].append(rel)
 
     def _rank(stat) -> list[dict]:
         out = []
@@ -296,7 +375,8 @@ def main() -> int:
                 continue
             out.append({"name": gt, "crops": s["n"], "hits": s["hit"],
                         "rate": round(100.0 * s["hit"] / s["n"], 1),
-                        "wrong": sorted(s["wrong"].items(), key=lambda x: -x[1])[:3]})
+                        "wrong": sorted(s["wrong"].items(), key=lambda x: -x[1])[:3],
+                        "crops64": _thumbs(s["paths"])})
         out.sort(key=lambda x: (-x["rate"], -x["crops"]))   # 전 출현이 뒤집힌 것 우선
         return out[:20]
 
