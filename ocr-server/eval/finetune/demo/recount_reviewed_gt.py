@@ -26,6 +26,40 @@ def comparable(text: str) -> str:
     return "".join(text.split()).strip(EDGE_JUNK)
 
 
+# ★잃어버림(①)의 원인 5분할. 겹치지 않게, 위에서부터 먼저 걸린 것으로 정한다.
+#    한글 오독    - 품명 본체의 한글이 다름. 진짜 인식 오류이자 유일하게 '못 읽게 된' 층
+#    법인표기(㈜) - 한글은 다르지만 ㈜/(주) 를 지우면 같음. 법인 표기 처리만 흔들린 것
+#    영문 오독    - 한글은 같고 영문이 다름 (F 누락, BLI->BL, I/l 혼동)
+#    숫자 오독    - 한글·영문은 같고 숫자가 다름 (용량·수량)
+#    기호·괄호    - 글자는 전부 같고 괄호·×·/ 같은 기호만 다름
+#  '한글 오독' 이 아니면 품명 본체는 그대로 읽고 있다는 뜻이라, 같은 593 이라도
+#  어느 층에서 잃었는지에 따라 대책(학습 강도 / 앵커 성분 / 후처리)이 갈린다.
+CAUSES = ("한글 오독", "영문 오독", "숫자 오독", "기호·괄호", "법인표기(㈜)")
+_CORP_MARK = re.compile(r"\(?주\)?|\(?유\)?")
+
+
+def _only(pattern: str, text: str) -> str:
+    """공백·전각을 정규화한 뒤 pattern 에 걸리는 글자를 지운 나머지."""
+    return re.sub(pattern, "", unicodedata.normalize("NFKC", "".join(text.split())))
+
+
+def _corp_stripped(text: str) -> str:
+    """법인표기(㈜·(주)·(유))를 지운 한글만."""
+    return re.sub(r"[^가-힣]", "", _CORP_MARK.sub(
+        "", unicodedata.normalize("NFKC", "".join(text.split()))))
+
+
+def lost_cause(gt: str, pred: str) -> str:
+    if _only(r"[^가-힣]", gt) != _only(r"[^가-힣]", pred):
+        return ("법인표기(㈜)" if _corp_stripped(gt) == _corp_stripped(pred)
+                else "한글 오독")
+    if _only(r"[^A-Za-z]", gt) != _only(r"[^A-Za-z]", pred):
+        return "영문 오독"
+    if _only(r"[^0-9]", gt) != _only(r"[^0-9]", pred):
+        return "숫자 오독"
+    return "기호·괄호"
+
+
 def load_scan(name: str, keep: set[str]) -> dict[str, dict]:
     rows: dict[str, dict] = {}
     with (SCANS / name).open(encoding="utf-8") as handle:
@@ -152,7 +186,14 @@ def main() -> None:
         lost = sum(base_ok[path] and not candidate_ok[path] for path in valid)
         unread = sum(not base_ok[path] and not candidate_ok[path] for path in valid)
         revived = sum(not base_ok[path] and candidate_ok[path] for path in valid)
+        # ① 을 원인별로 쪼갠다 - 같은 잃어버림이라도 층마다 대책이 다르다.
+        cause_of = {
+            path: lost_cause(policy[path][0], scan[path]["pred"])
+            for path in valid if base_ok[path] and not candidate_ok[path]
+        }
+        cause_count = Counter(cause_of.values())
         run_results[tag] = {
+            "lostCauses": {c: cause_count.get(c, 0) for c in CAUSES},
             "correct": correct,
             "charWrong": len(valid) - correct,        # ① + ②
             "notationOnly": notation_only,            # ③
@@ -214,13 +255,16 @@ def main() -> None:
         grouped_paths[group_key].append(path)
         display_name.setdefault(group_key, gt)
 
-    def candidate_rows(kind: str, tag: str) -> list[dict]:
+    def candidate_rows(kind: str, tag: str, cause: str | None = None) -> list[dict]:
         scan = scans[tag]
         run_ok = candidate_ok_by_run[tag]
         result = []
         for group_key, paths in grouped_paths.items():
             if kind == "lost":
                 selected = [path for path in paths if base_ok[path] and not run_ok[path]]
+                if cause is not None:
+                    selected = [path for path in selected
+                                if lost_cause(policy[path][0], scan[path]["pred"]) == cause]
             else:
                 selected = [path for path in paths if not run_ok[path]]
                 if len(selected) != len(paths):
@@ -307,7 +351,16 @@ def main() -> None:
         # 모든 run 의 후보를 이미지까지 함께 만든다. 로컬에는 코퍼스 원본이 없어
         # NEXT_TARGETS 를 다시 만들면 썸네일이 비므로, 화면은 이 값을 쓴다.
         "candidates": {
-            tag: {"lost": candidate_rows("lost", tag), "unread": candidate_rows("unread", tag)}
+            tag: {
+                "lost": candidate_rows("lost", tag),
+                "unread": candidate_rows("unread", tag),
+                # 원인별 후보표 - 리포트가 탭으로 나눠 보여준다.
+                "lostByCause": {
+                    cause: rows
+                    for cause in CAUSES
+                    if (rows := candidate_rows("lost", tag, cause))
+                },
+            }
             for tag in scans
         },
         "v5LostCandidates": candidate_rows("lost", "260804_1623"),

@@ -86,17 +86,21 @@ def main() -> None:
                     help="기준 스캔 태그(기본: scans 의 000_base 제외 최신)")
     ap.add_argument("--list", action="store_true", help="필요한 경로 목록만 출력")
     ap.add_argument("--apply", action="store_true", help="내려받은 tgz 를 캐시에 반영")
+    ap.add_argument("--archive", default=None,
+                    help="반영할 tgz 경로(기본: missing_crops.tgz). 다른 목적으로 따로 "
+                         "받아온 압축본도 같은 캐시에 넣을 수 있게 한다")
     args = ap.parse_args()
 
     tag = args.latest_tag or sorted(
         p.stem for p in SCANS.glob("*.jsonl") if p.name != "000_base.jsonl")[-1]
 
     if args.apply:
-        if not ARCHIVE.exists():
-            raise SystemExit(f"압축본이 없습니다: {ARCHIVE}")
+        archive_path = Path(args.archive) if args.archive else ARCHIVE
+        if not archive_path.exists():
+            raise SystemExit(f"압축본이 없습니다: {archive_path}")
         cache = json.loads(CACHE.read_text(encoding="utf-8")) if CACHE.exists() else {}
         added = 0
-        with tarfile.open(ARCHIVE, "r:gz") as archive:
+        with tarfile.open(archive_path, "r:gz") as archive:
             for member in archive.getmembers():
                 if not member.isfile():
                     continue

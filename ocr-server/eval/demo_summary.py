@@ -512,6 +512,48 @@ def _cand_table(items: list, esc, empty: str) -> str:
     return "\n".join(out)
 
 
+_CAUSE_HELP = {
+    "한글 오독": "품명 본체의 한글이 달라졌다 - 진짜로 못 읽게 된 층. 학습 강도(에폭·lr)를 "
+             "낮춰 가중치 이동을 줄이는 게 직접 처방이다.",
+    "영문 오독": "한글은 그대로고 영문만 다르다(F 누락, BLI→BL, I/l 혼동). 품명 본체는 "
+             "읽고 있으므로 마스터 매칭에서 흡수될 여지가 있다.",
+    "숫자 오독": "한글·영문은 그대로고 용량·수량 숫자가 다르다. 앵커의 짧은 숫자 비중과 "
+             "직접 연결된 층이다.",
+    "기호·괄호": "글자는 전부 맞고 괄호·×·/ 같은 기호만 다르다. GT 가 구글 OCR 원문이라 "
+             "인쇄를 그대로 반영한다는 보장이 없는 층이기도 하다.",
+    "법인표기(㈜)": "㈜ 를 (주)·( 로 푸는 방식만 흔들렸다. 품명 본체와 무관하다.",
+}
+
+
+def _cause_tabs(tag: str, all_rows: list, by_cause: dict, esc) -> str:
+    """① 잃어버림을 원인별 탭으로. 재집계본에 원인 분류가 없으면 기존 표 하나로 폴백.
+
+    같은 593 이라도 '한글 오독'이냐 '기호·괄호'냐에 따라 대책이 갈린다 - 한 표에
+    섞어 놓으면 그 판단이 안 선다. 탭 라벨에 건수를 박아 비중이 바로 보이게 한다.
+    """
+    empty = "잃어버린 품명이 없습니다."
+    if not by_cause:
+        return _cand_table(all_rows, esc, empty)
+    # 탭 그룹 id 는 JS 식별자로 쓰이므로 ASCII 만 남긴다(실행번호는 이미 ASCII).
+    g = "L" + re.sub(r"[^0-9A-Za-z_]", "", tag)
+    n_all = sum(sum(r.get("hits", 0) for r in rows) for rows in by_cause.values())
+    panes = [("전체", f"{n_all:,}", all_rows, "")]
+    for cause, rows in by_cause.items():
+        hits = sum(r.get("hits", 0) for r in rows)
+        panes.append((cause, f"{hits:,}", rows, _CAUSE_HELP.get(cause, "")))
+    out = ['<div class="tabs sub">']
+    for i, (label, n, _rows, _tip) in enumerate(panes):
+        out.append(f'<button id="t{g}_{i}" class="{"on" if i == 0 else ""}"'
+                   f" onclick=\"sub('{g}',{i},{len(panes)})\">{esc(label)} "
+                   f'<span class="muted">{n}</span></button>')
+    out.append("</div>")
+    for i, (_label, _n, rows, tip) in enumerate(panes):
+        note = f'<p class="muted" style="margin:8px 0 0">{esc(tip)}</p>' if tip else ""
+        out.append(f'<div id="p{g}_{i}" class="pane{" on" if i == 0 else ""}">'
+                   f'{note}{_cand_table(rows, esc, empty)}</div>')
+    return "\n".join(out)
+
+
 def _scan_delta(tag: str, prev_name: str) -> dict | None:
     """이 모델 스캔 vs 직전 모델 스캔 - 잃은 크롭 / 못 읽는 크롭을 비율까지.
 
@@ -533,6 +575,7 @@ def _scan_delta(tag: str, prev_name: str) -> dict | None:
                     "charWrong": run.get("charWrong"),
                     "prevOk": reviewed["baseCorrect"],
                     "lost": run["lost"],
+                    "lostCauses": run.get("lostCauses") or {},
                     "gained": run["revived"],
                     "unread": run.get("unread", run["incorrect"]),
                     "fail": run["incorrect"],
@@ -619,10 +662,21 @@ def _next_block(run: dict, esc, attempts: dict | None = None) -> str:
             f'<span class="muted">되살린 크롭 {d["gained"]:,} - 잃은 크롭 {d["lost"]:,} = '
             f'순증 {net:+,} 크롭</span>'
             + '</p>')
+        # ① 원인 분해 - 품명 본체를 못 읽게 된 몫(한글 오독)과 표기층을 갈라 보여준다.
+        _cz = {k: v for k, v in (d.get("lostCauses") or {}).items() if v}
+        if _cz:
+            _hangul = _cz.get("한글 오독", 0)
+            summary += (
+                '<p class="muted" style="margin:-6px 0 10px">① 원인별: '
+                + " · ".join(f"{esc(k)} <b>{v:,}</b>" for k, v in _cz.items())
+                + f' &nbsp;→&nbsp; 품명 본체가 깨진 건 <b>{_hangul:,}</b>'
+                + (f' ({100.0 * _hangul / d["lost"]:.0f}%)' if d["lost"] else "")
+                + ', 나머지는 영문·숫자·기호 층</p>')
     else:
         summary = ""
     lost_items = nt.get("lost") or []
     unread_items = nt.get("unread") or []
+    lost_by_cause: dict = {}
     # 재검수 재집계본이 있으면 모든 run 의 후보를 거기서 가져온다(썸네일 포함).
     _tag = str(run.get("runTag") or "")
     if os.path.exists(REVIEW_RECOUNT):
@@ -633,6 +687,7 @@ def _next_block(run: dict, esc, attempts: dict | None = None) -> str:
             if _cand:
                 lost_items = _cand.get("lost") or lost_items
                 unread_items = _cand.get("unread") or unread_items
+                lost_by_cause = _cand.get("lostByCause") or {}
         except (OSError, json.JSONDecodeError, KeyError):
             pass
     if _tag == "260804_1623" and os.path.exists(REVIEW_RECOUNT):
@@ -647,7 +702,7 @@ def _next_block(run: dict, esc, attempts: dict | None = None) -> str:
         summary +
         f'<p><b>① 이번 회차 2단계 타깃 후보</b> '
         f'<span class="muted">- 직전 모델은 읽던 품명을 이 모델이 잃었다</span></p>'
-        + _cand_table(lost_items, esc, "잃어버린 품명이 없습니다.")
+        + _cause_tabs(_tag, lost_items, lost_by_cause, esc)
         + f'<p><b>② 다음 회차 1단계 타깃 후보</b> '
           f'<span class="muted">- 이 모델도 여전히 못 읽는 품명</span></p>'
         + _cand_table(unread_items, esc, "해당 품명이 없습니다."))
