@@ -17,6 +17,15 @@
 # 로그는 ~/OCR/logs/finetune.log 에 tee. best 가중치 = eval/finetune/output/best_accuracy/.
 set -eo pipefail
 export PYTHONUNBUFFERED=1
+# ★결정성(2026-08-06). 같은 설정·같은 데이터로 두 번 돌렸는데(v5→v9 재실행) 잃어버림이
+#  593→718 로 갈라졌다. 시드는 PaddleOCR train.py 가 기본 1024 로 이미 고정하고 있으므로
+#  (random/np/paddle.seed — repo tools/train.py:298) 원인은 RNG 가 아니라 GPU 비결정성이다:
+#  cuDNN 알고리즘 자동선택 + atomic 누산. 아래 플래그는 paddle 초기화 전에 환경변수로
+#  있어야 먹는다(스크립트 최상단인 이유). 비용: 학습 10~20% 느려질 수 있음.
+#  성패는 A/A(동결 데이터셋으로 2회, --dataset-from)로 판정한다 — 개별 예측까지 같아야 성공.
+export FLAGS_cudnn_deterministic=1
+export FLAGS_cudnn_exhaustive_search=0
+export PYTHONHASHSEED=0
 source ~/OCR/ocr-server/.venv/bin/activate
 cd ~/OCR/ocr-server
 mkdir -p ~/OCR/logs
@@ -39,7 +48,8 @@ DRV=eval/finetune/paddlex_train.py
 #   bash run-finetune.sh --round=numeric  --from-adopted  # 숫자만 target + 품명 앵커(순차, 18문턱)
 ROUND=hangul
 TARGETS=""
-for a in "$@"; do case "$a" in --round=*) ROUND="${a#*=}" ;; --numeric) ROUND=numeric ;; --targets=*) TARGETS="${a#*=}" ;; esac; done
+DATASET_FROM=""
+for a in "$@"; do case "$a" in --round=*) ROUND="${a#*=}" ;; --numeric) ROUND=numeric ;; --targets=*) TARGETS="${a#*=}" ;; --dataset-from=*) DATASET_FROM="${a#*=}" ;; esac; done
 
 # --- 이어받기(트리) 결정: --from-adopted 면 채택본을 base 로 pretrain override ---
 FROM_ADOPTED=0
@@ -256,6 +266,7 @@ PY
     #    24   4008   2409      26/26 ✓    691   7,938   +7,247   83.72%  ✗잃어버림 반등 → 총량축 종료
     #    12   2004   1603      26/26 ✓    760   7,640   +6,880   82.91%  ✗품명0.8 기각
     #    12   2004   1204      26/26 ✓    778   7,494   +6,716   82.55%  ✗품명 성분층화 기각
+    #    12   2004   1204      26/26 ✓    718   7,560   +6,842   82.83%  ★v5 동일설정 재실행(v9) → 변동 +125 실측
     #  공정한 곡선은 균형 앵커가 적용된 3배(260804_1439)→6배→12배 셋이다.
     #  12배 실제 잃음 593 의 정체: 편집거리 1 단일 글자 오류가 92%.
     #  ★총량 축 종료(2026-08-05). 24배는 순증만 +232 이고 잃어버림이 반등 → 12배 복귀.
@@ -275,20 +286,21 @@ PY
     #   앵커를 늘린 HENS(+49장)도 잃음이 +71 늘어 배정 방향과 결과가 어긋났다.
     #   결정적으로 앵커가 <완전히 동일한> HNS(87→87)도 +25 움직였다.
     #
-    #  ★★그래서 지금 실험은 배분이 아니라 <재현성 측정>이다(2026-08-06).
-    #   손실 집합을 대조해 보면 실행마다 크게 뒤바뀐다:
-    #     v5 잃음 573 중 네 모델 공통 코어는 269(46.9%)뿐이고 나머지 304 는 매번 달라진다.
-    #     v8 은 v5 대비 신규손실 338 / 신규회복 152 = 490 이 뒤집혔는데 최종 차이는 186.
-    #     각 모델의 <자기만 잃는> 크롭이 188~217 로, 모델 간 차이(98~186)와 같은 규모다.
-    #   즉 지금까지의 배분 실험 4회(3·6·12·24배 / 품명0.8 / 성분층화)가 전부
-    #   "설정 효과"인지 "실행 변동"인지 분리되지 않는다. 같은 설정을 두 번 돌린 적이
-    #   한 번도 없어서 변동폭이 미측정이기 때문이다.
-    #   ▶ 이번 run = v5 레시피 그대로 재실행. 시드도 그대로라 <표본은 v5 와 동일>하고,
-    #     따라서 이 run 이 재는 것은 <학습 비결정성>뿐이다(GPU/cuDNN 등).
-    #     593 ± 20  → 변동 작음. v6~v8 의 악화는 실제 설정 효과로 볼 수 있다.
-    #     700 이상   → 변동 큼. 배분 실험 4회의 해석이 전부 무효이고, 앞으로 어떤
-    #                 배분 비교도 <같은 설정 n회 반복>으로 밴드를 먼저 잡아야 한다.
-    #   (표본 변동까지 같이 재려면 --seed 를 바꾼다. 그건 별개의 두 번째 측정이다.)
+    #  ★★재현성 측정(v9, 2026-08-06) 결과: 같은 설정·같은 학습셋인데 593→718 (+125).
+    #   사전 판정선 "700 이상 = 변동 큼" 에 걸렸다 → 배분 실험 4회(24배/품명0.8/층화)의
+    #   기각 판정은 전부 <보류>. 차이(98~186)가 재실행 변동(+125)과 같은 자릿수라
+    #   설정 효과와 실행 변동이 분리되지 않는다. 채택본은 여전히 v5(593) — 좋은 산출물이지
+    #   "최적 비율의 증거"로는 더 쓰지 않는다.
+    #   손실 집합 대조: v5 잃음 573 중 네 모델 공통 코어 269(46.9%)뿐, 나머지는 매번 바뀜.
+    #
+    #  ▼ 현재 단계 = 결정성 확보 후 A/A 통과 (스크립트 최상단 FLAGS_* 주석 참조).
+    #   시드(1024)는 이미 고정이었으므로 변동 원인은 GPU 비결정성 → cuDNN 플래그로 잠근다.
+    #   절차: ① 동결 번들(--dataset-from=versions/run_260806_1127/dataset)로 D1·D2 실행
+    #         ② 성공 기준 = 입력 해시·시작 가중치 해시·개별 예측(45,356) 전부 동일
+    #            (demo_aa_compare.py 로 대조. 점수만 비슷한 건 성공이 아니다)
+    #         ③ 같으면: 이후 실험은 같은 시드 1회 비교로 판정. 결정적 v5 1회 vs 층화 1회.
+    #            다르면: num_workers=0 로 재시도 → 그래도 다르면 B 실패, n회 반복 방식 전환.
+    #   v7 은 재실행하지 않는다(3중 개입 설계라 결정성이 있어도 인과 분해 불가).
     #  ★판정이 26/26 아래로 떨어지면 앵커가 타깃을 묻은 것 = 그 직전 배수가 상한선.
     DEMO_ANCHOR_RATIO=12.0       # 앵커 총량 = 타깃 크롭 × 이 배수 (167 × 12 = 2,004)
     DEMO_ANCHOR_ITEM=0.60        # v5 원본값. 무작위 추출(성분 층화 없음)
@@ -298,8 +310,20 @@ PY
     DEMO_ANCHOR_ARGS="--anchor-ratio $DEMO_ANCHOR_RATIO"
     DEMO_ANCHOR_ARGS="$DEMO_ANCHOR_ARGS --anchor-item-ratio $DEMO_ANCHOR_ITEM"
     DEMO_ANCHOR_ARGS="$DEMO_ANCHOR_ARGS --anchor-shortnum-ratio $DEMO_ANCHOR_SHORTNUM"
-    python eval/build_demo_dataset.py --targets "$TARGETS" \
-        --replay-sources "$REPLAY_SRC" $DEMO_ANCHOR_ARGS
+    if [ -n "$DATASET_FROM" ]; then
+      # ★동결 번들(A/A 용): 데이터셋을 다시 만들지 않고 이전 run 의 보존본을 그대로 쓴다.
+      #  재현성 측정에서 "빌드가 byte 단위로 같았나"라는 변수 자체를 제거한다.
+      #  사용: --dataset-from=eval/finetune/versions/run_260806_1127/dataset
+      echo "[데모] 동결 데이터셋 사용(빌드 생략): $DATASET_FROM"
+      for _f in train.txt val.txt test.txt manifest.json; do
+        cp "$DATASET_FROM/$_f" eval/finetune_corpus/dataset/ \
+          || { echo "★동결 번들에 $_f 가 없습니다: $DATASET_FROM"; exit 1; }
+      done
+      [ -f "$DATASET_FROM/dict.txt" ] && cp "$DATASET_FROM/dict.txt" eval/finetune_corpus/dict.txt
+    else
+      python eval/build_demo_dataset.py --targets "$TARGETS" \
+          --replay-sources "$REPLAY_SRC" $DEMO_ANCHOR_ARGS
+    fi
     # ★에폭 = "같은 타깃 크롭을 몇 번 보여주나". 기본 20 — 앵커 500 + 타깃 167 = 667줄
     #  기준 약 200스텝이고, 실측에서 정점(best)이 13에폭이라 20이면 충분히 여유가 있다.
     #  매 에폭 검증 → best_accuracy 자동 선택이므로 정점을 지나쳐도 손해는 시간뿐.
@@ -328,13 +352,25 @@ PY
       echo "round=$ROUND  step=$DEMO_N"
       echo "targets=$TARGETS"
       echo "anchor_args=$DEMO_ANCHOR_ARGS"
+      echo "dataset_from=${DATASET_FROM:-'(새로 빌드)'}"
       echo "epochs=$DEMO_EPOCHS"
       echo "train_override=$TRAIN_OVERRIDE"
       echo "git_commit=$(git rev-parse HEAD 2>/dev/null || echo unknown)"
+      echo "flags=cudnn_deterministic=$FLAGS_cudnn_deterministic exhaustive_search=$FLAGS_cudnn_exhaustive_search pythonhashseed=$PYTHONHASHSEED"
+      echo "versions=$(python -c "import paddle;print('paddle',paddle.__version__,'cuda',paddle.version.cuda(),'cudnn',paddle.version.cudnn())" 2>/dev/null || echo unknown)"
     } > "$_EV/run_args.txt"
     ( cd "$_EV" && sha256sum ./* > SHA256SUMS 2>/dev/null ) || true
     ( cd eval/finetune_corpus && sha256sum labels.txt labels_correct.txt \
         labels_correct.meta.jsonl replay_sources.txt 2>/dev/null ) >> "$_EV/SHA256SUMS" || true
+    # 시작 가중치 해시 — A/A 는 <같은 출발점>이어야 성립한다. 1단계면 official 사전학습
+    # 캐시, 2단계 이상이면 직전 통과본의 pdparams 를 남긴다.
+    if [ "$DEMO_N" -ge 2 ]; then
+      sha256sum "$DEMO_PREV/best_accuracy.pdparams" >> "$_EV/SHA256SUMS" 2>/dev/null || true
+    else
+      _PW=$(find ~/.paddlex -name "korean_PP-OCRv5_mobile_rec_pretrained.pdparams" 2>/dev/null | head -1)
+      if [ -n "$_PW" ]; then sha256sum "$_PW" >> "$_EV/SHA256SUMS" || true
+      else echo "# start-weights cache not found (URL download at train time)" >> "$_EV/SHA256SUMS"; fi
+    fi
     echo "[증거] 학습 입력 보존 → $_EV ($(ls "$_EV" | wc -l) 파일)"
     FT_CRITERIA="소생 데모 ${DEMO_ROUND}회차 ${DEMO_STEP}단계: 타깃[$TARGETS] held-out 동일품명 재현"
   elif [ "$ROUND" = "numeric" ]; then
@@ -390,6 +426,11 @@ PY
   mkdir -p "eval/finetune/versions/run_${RUN_TAG}"
   cp -r eval/finetune/output/best_accuracy "eval/finetune/versions/run_${RUN_TAG}/" 2>/dev/null \
     || echo "  (best_accuracy 복사 실패 — output 확인)"
+  # 산출 모델 해시 — A/A 최종 판정용("개별 예측 동일"의 상위 증거). 증거 폴더가 있을 때만.
+  if [ -d "eval/finetune/versions/run_${RUN_TAG}/dataset" ]; then
+    ( cd "eval/finetune/versions/run_${RUN_TAG}" \
+      && sha256sum best_accuracy/best_accuracy.pdparams >> dataset/SHA256SUMS 2>/dev/null ) || true
+  fi
   echo "[6/6] 인식 비교 리포트 (base vs 파인튜닝, held-out test 크롭 직접)"
   python eval/finetune_report.py --run-tag "$RUN_TAG" || echo "  (리포트 생성 실패 — 로그 확인)"
   python eval/finetune_report_by_type.py || echo "  (타입별 리포트 생성 실패 — 로그 확인)"
