@@ -49,7 +49,8 @@ DRV=eval/finetune/paddlex_train.py
 ROUND=hangul
 TARGETS=""
 DATASET_FROM=""
-for a in "$@"; do case "$a" in --round=*) ROUND="${a#*=}" ;; --numeric) ROUND=numeric ;; --targets=*) TARGETS="${a#*=}" ;; --dataset-from=*) DATASET_FROM="${a#*=}" ;; esac; done
+WORKERS=""
+for a in "$@"; do case "$a" in --round=*) ROUND="${a#*=}" ;; --numeric) ROUND=numeric ;; --targets=*) TARGETS="${a#*=}" ;; --dataset-from=*) DATASET_FROM="${a#*=}" ;; --workers=*) WORKERS="${a#*=}" ;; esac; done
 
 # --- 이어받기(트리) 결정: --from-adopted 면 채택본을 base 로 pretrain override ---
 FROM_ADOPTED=0
@@ -301,6 +302,13 @@ PY
     #         ③ 같으면: 이후 실험은 같은 시드 1회 비교로 판정. 결정적 v5 1회 vs 층화 1회.
     #            다르면: num_workers=0 로 재시도 → 그래도 다르면 B 실패, n회 반복 방식 전환.
     #   v7 은 재실행하지 않는다(3중 개입 설계라 결정성이 있어도 인과 분해 불가).
+    #  ★A/A 1차(D1=260806_1224 / D2=260806_1302, cudnn 플래그 ON) 결과 = 실패(2026-08-06):
+    #   입력·시작가중치 해시는 동일했으나 pdparams 해시가 다르고 개별 예측 diff 1,943.
+    #   단, 집계는 수렴: 정답 수 37,418 로 <완전 동일>, 잃음 693 vs 649(Δ44 — 플래그 전
+    #   v5↔v9 의 Δ125 보다 좁음. 각 1쌍이라 통계적 결론은 아님).
+    #   → 손잡이 ②: --workers=0 으로 D3·D4. 워커 프로세스 차원을 통째로 제거한 재검증.
+    #     그래도 diff>0 이면 완전 결정성은 포기하고, <Δ44 수준의 좁아진 밴드> 를 전제로
+    #     n회 반복(밴드) 방식으로 전환한다.
     #  ★판정이 26/26 아래로 떨어지면 앵커가 타깃을 묻은 것 = 그 직전 배수가 상한선.
     DEMO_ANCHOR_RATIO=12.0       # 앵커 총량 = 타깃 크롭 × 이 배수 (167 × 12 = 2,004)
     DEMO_ANCHOR_ITEM=0.60        # v5 원본값. 무작위 추출(성분 층화 없음)
@@ -323,6 +331,17 @@ PY
     else
       python eval/build_demo_dataset.py --targets "$TARGETS" \
           --replay-sources "$REPLAY_SRC" $DEMO_ANCHOR_ARGS
+    fi
+    if [ -n "$WORKERS" ]; then
+      # ★A/A 손잡이 ②: DataLoader 워커 수 고정. cudnn 플래그만으로는 D1/D2 가 갈라져서
+      #  (예측 diff 1,943 · pdparams 상이) 워커 프로세스 차원을 통째로 제거해 재검증한다.
+      #  PaddleX 는 temp config 를 venv 안 원본 yaml 에서 생성하므로 그 원본을 patch 한다.
+      #  ⚠️venv 파일이라 영구적이다 — 되돌리기: --workers=8 (원래 train 8 / eval 4).
+      _Y1=".venv/lib/python3.12/site-packages/paddlex/repo_apis/PaddleOCR_api/configs/korean_PP-OCRv5_mobile_rec.yaml"
+      _Y2=".venv/lib/python3.12/site-packages/paddlex/repo_manager/repos/PaddleOCR/configs/rec/PP-OCRv5/multi_language/korean_PP-OCRv5_mobile_rec.yml"
+      sed -i "s/num_workers: [0-9]*/num_workers: $WORKERS/" "$_Y1" "$_Y2"
+      echo "[데모] DataLoader num_workers=$WORKERS 고정 (venv 패치):"
+      grep -n "num_workers" "$_Y1" | sed "s/^/    /"
     fi
     # ★에폭 = "같은 타깃 크롭을 몇 번 보여주나". 기본 20 — 앵커 500 + 타깃 167 = 667줄
     #  기준 약 200스텝이고, 실측에서 정점(best)이 13에폭이라 20이면 충분히 여유가 있다.
@@ -353,6 +372,7 @@ PY
       echo "targets=$TARGETS"
       echo "anchor_args=$DEMO_ANCHOR_ARGS"
       echo "dataset_from=${DATASET_FROM:-'(새로 빌드)'}"
+      echo "workers=${WORKERS:-'(기본 train8/eval4)'}"
       echo "epochs=$DEMO_EPOCHS"
       echo "train_override=$TRAIN_OVERRIDE"
       echo "git_commit=$(git rev-parse HEAD 2>/dev/null || echo unknown)"
