@@ -305,6 +305,30 @@ PY
     #  그건 eval_interval(매 에폭 검증)로 따로 갱신되므로 중간본은 필요 없다.
     TRAIN_OVERRIDE="$TRAIN_OVERRIDE -o Train.epochs_iters=$DEMO_EPOCHS"
     TRAIN_OVERRIDE="$TRAIN_OVERRIDE -o Train.save_interval=$DEMO_EPOCHS"
+    # ★학습 입력 증거 보존 — train.txt 는 학습에 소비돼 사라진다.
+    #  2026-08-06 실제 사고: v5 의 표본이 남아 있지 않아 "v8 은 v5 대비 품명 내부만
+    #  바뀌었다" 를 코드 구조로만 주장할 수 있고 실측으로는 못 보였다. manifest 는
+    #  <몇 장씩>만 말해주지 <어느 크롭이었나>는 말해주지 않는다.
+    #  시드·풀 고정이라 재현은 되지만 코퍼스가 바뀌면 그 재현도 깨지므로 원본 해시도 같이 남긴다.
+    #  ★반드시 학습 <전>에 떠야 한다(여기가 그 자리). 데모 라운드 train.txt 는 ~150KB.
+    _EV="eval/finetune/versions/run_${RUN_TAG}/dataset"
+    mkdir -p "$_EV"
+    for _f in dataset/train.txt dataset/val.txt dataset/test.txt dataset/manifest.json dict.txt; do
+      cp "eval/finetune_corpus/$_f" "$_EV/" 2>/dev/null || true
+    done
+    {
+      echo "run_tag=$RUN_TAG"
+      echo "round=$ROUND  step=$DEMO_N"
+      echo "targets=$TARGETS"
+      echo "anchor_args=$DEMO_ANCHOR_ARGS"
+      echo "epochs=$DEMO_EPOCHS"
+      echo "train_override=$TRAIN_OVERRIDE"
+      echo "git_commit=$(git rev-parse HEAD 2>/dev/null || echo unknown)"
+    } > "$_EV/run_args.txt"
+    ( cd "$_EV" && sha256sum ./* > SHA256SUMS 2>/dev/null ) || true
+    ( cd eval/finetune_corpus && sha256sum labels.txt labels_correct.txt \
+        labels_correct.meta.jsonl replay_sources.txt 2>/dev/null ) >> "$_EV/SHA256SUMS" || true
+    echo "[증거] 학습 입력 보존 → $_EV ($(ls "$_EV" | wc -l) 파일)"
     FT_CRITERIA="소생 데모 ${DEMO_ROUND}회차 ${DEMO_STEP}단계: 타깃[$TARGETS] held-out 동일품명 재현"
   elif [ "$ROUND" = "numeric" ]; then
     # ★★숫자 라운드 (2026-07-24): 숫자(금액/수량/단가) 인식↑ + 품명 유지~개선.
