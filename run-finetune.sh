@@ -17,12 +17,10 @@
 # 로그는 ~/OCR/logs/finetune.log 에 tee. best 가중치 = eval/finetune/output/best_accuracy/.
 set -eo pipefail
 export PYTHONUNBUFFERED=1
-# ★결정성(2026-08-06). 같은 설정·같은 데이터로 두 번 돌렸는데(v5→v9 재실행) 잃어버림이
-#  593→718 로 갈라졌다. 시드는 PaddleOCR train.py 가 기본 1024 로 이미 고정하고 있으므로
-#  (random/np/paddle.seed — repo tools/train.py:298) 원인은 RNG 가 아니라 GPU 비결정성이다:
-#  cuDNN 알고리즘 자동선택 + atomic 누산. 아래 플래그는 paddle 초기화 전에 환경변수로
-#  있어야 먹는다(스크립트 최상단인 이유). 비용: 학습 10~20% 느려질 수 있음.
-#  성패는 A/A(동결 데이터셋으로 2회, --dataset-from)로 판정한다 — 개별 예측까지 같아야 성공.
+# ★결정성 진단(2026-08-06). 같은 설정·같은 데이터에서도 결과가 갈라졌고 cuDNN 고정과
+#  workers=0 만으로 해결되지 않았다. GPU 비결정성으로 단정하지 않고 --repro-trace 로
+#  샘플 순서→첫 배치 텐서→첫 gradient→첫 optimizer update 순서의 최초 차이를 찾는다.
+#  아래 플래그는 기존 A/A 조건을 유지하기 위해 Paddle 초기화 전에 설정한다.
 export FLAGS_cudnn_deterministic=1
 export FLAGS_cudnn_exhaustive_search=0
 export PYTHONHASHSEED=0
@@ -54,6 +52,7 @@ DEMO_EPOCHS_ARG=20
 EPOCH_LADDER=0
 EPOCH_CLEANUP=0
 DEMO_SCAN=1
+REPRO_TRACE=0
 for a in "$@"; do
   case "$a" in
     --round=*) ROUND="${a#*=}" ;;
@@ -65,8 +64,14 @@ for a in "$@"; do
     --epoch-ladder) EPOCH_LADDER=1 ;;
     --epoch-cleanup) EPOCH_CLEANUP=1 ;;
     --no-scan) DEMO_SCAN=0 ;;
+    --repro-trace) REPRO_TRACE=1 ;;
   esac
 done
+if [ "$REPRO_TRACE" = "1" ]; then
+  # 1 epoch 진단 두 건이 같은 분 안에 끝나도 서로 덮어쓰지 않게 초 단위 태그를 쓴다.
+  RUN_TAG="$(date +%y%m%d_%H%M%S)"
+  TRAIN_LOG="$HOME/OCR/logs/finetune_${RUN_TAG}.train.log"
+fi
 
 # --- 이어받기(트리) 결정: --from-adopted 면 채택본을 base 로 pretrain override ---
 FROM_ADOPTED=0
@@ -348,6 +353,17 @@ PY
       python eval/build_demo_dataset.py --targets "$TARGETS" \
           --replay-sources "$REPLAY_SRC" $DEMO_ANCHOR_ARGS
     fi
+    if [ "$REPRO_TRACE" = "1" ]; then
+      if [ -z "$DATASET_FROM" ]; then
+        echo "★--repro-trace 는 동일 입력 보장을 위해 --dataset-from 이 필수입니다."
+        exit 1
+      fi
+      if [ -n "$WORKERS" ] && [ "$WORKERS" != "0" ]; then
+        echo "★--repro-trace 는 --workers=0 으로 실행해야 합니다. 현재: $WORKERS"
+        exit 1
+      fi
+      WORKERS=0
+    fi
     if [ -n "$WORKERS" ]; then
       # ★A/A 손잡이 ②: DataLoader 워커 수 고정. cudnn 플래그만으로는 D1/D2 가 갈라져서
       #  (예측 diff 1,943 · pdparams 상이) 워커 프로세스 차원을 통째로 제거해 재검증한다.
@@ -365,6 +381,12 @@ PY
     #  안 붙으면 에폭이 아니라 lr(3e-5→1e-4)을 올린다 — 같은 크롭 반복만 늘리는 건
     #  학습이 아니라 암기 쪽으로 간다.
     DEMO_EPOCHS=$DEMO_EPOCHS_ARG
+    if [ "$REPRO_TRACE" = "1" ]; then
+      DEMO_EPOCHS=1
+      DEMO_SCAN=0
+      TRAIN_OVERRIDE="$TRAIN_OVERRIDE -o Global.seed=1024"
+      echo "[재현성 진단] 1 epoch / workers=0 / 첫 배치·첫 optimizer step 계측"
+    fi
     # ★에폭 궤적 실험(opt-in): 서로 다른 ep8/ep20 run 은 GPU 비결정성이 섞이므로,
     #  한 번의 20ep 학습에서 ep8·12·20 을 저장해 같은 궤적 안의 이동만 비교한다.
     #    bash ~/OCR/run-finetune.sh --round=demo --targets="..." --epoch-ladder
@@ -404,6 +426,7 @@ PY
       echo "workers=${WORKERS:-'(기본 train8/eval4)'}"
       echo "epochs=$DEMO_EPOCHS"
       echo "epoch_ladder=$EPOCH_LADDER  points=$DEMO_EPOCH_POINTS  save_interval=$DEMO_SAVE_INTERVAL"
+      echo "repro_trace=$REPRO_TRACE"
       echo "train_override=$TRAIN_OVERRIDE"
       echo "git_commit=$(git rev-parse HEAD 2>/dev/null || echo unknown)"
       echo "flags=cudnn_deterministic=$FLAGS_cudnn_deterministic exhaustive_search=$FLAGS_cudnn_exhaustive_search pythonhashseed=$PYTHONHASHSEED"
@@ -470,8 +493,41 @@ PY
   # 학습 출력을 진행 정리기로 통과 → 왼쪽에 '전체 대비 진행/​%' 카운터로 깔끔하게.
   # (에러·다운로드·평가결과 줄은 그대로 통과하니 문제 생기면 그대로 보임)
   # 원본 학습 로그를 run별로 따로 보존해야 최고 epoch를 정확히 복원할 수 있다.
-  python "$DRV" -c "$CFG" -o Global.mode=train $TRAIN_OVERRIDE 2>&1 \
+  _REPRO_DRIVER_ARGS=()
+  if [ "$REPRO_TRACE" = "1" ]; then
+    _REPRO_DIR="$PWD/eval/finetune/versions/run_${RUN_TAG}/dataset/repro_trace"
+    mkdir -p "$_REPRO_DIR"
+    _REPRO_STARTED="$_REPRO_DIR/training.started"
+    touch "$_REPRO_STARTED"
+    _REPRO_DRIVER_ARGS+=("--repro-trace-dir=$_REPRO_DIR" "--repro-seed=1024")
+  fi
+  python "$DRV" "${_REPRO_DRIVER_ARGS[@]}" -c "$CFG" -o Global.mode=train $TRAIN_OVERRIDE 2>&1 \
     | tee "$TRAIN_LOG" | python eval/finetune_progress.py
+  if [ "$REPRO_TRACE" = "1" ]; then
+    _REPRO_PDP="eval/finetune/output/best_accuracy/best_accuracy.pdparams"
+    if [ ! -f "$_REPRO_PDP" ]; then
+      _REPRO_PDP=$(find eval/finetune/output -type f -name "*.pdparams" -print | sort | tail -1)
+    fi
+    if [ -z "$_REPRO_PDP" ]; then
+      echo "★재현성 진단 checkpoint를 찾지 못했습니다."
+      exit 1
+    fi
+    if [ ! "$_REPRO_PDP" -nt "$_REPRO_STARTED" ]; then
+      echo "★checkpoint가 이번 진단 실행에서 생성된 파일이 아닙니다: $_REPRO_PDP"
+      exit 1
+    fi
+    sha256sum "$_REPRO_PDP" > "$_REPRO_DIR/checkpoint.file.sha256"
+    python eval/finetune/repro_trace.py --checkpoint "$_REPRO_PDP" \
+      > "$_REPRO_DIR/checkpoint.values.sha256"
+    printf "%s\n" "$_REPRO_PDP" > "$_REPRO_DIR/checkpoint.path.txt"
+    cp "$TRAIN_LOG" "$_REPRO_DIR/train.log"
+    echo "[재현성 진단 완료] $RUN_TAG"
+    echo "  trace: $_REPRO_DIR/trace.json"
+    echo "  checkpoint: $_REPRO_DIR/checkpoint.values.sha256"
+    echo "  같은 명령으로 한 번 더 실행한 뒤 비교:"
+    echo "  python eval/finetune/repro_trace_compare.py $RUN_TAG <두번째_RUN_TAG>"
+    exit 0
+  fi
   echo "[5/6] export (서버가 읽는 inference 형식으로 변환)"
   python "$DRV" -c "$CFG" -o Global.mode=export
   # ★run별 모델 자동 보존: output/ 은 다음 run 이 덮어쓰므로(probe1 모델 소실 사고),
