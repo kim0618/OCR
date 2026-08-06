@@ -32,6 +32,7 @@ import argparse
 import json
 import os
 import random
+import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -47,6 +48,23 @@ BAL_META = os.path.join(CORPUS_DIR, "labels_correct.meta.jsonl")
 DATASET_DIR = os.path.join(CORPUS_DIR, "dataset")
 
 MIN_TRAIN_TARGET = 10   # 학습용 타깃 크롭 최소치 — 미달이면 후보 차순위로 (abort)
+
+# 앵커 성분 서명 - H 한글 / E 영문 / N 숫자 / S 기호. 판정 분석(recount)과 같은 문자
+# 클래스를 써야 "어느 조합에서 잃었나 → 그 조합을 앵커에 얼마나 넣나"가 바로 이어진다.
+SYMBOL_RE = r"[()\[\]{}/\\·,.:;+*%~°'\"-]"
+
+
+def _sig(label: str) -> str:
+    s = ""
+    if re.search(r"[가-힣]", label):
+        s += "H"
+    if re.search(r"[A-Za-z]", label):
+        s += "E"
+    if re.search(r"[0-9]", label):
+        s += "N"
+    if re.search(SYMBOL_RE, label):
+        s += "S"
+    return s or "-"
 
 
 def _bal_meta_rows() -> list[dict]:
@@ -165,6 +183,16 @@ def main() -> int:
                          "일정하게 유지된다. 0 = 앵커 없음(2026-08-03 실측: 판정 22/26 실패)")
     ap.add_argument("--anchor", type=int, default=0,
                     help="앵커 수 절대값. 주면 --anchor-ratio 를 덮어쓴다")
+    # ★성분 층화(2026-08-06). 비율 플래그는 <실제 노출>을 보장하지 못한다: v7 에서
+    #  --anchor-item-ratio 만 0.6→0.8 로 올렸는데 leftover 슬롯이 402→1 로 줄면서
+    #  순수 짧은숫자가 513→420 으로 같이 빠졌다(의도 안 한 3중 개입 → 해석 불가).
+    #  --anchor-plan 은 버킷별 <장수>를 못박아 leftover 자체를 없앤다.
+    #    키: 성분 서명(HENS/HEN/H/HS/HNS/HN/HES/HE/N…)=품명 풀 / NUM=타컬럼 짧은숫자
+    #        / REST=타컬럼 나머지.  합계가 곧 앵커 총량이 되므로 --anchor-ratio 와 함께
+    #        쓰면 총량이 일치하는지 검사한다.
+    ap.add_argument("--anchor-plan", default="",
+                    help="앵커 버킷별 장수 'HENS=446,HEN=280,...,NUM=498,REST=302'. "
+                         "주면 --anchor-item-ratio/--anchor-shortnum-ratio 를 대체한다")
     # ★앵커 구성 - 무작위로 뽑으면 정답풀 컬럼 분포를 그대로 따라가 품명이 8% 안팎뿐이다.
     #  그런데 파인튜닝이 깨뜨리는 건 품명(한 글자 치환)이라, 정작 지켜야 할 쪽 앵커가 얇다.
     #  clean4(2026-07-30)에서 '짧은 숫자'를 겨냥해 앵커를 채우자 숫자 -8.8 -> +2.0 으로
@@ -285,19 +313,61 @@ def main() -> int:
         for pool in (item_pool, num_pool, rest_pool):
             rnd.shuffle(pool)
         want = n_anchor + args.val_anchor
-        n_item = int(want * args.anchor_item_ratio)
-        n_num = int(want * args.anchor_shortnum_ratio)
-        picked = item_pool[:n_item] + num_pool[:n_num]
-        # 어느 한 풀이 모자라면 나머지 풀에서 채운다 - 총량은 항상 맞춘다.
-        leftover = (item_pool[n_item:] + num_pool[n_num:] + rest_pool)
-        rnd.shuffle(leftover)
-        picked += leftover[:max(0, want - len(picked))]
+        # 품명 풀을 성분 서명으로 쪼갠다. 라벨이 순수 짧은숫자(1~3자리)인 품명 크롭은
+        # ITEMNUM 으로 따로 뺀다 — 서명으로는 'N' 이지만 긴 숫자(제품코드 등)와 섞이면
+        # v5 의 '품명·순수 짧은숫자 15장' 을 그대로 재현할 수 없다.
+        sig_pools: dict[str, list] = {}
+        for p, g in item_pool:
+            flat = g.strip()
+            key = "ITEMNUM" if (flat.isdigit() and len(flat) <= 3) else _sig(flat)
+            sig_pools.setdefault(key, []).append((p, g))
+        if args.anchor_plan:
+            plan = {}
+            for part in args.anchor_plan.split(","):
+                key, _, val = part.partition("=")
+                plan[key.strip()] = int(val)
+            if sum(plan.values()) != want:
+                raise SystemExit(f"--anchor-plan 합계 {sum(plan.values())} != 앵커 총량 {want}"
+                                 " — 총량이 달라지면 이전 라운드와 비교가 성립하지 않는다.")
+            picked, short = [], {}
+            for key, n in plan.items():
+                pool = (num_pool if key == "NUM" else
+                        rest_pool if key == "REST" else sig_pools.get(key, []))
+                picked += pool[:n]
+                if len(pool) < n:
+                    short[key] = {"want": n, "pool": len(pool)}
+            if short:
+                # 부족분을 다른 성분으로 조용히 메우지 않는다 — 그게 v7 의 해석 불가 원인이었다.
+                raise SystemExit(f"★앵커 풀 부족 {short} — 계획대로 못 채우면 단일 변수 실험이"
+                                 " 아니게 된다. 장수를 낮추거나 풀을 넓혀서 다시 실행할 것.")
+            _ANCHOR_MIX.update(plan=plan)
+        else:
+            n_item = int(want * args.anchor_item_ratio)
+            n_num = int(want * args.anchor_shortnum_ratio)
+            picked = item_pool[:n_item] + num_pool[:n_num]
+            # 어느 한 풀이 모자라면 나머지 풀에서 채운다 - 총량은 항상 맞춘다.
+            leftover = (item_pool[n_item:] + num_pool[n_num:] + rest_pool)
+            rnd.shuffle(leftover)
+            picked += leftover[:max(0, want - len(picked))]
         rnd.shuffle(picked)
         anchors = picked
+        got: dict[str, int] = {}
+        for p, g in anchors:
+            flat = g.strip()
+            short_num = flat.isdigit() and len(flat) <= 3
+            if bal_col.get(p) == "itemName":
+                key = "ITEMNUM" if short_num else _sig(flat)
+            else:
+                key = "NUM" if short_num else "REST"
+            got[key] = got.get(key, 0) + 1
         _ANCHOR_MIX.update(item=sum(1 for p, _ in anchors if bal_col.get(p) == "itemName"),
                            shortNum=sum(1 for _, g in anchors
                                         if g.strip().isdigit() and len(g.strip()) <= 3),
-                           itemPool=len(item_pool), numPool=len(num_pool))
+                           itemPool=len(item_pool), numPool=len(num_pool),
+                           # ★요청(plan) 과 실제(got) 를 같이 남긴다 - 리포트가 배합을
+                           #  추정이 아니라 실측으로 말할 수 있어야 한다.
+                           sigGot=dict(sorted(got.items())),
+                           sigPool={k: len(v) for k, v in sorted(sig_pools.items())})
 
     val_anchor = anchors[:args.val_anchor]
     train_anchor = anchors[args.val_anchor:]
