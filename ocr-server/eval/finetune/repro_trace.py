@@ -228,7 +228,34 @@ def install(output_dir: str | Path, seed: int = 1024) -> ReproTracer:
 
     tracer = ReproTracer(output_dir, seed)
 
+    original_loader_init = paddle.io.DataLoader.__init__
     original_loader_iter = paddle.io.DataLoader.__iter__
+
+    def wrap_sampler_class(sampler: Any) -> None:
+        if sampler is None:
+            return
+        sampler_class = type(sampler)
+        original_sampler_iter = sampler_class.__dict__.get("__iter__")
+        if original_sampler_iter is None or getattr(
+            original_sampler_iter, "_repro_traced", False
+        ):
+            return
+
+        def traced_sampler_iter(instance):
+            entry = tracer.start_sampler(sampler_class.__name__)
+            for index, indices in enumerate(original_sampler_iter(instance), start=1):
+                tracer.record_indices(entry, index, indices)
+                yield indices
+
+        traced_sampler_iter._repro_traced = True
+        sampler_class.__iter__ = traced_sampler_iter
+
+    def traced_loader_init(loader: paddle.io.DataLoader, *args, **kwargs):
+        batch_sampler = kwargs.get("batch_sampler")
+        if batch_sampler is None and len(args) >= 2:
+            batch_sampler = args[1]
+        wrap_sampler_class(batch_sampler)
+        return original_loader_init(loader, *args, **kwargs)
 
     def traced_loader_iter(loader: paddle.io.DataLoader):
         entry = tracer.start_loader()
@@ -237,6 +264,7 @@ def install(output_dir: str | Path, seed: int = 1024) -> ReproTracer:
             tracer.record_batch(entry, index, batch)
             yield batch
 
+    paddle.io.DataLoader.__init__ = traced_loader_init
     paddle.io.DataLoader.__iter__ = traced_loader_iter
 
     for sampler_name in ("BatchSampler", "DistributedBatchSampler"):
@@ -254,6 +282,7 @@ def install(output_dir: str | Path, seed: int = 1024) -> ReproTracer:
                     tracer.record_indices(entry, index, indices)
                     yield indices
 
+            traced_sampler_iter._repro_traced = True
             return traced_sampler_iter
 
         sampler_class.__iter__ = make_sampler_iter(original_sampler_iter, sampler_name)

@@ -1,4 +1,6 @@
+import os
 import sys
+from pathlib import Path
 
 import numpy as np
 from matplotlib.backends.backend_agg import FigureCanvasAgg as _Canvas
@@ -19,9 +21,16 @@ def _install_repro_trace() -> None:
             remaining.append(argument)
     sys.argv[:] = remaining
     if trace_dir:
-        from repro_trace import install
-
-        install(trace_dir, seed=seed)
+        # PaddleX launches PaddleOCR/tools/train.py in a child Python process.
+        # Put a dedicated sitecustomize on that child's import path; patching
+        # this thin PaddleX driver does not reach the actual training process.
+        bootstrap = Path(__file__).resolve().parent / "repro_bootstrap"
+        current_pythonpath = os.environ.get("PYTHONPATH", "")
+        os.environ["PYTHONPATH"] = os.pathsep.join(
+            part for part in (str(bootstrap), current_pythonpath) if part
+        )
+        os.environ["OCR_REPRO_TRACE_DIR"] = str(Path(trace_dir).resolve())
+        os.environ["OCR_REPRO_SEED"] = str(seed)
 
 
 _install_repro_trace()
