@@ -35,9 +35,8 @@ def _first_batch(trace: dict[str, Any]) -> str | None:
 
 
 def _first_indices(trace: dict[str, Any]) -> str | None:
-    step_indices = (trace.get("firstOptimizerStep") or {}).get("latestIndices") or {}
-    if step_indices.get("sha256"):
-        return step_indices["sha256"]
+    # DataLoader may prefetch sampler batch 2 before optimizer step 1. Comparing
+    # latestIndices incorrectly reported the second batch as the first divergence.
     for sampler in trace.get("samplers", []):
         batches = sampler.get("batches", [])
         if batches:
@@ -114,7 +113,7 @@ def main() -> int:
         reason = "gradient까지 같지만 optimizer update가 갈라졌습니다."
     else:
         reason = "첫 스텝은 같고 그 이후 epoch 1 안에서 갈라졌습니다."
-    print(f"RESULT: 최초 차이={first_difference} — {reason}")
+    print(f"RESULT: 최초 차이={first_difference} - {reason}")
     return 1
 
 

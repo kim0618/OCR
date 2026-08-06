@@ -133,6 +133,8 @@ class ReproTracer:
                         "FLAGS_cudnn_deterministic",
                         "FLAGS_cudnn_exhaustive_search",
                         "PYTHONHASHSEED",
+                        "OCR_FIXED_TRAIN_SEED",
+                        "OCR_TRAIN_SEED_PATCHED",
                     )
                 },
             },

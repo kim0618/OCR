@@ -381,10 +381,13 @@ PY
     #  안 붙으면 에폭이 아니라 lr(3e-5→1e-4)을 올린다 — 같은 크롭 반복만 늘리는 건
     #  학습이 아니라 암기 쪽으로 간다.
     DEMO_EPOCHS=$DEMO_EPOCHS_ARG
+    # PaddleOCR tools/train.py 는 Global.seed가 있어도 Train DataLoader를 seed=None으로
+    # 생성해 SimpleDataSet 안에서 random.seed(None)을 호출한다. 실제 데이터 매핑과
+    # RecConAug/RecAug가 매 실행 달라지는 최초 원인이므로 자식 프로세스에 명시 주입한다.
+    TRAIN_OVERRIDE="$TRAIN_OVERRIDE -o Global.seed=1024"
     if [ "$REPRO_TRACE" = "1" ]; then
       DEMO_EPOCHS=1
       DEMO_SCAN=0
-      TRAIN_OVERRIDE="$TRAIN_OVERRIDE -o Global.seed=1024"
       echo "[재현성 진단] 1 epoch / workers=0 / 첫 배치·첫 optimizer step 계측"
     fi
     # ★에폭 궤적 실험(opt-in): 서로 다른 ep8/ep20 run 은 GPU 비결정성이 섞이므로,
@@ -494,6 +497,9 @@ PY
   # (에러·다운로드·평가결과 줄은 그대로 통과하니 문제 생기면 그대로 보임)
   # 원본 학습 로그를 run별로 따로 보존해야 최고 epoch를 정확히 복원할 수 있다.
   _REPRO_DRIVER_ARGS=()
+  if [ "$ROUND" = "demo" ]; then
+    _REPRO_DRIVER_ARGS+=("--fixed-train-seed=1024")
+  fi
   if [ "$REPRO_TRACE" = "1" ]; then
     _REPRO_DIR="$PWD/eval/finetune/versions/run_${RUN_TAG}/dataset/repro_trace"
     mkdir -p "$_REPRO_DIR"
