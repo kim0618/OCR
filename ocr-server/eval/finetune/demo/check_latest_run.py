@@ -83,19 +83,41 @@ def fetch() -> list[str]:
     for rp in remote_runs:
         folder = rp.rstrip("/").split("/")[-1]
         tag = folder.split("_", 1)[1]
-        if tag in local_tags:
-            continue
-        print(f"[회수] {folder}")
-        if not _scp(f"{REMOTE}/{folder}", HERE / folder, key):
-            print(f"  ★리포트 회수 실패: {folder}")
-            continue
-        if not (SCANS / f"{tag}.jsonl").exists():
-            if _scp(f"{REMOTE}/scans/{tag}.jsonl", SCANS / f"{tag}.jsonl", key):
-                print(f"  스캔 {tag}.jsonl")
-            else:
-                print(f"  ★스캔 회수 실패: {tag} - 판정 불가")
+        fetched = False
+        if tag not in local_tags:
+            print(f"[회수] {folder}")
+            if not _scp(f"{REMOTE}/{folder}", HERE / folder, key):
+                print(f"  ★리포트 회수 실패: {folder}")
                 continue
-        new.append(tag)
+            fetched = True
+
+        # 한 궤적 에폭 실험은 <tag>_ep08, <tag>_ep12 와 exact ep20인 <tag>를
+        # 함께 만든다. 리포트 폴더가 이미 로컬에 있어도 뒤늦게 완료된 스캔은 받아야 한다.
+        remote_scans = _ssh(
+            f"ls {REMOTE}/scans/{tag}*.jsonl 2>/dev/null || true", key).split()
+        for remote_scan in remote_scans:
+            name = remote_scan.rsplit("/", 1)[-1]
+            if (SCANS / name).exists():
+                continue
+            if _scp(f"{REMOTE}/scans/{name}", SCANS / name, key):
+                print(f"  스캔 {name}")
+                fetched = True
+            else:
+                print(f"  ★스캔 회수 실패: {name}")
+
+        # target 26/26 및 체크포인트 해시는 가중치 전체를 받지 않고 작은 증거 파일만 회수.
+        has_epoch_scans = any("_ep" in path.rsplit("/", 1)[-1] for path in remote_scans)
+        local_epoch = HERE / folder / "epoch_ladder"
+        if has_epoch_scans and _scp(
+            f"~/OCR/ocr-server/eval/finetune/versions/run_{tag}/epochs/EPOCH_LADDER.tsv",
+            local_epoch / "EPOCH_LADDER.tsv", key):
+            for epoch in ("08", "12", "20"):
+                _scp(
+                    f"~/OCR/ocr-server/eval/finetune/versions/run_{tag}/epochs/"
+                    f"epoch_{epoch}/TARGET_EVAL.json",
+                    local_epoch / f"epoch_{epoch}_TARGET_EVAL.json", key)
+        if fetched:
+            new.append(tag)
     if new:
         _scp("~/OCR/ocr-server/eval/RUN_HISTORY.jsonl", OCR_SERVER / "eval", key)
     return new

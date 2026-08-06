@@ -245,6 +245,9 @@ def main() -> int:
     ap.add_argument("--min-count", type=int, default=3, help="후보 품명의 최소 출현 크롭 수")
     ap.add_argument("--use-base", action="store_true",
                     help="파인튜닝 모델 대신 official base 로 스캔 - 최초 1회 기준선 만들기")
+    ap.add_argument("--model-dir", default=None,
+                    help="스캔할 export inference 디렉터리. 미지정이면 기존처럼 "
+                         "eval/finetune/output 의 최신 export 를 사용한다")
     ap.add_argument("--scan-tag", default=None,
                     help="스캔 파일 이름(기본: --run-tag). base 기준선은 000_base 권장 "
                          "- 파일명 정렬이 곧 시간 순서라 000_ 이 항상 첫 기준선이 된다")
@@ -285,7 +288,10 @@ def main() -> int:
         raise SystemExit("기준셋 품명 크롭을 찾지 못했습니다(코퍼스/replay_sources 확인)")
 
     if not args.from_scan:
-        who = "official base" if args.use_base else "이번 파인튜닝 모델"
+        if args.use_base and args.model_dir:
+            raise SystemExit("--use-base 와 --model-dir 는 함께 쓸 수 없습니다")
+        who = ("official base" if args.use_base else
+               (f"지정 모델({args.model_dir})" if args.model_dir else "이번 파인튜닝 모델"))
         print(f"[스캔] 기준셋 품명 크롭 {len(rows):,}장 — {who} 로 판독")
         try:
             from paddlex import create_model
@@ -294,9 +300,11 @@ def main() -> int:
         if args.use_base:
             model = create_model(BASE_MODEL)          # 기준선: 파인튜닝 없는 원본
         else:
-            ft_dir = find_ft_inference()
+            ft_dir = args.model_dir or find_ft_inference()
             if not ft_dir:
                 raise SystemExit("파인튜닝 inference 디렉터리 없음 — export 먼저")
+            if not os.path.isdir(ft_dir):
+                raise SystemExit(f"지정한 inference 디렉터리가 없습니다: {ft_dir}")
             model = create_model(BASE_MODEL, ft_dir)
         # 8만 장을 한 번에 넘기면 10분 넘게 아무 출력이 없다 → 덩어리로 나눠 진행률을 찍는다.
         import time
@@ -315,10 +323,20 @@ def main() -> int:
                   f"경과 {el / 60:.1f}분 · 남은 예상 {eta / 60:.1f}분", flush=True)
 
         os.makedirs(SCANS_DIR, exist_ok=True)
-        with open(scan_path, "w", encoding="utf-8") as f:
-            for (rel, gt), p in zip(rows, preds):
-                f.write(json.dumps({"path": rel, "gt": gt, "pred": p,
-                                    "ok": p.strip() == gt.strip()}, ensure_ascii=False) + "\n")
+        # 4~5만 장 스캔 도중 중단된 반쪽 jsonl 이 recount 의 공통집합을 깨뜨리지 않도록,
+        # 같은 디렉터리의 임시 파일을 완성한 뒤에만 최종 이름으로 원자 교체한다.
+        scan_tmp = scan_path + f".tmp.{os.getpid()}"
+        try:
+            with open(scan_tmp, "w", encoding="utf-8") as f:
+                for (rel, gt), p in zip(rows, preds):
+                    f.write(json.dumps({"path": rel, "gt": gt, "pred": p,
+                                        "ok": p.strip() == gt.strip()}, ensure_ascii=False) + "\n")
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(scan_tmp, scan_path)
+        finally:
+            if os.path.exists(scan_tmp):
+                os.remove(scan_tmp)
         ok_n = sum(1 for p, (_, gt) in zip(preds, rows) if p.strip() == gt.strip())
         print(f"[스캔] 저장: {scan_path}  "
               f"(정답 {ok_n:,} / {len(rows):,} = {100.0 * ok_n / len(rows):.1f}%)")

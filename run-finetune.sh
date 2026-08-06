@@ -50,7 +50,23 @@ ROUND=hangul
 TARGETS=""
 DATASET_FROM=""
 WORKERS=""
-for a in "$@"; do case "$a" in --round=*) ROUND="${a#*=}" ;; --numeric) ROUND=numeric ;; --targets=*) TARGETS="${a#*=}" ;; --dataset-from=*) DATASET_FROM="${a#*=}" ;; --workers=*) WORKERS="${a#*=}" ;; esac; done
+DEMO_EPOCHS_ARG=20
+EPOCH_LADDER=0
+EPOCH_CLEANUP=0
+DEMO_SCAN=1
+for a in "$@"; do
+  case "$a" in
+    --round=*) ROUND="${a#*=}" ;;
+    --numeric) ROUND=numeric ;;
+    --targets=*) TARGETS="${a#*=}" ;;
+    --dataset-from=*) DATASET_FROM="${a#*=}" ;;
+    --workers=*) WORKERS="${a#*=}" ;;
+    --epochs=*) DEMO_EPOCHS_ARG="${a#*=}" ;;
+    --epoch-ladder) EPOCH_LADDER=1 ;;
+    --epoch-cleanup) EPOCH_CLEANUP=1 ;;
+    --no-scan) DEMO_SCAN=0 ;;
+  esac
+done
 
 # --- 이어받기(트리) 결정: --from-adopted 면 채택본을 base 로 pretrain override ---
 FROM_ADOPTED=0
@@ -348,13 +364,26 @@ PY
     #  매 에폭 검증 → best_accuracy 자동 선택이므로 정점을 지나쳐도 손해는 시간뿐.
     #  안 붙으면 에폭이 아니라 lr(3e-5→1e-4)을 올린다 — 같은 크롭 반복만 늘리는 건
     #  학습이 아니라 암기 쪽으로 간다.
-    DEMO_EPOCHS=${DEMO_EPOCHS:-20}
-    # ★중간 체크포인트 저장 끄기(save_interval=에폭수). config 기본 1 이면 에폭마다
-    #  iter_epoch_N/ 을 통째로 남겨 316MB×에폭수를 먹는다(2026-08-03: 40에폭에 9.5GB →
-    #  디스크 100% 로 28에폭에서 학습 중단). 우리가 쓰는 건 best_accuracy 뿐이고
-    #  그건 eval_interval(매 에폭 검증)로 따로 갱신되므로 중간본은 필요 없다.
+    DEMO_EPOCHS=$DEMO_EPOCHS_ARG
+    # ★에폭 궤적 실험(opt-in): 서로 다른 ep8/ep20 run 은 GPU 비결정성이 섞이므로,
+    #  한 번의 20ep 학습에서 ep8·12·20 을 저장해 같은 궤적 안의 이동만 비교한다.
+    #    bash ~/OCR/run-finetune.sh --round=demo --targets="..." --epoch-ladder
+    #  기본은 예전처럼 중간 저장을 끈다. 실험 때만 save_interval=4 로 4·8·12·16·20을
+    #  만들고, 학습 뒤 정확한 ep8·12·20 가중치를 별도 export/판정/전수스캔한다.
+    DEMO_EPOCH_POINTS="8 12 20"
+    if [ "$EPOCH_LADDER" = "1" ]; then
+      if [ "$DEMO_EPOCHS" -ne 20 ]; then
+        echo "★에폭 궤적 실험은 동일 20ep 궤적의 8·12·20 비교입니다: DEMO_EPOCHS=$DEMO_EPOCHS"
+        exit 1
+      fi
+      DEMO_SAVE_INTERVAL=4
+      echo "[에폭 궤적] 활성화: points=[$DEMO_EPOCH_POINTS] save_interval=$DEMO_SAVE_INTERVAL"
+    else
+      # config 기본 1 이면 316MB×에폭수를 남긴다. 보통 run 은 best_accuracy 만 보존한다.
+      DEMO_SAVE_INTERVAL=$DEMO_EPOCHS
+    fi
     TRAIN_OVERRIDE="$TRAIN_OVERRIDE -o Train.epochs_iters=$DEMO_EPOCHS"
-    TRAIN_OVERRIDE="$TRAIN_OVERRIDE -o Train.save_interval=$DEMO_EPOCHS"
+    TRAIN_OVERRIDE="$TRAIN_OVERRIDE -o Train.save_interval=$DEMO_SAVE_INTERVAL"
     # ★학습 입력 증거 보존 — train.txt 는 학습에 소비돼 사라진다.
     #  2026-08-06 실제 사고: v5 의 표본이 남아 있지 않아 "v8 은 v5 대비 품명 내부만
     #  바뀌었다" 를 코드 구조로만 주장할 수 있고 실측으로는 못 보였다. manifest 는
@@ -374,6 +403,7 @@ PY
       echo "dataset_from=${DATASET_FROM:-'(새로 빌드)'}"
       echo "workers=${WORKERS:-'(기본 train8/eval4)'}"
       echo "epochs=$DEMO_EPOCHS"
+      echo "epoch_ladder=$EPOCH_LADDER  points=$DEMO_EPOCH_POINTS  save_interval=$DEMO_SAVE_INTERVAL"
       echo "train_override=$TRAIN_OVERRIDE"
       echo "git_commit=$(git rev-parse HEAD 2>/dev/null || echo unknown)"
       echo "flags=cudnn_deterministic=$FLAGS_cudnn_deterministic exhaustive_search=$FLAGS_cudnn_exhaustive_search pythonhashseed=$PYTHONHASHSEED"
@@ -390,6 +420,10 @@ PY
       _PW=$(find ~/.paddlex -name "korean_PP-OCRv5_mobile_rec_pretrained.pdparams" 2>/dev/null | head -1)
       if [ -n "$_PW" ]; then sha256sum "$_PW" >> "$_EV/SHA256SUMS" || true
       else echo "# start-weights cache not found (URL download at train time)" >> "$_EV/SHA256SUMS"; fi
+    fi
+    if [ "$EPOCH_LADDER" = "1" ]; then
+      # output/ 에 과거 iter_epoch_* 가 남아 있어도 이번 run 산출물로 오인하지 않게 하는 경계.
+      touch "$_EV/epoch_ladder.started"
     fi
     echo "[증거] 학습 입력 보존 → $_EV ($(ls "$_EV" | wc -l) 파일)"
     FT_CRITERIA="소생 데모 ${DEMO_ROUND}회차 ${DEMO_STEP}단계: 타깃[$TARGETS] held-out 동일품명 재현"
@@ -500,14 +534,116 @@ PY
       echo "       시작 모델은 그대로이니, 조건(에폭·크롭 수)을 바꿔 같은 --targets 로 재실행하세요."
       echo "       (재시도는 '${DEMO_N}-1 모델'로 실행 이력에 남습니다)"
     fi
+
+    # ★한 궤적 에폭 사다리: exact checkpoint 를 각각 격리 export 하고,
+    #  ①타깃 held-out 판정 ②기준 45,617장 전수 스캔을 남긴다.
+    #  best_accuracy 는 target-val 20장 기준이라 '잃어버림 최소' 체크포인트가 아니다.
+    if [ "$EPOCH_LADDER" = "1" ]; then
+      _EPOCH_ROOT="eval/finetune/versions/run_${RUN_TAG}/epochs"
+      mkdir -p "$_EPOCH_ROOT"
+      printf "epoch\tcheckpoint_sha256\ttarget_eval\tscan_tag\n" > "$_EPOCH_ROOT/EPOCH_LADDER.tsv"
+      _LADDER_OK=1
+      _LADDER_MARKER="eval/finetune/versions/run_${RUN_TAG}/dataset/epoch_ladder.started"
+      for _EP in $DEMO_EPOCH_POINTS; do
+        _EP2=$(printf "%02d" "$_EP")
+        _CKPT_DIR=$(find eval/finetune/output -maxdepth 1 -type d \
+          \( -name "iter_epoch_${_EP}" -o -name "epoch_${_EP}" \) -print -quit)
+        if [ -z "$_CKPT_DIR" ]; then
+          echo "★epoch ${_EP} 체크포인트 디렉터리가 없습니다 (save_interval 확인)"
+          _LADDER_OK=0
+          continue
+        fi
+        _PDP=$(find "$_CKPT_DIR" -maxdepth 1 -type f -name "*.pdparams" -print -quit)
+        if [ -z "$_PDP" ]; then
+          echo "★epoch ${_EP} pdparams 가 없습니다: $_CKPT_DIR"
+          _LADDER_OK=0
+          continue
+        fi
+        if [ ! "$_PDP" -nt "$_LADDER_MARKER" ]; then
+          echo "★epoch ${_EP} 체크포인트가 이번 run 보다 오래됐습니다: $_PDP"
+          _LADDER_OK=0
+          continue
+        fi
+
+        _EPOCH_DIR="$_EPOCH_ROOT/epoch_${_EP2}"
+        _INF="$_EPOCH_DIR/inference"
+        mkdir -p "$_EPOCH_DIR"
+        _ARCHIVED_PDP="$_EPOCH_DIR/epoch_${_EP2}.pdparams"
+        cp "$_PDP" "$_ARCHIVED_PDP"
+        for _SMALL in "$_CKPT_DIR"/*.states "$_CKPT_DIR"/*.json "$_CKPT_DIR"/config.yaml; do
+          if [ -f "$_SMALL" ]; then cp "$_SMALL" "$_EPOCH_DIR/"; fi
+        done
+        sha256sum "$_ARCHIVED_PDP" > "$_EPOCH_DIR/SHA256SUMS"
+
+        echo "[에폭 궤적] epoch ${_EP}: exact weight export → $_INF"
+        if ! python "$DRV" -c "$CFG" -o Global.mode=export \
+             -o Export.weight_path="$_ARCHIVED_PDP" -o Global.output="$_INF"; then
+          echo "★epoch ${_EP} export 실패"
+          _LADDER_OK=0
+          continue
+        fi
+        if [ -z "$(find "$_INF" -type f -print -quit)" ]; then
+          echo "★epoch ${_EP} inference 산출물이 비어 있습니다: $_INF"
+          _LADDER_OK=0
+          continue
+        fi
+
+        _TARGET_JSON="$_EPOCH_DIR/TARGET_EVAL.json"
+        _TARGET_PASS=1
+        python eval/demo_checkpoint_eval.py --model-dir "$_INF" \
+          --output "$_TARGET_JSON" --tag "${RUN_TAG}_ep${_EP2}" || _TARGET_PASS=0
+
+        # ep20 은 기존 도구(check_latest_run 등)가 run tag 로 찾을 수 있게 본 이름을 쓴다.
+        # ep8/12 만 suffix 를 붙여 한 궤적의 중간점임을 명시한다.
+        if [ "$_EP" -eq "$DEMO_EPOCHS" ]; then
+          _SCAN_TAG="$RUN_TAG"
+        else
+          _SCAN_TAG="${RUN_TAG}_ep${_EP2}"
+        fi
+        if [ "$DEMO_SCAN" = "1" ]; then
+          echo "[에폭 궤적] epoch ${_EP}: 기준셋 전수 스캔 → ${_SCAN_TAG}.jsonl"
+          if ! python -u eval/demo_next_target.py --run-tag "$RUN_TAG" \
+               --scan-tag "$_SCAN_TAG" --model-dir "$_INF" --scan-only; then
+            echo "★epoch ${_EP} 전수 스캔 실패"
+            _LADDER_OK=0
+          fi
+        else
+          _SCAN_TAG="(DEMO_SCAN=0)"
+        fi
+        _PDP_SHA=$(sha256sum "$_ARCHIVED_PDP" | awk '{print $1}')
+        printf "%s\t%s\t%s\t%s\n" "$_EP" "$_PDP_SHA" "$_TARGET_PASS" "$_SCAN_TAG" \
+          >> "$_EPOCH_ROOT/EPOCH_LADDER.tsv"
+      done
+      DEMO_EPOCH_LADDER_DONE=1
+
+      # 판정·스캔이 모두 끝난 뒤에만 큰 optimizer 포함 원본 checkpoint 를 정리한다.
+      # 기본 0은 보수적으로 유지. 디스크가 빠듯한 AWS 실행에서만 명시적으로 1을 준다.
+      if [ "$EPOCH_CLEANUP" = "1" ] && [ "$_LADDER_OK" = "1" ]; then
+        echo "[에폭 궤적] archive/export/scan 완료 — output 중간 체크포인트 정리"
+        for _EP in 4 8 12 16 20; do
+          _DROP=$(realpath -m "eval/finetune/output/iter_epoch_${_EP}")
+          case "$_DROP" in
+            "$PWD"/eval/finetune/output/iter_epoch_*)
+              [ -d "$_DROP" ] && rm -rf -- "$_DROP"
+              ;;
+            *) echo "★정리 경로가 output 밖이라 건너뜀: $_DROP" ;;
+          esac
+        done
+      elif [ "$EPOCH_CLEANUP" = "1" ]; then
+        echo "★에폭 산출물 일부가 실패해 원본 체크포인트를 정리하지 않았습니다"
+      fi
+      echo "[에폭 궤적] 인덱스: $_EPOCH_ROOT/EPOCH_LADDER.tsv"
+    fi
   fi
   if [ "$ROUND" = "demo" ]; then
     # ★다음 타깃 스캔(기준셋 품명 크롭 ~9만 장 판독, 20분 안팎)은 기본으로 이어서 돌린다.
     #  통과하면 어차피 다음 단계 타깃이 필요하고, 실패하면 아래 조건에서 자동으로 건너뛰므로
-    #  낭비가 없다. 판정만 보고 싶으면 DEMO_SCAN=0 으로 끈다.
+    #  낭비가 없다. 판정만 보고 싶으면 --no-scan 으로 끈다.
     #  (스캔은 반드시 판정 통과 run 에서만 — 실패 모델 판독이 demo/scans/ 에 남으면
     #   다음 단계가 그걸 '직전 모델'로 잘못 대조한다.)
-    if [ "$DEMO_PASS" = "1" ] && [ "${DEMO_SCAN:-1}" = "1" ]; then
+    if [ "${DEMO_EPOCH_LADDER_DONE:-0}" = "1" ]; then
+      echo "[다음 타깃 스캔] 에폭 궤적의 exact checkpoint 스캔으로 대체했습니다"
+    elif [ "$DEMO_PASS" = "1" ] && [ "$DEMO_SCAN" = "1" ]; then
       echo "[다음 타깃 스캔] 기준셋 품명 크롭 판독 → 잃어버린 품명 / 못 읽는 품명 후보"
       # 대조 상대 = 이 run 의 <시작 모델> 스캔. 파일명 순서로 고르면 안 된다 -
       # 재시도(1-1-v2, v3...)는 서로 형제라 직전 시도가 부모가 아니다(둘 다 base 출발).
@@ -529,7 +665,7 @@ PY
       python -u eval/demo_next_target.py --run-tag "$RUN_TAG" --exclude "$TARGETS" $_PREV_ARG \
         || echo "  (타깃 스캔 실패 - 수동: python eval/demo_next_target.py --run-tag $RUN_TAG)"
     elif [ "$DEMO_PASS" = "1" ]; then
-      echo "[다음 타깃 스캔] DEMO_SCAN=0 으로 껐습니다. 나중에 돌리려면:"
+      echo "[다음 타깃 스캔] --no-scan 으로 껐습니다. 나중에 돌리려면:"
       echo "  python eval/demo_next_target.py --run-tag $RUN_TAG --exclude \"$TARGETS\""
     else
       echo "[다음 타깃 스캔] 건너뜀 - 판정 실패 모델은 체인/스캔에 넣지 않습니다"
