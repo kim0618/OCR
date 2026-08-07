@@ -53,6 +53,7 @@ EPOCH_LADDER=0
 EPOCH_CLEANUP=0
 DEMO_SCAN=1
 REPRO_TRACE=0
+EPOCHS_EXPLICIT=0
 for a in "$@"; do
   case "$a" in
     --round=*) ROUND="${a#*=}" ;;
@@ -60,7 +61,7 @@ for a in "$@"; do
     --targets=*) TARGETS="${a#*=}" ;;
     --dataset-from=*) DATASET_FROM="${a#*=}" ;;
     --workers=*) WORKERS="${a#*=}" ;;
-    --epochs=*) DEMO_EPOCHS_ARG="${a#*=}" ;;
+    --epochs=*) DEMO_EPOCHS_ARG="${a#*=}"; EPOCHS_EXPLICIT=1 ;;
     --epoch-ladder) EPOCH_LADDER=1 ;;
     --epoch-cleanup) EPOCH_CLEANUP=1 ;;
     --no-scan) DEMO_SCAN=0 ;;
@@ -386,9 +387,11 @@ PY
     # RecConAug/RecAug가 매 실행 달라지는 최초 원인이므로 자식 프로세스에 명시 주입한다.
     TRAIN_OVERRIDE="$TRAIN_OVERRIDE -o Global.seed=1024"
     if [ "$REPRO_TRACE" = "1" ]; then
-      DEMO_EPOCHS=1
+      if [ "$EPOCHS_EXPLICIT" != "1" ]; then
+        DEMO_EPOCHS=1
+      fi
       DEMO_SCAN=0
-      echo "[재현성 진단] 1 epoch / workers=0 / 첫 배치·첫 optimizer step 계측"
+      echo "[재현성 진단] $DEMO_EPOCHS epoch / workers=0 / 첫 배치·첫 optimizer step 계측"
     fi
     # ★에폭 궤적 실험(opt-in): 서로 다른 ep8/ep20 run 은 GPU 비결정성이 섞이므로,
     #  한 번의 20ep 학습에서 ep8·12·20 을 저장해 같은 궤적 안의 이동만 비교한다.
@@ -498,14 +501,17 @@ PY
   # 원본 학습 로그를 run별로 따로 보존해야 최고 epoch를 정확히 복원할 수 있다.
   _REPRO_DRIVER_ARGS=()
   if [ "$ROUND" = "demo" ]; then
-    _REPRO_DRIVER_ARGS+=("--fixed-train-seed=1024")
+    # The NRTR/GTC token embedding is the only parameter whose CUDA backward
+    # differed in fixed-input A/A traces. Keep its pretrained value fixed so
+    # demo recipe comparisons measure the recipe instead of atomic-add luck.
+    _REPRO_DRIVER_ARGS+=("--fixed-train-seed=1024" "--freeze-gtc-embedding")
   fi
   if [ "$REPRO_TRACE" = "1" ]; then
     _REPRO_DIR="$PWD/eval/finetune/versions/run_${RUN_TAG}/dataset/repro_trace"
     mkdir -p "$_REPRO_DIR"
     _REPRO_STARTED="$_REPRO_DIR/training.started"
     touch "$_REPRO_STARTED"
-    _REPRO_DRIVER_ARGS+=("--repro-trace-dir=$_REPRO_DIR" "--repro-seed=1024" "--freeze-gtc-embedding")
+    _REPRO_DRIVER_ARGS+=("--repro-trace-dir=$_REPRO_DIR" "--repro-seed=1024")
   fi
   python "$DRV" "${_REPRO_DRIVER_ARGS[@]}" -c "$CFG" -o Global.mode=train $TRAIN_OVERRIDE 2>&1 \
     | tee "$TRAIN_LOG" | python eval/finetune_progress.py
