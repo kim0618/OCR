@@ -344,29 +344,40 @@ def _history(attempts: dict[tuple[int, int], list[dict]], esc) -> str:
     if not rows:
         return '<p class="muted">아직 실행 기록이 없습니다.</p>'
 
-    p = ['<table><tr><th style="width:44px">#</th>'
-         '<th style="width:56px">회차</th><th style="width:66px">단계</th>'
-         '<th style="width:56px">버전</th><th style="width:150px">타깃 품명</th>'
-         '<th style="width:88px">모델</th>'
-         # 앞 3개는 '가진 것'(풀 모수), 네 번째가 '이번에 실제로 쓴 것'이다.
-         # 헤더에 근거를 달아둬야 470만이 '학습에 쓴 장수'로 오해되지 않는다.
-         '<th style="width:96px" title="그 학습 크롭이 나온 원본 문서 수 - 리키잉한 이미지 중 기준셋(9,001)이 아닌 것. 출처 메타가 있는 크롭으로만 세므로 최소치다">학습 문서</th>'
-         '<th style="width:118px" title="학습에 쓸 수 있는 크롭 전량 = (실패풀+정답풀) − 판정풀. '
-         '정답풀 상당수가 출처 메타 없이 수확돼, 정확히는 &quot;기준셋임이 확인되지 않은 나머지&quot;다. '
-         '이번에 실제로 학습한 장수는 오른쪽 &quot;학습 크롭&quot; 열이다">학습 총크롭</th>'
-         '<th style="width:112px" title="그중 품명 컬럼 크롭(matchRatio≥0.7). 출처·컬럼이 확인되는 것만 '
-         '센 최소치 — 메타 없는 정답 크롭은 빠져 있다">품명 크롭</th>'
-         '<th title="이번 run 이 실제로 학습한 크롭 = 타깃 + 앵커 (검증용 20장 제외)">학습 크롭</th>'
-         '<th style="width:88px" title="판정 크롭이 나온 기준셋 문서 수 - 학습 금지 대상이라 이 문서들이 곧 판정 대상이다">판정 문서</th>'
-         '<th style="width:112px" title="기준셋(9,001 문서)에서 온 크롭 전량 — 학습 금지 대상이라 '
-         '이게 곧 판정 풀이다">판정 총크롭</th>'
-         '<th style="width:108px" title="그중 품명 컬럼 크롭(matchRatio≥0.7). 다음 타깃 스캔이 '
-         "읽는 장수와 같은 수다\">품명 크롭</th>"
-         '<th style="width:104px" title="이 run 이 만든 모델이 기준셋 품명 크롭 전량을 다시 읽어 틀린 수(스캔 실측). 다음 단계 타깃은 이 안에서 고른다. 스캔은 판정 통과 run 에서만 돌므로 실패 행은 비어 있다">실패 크롭</th>'
-         '<th style="width:72px" title="이번 단계에서 실제로 채점한 크롭 = 타깃 품명의 기준셋 출신 크롭">판정 크롭</th>'
-                  '<th style="width:90px">AWS 비용</th><th style="width:80px">결과</th></tr>']
+    table_head = ('<table><tr><th style="width:44px">#</th>'
+                  '<th style="width:56px">회차</th><th style="width:66px">단계</th>'
+                  '<th style="width:56px">버전</th><th style="width:150px">타깃 품명</th>'
+                  '<th style="width:88px">모델</th>'
+                  # 앞 3개는 '가진 것'(풀 모수), 네 번째가 '이번에 실제로 쓴 것'이다.
+                  # 헤더에 근거를 달아둬야 470만이 '학습에 쓴 장수'로 오해되지 않는다.
+                  '<th style="width:96px" title="그 학습 크롭이 나온 원본 문서 수 - 리키잉한 이미지 중 기준셋(9,001)이 아닌 것. 출처 메타가 있는 크롭으로만 세므로 최소치다">학습 문서</th>'
+                  '<th style="width:118px" title="학습에 쓸 수 있는 크롭 전량 = (실패풀+정답풀) − 판정풀. '
+                  '정답풀 상당수가 출처 메타 없이 수확돼, 정확히는 &quot;기준셋임이 확인되지 않은 나머지&quot;다. '
+                  '이번에 실제로 학습한 장수는 오른쪽 &quot;학습 크롭&quot; 열이다">학습 총크롭</th>'
+                  '<th style="width:112px" title="그중 품명 컬럼 크롭(matchRatio≥0.7). 출처·컬럼이 확인되는 것만 '
+                  '센 최소치 — 메타 없는 정답 크롭은 빠져 있다">품명 크롭</th>'
+                  '<th title="이번 run 이 실제로 학습한 크롭 = 타깃 + 앵커 (검증용 20장 제외)">학습 크롭</th>'
+                  '<th style="width:88px" title="판정 크롭이 나온 기준셋 문서 수 - 학습 금지 대상이라 이 문서들이 곧 판정 대상이다">판정 문서</th>'
+                  '<th style="width:112px" title="기준셋(9,001 문서)에서 온 크롭 전량 — 학습 금지 대상이라 '
+                  '이게 곧 판정 풀이다">판정 총크롭</th>'
+                  '<th style="width:108px" title="그중 품명 컬럼 크롭(matchRatio≥0.7). 다음 타깃 스캔이 '
+                  "읽는 장수와 같은 수다\">품명 크롭</th>"
+                  '<th style="width:104px" title="이 run 이 만든 모델이 기준셋 품명 크롭 전량을 다시 읽어 틀린 수(스캔 실측). 다음 단계 타깃은 이 안에서 고른다. 스캔은 판정 통과 run 에서만 돌므로 실패 행은 비어 있다">실패 크롭</th>'
+                  '<th style="width:72px" title="이번 단계에서 실제로 채점한 크롭 = 타깃 품명의 기준셋 출신 크롭">판정 크롭</th>'
+                  '<th style="width:90px">AWS 비용</th><th style="width:80px">결과</th></tr>')
+    p: list[str] = []
     total_sec = total_usd = 0.0
     for seq, (_, n, i, r_no, st, run) in enumerate(rows, 1):
+        # 실행 이력은 10개 단위로 접는다. 마지막 묶음만 기본으로 펼쳐 두므로
+        # 16개면 1~10은 접힘/11~16은 펼침, 21개면 1~20은 접힘/21은 펼침이다.
+        if (seq - 1) % 10 == 0:
+            batch_end = min(seq + 9, len(rows))
+            open_attr = " open" if batch_end == len(rows) else ""
+            latest = ' <span class="muted">· 최신</span>' if open_attr else ""
+            p.append(f'<details class="history-batch"{open_attr}>'
+                     f'<summary class="big">실행 {seq}~{batch_end} '
+                     f'<span class="muted">({batch_end - seq + 1}건)</span>{latest}</summary>')
+            p.append(table_head)
         s = run.get("summary") or {}
         ok = s.get("allPass")
         # ★타깃은 누적이다 - 1차 2단계면 1단계 품명 + 이번 신규 품명 둘 다 학습·판정 대상.
@@ -449,12 +460,13 @@ def _history(attempts: dict[tuple[int, int], list[dict]], esc) -> str:
                          f'font-weight:700">▸ 다음 타깃 후보</summary>'
                          f'<div style="padding:8px 4px 2px">{nxt}</div>'
                          f'</details></td></tr>')
-    # 합계는 표의 마지막 행으로 — AWS 비용 열 아래에 정렬돼야 읽기 쉽다.
-    if total_usd:
-        p.append(f'<tr style="background:#f2f6fa"><td colspan="15" '
-                 f'style="text-align:right"><b>합계</b></td>'
-                 f'<td><b>${total_usd:.2f}</b></td><td></td></tr>')
-    p.append("</table>")
+        if seq % 10 == 0 or seq == len(rows):
+            # 합계는 마지막 묶음의 마지막 행에만 표시한다.
+            if seq == len(rows) and total_usd:
+                p.append(f'<tr style="background:#f2f6fa"><td colspan="15" '
+                         f'style="text-align:right"><b>합계</b></td>'
+                         f'<td><b>${total_usd:.2f}</b></td><td></td></tr>')
+            p.append("</table></details>")
     p.append(_lineage(attempts, esc))
     return "\n".join(p)
 
