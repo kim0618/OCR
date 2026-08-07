@@ -97,6 +97,24 @@ def _parameter_digest(parameters: Iterable[paddle.Tensor], gradients: bool) -> s
     return hasher.hexdigest()
 
 
+def _gradient_details(parameters: Iterable[paddle.Tensor]) -> list[dict[str, Any]]:
+    details: list[dict[str, Any]] = []
+    for parameter in parameters:
+        name = getattr(parameter, "name", "") or "unnamed"
+        gradient = parameter.grad
+        entry: dict[str, Any] = {"name": name, "present": gradient is not None}
+        if gradient is not None:
+            entry.update(
+                {
+                    "shape": list(gradient.shape),
+                    "dtype": str(gradient.dtype),
+                    "sha256": _digest(gradient),
+                }
+            )
+        details.append(entry)
+    return details
+
+
 class ReproTracer:
     def __init__(self, output_dir: str | Path, seed: int) -> None:
         self.output_dir = Path(output_dir).resolve()
@@ -109,6 +127,7 @@ class ReproTracer:
         self.samplers: list[dict[str, Any]] = []
         self.first_backward: dict[str, Any] | None = None
         self.first_step: dict[str, Any] | None = None
+        self.parameter_name_map: dict[str, str] = {}
         self.latest_batch: dict[str, Any] | None = None
         self.latest_indices: dict[str, Any] | None = None
         self._loader_count = 0
@@ -143,6 +162,7 @@ class ReproTracer:
             "samplers": self.samplers,
             "firstBackward": self.first_backward,
             "firstOptimizerStep": self.first_step,
+            "parameterNameMap": self.parameter_name_map,
         }
 
     def _save(self) -> None:
@@ -211,9 +231,23 @@ class ReproTracer:
                 "latestIndices": self.latest_indices,
                 "parametersBeforeSha256": _parameter_digest(parameters, gradients=False),
                 "gradientsSha256": _parameter_digest(parameters, gradients=True),
+                "gradientParameters": _gradient_details(parameters),
                 "parametersAfterSha256": None,
             }
             self._save()
+
+    def record_state_dict(self, state_dict: dict[str, Any]) -> None:
+        mapping = {
+            (getattr(value, "name", "") or key): key
+            for key, value in state_dict.items()
+            if isinstance(value, paddle.Tensor)
+        }
+        if len(mapping) <= len(self.parameter_name_map):
+            return
+        with self._lock:
+            if len(mapping) > len(self.parameter_name_map):
+                self.parameter_name_map = mapping
+                self._save()
 
     def record_backward(self, loss: paddle.Tensor) -> None:
         if self.first_backward is not None:
@@ -294,6 +328,15 @@ def install(output_dir: str | Path, seed: int = 1024) -> ReproTracer:
         return original_backward(tensor, *args, **kwargs)
 
     paddle.Tensor.backward = traced_backward
+
+    original_state_dict = paddle.nn.Layer.state_dict
+
+    def traced_state_dict(layer: paddle.nn.Layer, *args, **kwargs):
+        result = original_state_dict(layer, *args, **kwargs)
+        tracer.record_state_dict(result)
+        return result
+
+    paddle.nn.Layer.state_dict = traced_state_dict
 
     for sampler_name in ("BatchSampler", "DistributedBatchSampler"):
         sampler_class = getattr(paddle.io, sampler_name, None)

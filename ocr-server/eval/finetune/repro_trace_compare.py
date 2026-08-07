@@ -69,6 +69,42 @@ def _dataset_hash(run_dir: Path) -> str | None:
     return hasher.hexdigest() if found else None
 
 
+def _gradient_differences(
+    trace_a: dict[str, Any], trace_b: dict[str, Any]
+) -> list[tuple[str, str | None, str | None]]:
+    step_a = trace_a.get("firstOptimizerStep") or {}
+    step_b = trace_b.get("firstOptimizerStep") or {}
+    gradients_a = {
+        item.get("name"): item.get("sha256")
+        for item in step_a.get("gradientParameters", [])
+    }
+    gradients_b = {
+        item.get("name"): item.get("sha256")
+        for item in step_b.get("gradientParameters", [])
+    }
+    name_map = dict(trace_a.get("parameterNameMap") or {})
+    name_map.update(trace_b.get("parameterNameMap") or {})
+    differences = []
+    for internal_name in sorted(set(gradients_a) | set(gradients_b)):
+        hash_a, hash_b = gradients_a.get(internal_name), gradients_b.get(internal_name)
+        if hash_a != hash_b:
+            differences.append((name_map.get(internal_name, internal_name), hash_a, hash_b))
+    return differences
+
+
+def _gradient_group(name: str) -> str:
+    lowered = name.lower()
+    if "ctc" in lowered:
+        return "CTC"
+    if "nrtr" in lowered or "gtc" in lowered:
+        return "NRTR/GTC"
+    if "backbone" in lowered:
+        return "BACKBONE"
+    if "neck" in lowered or "encoder" in lowered:
+        return "NECK/ENCODER"
+    return "OTHER"
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("run_a")
@@ -102,6 +138,19 @@ def main() -> int:
         print(f"{name:22} {status:7}  {value_a or '(missing)'}  {value_b or '(missing)'}")
         if not both_missing and not same and first_difference is None:
             first_difference = name
+
+    gradient_differences = _gradient_differences(trace_a, trace_b)
+    if gradient_differences:
+        groups: dict[str, int] = {}
+        for parameter_name, _, _ in gradient_differences:
+            group = _gradient_group(parameter_name)
+            groups[group] = groups.get(group, 0) + 1
+        print("gradient_parameter_diff", len(gradient_differences), groups)
+        for parameter_name, hash_a, hash_b in gradient_differences[:20]:
+            print(
+                f"  {parameter_name}: {(hash_a or '(missing)')[:12]} != "
+                f"{(hash_b or '(missing)')[:12]}"
+            )
 
     if first_difference is None:
         print("RESULT: epoch 1까지 완전 동일합니다.")
