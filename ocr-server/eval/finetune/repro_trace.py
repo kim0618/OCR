@@ -107,6 +107,7 @@ class ReproTracer:
         self.started_at = time.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.loaders: list[dict[str, Any]] = []
         self.samplers: list[dict[str, Any]] = []
+        self.first_backward: dict[str, Any] | None = None
         self.first_step: dict[str, Any] | None = None
         self.latest_batch: dict[str, Any] | None = None
         self.latest_indices: dict[str, Any] | None = None
@@ -140,6 +141,7 @@ class ReproTracer:
             },
             "loaders": self.loaders,
             "samplers": self.samplers,
+            "firstBackward": self.first_backward,
             "firstOptimizerStep": self.first_step,
         }
 
@@ -213,6 +215,22 @@ class ReproTracer:
             }
             self._save()
 
+    def record_backward(self, loss: paddle.Tensor) -> None:
+        if self.first_backward is not None:
+            return
+        array = loss.detach().cpu().numpy()
+        with self._lock:
+            if self.first_backward is not None:
+                return
+            self.first_backward = {
+                "sha256": _digest(loss),
+                "dtype": str(array.dtype),
+                "shape": list(array.shape),
+                "value": array.tolist(),
+                "latestBatch": self.latest_batch,
+            }
+            self._save()
+
     def after_step(self, optimizer: paddle.optimizer.Optimizer) -> None:
         if not self.first_step or self.first_step["parametersAfterSha256"] is not None:
             return
@@ -268,6 +286,14 @@ def install(output_dir: str | Path, seed: int = 1024) -> ReproTracer:
 
     paddle.io.DataLoader.__init__ = traced_loader_init
     paddle.io.DataLoader.__iter__ = traced_loader_iter
+
+    original_backward = paddle.Tensor.backward
+
+    def traced_backward(tensor: paddle.Tensor, *args, **kwargs):
+        tracer.record_backward(tensor)
+        return original_backward(tensor, *args, **kwargs)
+
+    paddle.Tensor.backward = traced_backward
 
     for sampler_name in ("BatchSampler", "DistributedBatchSampler"):
         sampler_class = getattr(paddle.io, sampler_name, None)

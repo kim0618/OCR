@@ -51,6 +51,10 @@ def _checkpoint_hash(run_dir: Path) -> str | None:
     return path.read_text(encoding="utf-8").split()[0]
 
 
+def _first_loss(trace: dict[str, Any]) -> str | None:
+    return (trace.get("firstBackward") or {}).get("sha256")
+
+
 def _dataset_hash(run_dir: Path) -> str | None:
     hasher = hashlib.sha256()
     dataset_dir = run_dir / "dataset"
@@ -82,6 +86,7 @@ def main() -> int:
         ("first_sample_indices", _first_indices(trace_a), _first_indices(trace_b)),
         ("first_batch", _first_batch(trace_a), _first_batch(trace_b)),
         ("initial_parameters", step_a.get("parametersBeforeSha256"), step_b.get("parametersBeforeSha256")),
+        ("first_loss", _first_loss(trace_a), _first_loss(trace_b)),
         ("first_gradients", step_a.get("gradientsSha256"), step_b.get("gradientsSha256")),
         ("after_first_step", step_a.get("parametersAfterSha256"), step_b.get("parametersAfterSha256")),
         ("epoch1_checkpoint", _checkpoint_hash(run_a), _checkpoint_hash(run_b)),
@@ -91,9 +96,11 @@ def main() -> int:
     print(f"B: {run_b}")
     first_difference = None
     for name, value_a, value_b in checks:
+        both_missing = value_a is None and value_b is None
         same = value_a is not None and value_a == value_b
-        print(f"{name:22} {'SAME' if same else 'DIFF'}  {value_a or '(missing)'}  {value_b or '(missing)'}")
-        if not same and first_difference is None:
+        status = "MISSING" if both_missing else ("SAME" if same else "DIFF")
+        print(f"{name:22} {status:7}  {value_a or '(missing)'}  {value_b or '(missing)'}")
+        if not both_missing and not same and first_difference is None:
             first_difference = name
 
     if first_difference is None:
@@ -107,8 +114,13 @@ def main() -> int:
         reason = "샘플 순서는 같지만 augmentation 또는 전처리 결과가 다릅니다."
     elif first_difference == "initial_parameters":
         reason = "시작 가중치가 다릅니다."
+    elif first_difference == "first_loss":
+        reason = "같은 입력/가중치에서 forward 또는 loss 계산이 갈라졌습니다."
     elif first_difference == "first_gradients":
-        reason = "같은 입력/가중치에서 forward 또는 backward 계산이 갈라졌습니다."
+        if _first_loss(trace_a) is not None and _first_loss(trace_b) is not None:
+            reason = "loss까지 같지만 backward gradient 계산이 갈라졌습니다."
+        else:
+            reason = "gradient가 갈라졌습니다. loss 계측이 없어 forward/backward 구분은 불가합니다."
     elif first_difference == "after_first_step":
         reason = "gradient까지 같지만 optimizer update가 갈라졌습니다."
     else:
