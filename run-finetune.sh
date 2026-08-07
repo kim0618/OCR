@@ -505,7 +505,7 @@ PY
     mkdir -p "$_REPRO_DIR"
     _REPRO_STARTED="$_REPRO_DIR/training.started"
     touch "$_REPRO_STARTED"
-    _REPRO_DRIVER_ARGS+=("--repro-trace-dir=$_REPRO_DIR" "--repro-seed=1024")
+    _REPRO_DRIVER_ARGS+=("--repro-trace-dir=$_REPRO_DIR" "--repro-seed=1024" "--freeze-gtc-embedding")
   fi
   python "$DRV" "${_REPRO_DRIVER_ARGS[@]}" -c "$CFG" -o Global.mode=train $TRAIN_OVERRIDE 2>&1 \
     | tee "$TRAIN_LOG" | python eval/finetune_progress.py

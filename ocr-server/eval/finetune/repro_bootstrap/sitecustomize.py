@@ -9,6 +9,19 @@ from pathlib import Path
 
 trace_dir = os.environ.get("OCR_REPRO_TRACE_DIR")
 fixed_train_seed = os.environ.get("OCR_FIXED_TRAIN_SEED")
+freeze_gtc_embedding = os.environ.get("OCR_FREEZE_GTC_EMBEDDING") == "1"
+
+if freeze_gtc_embedding:
+    import paddle
+
+    _original_embedding_init = paddle.nn.Embedding.__init__
+
+    def _frozen_embedding_init(layer, *args, **kwargs):
+        _original_embedding_init(layer, *args, **kwargs)
+        layer.weight.stop_gradient = True
+
+    paddle.nn.Embedding.__init__ = _frozen_embedding_init
+    os.environ["OCR_GTC_EMBEDDING_FREEZE_PATCHED"] = "1"
 
 if fixed_train_seed:
     # PaddleOCR/tools/train.py intentionally calls build_dataloader(..., seed=None).

@@ -155,6 +155,8 @@ class ReproTracer:
                         "PYTHONHASHSEED",
                         "OCR_FIXED_TRAIN_SEED",
                         "OCR_TRAIN_SEED_PATCHED",
+                        "OCR_FREEZE_GTC_EMBEDDING",
+                        "OCR_GTC_EMBEDDING_FREEZE_PATCHED",
                     )
                 },
             },
