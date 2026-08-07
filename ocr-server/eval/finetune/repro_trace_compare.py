@@ -125,7 +125,7 @@ def main() -> int:
         ("first_loss", _first_loss(trace_a), _first_loss(trace_b)),
         ("first_gradients", step_a.get("gradientsSha256"), step_b.get("gradientsSha256")),
         ("after_first_step", step_a.get("parametersAfterSha256"), step_b.get("parametersAfterSha256")),
-        ("epoch1_checkpoint", _checkpoint_hash(run_a), _checkpoint_hash(run_b)),
+        ("final_checkpoint", _checkpoint_hash(run_a), _checkpoint_hash(run_b)),
     ]
 
     print(f"A: {run_a}")
@@ -153,7 +153,7 @@ def main() -> int:
             )
 
     if first_difference is None:
-        print("RESULT: epoch 1까지 완전 동일합니다.")
+        print("RESULT: 저장된 최종 체크포인트까지 완전 동일합니다.")
         return 0
     if first_difference == "dataset_bundle":
         reason = "동결 데이터셋 파일이 서로 다릅니다."

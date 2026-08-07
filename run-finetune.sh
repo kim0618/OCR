@@ -354,17 +354,15 @@ PY
       python eval/build_demo_dataset.py --targets "$TARGETS" \
           --replay-sources "$REPLAY_SRC" $DEMO_ANCHOR_ARGS
     fi
-    if [ "$REPRO_TRACE" = "1" ]; then
-      if [ -z "$DATASET_FROM" ]; then
-        echo "★--repro-trace 는 동일 입력 보장을 위해 --dataset-from 이 필수입니다."
-        exit 1
-      fi
-      if [ -n "$WORKERS" ] && [ "$WORKERS" != "0" ]; then
-        echo "★--repro-trace 는 --workers=0 으로 실행해야 합니다. 현재: $WORKERS"
-        exit 1
-      fi
-      WORKERS=0
+    if [ "$REPRO_TRACE" = "1" ] && [ -z "$DATASET_FROM" ]; then
+      echo "★--repro-trace 는 동일 입력 보장을 위해 --dataset-from 이 필수입니다."
+      exit 1
     fi
+    if [ -n "$WORKERS" ] && [ "$WORKERS" != "0" ]; then
+      echo "★demo 결정성 학습은 --workers=0 만 허용합니다. 현재: $WORKERS"
+      exit 1
+    fi
+    WORKERS=0
     if [ -n "$WORKERS" ]; then
       # ★A/A 손잡이 ②: DataLoader 워커 수 고정. cudnn 플래그만으로는 D1/D2 가 갈라져서
       #  (예측 diff 1,943 · pdparams 상이) 워커 프로세스 차원을 통째로 제거해 재검증한다.
