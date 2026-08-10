@@ -52,6 +52,7 @@ MIN_TRAIN_TARGET = 10   # 학습용 타깃 크롭 최소치 — 미달이면 후
 # 앵커 성분 서명 - H 한글 / E 영문 / N 숫자 / S 기호. 판정 분석(recount)과 같은 문자
 # 클래스를 써야 "어느 조합에서 잃었나 → 그 조합을 앵커에 얼마나 넣나"가 바로 이어진다.
 SYMBOL_RE = r"[()\[\]{}/\\·,.:;+*%~°'\"-]"
+_HANGUL = re.compile(r"[가-힣]")
 
 
 def _sig(label: str) -> str:
@@ -201,6 +202,30 @@ def main() -> int:
                     help="앵커 중 품명 크롭 비중(0~1). 기본 0.6")
     ap.add_argument("--anchor-shortnum-ratio", type=float, default=0.2,
                     help="앵커 중 짧은 숫자(1~3자리) 비중. 숫자 붕괴 방어용. 기본 0.2")
+    ap.add_argument("--anchor-shortnum", type=int, default=0,
+                    help="짧은 숫자 앵커 장수 절대값. 주면 --anchor-shortnum-ratio 를 덮어쓴다")
+    # ★★겨냥 선발(2026-08-10). 비율·버킷 축을 다 돌려본 뒤의 결론:
+    #  <크롭 단위 비율>은 방어력을 못 재는 잣대였다. '로수반정10mg' 은 '영문+숫자 혼재'로
+    #  분류되지만 한글을 5자 담는다. 548 손실의 한글 오독은 롱테일이라(최다 혼동쌍 8건)
+    #  중요한 건 층 비율이 아니라 <그 글자를 앵커에서 몇 번 보여줬나>다.
+    #  현행 8,016 앵커 실측: 깨진 한글 105종 중 14종이 노출 0회, 42종이 10회 미만.
+    #  → 깨진 글자 목록(build_target_chars.py 산출)을 받아 ①글자마다 최소 장수 확보
+    #    ②깨진 글자 밀도 순으로 채운다. 남는 슬롯은 무작위 품명(분포 유지).
+    ap.add_argument("--anchor-target-chars", default="",
+                    help="깨진 글자 목록 JSON(eval/finetune/demo/target_chars_<tag>.json). "
+                         "주면 --anchor-aim-ratio 만큼을 그 글자 겨냥 선발로 채운다")
+    ap.add_argument("--anchor-aim-ratio", type=float, default=0.0,
+                    help="앵커 중 겨냥 선발 비중(0~1). 나머지는 무작위 품명. 0=겨냥 안 함")
+    ap.add_argument("--anchor-per-char", type=int, default=40,
+                    help="겨냥 선발에서 글자 하나당 확보할 최대 크롭 수. 희귀 글자부터 채운다")
+    # ★겨냥 후보 풀(2026-08-10 실측): 정답풀 3.09M 중 컬럼 메타가 붙은 건 264,984 뿐이고
+    #  'itemName' 으로 확인되는 건 35,507 장이다. 나머지 2.83M 은 컬럼 미상이라 통째로
+    #  후보에서 빠져 있었다. 겨냥은 컬럼이 아니라 <글자>를 보는 것이므로 한글이 있는
+    #  크롭이면 후보가 된다. 넓힌 풀(728,162)에서 뽑으면 노출 0회 한글이 14종→0종,
+    #  10회 미만이 42종→2종으로 떨어진다(좁은 풀은 각각 4종/26종에서 멈춘다).
+    ap.add_argument("--anchor-aim-pool", choices=("korean", "item"), default="korean",
+                    help="겨냥 후보 풀. korean=한글 보유 정답 크롭 전체(권장) / "
+                         "item=컬럼이 itemName 으로 확인된 것만")
     ap.add_argument("--val-target", type=int, default=20,
                     help="검증용으로 <학습 크롭에서> 뺄 장수. 판정셋(기준셋)은 val 에도 쓰지 않는다")
     ap.add_argument("--val-anchor", type=int, default=0,
@@ -296,7 +321,7 @@ def main() -> int:
         bal_src = _bal_src()
         bal_col = _bal_col()          # 정답풀 컬럼(사이드카에 있는 24% 만 알 수 있음)
         used = ({p for p, _ in judge_t} | {p for p, _ in train_t} | {p for p, _ in val_t})
-        item_pool, num_pool, rest_pool = [], [], []
+        item_pool, num_pool, rest_pool, korean_pool = [], [], [], []
         for p, g in sorted(load_labels(BAL_LABELS).items()):
             if p in used:
                 continue
@@ -304,13 +329,17 @@ def main() -> int:
                 n_anchor_replay_skip += 1
                 continue
             flat = g.strip()
+            short_num = flat.isdigit() and len(flat) <= 3
             if bal_col.get(p) == "itemName":
                 item_pool.append((p, g))
-            elif flat.isdigit() and len(flat) <= 3:
+            elif short_num:
                 num_pool.append((p, g))     # 라벨만 보면 되니 사이드카가 없어도 잡힌다
             else:
                 rest_pool.append((p, g))
-        for pool in (item_pool, num_pool, rest_pool):
+            # 겨냥 후보(컬럼 무관) — 한글이 하나라도 있으면 '그 글자를 보여주는' 크롭이다.
+            if not short_num and _HANGUL.search(g):
+                korean_pool.append((p, g))
+        for pool in (item_pool, num_pool, rest_pool, korean_pool):
             rnd.shuffle(pool)
         want = n_anchor + args.val_anchor
         # 품명 풀을 성분 서명으로 쪼갠다. 라벨이 순수 짧은숫자(1~3자리)인 품명 크롭은
@@ -321,7 +350,84 @@ def main() -> int:
             flat = g.strip()
             key = "ITEMNUM" if (flat.isdigit() and len(flat) <= 3) else _sig(flat)
             sig_pools.setdefault(key, []).append((p, g))
-        if args.anchor_plan:
+        if args.anchor_target_chars and args.anchor_aim_ratio > 0:
+            # ★겨냥 선발. 순서가 중요하다:
+            #  ①짧은숫자를 먼저 확보(숫자 출력붕괴 방어의 최소선)
+            #  ②깨진 글자를 <희귀한 것부터> 글자당 최대 per_char 장 — 흔한 글자는
+            #    어차피 따라오므로, 먼저 뽑으면 희귀 글자 자리를 먹는다.
+            #  ③남은 겨냥 슬롯은 깨진 글자를 많이 담은 순(밀도)
+            #  ④나머지는 무작위 품명 — 앵커가 '복잡한 라벨'로만 치우치지 않게 한다.
+            spec = json.load(open(args.anchor_target_chars, encoding="utf-8"))
+            chars = spec.get("chars", {})
+            want_chars = {c for group in ("hangul", "english")
+                          for c, _ in chars.get(group, [])}
+            if not want_chars:
+                raise SystemExit(f"★겨냥 글자 목록이 비어 있습니다: {args.anchor_target_chars}")
+            aim_pool = korean_pool if args.anchor_aim_pool == "korean" else item_pool
+            n_num = (args.anchor_shortnum if args.anchor_shortnum > 0
+                     else int(want * args.anchor_shortnum_ratio))
+            n_num = min(n_num, len(num_pool))
+            n_rest = want - n_num
+            n_aim = int(n_rest * args.anchor_aim_ratio)
+
+            by_char: dict[str, list] = {}
+            for p, g in aim_pool:
+                for c in set(g) & want_chars:
+                    by_char.setdefault(c, []).append((p, g))
+
+            picked, taken = [], set()
+            for c in sorted(want_chars, key=lambda c: len(by_char.get(c, []))):
+                if len(picked) >= n_aim:
+                    break
+                got = 0
+                for p, g in by_char.get(c, []):
+                    if got >= args.anchor_per_char or len(picked) >= n_aim:
+                        break
+                    if p in taken:
+                        got += 1          # 이미 뽑힌 크롭도 그 글자를 보여주고 있다
+                        continue
+                    picked.append((p, g)); taken.add(p); got += 1
+            if len(picked) < n_aim:
+                dense = sorted(((len(set(g) & want_chars), p, g)
+                                for p, g in aim_pool if p not in taken),
+                               key=lambda x: -x[0])
+                for _, p, g in dense[:n_aim - len(picked)]:
+                    picked.append((p, g)); taken.add(p)
+            n_aim_real = len(picked)
+            for p, g in item_pool:        # ④무작위 품명으로 나머지
+                if len(picked) >= n_rest:
+                    break
+                if p not in taken:
+                    picked.append((p, g)); taken.add(p)
+            if len(picked) < n_rest:
+                raise SystemExit(
+                    f"★앵커 풀 부족: 품명 {len(item_pool)}장으로 {n_rest}장을 못 채웁니다. "
+                    "총량을 낮추거나 --anchor-aim-ratio 를 올려서 다시 실행할 것.")
+            picked += num_pool[:n_num]
+
+            # ★달성 커버리지를 manifest 에 남긴다 - '몇 % 넣었다'가 아니라
+            #  '그 글자를 몇 번 보여줬다'가 이 설계의 판정 지표다.
+            seen: dict[str, int] = {}
+            for _, g in picked:
+                for ch in g:
+                    seen[ch] = seen.get(ch, 0) + 1
+
+            def _cov(group: str) -> dict:
+                cs = [c for c, _ in chars.get(group, [])]
+                if not cs:
+                    return {}
+                hit = sorted(seen.get(c, 0) for c in cs)
+                return {"chars": len(cs), "zero": sum(1 for x in hit if x == 0),
+                        "under10": sum(1 for x in hit if x < 10),
+                        "median": hit[len(hit) // 2], "total": sum(hit)}
+
+            _ANCHOR_MIX.update(
+                aim=n_aim_real, aimRandom=n_rest - n_aim_real, aimNum=n_num,
+                aimPool=args.anchor_aim_pool, aimPoolSize=len(aim_pool),
+                aimSource=os.path.basename(args.anchor_target_chars),
+                aimPerChar=args.anchor_per_char,
+                coverage={g: _cov(g) for g in ("hangul", "english", "digit")})
+        elif args.anchor_plan:
             plan = {}
             for part in args.anchor_plan.split(","):
                 key, _, val = part.partition("=")

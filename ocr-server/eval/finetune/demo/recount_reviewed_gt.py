@@ -308,7 +308,9 @@ def main() -> None:
 
     # 직전 최선 모델 대비 전이 경로. 전체 숫자가 좋아져도 손실 집합이 단조롭게
     # 줄지는 않으므로(6배->12배에서 169장 신규 손실), 신규 손실은 따로 뽑아 실물 확인한다.
-    BASELINE_TAG = "260804_1623"
+    # ★결정론 앵커 8,016(48배) 모델 = 현행 기준선(2026-08-10 확정).
+    #  옛 12배 260804_1623 대비 전이는 비결정적 관측이라 더 쓰지 않는다.
+    BASELINE_TAG = "260807_1302"
     transitions: dict[str, dict] = {}
     if BASELINE_TAG in candidate_ok_by_run:
         prev_ok = candidate_ok_by_run[BASELINE_TAG]
