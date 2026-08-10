@@ -374,22 +374,29 @@ PY
     #   뿌린 것이 차이다. 기호·㈜ 는 사용자 판단으로 후처리 몫(글자가 빠지면 복구
     #   불가능한 한글·영문·숫자를 우선한다)이지만, 겨냥 선발 부산물로 같이 올라간다.
     #  ★판정이 26/26 아래로 떨어지면 앵커가 타깃을 묻은 것 = 그 직전 구성이 상한선.
-    DEMO_ANCHOR_TOTAL=8016       # 결정론 곡선 정점(260807_1302). 배수 아님, 절대 장수
-    DEMO_ANCHOR_SHORTNUM_N=800   # 순수 1~3자리 숫자. 2,024 에서 감축(숫자 손실 37=최저층)
-    DEMO_ANCHOR_AIM=0.60         # 겨냥 비중. 40%는 이득이 덜하고 80~100%는 라벨이 길어짐
-    DEMO_ANCHOR_PER_CHAR=40      # 글자당 최대 확보 장수(희귀 글자부터)
-    DEMO_ANCHOR_CHARS=eval/finetune/demo/target_chars_260807_1302.json
-    if [ ! -f "$DEMO_ANCHOR_CHARS" ]; then
-      echo "★겨냥 글자 목록이 없습니다: $DEMO_ANCHOR_CHARS"
-      echo "  로컬에서 python eval/finetune/demo/build_target_chars.py <태그> 로 만들어 커밋할 것"
-      exit 1
-    fi
+    #  ★★★2026-08-10 확정: 겨냥 구성 기각, <v16(260807_1302) 무작위 구성>으로 복귀.
+    #   GT 전수 검수(442건) 후 저울을 바로잡고 ①을 글자/표기로 쪼개 다시 재니:
+    #     run              정답     ①글자  ①표기   ①계
+    #     12배 260807_1022  37,216    728    122    850
+    #     ★48배 260807_1302 38,511    369    106    475   ← 전 run 최저
+    #     96배 260807_1440  38,478    440    126    566
+    #     겨냥 260810_1037  37,737    418     69    487
+    #   겨냥 앵커가 줄인 건 표기층(106→69)이고 <글자는 49건 더 틀렸다>(369→418).
+    #   합계로는 근소해 보이던 차이가 분리하니 드러났다. 특별한 기법 없이 버킷에서
+    #   무작위로 뽑은 v16 구성이 여전히 최고다. 겨냥 인자는 코드에 남겨두되 쓰지 않는다.
+    #   (다시 쓰려면: --anchor-target-chars <target_chars_*.json> --anchor-aim-ratio 0.6
+    #    --anchor-per-char 40 --anchor-aim-pool korean --anchor-shortnum 800)
+    #  ★비율(--anchor-ratio)이 아니라 절대값을 쓰는 이유: 2단계부터 타깃이 누적된다.
+    #   v16 은 --anchor-ratio 48.0 × 타깃 167 = 8,016 이었는데, 같은 배수를 2단계
+    #   (타깃 ~322)에 그대로 쓰면 앵커가 15,000대 = 실측에서 나빴던 96배 지점이 된다.
+    #   앵커의 일은 '판정셋 45,617장을 지키는 것'이고 그 방어 대상은 단계가 가도
+    #   안 변하므로, 타깃이 아니라 절대값에 고정하는 것이 맞다.
+    DEMO_ANCHOR_TOTAL=8016       # v16 과 동일 총량. 배수 아님, 절대 장수
+    DEMO_ANCHOR_ITEM=0.60        # v16 원본값
+    DEMO_ANCHOR_SHORTNUM=0.20    # v16 원본값
     DEMO_ANCHOR_ARGS="--anchor $DEMO_ANCHOR_TOTAL"
-    DEMO_ANCHOR_ARGS="$DEMO_ANCHOR_ARGS --anchor-shortnum $DEMO_ANCHOR_SHORTNUM_N"
-    DEMO_ANCHOR_ARGS="$DEMO_ANCHOR_ARGS --anchor-target-chars $DEMO_ANCHOR_CHARS"
-    DEMO_ANCHOR_ARGS="$DEMO_ANCHOR_ARGS --anchor-aim-ratio $DEMO_ANCHOR_AIM"
-    DEMO_ANCHOR_ARGS="$DEMO_ANCHOR_ARGS --anchor-per-char $DEMO_ANCHOR_PER_CHAR"
-    DEMO_ANCHOR_ARGS="$DEMO_ANCHOR_ARGS --anchor-aim-pool korean"
+    DEMO_ANCHOR_ARGS="$DEMO_ANCHOR_ARGS --anchor-item-ratio $DEMO_ANCHOR_ITEM"
+    DEMO_ANCHOR_ARGS="$DEMO_ANCHOR_ARGS --anchor-shortnum-ratio $DEMO_ANCHOR_SHORTNUM"
     if [ -n "$DATASET_FROM" ]; then
       # ★동결 번들(A/A 용): 데이터셋을 다시 만들지 않고 이전 run 의 보존본을 그대로 쓴다.
       #  재현성 측정에서 "빌드가 byte 단위로 같았나"라는 변수 자체를 제거한다.

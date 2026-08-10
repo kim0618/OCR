@@ -587,6 +587,8 @@ def _scan_delta(tag: str, prev_name: str) -> dict | None:
                     "charWrong": run.get("charWrong"),
                     "prevOk": reviewed["baseCorrect"],
                     "lost": run["lost"],
+                    "lostChar": run.get("lostChar"),
+                    "lostNotation": run.get("lostNotation"),
                     "lostCauses": run.get("lostCauses") or {},
                     "gained": run["revived"],
                     "unread": run.get("unread", run["incorrect"]),
@@ -654,35 +656,47 @@ def _next_block(run: dict, esc, attempts: dict | None = None) -> str:
     prev_name = f"{prev_tag}.jsonl" if prev_tag else (nt.get("prevScan") or "")
     d = _scan_delta(str(run.get("runTag") or ""), prev_name)
     if d:
-        lost_pct = 100.0 * d["lost"] / d["prevOk"] if d["prevOk"] else 0.0
+        # ★①은 <글자가 틀린 것>만 센다(2026-08-10). 꼬리 기호·행번호 구분자만 다른
+        #  몫은 품명 글자를 다 맞게 읽은 것이므로 ③(표기만 다름)으로 옮겨 합산한다.
+        #  합계로 두면 표기층이 글자층 변화를 가린다 - 겨냥 앵커 run 이 ①계로는 근소했는데
+        #  글자만 떼니 369→418 로 49건 더 틀린 게 드러났다.
+        _ln = d.get("lostNotation") or 0
+        lost_char = d.get("lostChar")
+        if lost_char is None:                 # 옛 재집계본 폴백
+            lost_char, _ln = d["lost"], 0
+        nota = (d.get("notationOnly", d.get("notation")) or 0) + _ln
+        lost_pct = 100.0 * lost_char / d["prevOk"] if d["prevOk"] else 0.0
         unread_pct = 100.0 * d["unread"] / d["n"] if d["n"] else 0.0
-        net = d["gained"] - d["lost"]
-        # ★판정은 표기 차이(공백·표 테두리)를 무시하고 글자만 본다.
-        #  ③은 글자를 맞게 읽었으나 표기가 GT 와 다른 몫으로, ①②(실패)에는 넣지 않는다.
-        nota = d.get("notationOnly", d.get("notation"))
+        net = d["gained"] - lost_char
         summary = (
-            f'<p class="big">① 잃어버림 <b>{d["lost"]:,} 크롭</b> '
+            f'<p class="big">① 잃어버림 <b>{lost_char:,} 크롭</b> '
             f'<span class="muted">(직전 모델이 읽던 {d["prevOk"]:,} 중 </span>'
-            f'<b>{lost_pct:.1f}%</b><span class="muted">)</span> &nbsp;·&nbsp; '
+            f'<b>{lost_pct:.1f}%</b>'
+            f'<span class="muted">, 글자가 실제로 틀린 것만)</span> &nbsp;·&nbsp; '
             f'② 못 읽음 <b>{d["unread"]:,} 크롭</b> '
             f'<span class="muted">(전체 {d["n"]:,} 중 </span>'
             f'<b>{unread_pct:.1f}%</b><span class="muted">)</span>'
             f' &nbsp;·&nbsp; ③ 표기만 다름 <b>{nota:,} 크롭</b> '
-            f'<span class="muted">(글자는 맞게 읽었으나 공백·표 테두리 차이)</span><br>'
-            f'<span class="muted">실패 크롭 {d.get("fail", 0):,} = ① {d["lost"]:,} + '
+            + (f'<span class="muted">(공백·표 테두리 {nota - _ln:,} + 꼬리 기호·행번호 '
+               f'구분자 {_ln:,} — 글자는 다 맞게 읽음)</span>' if _ln else
+               '<span class="muted">(글자는 맞게 읽었으나 공백·표 테두리 차이)</span>')
+            + f'<br><span class="muted">실패 크롭 {d.get("fail", 0):,} = ① {lost_char:,} + '
             f'② {d["unread"]:,} + ③ {nota:,} &nbsp;·&nbsp; </span>'
-            f'<span class="muted">되살린 크롭 {d["gained"]:,} - 잃은 크롭 {d["lost"]:,} = '
+            f'<span class="muted">되살린 크롭 {d["gained"]:,} - 잃은 크롭 {lost_char:,} = '
             f'순증 {net:+,} 크롭</span>'
             + '</p>')
-        # ① 원인 분해 - 품명 본체를 못 읽게 된 몫(한글 오독)과 표기층을 갈라 보여준다.
+        _lc = lost_char
+        # ① 원인 분해 - 글자가 틀린 몫(①-A)에만 매긴다. 표기층은 원인이 없다.
         _cz = {k: v for k, v in (d.get("lostCauses") or {}).items() if v}
         if _cz:
             _hangul = _cz.get("한글 오독", 0)
+            _den = _lc if _lc else d["lost"]
             summary += (
-                '<p class="muted" style="margin:-6px 0 10px">① 원인별: '
+                '<p class="muted" style="margin:-6px 0 10px">① 원인별'
+                + (f'(글자가 틀린 {_den:,} 기준)' if _lc else '') + ': '
                 + " · ".join(f"{esc(k)} <b>{v:,}</b>" for k, v in _cz.items())
                 + f' &nbsp;→&nbsp; 품명 본체가 깨진 건 <b>{_hangul:,}</b>'
-                + (f' ({100.0 * _hangul / d["lost"]:.0f}%)' if d["lost"] else "")
+                + (f' ({100.0 * _hangul / _den:.0f}%)' if _den else "")
                 + ', 나머지는 영문·숫자·기호 층</p>')
     else:
         summary = ""

@@ -146,13 +146,30 @@ def judge(data: dict, baseline: str) -> None:
     newer = sorted(t for t in runs if t > baseline)
     print(f"\n평가 크롭 {data['evaluatedCrops']:,} · base 정답 {data['baseCorrect']:,}"
           f" ({100 * data['baseCorrect'] / data['evaluatedCrops']:.2f}%)")
-    print(f"{'run':<14}{'정답':>9}{'①잃어버림':>11}{'②못읽음':>10}"
+    # ★①은 <글자가 틀린 것>만 센다(2026-08-10). 꼬리 기호·행번호 구분자만 다른 몫은
+    #  품명 글자를 다 맞게 읽은 것이라 ③(표기만 다름)으로 합산한다. 판정도 이 기준이다.
+    def _lost(r: dict) -> int:
+        return r.get("lostChar", r["lost"])
+
+    def _nota(r: dict) -> int:
+        return r.get("notationOnly", 0) + r.get("lostNotation", 0)
+
+    # run 폴더가 `NNN_<태그>` 라 앞 번호가 곧 버전이다. 태그만으로는 헷갈려서 함께 찍는다.
+    def _ver(tag: str) -> str:
+        for d in glob.glob(str(HERE / f"*_{tag}")):
+            name = Path(d).name.split("_", 1)[0]
+            if name.isdigit():
+                return f"v{int(name)}"
+        return ""
+
+    print(f"{'':<5}{'run':<14}{'정답':>9}{'①잃어버림':>11}{'②못읽음':>10}"
           f"{'③표기만':>10}{'되살림':>9}{'순증':>9}")
     for tag in list(runs):
         r = runs[tag]
         mark = " ←기준" if tag == baseline else (" ←신규" if tag in newer else "")
-        print(f"{tag:<14}{r['correct']:>9,}{r['lost']:>11,}{r.get('unread', 0):>10,}"
-              f"{r.get('notationOnly', 0):>10,}{r['revived']:>9,}{r['net']:>+9,}{mark}")
+        print(f"{_ver(tag):<5}{tag:<14}{r['correct']:>9,}{_lost(r):>11,}"
+              f"{r.get('unread', 0):>10,}{_nota(r):>10,}{r['revived']:>9,}"
+              f"{r['revived'] - _lost(r):>+9,}{mark}")
     if not newer:
         print("\n새 run 이 없습니다. AWS 에서 실행 후 다시 확인하세요.")
         return
@@ -166,13 +183,17 @@ def judge(data: dict, baseline: str) -> None:
             passed = (j.get("summary") or {}).get("allPass")
             tgt = j["targets"][0]["verdict"]
         print(f"\n=== {tag} 채택 판정 (기준 {baseline}) ===")
+        # ★채택 조건 3개(2026-08-10 사용자 확정). 되살림·순증은 지표에서 뺐다.
+        #  주지표 = 잃어버림(못 읽게 되는 게 계속 생기면 신뢰가 안 된다).
+        #  단 '정답 총량 하한'을 같이 둔다 — 그게 없으면 잃어버림 29건 줄이자고
+        #  정답 704건을 잃는 교환(260810_1037 실측, 25:1)이 통과해버린다.
         rows = [
             ("타깃 판정 26/26 유지",
              f"{tgt['ft']}/{tgt['n']}" if rep else "?", "-", bool(passed)),
-            ("① 잃어버림 감소", f"{r['lost']:,}", f"{b['lost']:,}", r["lost"] < b["lost"]),
-            ("되살림 유지·증가", f"{r['revived']:,}", f"{b['revived']:,}",
-             r["revived"] >= b["revived"]),
-            ("순증 증가", f"{r['net']:+,}", f"{b['net']:+,}", r["net"] > b["net"]),
+            ("① 잃어버림 감소(글자)", f"{_lost(r):,}", f"{_lost(b):,}",
+             _lost(r) < _lost(b)),
+            ("전체 정답 유지·증가", f"{r['correct']:,}", f"{b['correct']:,}",
+             r["correct"] >= b["correct"]),
         ]
         for name, got, ref, ok in rows:
             print(f"  {'OK ' if ok else '✗  '} {name:<22} {got:>10}   (기준 {ref})")

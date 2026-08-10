@@ -35,6 +35,27 @@ def comparable(text: str) -> str:
 #  '한글 오독' 이 아니면 품명 본체는 그대로 읽고 있다는 뜻이라, 같은 593 이라도
 #  어느 층에서 잃었는지에 따라 대책(학습 강도 / 앵커 성분 / 후처리)이 갈린다.
 CAUSES = ("한글 오독", "영문 오독", "숫자 오독", "기호·괄호", "법인표기(㈜)")
+
+# ★①을 두 층으로 쪼개는 표기 정규화(2026-08-10).
+#  comparable() 은 공백·전각만 흡수해서, 꼬리 하이픈·곱셈기호·행번호 구분자 차이가
+#  '잃어버림'으로 잡힌다. 실제로는 품명 글자를 다 맞게 읽은 건이다.
+#  ★채점 기준 자체는 바꾸지 않는다 - 규칙을 correct 판정에 넣으면 base 정답도 같이
+#   올라(시뮬레이션 +401) 기준선이 흔들리고 과거 run 비교가 끊긴다.
+#   그래서 ①의 <분류>에만 쓴다: ①-A 글자가 틀림 / ①-B 표기만 다름.
+NOTATION_RULES = (
+    ("꼬리 문장부호", lambda s: re.sub(r"[.\-_/·,]+$", "", s)),
+    ("곱셈기호", lambda s: re.sub(r"[×xX*]", "*", s)),
+    # 모델이 구분자를 끼워 넣은 형태(`10-A-135-경보)`, `10-A157_경보)`)까지 걷어낸다.
+    ("선두 행번호", lambda s: re.sub(r"^\d{1,4}[-–_]?[A-Z]?[-–_]?\d{0,4}[-–_]?", "", s)),
+    ("괄호 미종결", lambda s: s + ")" * max(0, s.count("(") - s.count(")"))),
+)
+
+
+def notation_norm(text: str) -> str:
+    value = comparable(text)
+    for _, rule in NOTATION_RULES:
+        value = rule(value)
+    return value
 _CORP_MARK = re.compile(r"\(?주\)?|\(?유\)?")
 
 
@@ -71,20 +92,32 @@ def load_scan(name: str, keep: set[str]) -> dict[str, dict]:
 
 
 def load_policy() -> tuple[dict[str, str], set[str], dict[str, int]]:
-    review = json.loads(RESULT.read_text(encoding="utf-8"))
+    # ★검수본은 여러 회차가 쌓인다(2026-08-05 220장 → 2026-08-10 143장 …).
+    #  GT_REVIEW_*_result.json 을 파일명 순으로 모두 읽고, 같은 품명이 재검수되면
+    #  나중 회차가 이긴다. 파일을 새로 만들 때 코드를 고칠 필요가 없다.
+    files = sorted(HERE.glob("GT_REVIEW_*_result.json"))
+    if not files:
+        raise RuntimeError(f"검수본이 없습니다: {HERE}/GT_REVIEW_*_result.json")
+    review: list[dict] = []
+    for f in files:
+        rows = json.loads(f.read_text(encoding="utf-8"))
+        print(f"[검수본] {f.name}: {len(rows)}건")
+        review.extend(rows)
     approved: dict[str, list[str]] = {}
     for row in review:
         if row["status"] == "approved":
             approved.setdefault(name_key(row["old_gt"]), []).append(row["final_gt"])
 
+    # 같은 품명에 서로 다른 수정본이 오면 <나중 회차>를 쓴다(재검수로 본다).
+    # 파일 순서대로 append 했으므로 리스트의 마지막이 최신이다.
     conflicts = {
         key: sorted(set(map(comparable, values)))
         for key, values in approved.items()
         if len(set(map(comparable, values))) > 1
     }
-    if conflicts:
-        raise RuntimeError(f"conflicting reviewed GT mappings: {conflicts}")
-    overrides = {key: values[0] for key, values in approved.items()}
+    for key, variants in conflicts.items():
+        print(f"[검수본 충돌] {key}: {variants} → 마지막 값 채택 {approved[key][-1]!r}")
+    overrides = {key: values[-1] for key, values in approved.items()}
 
     verdicts: dict[int, str] = {}
     for line in (AUDIT / "verdicts.txt").read_text(encoding="utf-8").splitlines():
@@ -186,13 +219,22 @@ def main() -> None:
         lost = sum(base_ok[path] and not candidate_ok[path] for path in valid)
         unread = sum(not base_ok[path] and not candidate_ok[path] for path in valid)
         revived = sum(not base_ok[path] and candidate_ok[path] for path in valid)
-        # ① 을 원인별로 쪼갠다 - 같은 잃어버림이라도 층마다 대책이 다르다.
+        # ★① 을 두 층으로 나눈다(2026-08-10). 채점은 그대로 두고 분류만 쪼갠다.
+        #   ①-B = 표기 정규화하면 같아지는 건 = 품명 글자는 다 맞게 읽었다.
+        #   원인 5분할은 ①-A(글자가 실제로 틀린 것)에만 매긴다.
+        lost_paths = [p for p in valid if base_ok[p] and not candidate_ok[p]]
+        lost_notation = [p for p in lost_paths
+                         if notation_norm(policy[p][0]) == notation_norm(scan[p]["pred"])]
+        notation_set = set(lost_notation)
+        lost_char = [p for p in lost_paths if p not in notation_set]
         cause_of = {
             path: lost_cause(policy[path][0], scan[path]["pred"])
-            for path in valid if base_ok[path] and not candidate_ok[path]
+            for path in lost_char
         }
         cause_count = Counter(cause_of.values())
         run_results[tag] = {
+            "lostChar": len(lost_char),          # ①-A 글자가 틀림
+            "lostNotation": len(lost_notation),  # ①-B 표기만 다름
             "lostCauses": {c: cause_count.get(c, 0) for c in CAUSES},
             "correct": correct,
             "charWrong": len(valid) - correct,        # ① + ②
@@ -263,8 +305,11 @@ def main() -> None:
             if kind == "lost":
                 selected = [path for path in paths if base_ok[path] and not run_ok[path]]
                 if cause is not None:
-                    selected = [path for path in selected
-                                if lost_cause(policy[path][0], scan[path]["pred"]) == cause]
+                    # 원인 탭은 ①-A(글자가 틀린 것)만 담는다 - ①-B(표기)는 원인이 없다.
+                    selected = [
+                        path for path in selected
+                        if notation_norm(policy[path][0]) != notation_norm(scan[path]["pred"])
+                        and lost_cause(policy[path][0], scan[path]["pred"]) == cause]
             else:
                 selected = [path for path in paths if not run_ok[path]]
                 if len(selected) != len(paths):
