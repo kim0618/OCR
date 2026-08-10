@@ -412,12 +412,23 @@ def _history(attempts: dict[tuple[int, int], list[dict]], esc) -> str:
         mix = c.get("anchorMix") or {}
         mix_t = (f' (품명 {mix.get("item", 0):,} · 짧은숫자 {mix.get("shortNum", 0):,})'
                  if mix else "")
-        crop_train = (f'타깃 <b>{uniq}</b>'
-                      + (f' <span class="muted">({over:,}줄 복제)</span>'
-                         if over and over > (uniq or 0) else "")
-                      + (f' <span class="muted" title="앵커 구성{mix_t}">· 앵커 {anchor:,}</span>'
-                         if anchor else ' <span class="muted">· 앵커 없음</span>')
-                      ) if uniq is not None else '<span class="muted">미측정</span>'
+        # ★보간 모델은 학습 크롭이 없다(가중치 산술). '미측정' 대신 재료를 표기:
+        #  v16-0.8 = 0.8×v16 + 0.2×base. 재료 run 의 버전 번호는 같은 시도 목록에서 찾는다.
+        itp = run.get("interpolation")
+        if itp:
+            src_ver = next((f"v{j + 1}" for j, (_, _, _, _, _, r2) in enumerate(rows)
+                            if str(r2.get("runTag")) == str(itp.get("ftRun"))), "FT")
+            crop_train = (f'<b>{src_ver}-{itp.get("alphaFt"):g}</b> '
+                          f'<span class="muted" title="가중치 보간: '
+                          f'{itp.get("alphaFt"):g}×{src_ver} + '
+                          f'{1 - itp.get("alphaFt"):g}×base, 학습 없음">보간</span>')
+        else:
+            crop_train = (f'타깃 <b>{uniq}</b>'
+                          + (f' <span class="muted">({over:,}줄 복제)</span>'
+                             if over and over > (uniq or 0) else "")
+                          + (f' <span class="muted" title="앵커 구성{mix_t}">· 앵커 {anchor:,}</span>'
+                             if anchor else ' <span class="muted">· 앵커 없음</span>')
+                          ) if uniq is not None else '<span class="muted">미측정</span>'
         # 총크롭 = 그 타깃이 코퍼스/기준셋에 가지고 있던 크롭 전량("가진 것").
         # 옆의 학습·판정 크롭은 그중 실제로 쓴 것 — 학습분은 검증용 20장을 뺀 수치다.
         pool = run.get("pool") or {}

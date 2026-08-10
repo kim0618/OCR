@@ -49,6 +49,7 @@ TARGETS=""
 DATASET_FROM=""
 WORKERS=""
 DEMO_EPOCHS_ARG=20
+DEMO_LR=""             # --lr=1e-5 형식. 비우면 config(3e-5) 그대로
 EPOCH_LADDER=0
 EPOCH_CLEANUP=0
 DEMO_SCAN=1
@@ -62,6 +63,7 @@ for a in "$@"; do
     --dataset-from=*) DATASET_FROM="${a#*=}" ;;
     --workers=*) WORKERS="${a#*=}" ;;
     --epochs=*) DEMO_EPOCHS_ARG="${a#*=}"; EPOCHS_EXPLICIT=1 ;;
+    --lr=*) DEMO_LR="${a#*=}" ;;
     --epoch-ladder) EPOCH_LADDER=1 ;;
     --epoch-cleanup) EPOCH_CLEANUP=1 ;;
     --no-scan) DEMO_SCAN=0 ;;
@@ -441,6 +443,13 @@ PY
     # 생성해 SimpleDataSet 안에서 random.seed(None)을 호출한다. 실제 데이터 매핑과
     # RecConAug/RecAug가 매 실행 달라지는 최초 원인이므로 자식 프로세스에 명시 주입한다.
     TRAIN_OVERRIDE="$TRAIN_OVERRIDE -o Global.seed=1024"
+    # ★lr 실험(2026-08-10, wf80 채택 후 다음 카드). 잃어버림의 근원은 가중치 이동 총량이고
+    #  타깃(0→26/26)은 마진이 크므로, lr 을 낮춰 <처음부터 덜 움직이는> 모델을 시도한다.
+    #  보간(사후 롤백)과 같은 목표의 다른 경로. 실패 판정 = 타깃 26/26 미달 시 그 자리에서 기각.
+    if [ -n "$DEMO_LR" ]; then
+      TRAIN_OVERRIDE="$TRAIN_OVERRIDE -o Train.learning_rate=$DEMO_LR"
+      echo "[데모] lr 오버라이드: $DEMO_LR (config 기본 3e-5)"
+    fi
     if [ "$REPRO_TRACE" = "1" ]; then
       if [ "$EPOCHS_EXPLICIT" != "1" ]; then
         DEMO_EPOCHS=1
