@@ -25,6 +25,13 @@ sys.path.insert(0, HERE)
 from finetune_ledger import CORPUS_DIR  # noqa: E402
 from finetune_report import BASE_MODEL, predict_all  # noqa: E402
 
+# ★판정 기준은 저울(recount_reviewed_gt)과 <같은 함수>를 써야 한다(2026-08-10 사고).
+#  저울은 comparable() 로 NFKC·공백을 흡수하는데 판정만 strict 비교였다. 1단계 타깃
+#  (세파록스캡슐)은 GT 에 공백이 없어 드러나지 않다가, 2단계 4타깃에서 실패 5건 중
+#  4건이 <공백만 다른 정답>으로 잡혀 run 전체가 기각됐다.
+sys.path.insert(0, os.path.join(HERE, "finetune", "demo"))
+from recount_reviewed_gt import comparable  # noqa: E402
+
 MANIFEST = os.path.join(CORPUS_DIR, "dataset", "manifest.json")
 TEST_LIST = os.path.join(CORPUS_DIR, "test.txt")
 
@@ -76,7 +83,7 @@ def main() -> int:
     details = []
     for (rel, gt), prediction in zip(rows, predictions):
         target = next((name for name in targets if keys[name] in gt.replace(" ", "")), None)
-        ok = (prediction or "").strip() == gt.strip()
+        ok = comparable(prediction or "") == comparable(gt)
         details.append({"path": rel, "gt": gt, "pred": prediction, "ok": ok,
                         "target": target})
     for target in targets:

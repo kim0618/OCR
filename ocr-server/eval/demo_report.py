@@ -38,6 +38,16 @@ from finetune_ledger import CORPUS_DIR  # noqa: E402
 from finetune_report import _report_id, _write_text, \
     PREDICTIONS_JSONL, BASE_MODEL  # noqa: E402
 
+# ★판정 비교는 저울(recount_reviewed_gt.comparable)과 같은 함수를 쓴다 - 기준이 갈리면
+#  "저울로는 정답인데 판정은 실패"가 생긴다(2026-08-10 2단계 사고).
+sys.path.insert(0, os.path.join(HERE, "finetune", "demo"))
+from recount_reviewed_gt import comparable as _cmp_raw  # noqa: E402
+
+
+def _cmp(text: str | None) -> str:
+    return _cmp_raw(text or "")
+
+
 MANIFEST = os.path.join(CORPUS_DIR, "dataset", "manifest.json")
 RUNS_DIR = os.path.join(HERE, "runs")
 # 데모 산출물은 벤치/본판 리포트(reports/)와 섞지 않고 finetune/demo/ 아래로 모은다.
@@ -238,8 +248,11 @@ def main() -> int:
     for t in targets:
         rows = by_target[t]
         n = len(rows)
-        ft_ok = sum((e["finetuned"] or "").strip() == (e["gt"] or "").strip() for e in rows)
-        b_ok = sum((e["base"] or "").strip() == (e["gt"] or "").strip() for e in rows)
+        # ★저울(recount_reviewed_gt.comparable)과 같은 기준으로 센다 - 공백·전각 차이는
+        #  글자를 맞게 읽은 것이다. strict 비교였을 때 2단계에서 <공백만 다른 정답> 4건이
+        #  실패로 잡혀 run 이 통째로 기각됐다(2026-08-10).
+        ft_ok = sum(_cmp(e["finetuned"]) == _cmp(e["gt"]) for e in rows)
+        b_ok = sum(_cmp(e["base"]) == _cmp(e["gt"]) for e in rows)
         verdicts[t] = {"n": n, "ft": ft_ok, "base": b_ok,
                        "pass": n > 0 and ft_ok == n}
     all_pass = all(v["pass"] for v in verdicts.values())
