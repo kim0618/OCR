@@ -50,6 +50,7 @@ DATASET_FROM=""
 WORKERS=""
 DEMO_EPOCHS_ARG=20
 DEMO_LR=""             # --lr=1e-5 형식. 비우면 config(3e-5) 그대로
+DEMO_INTERP=0          # --interp: 판정 통과 시 학습 직후 보간 α 스윕까지 자동 실행
 EPOCH_LADDER=0
 EPOCH_CLEANUP=0
 DEMO_SCAN=1
@@ -67,6 +68,7 @@ for a in "$@"; do
     --epoch-ladder) EPOCH_LADDER=1 ;;
     --epoch-cleanup) EPOCH_CLEANUP=1 ;;
     --no-scan) DEMO_SCAN=0 ;;
+    --interp) DEMO_INTERP=1 ;;
     --repro-trace) REPRO_TRACE=1 ;;
   esac
 done
@@ -261,20 +263,13 @@ PY
     DEMO_ROUND=$(( (DEMO_N + 1) / 2 ))
     if [ $((DEMO_N % 2)) -eq 1 ]; then DEMO_STEP=1; else DEMO_STEP=2; fi
     DEMO_MODELS=eval/finetune/demo/models
-    DEMO_PREV="$DEMO_MODELS/step$((DEMO_N - 1))"    # 바로 앞 단계 모델 = 이번 시작점
+    # ★★2026-08-10 사용자 확정: <모든 단계가 official base 재시작 + 타깃만 누적>.
+    #  이전의 '직전 단계 모델 이어받기'는 폐기된 설계의 잔재였다(실제 17개 run 전부
+    #  base 재시작이었고, demo/models/step1 에는 마지막 통과 run(기각된 lr 실험 v20)이
+    #  들어 있어 이어받으면 엉뚱한 시작점이 된다). base 재시작이므로 저울(base 정답
+    #  30,620)과 판정 비교도 항상 base 대비로 일정하다.
     DEMO_CMP_ARGS=""
-    if [ "$DEMO_N" -ge 2 ]; then
-      if [ ! -f "$DEMO_PREV/best_accuracy.pdparams" ]; then
-        echo "★${DEMO_N}번째 단계인데 직전 단계 모델이 없습니다: $DEMO_PREV/best_accuracy.pdparams"
-        echo "  (단계는 순서대로 이어져야 합니다 - 직전 단계를 먼저 완료하세요)"; exit 1
-      fi
-      TRAIN_OVERRIDE="-o Train.pretrain_weight_path=$PWD/$DEMO_PREV/best_accuracy.pdparams"
-      BASE_TAG="demo_step$((DEMO_N - 1))"
-      DEMO_CMP_ARGS="--compare-dir $PWD/$DEMO_PREV/inference --compare-step $((DEMO_N - 1))"
-      echo "[데모] ${DEMO_ROUND}회차 ${DEMO_STEP}단계 (통산 ${DEMO_N}번째 모델) - 시작 모델 = 직전 $((DEMO_N - 1))번째 모델"
-    else
-      echo "[데모] 1회차 1단계 (통산 1번째 모델) - 시작 모델 = official base"
-    fi
+    echo "[데모] ${DEMO_ROUND}회차 ${DEMO_STEP}단계 (타깃 ${DEMO_N}개 누적) - 시작 모델 = official base (항상 재시작)"
     # 기준셋(9,001) 소스 목록은 '학습 금지'인 동시에 '판정셋 식별자'다:
     #  그 문서에서 온 크롭 = 판정셋, 나머지(코퍼스) = 학습셋. 홀드아웃 불필요.
     # ★앵커 설정 - 아래 세 상수를 직접 고쳐서 바꾼다(환경변수 아님).
@@ -505,15 +500,11 @@ PY
     ( cd "$_EV" && sha256sum ./* > SHA256SUMS 2>/dev/null ) || true
     ( cd eval/finetune_corpus && sha256sum labels.txt labels_correct.txt \
         labels_correct.meta.jsonl replay_sources.txt 2>/dev/null ) >> "$_EV/SHA256SUMS" || true
-    # 시작 가중치 해시 — A/A 는 <같은 출발점>이어야 성립한다. 1단계면 official 사전학습
-    # 캐시, 2단계 이상이면 직전 통과본의 pdparams 를 남긴다.
-    if [ "$DEMO_N" -ge 2 ]; then
-      sha256sum "$DEMO_PREV/best_accuracy.pdparams" >> "$_EV/SHA256SUMS" 2>/dev/null || true
-    else
-      _PW=$(find ~/.paddlex -name "korean_PP-OCRv5_mobile_rec_pretrained.pdparams" 2>/dev/null | head -1)
-      if [ -n "$_PW" ]; then sha256sum "$_PW" >> "$_EV/SHA256SUMS" || true
-      else echo "# start-weights cache not found (URL download at train time)" >> "$_EV/SHA256SUMS"; fi
-    fi
+    # 시작 가중치 해시 — A/A 는 <같은 출발점>이어야 성립한다.
+    # 모든 단계가 base 재시작이므로 항상 official 사전학습 캐시를 남긴다(2026-08-10).
+    _PW=$(find ~/.paddlex ~/.paddleocr -name "korean_PP-OCRv5_mobile_rec_pretrained.pdparams" 2>/dev/null | head -1)
+    if [ -n "$_PW" ]; then sha256sum "$_PW" >> "$_EV/SHA256SUMS" || true
+    else echo "# start-weights cache not found (URL download at train time)" >> "$_EV/SHA256SUMS"; fi
     if [ "$EPOCH_LADDER" = "1" ]; then
       # output/ 에 과거 iter_epoch_* 가 남아 있어도 이번 run 산출물로 오인하지 않게 하는 경계.
       touch "$_EV/epoch_ladder.started"
@@ -777,15 +768,9 @@ PY
       echo "[다음 타깃 스캔] 에폭 궤적의 exact checkpoint 스캔으로 대체했습니다"
     elif [ "$DEMO_PASS" = "1" ] && [ "$DEMO_SCAN" = "1" ]; then
       echo "[다음 타깃 스캔] 기준셋 품명 크롭 판독 → 잃어버린 품명 / 못 읽는 품명 후보"
-      # 대조 상대 = 이 run 의 <시작 모델> 스캔. 파일명 순서로 고르면 안 된다 -
-      # 재시도(1-1-v2, v3...)는 서로 형제라 직전 시도가 부모가 아니다(둘 다 base 출발).
-      # 1단계면 base 기준선, 그 외에는 step<N-1> 심링크가 가리키는 run 의 스캔.
-      if [ "$DEMO_N" -le 1 ]; then
-        _PREV_SCAN="eval/finetune/demo/scans/000_base.jsonl"
-      else
-        _PREV_TAG=$(readlink "$DEMO_MODELS/step$((DEMO_N - 1))" 2>/dev/null | sed -E 's#.*/versions/run_([^/]+)/.*#\1#')
-        _PREV_SCAN="eval/finetune/demo/scans/${_PREV_TAG}.jsonl"
-      fi
+      # 대조 상대 = 시작 모델 스캔. 모든 단계가 base 재시작이므로 항상 base 기준선이다
+      # (2026-08-10. 이전의 step<N-1> 심링크 추적은 이어학습 설계의 잔재라 제거).
+      _PREV_SCAN="eval/finetune/demo/scans/000_base.jsonl"
       if [ -f "$_PREV_SCAN" ]; then
         echo "  대조 상대(시작 모델): $_PREV_SCAN"
         _PREV_ARG="--prev-scan $_PREV_SCAN"
@@ -801,6 +786,15 @@ PY
       echo "  python eval/demo_next_target.py --run-tag $RUN_TAG --exclude \"$TARGETS\""
     else
       echo "[다음 타깃 스캔] 건너뜀 - 판정 실패 모델은 체인/스캔에 넣지 않습니다"
+    fi
+    # ★보간 스윕(--interp, 2026-08-10): 학습 → 보간이 wf80 채택으로 검증된 표준 레시피다.
+    #  판정 통과본에만 얹는다. dataset 이 아직 이 run 것일 때 돌아야 판정 크롭이 맞다.
+    if [ "$DEMO_INTERP" = "1" ] && [ "$DEMO_PASS" = "1" ]; then
+      echo "[보간 스윕] base↔${RUN_TAG} α 스윕 시작 (학습 없음, 추론만)"
+      bash eval/finetune/demo/run_interp_sweep.sh --ft-run="$RUN_TAG" \
+        || echo "  ★보간 스윕 실패 - 수동: bash eval/finetune/demo/run_interp_sweep.sh --ft-run=$RUN_TAG"
+    elif [ "$DEMO_INTERP" = "1" ]; then
+      echo "[보간 스윕] 건너뜀 - 판정 실패 모델에는 얹지 않습니다"
     fi
     echo "==================== 파인튜닝 끝 [$(date +'%F %T')] ===================="
     echo "★★소생 데모 리포트(이번 단계): ${DEMO_OUT:-eval/finetune/demo}/DEMO_REPORT_${RUN_TAG}.html"

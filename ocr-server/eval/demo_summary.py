@@ -478,8 +478,83 @@ def _history(attempts: dict[tuple[int, int], list[dict]], esc) -> str:
                          f'style="text-align:right"><b>합계</b></td>'
                          f'<td><b>${total_usd:.2f}</b></td><td></td></tr>')
             p.append("</table></details>")
+    p.append(_best_models(attempts, esc))
     p.append(_lineage(attempts, esc))
     return "\n".join(p)
+
+
+# ★대표 모델 비교(2026-08-10 사용자 요청). 실행 이력 20행 중 <지금 의미 있는 두 모델>만
+#  따로 뽑아 실행 이력과 모델 계보 사이에 표로 보여준다. 채택이 바뀌면 이 목록을 갱신할 것.
+BEST_MODELS = [
+    ("260807_1302", "학습 최선 (앵커 8,016 무작위)", False),
+    ("260810_wf80", "★최종 채택 · 가중치 보간 v16-0.8 (학습 없음)", True),
+]
+
+
+def _best_models(attempts: dict[tuple[int, int], list[dict]], esc) -> str:
+    """v16 vs wf80 요약 표. 수치는 전부 GT_REVIEW_RECOUNT(재집계 단일 출처)에서 읽는다."""
+    try:
+        with open(REVIEW_RECOUNT, encoding="utf-8") as handle:
+            reviewed = json.load(handle)
+    except OSError:
+        return ""
+    runs = reviewed.get("runs") or {}
+    base_ok = reviewed.get("baseCorrect") or 0
+    n_eval = reviewed.get("evaluatedCrops") or 0
+
+    # 버전 번호는 실행 이력과 같은 규칙(폴더 NNN → vNN)으로 붙인다.
+    ver_of: dict[str, str] = {}
+    for lst in attempts.values():
+        ordered = sorted(lst, key=lambda r: str(r.get("generatedAt") or ""))
+        for i, run in enumerate(ordered):
+            ver_of[str(run.get("runTag"))] = f"v{i + 1}"
+
+    rows = []
+    for tag, label, adopted in BEST_MODELS:
+        r = runs.get(tag)
+        if not r:
+            continue
+        lost = r.get("lostChar", r.get("lost", 0))
+        nota = (r.get("notationOnly") or 0) + (r.get("lostNotation") or 0)
+        style = ' style="background:#f0f9f2"' if adopted else ""
+        rows.append(
+            f'<tr{style}><td><b>{ver_of.get(tag, "-")}</b></td>'
+            f'<td>{esc(label)}</td>'
+            f'<td class="muted">{esc(tag)}</td>'
+            f'<td><b>26/26</b></td>'
+            f'<td><b>{r["correct"]:,}</b> <span class="muted">'
+            f'({100.0 * r["correct"] / n_eval:.1f}%)</span></td>'
+            f'<td><b>{lost:,}</b> <span class="muted">'
+            f'({100.0 * lost / base_ok:.2f}%)</span></td>'
+            f'<td>{r.get("unread", 0):,}</td><td>{nota:,}</td>'
+            f'<td>{r["revived"]:,}</td><td>{r["revived"] - lost:+,}</td></tr>')
+        # ★남은 잃어버림·다음 타깃 후보 - 실행 이력 행과 <완전히 같은 구조>로,
+        #  표 안의 전체폭 행 + details 에 넣는다(2026-08-10). 표 밖 독립 details 로 두면
+        #  후보 블록 내부의 잉여 닫힘 태그가 접기 구조를 깨뜨려 내용이 밖으로 샌다.
+        #  표 셀 안에서는 브라우저 파서가 이를 격리해 접힘이 유지된다(실행 이력에서 검증됨).
+        run = next((r2 for lst in attempts.values() for r2 in lst
+                    if str(r2.get("runTag")) == tag), None)
+        body = _next_block(run, esc, attempts, id_suffix="best") if run else ""
+        if body:
+            rows.append(
+                f'<tr><td colspan="10" style="background:#f6faf7">'
+                f'<details><summary style="cursor:pointer;color:#0a7a3d;'
+                f'font-weight:700">▸ 남은 잃어버림 · 다음 타깃 후보</summary>'
+                f'<div style="padding:8px 4px 2px">{body}</div>'
+                f'</details></td></tr>')
+    if not rows:
+        return ""
+    return (
+        '<h3>대표 모델</h3>'
+        '<p class="muted">실행 이력 전체 중 지금 기준이 되는 두 모델. '
+        '수치는 GT 재검수 반영 재집계(GT_REVIEW_RECOUNT) 기준, '
+        '①은 글자가 실제로 틀린 것만.</p>'
+        '<table><tr><th style="width:56px">버전</th><th>모델</th>'
+        '<th style="width:110px">run</th><th style="width:76px">타깃</th>'
+        '<th style="width:150px">정답</th><th style="width:120px">①잃어버림</th>'
+        '<th style="width:96px">②못읽음</th><th style="width:96px">③표기만</th>'
+        '<th style="width:90px">되살림</th><th style="width:90px">순증</th></tr>'
+        + "".join(rows) + "</table>")
 
 
 def _next_targets(run: dict) -> dict | None:
@@ -548,7 +623,8 @@ _CAUSE_HELP = {
 }
 
 
-def _cause_tabs(tag: str, all_rows: list, by_cause: dict, esc) -> str:
+def _cause_tabs(tag: str, all_rows: list, by_cause: dict, esc,
+                id_suffix: str = "") -> str:
     """① 잃어버림을 원인별 탭으로. 재집계본에 원인 분류가 없으면 기존 표 하나로 폴백.
 
     같은 593 이라도 '한글 오독'이냐 '기호·괄호'냐에 따라 대책이 갈린다 - 한 표에
@@ -558,7 +634,10 @@ def _cause_tabs(tag: str, all_rows: list, by_cause: dict, esc) -> str:
     if not by_cause:
         return _cand_table(all_rows, esc, empty)
     # 탭 그룹 id 는 JS 식별자로 쓰이므로 ASCII 만 남긴다(실행번호는 이미 ASCII).
-    g = "L" + re.sub(r"[^0-9A-Za-z_]", "", tag)
+    # ★같은 run 의 탭이 페이지에 두 번 나올 수 있다(실행 이력 + 대표 모델, 2026-08-10).
+    #  id 가 겹치면 클릭이 항상 먼저 나온 쪽(접힌 이력 행)만 바꿔 탭이 죽은 것처럼 보인다
+    #  → 호출처가 id_suffix 로 그룹을 갈라야 한다.
+    g = "L" + re.sub(r"[^0-9A-Za-z_]", "", tag + id_suffix)
     n_all = sum(sum(r.get("hits", 0) for r in rows) for rows in by_cause.values())
     panes = [("전체", f"{n_all:,}", all_rows, "")]
     for cause, rows in by_cause.items():
@@ -655,8 +734,13 @@ def _scan_delta(tag: str, prev_name: str) -> dict | None:
             "gained": gained, "unread": unread, "notation": notation}
 
 
-def _next_block(run: dict, esc, attempts: dict | None = None) -> str:
-    """다음 타깃 후보 — 이 모델이 잃은 품명 / 아직 못 읽는 품명."""
+def _next_block(run: dict, esc, attempts: dict | None = None,
+                id_suffix: str = "") -> str:
+    """다음 타깃 후보 — 이 모델이 잃은 품명 / 아직 못 읽는 품명.
+
+    id_suffix: 같은 run 을 한 페이지에 두 번 렌더할 때(실행 이력 + 대표 모델)
+    탭 요소 id 충돌을 막는 구분자.
+    """
     nt = _next_targets(run)
     if not nt:
         return ""
@@ -739,7 +823,7 @@ def _next_block(run: dict, esc, attempts: dict | None = None) -> str:
         summary +
         f'<p><b>① 이번 회차 2단계 타깃 후보</b> '
         f'<span class="muted">- 직전 모델은 읽던 품명을 이 모델이 잃었다</span></p>'
-        + _cause_tabs(_tag, lost_items, lost_by_cause, esc)
+        + _cause_tabs(_tag, lost_items, lost_by_cause, esc, id_suffix)
         + f'<p><b>② 다음 회차 1단계 타깃 후보</b> '
           f'<span class="muted">- 이 모델도 여전히 못 읽는 품명</span></p>'
         + _cand_table(unread_items, esc, "해당 품명이 없습니다."))
