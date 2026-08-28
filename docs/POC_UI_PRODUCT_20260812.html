@@ -1,0 +1,1243 @@
+<!doctype html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MySuit OCR · POC</title>
+<!-- 제품 스타일시트를 그대로 사용한다. -->
+<link rel="stylesheet" href="../mysuit-ocr/src/app/globals.css">
+<style>
+body{overflow:hidden}
+.shell{display:flex;height:100vh;width:100vw}
+
+.side{width:150px;flex:0 0 150px;background:var(--panel);box-shadow:var(--shadowSoft);
+ padding:16px 12px;display:flex;flex-direction:column;gap:14px;overflow:hidden}
+.side-top{height:32px;display:flex;align-items:center;justify-content:space-between}
+.side-brand{font-size:16px;font-weight:700}
+.side-burger{border:0;background:transparent;color:var(--muted);font-size:18px;line-height:1;
+ width:28px;height:28px;border-radius:8px;display:grid;place-items:center;cursor:pointer}
+.side-lab{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.4px}
+.side-sel{width:100%;background:var(--panel2);border:1px solid var(--border);border-radius:7px;
+ padding:6px 8px;color:var(--text);font-size:12px;font-family:inherit}
+.side-menu{height:20px;display:flex;align-items:center}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav a{display:flex;align-items:center;gap:8px;padding:8px 9px;border-radius:9px;color:var(--muted);
+ text-decoration:none;font-size:13px;font-weight:600;cursor:pointer}
+.nav a:hover{background:var(--panel2)}
+.nav a.on{background:var(--accentBg);color:var(--accent);font-weight:800}
+.nav .no{width:18px;height:18px;border-radius:6px;background:var(--panel2);color:var(--muted);
+ display:grid;place-items:center;font-size:9px;font-weight:800;flex:none}
+.nav a.on .no{background:var(--accent);color:#fff}
+
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.hd{height:54px;flex:none;background:var(--panel);box-shadow:var(--shadowSoft);display:flex;
+ align-items:center;justify-content:space-between;padding:0 16px;position:relative;z-index:2}
+.hd h1{margin:0;font-size:15px;font-weight:800}
+.hd-r{display:flex;align-items:center;gap:8px}
+
+.body{flex:1;min-height:0;padding:14px;overflow:hidden}
+.view{height:100%;display:none;flex-direction:column;gap:10px}
+.view.on{display:flex}
+
+.card{background:var(--panel);border-radius:12px;box-shadow:var(--shadow);display:flex;
+ flex-direction:column;min-width:0;overflow:hidden;flex:none}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:10px;
+ padding:10px 13px;border-bottom:1px solid var(--border);flex:none}
+.card-h .t{font-size:13px;font-weight:800;color:var(--accent);letter-spacing:.2px}
+.scroll{overflow:auto;min-height:0}
+.fill{flex:1;min-height:0}
+.cols{display:grid;gap:10px;flex:1;min-height:0}
+.c-46{grid-template-columns:.9fr 1.1fr}
+.c-73{grid-template-columns:1.5fr .5fr}
+.stack{display:flex;flex-direction:column;gap:10px;min-height:0;overflow-y:auto;padding-right:2px}
+
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;flex:none}
+.kpi{background:var(--panel);border-radius:10px;box-shadow:var(--shadowSoft);padding:11px 13px;
+ position:relative;overflow:hidden}
+.kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);
+ opacity:.55}
+.kpi span{display:block;font-size:11px;color:var(--muted);font-weight:700;margin-bottom:3px}
+.kpi b{font-size:18px;font-weight:800;letter-spacing:-.02em}
+
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:var(--panel2);color:var(--muted);font-weight:700;text-align:left;padding:8px 10px;
+ border-bottom:1px solid var(--border);white-space:nowrap;position:sticky;top:0;z-index:1}
+td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+tbody tr{transition:background .12s}
+tbody tr:hover td{background:var(--panel2)}
+tbody tr.flag:hover td{background:rgba(217,119,6,.13)}
+tbody tr.chg:hover td{background:var(--accentBg)}
+tbody tr:last-child td{border-bottom:0}
+.n{text-align:right;font-variant-numeric:tabular-nums}
+.fkey{font-family:ui-monospace,Consolas,monospace;font-size:10.5px;color:var(--muted)}
+tr.tot td{background:var(--panel2);font-weight:800}
+
+.tag{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:3px 8px;
+ font-size:10.5px;font-weight:800;white-space:nowrap}
+.tag.ac{background:var(--accentBg);color:var(--accent)}
+.tag.ok{background:rgba(22,163,74,.12);color:#16a34a}
+.tag.wa{background:rgba(217,119,6,.13);color:#d97706}
+.tag.er{background:rgba(220,38,38,.12);color:#dc2626}
+.tag.mu{background:var(--panel2);color:var(--muted)}
+.tag.dot::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor}
+.cf{font-variant-numeric:tabular-nums;font-weight:800;text-align:right}
+.cf.h{color:#16a34a}.cf.m{color:#d97706}.cf.l{color:#dc2626}
+tr.flag td{background:rgba(217,119,6,.07)}
+tr.chg td{background:var(--accentBg)}
+tr.dim td{color:var(--muted)}
+.was{color:#dc2626;font-weight:800}
+.now{color:#16a34a;font-weight:800}
+.none{color:#dc2626;font-style:italic}
+
+.doc{background:var(--panel2);flex:1;min-height:0;display:flex;align-items:flex-start;
+ justify-content:center;padding:12px;overflow:auto}
+.paper{width:100%;max-width:560px;aspect-ratio:210/297;background:#fff;color:#1f2937;
+ box-shadow:0 6px 26px rgba(0,0,0,.22);padding:34px 30px;font-size:10.5px;flex:none}
+.paper h4{margin:0 0 20px;text-align:center;font-size:17px;letter-spacing:.26em;font-weight:800}
+.paper .pm{display:grid;grid-template-columns:1fr 1fr;gap:2px 10px;margin-bottom:11px}
+.paper .pm div{border-bottom:1px solid #d5dae0;padding:5px 3px}
+.paper .pm i{font-style:normal;color:#98a1ab;display:inline-block;width:60px}
+.paper table{border:1px solid #b6bec6;font-size:9.5px}
+.paper th,.paper td{border:1px solid #d0d6dc;padding:5px 6px;background:transparent;color:#1f2937;
+ position:static;white-space:normal}
+.paper th{background:#eef1f4;color:#5c656f;font-size:9px}
+.paper .tot{margin-top:9px;text-align:right;font-size:11px;font-weight:800}
+
+/* RunOCR 실행 전 - 제품 uw-runocr 구조 */
+.tpl{display:flex;gap:8px;overflow-x:auto;padding:2px;flex:none}
+.tplcard{width:88px;flex:none;border:1px solid var(--border);border-radius:9px;background:var(--panel);
+ padding:5px;cursor:pointer;box-shadow:var(--shadowSoft)}
+.tplcard.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.tplcard .thumb{height:44px;border-radius:6px;background:var(--panel2);display:grid;place-items:center;
+ overflow:hidden}
+.tplcard .thumb u{width:70%;height:70%;border-radius:2px;background:
+ repeating-linear-gradient(180deg,var(--border) 0 1px,transparent 1px 5px);text-decoration:none}
+.tplcard .nm{font-size:10px;font-weight:700;text-align:center;margin-top:4px;white-space:nowrap;
+ overflow:hidden;text-overflow:ellipsis}
+.guide{padding:12px 13px;font-size:11.5px}
+.guide h5{margin:0 0 3px;font-size:11.5px;font-weight:800}
+.guide .gs{margin-bottom:12px}
+.guide .gs:last-child{margin-bottom:0}
+.guide .gd{font-size:10px;color:var(--muted);margin-bottom:5px}
+.guide ul{margin:0;padding-left:15px}
+.guide li{margin:2px 0;line-height:1.6}
+.runbtn{width:100%;padding:12px;border-radius:10px;border:1px solid var(--accent);
+ background:var(--accent);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit}
+.mdsel{width:100%;background:var(--panel);border:1px solid var(--border);border-radius:9px;
+ padding:9px 10px;font-size:12.5px;color:var(--text);font-family:inherit;font-weight:700}
+
+/* 결과 패널 - 제품 OcrResultPanel 구조 */
+.ortabs{display:flex;gap:4px;padding:8px 13px 0;border-bottom:1px solid var(--border);flex:none}
+.ortab{border:0;background:transparent;padding:8px 13px;border-radius:8px 8px 0 0;font-size:12.5px;
+ font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit;display:flex;align-items:center;
+ gap:6px;border-bottom:2px solid transparent;margin-bottom:-1px}
+.ortab:hover{color:var(--text)}
+.ortab.on{color:var(--accent);border-bottom-color:var(--accent);background:var(--accentBg)}
+.ortab .bdg{border-radius:99px;padding:1px 6px;font-size:9.5px;font-weight:900;
+ background:rgba(220,38,38,.14);color:#dc2626}
+.orbody{flex:1;min-height:0;display:flex;flex-direction:column}
+.orpane{display:none;flex:1;min-height:0;flex-direction:column}
+.orpane.on{display:flex}
+.modes{display:flex;gap:6px;align-items:center;padding:10px 13px;border-bottom:1px solid var(--border);
+ flex:none}
+.modes .sp{margin-left:auto;display:flex;gap:6px;align-items:center}
+.valsum{padding:12px 13px;border-bottom:1px solid var(--border);flex:none;display:flex;
+ align-items:center;gap:10px;flex-wrap:wrap}
+.valsum .h{font-size:13px;font-weight:800}
+.valsec{padding:11px 13px 0;flex:none}
+.valsec .st{display:flex;align-items:center;justify-content:space-between;gap:8px;
+ font-size:11.5px;font-weight:800;color:var(--muted);margin-bottom:7px}
+.valrow{display:grid;grid-template-columns:10px minmax(140px,1.5fr) minmax(0,2.4fr) 62px;gap:9px;
+ align-items:center;padding:8px 10px;border:1px solid var(--border);border-radius:9px;
+ margin-bottom:6px;font-size:12px;cursor:pointer;background:var(--panel)}
+.valrow:hover{background:var(--panel2)}
+.valrow .dt{width:8px;height:8px;border-radius:50%}
+.valrow .nm{font-weight:700}
+.valrow .nm em{font-style:normal;font-size:10px;color:var(--muted);margin-left:4px}
+.valrow .vl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.d-er{background:#dc2626}.d-wa{background:#d97706}.d-ok{background:#16a34a}
+.cellin{width:100%;border:1px solid var(--border);border-radius:6px;padding:5px 8px;
+ background:var(--panel);color:var(--text);font-family:inherit;font-size:11.5px}
+tr.flag .cellin{border-color:#d97706}
+.stepbar{height:32px;border-radius:9px;overflow:hidden;display:flex;background:var(--panel2)}
+.stepbar span{display:grid;place-items:center;font-size:11px;font-weight:800;color:#fff}
+.aggt{display:none}
+.aggt.on{display:table}
+.fbar{display:flex;gap:7px;flex-wrap:wrap;padding:10px 13px;border-bottom:1px solid var(--border);
+ flex:none}
+.fchip{border:1px solid var(--border);background:var(--panel2);border-radius:9px;padding:6px 10px;
+ cursor:pointer;font-family:inherit;text-align:left;line-height:1.3}
+.fchip:hover{border-color:var(--accent)}
+.fchip.on{border-color:var(--accent);background:var(--accentBg)}
+.fchip b{display:block;font-size:11.5px;font-weight:800}
+.fchip s{display:block;font-size:9.5px;color:var(--muted);text-decoration:none}
+.barwrap{display:flex;align-items:center;gap:7px}
+.mini{flex:1;height:6px;border-radius:99px;background:var(--panel2);overflow:hidden;min-width:52px}
+.mini i{display:block;height:100%}
+.pct{font-size:11px;font-weight:800;font-variant-numeric:tabular-nums;width:34px;text-align:right}
+.hstate{display:none;flex:1;min-height:0;flex-direction:column;gap:10px}
+.hstate.on{display:flex}
+.filt{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 13px}
+.filt .fl{font-size:12px;font-weight:700;color:var(--muted)}
+.mkhit{outline:2px solid var(--accent);outline-offset:1px;background:rgba(8,145,178,.10)!important}
+#issueTable tbody tr{cursor:pointer}
+#issueTable tbody tr.sel td{background:var(--accentBg)}
+.runrow{display:grid;grid-template-columns:18px 1fr auto;gap:8px;align-items:center;padding:9px 12px;
+ border-bottom:1px solid var(--border);cursor:pointer;font-size:12px}
+.runrow:hover{background:var(--panel2)}
+.runrow.on{background:var(--accentBg)}
+.runrow i{font-style:normal;font-size:10px;color:var(--muted)}
+.runrow b{display:block;font-size:12px;font-weight:700}
+.runrow s{display:block;font-size:10px;color:var(--muted);text-decoration:none}
+
+.mixbar,.routebar{height:28px;border-radius:8px;overflow:hidden;display:flex;background:var(--panel2)}
+.mixbar span,.routebar span{display:grid;place-items:center;font-size:10.5px;font-weight:800}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:8px}
+.legend i{width:9px;height:9px;border-radius:3px;display:inline-block;margin-right:5px;
+ vertical-align:-1px;font-style:normal}
+
+.seg{display:inline-flex;padding:3px;border:1px solid var(--border);border-radius:10px;
+ background:var(--panel2)}
+.seg button{border:0;background:transparent;padding:6px 12px;border-radius:8px;font-size:12px;
+ font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit}
+.seg button.on{background:var(--panel);color:var(--text);box-shadow:var(--shadowSoft)}
+.gt{display:none}
+.show-gt .gt{display:table-cell}
+
+.bar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;padding:10px 13px;
+ border-top:1px solid var(--border);flex:none}
+.bar .lab{font-size:11px;font-weight:800;color:var(--muted);margin-right:2px}
+.spec{padding:11px 13px;font-size:11.5px;line-height:1.9}
+.spec dt{font-size:10px;font-weight:800;color:var(--muted);margin-top:9px}
+.spec dt:first-child{margin-top:0}
+.spec dd{margin:0;font-weight:600}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,14px);background:#111827;
+ color:#fff;padding:9px 14px;border-radius:10px;font-size:12px;opacity:0;pointer-events:none;
+ transition:.18s;z-index:9}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <aside class="side">
+    <div class="side-top"><div class="side-brand">MySuit OCR</div>
+      <button class="side-burger">≡</button></div>
+    <div style="display:flex;flex-direction:column;gap:5px">
+      <div class="side-lab">사이트</div>
+      <select class="side-sel"><option>한빛약품</option></select>
+    </div>
+    <div class="side-menu"><span class="side-lab">MENU</span></div>
+    <nav class="nav">
+      <a><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><rect x="3" y="2" width="14" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/><line x1="6" y1="6" x2="14" y2="6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="6" y1="10" x2="14" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="6" y1="14" x2="10" y2="14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Template</a>
+      <a><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M10 14V4M10 4L6 8M10 4L14 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 16h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>RunOCR</a>
+      <a><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.5" stroke="currentColor" stroke-width="1.8"/><path d="M10 6V10.5L13 12.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>History</a>
+      <a><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M3.5 10a6.5 6.5 0 1 0 1.3-3.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M3.5 4.5V8H7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Restore</a>
+    </nav>
+    <div class="side-menu" style="margin-top:2px"><span class="side-lab">POC</span></div>
+    <nav class="nav">
+      <a class="on" data-view="ocr"><span class="no">01</span>OCR 실행</a>
+      <a data-view="run"><span class="no">02</span>실행 결과</a>
+      <a data-view="missed"><span class="no">03</span>확인 항목</a>
+      <a data-view="compare"><span class="no">04</span>모델 비교</a>
+      <a data-view="learning"><span class="no">05</span>학습 결과</a>
+      <a data-view="remaining"><span class="no">06</span>처리 경로</a>
+    </nav>
+  </aside>
+
+  <div class="main">
+    <header class="hd">
+      <h1 id="hdTitle">OCR 실행</h1>
+      <div class="hd-r">
+        <span class="tag wa dot">예시 데이터</span>
+        <button class="ms-btn" id="themeBtn">◐</button>
+        <button class="ms-btn">로그아웃</button>
+      </div>
+    </header>
+
+    <div class="body">
+
+      <!-- ============ 01 OCR 실행 (실행 전) ============ -->
+      <section class="view on" id="v-ocr">
+        <div class="tpl">
+          <div class="tplcard on"><div class="thumb"><u></u></div><div class="nm">비정형</div></div>
+          <div class="tplcard"><div class="thumb"><u></u></div><div class="nm">거래명세서</div></div>
+          <div class="tplcard"><div class="thumb"><u></u></div><div class="nm">거래_1</div></div>
+          <div class="tplcard"><div class="thumb"><u></u></div><div class="nm">거래_2</div></div>
+          <div class="tplcard"><div class="thumb"><u></u></div><div class="nm">거래_3</div></div>
+          <div class="tplcard"><div class="thumb"><u></u></div><div class="nm">영수증</div></div>
+        </div>
+
+        <div class="cols" style="grid-template-columns:1fr 280px">
+          <div class="card">
+            <div class="card-h"><span class="t">업로드 문서</span>
+              <div style="display:flex;gap:6px;align-items:center">
+                <span class="tag ac">6건</span>
+                <button class="ms-btn-sm">파일 추가</button></div></div>
+            <div class="fbar">
+                <button class="fchip on"><b>4.pdf</b><s>1.2 MB</s></button>
+                <button class="fchip"><b>5.pdf</b><s>0.9 MB</s></button>
+                <button class="fchip"><b>6.pdf</b><s>1.4 MB</s></button>
+                <button class="fchip"><b>7.pdf</b><s>1.1 MB</s></button>
+                <button class="fchip"><b>8.pdf</b><s>0.8 MB</s></button>
+                <button class="fchip"><b>9.pdf</b><s>1.3 MB</s></button>
+            </div>
+            <div class="doc">
+              <div class="paper" style="max-width:520px">
+                <h4>거 래 명 세 표</h4>
+                <div class="pm">
+                  <div><i>등록번호</i>117-81-53390</div><div><i>등록번호</i>113-85-04425</div>
+                  <div><i>상호</i>(주)한빛약품</div><div><i>상호</i>백계약품(주)</div>
+                  <div><i>대표</i>남이레</div><div><i>대표</i>김승관</div>
+                  <div><i>업태</i>무역업, 건강보조식품</div><div><i>작성일</i>2024-07-02</div>
+                </div>
+                <table>
+                  <tr><th style="width:52%">품 명</th><th>수량</th><th>단가</th><th>공급가액</th></tr>
+                  <tr><td>세파록스캡슐</td><td class="n">3</td><td class="n">18,500</td><td class="n">55,500</td></tr>
+                  <tr><td>바리켄산</td><td class="n">2</td><td class="n">12,000</td><td class="n">24,000</td></tr>
+                  <tr><td>메로겔(메트로니다졸)(수출명: MINROGE)</td><td class="n">1</td><td class="n">31,000</td><td class="n">31,000</td></tr>
+                  <tr><td>다에피정10밀리그램(에피나스틴염산염)100정</td><td class="n">10</td><td class="n">4,400</td><td class="n">44,000</td></tr>
+                </table>
+                <div class="tot">합 계 &nbsp; 154,500</div>
+              </div>
+            </div>
+            <div class="bar"><span class="tag mu">4.pdf</span><span class="tag mu">1.2 MB</span>
+              <span class="tag mu">2480 &times; 3508</span><span class="tag mu">300dpi</span>
+              <span class="tag ac" style="margin-left:auto">선택 1 / 6</span></div>
+          </div>
+
+          <div class="card">
+            <div class="guide" style="border-bottom:1px solid var(--border)">
+              <div class="gs" style="margin-bottom:0">
+                <h5>모델 선택</h5>
+                <select class="mdsel" style="margin-top:6px">
+                  <option>기본 모델</option><option>학습 모델</option>
+                </select>
+              </div>
+            </div>
+            <div class="guide scroll fill">
+              <div class="gs"><h5>지원 형식</h5>
+                <div class="gd">업로드 / 내보내기 가능한 파일 형식</div>
+                <ul><li>Upload: jpeg, jpg, png, pdf, tif, tiff</li>
+                  <li>Export: json, xlsx, html, hwp(예정)</li></ul></div>
+              <div class="gs"><h5>자동 처리</h5>
+                <div class="gd">업로드 직후 자동으로 수행되는 보정</div>
+                <ul><li>기울기 보정</li><li>노이즈 제거</li><li>대비 강화</li><li>언어 감지</li></ul></div>
+              <div class="gs"><h5>업로드 가이드</h5>
+                <div class="gd">정확도를 높이기 위한 권장 조건</div>
+                <ul><li>150~300dpi, 텍스트 선명, 흔들림 없음</li><li>글자 높이 10px 이상</li>
+                  <li>가로 2000px 내외 권장</li><li>업로드 파일은 24시간 후 자동 삭제</li></ul></div>
+            </div>
+            <div style="padding:12px 13px;border-top:1px solid var(--border)">
+              <button class="runbtn" data-view-go="run">Run OCR &middot; 6건</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 02 실행 결과 (제품 OcrResultPanel 구조) ============ -->
+      <section class="view" id="v-run">
+        <div class="kpis">
+          <div class="kpi"><span>문서</span><b>4.pdf</b></div>
+          <div class="kpi"><span>모델</span><b>기본</b></div>
+          <div class="kpi"><span>필드</span><b>14</b></div>
+          <div class="kpi"><span>오류</span><b style="color:#dc2626">1</b></div>
+          <div class="kpi"><span>경고</span><b style="color:#d97706">5</b></div>
+        </div>
+
+        <div class="cols c-46">
+          <div class="card">
+            <div class="card-h"><span class="t">문서</span>
+              <div class="seg" id="prepSeg">
+                <button class="on" data-prep="after">전처리 후</button>
+                <button data-prep="before">전처리 전</button>
+              </div></div>
+            <div class="doc">
+              <div class="paper" id="paperRun">
+                <h4>거 래 명 세 표</h4>
+                <div class="pm">
+                  <div><i>등록번호</i>117-81-53390</div><div><i>등록번호</i>113-85-04425</div>
+                  <div><i>상호</i>(주)한빛약품</div><div><i>상호</i>백계약품(주)</div>
+                  <div><i>대표</i>남이레</div><div><i>대표</i>김승관</div>
+                  <div><i>업태</i>무역업, 건강보조식품</div><div><i>작성일</i>2024-07-02</div>
+                </div>
+                <table>
+                  <tr><th style="width:52%">품 명</th><th>수량</th><th>단가</th><th>공급가액</th></tr>
+                  <tr><td>세파록스캡슐</td><td class="n">3</td><td class="n">18,500</td><td class="n">55,500</td></tr>
+                  <tr><td>바리켄산</td><td class="n">2</td><td class="n">12,000</td><td class="n">24,000</td></tr>
+                  <tr><td>메로겔(메트로니다졸)(수출명: MINROGE)</td><td class="n">1</td><td class="n">31,000</td><td class="n">31,000</td></tr>
+                  <tr><td>다에피정10밀리그램(에피나스틴염산염)100정</td><td class="n">10</td><td class="n">4,400</td><td class="n">44,000</td></tr>
+                </table>
+                <div class="tot">합 계 &nbsp; 154,500</div>
+              </div>
+            </div>
+            <div class="bar"><span class="tag mu">4.pdf</span><span class="tag mu">2480 x 3508</span>
+              <span class="tag mu">기울기 보정 -0.8&deg;</span><span class="tag mu">3.8초</span></div>
+          </div>
+
+          <div class="card">
+            <div class="ortabs" id="orTabs">
+              <button class="ortab on" data-tab="preview">Preview</button>
+              <button class="ortab" data-tab="custom">Custom</button>
+              <button class="ortab" data-tab="validation">Validation<span class="bdg">1</span></button>
+            </div>
+
+            <div class="orbody">
+              <div class="orpane on" id="pane-preview">
+                <div class="modes">
+                  <button class="ms-btn-sm" style="border-color:var(--accent);color:var(--accent)">Markdown</button>
+                  <button class="ms-btn-sm">JSON</button>
+                  <div class="sp"><span class="tag mu">자동 저장됨 09:12</span></div>
+                </div>
+                <div class="scroll fill">
+                  <table>
+                    <thead><tr><th style="width:28px">No</th><th style="width:126px">한글 필드명</th>
+                      <th style="width:146px">영문 필드명</th><th>원본 데이터</th>
+                      <th style="width:64px;text-align:right">정확도</th></tr></thead>
+                    <tbody>
+                  <tr class=""><td>1</td><td>공급자 등록번호</td><td class="fkey">supplierBizNumber</td><td>117-81-53390</td><td class="cf h">100.0%</td></tr>
+                  <tr class="flag"><td>2</td><td>공급자 상호</td><td class="fkey">supplierCompany</td><td>주식회사한빛약품대표남이레</td><td class="cf m">77.2%</td></tr>
+                  <tr class="flag"><td>3</td><td>공급자 대표</td><td class="fkey">supplierRepresentative</td><td>무역업,건강보조식</td><td class="cf l">61.0%</td></tr>
+                  <tr class=""><td>4</td><td>공급받는자 등록번호</td><td class="fkey">buyerBizNumber</td><td>113-85-04425</td><td class="cf h">100.0%</td></tr>
+                  <tr class="flag"><td>5</td><td>공급받는자 상호</td><td class="fkey">buyerCompany</td><td>백계약품(주)</td><td class="cf m">73.6%</td></tr>
+                  <tr class=""><td>6</td><td>공급받는자 대표</td><td class="fkey">buyerRepresentative</td><td>김승관</td><td class="cf h">98.5%</td></tr>
+                  <tr class=""><td>7</td><td>작성일자</td><td class="fkey">issueDate</td><td>2024-07-02</td><td class="cf h">100.0%</td></tr>
+                  <tr class=""><td>8</td><td>합계금액</td><td class="fkey">totalAmount</td><td>154,500</td><td class="cf h">100.0%</td></tr>
+                  <tr class="flag"><td>9</td><td>누계</td><td class="fkey">cumulativeAmount</td><td><span class="none">검출되지 않음</span></td><td class="cf l">0.0%</td></tr>
+                  <tr class=""><td>10</td><td>문서 종류</td><td class="fkey">documentType</td><td>거래명세표</td><td class="cf h">99.7%</td></tr>
+                    </tbody>
+                  </table>
+                  <div class="card-h" style="border-top:1px solid var(--border)">
+                    <span class="t">품목</span>
+                    <span class="tag ok">수량 x 단가 = 금액 &middot; 4 / 4</span></div>
+                  <table>
+                    <thead><tr><th style="width:28px">No</th><th>품명</th><th style="width:48px" class="n">수량</th>
+                      <th style="width:64px" class="n">단가</th><th style="width:70px" class="n">금액</th>
+                      <th style="width:64px;text-align:right">정확도</th></tr></thead>
+                    <tbody>
+                  <tr class="flag"><td>1</td><td>세파록스캡슬</td><td class="n">3</td><td class="n">18,500</td><td class="n">55,500</td><td class="cf m">88.4%</td></tr>
+                  <tr class=""><td>2</td><td>바리켄산</td><td class="n">2</td><td class="n">12,000</td><td class="n">24,000</td><td class="cf h">96.1%</td></tr>
+                  <tr class=""><td>3</td><td>메로겔(메트로니다졸)(수출명:MINROGE)</td><td class="n">1</td><td class="n">31,000</td><td class="n">31,000</td><td class="cf h">94.7%</td></tr>
+                  <tr class="flag"><td>4</td><td>다에피정10밀리그램(에피나스틴엄산염)100정</td><td class="n">10</td><td class="n">4,400</td><td class="n">44,000</td><td class="cf m">85.2%</td></tr>
+                      <tr class="tot"><td></td><td>합계</td><td class="n">16</td><td></td>
+                        <td class="n">154,500</td><td></td></tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="bar"><span class="lab">Export</span>
+                  <button class="ms-btn-sm" data-toast="json">json</button>
+                  <button class="ms-btn-sm" data-toast="xlsx">xlsx</button>
+                  <button class="ms-btn-sm" data-toast="html">html</button>
+                  <button class="ms-btn-sm" data-toast="hwp 예정">hwp (예정)</button>
+                </div>
+              </div>
+
+              <div class="orpane" id="pane-custom">
+                <div class="modes">
+                  <button class="ms-btn-sm">필드 추가</button>
+                  <button class="ms-btn-sm">영역 수정</button>
+                  <button class="ms-btn-sm">OCR 재실행</button>
+                  <div class="sp"><button class="ms-btn-sm"
+                    style="background:var(--accent);border-color:var(--accent);color:#fff">저장</button></div>
+                </div>
+                <div class="scroll fill">
+                  <table>
+                    <thead><tr><th style="width:28px">No</th><th style="width:126px">한글 필드명</th>
+                      <th style="width:146px">영문 필드명</th><th>원본 데이터</th>
+                      <th style="width:184px">최종값</th>
+                      <th style="width:64px;text-align:right">정확도</th></tr></thead>
+                    <tbody>
+                  <tr class=""><td>1</td><td>공급자 등록번호</td><td class="fkey">supplierBizNumber</td><td>117-81-53390</td><td><input class="cellin" value="117-81-53390"></td><td class="cf h">100.0%</td></tr>
+                  <tr class="flag"><td>2</td><td>공급자 상호</td><td class="fkey">supplierCompany</td><td>주식회사한빛약품대표남이레</td><td><input class="cellin" value="주식회사한빛약품대표남이레"></td><td class="cf m">77.2%</td></tr>
+                  <tr class="flag"><td>3</td><td>공급자 대표</td><td class="fkey">supplierRepresentative</td><td>무역업,건강보조식</td><td><input class="cellin" value="무역업,건강보조식"></td><td class="cf l">61.0%</td></tr>
+                  <tr class=""><td>4</td><td>공급받는자 등록번호</td><td class="fkey">buyerBizNumber</td><td>113-85-04425</td><td><input class="cellin" value="113-85-04425"></td><td class="cf h">100.0%</td></tr>
+                  <tr class="flag"><td>5</td><td>공급받는자 상호</td><td class="fkey">buyerCompany</td><td>백계약품(주)</td><td><input class="cellin" value="백계약품(주)"></td><td class="cf m">73.6%</td></tr>
+                  <tr class=""><td>6</td><td>공급받는자 대표</td><td class="fkey">buyerRepresentative</td><td>김승관</td><td><input class="cellin" value="김승관"></td><td class="cf h">98.5%</td></tr>
+                  <tr class=""><td>7</td><td>작성일자</td><td class="fkey">issueDate</td><td>2024-07-02</td><td><input class="cellin" value="2024-07-02"></td><td class="cf h">100.0%</td></tr>
+                  <tr class=""><td>8</td><td>합계금액</td><td class="fkey">totalAmount</td><td>154,500</td><td><input class="cellin" value="154,500"></td><td class="cf h">100.0%</td></tr>
+                  <tr class="flag"><td>9</td><td>누계</td><td class="fkey">cumulativeAmount</td><td><span class="none">검출되지 않음</span></td><td><input class="cellin" value=""></td><td class="cf l">0.0%</td></tr>
+                  <tr class=""><td>10</td><td>문서 종류</td><td class="fkey">documentType</td><td>거래명세표</td><td><input class="cellin" value="거래명세표"></td><td class="cf h">99.7%</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="orpane" id="pane-validation">
+                <div class="valsum">
+                  <span class="h">검수 결과</span>
+                  <span class="tag er">확인 필요</span>
+                  <span style="font-size:12px;color:var(--muted)">오류 <b>1</b>건 / 경고 <b>5</b>건 / 성공 <b>8</b>건</span>
+                  <div style="margin-left:auto"><span class="tag ok">검산 4 / 4 통과</span></div>
+                </div>
+                <div class="scroll fill" style="padding-bottom:12px">
+                  <div class="valsec">
+                    <div class="st"><span>오류 내역: 1건</span>
+                      <button class="ms-btn-sm" data-gotab="custom">오류 수정</button></div>
+                  <div class="valrow"><span class="dt d-er"></span><span class="nm">누계<em>(cumulativeAmount)</em></span><span class="vl">검출되지 않음</span><span class="cf l">0.0%</span></div>
+                  </div>
+                  <div class="valsec">
+                    <div class="st"><span>경고 내역: 5건</span>
+                      <button class="ms-btn-sm" data-gotab="custom">경고 확인</button></div>
+                  <div class="valrow"><span class="dt d-wa"></span><span class="nm">공급자 상호<em>(supplierCompany)</em></span><span class="vl">주식회사한빛약품대표남이레</span><span class="cf m">77.2%</span></div>
+                  <div class="valrow"><span class="dt d-wa"></span><span class="nm">공급자 대표<em>(supplierRepresentative)</em></span><span class="vl">무역업,건강보조식</span><span class="cf m">61.0%</span></div>
+                  <div class="valrow"><span class="dt d-wa"></span><span class="nm">공급받는자 상호<em>(buyerCompany)</em></span><span class="vl">백계약품(주)</span><span class="cf m">73.6%</span></div>
+                  <div class="valrow"><span class="dt d-wa"></span><span class="nm">품명 01<em>(itemName)</em></span><span class="vl">세파록스캡슬</span><span class="cf m">88.4%</span></div>
+                  <div class="valrow"><span class="dt d-wa"></span><span class="nm">품명 04<em>(itemName)</em></span><span class="vl">다에피정10밀리그램(에피나스틴엄산염)100정</span><span class="cf m">85.2%</span></div>
+                  </div>
+                  <div class="valsec">
+                    <div class="st"><span>성공 내역: 8건</span></div>
+                  <div class="valrow"><span class="dt d-ok"></span><span class="nm">공급자 등록번호<em>(supplierBizNumber)</em></span><span class="vl">117-81-53390</span><span class="cf h">100.0%</span></div>
+                  <div class="valrow"><span class="dt d-ok"></span><span class="nm">공급받는자 등록번호<em>(buyerBizNumber)</em></span><span class="vl">113-85-04425</span><span class="cf h">100.0%</span></div>
+                  <div class="valrow"><span class="dt d-ok"></span><span class="nm">공급받는자 대표<em>(buyerRepresentative)</em></span><span class="vl">김승관</span><span class="cf h">98.5%</span></div>
+                  <div class="valrow"><span class="dt d-ok"></span><span class="nm">작성일자<em>(issueDate)</em></span><span class="vl">2024-07-02</span><span class="cf h">100.0%</span></div>
+                  <div class="valrow"><span class="dt d-ok"></span><span class="nm">합계금액<em>(totalAmount)</em></span><span class="vl">154,500</span><span class="cf h">100.0%</span></div>
+                  <div class="valrow"><span class="dt d-ok"></span><span class="nm">문서 종류<em>(documentType)</em></span><span class="vl">거래명세표</span><span class="cf h">99.7%</span></div>
+                  <div class="valrow"><span class="dt d-ok"></span><span class="nm">품명 02<em>(itemName)</em></span><span class="vl">바리켄산</span><span class="cf h">96.1%</span></div>
+                  <div class="valrow"><span class="dt d-ok"></span><span class="nm">품명 03<em>(itemName)</em></span><span class="vl">메로겔(메트로니다졸)(수출명:MINROGE)</span><span class="cf h">94.7%</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 03 확인 항목 (제품 History: 목록 <-> 상세) ============ -->
+      <section class="view" id="v-missed">
+          <div class="hstate on" id="hs-list">
+            <div class="card" style="flex:none">
+              <div class="filt">
+                <span class="fl">요청일시</span>
+                <input class="ms-input" type="date" style="width:150px">
+                <span class="fl">~</span>
+                <input class="ms-input" type="date" value="2026-08-12" style="width:150px">
+                <span class="fl" style="margin-left:6px">상태</span>
+                <select class="ms-select" style="width:110px"><option>전체</option>
+                  <option>성공</option><option>실패</option></select>
+                <span class="fl" style="margin-left:6px">모델</span>
+                <select class="ms-select" id="mdFilter" style="width:110px"><option>전체</option><option>기본</option><option>학습</option></select>
+                <span class="fl" style="margin-left:6px">확인 필요</span>
+                <select class="ms-select" style="width:110px"><option>전체</option>
+                  <option>있음</option><option>없음</option></select>
+                <button class="ms-btn" style="background:var(--accent);border-color:var(--accent);color:#fff">조회</button>
+                <button class="ms-btn" style="border-color:#dc2626;color:#dc2626">전체 삭제</button>
+              </div>
+            </div>
+
+            <div class="cols" style="grid-template-columns:1fr 1.05fr">
+            <div class="card fill">
+              <div class="card-h"><span class="t">실행 이력</span>
+                <div style="display:flex;gap:6px;align-items:center">
+                  <span class="tag mu">총 12건</span>
+                  <span class="tag mu">기본 20</span><span class="tag ac">학습 12</span></div></div>
+              <div class="scroll fill">
+                <table>
+                  <thead><tr><th style="width:44px">No</th><th style="width:96px">템플릿명</th>
+                    <th style="width:76px">모델</th>
+                    <th style="width:160px">요청일시</th><th style="width:80px">상태</th><th>파일명</th>
+                    <th style="width:100px">확인 필요</th>
+                    <th style="width:88px;text-align:center">상세보기</th>
+                    <th style="width:70px;text-align:center">삭제</th></tr></thead>
+                  <tbody>
+                  <tr data-model="학습" class="flag"><td>1</td><td>비정형</td><td><span class="tag ac">학습</span></td><td>2026-08-12 10:41</td><td><span class="tag ok">성공</span></td><td>4.pdf</td><td><span class="tag wa">확인 3</span></td><td style="text-align:center"><button class="ms-btn-sm" data-open="detail">상세보기</button></td><td style="text-align:center"><button class="ms-btn-sm">삭제</button></td></tr>
+                  <tr data-model="학습" class="flag"><td>2</td><td>비정형</td><td><span class="tag ac">학습</span></td><td>2026-08-12 10:40</td><td><span class="tag ok">성공</span></td><td>5.pdf</td><td><span class="tag wa">확인 2</span></td><td style="text-align:center"><button class="ms-btn-sm" data-open="detail">상세보기</button></td><td style="text-align:center"><button class="ms-btn-sm">삭제</button></td></tr>
+                  <tr data-model="학습"><td>3</td><td>비정형</td><td><span class="tag ac">학습</span></td><td>2026-08-12 10:39</td><td><span class="tag ok">성공</span></td><td>6.pdf</td><td><span class="tag ok">확인 0</span></td><td style="text-align:center"><button class="ms-btn-sm" data-open="detail">상세보기</button></td><td style="text-align:center"><button class="ms-btn-sm">삭제</button></td></tr>
+                  <tr data-model="학습" class="flag"><td>4</td><td>비정형</td><td><span class="tag ac">학습</span></td><td>2026-08-12 10:38</td><td><span class="tag ok">성공</span></td><td>7.pdf</td><td><span class="tag wa">확인 2</span></td><td style="text-align:center"><button class="ms-btn-sm" data-open="detail">상세보기</button></td><td style="text-align:center"><button class="ms-btn-sm">삭제</button></td></tr>
+                  <tr data-model="학습" class="flag"><td>5</td><td>비정형</td><td><span class="tag ac">학습</span></td><td>2026-08-12 10:37</td><td><span class="tag ok">성공</span></td><td>8.pdf</td><td><span class="tag wa">확인 1</span></td><td style="text-align:center"><button class="ms-btn-sm" data-open="detail">상세보기</button></td><td style="text-align:center"><button class="ms-btn-sm">삭제</button></td></tr>
+                  <tr data-model="학습" class="flag"><td>6</td><td>비정형</td><td><span class="tag ac">학습</span></td><td>2026-08-12 10:36</td><td><span class="tag ok">성공</span></td><td>9.pdf</td><td><span class="tag wa">확인 4</span></td><td style="text-align:center"><button class="ms-btn-sm" data-open="detail">상세보기</button></td><td style="text-align:center"><button class="ms-btn-sm">삭제</button></td></tr>
+                  <tr data-model="기본" class="flag"><td>7</td><td>비정형</td><td><span class="tag mu">기본</span></td><td>2026-08-12 09:12</td><td><span class="tag ok">성공</span></td><td>4.pdf</td><td><span class="tag wa">확인 5</span></td><td style="text-align:center"><button class="ms-btn-sm" data-open="detail">상세보기</button></td><td style="text-align:center"><button class="ms-btn-sm">삭제</button></td></tr>
+                  <tr data-model="기본" class="flag"><td>8</td><td>비정형</td><td><span class="tag mu">기본</span></td><td>2026-08-12 09:11</td><td><span class="tag ok">성공</span></td><td>5.pdf</td><td><span class="tag wa">확인 3</span></td><td style="text-align:center"><button class="ms-btn-sm" data-open="detail">상세보기</button></td><td style="text-align:center"><button class="ms-btn-sm">삭제</button></td></tr>
+                  <tr data-model="기본"><td>9</td><td>비정형</td><td><span class="tag mu">기본</span></td><td>2026-08-12 09:10</td><td><span class="tag ok">성공</span></td><td>6.pdf</td><td><span class="tag ok">확인 0</span></td><td style="text-align:center"><button class="ms-btn-sm" data-open="detail">상세보기</button></td><td style="text-align:center"><button class="ms-btn-sm">삭제</button></td></tr>
+                  <tr data-model="기본" class="flag"><td>10</td><td>비정형</td><td><span class="tag mu">기본</span></td><td>2026-08-12 09:09</td><td><span class="tag ok">성공</span></td><td>7.pdf</td><td><span class="tag wa">확인 4</span></td><td style="text-align:center"><button class="ms-btn-sm" data-open="detail">상세보기</button></td><td style="text-align:center"><button class="ms-btn-sm">삭제</button></td></tr>
+                  <tr data-model="기본" class="flag"><td>11</td><td>비정형</td><td><span class="tag mu">기본</span></td><td>2026-08-12 09:08</td><td><span class="tag ok">성공</span></td><td>8.pdf</td><td><span class="tag wa">확인 2</span></td><td style="text-align:center"><button class="ms-btn-sm" data-open="detail">상세보기</button></td><td style="text-align:center"><button class="ms-btn-sm">삭제</button></td></tr>
+                  <tr data-model="기본" class="flag"><td>12</td><td>비정형</td><td><span class="tag mu">기본</span></td><td>2026-08-12 09:07</td><td><span class="tag ok">성공</span></td><td>9.pdf</td><td><span class="tag wa">확인 6</span></td><td style="text-align:center"><button class="ms-btn-sm" data-open="detail">상세보기</button></td><td style="text-align:center"><button class="ms-btn-sm">삭제</button></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card fill">
+              <div class="card-h"><span class="t">필드별 결과</span>
+                <div class="seg" id="aggSeg">
+                  <button class="on" data-agg="base">기본</button>
+                  <button data-agg="tuned">학습</button>
+                </div></div>
+              <div class="scroll fill">
+              <table class="aggt on" data-agg="base">
+                <thead><tr><th style="width:150px">필드</th><th class="n" style="width:70px">정상</th><th class="n" style="width:56px">확인</th><th style="width:126px">정상률</th><th style="width:150px">원인</th><th style="width:60px">해결</th></tr></thead>
+                <tbody>
+                  <tr class=""><td>공급자 등록번호<br><span class="fkey">supplierBizNumber</span></td><td class="n">6 / 6</td><td class="n">0</td><td><div class="barwrap"><div class="mini"><i style="width:100%;background:#16a34a"></i></div><span class="pct" style="color:#16a34a">100%</span></div></td><td><span style="color:var(--muted)">—</span></td><td><span style="color:var(--muted)">—</span></td></tr>
+                  <tr class="flag"><td>공급자 상호<br><span class="fkey">supplierCompany</span></td><td class="n">3 / 6</td><td class="n"><span class="was">3</span></td><td><div class="barwrap"><div class="mini"><i style="width:50%;background:#d97706"></i></div><span class="pct" style="color:#d97706">50%</span></div></td><td>상호·대표 블록 결합</td><td><span class="tag mu">규칙</span></td></tr>
+                  <tr class="flag"><td>공급자 대표<br><span class="fkey">supplierRepresentative</span></td><td class="n">3 / 6</td><td class="n"><span class="was">3</span></td><td><div class="barwrap"><div class="mini"><i style="width:50%;background:#d97706"></i></div><span class="pct" style="color:#d97706">50%</span></div></td><td>상호·대표 블록 결합</td><td><span class="tag mu">규칙</span></td></tr>
+                  <tr class=""><td>공급받는자 등록번호<br><span class="fkey">buyerBizNumber</span></td><td class="n">6 / 6</td><td class="n">0</td><td><div class="barwrap"><div class="mini"><i style="width:100%;background:#16a34a"></i></div><span class="pct" style="color:#16a34a">100%</span></div></td><td><span style="color:var(--muted)">—</span></td><td><span style="color:var(--muted)">—</span></td></tr>
+                  <tr class="flag"><td>공급받는자 상호<br><span class="fkey">buyerCompany</span></td><td class="n">4 / 6</td><td class="n"><span class="was">2</span></td><td><div class="barwrap"><div class="mini"><i style="width:67%;background:#d97706"></i></div><span class="pct" style="color:#d97706">67%</span></div></td><td>㈜ / (주) 표기 차이</td><td><span class="tag mu">규칙</span></td></tr>
+                  <tr class=""><td>공급받는자 대표<br><span class="fkey">buyerRepresentative</span></td><td class="n">6 / 6</td><td class="n">0</td><td><div class="barwrap"><div class="mini"><i style="width:100%;background:#16a34a"></i></div><span class="pct" style="color:#16a34a">100%</span></div></td><td><span style="color:var(--muted)">—</span></td><td><span style="color:var(--muted)">—</span></td></tr>
+                  <tr class=""><td>작성일자<br><span class="fkey">issueDate</span></td><td class="n">6 / 6</td><td class="n">0</td><td><div class="barwrap"><div class="mini"><i style="width:100%;background:#16a34a"></i></div><span class="pct" style="color:#16a34a">100%</span></div></td><td><span style="color:var(--muted)">—</span></td><td><span style="color:var(--muted)">—</span></td></tr>
+                  <tr class=""><td>합계금액<br><span class="fkey">totalAmount</span></td><td class="n">6 / 6</td><td class="n">0</td><td><div class="barwrap"><div class="mini"><i style="width:100%;background:#16a34a"></i></div><span class="pct" style="color:#16a34a">100%</span></div></td><td><span style="color:var(--muted)">—</span></td><td><span style="color:var(--muted)">—</span></td></tr>
+                  <tr class="flag"><td>누계<br><span class="fkey">cumulativeAmount</span></td><td class="n">2 / 6</td><td class="n"><span class="was">4</span></td><td><div class="barwrap"><div class="mini"><i style="width:33%;background:#dc2626"></i></div><span class="pct" style="color:#dc2626">33%</span></div></td><td>누계 컬럼 미매핑</td><td><span class="tag mu">규칙</span></td></tr>
+                  <tr class=""><td>문서 종류<br><span class="fkey">documentType</span></td><td class="n">6 / 6</td><td class="n">0</td><td><div class="barwrap"><div class="mini"><i style="width:100%;background:#16a34a"></i></div><span class="pct" style="color:#16a34a">100%</span></div></td><td><span style="color:var(--muted)">—</span></td><td><span style="color:var(--muted)">—</span></td></tr>
+                  <tr class="flag"><td>품명<br><span class="fkey">itemName</span></td><td class="n">16 / 24</td><td class="n"><span class="was">8</span></td><td><div class="barwrap"><div class="mini"><i style="width:67%;background:#d97706"></i></div><span class="pct" style="color:#d97706">67%</span></div></td><td>글자 오독</td><td><span class="tag ac">학습</span></td></tr>
+                  <tr class="tot"><td>합계</td><td class="n">64 / 84</td><td class="n">20</td><td></td><td></td><td></td></tr>
+                </tbody>
+              </table>
+              <table class="aggt" data-agg="tuned">
+                <thead><tr><th style="width:150px">필드</th><th class="n" style="width:70px">정상</th><th class="n" style="width:56px">확인</th><th style="width:126px">정상률</th><th style="width:150px">원인</th><th style="width:60px">해결</th></tr></thead>
+                <tbody>
+                  <tr class=""><td>공급자 등록번호<br><span class="fkey">supplierBizNumber</span></td><td class="n">6 / 6</td><td class="n">0</td><td><div class="barwrap"><div class="mini"><i style="width:100%;background:#16a34a"></i></div><span class="pct" style="color:#16a34a">100%</span></div></td><td><span style="color:var(--muted)">—</span></td><td><span style="color:var(--muted)">—</span></td></tr>
+                  <tr class="flag"><td>공급자 상호<br><span class="fkey">supplierCompany</span></td><td class="n">3 / 6</td><td class="n"><span class="was">3</span></td><td><div class="barwrap"><div class="mini"><i style="width:50%;background:#d97706"></i></div><span class="pct" style="color:#d97706">50%</span></div></td><td>상호·대표 블록 결합</td><td><span class="tag mu">규칙</span></td></tr>
+                  <tr class="flag"><td>공급자 대표<br><span class="fkey">supplierRepresentative</span></td><td class="n">3 / 6</td><td class="n"><span class="was">3</span></td><td><div class="barwrap"><div class="mini"><i style="width:50%;background:#d97706"></i></div><span class="pct" style="color:#d97706">50%</span></div></td><td>상호·대표 블록 결합</td><td><span class="tag mu">규칙</span></td></tr>
+                  <tr class=""><td>공급받는자 등록번호<br><span class="fkey">buyerBizNumber</span></td><td class="n">6 / 6</td><td class="n">0</td><td><div class="barwrap"><div class="mini"><i style="width:100%;background:#16a34a"></i></div><span class="pct" style="color:#16a34a">100%</span></div></td><td><span style="color:var(--muted)">—</span></td><td><span style="color:var(--muted)">—</span></td></tr>
+                  <tr class="flag"><td>공급받는자 상호<br><span class="fkey">buyerCompany</span></td><td class="n">4 / 6</td><td class="n"><span class="was">2</span></td><td><div class="barwrap"><div class="mini"><i style="width:67%;background:#d97706"></i></div><span class="pct" style="color:#d97706">67%</span></div></td><td>㈜ / (주) 표기 차이</td><td><span class="tag mu">규칙</span></td></tr>
+                  <tr class=""><td>공급받는자 대표<br><span class="fkey">buyerRepresentative</span></td><td class="n">6 / 6</td><td class="n">0</td><td><div class="barwrap"><div class="mini"><i style="width:100%;background:#16a34a"></i></div><span class="pct" style="color:#16a34a">100%</span></div></td><td><span style="color:var(--muted)">—</span></td><td><span style="color:var(--muted)">—</span></td></tr>
+                  <tr class=""><td>작성일자<br><span class="fkey">issueDate</span></td><td class="n">6 / 6</td><td class="n">0</td><td><div class="barwrap"><div class="mini"><i style="width:100%;background:#16a34a"></i></div><span class="pct" style="color:#16a34a">100%</span></div></td><td><span style="color:var(--muted)">—</span></td><td><span style="color:var(--muted)">—</span></td></tr>
+                  <tr class=""><td>합계금액<br><span class="fkey">totalAmount</span></td><td class="n">6 / 6</td><td class="n">0</td><td><div class="barwrap"><div class="mini"><i style="width:100%;background:#16a34a"></i></div><span class="pct" style="color:#16a34a">100%</span></div></td><td><span style="color:var(--muted)">—</span></td><td><span style="color:var(--muted)">—</span></td></tr>
+                  <tr class="flag"><td>누계<br><span class="fkey">cumulativeAmount</span></td><td class="n">2 / 6</td><td class="n"><span class="was">4</span></td><td><div class="barwrap"><div class="mini"><i style="width:33%;background:#dc2626"></i></div><span class="pct" style="color:#dc2626">33%</span></div></td><td>누계 컬럼 미매핑</td><td><span class="tag mu">규칙</span></td></tr>
+                  <tr class=""><td>문서 종류<br><span class="fkey">documentType</span></td><td class="n">6 / 6</td><td class="n">0</td><td><div class="barwrap"><div class="mini"><i style="width:100%;background:#16a34a"></i></div><span class="pct" style="color:#16a34a">100%</span></div></td><td><span style="color:var(--muted)">—</span></td><td><span style="color:var(--muted)">—</span></td></tr>
+                  <tr class=""><td>품명<br><span class="fkey">itemName</span></td><td class="n">24 / 24</td><td class="n">0</td><td><div class="barwrap"><div class="mini"><i style="width:100%;background:#16a34a"></i></div><span class="pct" style="color:#16a34a">100%</span></div></td><td>글자 오독</td><td><span class="tag ac">학습</span></td></tr>
+                  <tr class="tot"><td>합계</td><td class="n">72 / 84</td><td class="n">12</td><td></td><td></td><td></td></tr>
+                </tbody>
+              </table>
+              </div>
+            </div>
+          </div>
+          </div>
+
+          <div class="hstate" id="hs-detail">
+        <div class="card" style="flex:none">
+          <div class="card-h">
+            <div style="display:flex;align-items:center;gap:9px">
+              <span class="t">상세보기</span><span class="tag mu">비정형</span>
+              <span style="font-size:12px;color:var(--muted)">4.pdf &middot; 2026-08-12 09:12</span>
+            </div>
+            <div style="display:flex;gap:6px;align-items:center">
+              <span class="tag wa">확인 필요 5 / 14</span>
+              <button class="ms-btn-sm" data-toast="학습 대상 2건 전달">학습 대상 전달</button>
+              <button class="ms-btn-sm" data-back="list">목록</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="cols c-46">
+          <div class="stack">
+            <div class="card fill">
+              <div class="card-h"><span class="t">전처리 전 이미지</span>
+                <span class="tag mu">기울기 -0.8&deg;</span></div>
+              <div class="doc">
+                <div class="paper" id="pB" style="transform:rotate(-0.8deg)">
+                  <h4>거 래 명 세 표</h4>
+                  <div class="pm">
+                    <div><i>등록번호</i>117-81-53390</div><div><i>등록번호</i>113-85-04425</div>
+                    <div id="mk-sc-pB"><i>상호</i>(주)한빛약품</div><div><i>상호</i>백계약품(주)</div>
+                    <div id="mk-sr-pB"><i>대표</i>남이레</div><div><i>대표</i>김승관</div>
+                    <div><i>업태</i>무역업, 건강보조식품</div><div><i>작성일</i>2024-07-02</div>
+                  </div>
+                  <table>
+                    <tr><th style="width:52%">품 명</th><th>수량</th><th>단가</th><th>공급가액</th></tr>
+                    <tr id="mk-i1-pB"><td>세파록스캡슐</td><td class="n">3</td><td class="n">18,500</td><td class="n">55,500</td></tr>
+                    <tr><td>바리켄산</td><td class="n">2</td><td class="n">12,000</td><td class="n">24,000</td></tr>
+                    <tr><td>메로겔(메트로니다졸)(수출명: MINROGE)</td><td class="n">1</td><td class="n">31,000</td><td class="n">31,000</td></tr>
+                    <tr id="mk-i4-pB"><td>다에피정10밀리그램(에피나스틴염산염)100정</td><td class="n">10</td><td class="n">4,400</td><td class="n">44,000</td></tr>
+                  </table>
+                  <div class="tot" id="mk-cu-pB">합 계 &nbsp; 154,500</div>
+                </div>
+              </div>
+            </div>
+            <div class="card fill">
+              <div class="card-h"><span class="t">전처리 후 이미지</span>
+                <span class="tag mu">보정 적용</span></div>
+              <div class="doc">
+                <div class="paper" id="pA">
+                  <h4>거 래 명 세 표</h4>
+                  <div class="pm">
+                    <div><i>등록번호</i>117-81-53390</div><div><i>등록번호</i>113-85-04425</div>
+                    <div id="mk-sc-pA"><i>상호</i>(주)한빛약품</div><div><i>상호</i>백계약품(주)</div>
+                    <div id="mk-sr-pA"><i>대표</i>남이레</div><div><i>대표</i>김승관</div>
+                    <div><i>업태</i>무역업, 건강보조식품</div><div><i>작성일</i>2024-07-02</div>
+                  </div>
+                  <table>
+                    <tr><th style="width:52%">품 명</th><th>수량</th><th>단가</th><th>공급가액</th></tr>
+                    <tr id="mk-i1-pA"><td>세파록스캡슐</td><td class="n">3</td><td class="n">18,500</td><td class="n">55,500</td></tr>
+                    <tr><td>바리켄산</td><td class="n">2</td><td class="n">12,000</td><td class="n">24,000</td></tr>
+                    <tr><td>메로겔(메트로니다졸)(수출명: MINROGE)</td><td class="n">1</td><td class="n">31,000</td><td class="n">31,000</td></tr>
+                    <tr id="mk-i4-pA"><td>다에피정10밀리그램(에피나스틴염산염)100정</td><td class="n">10</td><td class="n">4,400</td><td class="n">44,000</td></tr>
+                  </table>
+                  <div class="tot" id="mk-cu-pA">합 계 &nbsp; 154,500</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="stack">
+            <div class="card">
+              <div class="card-h"><span class="t">출력 필드</span>
+                <div class="seg" id="needSeg">
+                  <button data-need="all">전체 14</button>
+                  <button class="on" data-need="only">확인 필요 5</button>
+                </div></div>
+              <table id="fieldTable">
+                <thead><tr><th style="width:26px">No</th><th style="width:118px">한글 필드명</th>
+                  <th style="width:132px">영문 필드명</th><th>원본 데이터</th><th>있어야 할 값</th>
+                  <th style="width:126px">원인</th><th style="width:56px">해결</th>
+                  <th style="width:58px;text-align:right">정확도</th></tr></thead>
+                <tbody>
+                  <tr class="" data-need="0"><td>1</td><td>공급자 등록번호</td><td class="fkey">supplierBizNumber</td><td>117-81-53390</td><td><span style="color:var(--muted)">—</span></td><td><span style="color:var(--muted)">—</span></td><td></td><td class="cf h">100.0%</td></tr>
+                  <tr class="flag" data-need="1" data-mark="sc"><td>2</td><td>공급자 상호</td><td class="fkey">supplierCompany</td><td><span class="was">주식회사한빛약품대표남이레</span></td><td><span class="now">(주)한빛약품</span></td><td>상호·대표 블록 결합</td><td><span class="tag mu">규칙</span></td><td class="cf m">77.2%</td></tr>
+                  <tr class="flag" data-need="1" data-mark="sr"><td>3</td><td>공급자 대표</td><td class="fkey">supplierRepresentative</td><td><span class="was">무역업,건강보조식</span></td><td><span class="now">남이레</span></td><td>상호·대표 블록 결합</td><td><span class="tag mu">규칙</span></td><td class="cf l">61.0%</td></tr>
+                  <tr class="" data-need="0"><td>4</td><td>공급받는자 등록번호</td><td class="fkey">buyerBizNumber</td><td>113-85-04425</td><td><span style="color:var(--muted)">—</span></td><td><span style="color:var(--muted)">—</span></td><td></td><td class="cf h">100.0%</td></tr>
+                  <tr class="" data-need="0"><td>5</td><td>공급받는자 상호</td><td class="fkey">buyerCompany</td><td>백계약품(주)</td><td><span style="color:var(--muted)">—</span></td><td><span style="color:var(--muted)">—</span></td><td></td><td class="cf m">73.6%</td></tr>
+                  <tr class="" data-need="0"><td>6</td><td>공급받는자 대표</td><td class="fkey">buyerRepresentative</td><td>김승관</td><td><span style="color:var(--muted)">—</span></td><td><span style="color:var(--muted)">—</span></td><td></td><td class="cf h">98.5%</td></tr>
+                  <tr class="" data-need="0"><td>7</td><td>작성일자</td><td class="fkey">issueDate</td><td>2024-07-02</td><td><span style="color:var(--muted)">—</span></td><td><span style="color:var(--muted)">—</span></td><td></td><td class="cf h">100.0%</td></tr>
+                  <tr class="" data-need="0"><td>8</td><td>합계금액</td><td class="fkey">totalAmount</td><td>154,500</td><td><span style="color:var(--muted)">—</span></td><td><span style="color:var(--muted)">—</span></td><td></td><td class="cf h">100.0%</td></tr>
+                  <tr class="flag" data-need="1" data-mark="cu"><td>9</td><td>누계</td><td class="fkey">cumulativeAmount</td><td><span class="none">검출되지 않음</span></td><td><span class="now">154,500</span></td><td>컬럼 미매핑</td><td><span class="tag mu">규칙</span></td><td class="cf l">0.0%</td></tr>
+                  <tr class="" data-need="0"><td>10</td><td>문서 종류</td><td class="fkey">documentType</td><td>거래명세표</td><td><span style="color:var(--muted)">—</span></td><td><span style="color:var(--muted)">—</span></td><td></td><td class="cf h">99.7%</td></tr>
+                  <tr class="flag" data-need="1" data-mark="i1"><td>11</td><td>품명 01</td><td class="fkey">itemName</td><td><span class="was">세파록스캡슬</span></td><td><span class="now">세파록스캡슐</span></td><td>글자 오독 · 슬 / 슐</td><td><span class="tag ac">학습</span></td><td class="cf m">88.4%</td></tr>
+                  <tr class="" data-need="0"><td>12</td><td>품명 02</td><td class="fkey">itemName</td><td>바리켄산</td><td><span style="color:var(--muted)">—</span></td><td><span style="color:var(--muted)">—</span></td><td></td><td class="cf h">96.1%</td></tr>
+                  <tr class="" data-need="0"><td>13</td><td>품명 03</td><td class="fkey">itemName</td><td>메로겔(메트로니다졸)(수출명:MINROGE)</td><td><span style="color:var(--muted)">—</span></td><td><span style="color:var(--muted)">—</span></td><td></td><td class="cf h">94.7%</td></tr>
+                  <tr class="flag" data-need="1" data-mark="i4"><td>14</td><td>품명 04</td><td class="fkey">itemName</td><td><span class="was">…(에피나스틴엄산염)100정</span></td><td><span class="now">…(에피나스틴염산염)100정</span></td><td>글자 오독 · 엄 / 염</td><td><span class="tag ac">학습</span></td><td class="cf m">85.2%</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="card fill">
+              <div class="card-h"><span class="t">OCR 데이터</span><span class="tag mu">42건</span></div>
+              <div class="scroll fill">
+                <table>
+                  <thead><tr><th style="width:26px">No</th><th style="width:96px">필드</th>
+                    <th>원본 데이터</th><th style="width:58px;text-align:right">정확도</th></tr></thead>
+                  <tbody>
+                  <tr><td>1</td><td class="fkey">field_1</td><td>거래명세표</td><td class="cf h">99.7%</td></tr>
+                  <tr><td>2</td><td class="fkey">field_2</td><td>2024 년 07 월 02 일</td><td class="cf h">97.9%</td></tr>
+                  <tr><td>3</td><td class="fkey">field_3</td><td>등록번호</td><td class="cf h">92.9%</td></tr>
+                  <tr><td>4</td><td class="fkey">field_4</td><td>117-81-53390</td><td class="cf h">100.0%</td></tr>
+                  <tr><td>5</td><td class="fkey">field_5</td><td>상호</td><td class="cf m">87.6%</td></tr>
+                  <tr><td>6</td><td class="fkey">field_6</td><td>주식회사한빛약품대표남이레</td><td class="cf m">77.2%</td></tr>
+                  <tr><td>7</td><td class="fkey">field_7</td><td>업태</td><td class="cf h">96.3%</td></tr>
+                  <tr><td>8</td><td class="fkey">field_8</td><td>무역업,건강보조식</td><td class="cf l">61.0%</td></tr>
+                  <tr><td>9</td><td class="fkey">field_9</td><td>등록번호</td><td class="cf h">90.3%</td></tr>
+                  <tr><td>10</td><td class="fkey">field_10</td><td>113-85-04425</td><td class="cf h">99.9%</td></tr>
+                  <tr><td>11</td><td class="fkey">field_11</td><td>백계약품(주)</td><td class="cf m">73.6%</td></tr>
+                  <tr><td>12</td><td class="fkey">field_12</td><td>김승관</td><td class="cf h">98.5%</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+          </div>
+      </section>
+
+      <!-- ============ 04 모델 비교 ============ -->
+      <section class="view" id="v-compare">
+        <div style="display:flex;align-items:center;gap:11px;flex:none">
+          <div class="seg" id="modeSeg">
+            <button class="on" data-mode="blind">블라인드 문서</button>
+            <button data-mode="replay">사전 검증 문서</button>
+          </div>
+          <span class="tag ac" style="margin-left:4px">학습 모델 · 03 전달 항목 2건 반영</span>
+          <div style="margin-left:auto;display:flex;gap:7px">
+            <button class="ms-btn">새 문서</button>
+            <button class="ms-btn" data-toast="두 모델 동시 실행"
+              style="background:var(--accent);border-color:var(--accent);color:#fff">두 모델로 실행</button>
+          </div>
+        </div>
+
+        <div class="kpis">
+          <div class="kpi"><span>비교 필드</span><b>14</b></div>
+          <div class="kpi"><span>달라진 필드</span><b style="color:var(--accent)">2</b></div>
+          <div class="kpi"><span>같은 필드</span><b>12</b></div>
+          <div class="kpi"><span>확인 필요</span><b style="color:#d97706">5 → 3</b></div>
+          <div class="kpi"><span>실행 시간</span><b>7.4초</b></div>
+        </div>
+
+        <div class="cols c-46">
+          <div class="card">
+            <div class="card-h"><span class="t">업로드 문서</span>
+              <span class="tag mu" id="upTag">블라인드</span></div>
+            <div class="doc">
+              <div class="paper" style="max-width:420px">
+                <h4>거 래 명 세 표</h4>
+                <div class="pm">
+                  <div><i>등록번호</i>117-81-53390</div><div><i>등록번호</i>113-85-04425</div>
+                  <div><i>상호</i>(주)한빛약품</div><div><i>상호</i>백계약품(주)</div>
+                  <div><i>대표</i>남이레</div><div><i>대표</i>김승관</div>
+                  <div><i>업태</i>무역업, 건강보조식품</div><div><i>작성일</i>2024-07-02</div>
+                </div>
+                <table>
+                  <tr><th style="width:52%">품 명</th><th>수량</th><th>단가</th><th>공급가액</th></tr>
+                  <tr><td>세파록스캡슐</td><td class="n">3</td><td class="n">18,500</td><td class="n">55,500</td></tr>
+                  <tr><td>바리켄산</td><td class="n">2</td><td class="n">12,000</td><td class="n">24,000</td></tr>
+                  <tr><td>메로겔(메트로니다졸)(수출명: MINROGE)</td><td class="n">1</td><td class="n">31,000</td><td class="n">31,000</td></tr>
+                  <tr><td>다에피정10밀리그램(에피나스틴염산염)100정</td><td class="n">10</td><td class="n">4,400</td><td class="n">44,000</td></tr>
+                </table>
+                <div class="tot">합 계 &nbsp; 154,500</div>
+              </div>
+            </div>
+            <div class="bar"><span class="tag mu">해시 기록</span><span class="tag mu">평가셋 미포함</span>
+              <span class="tag mu">2026-08-12 09:20</span></div>
+          </div>
+
+          <div class="card" id="cmpCard">
+            <div class="card-h"><span class="t">필드별 비교</span>
+              <span class="tag ac">14개 중 2개 변경</span></div>
+            <div class="scroll fill">
+              <table>
+                <thead><tr><th style="width:118px">필드</th><th>학습 전</th><th>학습 후</th>
+                  <th class="gt">정답</th><th style="width:78px">판정</th></tr></thead>
+                <tbody>
+                  <tr class="dim"><td>공급자 등록번호</td><td>117-81-53390</td><td>117-81-53390</td>
+                    <td class="gt">117-81-53390</td><td><span class="tag mu">동일</span></td></tr>
+                  <tr class="dim"><td>공급자 상호</td><td>주식회사한빛약품대표남이레</td>
+                    <td>주식회사한빛약품대표남이레</td><td class="gt">(주)한빛약품</td>
+                    <td><span class="tag mu">동일</span></td></tr>
+                  <tr class="dim"><td>공급자 대표</td><td>무역업,건강보조식</td><td>무역업,건강보조식</td>
+                    <td class="gt">남이레</td><td><span class="tag mu">동일</span></td></tr>
+                  <tr class="dim"><td>공급받는자 등록번호</td><td>113-85-04425</td><td>113-85-04425</td>
+                    <td class="gt">113-85-04425</td><td><span class="tag mu">동일</span></td></tr>
+                  <tr class="dim"><td>공급받는자 상호</td><td>백계약품(주)</td><td>백계약품(주)</td>
+                    <td class="gt">백계약품(주)</td><td><span class="tag mu">동일</span></td></tr>
+                  <tr class="dim"><td>공급받는자 대표</td><td>김승관</td><td>김승관</td>
+                    <td class="gt">김승관</td><td><span class="tag mu">동일</span></td></tr>
+                  <tr class="dim"><td>작성일자</td><td>2024-07-02</td><td>2024-07-02</td>
+                    <td class="gt">2024-07-02</td><td><span class="tag mu">동일</span></td></tr>
+                  <tr class="dim"><td>합계금액</td><td>154,500</td><td>154,500</td>
+                    <td class="gt">154,500</td><td><span class="tag mu">동일</span></td></tr>
+                  <tr class="dim"><td>누계</td><td class="none">검출 안 됨</td><td class="none">검출 안 됨</td>
+                    <td class="gt">154,500</td><td><span class="tag mu">동일</span></td></tr>
+                  <tr class="chg"><td><b>품명 01</b></td><td class="was">세파록스캡슬</td>
+                    <td class="now">세파록스캡슐</td><td class="gt">세파록스캡슐</td>
+                    <td><span class="tag wa judge">판단 보류</span></td></tr>
+                  <tr class="dim"><td>품명 02</td><td>바리켄산</td><td>바리켄산</td>
+                    <td class="gt">바리켄산</td><td><span class="tag mu">동일</span></td></tr>
+                  <tr class="dim"><td>품명 03</td><td>메로겔(메트로니다졸)(수출명:MINROGE)</td>
+                    <td>메로겔(메트로니다졸)(수출명:MINROGE)</td>
+                    <td class="gt">메로겔(메트로니다졸)(수출명: MINROGE)</td>
+                    <td><span class="tag mu">동일</span></td></tr>
+                  <tr class="chg"><td><b>품명 04</b></td>
+                    <td class="was">다에피정10밀리그램(에피나스틴엄산염)100정</td>
+                    <td class="now">다에피정10밀리그램(에피나스틴염산염)100정</td>
+                    <td class="gt">다에피정10밀리그램(에피나스틴염산염)100정</td>
+                    <td><span class="tag wa judge">판단 보류</span></td></tr>
+                  <tr class="dim"><td>수량 · 단가 · 금액</td><td>16 / 154,500</td><td>16 / 154,500</td>
+                    <td class="gt">16 / 154,500</td><td><span class="tag ok">산술 일치</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="bar"><span class="lab">전체 유지 재검사</span>
+              <span class="tag mu">타깃 <b style="color:#dc2626">9/38</b> → <b style="color:#16a34a">38/38</b></span>
+              <span class="tag mu">기준 데이터 유지 38,429</span>
+              <span class="tag wa">257 잃음</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 05 학습 결과 ============ -->
+      <section class="view" id="v-learning">
+        <div class="kpis">
+          <div class="kpi"><span>전달한 항목</span><b>2건</b></div>
+          <div class="kpi"><span>학습 크롭</span><b>420</b></div>
+          <div class="kpi"><span>복습 크롭</span><b>8,016</b></div>
+          <div class="kpi"><span>고객 문서 품명</span><b style="white-space:nowrap"><span class="was">16</span><span style="color:var(--muted)">&rarr;</span><span class="now">24</span><span style="font-size:13px;color:var(--muted)">/24</span></b></div>
+          <div class="kpi"><span>새로 잃은 판독</span><b style="color:#d97706">257</b></div>
+        </div>
+
+        <div class="cols c-73">
+          <div class="stack">
+
+            <div class="card">
+              <div class="card-h"><span class="t">전달한 항목 결과</span>
+                <div style="display:flex;gap:6px;align-items:center">
+                  <span class="tag ac">고객 문서 6건</span>
+                  <span class="tag ok">8 / 8</span></div></div>
+              <table>
+                <thead><tr><th>항목</th><th style="width:110px">전달 출처</th>
+                  <th class="n" style="width:70px">등장</th>
+                  <th class="n" style="width:76px">학습 전</th><th class="n" style="width:76px">학습 후</th>
+                  <th style="width:62px">결과</th></tr></thead>
+                <tbody>
+                  <tr><td>세파록스캡슬 &rarr; <b>세파록스캡슐</b></td>
+                    <td>4.pdf · 7.pdf · 9.pdf</td><td class="n">5</td>
+                    <td class="n was">0 / 5</td><td class="n now">5 / 5</td>
+                    <td><span class="tag ok">해결</span></td></tr>
+                  <tr><td>…에피나스틴엄산염 &rarr; <b>…에피나스틴염산염</b></td>
+                    <td>4.pdf · 5.pdf</td><td class="n">3</td>
+                    <td class="n was">0 / 3</td><td class="n now">3 / 3</td>
+                    <td><span class="tag ok">해결</span></td></tr>
+                  <tr class="tot"><td>합계</td><td></td><td class="n">8</td>
+                    <td class="n">0 / 8</td><td class="n">8 / 8</td><td></td></tr>
+                </tbody>
+              </table>
+              <div class="bar"><span class="lab">품명 필드 전체</span>
+                <span class="tag mu">16 / 24 &rarr; 24 / 24</span>
+                <span class="lab" style="margin-left:8px">다른 필드</span>
+                <span class="tag mu">변화 없음</span></div>
+            </div>
+
+            <div class="card">
+              <div class="card-h"><span class="t">유지 검사</span>
+                <div style="display:flex;gap:6px;align-items:center">
+                  <span class="tag mu">내부 기준 데이터 45,617</span>
+                  <span class="tag mu">고객 문서 아님</span></div></div>
+              <table>
+                <thead><tr><th>구성</th><th class="n" style="width:96px">전달 항목</th>
+                  <th class="n" style="width:110px">유지된 판독</th>
+                  <th class="n" style="width:110px">새로 잃은 판독</th>
+                  <th style="width:74px">판정</th></tr></thead>
+                <tbody>
+                  <tr><td>학습 전 기본 모델</td><td class="n">9 / 38</td><td class="n">30,726</td>
+                    <td class="n">—</td><td><span class="tag mu">기준점</span></td></tr>
+                  <tr><td>새 품명만 학습<br><span class="fkey">복습 없음</span></td>
+                    <td class="n now">38 / 38</td><td class="n" style="font-weight:800">38,255</td>
+                    <td class="n was">472</td><td><span class="tag er">유지 실패</span></td></tr>
+                  <tr><td>복습 + 가중치 보정<br><span class="fkey">복습 8,016 · 보정 0.8</span></td>
+                    <td class="n now">38 / 38</td><td class="n" style="font-weight:800">38,429</td>
+                    <td class="n" style="color:#d97706;font-weight:800">257</td>
+                    <td><span class="tag ok">채택</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+
+
+            <div class="card">
+              <div class="card-h"><span class="t">잃은 판독 유형 분류</span>
+                <div style="display:flex;gap:6px;align-items:center">
+                  <span class="tag mu">내부 기준 데이터</span>
+                  <span class="tag mu">356건 전수</span></div></div>
+              <table>
+                <thead><tr><th style="width:140px">유형</th><th>예</th>
+                  <th class="n" style="width:56px">건수</th><th style="width:96px">처리</th></tr></thead>
+                <tbody>
+                  <tr><td>인쇄 선명 · 오독</td><td>한 글자 오독 · 글자 수 오류</td>
+                    <td class="n">203</td><td><span class="tag ac">품명 대조</span></td></tr>
+                  <tr><td>법인 표기</td><td>㈜ / (주) / 주식회사</td><td class="n">61</td>
+                    <td><span class="tag mu">출력 규칙</span></td></tr>
+                  <tr><td>기호 · 괄호</td><td>꼬리 마침표 · &times; / x · 괄호 미종결</td>
+                    <td class="n">56</td><td><span class="tag mu">출력 규칙</span></td></tr>
+                  <tr><td>동형 글자</td><td>O / 0 · l / 1 · 다 / 디</td><td class="n">21</td>
+                    <td><span class="tag mu">사람 확인</span></td></tr>
+                  <tr><td>인쇄 불량</td><td>번짐 · 흐림 · 저해상</td><td class="n">12</td>
+                    <td><span class="tag mu">사람 확인</span></td></tr>
+                  <tr><td>복합 오류</td><td>한 셀에 두 가지 이상</td><td class="n">3</td>
+                    <td><span class="tag mu">사람 확인</span></td></tr>
+                  <tr class="tot"><td>합계</td><td></td><td class="n">356</td><td></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="card fill">
+              <div class="card-h"><span class="t">유지 검사 상세</span>
+                <span class="tag mu">내부 검증 품명 4종 · 38개 위치</span></div>
+              <div class="scroll fill">
+                <table>
+                  <thead><tr><th>품명</th><th style="width:112px">대상</th>
+                    <th class="n" style="width:76px">학습 전</th><th class="n" style="width:76px">학습 후</th>
+                    <th style="width:62px">결과</th></tr></thead>
+                  <tbody>
+                    <tr><td>세파록스캡슐</td><td><span class="tag ac">신규</span></td>
+                      <td class="n was">0 / 26</td><td class="n now">26 / 26</td>
+                      <td><span class="tag ok">개선</span></td></tr>
+                    <tr><td>다에피정10밀리그램(에피나스틴염산염) 100정</td>
+                      <td><span class="tag ac">신규</span></td>
+                      <td class="n was">2 / 5</td><td class="n now">5 / 5</td>
+                      <td><span class="tag ok">개선</span></td></tr>
+                    <tr><td>바리켄산</td><td><span class="tag mu">유지 확인</span></td>
+                      <td class="n" style="font-weight:800">5 / 5</td>
+                      <td class="n" style="font-weight:800">5 / 5</td>
+                      <td><span class="tag ok">유지</span></td></tr>
+                    <tr><td>메로겔(메트로니다졸)(수출명: MINROGE)</td>
+                      <td><span class="tag mu">유지 확인</span></td>
+                      <td class="n" style="font-weight:800">2 / 2</td>
+                      <td class="n" style="font-weight:800">2 / 2</td>
+                      <td><span class="tag ok">유지</span></td></tr>
+                    <tr class="tot"><td>합계</td><td></td><td class="n">9 / 38</td>
+                      <td class="n">38 / 38</td><td></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="stack">
+            <div class="card">
+              <div class="card-h"><span class="t">학습 데이터 구성</span>
+                <span class="tag mu">8,436장</span></div>
+              <div style="padding:12px 13px">
+                <div class="mixbar">
+                  <span style="width:5%;min-width:70px;background:var(--accent);color:#fff">420</span>
+                  <span style="flex:1;background:var(--accentBg);color:var(--accent)">복습 8,016</span>
+                </div>
+              </div>
+              <dl class="spec" style="border-top:1px solid var(--border)">
+                <dt>새 학습</dt><dd>전달 항목이 나오는 크롭 420장</dd>
+                <dt>복습</dt><dd>이미 정상 판독하던 크롭 8,016장</dd>
+              </dl>
+            </div>
+
+            <div class="card">
+              <div class="card-h"><span class="t">학습 사양</span></div>
+              <dl class="spec">
+                <dt>대상 출처</dt><dd>03 확인 항목 · 2건</dd>
+                <dt>교체 범위</dt><dd>인식 모델</dd>
+                <dt>복습 비율</dt><dd>420 : 8,016</dd>
+                <dt>가중치 보정</dt><dd>0.8</dd>
+                <dt>유지 검사</dt><dd>45,617개 위치 전수</dd>
+                <dt>모델 체크섬</dt><dd class="fkey">a3f9c1…</dd>
+              </dl>
+            </div>
+
+            <div class="card">
+              <div class="card-h"><span class="t">미산출</span></div>
+              <dl class="spec">
+                <dt>자동처리율</dt><dd class="none">판정 규칙 합의 전</dd>
+                <dt>필드별 목표치</dt><dd class="none">합의 전</dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 06 처리 경로 ============ -->
+      <section class="view" id="v-remaining">
+        <div class="kpis">
+          <div class="kpi"><span>검사 칸</span><b>84</b></div>
+          <div class="kpi"><span>기본 모델</span><b>64<span style="font-size:13px;color:var(--muted)">/84</span></b></div>
+          <div class="kpi"><span>학습 적용</span><b class="now">+8</b></div>
+          <div class="kpi"><span>규칙 적용</span><b style="color:var(--accent)">+12</b></div>
+          <div class="kpi"><span>사람 확인</span><b class="none" style="font-size:14px">기준 미정</b></div>
+        </div>
+
+        <div class="cols c-73">
+          <div class="stack">
+
+            <div class="card">
+              <div class="card-h"><span class="t">처리 단계</span>
+                <span class="tag ac">고객 문서 6건 · 84칸</span></div>
+              <div style="padding:12px 13px">
+                <div class="stepbar">
+                  <span style="width:76.2%;background:#8b95a5">기본 모델 64</span>
+                  <span style="width:9.5%;background:var(--accent)">학습 +8</span>
+                  <span style="width:14.3%;background:#4f6ba8">규칙 +12</span>
+                </div>
+              </div>
+              <table>
+                <thead><tr><th style="width:132px">단계</th><th>처리 대상</th>
+                  <th class="n" style="width:70px">건수</th><th class="n" style="width:88px">누적 정상</th>
+                  <th style="width:96px">적용 시점</th></tr></thead>
+                <tbody>
+                  <tr><td>기본 모델</td><td>학습 전 판독</td><td class="n">—</td>
+                    <td class="n">64 / 84 <span class="pct" style="color:#d97706">76%</span></td>
+                    <td><span class="tag mu">현재</span></td></tr>
+                  <tr class="chg"><td><b>학습</b></td><td>품명 글자 오독</td>
+                    <td class="n now">+8</td>
+                    <td class="n">72 / 84 <span class="pct" style="color:#d97706">86%</span></td>
+                    <td><span class="tag ac">모델 교체</span></td></tr>
+                  <tr class="chg"><td><b>출력 규칙</b></td><td>상호·대표 블록 분리 · ㈜ 표기 통일</td>
+                    <td class="n now">+8</td>
+                    <td class="n">80 / 84 <span class="pct" style="color:#d97706">95%</span></td>
+                    <td><span class="tag mu">즉시</span></td></tr>
+                  <tr class="chg"><td><b>컬럼 매핑</b></td><td>누계 칸 미검출</td>
+                    <td class="n now">+4</td>
+                    <td class="n">84 / 84 <span class="pct" style="color:#16a34a">100%</span></td>
+                    <td><span class="tag mu">즉시</span></td></tr>
+                </tbody>
+              </table>
+              <div class="bar"><span class="lab">이 6건 기준</span>
+                <span class="tag mu">모델 교체 1회</span>
+                <span class="tag mu">규칙 3종 추가</span>
+                <span class="tag ok">잔여 0</span></div>
+            </div>
+
+            <div class="card">
+              <div class="card-h"><span class="t">처리 방법</span>
+                <span class="tag mu">확인 20건</span></div>
+              <table>
+                <thead><tr><th style="width:110px">방법</th><th style="width:170px">대상 유형</th>
+                  <th class="n" style="width:60px">건수</th><th>내용</th>
+                  <th style="width:110px">준비물</th></tr></thead>
+                <tbody>
+                  <tr><td><span class="tag ac">학습</span></td><td>글자 오독</td><td class="n">8</td>
+                    <td>인식 모델이 해당 글자를 읽도록 재학습</td>
+                    <td>오독 목록 · 크롭</td></tr>
+                  <tr><td><span class="tag mu">출력 규칙</span></td><td>블록 결합</td><td class="n">6</td>
+                    <td>상호 칸과 대표 칸을 분리해 각 필드로 배정</td>
+                    <td>서식 규칙 1건</td></tr>
+                  <tr><td><span class="tag mu">출력 규칙</span></td><td>표기 차이</td><td class="n">2</td>
+                    <td>㈜ / (주) / 주식회사 를 한 형태로 통일</td>
+                    <td>고객 표기 기준</td></tr>
+                  <tr><td><span class="tag mu">컬럼 매핑</span></td><td>컬럼 미매핑</td><td class="n">4</td>
+                    <td>누계 칸을 cumulativeAmount 로 연결</td>
+                    <td>서식 정의 1건</td></tr>
+                  <tr><td><span class="tag mu">품명 대조</span></td><td>등록 품명 오독</td>
+                    <td class="n">—</td>
+                    <td>고객 품명 대장과 대조해 가장 가까운 등록 품명으로 교정</td>
+                    <td class="none">품명 대장 미제공</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="card fill">
+              <div class="card-h"><span class="t">사람 확인이 필요한 경우</span>
+                <span class="tag mu">이번 6건에서는 발생 없음</span></div>
+              <table>
+                <thead><tr><th style="width:150px">조건</th><th>판정 방법</th>
+                  <th class="n" style="width:86px">이번 6건</th>
+                  <th style="width:110px">운영 처리</th></tr></thead>
+                <tbody>
+                  <tr><td>해상도 부족</td><td>입력 이미지 150dpi 미만 또는 글자 높이 10px 미만</td>
+                    <td class="n">0</td><td><span class="tag mu">업로드 시 경고</span></td></tr>
+                  <tr><td>인쇄 상태 불량</td><td>번짐·흐림으로 인식 신뢰도 40% 미만</td>
+                    <td class="n">0</td><td><span class="tag mu">검수 대상</span></td></tr>
+                  <tr><td>모양이 같은 글자</td><td>O / 0 · l / 1 · 다 / 디 — 산술·대조로도 못 가림</td>
+                    <td class="n">0</td><td><span class="tag mu">검수 대상</span></td></tr>
+                  <tr><td>손글씨</td><td>인쇄체가 아닌 필기 영역</td>
+                    <td class="n">0</td><td><span class="tag mu">검수 대상</span></td></tr>
+                  <tr><td>미등록 품명</td><td>고객 품명 대장에 없는 품명</td>
+                    <td class="n">0</td><td><span class="tag mu">검수 대상</span></td></tr>
+                </tbody>
+              </table>
+              <div class="bar"><span class="lab">주의</span>
+                <span style="font-size:11.5px;color:var(--muted)">위 조건은 문서 품질에 따라 발생합니다.
+                  POC 문서 6건에는 없었으나 운영 전량에서는 비율이 달라집니다.</span></div>
+            </div>
+          </div>
+
+          <div class="stack">
+            <div class="card">
+              <div class="card-h"><span class="t">필드별 처리 후</span>
+                <span class="tag ok">14 / 14</span></div>
+              <table>
+                <thead><tr><th>필드</th><th class="n" style="width:60px">현재</th>
+                  <th class="n" style="width:60px">처리 후</th></tr></thead>
+                <tbody>
+                  <tr><td>공급자 상호</td><td class="n was">3/6</td><td class="n now">6/6</td></tr>
+                  <tr><td>공급자 대표</td><td class="n was">3/6</td><td class="n now">6/6</td></tr>
+                  <tr><td>공급받는자 상호</td><td class="n was">4/6</td><td class="n now">6/6</td></tr>
+                  <tr><td>누계</td><td class="n was">2/6</td><td class="n now">6/6</td></tr>
+                  <tr><td>품명</td><td class="n was">16/24</td><td class="n now">24/24</td></tr>
+                  <tr class="dim"><td>그 외 9필드</td><td class="n">36/36</td><td class="n">36/36</td></tr>
+                  <tr class="tot"><td>합계</td><td class="n">64/84</td><td class="n">84/84</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="card">
+              <div class="card-h"><span class="t">운영 사양</span></div>
+              <dl class="spec">
+                <dt>Export</dt><dd>json · xlsx · html<br><span class="fkey">hwp 예정</span></dd>
+                <dt>권장 해상도</dt><dd>150~300dpi</dd>
+                <dt>글자 높이</dt><dd>10px 이상</dd>
+                <dt>이미지 폭</dt><dd>2000px 내외</dd>
+                <dt>파일 보관</dt><dd>24시간 후 삭제</dd>
+              </dl>
+            </div>
+
+            <div class="card">
+              <div class="card-h"><span class="t">미산출</span></div>
+              <dl class="spec">
+                <dt>검수 권장 비율</dt><dd class="none">판정 규칙 합의 전</dd>
+                <dt>필드별 목표치</dt><dd class="none">합의 전</dd>
+                <dt>품명 대조 효과</dt><dd class="none">품명 대장 제공 후</dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const T={ocr:'OCR 실행',run:'실행 결과',missed:'확인 항목',learning:'학습 결과',
+  compare:'모델 비교',remaining:'처리 경로'};
+function open(n){
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on',v.id==='v-'+n));
+  document.querySelectorAll('.nav a[data-view]').forEach(a=>a.classList.toggle('on',a.dataset.view===n));
+  document.querySelector('#hdTitle').textContent=T[n];
+  if(location.hash.slice(1)!==n)history.replaceState(null,'','#'+n);
+}
+document.querySelectorAll('.nav a[data-view]').forEach(a=>
+  a.addEventListener('click',()=>open(a.dataset.view)));
+document.querySelectorAll('[data-view-go]').forEach(b=>
+  b.addEventListener('click',()=>open(b.dataset.viewGo)));
+document.querySelectorAll('#orTabs .ortab').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#orTabs .ortab').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');
+  document.querySelectorAll('.orpane').forEach(p=>p.classList.toggle('on',p.id==='pane-'+b.dataset.tab));
+}));
+document.querySelectorAll('[data-gotab]').forEach(b=>b.addEventListener('click',()=>
+  document.querySelector('#orTabs .ortab[data-tab="'+b.dataset.gotab+'"]').click()));
+document.querySelectorAll('#prepSeg button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#prepSeg button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');
+  document.querySelector('#paperRun').style.transform =
+    b.dataset.prep==='before' ? 'rotate(-0.8deg)' : 'none';
+}));
+document.querySelectorAll('#aggSeg button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#aggSeg button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');
+  document.querySelectorAll('.aggt').forEach(t=>t.classList.toggle('on',t.dataset.agg===b.dataset.agg));
+}));
+const mdF=document.querySelector('#mdFilter');
+if(mdF)mdF.addEventListener('change',()=>{
+  const v=mdF.value;
+  document.querySelectorAll('#hs-list tbody tr').forEach(r=>{
+    r.style.display=(v==='전체'||r.dataset.model===v)?'':'none';});
+});
+function hState(n){
+  document.querySelectorAll('.hstate').forEach(x=>x.classList.toggle('on',x.id==='hs-'+n));
+}
+document.querySelectorAll('[data-open="detail"]').forEach(b=>
+  b.addEventListener('click',()=>hState('detail')));
+document.querySelectorAll('#v-missed [data-back="list"]').forEach(b=>
+  b.addEventListener('click',()=>hState('list')));
+const fieldTb=document.querySelector('#fieldTable');
+if(fieldTb){
+  const frs=[...fieldTb.querySelectorAll('tbody tr')];
+  const hit=mk=>{
+    document.querySelectorAll('.mkhit').forEach(e=>e.classList.remove('mkhit'));
+    if(!mk)return;
+    ['pB','pA'].forEach(p=>document.querySelector('#mk-'+mk+'-'+p)?.classList.add('mkhit'));
+  };
+  frs.forEach(r=>r.addEventListener('click',()=>{
+    frs.forEach(x=>x.classList.remove('sel')); r.classList.add('sel'); hit(r.dataset.mark);
+  }));
+  const applyNeed=mode=>frs.forEach(r=>{
+    r.style.display=(mode==='all'||r.dataset.need==='1')?'':'none';});
+  document.querySelectorAll('#needSeg button').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('#needSeg button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on'); applyNeed(b.dataset.need);}));
+  applyNeed('only');
+  frs.find(r=>r.dataset.mark)?.click();
+}
+document.querySelectorAll('.runrow').forEach(r=>r.addEventListener('click',()=>{
+  document.querySelectorAll('.runrow').forEach(x=>x.classList.remove('on'));r.classList.add('on');}));
+
+document.querySelectorAll('#modeSeg button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#modeSeg button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');
+  const rp=b.dataset.mode==='replay';
+  document.querySelector('#cmpCard').classList.toggle('show-gt',rp);
+  document.querySelector('#upTag').textContent=rp?'사전 검증':'블라인드';
+  document.querySelectorAll('#cmpCard .judge').forEach(x=>{
+    x.textContent=rp?'정답 일치':'판단 보류';x.className='tag '+(rp?'ok':'wa')+' judge';});
+}));
+
+document.querySelector('#themeBtn').addEventListener('click',()=>{
+  const r=document.documentElement;
+  r.dataset.theme=r.dataset.theme==='dark'?'light':'dark';});
+
+const tw=document.querySelector('#toast');let tm;
+document.querySelectorAll('[data-toast]').forEach(b=>b.addEventListener('click',()=>{
+  tw.textContent=b.dataset.toast;tw.classList.add('show');
+  clearTimeout(tm);tm=setTimeout(()=>tw.classList.remove('show'),1500);}));
+
+const q=new URLSearchParams(location.search);
+const w=location.hash.slice(1)||q.get('view');
+if(T[w])open(w);
+if(q.get('state')==='detail')hState('detail');
+const tb=q.get('tab');
+if(tb)document.querySelector('#orTabs .ortab[data-tab="'+tb+'"]')?.click();
+if(q.get('mode')==='replay')document.querySelector('#modeSeg button[data-mode="replay"]').click();
+</script>
+</body>
+</html>
