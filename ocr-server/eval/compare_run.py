@@ -41,7 +41,8 @@ def _latest_run() -> str | None:
     return sorted(runs)[-1] if runs else None
 
 
-def compare_run(ts: str | None = None, testset: str = C.DEFAULT_TESTSET) -> dict[str, Any]:
+def compare_run(ts: str | None = None, testset: str = C.DEFAULT_TESTSET,
+                skip_missing: bool = False) -> dict[str, Any]:
     run_dir = os.path.join(C.RUNS_DIR, ts) if ts else C.latest_run(testset)
     if not run_dir or not os.path.isdir(run_dir):
         raise FileNotFoundError(f"run dir not found: {run_dir}")
@@ -80,6 +81,10 @@ def compare_run(ts: str | None = None, testset: str = C.DEFAULT_TESTSET) -> dict
         src = s["sourceFile"]
         gt = agg[s["gtKey"]] if agg is not None else load_gt(os.path.normpath(os.path.join(C.HERE, s["gt"])), profile=kind)
         res_path = os.path.join(samples_dir, src + ".json")
+        # 부분 run(500장 표본·VLM 스크리닝) 채점용 명시적 옵트인. 기본은 종전대로
+        # 전량을 요구한다 - 전량 run에서 조용히 건너뛰면 누락을 숨기게 된다.
+        if skip_missing and not os.path.exists(res_path):
+            continue
         result = json.load(open(res_path, encoding="utf-8"))
         ext_df = result.get("documentFields") or {}
 
@@ -155,5 +160,7 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--ts", default=None)
     ap.add_argument("--testset", default=C.DEFAULT_TESTSET)
+    ap.add_argument("--skip-missing", action="store_true",
+                    help="샘플 결과가 없는 문서는 건너뛴다(부분 run 채점용 옵트인)")
     args = ap.parse_args()
-    compare_run(args.ts, args.testset)
+    compare_run(args.ts, args.testset, skip_missing=args.skip_missing)

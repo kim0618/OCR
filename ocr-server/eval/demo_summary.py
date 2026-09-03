@@ -37,10 +37,57 @@ sys.path.insert(0, HERE)
 from finetune_report import _write_text  # noqa: E402
 from demo_next_target import is_item_name, same_text, basis_keep, gt_bad  # noqa: E402
 
+# 실패 사유를 고를 때 저울(recount)과 같은 기준으로 본다 - 공백·전각만 다른 건
+# 글자를 맞게 읽은 것이라 실패 목록에 넣지 않는다.
+sys.path.insert(0, os.path.join(HERE, "finetune", "demo"))
+from recount_reviewed_gt import comparable as _cmp_raw, bad_paths as _bad_paths  # noqa: E402
+
+
+def _cmp(text) -> str:
+    return _cmp_raw(text or "")
+
 DEMO_DIR = os.path.join(HERE, "finetune", "demo")
 DEFAULT_OUT = os.path.join(DEMO_DIR, "DEMO_SUMMARY.html")
 REVIEW_RECOUNT = os.path.join(DEMO_DIR, "GT_REVIEW_RECOUNT.json")
 ORD = ["1차", "2차", "3차", "4차", "5차", "6차", "7차", "8차"]
+
+
+def _rejudge(run: dict) -> None:
+    """저장된 판정을 저울 기준(comparable)으로 다시 센다.
+
+    ★2026-08-11: 판정기가 한동안 strict 비교(.strip() ==)여서 <공백·전각만 다른 정답>이
+    실패로 기록됐다. 그 시절에 만들어진 리포트 JSON 은 verdict 가 그대로 남아 있어
+    화면이 "다에피정 2/5"처럼 잘못 나온다. 리포트를 다시 만들 수 없는 과거 run 도
+    있으므로, 화면을 그리기 전에 rows 로부터 다시 센다(원본 파일은 건드리지 않는다).
+    """
+    targets = run.get("targets") or []
+    if not targets:
+        return
+    bad = _bad_paths()
+    n_pass = 0
+    for t in targets:
+        rows = t.get("rows") or []
+        if not rows:
+            continue
+        # ★판독 불가로 확정된 크롭은 판정 모수에서 뺀다(저울과 같은 명단).
+        #  path 가 있는 리포트만 걸러진다 - 과거 리포트는 backfill_report_paths.py 로 채운다.
+        if bad:
+            rows = [r for r in rows if r.get("path") not in bad]
+            t["rows"] = rows
+        if not rows:
+            continue
+        for r in rows:
+            r["ok"] = _cmp(r.get("finetuned")) == _cmp(r.get("gt"))
+        ok_n = sum(1 for r in rows if r["ok"])
+        v = dict(t.get("verdict") or {})
+        v["n"] = len(rows)
+        v["ft"] = ok_n
+        v["base"] = sum(1 for r in rows if _cmp(r.get("base")) == _cmp(r.get("gt")))
+        v["pass"] = ok_n == len(rows)
+        t["verdict"] = v
+        n_pass += bool(v["pass"])
+    run["summary"] = {"pass": n_pass, "total": len(targets),
+                      "allPass": n_pass == len(targets)}
 
 
 def _load_attempts(input_dir: str) -> dict[tuple[int, int], list[dict]]:
@@ -67,6 +114,7 @@ def _load_attempts(input_dir: str) -> dict[tuple[int, int], list[dict]]:
         folder = os.path.basename(os.path.dirname(fp))
         if (m := re.match(r"(\d{3})_", folder)):
             j["runSeq"] = m.group(1)
+        _rejudge(j)
         cyc = int(j.get("cycle") or len(j.get("targets") or []))
         key = (int(j.get("roundNo") or (cyc + 1) // 2),
                int(j.get("step") or (1 if cyc % 2 else 2)))
@@ -386,7 +434,9 @@ def _history(attempts: dict[tuple[int, int], list[dict]], esc) -> str:
         for t in run.get("targets") or []:
             nm = esc(t["name"])
             tl.append(f"<b>{nm}</b>" if t.get("isNew") else nm)
-        tgt = " · ".join(tl) or "-"
+        # 타깃이 여러 개면 한 줄에 이어 붙이지 않고 <한 품명씩 개행>한다 - 4개가 넘어가면
+        # 가운뎃점으로 이으면 셀 안에서 뭉개져 어느 품명이 몇 개인지 안 보인다.
+        tgt = "<br>".join(tl) or "-"
         h = hist.get(str(run.get("runTag") or ""), {})
         sec = float(h.get("elapsedSec") or 0)
         usd = float(h.get("estimatedCostUsd") or 0)
@@ -483,11 +533,16 @@ def _history(attempts: dict[tuple[int, int], list[dict]], esc) -> str:
     return "\n".join(p)
 
 
-# ★대표 모델 비교(2026-08-10 사용자 요청). 실행 이력 20행 중 <지금 의미 있는 두 모델>만
+# ★대표 모델 비교(2026-08-10 사용자 요청). 실행 이력 전체 중 <지금 의미 있는 모델>만
 #  따로 뽑아 실행 이력과 모델 계보 사이에 표로 보여준다. 채택이 바뀌면 이 목록을 갱신할 것.
+#  (태그, 설명, 채택본 여부)
+#  ★보간 α 는 0.8 로 고정해 비교한다(2026-08-11 사용자 확정) - 라운드마다 α 를 바꾸면
+#   "타깃이 늘어서 좋아진 건지 α 를 내려서 좋아진 건지"가 섞여 해석이 안 된다.
 BEST_MODELS = [
-    ("260807_1302", "학습 최선 (앵커 8,016 무작위)", False),
-    ("260810_wf80", "★최종 채택 · 가중치 보간 v16-0.8 (학습 없음)", True),
+    ("260807_1302", "1타깃 학습 (앵커 8,016 무작위)", False),
+    ("260810_wf80", "1타깃 + 보간 0.8 (1단계 채택본)", True),
+    ("260811_1105", "4타깃 학습 (세파록스+바리켄산+메로겔+다에피정)", False),
+    ("260811_1105_wf80", "4타깃 + 보간 0.8 — 같은 α 로 1타깃과 직접 비교", False),
 ]
 
 
@@ -502,12 +557,13 @@ def _best_models(attempts: dict[tuple[int, int], list[dict]], esc) -> str:
     base_ok = reviewed.get("baseCorrect") or 0
     n_eval = reviewed.get("evaluatedCrops") or 0
 
-    # 버전 번호는 실행 이력과 같은 규칙(폴더 NNN → vNN)으로 붙인다.
-    ver_of: dict[str, str] = {}
-    for lst in attempts.values():
-        ordered = sorted(lst, key=lambda r: str(r.get("generatedAt") or ""))
-        for i, run in enumerate(ordered):
-            ver_of[str(run.get("runTag"))] = f"v{i + 1}"
+    # ★버전 번호는 <실행 이력의 통산 순번>이다(v22 = 22번째 실행). 단계별 시도 순번
+    #  (2-2-v2)과 다르다 - 단계 안에서 세면 4타깃 run 이 v1·v2 로 찍혀 실행 이력과
+    #  어긋난다(2026-08-11 실측). 실행 이력과 같은 방식으로 전체를 시간순 정렬해 센다.
+    all_runs = sorted(
+        (r for lst in attempts.values() for r in lst),
+        key=lambda r: str(r.get("generatedAt") or ""))
+    ver_of = {str(r.get("runTag")): f"v{i + 1}" for i, r in enumerate(all_runs)}
 
     rows = []
     for tag, label, adopted in BEST_MODELS:
@@ -517,11 +573,31 @@ def _best_models(attempts: dict[tuple[int, int], list[dict]], esc) -> str:
         lost = r.get("lostChar", r.get("lost", 0))
         nota = (r.get("notationOnly") or 0) + (r.get("lostNotation") or 0)
         style = ' style="background:#f0f9f2"' if adopted else ""
+        # 타깃 판정은 그 run 의 리포트에서 읽는다(모델마다 타깃 수가 다르다).
+        run0 = next((r2 for lst in attempts.values() for r2 in lst
+                     if str(r2.get("runTag")) == tag), None)
+        tgts = (run0 or {}).get("targets") or []
+        tv = [(t.get("verdict") or {}) for t in tgts]
+        n_ok = sum(1 for v in tv if v.get("pass"))
+        crops_ok = sum(v.get("ft", 0) for v in tv)
+        crops_n = sum(v.get("n", 0) for v in tv)
+        # 타깃은 <한 품명씩 개행>하고 그 품명의 판정을 옆에 붙인다 - 어느 품명이
+        # 몇 개 통과했는지가 합계만으로는 안 보인다.
+        detail = "<br>".join(
+            f'{esc(t["name"])} '
+            f'<b class="{"ok" if (t.get("verdict") or {}).get("pass") else "bad"}">'
+            f'{(t.get("verdict") or {}).get("ft", 0)}/'
+            f'{(t.get("verdict") or {}).get("n", 0)}</b>'
+            for t in tgts) or '<span class="muted">-</span>'
+        verdict = (f'<b>{crops_ok}/{crops_n}</b> '
+                   f'<span class="muted">· 품명 {n_ok}/{len(tv)}</span><br>'
+                   f'<span style="font-size:12px">{detail}</span>'
+                   if tv else '<span class="muted">-</span>')
         rows.append(
             f'<tr{style}><td><b>{ver_of.get(tag, "-")}</b></td>'
             f'<td>{esc(label)}</td>'
             f'<td class="muted">{esc(tag)}</td>'
-            f'<td><b>26/26</b></td>'
+            f'<td>{verdict}</td>'
             f'<td><b>{r["correct"]:,}</b> <span class="muted">'
             f'({100.0 * r["correct"] / n_eval:.1f}%)</span></td>'
             f'<td><b>{lost:,}</b> <span class="muted">'
@@ -532,12 +608,10 @@ def _best_models(attempts: dict[tuple[int, int], list[dict]], esc) -> str:
         #  표 안의 전체폭 행 + details 에 넣는다(2026-08-10). 표 밖 독립 details 로 두면
         #  후보 블록 내부의 잉여 닫힘 태그가 접기 구조를 깨뜨려 내용이 밖으로 샌다.
         #  표 셀 안에서는 브라우저 파서가 이를 격리해 접힘이 유지된다(실행 이력에서 검증됨).
-        run = next((r2 for lst in attempts.values() for r2 in lst
-                    if str(r2.get("runTag")) == tag), None)
-        body = _next_block(run, esc, attempts, id_suffix="best") if run else ""
+        body = _next_block(run0, esc, attempts, id_suffix="best") if run0 else ""
         if body:
             rows.append(
-                f'<tr><td colspan="10" style="background:#f6faf7">'
+                f'<tr><td colspan="11" style="background:#f6faf7">'
                 f'<details><summary style="cursor:pointer;color:#0a7a3d;'
                 f'font-weight:700">▸ 남은 잃어버림 · 다음 타깃 후보</summary>'
                 f'<div style="padding:8px 4px 2px">{body}</div>'
@@ -546,11 +620,11 @@ def _best_models(attempts: dict[tuple[int, int], list[dict]], esc) -> str:
         return ""
     return (
         '<h3>대표 모델</h3>'
-        '<p class="muted">실행 이력 전체 중 지금 기준이 되는 두 모델. '
+        '<p class="muted">실행 이력 전체 중 지금 기준이 되는 모델들. '
         '수치는 GT 재검수 반영 재집계(GT_REVIEW_RECOUNT) 기준, '
-        '①은 글자가 실제로 틀린 것만.</p>'
-        '<table><tr><th style="width:56px">버전</th><th>모델</th>'
-        '<th style="width:110px">run</th><th style="width:76px">타깃</th>'
+        '①은 글자가 실제로 틀린 것만. 타깃 칸은 판정 크롭 / 통과 품명 수.</p>'
+        '<table><tr><th style="width:56px">버전</th><th style="width:210px">모델</th>'
+        '<th style="width:110px">run</th><th style="width:290px">타깃</th>'
         '<th style="width:150px">정답</th><th style="width:120px">①잃어버림</th>'
         '<th style="width:96px">②못읽음</th><th style="width:96px">③표기만</th>'
         '<th style="width:90px">되살림</th><th style="width:90px">순증</th></tr>'
@@ -837,29 +911,32 @@ def _why_fail(run: dict, esc) -> str:
     """
     c = run.get("counts") or {}
     lines = []
+    n_nota = 0
     for t in run.get("targets") or []:
         v = t.get("verdict") or {}
         if v.get("pass"):
             continue
-        bad = [r for r in (t.get("rows") or []) if not r.get("ok")]
-        lines.append(f'<b>{esc(t["name"])}</b> - 판정 {v.get("n", 0)} 크롭 중 '
-                     f'<b>{len(bad)} 크롭 실패</b> (시작 모델은 {v.get("base", 0)} 크롭 정답)')
-        if bad:
-            items = "".join(
-                f'<li>정답 <b>{esc(r["gt"])}</b> → 이 모델 '
-                f'<span class="bad">{esc(r["finetuned"]) or "(빈칸)"}</span>'
-                f' <span class="muted">(시작 모델: {esc(r["base"]) or "(빈칸)"})</span></li>'
-                for r in bad[:6])
-            lines.append(f'<ul style="margin:6px 0 10px">{items}</ul>')
-    cond = []
-    if c.get("targetTrainUnique") is not None:
-        cond.append(f'타깃 {c["targetTrainUnique"]} 크롭')
-        cond.append("앵커 없음" if not c.get("anchor") else f'앵커 {c["anchor"]:,} 크롭')
-    if cond:
-        lines.append(f'<p class="muted">이 실행의 학습 조건: {" · ".join(cond)}. '
-                     f'타깃 글자는 고쳐졌는데 주변 글자가 삽입·삭제·치환으로 흔들린다면, '
-                     f'학습 신호가 타깃 하나로 쏠려 글자/공백 판정 기준이 함께 밀린 것이다 '
-                     f'— 앵커(타깃과 무관한 정답 크롭)를 섞으면 그 기준이 유지된다.</p>')
+        # ★공백·전각만 다른 건 실패 사유가 아니다(2026-08-11). 판정기가 strict 비교라
+        #  <공백만 다른 정답>이 실패로 잡혀 run 이 통째로 기각된 사고가 있었다. 저울과
+        #  같은 comparable 로 걸러, 진짜 글자가 틀린 것만 사유로 보여준다.
+        rows_bad = [r for r in (t.get("rows") or []) if not r.get("ok")]
+        real = [r for r in rows_bad if _cmp(r.get("finetuned")) != _cmp(r.get("gt"))]
+        n_nota += len(rows_bad) - len(real)
+        if not real:
+            continue          # 표기만 다른 타깃은 실패 사유가 아니므로 아예 표시하지 않는다
+        # 타깃 하나마다 한 줄씩, 그 아래 실패 크롭을 줄바꿈해 보여준다(가독성).
+        lines.append(
+            f'<p style="margin:10px 0 4px"><b>{esc(t["name"])}</b> — '
+            f'판정 {v.get("n", 0)} 크롭 중 <b class="bad">{len(real)} 크롭 실패</b> '
+            f'<span class="muted">(시작 모델은 {v.get("base", 0)} 크롭 정답)</span></p>')
+        items = "".join(
+            f'<li style="margin:3px 0">정답 <b>{esc(r["gt"])}</b><br>'
+            f'<span style="margin-left:14px">이 모델 '
+            f'<span class="bad">{esc(r["finetuned"]) or "(빈칸)"}</span></span><br>'
+            f'<span class="muted" style="margin-left:14px">시작 모델 '
+            f'{esc(r["base"]) or "(빈칸)"}</span></li>'
+            for r in real[:6])
+        lines.append(f'<ul style="margin:2px 0 8px">{items}</ul>')
     return "\n".join(lines)
 
 

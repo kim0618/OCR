@@ -154,12 +154,34 @@ def load_policy() -> tuple[dict[str, str], set[str], dict[str, int]]:
     return overrides, excluded, counts
 
 
+def bad_paths() -> set[str]:
+    """크롭 경로 단위 평가 제외(basis_bad_paths.txt).
+
+    gt_bad.txt 는 GT 문자열 기준이라 같은 품명의 멀쩡한 크롭까지 함께 빠진다.
+    해상도 한계처럼 <그 한 장만> 판독 불가인 경우를 위한 경로 단위 명단이다.
+    """
+    f = HERE / "basis_bad_paths.txt"
+    if not f.exists():
+        return set()
+    out = set()
+    for line in f.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if line and not line.startswith("#"):
+            out.add(line.split("\t", 1)[0].strip())
+    return out
+
+
 def main() -> None:
     keep = {
         line.strip()
         for line in (HERE / "basis_keep.txt").read_text(encoding="utf-8").splitlines()
         if line.strip()
     }
+    dropped = bad_paths() & keep
+    keep -= dropped
+    if dropped:
+        print(f"[경로 제외] basis_bad_paths.txt: {len(dropped)}장 "
+              f"(평가 크롭 {45617} → {len(keep)})")
     overrides, excluded_names, review_counts = load_policy()
     base = load_scan("000_base.jsonl", keep)
     # 스캔 파일명이 곧 실행 시각이라 정렬이 실험 순서다. 새 run 을 추가해도 코드 수정 불필요.
@@ -170,7 +192,7 @@ def main() -> None:
         common &= set(scan)
     # 새 스캔이 기존보다 좁은 크롭 집합을 담으면 모든 과거 수치의 분모가 조용히 바뀐다.
     # 그러면 곡선 비교가 무효이므로 즉시 멈춘다(EXPECTED 는 GT 재검수 확정 시점 값).
-    EXPECTED_COMMON = 45617
+    EXPECTED_COMMON = 45617 - len(dropped)   # 경로 제외분만큼 자동으로 깎는다
     if common and len(common) != EXPECTED_COMMON:
         raise RuntimeError(
             f"공통 크롭이 {EXPECTED_COMMON} 이 아니라 {len(common)} 입니다. "

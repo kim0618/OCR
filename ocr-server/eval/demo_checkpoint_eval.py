@@ -30,7 +30,7 @@ from finetune_report import BASE_MODEL, predict_all  # noqa: E402
 #  (세파록스캡슐)은 GT 에 공백이 없어 드러나지 않다가, 2단계 4타깃에서 실패 5건 중
 #  4건이 <공백만 다른 정답>으로 잡혀 run 전체가 기각됐다.
 sys.path.insert(0, os.path.join(HERE, "finetune", "demo"))
-from recount_reviewed_gt import comparable  # noqa: E402
+from recount_reviewed_gt import comparable, bad_paths  # noqa: E402
 
 MANIFEST = os.path.join(CORPUS_DIR, "dataset", "manifest.json")
 TEST_LIST = os.path.join(CORPUS_DIR, "test.txt")
@@ -66,6 +66,15 @@ def main() -> int:
     targets = [str(value) for value in manifest.get("targets", [])]
     keys = {target: target.replace(" ", "") for target in targets}
     rows = _rows()
+    # ★판독 불가로 확정된 크롭은 게이트에서도 뺀다(저울과 같은 명단을 쓴다).
+    #  어떤 모델도 못 읽는 크롭을 게이트에 두면 그 타깃은 영원히 실패한다.
+    bad = bad_paths()
+    if bad:
+        before = len(rows)
+        rows = [row for row in rows if row[0] not in bad]
+        if before != len(rows):
+            print(f"[판정] basis_bad_paths 로 {before - len(rows)}장 제외 "
+                  f"({before} → {len(rows)})")
     if not rows:
         raise SystemExit("판정 크롭이 비어 있습니다")
 

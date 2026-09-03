@@ -240,7 +240,7 @@ tr.dim td{color:var(--muted)}
 
 .bar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;padding:10px 13px;
  border-top:1px solid var(--border);flex:none}
-.bar .lab{font-size:11px;font-weight:800;color:var(--muted);margin-right:2px}
+.bar .lab,.card-h .lab{font-size:11px;font-weight:800;color:var(--muted);margin-right:2px}
 .spec{padding:11px 13px;font-size:11.5px;line-height:1.9}
 .spec dt{font-size:10px;font-weight:800;color:var(--muted);margin-top:9px}
 .spec dt:first-child{margin-top:0}
@@ -283,6 +283,12 @@ tr.dim td{color:var(--muted)}
 .dz-t{font-size:15px;font-weight:800}
 .dz-s{font-size:11.5px;color:var(--muted);margin-top:5px}
 .runbtn:disabled{background:var(--panel2);border-color:var(--border);color:var(--muted);cursor:default}
+/* 제품 globals.css 의 .ms-btn 계열에는 :disabled 가 없다. 여기서 준다.
+   hover 까지 덮지 않으면 못 누르는 버튼이 accent 로 밝아진다. */
+.ms-btn:disabled,.ms-btn-sm:disabled{background:var(--panel2);border-color:var(--border);
+ color:var(--muted);opacity:.5;cursor:default}
+.ms-btn:disabled:hover,.ms-btn-sm:disabled:hover{background:var(--panel2);
+ border-color:var(--border);color:var(--muted)}
 .ltool{display:flex;align-items:center;gap:10px;padding:11px 13px;
  border-bottom:1px solid var(--border);flex:none;flex-wrap:wrap}
 /* 필드 표 공통 툴바 - 필드가 수십 개로 늘어도 찾아갈 수 있게 */
@@ -813,19 +819,20 @@ tr.pick td{background:var(--accentBg)}
 
       <!-- ================= 03 OCR 실행결과 ================= -->
       <section class="view" id="v-run">
-        <div style="display:flex;align-items:center;gap:11px;flex:none">
-          <div style="margin-left:auto;display:flex;gap:7px">
-            <button class="ms-btn" data-view-go="ocr">새 문서</button>
-            <button class="ms-btn" data-view-go="ocr"
-              style="background:var(--accent);border-color:var(--accent);color:#fff">다시 실행</button>
+        <div class="card" style="flex:none">
+          <div class="card-h">
+            <div style="display:flex;align-items:center;gap:9px">
+              <span class="tag mu">비정형</span>
+              <span class="tag mu">기본 모델</span>
+              <span style="font-size:12px;color:var(--muted)">20260618135314_0008.jpg</span></div>
+            <button class="ms-btn-sm" data-view-go="ocr">새 문서</button>
           </div>
         </div>
         <div class="cols c-46">
           <div class="card">
             <div class="card-h"><span class="t">업로드 문서</span>
               <div style="display:flex;gap:6px;align-items:center">
-                <span class="tag mu" id="fbHint">행을 누르면 문서에서 표시됩니다</span>
-                <span class="tag mu">20260618135314_0008.jpg</span></div></div>
+                <span class="tag mu" id="fbHint">행을 누르면 문서에서 표시됩니다</span></div></div>
             <div class="doc">
               <div class="cvs" id="runCvs">
                 <div class="scan" id="pR" role="img" aria-label="20260618135314_0008.jpg"></div>
@@ -882,14 +889,13 @@ tr.pick td{background:var(--accentBg)}
                 </div>
                 <div class="scroll fill" id="previewMarkdown">
                   <div class="ftool" data-ftool="#tbPrev,#tbPrevItem">
-                    <input class="ms-input" data-q placeholder="필드명 · 값 검색" style="width:220px">
                     <div class="seg" data-seg>
                       <button class="on" data-f="all">전체 34</button>
                       <button data-f="need">확인 필요 9</button>
                     </div>
                     <span class="fc" data-cnt></span>
                   </div>
-                  <div class="srcbar">문서 정보 11개</div>
+                  <div class="card-h"><span class="t">문서 필드 인식 결과</span><span class="tag mu">11개</span></div>
                   <table id="tbPrev">
                     <thead><tr><th style="width:28px">No</th><th style="width:126px">한글 필드명</th>
                       <th style="width:146px">영문 필드명</th><th>원본 데이터</th>
@@ -908,8 +914,7 @@ tr.pick td{background:var(--accentBg)}
                   <tr class="flag" data-need="1" data-fb="totalAmount" data-k="합계금액 totalAmount "><td>11</td><td>합계금액</td><td class="fkey">totalAmount</td><td><span class="none">미검출</span></td><td style="text-align:center"><span class="tag wa">확인 필요</span></td></tr>
                     </tbody>
                   </table>
-                  <div class="srcbar" style="border-top:1px solid var(--border)">
-                    표 23행</div>
+                  <div class="card-h" style="border-top:1px solid var(--border)"><span class="t">표 인식 결과</span><span class="tag mu">23행</span></div>
                   <table id="tbPrevItem">
                     <thead><tr><th style="width:28px">No</th><th>품명</th>
                       <th style="width:56px">규격</th><th class="n" style="width:52px">수량</th>
@@ -962,7 +967,6 @@ tr.pick td{background:var(--accentBg)}
                 <div class="dmhelp" id="dmHelp">단일 영역에서 하나의 값을 읽습니다.</div>
                 <div class="scroll fill">
                   <div class="ftool" data-ftool="#fcList">
-                    <input class="ms-input" data-q placeholder="필드명 · 값 검색" style="width:220px">
                     <div class="seg" data-seg>
                       <button class="on" data-f="all">전체 34</button>
                       <button data-f="need">확인 필요 9</button>
@@ -1062,7 +1066,7 @@ tr.pick td{background:var(--accentBg)}
               <span class="fl">~</span>
               <input class="ms-input" type="date" value="2026-08-12" style="width:150px">
               <span class="fl" style="margin-left:6px">상태</span>
-              <select class="ms-select" style="width:100px"><option>전체</option></select>
+              <select class="ms-select" id="stFilter" style="width:100px"><option>전체</option><option>성공</option><option>실패</option></select>
               <span class="fl" style="margin-left:6px">모델</span>
               <select class="ms-select" id="mdFilter" style="width:100px">
                 <option>전체</option><option>기본</option><option>학습</option></select>
@@ -1086,18 +1090,18 @@ tr.pick td{background:var(--accentBg)}
                     <th style="width:72px;text-align:center">보기</th>
                     <th style="width:72px;text-align:center">삭제</th></tr></thead>
                   <tbody>
-                  <tr data-model="학습" data-need="1" class=flag><td>1</td><td>비정형</td><td><span class="tag ac">학습</span></td><td>2026-08-12 10:39</td><td><span class="tag ok">성공</span></td><td class="fkey">20260618135314_0008.jpg</td><td><span class="tag wa">확인 5</span></td><td style="text-align:center"><button class="ms-btn-sm" data-view-go="detail">보기</button></td><td style="text-align:center"><button class="ms-btn-sm">삭제</button></td></tr>
-                  <tr data-model="학습" data-need="1" class=flag><td>2</td><td>비정형</td><td><span class="tag ac">학습</span></td><td>2026-08-12 10:38</td><td><span class="tag ok">성공</span></td><td class="fkey">20260604092610_0008.jpg</td><td><span class="tag wa">확인 4</span></td><td style="text-align:center"><button class="ms-btn-sm" data-view-go="detail">보기</button></td><td style="text-align:center"><button class="ms-btn-sm">삭제</button></td></tr>
-                  <tr data-model="학습" data-need="1" class=flag><td>3</td><td>비정형</td><td><span class="tag ac">학습</span></td><td>2026-08-12 10:37</td><td><span class="tag ok">성공</span></td><td class="fkey">20260608132151_0009.jpg</td><td><span class="tag wa">확인 6</span></td><td style="text-align:center"><button class="ms-btn-sm" data-view-go="detail">보기</button></td><td style="text-align:center"><button class="ms-btn-sm">삭제</button></td></tr>
-                  <tr data-model="학습" data-need="1" class=flag><td>4</td><td>비정형</td><td><span class="tag ac">학습</span></td><td>2026-08-12 10:36</td><td><span class="tag ok">성공</span></td><td class="fkey">20260602120005_0002.jpg</td><td><span class="tag wa">확인 5</span></td><td style="text-align:center"><button class="ms-btn-sm" data-view-go="detail">보기</button></td><td style="text-align:center"><button class="ms-btn-sm">삭제</button></td></tr>
-                  <tr data-model="학습" data-need="1" class=flag><td>5</td><td>비정형</td><td><span class="tag ac">학습</span></td><td>2026-08-12 10:35</td><td><span class="tag ok">성공</span></td><td class="fkey">img20260605_0001.jpg</td><td><span class="tag wa">확인 4</span></td><td style="text-align:center"><button class="ms-btn-sm" data-view-go="detail">보기</button></td><td style="text-align:center"><button class="ms-btn-sm">삭제</button></td></tr>
-                  <tr data-model="학습" data-need="1" class=flag><td>6</td><td>비정형</td><td><span class="tag ac">학습</span></td><td>2026-08-12 10:34</td><td><span class="tag ok">성공</span></td><td class="fkey">20260601131502_0008.jpg</td><td><span class="tag wa">확인 6</span></td><td style="text-align:center"><button class="ms-btn-sm" data-view-go="detail">보기</button></td><td style="text-align:center"><button class="ms-btn-sm">삭제</button></td></tr>
-                  <tr data-model="기본" data-need="1" class=flag><td>7</td><td>비정형</td><td><span class="tag mu">기본</span></td><td>2026-08-12 09:13</td><td><span class="tag ok">성공</span></td><td class="fkey">20260618135314_0008.jpg</td><td><span class="tag wa">확인 7</span></td><td style="text-align:center"><button class="ms-btn-sm" data-view-go="detail">보기</button></td><td style="text-align:center"><button class="ms-btn-sm">삭제</button></td></tr>
-                  <tr data-model="기본" data-need="1" class=flag><td>8</td><td>비정형</td><td><span class="tag mu">기본</span></td><td>2026-08-12 09:12</td><td><span class="tag ok">성공</span></td><td class="fkey">20260604092610_0008.jpg</td><td><span class="tag wa">확인 6</span></td><td style="text-align:center"><button class="ms-btn-sm" data-view-go="detail">보기</button></td><td style="text-align:center"><button class="ms-btn-sm">삭제</button></td></tr>
-                  <tr data-model="기본" data-need="1" class=flag><td>9</td><td>비정형</td><td><span class="tag mu">기본</span></td><td>2026-08-12 09:11</td><td><span class="tag ok">성공</span></td><td class="fkey">20260608132151_0009.jpg</td><td><span class="tag wa">확인 8</span></td><td style="text-align:center"><button class="ms-btn-sm" data-view-go="detail">보기</button></td><td style="text-align:center"><button class="ms-btn-sm">삭제</button></td></tr>
-                  <tr data-model="기본" data-need="1" class=flag><td>10</td><td>비정형</td><td><span class="tag mu">기본</span></td><td>2026-08-12 09:10</td><td><span class="tag ok">성공</span></td><td class="fkey">20260602120005_0002.jpg</td><td><span class="tag wa">확인 7</span></td><td style="text-align:center"><button class="ms-btn-sm" data-view-go="detail">보기</button></td><td style="text-align:center"><button class="ms-btn-sm">삭제</button></td></tr>
-                  <tr data-model="기본" data-need="0"><td>11</td><td>비정형</td><td><span class="tag mu">기본</span></td><td>2026-08-12 09:09</td><td><span class="tag er">실패</span></td><td class="fkey">img20260605_0001.jpg</td><td><span style=color:var(--muted)>-</span></td><td style="text-align:center"><button class="ms-btn-sm" data-view-go="detail">보기</button></td><td style="text-align:center"><button class="ms-btn-sm">삭제</button></td></tr>
-                  <tr data-model="기본" data-need="1" class=flag><td>12</td><td>비정형</td><td><span class="tag mu">기본</span></td><td>2026-08-12 09:08</td><td><span class="tag ok">성공</span></td><td class="fkey">20260601131502_0008.jpg</td><td><span class="tag wa">확인 8</span></td><td style="text-align:center"><button class="ms-btn-sm" data-view-go="detail">보기</button></td><td style="text-align:center"><button class="ms-btn-sm">삭제</button></td></tr>
+                  <tr data-state="성공" data-model="학습" data-need="1" class=flag><td>1</td><td>비정형</td><td><span class="tag ac">학습</span></td><td>2026-08-12 10:39</td><td><span class="tag ok">성공</span></td><td class="fkey">20260618135314_0008.jpg</td><td><span class="tag wa">확인 5</span></td><td style="text-align:center"><button class="ms-btn-sm" data-view-go="detail">보기</button></td><td style="text-align:center"><button class="ms-btn-sm">삭제</button></td></tr>
+                  <tr data-state="성공" data-model="학습" data-need="1" class=flag><td>2</td><td>비정형</td><td><span class="tag ac">학습</span></td><td>2026-08-12 10:38</td><td><span class="tag ok">성공</span></td><td class="fkey">20260604092610_0008.jpg</td><td><span class="tag wa">확인 4</span></td><td style="text-align:center"><button class="ms-btn-sm" data-view-go="detail">보기</button></td><td style="text-align:center"><button class="ms-btn-sm">삭제</button></td></tr>
+                  <tr data-state="성공" data-model="학습" data-need="1" class=flag><td>3</td><td>비정형</td><td><span class="tag ac">학습</span></td><td>2026-08-12 10:37</td><td><span class="tag ok">성공</span></td><td class="fkey">20260608132151_0009.jpg</td><td><span class="tag wa">확인 6</span></td><td style="text-align:center"><button class="ms-btn-sm" data-view-go="detail">보기</button></td><td style="text-align:center"><button class="ms-btn-sm">삭제</button></td></tr>
+                  <tr data-state="성공" data-model="학습" data-need="1" class=flag><td>4</td><td>비정형</td><td><span class="tag ac">학습</span></td><td>2026-08-12 10:36</td><td><span class="tag ok">성공</span></td><td class="fkey">20260602120005_0002.jpg</td><td><span class="tag wa">확인 5</span></td><td style="text-align:center"><button class="ms-btn-sm" data-view-go="detail">보기</button></td><td style="text-align:center"><button class="ms-btn-sm">삭제</button></td></tr>
+                  <tr data-state="성공" data-model="학습" data-need="1" class=flag><td>5</td><td>비정형</td><td><span class="tag ac">학습</span></td><td>2026-08-12 10:35</td><td><span class="tag ok">성공</span></td><td class="fkey">img20260605_0001.jpg</td><td><span class="tag wa">확인 4</span></td><td style="text-align:center"><button class="ms-btn-sm" data-view-go="detail">보기</button></td><td style="text-align:center"><button class="ms-btn-sm">삭제</button></td></tr>
+                  <tr data-state="성공" data-model="학습" data-need="1" class=flag><td>6</td><td>비정형</td><td><span class="tag ac">학습</span></td><td>2026-08-12 10:34</td><td><span class="tag ok">성공</span></td><td class="fkey">20260601131502_0008.jpg</td><td><span class="tag wa">확인 6</span></td><td style="text-align:center"><button class="ms-btn-sm" data-view-go="detail">보기</button></td><td style="text-align:center"><button class="ms-btn-sm">삭제</button></td></tr>
+                  <tr data-state="성공" data-model="기본" data-need="1" class=flag><td>7</td><td>비정형</td><td><span class="tag mu">기본</span></td><td>2026-08-12 09:13</td><td><span class="tag ok">성공</span></td><td class="fkey">20260618135314_0008.jpg</td><td><span class="tag wa">확인 7</span></td><td style="text-align:center"><button class="ms-btn-sm" data-view-go="detail">보기</button></td><td style="text-align:center"><button class="ms-btn-sm">삭제</button></td></tr>
+                  <tr data-state="성공" data-model="기본" data-need="1" class=flag><td>8</td><td>비정형</td><td><span class="tag mu">기본</span></td><td>2026-08-12 09:12</td><td><span class="tag ok">성공</span></td><td class="fkey">20260604092610_0008.jpg</td><td><span class="tag wa">확인 6</span></td><td style="text-align:center"><button class="ms-btn-sm" data-view-go="detail">보기</button></td><td style="text-align:center"><button class="ms-btn-sm">삭제</button></td></tr>
+                  <tr data-state="성공" data-model="기본" data-need="1" class=flag><td>9</td><td>비정형</td><td><span class="tag mu">기본</span></td><td>2026-08-12 09:11</td><td><span class="tag ok">성공</span></td><td class="fkey">20260608132151_0009.jpg</td><td><span class="tag wa">확인 8</span></td><td style="text-align:center"><button class="ms-btn-sm" data-view-go="detail">보기</button></td><td style="text-align:center"><button class="ms-btn-sm">삭제</button></td></tr>
+                  <tr data-state="성공" data-model="기본" data-need="1" class=flag><td>10</td><td>비정형</td><td><span class="tag mu">기본</span></td><td>2026-08-12 09:10</td><td><span class="tag ok">성공</span></td><td class="fkey">20260602120005_0002.jpg</td><td><span class="tag wa">확인 7</span></td><td style="text-align:center"><button class="ms-btn-sm" data-view-go="detail">보기</button></td><td style="text-align:center"><button class="ms-btn-sm">삭제</button></td></tr>
+                  <tr data-state="실패" data-model="기본" data-need="0"><td>11</td><td>비정형</td><td><span class="tag mu">기본</span></td><td>2026-08-12 09:09</td><td><span class="tag er">실패</span></td><td class="fkey">img20260605_0001.jpg</td><td><span class="tag mu">표 미검출</span></td><td style="text-align:center"><button class="ms-btn-sm" disabled>보기</button></td><td style="text-align:center"><button class="ms-btn-sm">삭제</button></td></tr>
+                  <tr data-state="성공" data-model="기본" data-need="1" class=flag><td>12</td><td>비정형</td><td><span class="tag mu">기본</span></td><td>2026-08-12 09:08</td><td><span class="tag ok">성공</span></td><td class="fkey">20260601131502_0008.jpg</td><td><span class="tag wa">확인 8</span></td><td style="text-align:center"><button class="ms-btn-sm" data-view-go="detail">보기</button></td><td style="text-align:center"><button class="ms-btn-sm">삭제</button></td></tr>
                   <tr class="hempty2" style="display:none"><td colspan="9"
                     style="text-align:center;color:var(--muted);padding:26px 10px">
                     해당하는 실행이 없습니다</td></tr>
@@ -1125,55 +1129,67 @@ tr.pick td{background:var(--accentBg)}
                 <table class="aggt on" data-agg="base">
                   <thead><tr><th>필드</th><th class="n" style="width:84px">정상</th><th class="n" style="width:60px">확인</th><th style="width:190px">정상률</th></tr></thead>
                   <tbody>
-                  <tr class=""><td>공급자 등록번호<br><span class="fkey">supplierBizNumber</span></td><td class="n">6 / 6</td><td class="n">0</td><td><div class="barwrap"><div class="mini"><i style="width:100%;background:var(--ok)"></i></div><span class="pct" style="color:var(--ok)">100%</span></div></td></tr>
-                  <tr class="flag"><td>공급자 상호<br><span class="fkey">supplierCompany</span></td><td class="n">2 / 6</td><td class="n"><span class=was>4</span></td><td><div class="barwrap"><div class="mini"><i style="width:33%;background:var(--err)"></i></div><span class="pct" style="color:var(--err)">33%</span></div></td></tr>
-                  <tr class="flag"><td>공급자 주소<br><span class="fkey">supplierAddress</span></td><td class="n">3 / 6</td><td class="n"><span class=was>3</span></td><td><div class="barwrap"><div class="mini"><i style="width:50%;background:var(--warn)"></i></div><span class="pct" style="color:var(--warn)">50%</span></div></td></tr>
-                  <tr class=""><td>공급받는자 등록번호<br><span class="fkey">buyerBizNumber</span></td><td class="n">6 / 6</td><td class="n">0</td><td><div class="barwrap"><div class="mini"><i style="width:100%;background:var(--ok)"></i></div><span class="pct" style="color:var(--ok)">100%</span></div></td></tr>
-                  <tr class=""><td>공급받는자 상호<br><span class="fkey">buyerCompany</span></td><td class="n">6 / 6</td><td class="n">0</td><td><div class="barwrap"><div class="mini"><i style="width:100%;background:var(--ok)"></i></div><span class="pct" style="color:var(--ok)">100%</span></div></td></tr>
-                  <tr class=""><td>공급받는자 주소<br><span class="fkey">buyerAddress</span></td><td class="n">6 / 6</td><td class="n">0</td><td><div class="barwrap"><div class="mini"><i style="width:100%;background:var(--ok)"></i></div><span class="pct" style="color:var(--ok)">100%</span></div></td></tr>
-                  <tr class=""><td>작성일자<br><span class="fkey">issueDate</span></td><td class="n">6 / 6</td><td class="n">0</td><td><div class="barwrap"><div class="mini"><i style="width:100%;background:var(--ok)"></i></div><span class="pct" style="color:var(--ok)">100%</span></div></td></tr>
-                  <tr class=""><td>과세 구분<br><span class="fkey">taxType</span></td><td class="n">6 / 6</td><td class="n">0</td><td><div class="barwrap"><div class="mini"><i style="width:100%;background:var(--ok)"></i></div><span class="pct" style="color:var(--ok)">100%</span></div></td></tr>
-                  <tr class="flag"><td>공급가액<br><span class="fkey">supplyAmount</span></td><td class="n">0 / 6</td><td class="n"><span class=was>6</span></td><td><div class="barwrap"><div class="mini"><i style="width:0%;background:var(--err)"></i></div><span class="pct" style="color:var(--err)">0%</span></div></td></tr>
-                  <tr class="flag"><td>세액<br><span class="fkey">taxAmount</span></td><td class="n">0 / 6</td><td class="n"><span class=was>6</span></td><td><div class="barwrap"><div class="mini"><i style="width:0%;background:var(--err)"></i></div><span class="pct" style="color:var(--err)">0%</span></div></td></tr>
-                  <tr class="flag"><td>합계금액<br><span class="fkey">totalAmount</span></td><td class="n">0 / 6</td><td class="n"><span class=was>6</span></td><td><div class="barwrap"><div class="mini"><i style="width:0%;background:var(--err)"></i></div><span class="pct" style="color:var(--err)">0%</span></div></td></tr>
-                  <tr class="flag" data-field-scope="table" data-table-label="품목"><td>품명<br><span class="fkey">itemName</span></td><td class="n">119 / 139</td><td class="n"><span class=was>20</span></td><td><div class="barwrap"><div class="mini"><i style="width:86%;background:var(--warn)"></i></div><span class="pct" style="color:var(--warn)">86%</span></div></td></tr>
-                  <tr class="tot"><td>합계</td><td class="n">160 / 205</td><td class="n">45</td><td><div class="barwrap"><div class="mini"><i style="width:78%;background:var(--warn)"></i></div><span class="pct" style="color:var(--warn)">78%</span></div></td><td></td><td></td></tr>
+                  <tr class="flag"><td>공급자 등록번호<br><span class="fkey">supplierBizNumber</span></td><td class="n">5 / 6</td><td class="n"><span class=was>1</span></td><td></td></tr>
+                  <tr class="flag"><td>공급자 상호<br><span class="fkey">supplierCompany</span></td><td class="n">2 / 6</td><td class="n"><span class=was>4</span></td><td></td></tr>
+                  <tr class="flag"><td>공급자 주소<br><span class="fkey">supplierAddress</span></td><td class="n">3 / 6</td><td class="n"><span class=was>3</span></td><td></td></tr>
+                  <tr class="flag"><td>공급받는자 등록번호<br><span class="fkey">buyerBizNumber</span></td><td class="n">5 / 6</td><td class="n"><span class=was>1</span></td><td></td></tr>
+                  <tr class=""><td>공급받는자 상호<br><span class="fkey">buyerCompany</span></td><td class="n">6 / 6</td><td class="n">0</td><td></td></tr>
+                  <tr class=""><td>공급받는자 주소<br><span class="fkey">buyerAddress</span></td><td class="n">6 / 6</td><td class="n">0</td><td></td></tr>
+                  <tr class="flag"><td>작성일자<br><span class="fkey">issueDate</span></td><td class="n">4 / 6</td><td class="n"><span class=was>2</span></td><td></td></tr>
+                  <tr class=""><td>과세 구분<br><span class="fkey">taxType</span></td><td class="n">6 / 6</td><td class="n">0</td><td></td></tr>
+                  <tr class="flag"><td>공급가액<br><span class="fkey">supplyAmount</span></td><td class="n">0 / 6</td><td class="n"><span class=was>6</span></td><td></td></tr>
+                  <tr class="flag"><td>세액<br><span class="fkey">taxAmount</span></td><td class="n">0 / 6</td><td class="n"><span class=was>6</span></td><td></td></tr>
+                  <tr class="flag"><td>합계금액<br><span class="fkey">totalAmount</span></td><td class="n">0 / 6</td><td class="n"><span class=was>6</span></td><td></td></tr>
+                  <tr class="flag" data-field-scope="table" data-table-label="테이블"><td>품명<br><span class="fkey">itemName</span></td><td class="n">119 / 139</td><td class="n"><span class=was>20</span></td><td><div class="barwrap"><div class="mini"><i style="width:86%;background:var(--warn)"></i></div><span class="pct" style="color:var(--warn)">86%</span></div></td></tr>
+                  <tr class="flag" data-field-scope="table" data-table-label="테이블"><td>규격<br><span class="fkey">spec</span></td><td class="n">127 / 139</td><td class="n"><span class=was>12</span></td><td></td></tr>
+                  <tr class="flag" data-field-scope="table" data-table-label="테이블"><td>수량<br><span class="fkey">quantity</span></td><td class="n">132 / 139</td><td class="n"><span class=was>7</span></td><td></td></tr>
+                  <tr class="flag" data-field-scope="table" data-table-label="테이블"><td>단가<br><span class="fkey">unitPrice</span></td><td class="n">134 / 139</td><td class="n"><span class=was>5</span></td><td></td></tr>
+                  <tr class="flag" data-field-scope="table" data-table-label="테이블"><td>금액<br><span class="fkey">amount</span></td><td class="n">135 / 139</td><td class="n"><span class=was>4</span></td><td></td></tr>
+                  <tr class="tot"><td>합계</td><td class="n">688 / 761</td><td class="n">73</td><td><div class="barwrap"><div class="mini"><i style="width:78%;background:var(--warn)"></i></div><span class="pct" style="color:var(--warn)">78%</span></div></td><td></td><td></td></tr>
                   </tbody>
                 </table>
                 <table class="aggt" data-agg="tuned">
                   <thead><tr><th>필드</th><th class="n" style="width:84px">정상</th><th class="n" style="width:60px">확인</th><th style="width:190px">정상률</th></tr></thead>
                   <tbody>
-                  <tr class=""><td>공급자 등록번호<br><span class="fkey">supplierBizNumber</span></td><td class="n">6 / 6</td><td class="n">0</td><td><div class="barwrap"><div class="mini"><i style="width:100%;background:var(--ok)"></i></div><span class="pct" style="color:var(--ok)">100%</span></div></td></tr>
-                  <tr class="flag"><td>공급자 상호<br><span class="fkey">supplierCompany</span></td><td class="n">2 / 6</td><td class="n"><span class=was>4</span></td><td><div class="barwrap"><div class="mini"><i style="width:33%;background:var(--err)"></i></div><span class="pct" style="color:var(--err)">33%</span></div></td></tr>
-                  <tr class="flag"><td>공급자 주소<br><span class="fkey">supplierAddress</span></td><td class="n">3 / 6</td><td class="n"><span class=was>3</span></td><td><div class="barwrap"><div class="mini"><i style="width:50%;background:var(--warn)"></i></div><span class="pct" style="color:var(--warn)">50%</span></div></td></tr>
-                  <tr class=""><td>공급받는자 등록번호<br><span class="fkey">buyerBizNumber</span></td><td class="n">6 / 6</td><td class="n">0</td><td><div class="barwrap"><div class="mini"><i style="width:100%;background:var(--ok)"></i></div><span class="pct" style="color:var(--ok)">100%</span></div></td></tr>
-                  <tr class=""><td>공급받는자 상호<br><span class="fkey">buyerCompany</span></td><td class="n">6 / 6</td><td class="n">0</td><td><div class="barwrap"><div class="mini"><i style="width:100%;background:var(--ok)"></i></div><span class="pct" style="color:var(--ok)">100%</span></div></td></tr>
-                  <tr class=""><td>공급받는자 주소<br><span class="fkey">buyerAddress</span></td><td class="n">6 / 6</td><td class="n">0</td><td><div class="barwrap"><div class="mini"><i style="width:100%;background:var(--ok)"></i></div><span class="pct" style="color:var(--ok)">100%</span></div></td></tr>
-                  <tr class=""><td>작성일자<br><span class="fkey">issueDate</span></td><td class="n">6 / 6</td><td class="n">0</td><td><div class="barwrap"><div class="mini"><i style="width:100%;background:var(--ok)"></i></div><span class="pct" style="color:var(--ok)">100%</span></div></td></tr>
-                  <tr class=""><td>과세 구분<br><span class="fkey">taxType</span></td><td class="n">6 / 6</td><td class="n">0</td><td><div class="barwrap"><div class="mini"><i style="width:100%;background:var(--ok)"></i></div><span class="pct" style="color:var(--ok)">100%</span></div></td></tr>
-                  <tr class="flag"><td>공급가액<br><span class="fkey">supplyAmount</span></td><td class="n">0 / 6</td><td class="n"><span class=was>6</span></td><td><div class="barwrap"><div class="mini"><i style="width:0%;background:var(--err)"></i></div><span class="pct" style="color:var(--err)">0%</span></div></td></tr>
-                  <tr class="flag"><td>세액<br><span class="fkey">taxAmount</span></td><td class="n">0 / 6</td><td class="n"><span class=was>6</span></td><td><div class="barwrap"><div class="mini"><i style="width:0%;background:var(--err)"></i></div><span class="pct" style="color:var(--err)">0%</span></div></td></tr>
-                  <tr class="flag"><td>합계금액<br><span class="fkey">totalAmount</span></td><td class="n">0 / 6</td><td class="n"><span class=was>6</span></td><td><div class="barwrap"><div class="mini"><i style="width:0%;background:var(--err)"></i></div><span class="pct" style="color:var(--err)">0%</span></div></td></tr>
-                  <tr class="flag" data-field-scope="table" data-table-label="품목"><td>품명<br><span class="fkey">itemName</span></td><td class="n">133 / 139</td><td class="n"><span class=was>6</span></td><td><div class="barwrap"><div class="mini"><i style="width:96%;background:var(--warn)"></i></div><span class="pct" style="color:var(--warn)">96%</span></div></td></tr>
-                  <tr class="tot"><td>합계</td><td class="n">174 / 205</td><td class="n">31</td><td><div class="barwrap"><div class="mini"><i style="width:85%;background:var(--warn)"></i></div><span class="pct" style="color:var(--warn)">85%</span></div></td><td></td><td></td></tr>
+                  <tr class=""><td>공급자 등록번호<br><span class="fkey">supplierBizNumber</span></td><td class="n">6 / 6</td><td class="n">0</td><td></td></tr>
+                  <tr class="flag"><td>공급자 상호<br><span class="fkey">supplierCompany</span></td><td class="n">5 / 6</td><td class="n"><span class=was>1</span></td><td></td></tr>
+                  <tr class=""><td>공급자 주소<br><span class="fkey">supplierAddress</span></td><td class="n">6 / 6</td><td class="n">0</td><td></td></tr>
+                  <tr class=""><td>공급받는자 등록번호<br><span class="fkey">buyerBizNumber</span></td><td class="n">6 / 6</td><td class="n">0</td><td></td></tr>
+                  <tr class=""><td>공급받는자 상호<br><span class="fkey">buyerCompany</span></td><td class="n">6 / 6</td><td class="n">0</td><td></td></tr>
+                  <tr class=""><td>공급받는자 주소<br><span class="fkey">buyerAddress</span></td><td class="n">6 / 6</td><td class="n">0</td><td></td></tr>
+                  <tr class=""><td>작성일자<br><span class="fkey">issueDate</span></td><td class="n">6 / 6</td><td class="n">0</td><td></td></tr>
+                  <tr class=""><td>과세 구분<br><span class="fkey">taxType</span></td><td class="n">6 / 6</td><td class="n">0</td><td></td></tr>
+                  <tr class="flag"><td>공급가액<br><span class="fkey">supplyAmount</span></td><td class="n">0 / 6</td><td class="n"><span class=was>6</span></td><td></td></tr>
+                  <tr class="flag"><td>세액<br><span class="fkey">taxAmount</span></td><td class="n">0 / 6</td><td class="n"><span class=was>6</span></td><td></td></tr>
+                  <tr class="flag"><td>합계금액<br><span class="fkey">totalAmount</span></td><td class="n">0 / 6</td><td class="n"><span class=was>6</span></td><td></td></tr>
+                  <tr class="flag" data-field-scope="table" data-table-label="테이블"><td>품명<br><span class="fkey">itemName</span></td><td class="n">133 / 139</td><td class="n"><span class=was>6</span></td><td><div class="barwrap"><div class="mini"><i style="width:96%;background:var(--warn)"></i></div><span class="pct" style="color:var(--warn)">96%</span></div></td></tr>
+                  <tr class="" data-field-scope="table" data-table-label="테이블"><td>규격<br><span class="fkey">spec</span></td><td class="n">139 / 139</td><td class="n">0</td><td></td></tr>
+                  <tr class="" data-field-scope="table" data-table-label="테이블"><td>수량<br><span class="fkey">quantity</span></td><td class="n">139 / 139</td><td class="n">0</td><td></td></tr>
+                  <tr class="" data-field-scope="table" data-table-label="테이블"><td>단가<br><span class="fkey">unitPrice</span></td><td class="n">139 / 139</td><td class="n">0</td><td></td></tr>
+                  <tr class="" data-field-scope="table" data-table-label="테이블"><td>금액<br><span class="fkey">amount</span></td><td class="n">139 / 139</td><td class="n">0</td><td></td></tr>
+                  <tr class="tot"><td>합계</td><td class="n">733 / 761</td><td class="n">28</td><td><div class="barwrap"><div class="mini"><i style="width:85%;background:var(--warn)"></i></div><span class="pct" style="color:var(--warn)">85%</span></div></td><td></td><td></td></tr>
                   </tbody>
                 </table>
                 <table class="aggt" data-agg="diff">
                   <thead><tr><th>필드</th><th class="n" style="width:84px">기본</th><th class="n" style="width:84px">학습</th><th class="n" style="width:62px">변화</th><th style="width:150px">정상률</th></tr></thead>
                   <tbody>
-                  <tr class="dim"><td>공급자 등록번호<br><span class="fkey">supplierBizNumber</span></td><td class="n">6 / 6</td><td class="n">6 / 6</td><td class="n"><span style="color:var(--muted)">0</span></td><td><div class="barwrap"><div class="mini"><i style="width:100%;background:var(--ok)"></i></div><span class="pct" style="color:var(--ok)">100%</span></div></td></tr>
-                  <tr class="dim"><td>공급자 상호<br><span class="fkey">supplierCompany</span></td><td class="n">2 / 6</td><td class="n">2 / 6</td><td class="n"><span style="color:var(--muted)">0</span></td><td><div class="barwrap"><div class="mini"><i style="width:33%;background:var(--err)"></i></div><span class="pct" style="color:var(--err)">33%</span></div></td></tr>
-                  <tr class="dim"><td>공급자 주소<br><span class="fkey">supplierAddress</span></td><td class="n">3 / 6</td><td class="n">3 / 6</td><td class="n"><span style="color:var(--muted)">0</span></td><td><div class="barwrap"><div class="mini"><i style="width:50%;background:var(--warn)"></i></div><span class="pct" style="color:var(--warn)">50%</span></div></td></tr>
-                  <tr class="dim"><td>공급받는자 등록번호<br><span class="fkey">buyerBizNumber</span></td><td class="n">6 / 6</td><td class="n">6 / 6</td><td class="n"><span style="color:var(--muted)">0</span></td><td><div class="barwrap"><div class="mini"><i style="width:100%;background:var(--ok)"></i></div><span class="pct" style="color:var(--ok)">100%</span></div></td></tr>
-                  <tr class="dim"><td>공급받는자 상호<br><span class="fkey">buyerCompany</span></td><td class="n">6 / 6</td><td class="n">6 / 6</td><td class="n"><span style="color:var(--muted)">0</span></td><td><div class="barwrap"><div class="mini"><i style="width:100%;background:var(--ok)"></i></div><span class="pct" style="color:var(--ok)">100%</span></div></td></tr>
-                  <tr class="dim"><td>공급받는자 주소<br><span class="fkey">buyerAddress</span></td><td class="n">6 / 6</td><td class="n">6 / 6</td><td class="n"><span style="color:var(--muted)">0</span></td><td><div class="barwrap"><div class="mini"><i style="width:100%;background:var(--ok)"></i></div><span class="pct" style="color:var(--ok)">100%</span></div></td></tr>
-                  <tr class="dim"><td>작성일자<br><span class="fkey">issueDate</span></td><td class="n">6 / 6</td><td class="n">6 / 6</td><td class="n"><span style="color:var(--muted)">0</span></td><td><div class="barwrap"><div class="mini"><i style="width:100%;background:var(--ok)"></i></div><span class="pct" style="color:var(--ok)">100%</span></div></td></tr>
-                  <tr class="dim"><td>과세 구분<br><span class="fkey">taxType</span></td><td class="n">6 / 6</td><td class="n">6 / 6</td><td class="n"><span style="color:var(--muted)">0</span></td><td><div class="barwrap"><div class="mini"><i style="width:100%;background:var(--ok)"></i></div><span class="pct" style="color:var(--ok)">100%</span></div></td></tr>
-                  <tr class="dim"><td>공급가액<br><span class="fkey">supplyAmount</span></td><td class="n">0 / 6</td><td class="n">0 / 6</td><td class="n"><span style="color:var(--muted)">0</span></td><td><div class="barwrap"><div class="mini"><i style="width:0%;background:var(--err)"></i></div><span class="pct" style="color:var(--err)">0%</span></div></td></tr>
-                  <tr class="dim"><td>세액<br><span class="fkey">taxAmount</span></td><td class="n">0 / 6</td><td class="n">0 / 6</td><td class="n"><span style="color:var(--muted)">0</span></td><td><div class="barwrap"><div class="mini"><i style="width:0%;background:var(--err)"></i></div><span class="pct" style="color:var(--err)">0%</span></div></td></tr>
-                  <tr class="dim"><td>합계금액<br><span class="fkey">totalAmount</span></td><td class="n">0 / 6</td><td class="n">0 / 6</td><td class="n"><span style="color:var(--muted)">0</span></td><td><div class="barwrap"><div class="mini"><i style="width:0%;background:var(--err)"></i></div><span class="pct" style="color:var(--err)">0%</span></div></td></tr>
-                  <tr class="chg" data-field-scope="table" data-table-label="품목"><td>품명<br><span class="fkey">itemName</span></td><td class="n">119 / 139</td><td class="n">133 / 139</td><td class="n"><span class="now">+14</span></td><td><div class="barwrap"><div class="mini"><i style="width:96%;background:var(--warn)"></i></div><span class="pct" style="color:var(--warn)">96%</span></div></td></tr>
-                  <tr class="tot"><td>합계</td><td class="n">160 / 205</td><td class="n">174 / 205</td><td class="n"><span class="now">+14</span></td><td><div class="barwrap"><div class="mini"><i style="width:85%;background:var(--warn)"></i></div><span class="pct" style="color:var(--warn)">85%</span></div></td><td></td><td></td></tr>
+                  <tr class="chg"><td>공급자 등록번호<br><span class="fkey">supplierBizNumber</span></td><td class="n">5 / 6</td><td class="n">6 / 6</td><td class="n"><span class="now">+1</span></td><td></td></tr>
+                  <tr class="chg"><td>공급자 상호<br><span class="fkey">supplierCompany</span></td><td class="n">2 / 6</td><td class="n">5 / 6</td><td class="n"><span class="now">+3</span></td><td></td></tr>
+                  <tr class="chg"><td>공급자 주소<br><span class="fkey">supplierAddress</span></td><td class="n">3 / 6</td><td class="n">6 / 6</td><td class="n"><span class="now">+3</span></td><td></td></tr>
+                  <tr class="chg"><td>공급받는자 등록번호<br><span class="fkey">buyerBizNumber</span></td><td class="n">5 / 6</td><td class="n">6 / 6</td><td class="n"><span class="now">+1</span></td><td></td></tr>
+                  <tr class="dim"><td>공급받는자 상호<br><span class="fkey">buyerCompany</span></td><td class="n">6 / 6</td><td class="n">6 / 6</td><td class="n"><span style="color:var(--muted)">0</span></td><td></td></tr>
+                  <tr class="dim"><td>공급받는자 주소<br><span class="fkey">buyerAddress</span></td><td class="n">6 / 6</td><td class="n">6 / 6</td><td class="n"><span style="color:var(--muted)">0</span></td><td></td></tr>
+                  <tr class="chg"><td>작성일자<br><span class="fkey">issueDate</span></td><td class="n">4 / 6</td><td class="n">6 / 6</td><td class="n"><span class="now">+2</span></td><td></td></tr>
+                  <tr class="dim"><td>과세 구분<br><span class="fkey">taxType</span></td><td class="n">6 / 6</td><td class="n">6 / 6</td><td class="n"><span style="color:var(--muted)">0</span></td><td></td></tr>
+                  <tr class="dim"><td>공급가액<br><span class="fkey">supplyAmount</span></td><td class="n">0 / 6</td><td class="n">0 / 6</td><td class="n"><span style="color:var(--muted)">0</span></td><td></td></tr>
+                  <tr class="dim"><td>세액<br><span class="fkey">taxAmount</span></td><td class="n">0 / 6</td><td class="n">0 / 6</td><td class="n"><span style="color:var(--muted)">0</span></td><td></td></tr>
+                  <tr class="dim"><td>합계금액<br><span class="fkey">totalAmount</span></td><td class="n">0 / 6</td><td class="n">0 / 6</td><td class="n"><span style="color:var(--muted)">0</span></td><td></td></tr>
+                  <tr class="chg" data-field-scope="table" data-table-label="테이블"><td>품명<br><span class="fkey">itemName</span></td><td class="n">119 / 139</td><td class="n">133 / 139</td><td class="n"><span class="now">+14</span></td><td><div class="barwrap"><div class="mini"><i style="width:96%;background:var(--warn)"></i></div><span class="pct" style="color:var(--warn)">96%</span></div></td></tr>
+                  <tr class="chg" data-field-scope="table" data-table-label="테이블"><td>규격<br><span class="fkey">spec</span></td><td class="n">127 / 139</td><td class="n">139 / 139</td><td class="n"><span class="now">+12</span></td><td></td></tr>
+                  <tr class="chg" data-field-scope="table" data-table-label="테이블"><td>수량<br><span class="fkey">quantity</span></td><td class="n">132 / 139</td><td class="n">139 / 139</td><td class="n"><span class="now">+7</span></td><td></td></tr>
+                  <tr class="chg" data-field-scope="table" data-table-label="테이블"><td>단가<br><span class="fkey">unitPrice</span></td><td class="n">134 / 139</td><td class="n">139 / 139</td><td class="n"><span class="now">+5</span></td><td></td></tr>
+                  <tr class="chg" data-field-scope="table" data-table-label="테이블"><td>금액<br><span class="fkey">amount</span></td><td class="n">135 / 139</td><td class="n">139 / 139</td><td class="n"><span class="now">+4</span></td><td></td></tr>
+                  <tr class="tot"><td>합계</td><td class="n">688 / 761</td><td class="n">733 / 761</td><td class="n"><span class="now">+45</span></td><td><div class="barwrap"><div class="mini"><i style="width:85%;background:var(--warn)"></i></div><span class="pct" style="color:var(--warn)">85%</span></div></td><td></td><td></td></tr>
                   </tbody>
                 </table>
               </div>
@@ -1187,9 +1203,13 @@ tr.pick td{background:var(--accentBg)}
             <div class="card-h">
               <div style="display:flex;align-items:center;gap:9px">
                 <span class="tag mu">비정형</span>
+                <span class="tag mu">기본 모델</span>
                 <span style="font-size:12px;color:var(--muted)">20260618135314_0008.jpg &middot; 2026-08-12 09:12</span></div>
               <div style="display:flex;gap:6px;align-items:center">
-                <span class="tag wa">확인 필요 9</span>
+                <div class="seg" id="issueSeg">
+                  <button class="on" data-f="all">전체 34</button>
+                  <button data-f="need">확인 필요 9</button>
+                </div>
                 <button class="ms-btn-sm" data-toast="수정한 값을 정답 기준값으로 저장합니다."
                   style="background:var(--accent);border-color:var(--accent);color:#fff">저장</button>
                 <button class="ms-btn-sm" data-view-go="missed">목록</button></div>
@@ -1213,14 +1233,8 @@ tr.pick td{background:var(--accentBg)}
               </div>
             </div>
             <div class="card">
-              <div class="card-h"><span class="t">인식 결과</span>
-                <div style="display:flex;gap:8px;align-items:center">
-                  <div class="seg" id="issueSeg">
-                    <button class="on" data-f="all">전체 34</button>
-                    <button data-f="need">확인 필요 9</button>
-                  </div></div></div>
               <div class="scroll fill">
-                <div class="srcbar">문서 정보 11개</div>
+                <div class="card-h"><span class="t">문서 필드 인식 결과</span><span class="tag mu">11개</span></div>
                 <table>
                   <thead><tr><th style="width:150px">필드</th>
                     <th>OCR값</th><th style="width:230px">정답 · 수정</th>
@@ -1241,7 +1255,7 @@ tr.pick td{background:var(--accentBg)}
                   </tbody>
                 </table>
                 <div class="card-h" style="border-top:1px solid var(--border)">
-                  <span class="t">표</span><span class="tag mu">23행</span></div>
+                  <span class="t">표 인식 결과</span><span class="tag mu">23행</span></div>
                 <table>
                   <thead><tr><th style="width:34px">No</th>
                     <th>품명</th><th style="width:88px">규격</th><th class="n" style="width:76px">수량</th>
@@ -1381,7 +1395,7 @@ tr.pick td{background:var(--accentBg)}
                     <li>어느 쪽이 맞는지는 문서로 확인</li>
                     <li>차이는 인식 모델 몫</li></ul></div>
                 <div class="gs"><h5>표시 항목</h5>
-                  <ul><li>문서 정보 필드 비교</li><li>표 비교 &middot; 달라진 칸 강조</li>
+                  <ul><li>문서 필드 비교</li><li>표 비교 &middot; 달라진 칸 강조</li>
                     <li>정답 비교 &middot; 학습 정확도</li></ul></div>
               </div>
               <div style="padding:12px 13px;border-top:1px solid var(--border)">
@@ -1392,11 +1406,17 @@ tr.pick td{background:var(--accentBg)}
 
       <!-- ================= 07 비교 결과 ================= -->
       <section class="view" id="v-cmpresult">
-        <div style="display:flex;align-items:center;gap:11px;flex:none">
-          <div style="margin-left:auto;display:flex;gap:7px">
-            <button class="ms-btn" data-view-go="compare">새 문서</button>
-            <button class="ms-btn" data-view-go="compare"
-              style="background:var(--accent);border-color:var(--accent);color:#fff">다시 실행</button>
+        <div class="card" style="flex:none">
+          <div class="card-h">
+            <div style="display:flex;align-items:center;gap:7px">
+              <span class="lab">학습 전</span><span class="tag mu">기본 모델</span>
+              <span class="lab" style="margin-left:9px">학습 후</span>
+              <span class="tag mu">학습 모델 &middot; 260811_1105_wf80</span></div>
+            <div style="display:flex;gap:6px;align-items:center">
+              <button class="ms-btn-sm" data-view-go="compare">새 문서</button>
+              <button class="ms-btn-sm" data-view-go="compare"
+                style="background:var(--accent);border-color:var(--accent);color:#fff">다시 실행</button>
+            </div>
           </div>
         </div>
         <div class="cols c-46">
@@ -1408,12 +1428,14 @@ tr.pick td{background:var(--accentBg)}
           </div>
           <div class="stack" id="cmpCard">
             <div class="card fill">
-              <div class="card-h"><span class="t">문서 정보 필드 비교</span>
-                <span class="tag ac">1개 변경</span></div>
-              <div class="ftool" data-ftool="#tbCmp">
-                <input class="ms-input" data-q placeholder="필드명 · OCR값 검색" style="width:230px">
-                <span class="fc" data-cnt></span>
-              </div>
+              <div class="card-h"><span class="t">문서 필드 비교</span>
+                <div class="ftool" data-ftool="#tbCmp" style="padding:0;border:0">
+                  <div class="seg" data-seg>
+                    <button class="on" data-f="all">전체 11</button>
+                    <button data-f="chg">변경 1</button>
+                    <button data-f="same">동일 10</button>
+                  </div>
+                </div></div>
               <div class="scroll fill">
                 <table id="tbCmp">
                   <thead><tr><th style="width:150px">필드</th>
@@ -1437,16 +1459,13 @@ tr.pick td{background:var(--accentBg)}
             </div>
             <div class="card fill">
               <div class="card-h"><span class="t">표 비교</span>
-                <span class="tag ac">1개 변경</span></div>
-              <div class="ftool" data-ftool="#tbICmp">
-                <input class="ms-input" data-q placeholder="품명 · 값 검색" style="width:200px">
-                <div class="seg" data-seg>
-                  <button class="on" data-f="all">전체 23</button>
-                  <button data-f="chg">변경 1</button>
-                  <button data-f="same">동일 22</button>
-                </div>
-                <span class="fc" data-cnt></span>
-              </div>
+                <div class="ftool" data-ftool="#tbICmp" style="padding:0;border:0">
+                  <div class="seg" data-seg>
+                    <button class="on" data-f="all">전체 23</button>
+                    <button data-f="chg">변경 2</button>
+                    <button data-f="same">동일 21</button>
+                  </div>
+                </div></div>
               <div class="scroll fill">
                 <table id="tbICmp">
                   <thead><tr><th style="width:34px">No</th><th>품명</th>
@@ -1472,7 +1491,7 @@ tr.pick td{background:var(--accentBg)}
                   <tr class="dim" data-chg="0" data-k="품목 16 미니모프레신정0.2mg 미니모프레신정0.2mg"><td>16</td><td>미니모프레신정0.2mg</td><td>30T</td><td class="n">5</td><td class="n">28,980</td><td class="n">144,900</td><td style="text-align:center"><span class="tag mu">동일</span></td></tr>
                   <tr class="dim" data-chg="0" data-k="품목 17 세트린정 세트린정"><td>17</td><td>세트린정</td><td>100T</td><td class="n">10</td><td class="n">17,500</td><td class="n">175,000</td><td style="text-align:center"><span class="tag mu">동일</span></td></tr>
                   <tr class="chg" data-chg="1" data-k="품목 18 세파록스캡슬 세파록스캡슐"><td>18</td><td><span class="ba"><i>학습 전</i><span class="was">세파록스캡슬</span></span><span class="ba"><i>학습 후</i><span class="now">세파록스캡슐</span></span></td><td>30C</td><td class="n">5</td><td class="n">11,160</td><td class="n">55,800</td><td style="text-align:center"><span class="tag ac">변경</span></td></tr>
-                  <tr class="dim" data-chg="0" data-k="품목 19 스마틴정 스마틴정"><td>19</td><td>스마틴정</td><td>30T</td><td class="n">5</td><td class="n">3,570</td><td class="n">17,850</td><td style="text-align:center"><span class="tag mu">동일</span></td></tr>
+                  <tr class="chg" data-chg="1" data-k="품목 19 스마틴정 스마턴정"><td>19</td><td><span class="ba"><i>학습 전</i><span class="now">스마틴정</span></span><span class="ba"><i>학습 후</i><span class="was">스마턴정</span></span></td><td>30T</td><td class="n">5</td><td class="n">3,570</td><td class="n">17,850</td><td style="text-align:center"><span class="tag er">변경</span></td></tr>
                   <tr class="dim" data-chg="0" data-k="품목 20 싸리움캡슐 싸리움캡슐"><td>20</td><td>싸리움캡슐</td><td>30C</td><td class="n">10</td><td class="n">4,620</td><td class="n">46,200</td><td style="text-align:center"><span class="tag mu">동일</span></td></tr>
                   <tr class="dim" data-chg="0" data-k="품목 21 싸이브렉스캡슐100mg 싸이브렉스캡슐100mg"><td>21</td><td>싸이브렉스캡슐100mg</td><td>30C</td><td class="n">10</td><td class="n">8,850</td><td class="n">88,500</td><td style="text-align:center"><span class="tag mu">동일</span></td></tr>
                   <tr class="dim" data-chg="0" data-k="품목 22 싸이브렉스캡슐200mg 싸이브렉스캡슐200mg"><td>22</td><td>싸이브렉스캡슐200mg</td><td>30C</td><td class="n">10</td><td class="n">13,290</td><td class="n">132,900</td><td style="text-align:center"><span class="tag mu">동일</span></td></tr>
@@ -1484,17 +1503,30 @@ tr.pick td{background:var(--accentBg)}
 
         <div class="card fill" style="margin-top:8px">
           <div class="card-h"><span class="t">정답 비교</span>
-            <span class="tag ac">개선 2 &middot; 유지 2</span></div>
+              <div class="ftool" data-ftool="#tbGt" style="padding:0;border:0">
+                <div class="seg" data-seg>
+                  <button class="on" data-f="all">전체 9</button>
+                  <button data-f="up">해결 4</button>
+                  <button data-f="keep">유지 2</button>
+                  <button data-f="miss">미해결 2</button>
+                  <button data-f="down">실패 1</button>
+                </div>
+              </div></div>
           <div class="scroll fill">
-            <table>
-              <thead><tr><th>품명</th><th style="width:100px">대상</th>
+            <table id="tbGt">
+              <thead><tr><th style="width:90px">필드</th><th>값</th>
                 <th class="n" style="width:76px">학습 전</th><th class="n" style="width:76px">학습 후</th>
                 <th style="width:58px">결과</th></tr></thead>
               <tbody>
-              <tr><td>세파록스캡슐</td><td><span class="tag mu">유지 확인</span></td><td class="n was">0 / 26</td><td class="n now">26 / 26</td><td><span class="tag ok">개선</span></td></tr>
-                  <tr><td>바리켄산</td><td><span class="tag mu">유지 확인</span></td><td class="n ">5 / 5</td><td class="n now">5 / 5</td><td><span class="tag ok">유지</span></td></tr>
-                  <tr><td>메로겔(메트로니다졸)(수출명: MINROGE)</td><td><span class="tag mu">유지 확인</span></td><td class="n ">2 / 2</td><td class="n now">2 / 2</td><td><span class="tag ok">유지</span></td></tr>
-                  <tr><td>다에피정10밀리그램(에피나스틴염산염) 100정</td><td><span class="tag ac">신규</span></td><td class="n was">2 / 5</td><td class="n now">5 / 5</td><td><span class="tag ok">개선</span></td></tr>
+                  <tr data-res="up"><td>공급자 주소</td><td>경기 화성시 향남읍 제약공단3길 99한국휴텍스제약</td><td class="n was">0 / 6</td><td class="n now">6 / 6</td><td><span class="tag ok">해결</span></td></tr>
+                  <tr data-res="up"><td>품명</td><td>다에피정10밀리그램(에피나스틴염산염) 100정</td><td class="n was">2 / 5</td><td class="n now">5 / 5</td><td><span class="tag ok">해결</span></td></tr>
+                  <tr data-res="up"><td>품명</td><td>세파록스캡슐</td><td class="n was">0 / 26</td><td class="n now">26 / 26</td><td><span class="tag ok">해결</span></td></tr>
+                  <tr data-res="up"><td>규격</td><td>100C</td><td class="n was">0 / 12</td><td class="n now">12 / 12</td><td><span class="tag ok">해결</span></td></tr>
+                  <tr data-res="keep"><td>품명</td><td>바리켄산</td><td class="n ">5 / 5</td><td class="n now">5 / 5</td><td><span class="tag ok">유지</span></td></tr>
+                  <tr data-res="keep"><td>규격</td><td>30T</td><td class="n ">9 / 9</td><td class="n now">9 / 9</td><td><span class="tag ok">유지</span></td></tr>
+                  <tr data-res="miss"><td>단가</td><td>62,500</td><td class="n was">2 / 9</td><td class="n was">6 / 9</td><td><span class="tag wa">미해결</span></td></tr>
+                  <tr data-res="miss"><td>품명</td><td>로오딜슈프라정160mg</td><td class="n was">0 / 9</td><td class="n was">0 / 9</td><td><span class="tag wa">미해결</span></td></tr>
+                  <tr data-res="down"><td>품명</td><td>스마틴정</td><td class="n now">5 / 5</td><td class="n was">0 / 5</td><td><span class="tag er">실패</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -2021,7 +2053,7 @@ document.querySelectorAll('[data-ftool]').forEach(tool=>{
     ...t.querySelectorAll('tbody tr')]);
   const q=tool.querySelector('[data-q]'), cnt=tool.querySelector('[data-cnt]');
   const apply=()=>{
-    const t=(q.value||'').trim().toLowerCase();
+    const t=((q&&q.value)||'').trim().toLowerCase();
     const seg=tool.querySelector('[data-seg] button.on');
     const f=seg?seg.dataset.f:'all';
     let n=0;
@@ -2030,11 +2062,12 @@ document.querySelectorAll('[data-ftool]').forEach(tool=>{
         ? true
         : f==='need' ? r.dataset.need==='1'
         : f==='chg'  ? r.dataset.chg==='1'
-        : f==='same' ? r.dataset.chg==='0' : true;
+        : f==='same' ? r.dataset.chg==='0'
+        : r.dataset.res===f;
       const okQ=!t||(r.dataset.k||'').toLowerCase().includes(t);
       const show=okF&&okQ; r.style.display=show?'':'none'; if(show)n++;
     });
-    cnt.textContent=(n!==rows.length)?(n+' / '+rows.length+' 항목'):'';
+    if(cnt)cnt.textContent=(n!==rows.length)?(n+' / '+rows.length+' 항목'):'';
     // 품목 카드는 안에 보이는 행이 없으면 통째로 숨긴다
     const ic=document.querySelector('#itemCard');
     if(ic&&tbs.includes(ic.parentElement)){
@@ -2042,7 +2075,7 @@ document.querySelectorAll('[data-ftool]').forEach(tool=>{
       ic.style.display=live?'':'none';
     }
   };
-  q.addEventListener('input',apply);
+  if(q)q.addEventListener('input',apply);
   tool.querySelectorAll('[data-seg] button').forEach(b=>b.addEventListener('click',()=>{
     tool.querySelectorAll('[data-seg] button').forEach(x=>x.classList.remove('on'));
     b.classList.add('on'); apply();}));
@@ -2220,7 +2253,7 @@ function normalizeSingleAggTable(table){
     if(isTable){
       tableRows.push(row);
       tableTarget+=target;
-      tableLabel=tableLabel||row.dataset.tableLabel||'반복 항목';
+      tableLabel=tableLabel||row.dataset.tableLabel||'테이블';
     }else{
       generalTarget+=target;
       generalCorrect+=correct;
@@ -2242,7 +2275,7 @@ function normalizeSingleAggTable(table){
   }
   if(tableRows.length){
     const firstTable=tableRows[0];
-    const tableGroup=aggGroupRow(tableLabel+' 테이블','평가 '+tableTarget+'셀',5);
+    const tableGroup=aggGroupRow(tableLabel,'평가 '+tableTarget+'셀',5);
     body.insertBefore(tableGroup,firstTable);
     body.insertBefore(aggSubtotalRow('일반 필드 소계',generalTarget,generalCorrect,generalError,'single'),tableGroup);
   }
@@ -2267,7 +2300,7 @@ function normalizeDiffAggTable(table){
     if(isTable){
       tableRows.push(row);
       tableTarget+=target;
-      tableLabel=tableLabel||row.dataset.tableLabel||'반복 항목';
+      tableLabel=tableLabel||row.dataset.tableLabel||'테이블';
     }else{
       generalTarget+=target;
       generalBase+=base;
@@ -2289,7 +2322,7 @@ function normalizeDiffAggTable(table){
   }
   if(tableRows.length){
     const firstTable=tableRows[0];
-    const tableGroup=aggGroupRow(tableLabel+' 테이블','평가 '+tableTarget+'셀',6);
+    const tableGroup=aggGroupRow(tableLabel,'평가 '+tableTarget+'셀',6);
     body.insertBefore(tableGroup,firstTable);
     body.insertBefore(aggSubtotalRow('일반 필드 소계',generalTarget,generalBase,0,'diff',generalTuned),tableGroup);
   }
@@ -2305,11 +2338,13 @@ const mdF=document.querySelector('#mdFilter');
 if(mdF){
   const hrows=[...document.querySelectorAll('#v-missed tbody tr[data-model]')];
   const needF=document.querySelector('#needFilter');
+  const stF=document.querySelector('#stFilter');
   const empty=document.querySelector('.hempty2');
   let hp=1; const HP=20;
   const applyH=()=>{
-    const m=mdF.value, nd=needF.value;
+    const m=mdF.value, nd=needF.value, st=stF?stF.value:'전체';
     const hit=hrows.filter(r=>
+      (st==='전체'||r.dataset.state===st)&&
       (m==='전체'||r.dataset.model===m)&&
       (nd==='전체'||(nd==='있음')===(r.dataset.need==='1')));
     const pages=Math.max(1,Math.ceil(hit.length/HP));
@@ -2324,7 +2359,7 @@ if(mdF){
     document.querySelector('#hstprev').disabled=hp<=1;
     document.querySelector('#hstnext').disabled=hp>=pages;
   };
-  [mdF,needF].forEach(el=>el.addEventListener('change',()=>{hp=1;applyH();}));
+  [mdF,needF,stF].filter(Boolean).forEach(el=>el.addEventListener('change',()=>{hp=1;applyH();}));
   document.querySelector('#hstprev').addEventListener('click',()=>{if(hp>1){hp--;applyH();}});
   document.querySelector('#hstnext').addEventListener('click',()=>{hp++;applyH();});
   applyH();

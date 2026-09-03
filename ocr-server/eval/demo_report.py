@@ -366,15 +366,18 @@ base 정답 {s['exactMatch']}셀</b>. 대표 오독: {wrong_s}{variants}</div>""
         j_rows = []
         for e in by_target[t]:
             gt, b, f_ = e["gt"].strip(), (e["base"] or "").strip(), (e["finetuned"] or "").strip()
-            f_ok = f_ == gt
-            b_cls = "ok" if b == gt else "bad"
+            f_ok = _cmp(f_) == _cmp(gt)
+            b_cls = "ok" if _cmp(b) == _cmp(gt) else "bad"
             f_cls = "ok" if f_ok else "bad"
             mark = '<span class="ok">성공</span>' if f_ok else '<span class="bad">실패</span>'
             b64 = _img_b64(e["path"])
             parts.append(f"<tr><td>{_img_tag(e['path'], b64)}</td><td><b>{esc(gt)}</b></td>"
                          f"<td class='{b_cls}'>{esc(b) or '(빈칸)'}</td>"
                          f"<td class='{f_cls}'>{esc(f_) or '(빈칸)'}</td><td>{mark}</td></tr>")
-            j_rows.append({"gt": gt, "base": b, "finetuned": f_, "ok": f_ok, "imgB64": b64})
+            # ★path 를 함께 남긴다 - 판독 불가 크롭(basis_bad_paths)을 나중에 제외하려면
+            #  행을 경로로 특정할 수 있어야 한다. 없으면 순서 추측에 의존해야 한다.
+            j_rows.append({"path": e["path"], "gt": gt, "base": b,
+                           "finetuned": f_, "ok": f_ok, "imgB64": b64})
         parts.append(f"</table><p class='muted'>{esc(cmp_label)} {v['base']}/{v['n']} 정답 → "
                      f"파인튜닝 <b>{v['ft']}/{v['n']}</b> 정답</p>")
         j_targets.append({"name": t, "role": role, "isNew": i == cyc,

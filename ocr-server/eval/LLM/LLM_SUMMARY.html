@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LLM 2층 회수 여지 - 070_20260731_090123</title>
+<style>
+:root{--bg:#f6f8fa;--card:#ffffff;--line:#d0d7de;--fg:#1f2328;--muted:#59636e;
+--up:#1a7f37;--down:#cf222e;--warn:#9a6700;--link:#0969da}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+font-family:'Segoe UI','Malgun Gothic','Apple SD Gothic Neo',system-ui,sans-serif;
+font-size:14px;line-height:1.55;padding:clamp(14px,2.5vw,32px)}
+a{color:var(--link);text-decoration:none;font-weight:500}
+a:hover{text-decoration:underline}
+h1{font-size:20px;margin:0}
+.head{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;max-width:1600px;margin:0 auto 6px}
+.gen{color:var(--muted);font-size:12.5px}
+.note{color:var(--muted);font-size:12.5px;max-width:1600px;margin:4px auto}
+.note.warn{color:var(--warn)}
+section{background:var(--card);border:1px solid var(--line);border-radius:10px;
+padding:16px 18px;margin:18px auto;max-width:1600px;overflow-x:auto;box-shadow:0 1px 2px rgba(27,31,36,.04)}
+h2{font-size:16px;margin:0 0 10px}
+h3{font-size:13.5px;margin:14px 0 6px}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--muted);font-weight:600;font-size:12.5px;border-bottom:2px solid var(--line)}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:#f6f8fa}
+tfoot td{border-top:2px solid var(--line);border-bottom:none;font-weight:700;background:#f6f8fa}
+code{background:#eff1f3;border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:12.5px}
+.up{color:var(--up);font-weight:600}
+.down{color:var(--down);font-weight:600}
+.warnc{color:var(--warn);font-weight:600}
+.muted{color:var(--muted)}
+.legend{color:var(--muted);font-size:12px;margin-top:8px}
+.btn{display:inline-block;padding:5px 12px;border-radius:6px;background:var(--link);
+color:#fff;font-weight:600;font-size:12.5px;text-decoration:none;border:1px solid var(--link)}
+.btn:hover{background:#0860ca;text-decoration:none}
+.btn.ghost{background:#fff;color:var(--link)}
+.btn.ghost:hover{background:#eef4fb}
+
+.kpis{display:flex;flex-wrap:wrap;gap:10px;max-width:1600px;margin:0 auto}
+.kpi{flex:1;min-width:150px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 16px;box-shadow:0 1px 2px rgba(27,31,36,.04)}
+.kpi .lab{color:var(--muted);font-size:12px}
+.kpi b{font-size:24px;display:block;margin:2px 0}
+.kpi .sub{color:var(--muted);font-size:11.5px}
+.kpi.hot{border-color:#f0d99a;background:#fff8e6}
+.kpi.hot b{color:var(--warn)}
+.kpi.good{border-color:#a7e0b5;background:#e9f7ec}
+.kpi.good b{color:var(--up)}
+.kpi.off b{color:var(--muted)}
+
+.acc-lo{background:#ffeef0}
+.acc-mid{background:#fff8e6}
+.acc-hi{background:#e9f7ec}
+.tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:10px;border:1px solid var(--line);color:var(--muted);background:#f6f8fa;font-weight:600}
+.tag.real{border-color:#b6d8f2;background:#ddf0fd;color:#0550ae}
+.tag.calc{border-color:#a7e0b5;background:#e9f7ec;color:var(--up)}
+.tag.ex{border-color:#f0d99a;background:#fff8e6;color:var(--warn)}
+.tag.none{border-color:var(--line);background:#f6f8fa;color:var(--muted)}
+.dim td{color:var(--muted)}
+.grpline{border-left:1px solid var(--line)}
+/* 그룹 헤더: colspan 묶음은 가운데, 구분선은 본문 .grpline 과 같은 위치 */
+th.grp{text-align:center;border-left:1px solid var(--line);border-bottom:1px solid var(--line);
+       font-size:11.5px;letter-spacing:.02em;padding-bottom:5px}
+th.gl,td.gl{border-left:1px solid var(--line)}
+/* 숫자 열 정렬 통일 */
+table td,table th{font-variant-numeric:tabular-nums}
+thead th{vertical-align:bottom}
+td.muted,td.dashcell{color:var(--muted)}
+tbody td:first-child{padding-right:18px}
+.cards{display:flex;flex-wrap:wrap;gap:10px}
+.cell{flex:1;min-width:230px;border:1px solid var(--line);border-radius:8px;padding:11px 13px;background:#f6f8fa}
+.cell h4{margin:0 0 3px;font-size:13px}
+.cell p{margin:0;font-size:12.5px;color:var(--muted)}
+@media (max-width:640px){body{font-size:13px}.kpi{min-width:120px}}
+</style>
+</head>
+<body>
+
+<div class="head">
+  <h1>LLM 2층 회수 여지 <span class="muted">(070_20260731_090123)</span></h1>
+  <div class="gen">생성 2026-08-28 · 실측 출처 =
+    <a href="../runs/070_20260731_090123/LOCAL_SUMMARY.html">LOCAL_SUMMARY.html</a> ·
+    <a href="../runs/070_20260731_090123/PARSER_DROP_CLASSIFY.html">PARSER_DROP_CLASSIFY</a>
+  </div>
+</div>
+
+<div class="note">
+  <b>parser-drop</b> = GT 값이 OCR 출력엔 있는데 파서가 떨군 것 (회수 가능) ·
+  <b>recognition</b> = OCR이 글자 자체를 못 읽음 (OCR 바운드)
+</div>
+<div class="note">
+  이 페이지는 <b>그 회수 가능분을 LLM 2층에 맡겼을 때의 상한</b>을 컬럼별로 계산한 것이다.
+  <b>상한</b> = 회수 대상(parser-drop + recognition 중 회수 가능분)을 전부 살렸을 때의 정확도.
+  산출값이며 달성치가 아니다. 실제 회수율은 아직 측정한 적이 없다.
+</div>
+
+<div class="kpis">
+  <div class="kpi">
+    <div class="lab">지금 정확도 <span class="tag real">실측</span></div>
+    <b>48.2%</b>
+    <div class="sub">421,917 / 875,592 (필드+셀)</div>
+  </div>
+  <div class="kpi">
+    <div class="lab">결함 <span class="tag real">실측</span></div>
+    <b>453,675</b>
+    <div class="sub">불일치 + 누락</div>
+  </div>
+  <div class="kpi hot">
+    <div class="lab">2층 회수 대상 <span class="tag real">실측+추정</span></div>
+    <b>279,637</b>
+    <div class="sub">parser-drop 262,940 + reco 16,697</div>
+  </div>
+  <div class="kpi off">
+    <div class="lab">크롭 봐야 함 <span class="tag calc">산출</span></div>
+    <b>172,491</b>
+    <div class="sub">recognition 189,188 중 회수분 제외<br>크롭을 봐야 하는 몫</div>
+  </div>
+  <div class="kpi good">
+    <div class="lab">회수 대상 살리면 <span class="tag calc">산출</span></div>
+    <b>80.1%</b>
+    <div class="sub">+31.9pp · 701,554 / 875,592</div>
+  </div>
+  <div class="kpi off">
+    <div class="lab">실제 회수 <span class="tag none">미측정</span></div>
+    <b>-</b>
+    <div class="sub">LLM run 0건</div>
+  </div>
+</div>
+
+<section>
+  <h2>결함 453,675 를 누가 먹나</h2>
+  <table>
+    <thead>
+      <tr><th>갈래</th><th>건수</th><th>비중</th><th>룰</th><th>글자만 주는 LLM</th><th>크롭도 같이 주는 2층</th><th>판단</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><b>parser-drop</b> <span class="muted">읽었는데 못 넣음</span></td>
+        <td>262,940</td><td>58%</td>
+        <td class="down">종료됨</td><td class="up">가능</td><td class="up">가능</td>
+        <td>2층 1순위</td>
+      </tr>
+      <tr>
+        <td><b>recognition</b> <span class="muted">글자를 못 읽음</span></td>
+        <td>189,188</td><td>42%</td>
+        <td class="down">불가</td><td class="warnc">16,697</td><td class="warnc">나머지는 크롭</td>
+        <td>아래 분해 참조</td>
+      </tr>
+      <tr class="dim">
+        <td><b>ambiguous_fuzzy</b> <span class="muted">채점 자체가 애매</span></td>
+        <td>1,547</td><td>0.3%</td>
+        <td>해당 없음</td><td>해당 없음</td><td>해당 없음</td>
+        <td>보류</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="legend">
+    회수 가능분이 58% 라는 건 run 리포트가 직접 계산해 둔 값이다. 룰 트랙을 종료한 자리에 남아 있는 것이 이 262,940 이고,
+    LLM 2층을 검토하는 이유는 이 숫자 하나다.
+  </div>
+</section>
+
+<section>
+  <h2>recognition 189,188 분해 <span class="muted">(정말 못 읽은 것인지 확인)</span></h2>
+  <div class="note" style="margin:0 0 10px">
+    <b>recognition</b> 은 "GT 문자열이 OCR 출력에 없음" 으로 분류된 것이다. 그런데 그 안에는
+    OCR 이 더 많이 읽어서 안 맞는 경계 문제도 섞여 있을 수 있어, 실제 구성을 확인했다.
+  </div>
+
+  <h3>추출값 기준 구성</h3>
+  <table>
+    <thead><tr>
+      <th>갈래</th><th>건수</th><th>비중</th><th>성격</th>
+      <th class="grpline">LLM 가능여부</th><th>회수 가능</th><th>근거</th>
+    </tr></thead>
+    <tbody>
+      <tr><td><b>A</b> 추출값이 아예 없음</td><td>93,350</td><td>49.3%</td>
+        <td>파서가 아무것도 못 넣음</td>
+        <td class="grpline warnc">일부만</td><td>약 9,000</td>
+        <td>5자+ 표본 800 중 14.1% 가 원문에 있음</td></tr>
+      <tr><td><b>B3</b> 다른 값을 읽음</td><td>77,517</td><td>41.0%</td>
+        <td>GT 와 포함 관계도 아님 · 진짜 인식 오류</td>
+        <td class="grpline down">거의 불가</td><td>약 1,200</td>
+        <td>5자+ 표본 800 중 1.8% · 인식 축</td></tr>
+      <tr><td><b>B2</b> 추출값이 GT 의 일부</td><td>13,073</td><td>6.9%</td>
+        <td>절단</td>
+        <td class="grpline down">거의 불가</td><td>약 390</td>
+        <td>5자+ 표본 800 중 3.2% · 잘린 부분이 원문에도 없음</td></tr>
+      <tr><td><b>B1</b> 추출값이 GT 를 품고 더 붙음</td><td>5,248</td><td>2.8%</td>
+        <td>과포획 · 잘라내면 되는 경계 문제</td>
+        <td class="grpline up">가능</td><td>5,248 전량</td>
+        <td class="up">정답이 이미 추출값 안에 있음 · 표본 불필요</td></tr>
+    </tbody>
+    <tfoot>
+      <tr><td>계</td><td>189,188</td><td>100%</td><td></td>
+        <td class="grpline"></td><td>16,697</td><td>결함 453,675 의 3.7%</td></tr>
+    </tfoot>
+  </table>
+  <div class="legend">
+    <div><b>B1 만 성격이 다르다.</b> 정의상 추출값이 정답을 통째로 품고 있어서
+      (예: 정답 <code>서울 서초구 바우뫼로27길 7-21 (양재동)</code> · 추출 <code>...양재동알리코제약빌딩</code>)
+      <b>어디를 자를지만 정하면 된다.</b> 원문 검사와 무관하게 회수되므로 표본 추정이 필요 없다.</div>
+    <div>A · B2 · B3 의 추정치는 <b>GT 5자 이상 구간만</b> 측정한 값이다.
+      1~4자짜리 약 44,600 건은 짧아서 우연 일치가 섞여 이 방법으로 판정할 수 없다 · <b>미측정</b>.
+      따라서 위 합계는 하한에 가깝다.</div>
+  </div>
+
+  <h3>표본 검사 <span class="muted">정답이 그 문서 OCR 원문에 실제로 있나</span></h3>
+  <div class="note" style="margin:0 0 8px">
+    방법 = recognition 189,188 에서 무작위 3,000건(seed 11) 추출 → 각 건의
+    <code>snapshots/&lt;문서&gt;.json</code> 의 <code>full_text</code> 에서 공백 제거 후 GT 포함 여부 검사.
+    <b>짧은 값은 우연히 걸리므로 길이별로 나눠 본다.</b>
+  </div>
+  <table>
+    <thead><tr><th>GT 길이</th><th>표본</th><th>원문에 있음</th><th>비율</th><th>이 구간의 신뢰도</th></tr></thead>
+    <tbody>
+      <tr class="dim"><td>1~2자</td><td>462</td><td>415</td><td>89.8%</td>
+        <td>수량 <code>5</code> 같은 값이라 우연 일치 · <b>이 방법으로 판정 불가</b></td></tr>
+      <tr class="dim"><td>3~4자</td><td>227</td><td>40</td><td>17.6%</td><td>우연 일치 여지 있음</td></tr>
+      <tr><td>5~8자</td><td>1,385</td><td>160</td><td>11.6%</td><td>대체로 유효</td></tr>
+      <tr><td>9자 이상</td><td>919</td><td>30</td><td>3.3%</td><td>사실상 확정</td></tr>
+    </tbody>
+    <tfoot>
+      <tr><td>5자 이상 계</td><td>2,304</td><td>190</td><td>8.2%</td>
+        <td>버킷별 재계산은 아래 참조</td></tr>
+    </tfoot>
+  </table>
+  <div class="legend">
+    <div><b>결론</b> · recognition 중 <b>글자만 넘겨서 회수 가능한 몫은 16,697</b> 이다(전 컬럼 표본 측정).
+      결함 전체 453,675 의 3.7% · recognition 의 8.8% 수준이다.
+      나머지 172,491 은 OCR 원문에 정답이 아예 없어 <b>크롭을 봐야</b> 하고, 그건 인식 축(파인튜닝) 몫이다.
+      그 축은 앵커 · 보간 · lr 전부 소진했다.</div>
+    <div>1~2자 구간(89.8%)은 성과가 아니라 <b>측정 한계</b>다. 짧은 숫자는 우연히 원문에 존재하므로
+      이 방법으로 회수 가능 여부를 가릴 수 없다. 이 구간은 1차 실험에서 LLM 답을 직접 대조해야 판정된다.</div>
+  </div>
+
+  <h3>컬럼별 recognition 구성</h3>
+  <table>
+    <thead><tr>
+      <th>컬럼</th><th>recognition</th><th>추출값 없음</th><th>비율</th>
+      <th class="grpline">LLM 가능여부</th><th>추정 회수</th><th>회수율</th>
+      <th>미측정<br><span style="font-weight:400">짧은 값</span></th><th>비고</th>
+    </tr></thead>
+    <tbody>
+      <tr><td>manufacturingNo</td><td>15,445</td><td>14,354</td><td class="acc-lo">92.9%</td><td class="grpline up">가능</td><td>7,931</td><td>51.4%</td><td class="muted">2,183</td><td class="muted">원문에 정답이 있는 비율 59.2%</td></tr>
+      <tr><td>expiryDate</td><td>18,455</td><td>14,844</td><td class="acc-lo">80.4%</td><td class="grpline warnc">일부</td><td>2,303</td><td>12.5%</td><td class="muted">3</td><td class="muted"></td></tr>
+      <tr><td>unitPrice</td><td>10,209</td><td>7,926</td><td class="acc-lo">77.6%</td><td class="grpline warnc">일부</td><td>946</td><td>9.3%</td><td class="muted">5,904</td><td class="muted">B1 912 가 대부분</td></tr>
+      <tr><td>quantity</td><td>14,616</td><td>10,142</td><td class="acc-mid">69.4%</td><td class="grpline warnc">일부</td><td>963</td><td>6.6%</td><td class="muted">13,550</td><td class="muted">거의 전부 짧은 숫자 · 미측정</td></tr>
+      <tr><td>spec</td><td>17,595</td><td>11,670</td><td class="acc-mid">66.3%</td><td class="grpline down">거의 불가</td><td>305</td><td>1.7%</td><td class="muted">11,810</td><td class="muted">30T 같은 짧은 값이 대부분</td></tr>
+      <tr><td>amount</td><td>6,919</td><td>4,191</td><td class="acc-mid">60.6%</td><td class="grpline down">거의 불가</td><td>249</td><td>3.6%</td><td class="muted">1,101</td><td class="muted"></td></tr>
+      <tr><td>itemNameMaster</td><td>16,954</td><td>7,577</td><td>44.7%</td><td class="grpline down">거의 불가</td><td>246</td><td>1.5%</td><td class="muted">1,374</td><td class="muted">매칭 산출 컬럼</td></tr>
+      <tr><td>itemCode</td><td>31,705</td><td>10,718</td><td>33.8%</td><td class="grpline down">불가</td><td>0</td><td>0.0%</td><td class="muted">0</td><td class="muted">인쇄물이 아님 · 구조적으로 0</td></tr>
+      <tr><td>itemName</td><td>19,826</td><td>4,742</td><td>23.9%</td><td class="grpline down">거의 불가</td><td>802</td><td>4.0%</td><td class="muted">681</td><td class="muted">읽었으나 글자가 틀림</td></tr>
+      <tr><td>buyerAddress</td><td>8,335</td><td>975</td><td>11.7%</td><td class="grpline down">불가</td><td>0</td><td>0.0%</td><td class="muted">0</td><td class="muted">표본 400 중 0건</td></tr>
+    </tbody>
+    <tfoot>
+      <tr><td>위 10개 계</td><td>160,059</td><td>87,139</td><td>54.4%</td>
+        <td class="grpline"></td><td>13,745</td><td>8.6%</td><td class="muted">36,606</td>
+        <td class="muted">전 컬럼 합 16,697</td></tr>
+    </tfoot>
+  </table>
+  <div class="legend">
+    <div>측정 방법은 위 표본 검사와 같다(seed 31 · 컬럼별 표본 400 · GT 5자 이상). <b>추정 회수</b> =
+      B1(추출값이 정답을 품은 건, 전량 회수) + 5자 이상 구간의 원문 적중 추정.
+      <b>미측정</b>은 GT 가 4자 이하라 우연 일치가 섞여 판정할 수 없는 건수다.</div>
+    <div class="warnc"><b>manufacturingNo 는 recognition 으로 분류됐지만 실제로는 절반이 회수 가능하다.</b>
+      표본 400 중 59.2% 가 정답이 OCR 원문에 있었다. 15,445 중 약 7,931 · 회수율 51.4% 로 이 표에서 압도적 1위다.
+      제조번호는 parser-drop 쪽에서도 +70.7pp 로 1위였으므로 <b>두 갈래 모두에서 첫 대상</b>이다.</div>
+    <div><b>itemCode 31,705 과 buyerAddress 8,335 는 표본에서 0건이다.</b> itemCode 는 송장에서 읽는 값이 아니라
+      마스터매칭으로 채우는 산출물이라 "OCR 출력에 없음" 이 당연하고, 품명을 못 읽어서 코드를 못 만든 결과의
+      그림자에 가깝다. 둘 다 독립된 회수 대상이 아니다.</div>
+    <div><b>quantity 와 spec 은 대부분이 미측정이다.</b> 수량은 13,550 · 규격은 11,810 이 4자 이하라
+      이 방법으로 판정할 수 없다. 두 컬럼의 실제 회수율은 1차 실험에서 LLM 답을 직접 대조해야 나온다.</div>
+  </div>
+</section>
+
+<section>
+  <h2>컬럼별 회수 여지 <span class="muted">(회수 여지 +pp 큰 순 · 어느 컬럼부터 태울지의 근거)</span></h2>
+  <div class="pnote">
+    <b>회수 대상</b> = parser-drop(확정) + recognition 중 정답이 OCR 원문에 있다고 확인된 몫(표본 추정).
+    분류상 갈래는 다르지만 <b>2층이 같은 입력으로 같은 패스에 처리하므로 합쳐서 센다.</b>
+    <b>LLM 후 정확도는 그 회수 대상을 전부 살렸을 때의 상한이며 달성치가 아니다.</b>
+  </div>
+  <div class="scroll">
+    <table>
+      <thead>
+        <tr>
+          <th rowspan="2">컬럼</th>
+          <th colspan="2" class="grp">지금 · run 070 실측</th>
+          <th colspan="3" class="grp">2층 회수 대상</th>
+          <th colspan="2" class="grp">LLM 2층 후 · 산출</th>
+          <th rowspan="2">못 고침<br><span style="font-weight:400">reco 잔여</span></th>
+          <th rowspan="2" class="gl">실제 회수</th>
+        </tr>
+        <tr>
+          <th class="gl">지금 정확도</th><th>맞음 / 채점셀</th>
+          <th class="gl">parser-drop<br><span style="font-weight:400">확정</span></th>
+          <th>recognition 중<br><span style="font-weight:400">표본 추정</span></th><th>계</th>
+          <th class="gl">LLM 후 정확도<br><span style="font-weight:400">상한</span></th><th>+pp</th>
+        </tr>
+      </thead>
+      <tbody>
+      <tr><td><b>제조번호</b></td><td class="grpline acc-lo"><b>7.4%</b></td><td class="muted">5,261 / 71,187</td><td class="grpline">50,320</td><td>8,029</td><td><b>58,349</b></td><td class="grpline acc-hi"><b>89.4%</b></td><td class="up">+82.0</td><td class="muted">7,416</td><td class="grpline muted">-</td></tr>
+      <tr><td><b>유효기간</b></td><td class="grpline acc-lo"><b>30.0%</b></td><td class="muted">21,428 / 71,434</td><td class="grpline">31,551</td><td>2,211</td><td><b>33,762</b></td><td class="grpline acc-hi"><b>77.3%</b></td><td class="up">+47.3</td><td class="muted">16,244</td><td class="grpline muted">-</td></tr>
+      <tr><td><b>규격</b></td><td class="grpline acc-lo"><b>34.4%</b></td><td class="muted">28,948 / 84,224</td><td class="grpline">37,556</td><td>319</td><td><b>37,875</b></td><td class="grpline acc-hi"><b>79.3%</b></td><td class="up">+45.0</td><td class="muted">17,276</td><td class="grpline muted">-</td></tr>
+      <tr><td><b>합계금액</b></td><td class="grpline acc-mid"><b>46.5%</b></td><td class="muted">4,116 / 8,857</td><td class="grpline">3,152</td><td>789</td><td><b>3,941</b></td><td class="grpline acc-hi"><b>91.0%</b></td><td class="up">+44.5</td><td class="muted">800</td><td class="grpline muted">-</td></tr>
+      <tr><td><b>단가</b></td><td class="grpline acc-mid"><b>44.7%</b></td><td class="muted">37,775 / 84,540</td><td class="grpline">36,556</td><td>1,005</td><td><b>37,561</b></td><td class="grpline acc-hi"><b>89.1%</b></td><td class="up">+44.4</td><td class="muted">9,204</td><td class="grpline muted">-</td></tr>
+      <tr><td><b>공급가액</b></td><td class="grpline acc-mid"><b>44.9%</b></td><td class="muted">3,888 / 8,655</td><td class="grpline">2,967</td><td>574</td><td><b>3,541</b></td><td class="grpline acc-hi"><b>85.8%</b></td><td class="up">+40.9</td><td class="muted">1,226</td><td class="grpline muted">-</td></tr>
+      <tr><td><b>세액</b></td><td class="grpline acc-mid"><b>45.0%</b></td><td class="muted">4,044 / 8,985</td><td class="grpline">3,100</td><td>445</td><td><b>3,545</b></td><td class="grpline acc-hi"><b>84.5%</b></td><td class="up">+39.5</td><td class="muted">1,396</td><td class="grpline muted">-</td></tr>
+      <tr><td><b>수량</b></td><td class="grpline acc-mid"><b>48.7%</b></td><td class="muted">41,166 / 84,471</td><td class="grpline">28,689</td><td>963</td><td><b>29,652</b></td><td class="grpline acc-hi"><b>83.8%</b></td><td class="up">+35.1</td><td class="muted">13,653</td><td class="grpline muted">-</td></tr>
+      <tr><td><b>금액</b></td><td class="grpline acc-mid"><b>58.1%</b></td><td class="muted">49,111 / 84,498</td><td class="grpline">28,468</td><td>263</td><td><b>28,731</b></td><td class="grpline acc-hi"><b>92.1%</b></td><td class="up">+34.0</td><td class="muted">6,656</td><td class="grpline muted">-</td></tr>
+      <tr><td><b>보험코드</b></td><td class="grpline acc-mid"><b>59.3%</b></td><td class="muted">22,079 / 37,217</td><td class="grpline">9,856</td><td>949</td><td><b>10,805</b></td><td class="grpline acc-hi"><b>88.4%</b></td><td class="up">+29.0</td><td class="muted">4,213</td><td class="grpline muted">-</td></tr>
+      <tr><td><b>품명 <span class="muted">읽기 raw</span></b></td><td class="grpline acc-mid"><b>52.2%</b></td><td class="muted">44,114 / 84,540</td><td class="grpline">20,035</td><td>709</td><td><b>20,744</b></td><td class="grpline acc-hi"><b>76.7%</b></td><td class="up">+24.5</td><td class="muted">19,117</td><td class="grpline muted">-</td></tr>
+      <tr><td><b>공급자 상호</b></td><td class="grpline acc-mid"><b>48.4%</b></td><td class="muted">4,344 / 8,983</td><td class="grpline">1,810</td><td>33</td><td><b>1,843</b></td><td class="grpline acc-mid"><b>68.9%</b></td><td class="up">+20.5</td><td class="muted">2,793</td><td class="grpline muted">-</td></tr>
+      <tr><td><b>작성일자</b></td><td class="grpline acc-hi"><b>81.9%</b></td><td class="muted">7,128 / 8,701</td><td class="grpline">974</td><td>0</td><td><b>974</b></td><td class="grpline acc-hi"><b>93.1%</b></td><td class="up">+11.2</td><td class="muted">599</td><td class="grpline muted">-</td></tr>
+      <tr><td><b>공급받는자 사업자번호</b></td><td class="grpline acc-hi"><b>83.4%</b></td><td class="muted">6,813 / 8,166</td><td class="grpline">909</td><td>0</td><td><b>909</b></td><td class="grpline acc-hi"><b>94.6%</b></td><td class="up">+11.1</td><td class="muted">444</td><td class="grpline muted">-</td></tr>
+      <tr><td><b>공급자 사업자번호</b></td><td class="grpline acc-hi"><b>73.7%</b></td><td class="muted">6,510 / 8,839</td><td class="grpline">778</td><td>1</td><td><b>779</b></td><td class="grpline acc-hi"><b>82.5%</b></td><td class="up">+8.8</td><td class="muted">1,550</td><td class="grpline muted">-</td></tr>
+      <tr><td><b>공급받는자 주소</b></td><td class="grpline acc-lo"><b>0.5%</b></td><td class="muted">46 / 8,998</td><td class="grpline">586</td><td>0</td><td><b>586</b></td><td class="grpline acc-lo"><b>7.0%</b></td><td class="up">+6.5</td><td class="muted">8,335</td><td class="grpline muted">-</td></tr>
+      <tr><td><b>공급받는자 상호</b></td><td class="grpline acc-lo"><b>19.0%</b></td><td class="muted">1,714 / 8,998</td><td class="grpline">494</td><td>33</td><td><b>527</b></td><td class="grpline acc-lo"><b>24.9%</b></td><td class="up">+5.9</td><td class="muted">6,313</td><td class="grpline muted">-</td></tr>
+      <tr><td><b>품명 <span class="muted">마스터매칭 정식명</span></b></td><td class="grpline acc-hi"><b>74.3%</b></td><td class="muted">61,959 / 83,422</td><td class="grpline">4,453</td><td>246</td><td><b>4,699</b></td><td class="grpline acc-hi"><b>79.9%</b></td><td class="up">+5.6</td><td class="muted">16,708</td><td class="grpline muted">-</td></tr>
+      <tr><td><b>할인액</b></td><td class="grpline acc-hi"><b>94.8%</b></td><td class="muted">8,526 / 8,996</td><td class="grpline">424</td><td>0</td><td><b>424</b></td><td class="grpline acc-hi"><b>99.5%</b></td><td class="up">+4.7</td><td class="muted">46</td><td class="grpline muted">-</td></tr>
+      <tr><td><b>공급자 주소</b></td><td class="grpline acc-lo"><b>34.7%</b></td><td class="muted">2,898 / 8,352</td><td class="grpline">77</td><td>128</td><td><b>205</b></td><td class="grpline acc-lo"><b>37.2%</b></td><td class="up">+2.5</td><td class="muted">5,210</td><td class="grpline muted">-</td></tr>
+      <tr><td><b>itemCode <span class="muted">마스터매칭 채움</span></b></td><td class="grpline acc-mid"><b>62.3%</b></td><td class="muted">52,636 / 84,528</td><td class="grpline">184</td><td>0</td><td><b>184</b></td><td class="grpline acc-mid"><b>62.5%</b></td><td class="up">+0.2</td><td class="muted">31,705</td><td class="grpline muted">-</td></tr>
+      <tr><td><b>과세유형</b></td><td class="grpline acc-hi"><b>82.4%</b></td><td class="muted">7,413 / 9,001</td><td class="grpline">1</td><td>0</td><td><b>1</b></td><td class="grpline acc-hi"><b>82.4%</b></td><td class="up">+0.0</td><td class="muted">1,587</td><td class="grpline muted">-</td></tr>
+      <tr class="dim"><td>품명 — ③learndata A(held-out·비순환) (itemNameLearnA)</td><td class="grpline">75.7%</td><td>63,160 / 83,422</td><td class="grpline">0</td><td>0</td><td>0</td><td class="grpline">75.7%</td><td>+0.0</td><td>0</td><td class="grpline">파생 지표</td></tr>
+      <tr class="dim"><td>품명 — ③learndata B(full·순환상한) (itemNameLearnB)</td><td class="grpline">75.9%</td><td>63,314 / 83,422</td><td class="grpline">0</td><td>0</td><td>0</td><td class="grpline">75.9%</td><td>+0.0</td><td>0</td><td class="grpline">파생 지표</td></tr>
+      <tr class="dim"><td>itemCode — +learndata A(held-out·비순환) (itemCodeLearnA)</td><td class="grpline">64.4%</td><td>54,413 / 84,528</td><td class="grpline">0</td><td>0</td><td>0</td><td class="grpline">64.4%</td><td>+0.0</td><td>0</td><td class="grpline">파생 지표</td></tr>
+      <tr class="dim"><td>itemCode — +learndata B(full·순환상한) (itemCodeLearnB)</td><td class="grpline">64.7%</td><td>54,723 / 84,528</td><td class="grpline">0</td><td>0</td><td>0</td><td class="grpline">64.7%</td><td>+0.0</td><td>0</td><td class="grpline">파생 지표</td></tr>
+      </tbody>
+      <tfoot>
+        <tr><td>필드 + 셀 합산</td>
+          <td class="grpline">48.2%</td><td>421,917 / 875,592</td>
+          <td class="grpline">262,940</td><td>16,697</td><td><b>279,637</b></td>
+          <td class="grpline">80.1%</td><td class="up">+31.9</td>
+          <td>172,491</td><td class="grpline">-</td></tr>
+      </tfoot>
+    </table>
+  </div>
+  <div class="legend">
+    <div><b>제조번호가 압도적 1위다.</b> parser-drop 50,320 에 더해 recognition 15,445 중 8,029(표본 적중 60.0%)가
+      정답이 원문에 있었다. 회수 대상 58,349 · 상한 89.4% · <b>+82.0pp</b> 로 다른 컬럼과 자릿수가 다르다.</div>
+    <div><b>itemCode · 과세유형 · 공급자 주소 · 공급받는자 주소는 회수할 게 없다.</b>
+      parser-drop 도 recognition 회수분도 거의 0 이다. itemCode 는 인쇄물이 아니라 매칭 산출물이고,
+      나머지는 OCR 이 글자를 못 읽어 크롭을 봐야 한다. 못 고침 열이 그 크기다.</div>
+    <div>맨 아래 4행(learndata 계열)은 별도 컬럼이 아니라 같은 컬럼의 파생 지표라 회수 대상이 잡히지 않는다.
+      회수 대상에서 제외한다.</div>
+    <div>합산 행은 표의 컬럼 합이 아니라 run 리포트의 전체 필드(57,440/105,531) + 전체 셀(364,477/770,061) 이다.
+      표에는 파생 지표가 섞여 있어 단순 합산이 성립하지 않는다.</div>
+  </div>
+</section>
+
+<section>
+  <h2>실행 이력 <span class="muted">(LLM run · 0건)</span></h2>
+  <div class="note" style="margin:0 0 10px">
+    아직 한 번도 돌리지 않았다. 아래 2행은 <b>표가 어떻게 채워지는지</b> 보여주는 예시이며 측정값이 아니다.
+  </div>
+  <table>
+    <thead>
+      <tr><th>#</th><th>대상 컬럼</th><th>모델</th><th>보낸 행</th><th>회수</th><th>잃음</th><th>흔들림</th><th>비용</th><th>결과</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td><td>미정 <span class="muted">상단 표 상위 컬럼 중 선택</span></td><td class="muted">미정</td>
+        <td class="muted">-</td><td class="muted">-</td><td class="muted">-</td><td class="muted">-</td><td class="muted">-</td>
+        <td><span class="tag none">예정</span></td>
+      </tr>
+      <tr class="dim">
+        <td>2</td><td>표가 이렇게 채워진다</td><td>-</td>
+        <td>2,000</td><td>1,180</td><td>37</td><td>±24</td><td>$4</td>
+        <td><span class="tag ex">예시</span></td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="legend">
+    <b>흔들림</b> = 같은 입력을 3회 돌렸을 때 답이 달라진 건수. 파인튜닝은 embedding 동결로 A/A 완전일치를 확보했지만
+    LLM 에는 대응물이 없다. 회수가 이 폭보다 작으면 성과로 세지 않는다.
+  </div>
+</section>
+
+<section>
+  <h2>채택 조건 <span class="muted">(순서가 있다)</span></h2>
+  <div class="cards">
+    <div class="cell">
+      <h4>1. 흔들림 폭</h4>
+      <p>같은 입력 3회. 이 폭보다 작은 차이는 신호가 아니다. 파인튜닝 초기에 비결정 관측으로 곡선을 통째로 폐기했던 전례를 반복하지 않기 위한 1번 실험.</p>
+    </div>
+    <div class="cell">
+      <h4>2. 잃음</h4>
+      <p>원래 맞히던 셀을 2층이 망친 건수. 파인튜닝 판정과 동일하게 정답 증가보다 먼저 본다. 마스터 사전을 프롬프트에 넣으면 맞던 것까지 바뀐다.</p>
+    </div>
+    <div class="cell">
+      <h4>3. 회수</h4>
+      <p>보낸 parser-drop 중 실제로 살아난 비율. 앞의 둘을 통과했을 때만 센다.</p>
+    </div>
+    <div class="cell">
+      <h4>4. 빈칸 유지</h4>
+      <p>원본에 답이 없는 행을 채워 넣지 않았는지. 그럴듯하게 채운 값은 빈칸보다 사람이 잡아내기 어렵다.</p>
+    </div>
+  </div>
+  <div class="legend">
+    저울은 이미 있다. 크롭 45,617 · 문서 9,001 · ①잃어버림 ②못읽음 ③표기만 3분할 집계.
+    2층 결과를 같은 형식으로 뱉기만 하면 이 표들이 채워진다.
+  </div>
+</section>
+
+<section>
+  <h2>실행 전 정할 것 <span class="tag none">미결</span></h2>
+  <table>
+    <thead><tr><th>항목</th><th>선택지</th><th>지금 판단</th></tr></thead>
+    <tbody>
+      <tr><td>첫 대상 컬럼</td><td>상한 상위 / 숫자 3열</td>
+        <td>미정 · 상한 순서는 제조번호 · 규격 · 유효기간 · 단가</td></tr>
+      <tr><td>2층을 어디서 돌리나</td><td>외부 API / 우리 장비</td>
+        <td>측정은 외부 API 로 상한부터 · 제품은 우리 장비 쪽</td></tr>
+      <tr><td>기준셋을 외부로 보내도 되나</td><td>허용 / 불가</td>
+        <td class="warnc">고객 확인 필요 · 불가면 처음부터 우리 장비에서 측정</td></tr>
+      <tr><td>고친 정답을 어디에 쌓나</td><td>지금은 브라우저뿐</td>
+        <td class="warnc">쌓이는 곳이 없으면 2층을 붙여도 같은 실수가 반복된다</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<div class="note" style="margin-top:18px">
+  숫자는 전부 run 070_20260731_090123 의 로컬 합산뷰에서 가져왔다. run 이 바뀌면 이 페이지도 다시 만들어야 한다.
+</div>
+
+</body>
+</html>
