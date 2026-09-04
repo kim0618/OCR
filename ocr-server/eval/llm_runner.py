@@ -7,7 +7,7 @@
 
 별도 채점기를 만들지 않는다 - 셀 신원이 어긋나면 교차 2×2 네 칸이 의미를 잃는다.
 
-프롬프트는 eval/LLM/prompt_v1.md 의 ## SYSTEM / ## USER 절을 그대로 쓴다(룰 이식 v1).
+프롬프트는 eval/LLM/inputs/prompt_v1.md 의 ## SYSTEM / ## USER 절을 그대로 쓴다(룰 이식 v1).
 --no-fulltext 는 스모크 50장 A/B 용 - full_text 요구만 빼고 나머지는 동일하다.
 
 셋째 판(모델 전처리 후 = 프로세서가 리사이즈한 뷰)은 서버 안에서 일어나므로 클라이언트가
@@ -16,9 +16,9 @@ preprocessor 설정으로 별도 산출한다(러너 밖).
 
 CLI (AWS):
     python eval/llm_runner.py --server http://localhost:8000/v1 --model Qwen/Qwen3-VL-8B-Instruct \
-        --list eval/LLM/sample_500.txt --run vlm_qwen3_500
+        --list eval/LLM/inputs/sample_500.txt --run vlm_qwen3_500
 로컬 스모크(서버 없이 형식 검증):
-    python eval/llm_runner.py --canned eval/LLM/canned_response.json --list <2장> --run vlm_smoke
+    python eval/llm_runner.py --canned eval/LLM/inputs/canned_response.json --list <2장> --run vlm_smoke
 """
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 RUNS_DIR = os.path.join(HERE, "runs")
-PROMPT_PATH = os.path.join(HERE, "LLM", "prompt_v1.md")
+PROMPT_PATH = os.path.join(HERE, "LLM", "inputs", "prompt_v1.md")
 
 DOC_FIELDS = ["supplierCompany", "supplierBizNumber", "supplierAddress",
               "buyerCompany", "buyerBizNumber", "buyerAddress",

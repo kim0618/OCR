@@ -34,10 +34,10 @@ REPLAY_DIR = os.path.join(HERE, "data", "invoice_war", "images_replay")
 THUMB_PX = 560       # 저장 해상도. 카드가 화면 폭을 셋으로 나눠 쓰므로 표시도 이 근처다
 THUMB_Q = 60
 
-GROUPS = ["정상", "회전 적용 · 정상 처리", "기울기 보정됨", "오회전 위험군"]
-RISK = "오회전 위험군"
+GROUPS = ["정상", "회전 적용 · 정상 처리", "기울기 보정됨", "방향 판정 애매"]
+RISK = "방향 판정 애매"
 
-# groups: 이 파일에 실을 문서군. 전처리 축의 답은 오회전 위험군 한 행이므로 기본은 위험군만이다.
+# groups: 이 파일에 실을 문서군. 전처리 축의 답은 방향 판정 애매 한 행이므로 기본은 위험군만이다.
 # 회귀만 예외로 전 문서군을 싣는다 - 모델이 '정상 문서'를 망치는 것이 채택을 막는 가장 큰 리스크라
 # 위험군만 실으면 그게 안 보인다.
 KINDS = {
@@ -211,7 +211,7 @@ document.addEventListener('click', function (e) {
 def render(kind: str, cases: list[dict], sample: bool, kept: list[str]) -> str:
     meta = KINDS[kind]
     counts = {g: sum(1 for c in cases if c.get("group") == g) for g in GROUPS}
-    risk = counts.get("오회전 위험군", 0)
+    risk = counts.get("방향 판정 애매", 0)
     filters = ['<button data-group="*" aria-pressed="true">전체 '
                f'<span class="muted">{len(cases):,}</span></button>']
     for g in GROUPS:
@@ -247,7 +247,7 @@ def render(kind: str, cases: list[dict], sample: bool, kept: list[str]) -> str:
 <div class="kpis">
   <div class="kpi"><div class="lab">문서</div><b id="shown">{len(cases):,}</b>
     <div class="sub muted">이 부류 전량</div></div>
-  <div class="kpi hot"><div class="lab">오회전 위험군</div><b>{risk:,}</b>
+  <div class="kpi hot"><div class="lab">방향 판정 애매</div><b>{risk:,}</b>
     <div class="sub muted">{(100 * risk / len(cases)) if cases else 0:.1f}% · 이 축의 핵심</div></div>
 </div>
 
@@ -283,9 +283,9 @@ def _sample_cases(n: int = 6) -> list[dict]:
     rnd = random.Random(20260903)
     picked = rnd.sample(files, min(n, len(files)))
     plan = [
-        ("오회전 위험군", 90, "orientation 270° 적용 · margin 12", 34),
-        ("오회전 위험군", 90, "orientation 90° 적용 · margin 8", 27),
-        ("오회전 위험군", 180, "orientation 180° 적용 · margin 15", 19),
+        ("방향 판정 애매", 90, "orientation 270° 적용 · margin 12", 34),
+        ("방향 판정 애매", 90, "orientation 90° 적용 · margin 8", 27),
+        ("방향 판정 애매", 180, "orientation 180° 적용 · margin 15", 19),
         ("회전 적용 · 정상 처리", 0, "orientation 90° 적용 · margin 61", 12),
         ("기울기 보정됨", 0, "deskew 3.2°", 8),
         ("정상", 0, "전처리 미적용", 5),

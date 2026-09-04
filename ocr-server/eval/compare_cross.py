@@ -15,7 +15,7 @@ compare/ 의 셀 판정은 GT 행에 앵커되어 있으므로 셀 하나의 신
 
 CLI:
     python eval/compare_cross.py --base runs/072_.../compare --model runs/XXX/compare
-    python eval/compare_cross.py --base ... --model ... --out eval/LLM/cases.json
+    python eval/compare_cross.py --base ... --model ... --out eval/LLM/data/cases.json
 """
 from __future__ import annotations
 
