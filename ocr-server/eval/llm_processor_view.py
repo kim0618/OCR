@@ -38,12 +38,15 @@ def source_to_path(src: str) -> str | None:
     return p if os.path.exists(p) else None
 
 
-def to_image(pixel_values, grid_thw=None):
+def to_image(pixel_values, grid_thw=None, ip=None):
     """프로세서가 낸 텐서를 눈으로 볼 수 있는 이미지로 되돌린다.
 
-    모델마다 모양이 다르다 - Qwen 계열은 (패치수, 채널*패치크기^2) 로 평탄화돼 있어
-    grid 정보로 되접어야 하고, 타일 방식은 (타일, C, H, W) 로 온다.
-    되돌리기 어려우면 None 을 주고 호출부가 건너뛴다.
+    Qwen 계열은 패치를 **merge 블록 단위로 재배열해** 평탄화한다 - 단순 reshape 으로는
+    안 돌아온다. 정방향(Qwen2VLImageProcessor)이
+        (grid_t, T, C, gh//m, m, ph, gw//m, m, pw) --transpose(0,3,6,4,7,2,1,5,8)-->
+        (grid_t*gh*gw, C*T*ph*pw)
+    이므로 그 역치환 [0,6,5,1,3,7,2,4,8] 로 되돌린다.
+    타일 방식(InternVL 등)은 (타일, C, H, W) 로 와서 세로로 이어 붙인다.
     """
     import numpy as np
     from PIL import Image
@@ -51,35 +54,41 @@ def to_image(pixel_values, grid_thw=None):
     a = pixel_values
     if hasattr(a, "numpy"):
         a = a.detach().cpu().numpy()
-    a = np.asarray(a)
+    a = np.asarray(a, dtype="float32")
     while a.ndim > 4 and a.shape[0] == 1:
         a = a[0]
 
-    if a.ndim == 4:                       # (타일, C, H, W) - 타일을 세로로 이어 붙인다
-        tiles = [x for x in a]
-        arrs = []
-        for t in tiles:
-            if t.shape[0] not in (1, 3):
-                return None
-            arrs.append(np.transpose(t, (1, 2, 0)))
-        a = np.concatenate(arrs, axis=0)
+    if a.ndim == 2 and grid_thw is not None and ip is not None:
+        g = np.asarray(grid_thw).reshape(-1, 3)[0]
+        gt, gh, gw = int(g[0]), int(g[1]), int(g[2])
+        ps = int(getattr(ip, "patch_size", 16))
+        tp = int(getattr(ip, "temporal_patch_size", 2))
+        m = int(getattr(ip, "merge_size", 2))
+        c = a.shape[1] // (tp * ps * ps)
+        if c * tp * ps * ps != a.shape[1] or gt * gh * gw != a.shape[0]:
+            return None
+        a = a.reshape(gt, gh // m, gw // m, m, m, c, tp, ps, ps)
+        a = a.transpose(0, 6, 5, 1, 3, 7, 2, 4, 8)      # 역치환
+        a = a.reshape(gt * tp, c, gh * ps, gw * ps)[0]   # 첫 프레임만
+        a = np.transpose(a, (1, 2, 0))
+    elif a.ndim == 4:                       # (타일, C, H, W) - 세로로 이어 붙인다
+        if a.shape[1] not in (1, 3):
+            return None
+        a = np.concatenate([np.transpose(t, (1, 2, 0)) for t in a], axis=0)
     elif a.ndim == 3 and a.shape[0] in (1, 3):
         a = np.transpose(a, (1, 2, 0))
-    elif a.ndim == 2 and grid_thw is not None:
-        # Qwen: (패치수, C*ph*pw). grid_thw = (T, H, W) 패치 격자
-        g = np.asarray(grid_thw).reshape(-1, 3)[0]
-        t, gh, gw = int(g[0]), int(g[1]), int(g[2])
-        per = a.shape[1]
-        side = int(round((per / 3) ** 0.5))
-        if side * side * 3 != per or gh * gw * t != a.shape[0]:
-            return None
-        a = a.reshape(t, gh, gw, 3, side, side)[0]
-        a = a.transpose(0, 3, 1, 4, 2).reshape(gh * side, gw * side, 3)
     else:
         return None
 
-    lo, hi = float(a.min()), float(a.max())      # 정규화 역산(평균·표준편차를 몰라도 보인다)
-    a = (a - lo) / (hi - lo + 1e-8)
+    mean = np.asarray(getattr(ip, "image_mean", [0.5, 0.5, 0.5]), dtype="float32")
+    std = np.asarray(getattr(ip, "image_std", [0.5, 0.5, 0.5]), dtype="float32")
+    if a.shape[-1] == mean.shape[0]:
+        a = a * std + mean               # 정규화 역산 - 원래 밝기를 되살린다
+    else:
+        lo, hi = float(a.min()), float(a.max())
+        a = (a - lo) / (hi - lo + 1e-8)
+    if a.shape[-1] == 1:
+        a = np.repeat(a, 3, axis=-1)
     return Image.fromarray((a * 255).clip(0, 255).astype("uint8"))
 
 
@@ -136,11 +145,12 @@ def main() -> int:
                 import numpy as np
                 g = np.asarray(grid).reshape(-1, 3)[0]
                 # 비전 토큰 = 패치 격자 ÷ merge(보통 2x2)
-                n_tok = int(g[0] * g[1] * g[2] // 4)
+                mg = int(getattr(proc.image_processor, "merge_size", 2))
+                n_tok = int(g[0] * g[1] * g[2] // (mg * mg))
             elif pv is not None:
                 n_tok = int(getattr(pv, "shape", [0])[0])
 
-            img = to_image(pv, grid)
+            img = to_image(pv, grid, proc.image_processor)
             if img is None:
                 print(f"  [{i:>4}/{len(srcs)}] SKIP 텐서 모양 미지원 {src[:40]}", flush=True)
                 skip += 1
