@@ -190,9 +190,21 @@ def main() -> int:
     os.makedirs(inputs_dir, exist_ok=True)
 
     canned = json.load(open(args.canned, encoding="utf-8")) if args.canned else None
-    ok = fail = 0
+    ok = fail = done = 0
+    total = len(paths)
     lock = threading.Lock()
     t_start = time.time()
+
+    def log(flag: str, src: str, tail: str) -> None:
+        """한 장 끝날 때마다 즉시 찍는다 - 안 그러면 몇 시간 동안 아무것도 안 보인다.
+        run_batch.py 의 진행 로그와 같은 모양."""
+        nonlocal done
+        done += 1
+        el = time.time() - t_start
+        rate = done / el * 3600 if el > 0 else 0
+        eta = (total - done) / (done / el) / 60 if done and el > 0 else 0
+        print(f"  [{done:>4}/{total}] {flag} {src[:40]:<40} {tail}"
+              f"  | {rate:.0f}장/h 남은 {eta:.0f}분", flush=True)
 
     def work(path: str) -> None:
         nonlocal ok, fail
@@ -201,6 +213,7 @@ def main() -> int:
         if os.path.exists(out):        # resume: 있는 건 건너뛴다
             with lock:
                 ok += 1
+                log("SKIP", src, "이미 있음")
             return
         try:
             if canned is not None:
@@ -226,12 +239,21 @@ def main() -> int:
                 dfh.write(sfh.read())   # 보낸 이미지 그대로(프로세서 뷰는 AWS 별도 산출)
             with lock:
                 ok += 1
+                log("OK ", src,
+                    f"rows={rec['rowCount']:>3} in={meta.get('promptTokens') or '-':>6} "
+                    f"out={meta.get('completionTokens') or '-':>5} "
+                    f"{str(meta.get('finishReason')):<6} {ms / 1000:6.1f}s")
         except Exception as exc:            # noqa: BLE001 - 한 장 실패로 배치 죽이지 않는다
             with lock:
                 fail += 1
                 with open(os.path.join(run_dir, "errors.jsonl"), "a", encoding="utf-8") as fh:
                     fh.write(json.dumps({"sourceFile": src, "error": str(exc)},
                                         ensure_ascii=False) + "\n")
+                log("ERR", src, f"!! {exc}")
+
+    print(f"run {args.run}: {total}장, 동시 {args.concurrency}, model={args.model}, "
+          f"full_text={not args.no_fulltext}, max_tokens={args.max_tokens}, "
+          f"timeout={args.timeout:.0f}s", flush=True)
 
     # 한 장씩 보내면 vLLM 의 연속 배칭이 놀고 단일 스트림 대역폭에 묶인다
     # (L4 + 9B bf16 = 약 15 tok/s). 동시에 던져야 GPU 를 채운다.
