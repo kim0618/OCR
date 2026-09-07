@@ -31,11 +31,15 @@ VLM_PORT=8000
 #   내역 = 이미지 약 4.9K 토큰(1655x2340) + 프롬프트 약 1.5K + 출력 6K.
 #   ⚠️ 해상도(max_pixels)는 건드리지 않는다 - 작은 글씨 인식이 바로 이 실험의 측정 대상이라
 #      줄이면 교란 요인이 된다. 세 모델에 같은 값을 쓰고 지출 원장 옆에 기록한다.
-# 4B 는 KV 여유가 충분해 계획 원값(16384)·vLLM 기본 util 로 복귀.
-# (12288·0.95 는 8B 를 L4 에 욱여넣던 값 - 8B 재검토 때만 필요)
-VLM_MAX_LEN="${VLM_MAX_LEN:-16384}"
+# ★프로브 실측(2026-09-07, 4B)으로 확정한 값.
+#   입력: 송장 한 장 = 프롬프트 약 9.5K 토큰(이미지 ~8K - 추정 5K 의 거의 2배였다).
+#   출력: 41행+full_text = 6,111 토큰(상한 6144 에 33 차이로 통과), 51·44·43행 4장은
+#         6144 를 넘어 잘렸고 JSON 파싱 실패("Expecting delimiter" ~char 10K).
+#   → 출력 상한 10240, 컨텍스트 = 9.5K(입력) + 10K(출력) 여유로 24576.
+#   KV 는 요청이 실제 쓴 만큼만 먹으므로 동시 수는 vLLM 이 알아서 조절한다(무거운 문서만 줄어듦).
+VLM_MAX_LEN="${VLM_MAX_LEN:-24576}"
 VLM_GPU_UTIL="${VLM_GPU_UTIL:-0.90}"
-VLM_MAX_TOKENS="${VLM_MAX_TOKENS:-6144}"
+VLM_MAX_TOKENS="${VLM_MAX_TOKENS:-10240}"
 
 # ★FlashInfer 샘플러 끄기(2026-09-07 실측). DLAMI 에 CUDA 툴킷이 없어 nvcc 가 없는데
 #   flashinfer/sampling.py 의 get_sampling_module 이 JIT 로 커널을 빌드하려다 죽는다:
