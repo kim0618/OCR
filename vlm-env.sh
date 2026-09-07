@@ -15,6 +15,12 @@ NVME=/opt/dlami/nvme
 VLM_ROOT="$NVME/vllm"
 VLM_VENV="$VLM_ROOT/venv"
 export HF_HOME="$NVME/hf"
+# 캐시도 전부 nvme 로. EBS(/) 는 96% 라 여유가 없고, vLLM 은 torch.compile 산출물을
+# 기본값이면 ~/.cache/vllm(EBS)에 수 GB 쌓는다 - 기동 중에 / 가 차면 통째로 깨진다.
+export VLLM_CACHE_ROOT="$NVME/cache/vllm"
+export XDG_CACHE_HOME="$NVME/cache"
+export TRITON_CACHE_DIR="$NVME/cache/triton"
+mkdir -p "$VLLM_CACHE_ROOT" "$XDG_CACHE_HOME" "$TRITON_CACHE_DIR" 2>/dev/null || true
 VLM_PORT=8000
 VLM_SERVER="http://localhost:$VLM_PORT/v1"
 
