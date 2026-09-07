@@ -328,15 +328,25 @@ def write_plan(base_sum, models, crosses, costs, winner):
                 mv = metrics(models[n]["byGroup"][g])["cell 정확도"]
                 out += [fmt(mv), diff(mv, bv)]
             return out
-        if sec == "교차" and sub in ("셀 이동", "문서 이동"):
+        if sec == "교차" and sub and ("셀 이동" in sub or "문서 이동" in sub):
             g = next((g for g in GROUP_ORDER if GROUP_LABEL[g] in label), None)
-            n = winner or (names[0] if names else None)
-            if not g or not n:
+            # 500장 표에는 스크리닝 모델(첫 모델), 9,001 표에는 승자만.
+            # 구분 없이 채우면 채점셀은 9,001 인데 소생·회귀는 500장인 표가 나온다(실제로 겪음).
+            if "500장" in sub:
+                n = names[0] if names else None
+            else:
+                n = winner
+            if not g or not n or n not in crosses:
                 return None
-            c = crosses[n]["cell" if sub == "셀 이동" else "doc"][g]
-            return ["{:,}".format(c["keep"]), "{:,}".format(c["bothfail"]),
+            c = crosses[n]["cell" if "셀 이동" in sub else "doc"][g]
+            vals = ["{:,}".format(c["keep"]), "{:,}".format(c["bothfail"]),
                     "{:,}".format(c["revive"]), "{:,}".format(c["regress"]),
                     "%+d" % (c["revive"] - c["regress"])]
+            if "500장" in sub:      # 500장 표는 첫 칸(채점셀/문서)도 비어 있다
+                tot = (sum(c.values()) if "셀 이동" in sub
+                       else sum(models[n]["byGroup"][g]["docs"] for _ in (1,)))
+                vals = ["{:,}".format(tot)] + vals
+            return vals
         if sec == "비용" and sub in ("500장", "9,001장"):
             use = names if sub == "500장" else ([winner] if winner else [])
             if not use:
@@ -400,7 +410,11 @@ def write_plan(base_sum, models, crosses, costs, winner):
         if m:
             t = re.sub("<[^>]*>", "", m.group(1))
             h3 = None
-            for c in ("500장 - 모델 선정", "9,001장 - 본판정", "셀 이동", "문서 이동",
+            # 교차표가 500장용/9,001용 두 벌이라 h3 로 구분한다. 긴 후보를 먼저 봐야
+            # "셀 이동"이 "셀 이동 ... 500장" 을 삼키지 않는다.
+            for c in ("셀 이동 문서군별 · 500장 스크리닝", "문서 이동 문서군별 · 500장 스크리닝",
+                      "셀 이동 문서군별 · 9,001 본판정", "문서 이동 문서군별 · 9,001 본판정",
+                      "500장 - 모델 선정", "9,001장 - 본판정",
                       "종합", "행 컬럼", "헤더 필드", "500장", "9,001장"):
                 if c in t:
                     h3 = c
