@@ -21,7 +21,10 @@ mkdir -p "$VLM_ROOT" "$HF_HOME"
 "$VLM_VENV/bin/pip" install -q --upgrade pip
 # vllm 이 자기 torch 를 끌고 온다. Paddle venv 의 torch 2.11 과 격리된다.
 # transformers 는 세 모델 다 최신을 요구하므로 vllm 이 정하는 버전에 맡긴다.
-"$VLM_VENV/bin/pip" install -q vllm "huggingface_hub[hf_transfer]"
+# huggingface_hub 1.x 는 hf_transfer 를 extra 로 제공하지 않는다(전송은 xet 이 맡는다).
+# extra 를 붙이면 설치는 조용히 건너뛰는데 HF_HUB_ENABLE_HF_TRANSFER=1 만 남아
+# 다운로드가 "enabled but not available" 로 죽는다. 그래서 둘 다 안 쓴다.
+"$VLM_VENV/bin/pip" install -q vllm huggingface_hub
 "$VLM_VENV/bin/python" - <<'PY'
 import vllm, torch, transformers
 print(f"vllm {vllm.__version__} / torch {torch.__version__} / transformers {transformers.__version__}")
@@ -33,13 +36,19 @@ if [[ "${1:-}" == "--env-only" ]]; then
   exit 0
 fi
 
-export HF_HUB_ENABLE_HF_TRANSFER=1
 WANT=("$@")
 [[ ${#WANT[@]} -eq 0 ]] && WANT=(qwen)      # 스모크는 큐윈 하나면 된다
 for key in "${WANT[@]}"; do
   repo=$(vlm_repo "$key")
   vlm_say "$key  <-  $repo"
-  "$VLM_VENV/bin/huggingface-cli" download "$repo" 2>&1 | tail -3
+  # CLI 이름이 버전마다 바뀐다(huggingface-cli -> hf). 파이썬 API 는 안 바뀐다.
+  # 진행률을 가리지 않으려고 파이프로 자르지 않는다 - 18GB 짜리다.
+  HF_REPO="$repo" "$VLM_VENV/bin/python" - <<'PYEOF'
+import os
+from huggingface_hub import snapshot_download
+p = snapshot_download(os.environ["HF_REPO"], max_workers=8)
+print("saved:", p)
+PYEOF
   df -h "$NVME" | tail -1
 done
 

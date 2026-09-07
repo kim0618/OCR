@@ -43,6 +43,15 @@
 | `groups_072.json` | 9,001 문서 전량의 문서군 라벨 + 전처리 텔레메트리 + Base 셀 점수·붕괴 여부 |
 | `sample_500_sources.txt` | 500 표본의 sourceFile — 채점·대조용 |
 | `smoke_50_sources.txt` | 스모크 50 의 sourceFile |
+| `sample_500_manifest.tsv` | **표본 500 에 무엇이 들어 있나** — 문서군·행수·Base 정확도·붕괴·회전각·경로 (엑셀로 열림) |
+| `smoke_50_manifest.tsv` | 스모크 50 의 같은 표 |
+
+**표본 이미지를 따로 복사해 모아두지 않는다.** 실물은 `data/invoice_war/images_replay/` 9,001장이
+단일 출처이고 GT 도 전량 하나(`ground_truth_replay.json`)다. 500장만 폴더로 복사하면
+사본이 하나 더 생기고(141MB · git 미추적이라 전송 수단도 따로 필요), 무엇보다
+**채점 기준이 두 개**가 된다 — 068 목록과 072 기준선이 어긋났던 사고와 같은 형태다.
+GT 도 쪼개지 않는다. `compare_run` 은 문서 단위로 전량 GT 와 대조하고 부분 run 은 `--skip-missing` 이 처리한다.
+&ldquo;무엇이 들어 있나&rdquo;는 바이트 사본이 아니라 위 manifest 로 읽는다(`eval/llm_manifest.py`).
 
 ### `_rehearsal/` = 068→072 리허설. **VLM 이 아니다**
 
@@ -89,6 +98,7 @@ Paddle run 두 개(068 vs 072)를 맞대본 결과다. 형식 확인용으로만
 | `compare_cross.py` | 두 run 의 같은 셀을 맞대어 유지/소생/회귀/양쪽실패 2×2 |
 | `llm_cases_report.py` | 부류별 실물 갤러리(카드 = 원본 / Base 전처리 후 / 모델 전처리 후 3장) |
 | `llm_plan_fill.py` | **계획서가 필요로 하는 숫자를 전부 계산하고 `--write` 로 채운다** |
+| `llm_manifest.py` | 표본에 무엇이 들어 있는지 TSV 한 장으로 (`data/*_manifest.tsv`) |
 
 ## run 이 끝나면 - 계획서 채우기
 
