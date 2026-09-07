@@ -33,7 +33,6 @@
 | `sample_500.txt` | 500장 층화표본. `llm_runner --list` 가 받는 **eval/ 기준 이미지 경로**(sourceFile 아님) |
 | `smoke_50.txt` | 환경 확정 게이트 50장. 500 밖에서 뽑고 행수 상위 10장 강제 |
 | `canned_response.json` | 서버 없이 러너 형식만 검증할 때(`--canned`) |
-| `setup_vllm_nvme.sh` | g6 전환 후 vLLM venv + 모델 3개를 `/opt/dlami/nvme` 에 올린다 |
 
 목록 파일은 **LF 로 쓴다**(AWS 로 건너간다). CRLF 면 경로가 전부 안 맞는 것처럼 보인다.
 
@@ -54,15 +53,25 @@ Paddle run 두 개(068 vs 072)를 맞대본 결과다. 형식 확인용으로만
 
 ## 실행 순서
 
+실행 스크립트는 다른 운영 스크립트와 같이 `~/OCR/` 에 둔다(`run-eval.sh` · `start-backend.sh` 옆).
+`eval/LLM/inputs/` 는 러너가 **먹는 데이터**(프롬프트·목록) 자리이지 스크립트 자리가 아니다.
+
 ```
-① g6.xlarge 전환 (stop → 타입 변경 → start)     ← T4 로는 8B bf16 이 안 올라간다
-② git pull
-③ 백엔드 내리기 (fuser -k 9099/tcp)              ← RAM 15G, vLLM 과 동시 기동은 행업
-④ bash eval/LLM/inputs/setup_vllm_nvme.sh
-⑤ 스모크 50 — 게이트 5종 + full_text A/B
-⑥ 500×3 모델 (+50 재실행 = 결정성) → 로컬 채점 → 승자
+① g6.xlarge 전환 (stop → 타입 변경 → start)   ← T4 로는 8B bf16 이 안 올라간다
+② cd ~/OCR && git pull
+③ bash ~/OCR/run-vlm-setup.sh qwen           ← 백엔드 자동으로 내림. 스모크는 큐윈 하나면 된다
+④ bash ~/OCR/run-vlm-serve.sh qwen           ← tmux 세션 vllm, 뜰 때까지 대기
+⑤ bash ~/OCR/run-vlm-smoke.sh qwen           ← A/B 두 번 + 게이트 요약
+⑥ 나머지 두 모델 받아 500×3 (+50 재실행 = 결정성) → 로컬 채점 → 승자
 ⑦ 승자 9,001 본판정
 ```
+
+| 스크립트 | 하는 일 |
+|---|---|
+| `~/OCR/vlm-env.sh` | 공통 - nvme 경로 · 모델 repo id · g6/nvme/백엔드 가드. 나머지가 source 한다 |
+| `~/OCR/run-vlm-setup.sh` | vLLM venv(nvme, python3.12 별도) + 모델 내려받기. 서버는 안 띄움 |
+| `~/OCR/run-vlm-serve.sh` | tmux 세션 `vllm` 으로 기동, 뜰 때까지 폴링. 로그 `~/OCR/logs/vllm.log` |
+| `~/OCR/run-vlm-smoke.sh` | 스모크 50 A/B + 게이트 5종 요약(오류 수 · 행수 상위10 · VRAM · 오버헤드 · 소요 역산) |
 
 **Base 는 새로 돌리지 않는다.** 072 가 9,001 전량을 덮으므로 500장의 정확도·`samples/`·`processed/` 는
 전부 부분집계로 나오고(`llm_plan_fill.py`), 따로 잴 것은 처리량뿐인데 그건 072 의 2,606장/h 에서 환산한다.
@@ -79,6 +88,34 @@ Paddle run 두 개(068 vs 072)를 맞대본 결과다. 형식 확인용으로만
 | `compare_run.py` | run → `compare/`. 부분 run 은 `--skip-missing` |
 | `compare_cross.py` | 두 run 의 같은 셀을 맞대어 유지/소생/회귀/양쪽실패 2×2 |
 | `llm_cases_report.py` | 부류별 실물 갤러리(카드 = 원본 / Base 전처리 후 / 모델 전처리 후 3장) |
+| `llm_plan_fill.py` | **계획서가 필요로 하는 숫자를 전부 계산하고 `--write` 로 채운다** |
+
+## run 이 끝나면 - 계획서 채우기
+
+채점은 로컬에서 한다. AWS 에서 받을 것은 `runs/<run>/` 의 `samples/` 와 `run_meta.json` 뿐이다.
+
+```bash
+# 1) run -> compare/   (부분 run 은 --skip-missing)
+python eval/compare_run.py --ts vlm_qwen_500 --testset invoice_replay --skip-missing
+
+# 2) 계획서 채우기 - 500 스크리닝(후보 3개)
+python eval/llm_plan_fill.py --model qwen=vlm_qwen_500     --model minicpm=vlm_minicpm_500 --model internvl=vlm_internvl_500 --write
+
+# 3) 승자 확정 후 - 9,001 본판정 + 교차표
+python eval/llm_plan_fill.py --winner qwen=vlm_qwen_9001 --write
+
+# 4) 부류별 실물 갤러리
+python eval/compare_cross.py --base runs/072_20260802_182127/compare     --model runs/vlm_qwen_9001/compare --out eval/LLM/data/cases.json
+python eval/llm_cases_report.py --kind revived   --cases eval/LLM/data/cases.json
+python eval/llm_cases_report.py --kind regressed --cases eval/LLM/data/cases.json
+python eval/llm_cases_report.py --kind bothfail  --cases eval/LLM/data/cases.json
+```
+
+`llm_plan_fill.py` 가 한 번에 내는 것 - 문서군별 cell 정확도·차이 · 교차 2×2(셀·문서, 문서군별) ·
+파서 종합 6지표 · 행 컬럼 8 · 헤더 필드 12 · 처리량/소요/비용/Paddle 대비.
+모델이 주어지면 **그 run 이 덮는 문서로 Base 를 다시 집계**하므로 항상 같은 문서·같은 셀에서 비교한다.
+`--write` 는 **빈 데이터 칸만** 바꾼다 - 서술과 Base 열은 건드리지 않는다.
+열 순서는 `MODEL_ORDER`(qwen · minicpm · internvl)로 고정이라 CLI 입력 순서와 무관하다.
 
 ## 저울 규칙 (전 실험 공통)
 

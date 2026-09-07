@@ -60,7 +60,7 @@ def load_prompt(path: str, fulltext: bool) -> tuple[str, str]:
 # ---------------------------------------------------------------- 호출
 
 def call_vlm(server: str, model: str, system: str, user: str, image_path: str,
-             timeout: float, max_tokens: int, retry_note: str = "") -> tuple[str, float]:
+             timeout: float, max_tokens: int, retry_note: str = "") -> tuple[str, float, dict]:
     with open(image_path, "rb") as fh:
         b64 = base64.b64encode(fh.read()).decode("ascii")
     body = {
@@ -85,7 +85,12 @@ def call_vlm(server: str, model: str, system: str, user: str, image_path: str,
     with urllib.request.urlopen(req, timeout=timeout) as resp:
         data = json.loads(resp.read().decode("utf-8"))
     ms = (time.time() - t0) * 1000
-    return data["choices"][0]["message"]["content"], ms
+    ch = (data.get("choices") or [{}])[0]
+    usage = data.get("usage") or {}
+    meta = {"finishReason": ch.get("finish_reason"),
+            "promptTokens": usage.get("prompt_tokens"),
+            "completionTokens": usage.get("completion_tokens")}
+    return ch.get("message", {}).get("content", ""), ms, meta
 
 
 def parse_json(text: str) -> dict:
@@ -111,7 +116,7 @@ def source_name(path: str) -> str:
 # ---------------------------------------------------------------- 레코드
 
 def to_record(source_file: str, image_path: str, resp: dict, ms: float,
-              model: str, raw_len: int) -> dict:
+              model: str, raw_len: int, meta: dict | None = None) -> dict:
     """run_batch 레코드와 같은 모양으로 - compare_run 이 그대로 읽는다."""
     fields = {k: str((resp.get("documentFields") or {}).get(k) or "") for k in DOC_FIELDS}
     rows = []
@@ -138,7 +143,7 @@ def to_record(source_file: str, image_path: str, resp: dict, ms: float,
         "tableDetected": fields["tableDetected"],
         "documentFields": fields,
         "fullText": str(resp.get("full_text") or ""),
-        "vlm": {"model": model, "rawChars": raw_len},
+        "vlm": dict({"model": model, "rawChars": raw_len}, **(meta or {})),
         "clientMs": round(ms, 1),
         "error": None,
     }
@@ -191,9 +196,10 @@ def main() -> int:
         try:
             if canned is not None:
                 resp, ms, raw_len = canned, 0.0, len(json.dumps(canned))
+                meta = {"finishReason": "stop", "promptTokens": None, "completionTokens": None}
             else:
-                raw, ms = call_vlm(args.server, args.model, system, user, path,
-                                   args.timeout, args.max_tokens)
+                raw, ms, meta = call_vlm(args.server, args.model, system, user, path,
+                                         args.timeout, args.max_tokens)
                 raw_len = len(raw)
                 try:
                     resp = parse_json(raw)
@@ -203,7 +209,7 @@ def main() -> int:
                                         retry_note="\n\nJSON 하나만, 다른 텍스트 없이 출력하라.")
                     ms += ms2
                     resp = parse_json(raw)
-            rec = to_record(src, path, resp, ms, args.model, raw_len)
+            rec = to_record(src, path, resp, ms, args.model, raw_len, meta)
             with open(out, "w", encoding="utf-8") as fh:
                 json.dump(rec, fh, ensure_ascii=False, indent=2)
             with open(path, "rb") as sfh, open(os.path.join(inputs_dir, src), "wb") as dfh:
