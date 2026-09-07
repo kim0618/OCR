@@ -15,7 +15,7 @@
 preprocessor 설정으로 별도 산출한다(러너 밖).
 
 CLI (AWS):
-    python eval/llm_runner.py --server http://localhost:8000/v1 --model Qwen/Qwen3-VL-8B-Instruct \
+    python eval/llm_runner.py --server http://localhost:8000/v1 --model Qwen/Qwen3-VL-4B-Instruct \
         --list eval/LLM/inputs/sample_500.txt --run vlm_qwen3_500
 로컬 스모크(서버 없이 형식 검증):
     python eval/llm_runner.py --canned eval/LLM/inputs/canned_response.json --list <2장> --run vlm_smoke

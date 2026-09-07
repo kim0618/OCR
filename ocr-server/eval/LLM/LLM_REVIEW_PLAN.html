@@ -132,9 +132,18 @@ color:var(--muted);cursor:pointer;border-radius:8px 8px 0 0}
 
 <section>
   <h2>후보 비교 <span class="muted">(같은 g6에서 · 같은 단위)</span></h2>
+  <div class="note" style="margin:0 0 10px">
+    <b>후보 라인업 = 4B 급 (2026-09-07 확정)</b> - 처음 정한 8B 급(Qwen3-VL 8B · MiniCPM-V 4.5 · InternVL3.5-8B)은
+    <b>L4 에서 적재는 되나 서빙이 안 된다</b>는 것이 스모크에서 실측됐다:
+    가중치 16.65GiB 가 VRAM 을 다 먹어 KV 2.2GiB → <b>동시 1건 · 15 tok/s(대역폭 한계) ≈ 26장/h</b> = Paddle 의 1/100.
+    이 비교의 원칙이 <b>정통 OCR 과 VLM 을 같은 GPU 에서 비용까지 재는 것</b>이므로, GPU 를 올리는 대신 모델을 내렸다
+    (Qwen3-VL-4B · MiniCPM-V-4 · InternVL3.5-4B, 전부 Apache-2.0 · 4~4.7B · bf16 8~9.4GB → KV ~10GB · 동시 6~10건 추정).
+    <span class="warnc">⚠️ MiniCPM 은 같은 세대 4B 가 없어 한 세대 전(V-4, 뇌=MiniCPM4-3B)이다 - '처리량 축 1등' 선정 논리가 이 급에선 약하다.</span>
+    <span class="muted">8B 가 L4 급에서 돌려면 FP8 양자화 또는 상위 GPU(g6e·L40S 48GB, $1.86/h)가 필요하다 - 승자 확정 후 별개 제안으로 남겨둔다.</span>
+  </div>
   <h3>500장 <span class="muted">모델 선정</span></h3>
   <table>
-    <thead><tr><th>항목</th><th>Paddle base</th><th class="grpline">Qwen3-VL 8B</th><th>MiniCPM-V 4.5</th><th>InternVL3.5-8B</th></tr></thead>
+    <thead><tr><th>항목</th><th>Paddle base</th><th class="grpline">Qwen3-VL 4B</th><th>MiniCPM-V 4</th><th>InternVL3.5-4B</th></tr></thead>
     <tbody>
       <tr><td>처리량 <span class="muted">장/시간</span></td><td>2,606 <span class="tag calc">환산</span></td>
         <td class="grpline muted">?</td><td class="muted">?</td><td class="muted">?</td></tr>
@@ -184,9 +193,9 @@ color:var(--muted);cursor:pointer;border-radius:8px 8px 0 0}
     <thead><tr><th>날짜</th><th>항목</th><th>자원</th><th>소요</th><th>비용</th></tr></thead>
     <tbody>
       <tr><td class="muted">-</td><td>vLLM 세팅 + 모델 다운로드 3개</td><td class="muted">g6</td><td class="muted">?</td><td class="muted">?</td></tr>
-      <tr><td class="muted">-</td><td>Qwen3-VL 8B · 500장</td><td class="muted">g6 · vLLM</td><td class="muted">?</td><td class="muted">?</td></tr>
-      <tr><td class="muted">-</td><td>MiniCPM-V 4.5 · 500장</td><td class="muted">g6 · vLLM</td><td class="muted">?</td><td class="muted">?</td></tr>
-      <tr><td class="muted">-</td><td>InternVL3.5-8B · 500장</td><td class="muted">g6 · vLLM</td><td class="muted">?</td><td class="muted">?</td></tr>
+      <tr><td class="muted">-</td><td>Qwen3-VL 4B · 500장</td><td class="muted">g6 · vLLM</td><td class="muted">?</td><td class="muted">?</td></tr>
+      <tr><td class="muted">-</td><td>MiniCPM-V 4 · 500장</td><td class="muted">g6 · vLLM</td><td class="muted">?</td><td class="muted">?</td></tr>
+      <tr><td class="muted">-</td><td>InternVL3.5-4B · 500장</td><td class="muted">g6 · vLLM</td><td class="muted">?</td><td class="muted">?</td></tr>
       <tr><td class="muted">-</td><td>승자 · 9,001장 본판정</td><td class="muted">g6 · vLLM</td><td class="muted">?</td><td class="muted">?</td></tr>
       <tr><td class="muted">-</td><td>승자 · 크롭 45,617 L0 추론</td><td class="muted">g6 · vLLM</td><td class="muted">?</td><td class="muted">?</td></tr>
       <tr><td class="muted">-</td><td>승자 · LoRA 학습 (타깃 167 + 앵커 8,016)</td><td class="muted">g6</td><td class="muted">?</td><td class="muted">?</td></tr>
@@ -225,7 +234,7 @@ color:var(--muted);cursor:pointer;border-radius:8px 8px 0 0}
   <h3>500장 - 모델 선정</h3>
   <table>
     <thead>
-      <tr><th rowspan="2">문서군</th><th rowspan="2">문서</th><th rowspan="2">Base</th><th class="grp" colspan="2">Qwen3-VL 8B</th><th class="grp" colspan="2">MiniCPM-V 4.5</th><th class="grp" colspan="2">InternVL3.5-8B</th></tr>
+      <tr><th rowspan="2">문서군</th><th rowspan="2">문서</th><th rowspan="2">Base</th><th class="grp" colspan="2">Qwen3-VL 4B</th><th class="grp" colspan="2">MiniCPM-V 4</th><th class="grp" colspan="2">InternVL3.5-4B</th></tr>
       <tr><th class="grpline">값</th><th>차이</th><th class="grpline">값</th><th>차이</th><th class="grpline">값</th><th>차이</th></tr>
     </thead>
     <tbody>
@@ -376,7 +385,7 @@ color:var(--muted);cursor:pointer;border-radius:8px 8px 0 0}
   <h3>종합</h3>
     <table>
     <thead>
-      <tr><th rowspan="2">지표</th><th rowspan="2">Base</th><th class="grp" colspan="2">Qwen3-VL 8B</th><th class="grp" colspan="2">MiniCPM-V 4.5</th><th class="grp" colspan="2">InternVL3.5-8B</th></tr>
+      <tr><th rowspan="2">지표</th><th rowspan="2">Base</th><th class="grp" colspan="2">Qwen3-VL 4B</th><th class="grp" colspan="2">MiniCPM-V 4</th><th class="grp" colspan="2">InternVL3.5-4B</th></tr>
       <tr><th class="grpline">값</th><th>차이</th><th class="grpline">값</th><th>차이</th><th class="grpline">값</th><th>차이</th></tr>
     </thead>
     <tbody>
@@ -392,7 +401,7 @@ color:var(--muted);cursor:pointer;border-radius:8px 8px 0 0}
   <h3>행 컬럼</h3>
   <table>
     <thead>
-      <tr><th rowspan="2">컬럼</th><th rowspan="2">채점셀</th><th rowspan="2">Base</th><th class="grp" colspan="2">Qwen3-VL 8B</th><th class="grp" colspan="2">MiniCPM-V 4.5</th><th class="grp" colspan="2">InternVL3.5-8B</th></tr>
+      <tr><th rowspan="2">컬럼</th><th rowspan="2">채점셀</th><th rowspan="2">Base</th><th class="grp" colspan="2">Qwen3-VL 4B</th><th class="grp" colspan="2">MiniCPM-V 4</th><th class="grp" colspan="2">InternVL3.5-4B</th></tr>
       <tr><th class="grpline">값</th><th>차이</th><th class="grpline">값</th><th>차이</th><th class="grpline">값</th><th>차이</th></tr>
     </thead>
     <tbody>
@@ -410,7 +419,7 @@ color:var(--muted);cursor:pointer;border-radius:8px 8px 0 0}
   <h3>헤더 필드</h3>
   <table>
     <thead>
-      <tr><th rowspan="2">컬럼</th><th rowspan="2">채점셀</th><th rowspan="2">Base</th><th class="grp" colspan="2">Qwen3-VL 8B</th><th class="grp" colspan="2">MiniCPM-V 4.5</th><th class="grp" colspan="2">InternVL3.5-8B</th></tr>
+      <tr><th rowspan="2">컬럼</th><th rowspan="2">채점셀</th><th rowspan="2">Base</th><th class="grp" colspan="2">Qwen3-VL 4B</th><th class="grp" colspan="2">MiniCPM-V 4</th><th class="grp" colspan="2">InternVL3.5-4B</th></tr>
       <tr><th class="grpline">값</th><th>차이</th><th class="grpline">값</th><th>차이</th><th class="grpline">값</th><th>차이</th></tr>
     </thead>
     <tbody>

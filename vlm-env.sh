@@ -31,8 +31,10 @@ VLM_PORT=8000
 #   내역 = 이미지 약 4.9K 토큰(1655x2340) + 프롬프트 약 1.5K + 출력 6K.
 #   ⚠️ 해상도(max_pixels)는 건드리지 않는다 - 작은 글씨 인식이 바로 이 실험의 측정 대상이라
 #      줄이면 교란 요인이 된다. 세 모델에 같은 값을 쓰고 지출 원장 옆에 기록한다.
-VLM_MAX_LEN="${VLM_MAX_LEN:-12288}"
-VLM_GPU_UTIL="${VLM_GPU_UTIL:-0.95}"
+# 4B 는 KV 여유가 충분해 계획 원값(16384)·vLLM 기본 util 로 복귀.
+# (12288·0.95 는 8B 를 L4 에 욱여넣던 값 - 8B 재검토 때만 필요)
+VLM_MAX_LEN="${VLM_MAX_LEN:-16384}"
+VLM_GPU_UTIL="${VLM_GPU_UTIL:-0.90}"
 VLM_MAX_TOKENS="${VLM_MAX_TOKENS:-6144}"
 
 # ★FlashInfer 샘플러 끄기(2026-09-07 실측). DLAMI 에 CUDA 툴킷이 없어 nvcc 가 없는데
@@ -46,10 +48,17 @@ VLM_SERVER="http://localhost:$VLM_PORT/v1"
 
 # 후보 모델 - ⚠️ 처음 받기 전에 HF 페이지에서 정확한 repo id 를 확인할 것.
 # 선정 논리(계획서): Qwen=한국어 축 1등 · MiniCPM=처리량 축(비전토큰 4× 적음) · InternVL=검증용 2위.
+# ★2026-09-07 라인업 다운그레이드 8B → 4B (사용자 결정).
+#   원칙 = 정통 OCR(Paddle)과 VLM 을 **같은 GPU(L4)** 에서 비용까지 비교한다.
+#   8B(실총량 8.5~9B, bf16 17~18GB)는 L4 에서 적재는 되나 서빙 불가 실측:
+#   가중치가 VRAM 을 다 먹어 KV 2.2GB → 동시 1건, 15 tok/s(대역폭 한계) ≈ 26장/h.
+#   4B(8~9.4GB)는 KV ~10GB → 동시 6~10건, 단일 ~35 tok/s.
+#   ⚠️ minicpm 은 같은 세대 4B 가 없어 한 세대 전(V-4, 뇌=MiniCPM4-3B)로 내려감 - 선정 논리 약화 주의.
+#   8B 가중치는 nvme 에 남아 있음(재검토용). 지워도 됨 - 어차피 stop 하면 날아간다.
 declare -A VLM_MODELS=(
-  [qwen]="Qwen/Qwen3-VL-8B-Instruct"
-  [minicpm]="openbmb/MiniCPM-V-4_5"
-  [internvl]="OpenGVLab/InternVL3_5-8B"
+  [qwen]="Qwen/Qwen3-VL-4B-Instruct"
+  [minicpm]="openbmb/MiniCPM-V-4"
+  [internvl]="OpenGVLab/InternVL3_5-4B"
 )
 
 vlm_say() { printf '\n\033[1m== %s\033[0m\n' "$*"; }
