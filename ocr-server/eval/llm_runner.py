@@ -163,9 +163,9 @@ def main() -> int:
     ap.add_argument("--prompt", default=PROMPT_PATH)
     ap.add_argument("--no-fulltext", action="store_true", help="A/B: full_text 요구 제거")
     ap.add_argument("--limit", type=int, default=0)
-    # L4 단일 스트림 생성이 약 15 tok/s(대역폭 한계)라 긴 표는 6144 토큰에서 7분 넘게 걸린다.
-    # 300초로는 긴 문서가 통째로 timeout 난다(2026-09-07 실측).
-    ap.add_argument("--timeout", type=float, default=900.0)
+    # 꼬리 문서가 매우 무겁다(2026-09-07 A런 실측: 45행 = 1,371초, 중앙값은 181초).
+    # 900초로는 39행짜리가 끊겼다 - 모델이 실패한 게 아니라 우리가 기다리다 끊은 것.
+    ap.add_argument("--timeout", type=float, default=2400.0)
     ap.add_argument("--max-tokens", type=int, default=4096)
     ap.add_argument("--concurrency", type=int, default=8,
                     help="동시 요청 수. 1 이면 순차(느림) - vLLM 배칭을 쓰려면 올린다")
@@ -206,9 +206,12 @@ def main() -> int:
         print(f"  [{done:>4}/{total}] {flag} {src[:40]:<40} {tail}"
               f"  | {rate:.0f}장/h 남은 {eta:.0f}분", flush=True)
 
+    fails_dir = os.path.join(run_dir, "failed_raw")
+
     def work(path: str) -> None:
         nonlocal ok, fail
         src = source_name(path)
+        raw = ""
         out = os.path.join(samples_dir, src + ".json")
         if os.path.exists(out):        # resume: 있는 건 건너뛴다
             with lock:
@@ -249,6 +252,12 @@ def main() -> int:
                 with open(os.path.join(run_dir, "errors.jsonl"), "a", encoding="utf-8") as fh:
                     fh.write(json.dumps({"sourceFile": src, "error": str(exc)},
                                         ensure_ascii=False) + "\n")
+                # 모델이 뭘 뱉었는지 남긴다. 이게 없으면 "JSON 이 없다" 를 진단할 수 없다.
+                if raw:
+                    os.makedirs(fails_dir, exist_ok=True)
+                    with open(os.path.join(fails_dir, src + ".txt"), "w",
+                              encoding="utf-8") as fh:
+                        fh.write(raw)
                 log("ERR", src, f"!! {exc}")
 
     print(f"run {args.run}: {total}장, 동시 {args.concurrency}, model={args.model}, "

@@ -27,9 +27,13 @@ curl -sf "http://localhost:$VLM_PORT/v1/models" >/dev/null 2>&1 \
 run_one() {   # run_one <run 이름> [추가 인자...]
   local name="$1"; shift
   rm -rf "eval/runs/$name"
+  # 러너는 한 장이라도 실패하면 exit 1 을 낸다. set -e 가 그걸 받아 스크립트를 죽이면
+  # B런과 게이트 요약까지 통째로 날아간다(2026-09-07 실제로 그랬다: A 48/50 -> B 미실행).
+  # 배치는 실패를 안고 끝까지 가는 게 맞고, 판정은 아래 요약이 한다.
   stdbuf -oL -eL python3 -u eval/llm_runner.py \
     --server "$VLM_SERVER" --model "$REPO" \
-    --list "$LIST" --run "$name" --max-tokens "$VLM_MAX_TOKENS" "$@" 2>&1 | tee -a ~/OCR/logs/vlm_smoke.log
+    --list "$LIST" --run "$name" --max-tokens "$VLM_MAX_TOKENS" "$@" 2>&1 \
+    | tee -a ~/OCR/logs/vlm_smoke.log || true
 }
 
 vlm_say "A · full_text 포함  ($RUN_A)"
