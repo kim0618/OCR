@@ -29,7 +29,7 @@ run_one() {   # run_one <run 이름> [추가 인자...]
   rm -rf "eval/runs/$name"
   stdbuf -oL -eL python3 -u eval/llm_runner.py \
     --server "$VLM_SERVER" --model "$REPO" \
-    --list "$LIST" --run "$name" "$@" 2>&1 | tee -a ~/OCR/logs/vlm_smoke.log
+    --list "$LIST" --run "$name" --max-tokens "$VLM_MAX_TOKENS" "$@" 2>&1 | tee -a ~/OCR/logs/vlm_smoke.log
 }
 
 vlm_say "A · full_text 포함  ($RUN_A)"
@@ -40,7 +40,7 @@ vlm_say "B · full_text 제거  ($RUN_B)"
 run_one "$RUN_B" --no-fulltext
 
 vlm_say "게이트 요약"
-python3 - "$RUN_A" "$RUN_B" "$LIST" <<'PY'
+VLM_MAX_TOKENS="$VLM_MAX_TOKENS" python3 - "$RUN_A" "$RUN_B" "$LIST" <<'PY'
 import json, os, sys
 runs, list_path = sys.argv[1:3], sys.argv[3]
 want = sum(1 for l in open(list_path, encoding='utf-8') if l.strip())
@@ -67,8 +67,9 @@ for r in runs:
           f"{m.get('docsPerHour')}장/시간 · 오류 {n_err}")
     print(f"  행수 상위10 {sorted(rows, reverse=True)[:10]}   행수 0 인 문서 {empty}")
     if ctok:
+        cap = int(os.environ.get('VLM_MAX_TOKENS') or 6144)
         print(f"  출력 토큰 최대 {max(ctok):,} / 중앙 {sorted(ctok)[len(ctok)//2]:,}"
-              f"   (max_tokens 4096 대비 {100*max(ctok)/4096:.0f}%)")
+              f"   (max_tokens {cap:,} 대비 {100*max(ctok)/cap:.0f}%)")
     if cut:
         print(f"  X 잘림 {len(cut)}장 - finish_reason != stop:")
         for sf, fr, rc in cut[:5]:

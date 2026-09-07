@@ -22,6 +22,18 @@ export XDG_CACHE_HOME="$NVME/cache"
 export TRITON_CACHE_DIR="$NVME/cache/triton"
 mkdir -p "$VLLM_CACHE_ROOT" "$XDG_CACHE_HOME" "$TRITON_CACHE_DIR" 2>/dev/null || true
 VLM_PORT=8000
+# ★L4 24GB 제약으로 확정한 값(2026-09-07 실측). 정확도 튜닝이 아니라 하드웨어 제약이다.
+#   기본값(util 0.9 · len 16384)은 기동 실패한다:
+#     "Model loading took 16.65 GiB / Available KV cache 1.1 GiB /
+#      max seq len 16384 needs 2.25 GiB ... estimated maximum model length is 8000"
+#   가중치가 23GB 중 16.65GB 를 먹어 KV 가 안 남는다.
+#   util 을 0.95 로 올려 KV 를 ~2.2GB 확보하고, 길이는 우리 문서에 맞춰 12288 로 잡았다.
+#   내역 = 이미지 약 4.9K 토큰(1655x2340) + 프롬프트 약 1.5K + 출력 6K.
+#   ⚠️ 해상도(max_pixels)는 건드리지 않는다 - 작은 글씨 인식이 바로 이 실험의 측정 대상이라
+#      줄이면 교란 요인이 된다. 세 모델에 같은 값을 쓰고 지출 원장 옆에 기록한다.
+VLM_MAX_LEN="${VLM_MAX_LEN:-12288}"
+VLM_GPU_UTIL="${VLM_GPU_UTIL:-0.95}"
+VLM_MAX_TOKENS="${VLM_MAX_TOKENS:-6144}"
 VLM_SERVER="http://localhost:$VLM_PORT/v1"
 
 # 후보 모델 - ⚠️ 처음 받기 전에 HF 페이지에서 정확한 repo id 를 확인할 것.
