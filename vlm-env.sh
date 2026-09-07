@@ -34,6 +34,14 @@ VLM_PORT=8000
 VLM_MAX_LEN="${VLM_MAX_LEN:-12288}"
 VLM_GPU_UTIL="${VLM_GPU_UTIL:-0.95}"
 VLM_MAX_TOKENS="${VLM_MAX_TOKENS:-6144}"
+
+# ★FlashInfer 샘플러 끄기(2026-09-07 실측). DLAMI 에 CUDA 툴킷이 없어 nvcc 가 없는데
+#   flashinfer/sampling.py 의 get_sampling_module 이 JIT 로 커널을 빌드하려다 죽는다:
+#     "RuntimeError: Could not find nvcc and default cuda_home='/usr/local/cuda' doesn't exist"
+#   (알려진 이슈 vllm#26642). nvcc 를 wheel 로 넣을 수도 없다 - torch 가 cu130 인데
+#   nvidia-cuda-nvcc-cu13 은 0.0.1 스텁뿐이고 실물은 cu12 까지만 있다.
+#   우리는 temperature=0(greedy) 이라 샘플러 구현이 결과·속도에 사실상 영향이 없다.
+export VLLM_USE_FLASHINFER_SAMPLER=0
 VLM_SERVER="http://localhost:$VLM_PORT/v1"
 
 # 후보 모델 - ⚠️ 처음 받기 전에 HF 페이지에서 정확한 repo id 를 확인할 것.

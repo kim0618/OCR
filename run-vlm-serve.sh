@@ -26,7 +26,7 @@ vlm_stop_backend
 tmux kill-session -t vllm 2>/dev/null || true
 vlm_say "$KEY  ($REPO)  포트 $VLM_PORT  len=$VLM_MAX_LEN util=$VLM_GPU_UTIL"
 tmux new-session -d -s vllm \
-  "export HF_HOME='$HF_HOME' VLLM_CACHE_ROOT='$VLLM_CACHE_ROOT' XDG_CACHE_HOME='$XDG_CACHE_HOME' TRITON_CACHE_DIR='$TRITON_CACHE_DIR'; \
+  "export HF_HOME='$HF_HOME' VLLM_CACHE_ROOT='$VLLM_CACHE_ROOT' XDG_CACHE_HOME='$XDG_CACHE_HOME' TRITON_CACHE_DIR='$TRITON_CACHE_DIR' VLLM_USE_FLASHINFER_SAMPLER='$VLLM_USE_FLASHINFER_SAMPLER'; \
    '$VLM_VENV/bin/vllm' serve '$REPO' --port $VLM_PORT \
      --max-model-len $VLM_MAX_LEN --gpu-memory-utilization $VLM_GPU_UTIL \
      2>&1 | tee -a ~/OCR/logs/vllm.log"
