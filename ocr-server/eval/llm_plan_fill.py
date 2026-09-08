@@ -6,9 +6,9 @@ run 을 돌리고 나면 계획서에 들어갈 값이 한 번에 나와야 한�
 
     Base 만 (모델 run 전 - 문서의 현재 상태)
         python eval/llm_plan_fill.py
-    500 스크리닝 - 후보 3개
-        python eval/llm_plan_fill.py --model qwen=vlm_qwen_500 \\
-            --model minicpm=vlm_minicpm_500 --model internvl=vlm_internvl_500 --write
+    500 스크리닝 - 후보 3개 (+ Qwen 전처리본 = qwenp · 파서 500장 표에만 열이 있다)
+        python eval/llm_plan_fill.py --model qwen=vlm_qwen_500 --model qwenp=vlm_qwen_500p \\
+            --model minicpm=vlm_minicpm_500 --model internvl=vlm_internvl_500 --write --rebase
     9,001 본판정 - 승자만
         python eval/llm_plan_fill.py --winner qwen=vlm_qwen_9001 --write
 
@@ -51,15 +51,18 @@ HEADER_FIELDS = ["buyerAddress", "buyerCompany", "supplierAddress", "taxAmount",
 GROUP_ORDER = ["전처리없음", "기울기보정", "회전적용·정상", "회전적용·붕괴"]
 GROUP_LABEL = {"전처리없음": "전처리 없음", "기울기보정": "기울기 보정",
                "회전적용·정상": "회전 적용 · 정상", "회전적용·붕괴": "회전 적용 · 붕괴"}
-MODEL_ORDER = ["qwen", "minicpm", "internvl"]   # 계획서 표 헤더 순서와 같아야 한다
+MODEL_ORDER = ["qwen", "qwenp", "minicpm", "internvl"]   # 계획서 표 헤더 순서와 같아야 한다
+# 표마다 후보 열이 몇 벌, 어떤 순서로 있나. 파서 500장 표에만 Qwen 전처리본(qwenp) 열이 하나 더 있다.
+SLOTS_PARSER500 = ["qwen", "qwenp", "minicpm", "internvl"]
+SLOTS_500 = ["qwen", "minicpm", "internvl"]
 SUMMARY = ["cell 정확도", "field 정확도", "structure 실패",
-           "recognition 실패", "spurious", "행수 일치 문서"]
+           "recognition 실패", "spurious", "행수 일치 문서", "실패"]
 
 
 # ─────────────────────────────────────────────────────────── 집계
 
 def blank() -> dict:
-    return {"docs": 0, "rowMatchDocs": 0,
+    return {"docs": 0, "rowMatchDocs": 0, "failed": 0,
             "cell": {"scored": 0, "match": 0, "spurious": 0},
             "field": {"scored": 0, "match": 0, "spurious": 0},
             "defect": {"structure": 0, "recognition": 0, "layout": 0, "preprocessing": 0},
@@ -131,7 +134,16 @@ def load(run_dir: str, only: set | None = None) -> dict:
     return out
 
 
-def summarize(docs: dict, groups: dict) -> dict:
+def failed_count(run_dir: str) -> int:
+    """JSON 파싱이 깨져 채점에 못 들어간 문서 수(러너가 errors.jsonl 에 남긴다)."""
+    p = os.path.join(run_dir, "errors.jsonl")
+    if not os.path.exists(p):
+        return 0
+    with open(p, encoding="utf-8") as fh:
+        return sum(1 for ln in fh if ln.strip())
+
+
+def summarize(docs: dict, groups: dict, run_dir: str = "") -> dict:
     tot = blank()
     per = {g: blank() for g in GROUP_ORDER}
     for src, doc in docs.items():
@@ -139,6 +151,8 @@ def summarize(docs: dict, groups: dict) -> dict:
         g = (groups.get(src) or {}).get("group")
         if g in per:
             add(per[g], doc)
+    if run_dir:
+        tot["failed"] = failed_count(run_dir)
     return {"total": tot, "byGroup": per}
 
 
@@ -153,6 +167,8 @@ def metrics(acc: dict) -> dict:
         "recognition 실패": r(d["recognition"], tot_def),
         "spurious": r(c["spurious"] + f["spurious"], c["scored"] + f["scored"]),
         "행수 일치 문서": r(acc["rowMatchDocs"], acc["docs"]),
+        # JSON 파싱이 깨진 문서 비율. Base 는 구조상 0 이고, VLM 은 반복 루프로 잘린다.
+        "실패": r(acc.get("failed", 0), acc["docs"] + acc.get("failed", 0)),
     }
 
 
@@ -310,11 +326,69 @@ def dump(base_sum, models, crosses, costs, winner):
 # ─────────────────────────────────────────────────────────── HTML 기입
 
 CELLQ = re.compile(r'<td class="([a-z ]*?)muted">\?</td>')
+TD = re.compile(r'<td(?P<attr>[^>]*)>(?P<val>.*?)</td>', re.S)
+
+# Base 열은 손으로 넣은 값이라 모델 run 이 덮는 문서(=정렬본)와 어긋난다.
+# 실패 2장 때문에 500 vs 498 이 되어 표 안에서 Base + 차이 != 모델 이 됐다.
+# 아래 표들에서만 Base(와 채점셀) 칸을 정렬본으로 다시 쓴다. 9,001 표는 손대지 않는다.
+REBASE = {
+    ("전처리", "500장 - 모델 선정"): {"base": 2, "docs": 1},
+    ("파서500", "종합"): {"base": 1},
+    ("파서500", "행 컬럼"): {"base": 2, "scored": 1},
+    ("파서500", "헤더 필드"): {"base": 2, "scored": 1},
+}
 
 
-def write_plan(base_sum, models, crosses, costs, winner):
+def slots_for(sec, sub, present) -> list:
+    """그 표의 후보 열 순서. 500장 선정표는 여러 벌, 나머지는 한 벌(주어진 모델 하나)."""
+    if sec == "파서500":
+        return SLOTS_PARSER500
+    if sec == "전처리" and sub == "500장 - 모델 선정":
+        return SLOTS_500
+    if sec == "비용" and sub == "500장":
+        return SLOTS_500
+    return list(present)[:1]
+
+
+def set_td(line: str, idx: int, val: str, drop_muted: bool = False) -> str:
+    """행 한 줄에서 idx 번째 <td> 의 값만 바꾼다(속성·서술은 그대로 둔다)."""
+    n = [0]
+
+    def repl(mo):
+        i = n[0]
+        n[0] += 1
+        if i != idx:
+            return mo.group(0)
+        attr = mo.group("attr")
+        if drop_muted:                             # 값이 들어가면 흐린 표시를 뗀다
+            attr = re.sub(r'\s*muted', "", attr).replace('class=""', "").rstrip()
+        return "<td%s>%s</td>" % (attr, val)
+
+    return TD.sub(repl, line)
+
+
+def write_plan(base_sum, models, crosses, costs, winner, rebase=False):
     names = ordered(models)
     bm = metrics(base_sum["total"])
+
+    def base_for(sec, sub, label):
+        """그 행의 Base 값(과 채점셀·문서 수)을 정렬본으로 다시 계산한다."""
+        if sec == "전처리":
+            g = next((g for g in GROUP_ORDER if GROUP_LABEL[g] in label), None)
+            if not g:
+                return None
+            acc = base_sum["byGroup"][g]
+            return {"base": fmt(metrics(acc)["cell 정확도"]), "docs": "{:,}".format(acc["docs"])}
+        if sub == "종합":
+            key = next((k for k in SUMMARY if k in label), None)
+            return {"base": fmt(bm[key])} if key else None
+        attr = "byCol" if sub.startswith("행") else "byField"
+        keys = ROW_COLS if attr == "byCol" else HEADER_FIELDS
+        k = next((k for k in keys if "<code>%s</code>" % k in label), None)
+        if not k:
+            return None
+        sc, mt = base_sum["total"][attr][k]
+        return {"base": fmt(100.0 * mt / sc if sc else None), "scored": "{:,}".format(sc)}
 
     def vals_for(sec, sub, label):
         if sec == "전처리" and sub in ("500장 - 모델 선정", "9,001장 - 본판정"):
@@ -323,11 +397,11 @@ def write_plan(base_sum, models, crosses, costs, winner):
             if not g or not use:
                 return None
             bv = metrics(base_sum["byGroup"][g])["cell 정확도"]
-            out = []
+            out = {}
             for n in use:
                 mv = metrics(models[n]["byGroup"][g])["cell 정확도"]
-                out += [fmt(mv), diff(mv, bv)]
-            return out
+                out[n] = [fmt(mv), diff(mv, bv)]
+            return out, 2
         if sec == "교차" and sub and ("셀 이동" in sub or "문서 이동" in sub):
             g = next((g for g in GROUP_ORDER if GROUP_LABEL[g] in label), None)
             # 500장 표에는 스크리닝 모델(첫 모델), 9,001 표에는 승자만.
@@ -346,7 +420,7 @@ def write_plan(base_sum, models, crosses, costs, winner):
                 tot = (sum(c.values()) if "셀 이동" in sub
                        else sum(models[n]["byGroup"][g]["docs"] for _ in (1,)))
                 vals = ["{:,}".format(tot)] + vals
-            return vals
+            return {n: vals}, len(vals)
         if sec == "비용" and sub in ("500장", "9,001장"):
             use = names if sub == "500장" else ([winner] if winner else [])
             if not use:
@@ -354,17 +428,17 @@ def write_plan(base_sum, models, crosses, costs, winner):
             key = next((k for k in ("처리량", "소요", "비용", "Paddle 대비") if k in label), None)
             if not key:
                 return None
-            out = []
+            out = {}
             for n in use:
                 c = costs.get(n)
                 if not c:
-                    return None
+                    continue
                 mins = c["minutes"]
-                out.append({"처리량": "{:,.0f}".format(c["perHour"]),
-                            "소요": ("%.1f분" % mins) if mins < 90 else ("%.1f시간" % (mins / 60)),
-                            "비용": "$%.2f" % c["usd"],
-                            "Paddle 대비": ("%.0f×" % c["vsPaddle"]) if c["vsPaddle"] else "-"}[key])
-            return out
+                out[n] = [{"처리량": "{:,.0f}".format(c["perHour"]),
+                           "소요": ("%.1f분" % mins) if mins < 90 else ("%.1f시간" % (mins / 60)),
+                           "비용": "$%.2f" % c["usd"],
+                           "Paddle 대비": ("%.0f×" % c["vsPaddle"]) if c["vsPaddle"] else "-"}[key]]
+            return out, 1
         if sec in ("파서500", "파서9001"):
             use = names if sec == "파서500" else ([winner] if winner else [])
             if not use:
@@ -373,11 +447,11 @@ def write_plan(base_sum, models, crosses, costs, winner):
                 key = next((k for k in SUMMARY if k in label), None)
                 if not key:
                     return None
-                out = []
+                out = {}
                 for n in use:
                     mv = metrics(models[n]["total"])[key]
-                    out += [fmt(mv), diff(mv, bm[key])]
-                return out
+                    out[n] = [fmt(mv), diff(mv, bm[key])]
+                return out, 2
             attr = "byCol" if sub.startswith("행") else "byField"
             keys = ROW_COLS if attr == "byCol" else HEADER_FIELDS
             k = next((k for k in keys if "<code>%s</code>" % k in label), None)
@@ -385,18 +459,34 @@ def write_plan(base_sum, models, crosses, costs, winner):
                 return None
             bs, bmt = base_sum["total"][attr][k]
             bv = 100.0 * bmt / bs if bs else None
-            out = []
+            out = {}
             for n in use:
                 ms, mmt = models[n]["total"][attr][k]
                 mv = 100.0 * mmt / ms if ms else None
-                out += [fmt(mv), diff(mv, bv)]
-            return out
+                out[n] = [fmt(mv), diff(mv, bv)]
+            return out, 2
         return None
 
     lines = open(PLAN, encoding="utf-8").read().split("\n")
+    # 행이 여러 줄로 나뉘어 있으면(비용 표) 한 줄로 합친다 - 슬롯 위치는 행 전체의 칸 수로 세야 한다.
+    merged, buf = [], None
+    for ln in lines:
+        if buf is not None:
+            buf += ln.strip()
+            if "</tr>" in ln:
+                merged.append(buf)
+                buf = None
+            continue
+        if "<tr" in ln and "</tr>" not in ln and "<td" in ln:
+            buf = ln
+            continue
+        merged.append(ln)
+    if buf is not None:
+        merged.append(buf)
+    lines = merged
     h2 = h3 = None
     row_label = ""
-    filled = 0
+    filled = rebased = 0
     for i, ln in enumerate(lines):
         m = re.search(r"<h2>(.*?)</h2>", ln)
         if m:
@@ -421,24 +511,36 @@ def write_plan(base_sum, models, crosses, costs, winner):
                     break
         if "<tr" in ln:
             row_label = ln                      # 라벨은 행 첫 줄에 있다
+        if rebase and h2 and "<tr" in ln and (h2, h3) in REBASE:
+            got = base_for(h2, h3, ln)
+            if got:
+                for what, idx in REBASE[(h2, h3)].items():
+                    if got.get(what):
+                        ln = set_td(ln, idx, got[what])
+                lines[i] = ln
+                rebased += 1
         if not h2 or 'muted">?' not in ln:
             continue
-        vals = vals_for(h2, h3, row_label if "<tr" not in ln else ln)
-        if not vals:
+        got = vals_for(h2, h3, row_label if "<tr" not in ln else ln)
+        if not got or not got[0]:
             continue
-        it = iter(vals)
-
-        def repl(mo):
-            nonlocal filled
-            try:
-                v = next(it)
-            except StopIteration:
-                return mo.group(0)
-            filled += 1
-            cls = mo.group(1).strip()
-            return ('<td class="%s">%s</td>' % (cls, v)) if cls else "<td>%s</td>" % v
-
-        lines[i] = CELLQ.sub(repl, ln)
+        per, k = got
+        slot_list = slots_for(h2, h3, per)
+        tds = TD.findall(ln)
+        lead = len(tds) - k * len(slot_list)
+        if lead < 1:
+            continue
+        for n, vals in per.items():
+            if n not in slot_list:
+                continue                           # 이 표에 그 모델 열이 없다
+            si = slot_list.index(n)
+            for j, v in enumerate(vals):
+                idx = lead + si * k + j
+                if idx >= len(tds) or "muted" not in tds[idx][0] or tds[idx][1].strip() != "?":
+                    continue                       # 이미 채웠거나 '보류' 인 칸은 건드리지 않는다
+                ln = set_td(ln, idx, v, drop_muted=True)
+                filled += 1
+        lines[i] = ln
 
     open(PLAN, "w", encoding="utf-8", newline="\n").write("\n".join(lines))
     print("\n→ %s  (%d칸 기입)" % (PLAN, filled))
@@ -457,6 +559,8 @@ def main() -> int:
                     default=os.path.join(HERE, "LLM", "data", "sample_500_sources.txt"),
                     help="모델이 없을 때 Base 를 이 표본으로 부분집계")
     ap.add_argument("--write", action="store_true", help="계획서의 모델·차이 칸을 채운다")
+    ap.add_argument("--rebase", action="store_true",
+                    help="500장 표의 Base·채점셀 칸도 모델 run 정렬본으로 다시 쓴다")
     ap.add_argument("--json", help="기계용 출력 경로")
     args = ap.parse_args()
 
@@ -487,7 +591,7 @@ def main() -> int:
     models, crosses = {}, {}
     for name, rd in runs.items():
         docs = load(rd, set(base_docs))
-        models[name] = summarize(docs, groups)
+        models[name] = summarize(docs, groups, rd)
         crosses[name] = cross(base_docs, docs, groups)
         costs[name] = cost(rd, len(docs))
         print("  %s: %s 문서 %s" % (name, os.path.basename(rd), "{:,}".format(len(docs))))
@@ -498,7 +602,7 @@ def main() -> int:
         if not models:
             print("\n--write 는 --model / --winner 가 있어야 한다.", file=sys.stderr)
             return 1
-        write_plan(base_sum, models, crosses, costs, win)
+        write_plan(base_sum, models, crosses, costs, win, args.rebase)
 
     if args.json:
         with open(args.json, "w", encoding="utf-8", newline="\n") as fh:

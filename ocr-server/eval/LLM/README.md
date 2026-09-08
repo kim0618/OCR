@@ -31,6 +31,8 @@
 |---|---|
 | `prompt_v1.md` | 룰 이식 v1. `## SYSTEM` / `## USER` 절을 러너가 파싱. 동의어·보일러플레이트 DROP·헤더스킵·선두순번·빈칸추측 금지 + `full_text` + 스키마. **v2 는 승자 확정 후 + 전량 재실행과만** |
 | `sample_500.txt` | 500장 층화표본. `llm_runner --list` 가 받는 **eval/ 기준 이미지 경로**(sourceFile 아님) |
+| `sample_500p.txt` | 같은 500장의 **Base 전처리본**(072 processed, 950px) 경로. VLM 에 Paddle 과 같은 그림을 주는 run 용 - `aws/run-vlm-500p.sh` |
+| (모델 키 `qwenp`) | 그 run 의 결과. 파서 500장 표에만 `Qwen3-VL 4B 전처리본` 열이 있고 `llm_plan_fill --model qwenp=vlm_qwen_500p` 로 채운다 |
 | `smoke_50.txt` | 환경 확정 게이트 50장. 500 밖에서 뽑고 행수 상위 10장 강제 |
 | `canned_response.json` | 서버 없이 러너 형식만 검증할 때(`--canned`) |
 
