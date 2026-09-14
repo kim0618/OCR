@@ -51,9 +51,10 @@ HEADER_FIELDS = ["buyerAddress", "buyerCompany", "supplierAddress", "taxAmount",
 GROUP_ORDER = ["전처리없음", "기울기보정", "회전적용·정상", "회전적용·붕괴"]
 GROUP_LABEL = {"전처리없음": "전처리 없음", "기울기보정": "기울기 보정",
                "회전적용·정상": "회전 적용 · 정상", "회전적용·붕괴": "회전 적용 · 붕괴"}
-MODEL_ORDER = ["qwen", "qwenp", "minicpm", "internvl"]   # 계획서 표 헤더 순서와 같아야 한다
+MODEL_ORDER = ["qwen", "qwenp", "qwenr", "minicpm", "internvl"]   # 계획서 표 헤더 순서와 같아야 한다
 # 표마다 후보 열이 몇 벌, 어떤 순서로 있나. 파서 500장 표에만 Qwen 전처리본(qwenp) 열이 하나 더 있다.
-SLOTS_PARSER500 = ["qwen", "qwenp", "minicpm", "internvl"]
+# qwen=원본 · qwenp=전처리본(950px) · qwenr=리사이즈만 뺀 것. 계획서 헤더 순서와 같아야 한다.
+SLOTS_PARSER500 = ["qwen", "qwenp", "qwenr", "minicpm", "internvl"]
 SLOTS_500 = ["qwen", "minicpm", "internvl"]
 SUMMARY = ["cell 정확도", "field 정확도", "structure 실패",
            "recognition 실패", "spurious", "행수 일치 문서", "실패"]

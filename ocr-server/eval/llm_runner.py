@@ -113,9 +113,9 @@ def source_name(path: str) -> str:
     if m:
         return f"{m.group(1)}__{m.group(2)}__{m.group(3)}"
     base = os.path.basename(path)
-    # Base 전처리본(runs/<run>/processed/)은 이미 sourceFile 이름에 .jpg 를 한 번 더 붙여 저장돼 있다.
-    # 그걸 먹일 때는 그 꼬리를 떼야 compare_run 이 같은 GT·같은 Base 문서를 찾는다.
-    if "/processed/" in norm and base.endswith(".jpg.jpg"):
+    # run 폴더의 파생 이미지(processed/ · rotated/)는 sourceFile 이름에 .jpg 를 한 번 더 붙여 저장돼
+    # 있다. 그걸 먹일 때는 꼬리를 떼야 compare_run 이 같은 GT·같은 Base 문서를 찾는다.
+    if "/runs/" in norm and base.endswith(".jpg.jpg"):
         return base[:-4]
     return base
 

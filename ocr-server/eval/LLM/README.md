@@ -33,6 +33,7 @@
 | `sample_500.txt` | 500장 층화표본. `llm_runner --list` 가 받는 **eval/ 기준 이미지 경로**(sourceFile 아님) |
 | `sample_500p.txt` | 같은 500장의 **Base 전처리본**(072 processed, 950px) 경로. VLM 에 Paddle 과 같은 그림을 주는 run 용 - `aws/run-vlm-500p.sh` |
 | (모델 키 `qwenp`) | 그 run 의 결과. 파서 500장 표에만 `Qwen3-VL 4B 전처리본` 열이 있고 `llm_plan_fill --model qwenp=vlm_qwen_500p` 로 채운다 |
+| `sample_500r.txt` | 같은 500장을 **방향만 Base 와 같게 돌리고 해상도는 원본 그대로** 둔 것(`llm_make_rotated.py` 가 생성). 실제 제품 구성 - `aws/run-vlm-500r.sh`, 모델 키 `qwenr` |
 | `smoke_50.txt` | 환경 확정 게이트 50장. 500 밖에서 뽑고 행수 상위 10장 강제 |
 | `canned_response.json` | 서버 없이 러너 형식만 검증할 때(`--canned`) |
 
