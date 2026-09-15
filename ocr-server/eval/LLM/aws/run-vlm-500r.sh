@@ -31,7 +31,6 @@ if [[ "$SERVED" != "$WANT" ]]; then
   exit 1
 fi
 [[ -d "$REPO/$BASE_RUN/processed" ]] || { echo "072 processed 가 없다: $REPO/$BASE_RUN/processed" >&2; exit 1; }
-python3 -c "import PIL" 2>/dev/null || { echo "PIL 이 없다 - 회전본을 못 만든다: pip install pillow" >&2; exit 1; }
 grep -q '"/runs/" in norm' eval/llm_runner.py || {
   echo "llm_runner.py 가 옛 버전이다(회전본 파일명 .jpg.jpg 를 못 떼 채점이 전부 빗나간다). git pull 먼저." >&2; exit 1; }
 if [[ -d "$REPO/eval/runs/$RUN" ]]; then
@@ -42,8 +41,14 @@ fi
 # ── 회전본 생성 (GPU 안 씀 · 이미 있으면 건너뜀) ─────────────────────────────
 HAVE="$(ls "$ROT" 2>/dev/null | wc -l)"
 if [[ "$HAVE" -lt 500 ]]; then
-  echo "== 회전본 생성 (현재 $HAVE 장) - 각도는 처리본과 픽셀 상관으로 정한다"
-  python3 eval/llm_make_rotated.py \
+  # 시스템 python3 엔 PIL 도 pip 도 없다(DLAMI). VLM venv(vllm 이 pillow 를 끌고 옴) → Paddle venv 순으로 고른다.
+  PYIMG=""
+  for c in "${VLM_VENV:-}/bin/python" "$REPO/.venv/bin/python" python3; do
+    if command -v "$c" >/dev/null 2>&1 && "$c" -c "import PIL" 2>/dev/null; then PYIMG="$c"; break; fi
+  done
+  [[ -n "$PYIMG" ]] || { echo "PIL 있는 python 이 없다 - 회전본을 못 만든다" >&2; exit 1; }
+  echo "== 회전본 생성 (현재 $HAVE 장 · $PYIMG) - 각도는 처리본과 픽셀 상관으로 정한다"
+  "$PYIMG" eval/llm_make_rotated.py \
     --sources eval/LLM/data/sample_500_sources.txt \
     --groups eval/LLM/data/groups_072.json \
     --processed "$BASE_RUN/processed" \
