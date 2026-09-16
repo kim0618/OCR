@@ -36,18 +36,21 @@ BASE_RUN = os.path.join(HERE, "runs", "072_20260802_182127")
 GROUPS = os.path.join(HERE, "LLM", "data", "groups_072.json")
 
 EXCLUDE = {"itemCode", "itemNameMaster", "itemNameLearnA", "itemNameLearnB",
-           "itemCodeLearnA", "itemCodeLearnB"}
+           "itemCodeLearnA", "itemCodeLearnB",
+           "insuranceCode",   # itemCode→마스터 조회로 채워지는 ④ 파생 칸(2026-09-15 제외)
+           "taxType", "discountAmount"}   # 문서에서 읽는 칸이 아님 - 과세 플래그 · 94%가 0(2026-09-15 제외)
 SCORED = {"match", "mismatch", "ext_missing"}
 HOURLY_USD = 1.00                      # g6.xlarge on-demand
 PADDLE_PER_HOUR = 2606.0               # 072 실측
 COLLAPSE = 0.10                        # 문서 붕괴 임계
 
 # 계획서 표의 행 순서와 같아야 한다.
-ROW_COLS = ["manufacturingNo", "expiryDate", "spec", "itemName",
-            "unitPrice", "insuranceCode", "quantity", "amount"]
-HEADER_FIELDS = ["buyerAddress", "buyerCompany", "supplierAddress", "taxAmount",
-                 "supplyAmount", "totalAmount", "supplierCompany", "taxType",
-                 "buyerBizNumber", "issueDate", "supplierBizNumber", "discountAmount"]
+# 순서 = 명세서에 인쇄되는 순서(계획서 500장 표와 같게). 품목 → 수량·금액 → 로트 / 날짜 → 공급자 → 공급받는자 → 금액
+ROW_COLS = ["itemName", "spec", "quantity", "unitPrice", "amount",
+            "manufacturingNo", "expiryDate"]
+HEADER_FIELDS = ["issueDate", "supplierCompany", "supplierBizNumber", "supplierAddress",
+                 "buyerCompany", "buyerBizNumber", "buyerAddress",
+                 "supplyAmount", "taxAmount", "totalAmount"]
 GROUP_ORDER = ["전처리없음", "기울기보정", "회전적용·정상", "회전적용·붕괴"]
 GROUP_LABEL = {"전처리없음": "전처리 없음", "기울기보정": "기울기 보정",
                "회전적용·정상": "회전 적용 · 정상", "회전적용·붕괴": "회전 적용 · 붕괴"}
@@ -56,6 +59,8 @@ MODEL_ORDER = ["qwen", "qwenp", "qwenr", "minicpm", "internvl"]   # 계획서 �
 # qwen=원본 · qwenp=전처리본(950px) · qwenr=리사이즈만 뺀 것. 계획서 헤더 순서와 같아야 한다.
 SLOTS_PARSER500 = ["qwen", "qwenp", "qwenr", "minicpm", "internvl"]
 SLOTS_500 = ["qwen", "minicpm", "internvl"]
+# 500장 run 은 리사이즈 제거본 하나로만 돈다(2026-09-16) - 원본 입력을 전제한 전처리 표는 Qwen 만 채운다
+SLOTS_PRE500 = ["qwen"]
 SUMMARY = ["cell 정확도", "field 정확도", "structure 실패",
            "recognition 실패", "spurious", "행수 일치 문서", "실패"]
 
@@ -111,10 +116,13 @@ def add(acc: dict, doc: dict) -> None:
 
 
 def cells_of(doc: dict) -> dict:
-    """(GT행, 등장 순번, 컬럼) -> 맞았나. compare_cross 와 같은 셀 신원."""
+    """(GT행, 등장 순번, 컬럼) -> 맞았나. compare_cross 와 같은 셀 신원.
+
+    ★ GT 행 = 그 행의 GT 값 묶음. compare/ 의 rowIndex 는 짝지어진 **추출 행** 번호라(compare_table:107)
+    run 마다 달라서 GT 행 키로 쓸 수 없다(2026-09-15 실측 37% 오짝)."""
     out, seen = {}, {}
     for row in ((doc.get("table") or {}).get("rows") or []):
-        idx = str(row.get("rowIndex"))
+        idx = tuple(sorted((c, str(v.get("gt"))) for c, v in (row.get("cells") or {}).items()))
         occ = seen.get(idx, 0)
         seen[idx] = occ + 1
         for key, v in (row.get("cells") or {}).items():
@@ -345,9 +353,9 @@ def slots_for(sec, sub, present) -> list:
     if sec == "파서500":
         return SLOTS_PARSER500
     if sec == "전처리" and sub == "500장 - 모델 선정":
-        return SLOTS_500
+        return SLOTS_PRE500      # 원본 입력 전제 - 나머지 모델은 방향보정본으로만 돌아 저울이 다르다
     if sec == "비용" and sub == "500장":
-        return SLOTS_500
+        return SLOTS_PARSER500        # Qwen 입력 3종(원본·전처리본·리사이즈 제거) 열이 따로 있다
     return list(present)[:1]
 
 
@@ -362,7 +370,7 @@ def set_td(line: str, idx: int, val: str, drop_muted: bool = False) -> str:
             return mo.group(0)
         attr = mo.group("attr")
         if drop_muted:                             # 값이 들어가면 흐린 표시를 뗀다
-            attr = re.sub(r'\s*muted', "", attr).replace('class=""', "").rstrip()
+            attr = re.sub(r'\s*\bmuted\b', "", attr).replace('class=""', "").rstrip()
         return "<td%s>%s</td>" % (attr, val)
 
     return TD.sub(repl, line)

@@ -74,7 +74,7 @@ Paddle run 두 개(068 vs 072)를 맞대본 결과다. 형식 확인용으로만
 ③ bash ~/OCR/run-vlm-setup.sh qwen           ← 백엔드 자동으로 내림. 스모크는 큐윈 하나면 된다
 ④ bash ~/OCR/run-vlm-serve.sh qwen           ← tmux 세션 vllm, 뜰 때까지 대기
 ⑤ bash ~/OCR/run-vlm-smoke.sh qwen           ← A/B 두 번 + 게이트 요약
-⑥ 나머지 두 모델 받아 500×3 (+50 재실행 = 결정성) → 로컬 채점 → 승자
+⑥ 나머지 두 모델 받아 500r 만 (리사이즈 제거본 - 아래 규칙) → 로컬 채점 → 승자
 ⑦ 승자 9,001 본판정
 ```
 
@@ -107,12 +107,24 @@ Paddle run 두 개(068 vs 072)를 맞대본 결과다. 형식 확인용으로만
 
 채점은 로컬에서 한다. AWS 에서 받을 것은 `runs/<run>/` 의 `samples/` 와 `run_meta.json` 뿐이다.
 
+**500장 run 의 입력은 리사이즈 제거본 하나로 고정한다(2026-09-16 결정).**
+Qwen 만 입력 3벌(원본 `500` · 전처리본 `500p` · 리사이즈 제거 `500r`)을 돌렸고 그것으로 입력 축은 끝났다
+(원본 63.1 / 950px 52.9 / **리사이즈 제거 64.3**). MiniCPM·InternVL 은 `run-vlm-500r.sh` 만 돌린다 -
+승자 비교는 **Qwen 의 `500r` 열과 맞댄다**(원본 열과 비교하면 저울이 다르다).
+스모크 50장은 Qwen 때와 **같은 조건 그대로**(원본 목록 `smoke_50.txt` · `--no-fulltext`)여야 줄이 선다.
+전처리 탭의 500장 표는 "원본 입력" 전제라 Qwen 열만 채워진다 - 나머지 두 모델은 `해당 없음`.
+
 ```bash
 # 1) run -> compare/   (부분 run 은 --skip-missing)
-python eval/compare_run.py --ts vlm_qwen_500 --testset invoice_replay --skip-missing
+python eval/compare_run.py --ts vlm_minicpm_500r --testset invoice_replay --skip-missing
+
+# 1-1) 후처리 통일 - 원본 run 은 두고 사본에 적용(반드시 거친다)
+python eval/llm_derive_run.py --src vlm_minicpm_500r --dst vlm_minicpm_500r_post --lot-merge --base-chain
 
 # 2) 계획서 채우기 - 500 스크리닝(후보 3개)
-python eval/llm_plan_fill.py --model qwen=vlm_qwen_500     --model minicpm=vlm_minicpm_500 --model internvl=vlm_internvl_500 --write
+python eval/llm_plan_fill.py --base eval/runs/072_20260802_182127_post \
+    --model qwen=vlm_qwen_500_post --model qwenp=vlm_qwen_500p_post --model qwenr=vlm_qwen_500r_post \
+    --model minicpm=vlm_minicpm_500r_post --model internvl=vlm_internvl_500r_post --write --rebase
 
 # 3) 승자 확정 후 - 9,001 본판정 + 교차표
 python eval/llm_plan_fill.py --winner qwen=vlm_qwen_9001 --write

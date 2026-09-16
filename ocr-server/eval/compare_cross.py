@@ -86,9 +86,13 @@ def _cells(path: str) -> dict[tuple[str, int, str], bool]:
     with open(path, encoding="utf-8") as fh:
         doc = json.load(fh)
     out = {}
-    seen: dict[str, int] = {}
+    # ★2026-09-15 정정: compare/ 의 rowIndex 는 GT 행 번호가 아니라 **짝지어진 추출 행 번호**다
+    # (compare_table:107 - 짝 없는 GT 행은 맨 뒤에 GT 번호로 붙는다). 그래서 위 설명의 "같은 rowIndex 의
+    # n번째끼리" 는 다른 GT 행끼리 만나게 한다(072 vs qwen 500 실측 37% 오짝). GT 행 = 그 행의 GT 값 묶음으로
+    # 식별한다 - 두 run 이 같은 GT 에서 나왔으므로 100% 짝지어진다(묶음이 같은 행은 등장 순번으로).
+    seen: dict[tuple, int] = {}
     for row in ((doc.get("table") or {}).get("rows") or []):
-        idx = str(row.get("rowIndex"))
+        idx = tuple(sorted((c, str(v.get("gt"))) for c, v in (row.get("cells") or {}).items()))
         occ = seen.get(idx, 0)
         seen[idx] = occ + 1
         for key, verdict in (row.get("cells") or {}).items():

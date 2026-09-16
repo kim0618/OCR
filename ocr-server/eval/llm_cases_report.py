@@ -362,7 +362,9 @@ def main() -> int:
     print("  %-28s %5d" % ("합계", len(docs)))
 
     os.makedirs(OUT_DIR, exist_ok=True)
-    for axis, ax in AXES.items():
+    # 파서 쪽 실물(LLM_CASES_PARSER.html)은 llm_parser_cases.py 가 행 크롭으로 만든다(2026-09-15).
+    # 여기서 만들면 그 파일을 문서 전체 이미지판으로 덮어쓰므로 전처리 쪽만 만든다.
+    for axis, ax in ((k, v) for k, v in AXES.items() if k == "orient"):
         cases = [d for r in ax["rows"] for d in placed.get(r, [])
                  if not (ax.get("skip_kept") and d.get("class") == "kept")]
         cases.sort(key=lambda d: -abs(d.get("cellMove") or 0))
