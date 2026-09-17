@@ -40,7 +40,7 @@ EXCLUDE = {"itemCode", "itemNameMaster", "itemNameLearnA", "itemNameLearnB",
            "insuranceCode",   # itemCode→마스터 조회로 채워지는 ④ 파생 칸(2026-09-15 제외)
            "taxType", "discountAmount"}   # 문서에서 읽는 칸이 아님 - 과세 플래그 · 94%가 0(2026-09-15 제외)
 SCORED = {"match", "mismatch", "ext_missing"}
-HOURLY_USD = 1.00                      # g6.xlarge on-demand
+HOURLY_USD = 0.9896                    # g6.xlarge on-demand (ap-northeast-2 콘솔 실측 · llm_ledger.py 와 같은 값)
 PADDLE_PER_HOUR = 2606.0               # 072 실측
 COLLAPSE = 0.10                        # 문서 붕괴 임계
 
@@ -54,14 +54,14 @@ HEADER_FIELDS = ["issueDate", "supplierCompany", "supplierBizNumber", "supplierA
 GROUP_ORDER = ["전처리없음", "기울기보정", "회전적용·정상", "회전적용·붕괴"]
 GROUP_LABEL = {"전처리없음": "전처리 없음", "기울기보정": "기울기 보정",
                "회전적용·정상": "회전 적용 · 정상", "회전적용·붕괴": "회전 적용 · 붕괴"}
-MODEL_ORDER = ["qwen", "qwenp", "qwenr", "minicpm", "internvl"]   # 계획서 표 헤더 순서와 같아야 한다
+MODEL_ORDER = ["qwen", "qwenp", "qwenr", "paddlevl", "internvl"]   # 계획서 표 헤더 순서와 같아야 한다
 # 표마다 후보 열이 몇 벌, 어떤 순서로 있나. 파서 500장 표에만 Qwen 전처리본(qwenp) 열이 하나 더 있다.
-# qwen=원본 · qwenp=전처리본(950px) · qwenr=리사이즈만 뺀 것. 계획서 헤더 순서와 같아야 한다.
-SLOTS_PARSER500 = ["qwen", "qwenp", "qwenr", "minicpm", "internvl"]
-SLOTS_500 = ["qwen", "minicpm", "internvl"]
+# qwen=원본 · qwenp=전처리본(950px) · qwenr=리사이즈만 뺀 것 · paddlevl=PaddleOCR-VL 0.9B(MiniCPM 탈락 자리, 2026-09-17). 계획서 헤더 순서와 같아야 한다.
+SLOTS_PARSER500 = ["qwen", "qwenp", "qwenr", "paddlevl", "internvl"]
+SLOTS_500 = ["qwen", "paddlevl", "internvl"]
 # 500장 run 은 리사이즈 제거본 하나로만 돈다(2026-09-16) - 원본 입력을 전제한 전처리 표는 Qwen 만 채운다
 SLOTS_PRE500 = ["qwen"]
-SUMMARY = ["cell 정확도", "field 정확도", "structure 실패",
+SUMMARY = ["전체 정확도", "cell 정확도", "field 정확도", "structure 실패",
            "recognition 실패", "spurious", "행수 일치 문서", "실패"]
 
 
@@ -170,6 +170,8 @@ def metrics(acc: dict) -> dict:
     tot_def = sum(d.values())
     r = lambda m, s: (100.0 * m / s) if s else None
     return {
+        # 행 7칸 + 헤더 10칸을 한 저울에 올린 값. 두 표를 눈으로 합산할 수 없어 따로 낸다.
+        "전체 정확도": r(c["match"] + f["match"], c["scored"] + f["scored"]),
         "cell 정확도": r(c["match"], c["scored"]),
         "field 정확도": r(f["match"], f["scored"]),
         "structure 실패": r(d["structure"], tot_def),
@@ -224,6 +226,12 @@ def cost(run_dir: str, n_hint: int = 0) -> dict | None:
 
 
 # ─────────────────────────────────────────────────────────── 출력
+
+def hhmm(mins: float) -> str:
+    """소요 표기 - 지출 원장(llm_ledger.hhmm)과 같은 규칙. 1.7시간 같은 표기는 읽히지 않는다."""
+    m = round(mins)
+    return "%d분" % m if m < 90 else "%d시간 %d분" % (m // 60, m % 60)
+
 
 def fmt(v, suffix="%"):
     return "-" if v is None else "%.1f%s" % (v, suffix)
@@ -444,7 +452,7 @@ def write_plan(base_sum, models, crosses, costs, winner, rebase=False):
                     continue
                 mins = c["minutes"]
                 out[n] = [{"처리량": "{:,.0f}".format(c["perHour"]),
-                           "소요": ("%.1f분" % mins) if mins < 90 else ("%.1f시간" % (mins / 60)),
+                           "소요": hhmm(mins),
                            "비용": "$%.2f" % c["usd"],
                            "Paddle 대비": ("%.0f×" % c["vsPaddle"]) if c["vsPaddle"] else "-"}[key]]
             return out, 1

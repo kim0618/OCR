@@ -66,17 +66,22 @@ def report(rows: list[dict]) -> None:
 
 def render(rows: list[dict]) -> str:
     out = []
-    for r in rows:
-        cls = ' class="dim"' if r["kind"] == "run" else ""
-        mark = "&nbsp;&nbsp;↳ " if r["kind"] == "run" else ""
-        note = f' <span class="muted">{r["note"]}</span>' if r.get("note") else ""
+    # 표에 싣는 것은 run 뿐이다 - 무엇을 한 번 돌리는 데 얼마였나가 이 검토의 측정값이다.
+    # 세션(인스턴스 가동 시간 = AWS 실제 청구)은 ledger.jsonl 에 그대로 있고 합계 줄에만 나온다.
+    # 표에는 무엇을 돌렸는지만 싣는다 - 실패 수·처리량·시각 같은 주석은 jsonl 에만 남는다.
+    for i, r in enumerate([r for r in rows if r["kind"] == "run"], 1):
         out.append(
-            f'      <tr{cls}><td>{r["date"]}</td><td>{mark}{r["item"]}{note}</td>'
+            f'      <tr><td class="muted">{i}</td><td>{r["item"]}</td>'
             f'<td class="muted">{r["resource"]}</td><td>{hhmm(r["hours"])}</td>'
             f'<td>${r["usd"]:.2f}</td></tr>')
     billed = sum(r["usd"] for r in rows if r["kind"] == "session")
     hours = sum(r["hours"] for r in rows if r["kind"] == "session")
-    foot = (f'      <tr><td></td><td><b>실제 청구</b> <span class="muted">세션 합</span></td>'
+    rh = sum(r["hours"] for r in rows if r["kind"] == "run")
+    ru = sum(r["usd"] for r in rows if r["kind"] == "run")
+    foot = (f'      <tr><td></td><td><b>run 합</b></td><td></td>'
+            f'<td>{hhmm(rh)}</td><td><b>${ru:.2f}</b></td></tr>\n'
+            f'      <tr><td></td><td><b>AWS 실제 청구</b> '
+            f'<span class="muted">인스턴스가 켜져 있던 시간 - 모델 내려받기·서버 기동·결과 확인이 run 밖에 있어 더 길다</span></td>'
             f'<td></td><td>{hhmm(hours)}</td><td><b>${billed:.2f}</b></td></tr>')
     return "\n".join(out), foot
 
@@ -84,7 +89,7 @@ def render(rows: list[dict]) -> str:
 def write_plan(rows: list[dict]) -> None:
     body, foot = render(rows)
     s = io.open(PLAN, encoding="utf-8").read()
-    head = s.index("<h2>지출 내역")
+    head = s.index("<h2>AWS 비용")
     tb0 = s.index("<tbody>", head) + len("<tbody>")
     tb1 = s.index("</tbody>", tb0)
     tf0 = s.index("<tfoot>", tb1) + len("<tfoot>")
