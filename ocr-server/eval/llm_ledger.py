@@ -48,7 +48,7 @@ def append(row: dict) -> None:
 
 def hhmm(h: float) -> str:
     m = round(h * 60)
-    return f"{m}분" if m < 90 else f"{m // 60}시간 {m % 60}분"
+    return f"{m}분" if m < 60 else f"{m // 60}시간 {m % 60}분"
 
 
 def report(rows: list[dict]) -> None:

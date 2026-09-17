@@ -54,11 +54,11 @@ HEADER_FIELDS = ["issueDate", "supplierCompany", "supplierBizNumber", "supplierA
 GROUP_ORDER = ["전처리없음", "기울기보정", "회전적용·정상", "회전적용·붕괴"]
 GROUP_LABEL = {"전처리없음": "전처리 없음", "기울기보정": "기울기 보정",
                "회전적용·정상": "회전 적용 · 정상", "회전적용·붕괴": "회전 적용 · 붕괴"}
-MODEL_ORDER = ["qwen", "qwenp", "qwenr", "paddlevl", "internvl"]   # 계획서 표 헤더 순서와 같아야 한다
+MODEL_ORDER = ["qwen", "qwenp", "qwenr", "internvl", "paddlevl"]   # 계획서 표 헤더 순서와 같아야 한다
 # 표마다 후보 열이 몇 벌, 어떤 순서로 있나. 파서 500장 표에만 Qwen 전처리본(qwenp) 열이 하나 더 있다.
 # qwen=원본 · qwenp=전처리본(950px) · qwenr=리사이즈만 뺀 것 · paddlevl=PaddleOCR-VL 0.9B(MiniCPM 탈락 자리, 2026-09-17). 계획서 헤더 순서와 같아야 한다.
-SLOTS_PARSER500 = ["qwen", "qwenp", "qwenr", "paddlevl", "internvl"]
-SLOTS_500 = ["qwen", "paddlevl", "internvl"]
+SLOTS_PARSER500 = ["qwen", "qwenp", "qwenr", "internvl", "paddlevl"]
+SLOTS_500 = ["qwen", "internvl", "paddlevl"]
 # 500장 run 은 리사이즈 제거본 하나로만 돈다(2026-09-16) - 원본 입력을 전제한 전처리 표는 Qwen 만 채운다
 SLOTS_PRE500 = ["qwen"]
 SUMMARY = ["전체 정확도", "cell 정확도", "field 정확도", "structure 실패",
@@ -230,7 +230,7 @@ def cost(run_dir: str, n_hint: int = 0) -> dict | None:
 def hhmm(mins: float) -> str:
     """소요 표기 - 지출 원장(llm_ledger.hhmm)과 같은 규칙. 1.7시간 같은 표기는 읽히지 않는다."""
     m = round(mins)
-    return "%d분" % m if m < 90 else "%d시간 %d분" % (m // 60, m % 60)
+    return "%d분" % m if m < 60 else "%d시간 %d분" % (m // 60, m % 60)
 
 
 def fmt(v, suffix="%"):
