@@ -65,6 +65,17 @@ declare -A VLM_MODELS=(
   [internvl]="OpenGVLab/InternVL3_5-4B"
 )
 
+# ★모델별 멀티모달 전처리 옵션 (vLLM --mm-processor-kwargs 로 그대로 넘어간다).
+# 해상도는 원래 건드리지 않는 값이지만, MiniCPM-V 는 구조가 달라 기본값이 비교를 망친다:
+#   max_slice_nums=9 · image_feature_size=64 → 이미지 한 장이 (9+1)×64 = 640 토큰.
+#   Qwen3-VL 은 같은 명세서에 약 8,000 토큰을 쓴다. 12배 차이다.
+# 2026-09-16 스모크 50장 실측 = GT 718행 중 286행(39.8%)만 읽고, 12장은 프롬프트의 빈 양식을
+# 그대로 되돌려줬다(finish_reason=stop · 출력 192토큰). 안 읽힌 것이지 잘린 게 아니다.
+# → 슬라이스 상한을 올려 비전 토큰을 늘린다. 값과 이유는 지출 원장·계획서에 남긴다.
+declare -A VLM_MM_KWARGS=(
+  [minicpm]='{"max_slice_nums": 16}'
+)
+
 vlm_say() { printf '\n\033[1m== %s\033[0m\n' "$*"; }
 
 vlm_repo() {   # vlm_repo qwen -> Qwen/Qwen3-VL-8B-Instruct

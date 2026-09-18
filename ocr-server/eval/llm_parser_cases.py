@@ -4,7 +4,7 @@
     탭 = 행(품목표 7칸) 살린 것·망친 것 / 헤더(문서당 10필드) 살린 것·망친 것 / 전체 현황
     하위 탭 = 유형(틀린 쪽이 어떻게 틀렸나: 행을 통째로 못 잡음 / 칸을 비움 / 값을 틀리게 읽음 × 칸), 쪽마다 많은 5개
     묶음 = 행이면 품목(GT 품명), 헤더면 공급자(GT 상호). **기준셋 안의 그 묶음 전부**를 모아
-           "N행(문서) 중 Base a → 모델 b 정답 (살림 r · 잃음 l)" - FT 의 "세파록스캡슐 26크롭 중 몇 개 살렸나" 와 같은 단위.
+           "N행(문서) 중 Base a → Qwen b 정답 (살림 r · 잃음 l)" - FT 의 "세파록스캡슐 26크롭 중 몇 개 살렸나" 와 같은 단위.
            묶음을 펼치면 행·문서마다 크롭.
 
 크롭 = 그 칸 GT 값이 적힌 Base OCR 상자(071 스냅샷 · 좌표계 = 072 처리본과 동일). 모델은 좌표를 주지 않으므로
@@ -251,6 +251,9 @@ def main() -> int:
                     a4[0] += 1; a4[1] += mo
                 else:
                     a4[2] += 1; a4[3] += (not mo)
+                if not bo and not mo:                         # 둘 다 틀림
+                    types[("행", "둘다", kind_of(bc[c], b_miss), "" if b_miss else c)] += 1
+                    continue
                 if bo == mo:
                     continue
                 k = ("행", "살림", kind_of(bc[c], b_miss), "" if b_miss else c) if mo else \
@@ -284,7 +287,8 @@ def main() -> int:
         dom, side, how, c = k
         nm = name_of(c)
         what = how if how == ROWMISS else "%s%s %s" % (nm, josa(nm, "을", "를"), "비움" if how == "칸을 비움" else "틀리게 읽음")
-        return what if short else "%s %s" % ("Base가" if side == "살림" else "모델이", what)
+        who = {"살림": "Base가", "망침": "Qwen 이", "둘다": "둘 다"}[side]
+        return what if short else "%s %s" % (who, what)
 
     # ── 판정·묶기: 행은 (품목, 행), 헤더는 (공급자, 문서) ──
     def cells_of(k, R):
@@ -309,6 +313,8 @@ def main() -> int:
         miss_b, miss_m = (R[4], R[5]) if dom == "행" else (False, False)
         if side == "살림":
             return (not okb) and okm and (how == ROWMISS or (not miss_b and kind_of(bc[c], False) == how))
+        if side == "둘다":
+            return (not okb) and (not okm) and (how == ROWMISS or (not miss_b and kind_of(bc[c], False) == how))
         return okb and (not okm) and (how == ROWMISS or (not miss_m and kind_of(mc[c], False) == how))
 
     def group_key(k, R):
@@ -418,9 +424,9 @@ def main() -> int:
                     gt = esc(gt_raw)
                     miss_b, miss_m = (R[4], R[5]) if dom == "행" else (False, False)
                     if j[1] and not j[0]:
-                        vd = "<span class='ok'>%s</span>" % ("모델 행 잡음" if rowmiss else "모델 살림")
+                        vd = "<span class='ok'>%s</span>" % ("Qwen 행 잡음" if rowmiss else "Qwen 살림")
                     elif j[0] and not j[1]:
-                        vd = "<span class='bad'>%s</span>" % ("모델 행 놓침" if rowmiss else "모델 잃음")
+                        vd = "<span class='bad'>%s</span>" % ("Qwen 행 놓침" if rowmiss else "Qwen 잃음")
                     else:
                         vd = "<span class='muted'>%s</span>" % ("둘 다 맞음" if j[0] else "둘 다 틀림")
                     trs.append("<tr><td><img src='data:image/jpeg;base64,%s' style='max-height:34px'></td>"
@@ -429,7 +435,7 @@ def main() -> int:
                                    img, gt, esc(R[0][:34]), tone(j[0], bc, rowmiss), read_cell(k, bc, miss_b, gt_raw),
                                    tone(j[1], mc, rowmiss), read_cell(k, mc, miss_m, gt_raw), vd))
                 rest = N - min(N, SHOW_ROWS)
-                more = "<p class='muted'>외 %d%s 생략 - 위 표는 모델이 바꾼 것부터 보인다(숫자는 전체 %d%s 기준)</p>" % (
+                more = "<p class='muted'>외 %d%s 생략 - 위 표는 Qwen 이 바꾼 것부터 보인다(숫자는 전체 %d%s 기준)</p>" % (
                     rest, unit, N, unit) if rest else ""
                 thumb_html = "".join("<img src='data:image/jpeg;base64,%s' style='max-height:28px;margin:1px 4px 1px 0'>" % t for t in thumbs)
                 srows.append("<tr><td>%d</td><td><b>%s</b></td><td>%s</td><td class='nw'>%d%s <span class='muted'>(%d개 문서)</span></td>"
@@ -437,21 +443,22 @@ def main() -> int:
                              "<td class='nw'><span class='ok'>%d</span> · <span class='bad'>%d</span></td><td>%s</td></tr>" % (
                                  rank, esc(nm), thumb_html, N, unit, nd, okb, N, okm, N, rv, ls, mis_s))
                 details.append(
-                    "<details><summary class='big'><b>[%d] %s</b>%s - %d%s 중 Base <b class='%s'>%d</b> → 모델 <b class='%s'>%d</b> %s "
-                    "<span class='muted'>(모델 살림 %d · 모델 잃음 %d)</span></summary>"
-                    "<div class='tw'><table><tr><th style='width:260px'>크롭</th><th>정답</th><th>Base 읽음</th><th>모델 읽음</th>"
+                    "<details><summary class='big'><b>[%d] %s</b>%s - %d%s 중 Base <b class='%s'>%d</b> → Qwen <b class='%s'>%d</b> %s "
+                    "<span class='muted'>(Qwen 살림 %d · Qwen 잃음 %d)</span></summary>"
+                    "<div class='tw'><table><tr><th style='width:260px'>크롭</th><th>정답</th><th>Base 읽음</th><th>Qwen 읽음</th>"
                     "<th style='width:90px'>판정</th></tr>%s</table></div>%s</details>" % (
                         rank, esc(nm), "" if rowmiss else " <span class='muted'>· %s 칸</span>" % colname, N, unit,
                         "ok" if okb >= okm else "bad", okb, "ok" if okm >= okb else "bad", okm, what_ok, rv, ls, "".join(trs), more))
             panes.append(
                 "<div id='p%d_%d' class='%s'><div class='tw'><table><tr><th>#</th><th>%s</th><th>크롭 실물</th><th>%s</th>"
-                "<th>Base %s</th><th>모델 %s</th><th>모델 살림 · 잃음</th><th>대표 오독 (%s)</th></tr>%s</table></div>"
+                "<th>Base %s</th><th>Qwen %s</th><th>Qwen 살림 · 잃음</th><th>대표 오독 (%s)</th></tr>%s</table></div>"
                 "<h3>%s별 전체 %s <span class='muted'>(눌러서 펼침)</span></h3>%s</div>" % (
                     g, i, "pane on" if i == 0 else "pane", gname, unit, what_ok, what_ok,
-                    "Base" if side == "살림" else "모델", "".join(srows), gname, unit, "".join(details)))
+                    "Base" if side == "살림" else "Qwen", "".join(srows), gname, unit, "".join(details)))
         return "<div class='tabs sub'>%s</div>%s" % ("".join(buttons), "".join(panes))
 
-    boards = [board(0, "행", "살림"), board(1, "행", "망침"), board(2, "헤더", "살림"), board(3, "헤더", "망침")]
+    # 헤더 탭은 뺐다(2026-09-17) - 이 페이지는 품목표만 다룬다. 헤더 순증은 +88 뿐이라 계획서 숫자로 충분하다.
+    boards = [board(0, "행", "살림"), board(1, "행", "망침"), board(2, "행", "둘다")]
 
     def stat_rows(cols):
         return "".join(
@@ -466,35 +473,37 @@ def main() -> int:
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>파서 실물 · LLM 비교</title><style>{CSS}</style>
 <script>
-function sel(i){{for(var k=0;k<5;k++){{
+function sel(i){{for(var k=0;k<4;k++){{
  document.getElementById('t'+k).className=(k==i?'on':'');
  document.getElementById('p'+k).className=(k==i?'pane on':'pane');}}}}
 function sub(g,i,n){{for(var k=0;k<n;k++){{
  document.getElementById('t'+g+'_'+k).className=(k==i?'on':'');
  document.getElementById('p'+g+'_'+k).className=(k==i?'pane on':'pane');}}}}
 </script></head><body>
-<h1>파서 비교 <span class="muted">- {esc(a.label)} vs Base · {len(docs)}장</span></h1>
+<h1>파서 비교 <span class="muted">- 품목표 7칸 · {esc(a.label)} vs Base · {len(docs)}장</span></h1>
 <p class="muted"><a href="LLM_REVIEW_PLAN.html">← LLM 비교</a></p>
 
 <div class="tabs">
-<button id="t0" class="on" onclick="sel(0)">행: 모델이 살린 것 <span class=muted>{fmt(TR[1])}</span></button>
-<button id="t1" class="" onclick="sel(1)">행: 모델이 망친 것 <span class=muted>{fmt(TR[3])}</span></button>
-<button id="t2" class="" onclick="sel(2)">헤더: 모델이 살린 것 <span class=muted>{fmt(TH[1])}</span></button>
-<button id="t3" class="" onclick="sel(3)">헤더: 모델이 망친 것 <span class=muted>{fmt(TH[3])}</span></button>
-<button id="t4" class="" onclick="sel(4)">전체 현황</button>
+<button id="t0" class="on" onclick="sel(0)">Qwen 이 살린 것 <span class=muted>{fmt(TR[1])}</span></button>
+<button id="t1" class="" onclick="sel(1)">Qwen 이 망친 것 <span class=muted>{fmt(TR[3])}</span></button>
+<button id="t2" class="" onclick="sel(2)">둘 다 틀린 것 <span class=muted>{fmt(TR[0] - TR[1])}</span></button>
+<button id="t3" class="" onclick="sel(3)">전체 현황</button>
 </div>
 <div id="p0" class="pane on">{boards[0]}</div>
 <div id="p1" class="pane">{boards[1]}</div>
 <div id="p2" class="pane">{boards[2]}</div>
-<div id="p3" class="pane">{boards[3]}</div>
-<div id="p4" class="pane">
-<h3>품목표 7칸</h3>
-<div class="tw"><table><tr><th>칸</th><th>Base 가 틀림 → 모델이 살림</th><th>Base 가 맞음 → 모델이 잃음</th><th>순증</th></tr>{stat_rows(ORDER)}</table></div>
-<h3>헤더 10필드</h3>
-<div class="tw"><table><tr><th>필드</th><th>Base 가 틀림 → 모델이 살림</th><th>Base 가 맞음 → 모델이 잃음</th><th>순증</th></tr>{stat_rows(HEADER)}</table></div>
+<div id="p3" class="pane">
+<div class="tw"><table><tr><th>구분</th><th>칸</th><th>비중</th></tr>
+<tr><td>둘 다 맞음</td><td>{fmt(TR[2] - TR[3])}</td><td class="muted">{100*(TR[2]-TR[3])/(TR[0]+TR[2]):.1f}%</td></tr>
+<tr><td><b>Qwen 이 살린 것</b></td><td class="ok"><b>{fmt(TR[1])}</b></td><td class="muted">{100*TR[1]/(TR[0]+TR[2]):.1f}%</td></tr>
+<tr class="hi"><td><b>둘 다 틀림</b> <span class="muted">Qwen 으로 바꿔도 안 풀린 몫</span></td><td><b>{fmt(TR[0] - TR[1])}</b></td><td class="muted">{100*(TR[0]-TR[1])/(TR[0]+TR[2]):.1f}%</td></tr>
+<tr><td><b>Qwen 이 잃은 것</b></td><td class="bad"><b>{fmt(TR[3])}</b></td><td class="muted">{100*TR[3]/(TR[0]+TR[2]):.1f}%</td></tr>
+<tr><td>합계</td><td>{fmt(TR[0] + TR[2])}</td><td class="muted">100%</td></tr></table></div>
+<h3>칸별</h3>
+<div class="tw"><table><tr><th>칸</th><th>Base 가 틀림 → Qwen 이 살림</th><th>Base 가 맞음 → Qwen 이 잃음</th><th>순증</th></tr>{stat_rows(ORDER)}</table></div>
 </div>
-<p class="muted">묶음 = GT 품명 / GT 공급자(띄어쓰기·기호 무시). 크롭은 Base 처리본(950px)에서 그 값이 적힌 글자 상자를 자른 것 -
-모델은 원본 해상도로 봤으므로 실제로 본 화질은 이보다 높다.</p>
+<p class="muted">묶음 = GT 품명(띄어쓰기·기호 무시). 크롭은 Base 처리본(950px)에서 그 값이 적힌 글자 상자를 자른 것 -
+Qwen 은 원본 해상도로 봤으므로 실제로 본 화질은 이보다 높다.</p>
 </body></html>"""
     with open(OUT, "w", encoding="utf-8") as fh:
         fh.write(html)

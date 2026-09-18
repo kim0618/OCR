@@ -54,14 +54,17 @@ HEADER_FIELDS = ["issueDate", "supplierCompany", "supplierBizNumber", "supplierA
 GROUP_ORDER = ["전처리없음", "기울기보정", "회전적용·정상", "회전적용·붕괴"]
 GROUP_LABEL = {"전처리없음": "전처리 없음", "기울기보정": "기울기 보정",
                "회전적용·정상": "회전 적용 · 정상", "회전적용·붕괴": "회전 적용 · 붕괴"}
-MODEL_ORDER = ["qwen", "qwenp", "qwenr", "internvl", "paddlevl"]   # 계획서 표 헤더 순서와 같아야 한다
+MODEL_ORDER = ["qwen", "qwenp", "qwenr", "internvl", "minicpm", "paddlevl"]   # 계획서 표 헤더 순서와 같아야 한다
 # 표마다 후보 열이 몇 벌, 어떤 순서로 있나. 파서 500장 표에만 Qwen 전처리본(qwenp) 열이 하나 더 있다.
 # qwen=원본 · qwenp=전처리본(950px) · qwenr=리사이즈만 뺀 것 · paddlevl=PaddleOCR-VL 0.9B(MiniCPM 탈락 자리, 2026-09-17). 계획서 헤더 순서와 같아야 한다.
-SLOTS_PARSER500 = ["qwen", "qwenp", "qwenr", "internvl", "paddlevl"]
-SLOTS_500 = ["qwen", "internvl", "paddlevl"]
+SLOTS_PARSER500 = ["qwen", "qwenp", "qwenr", "internvl"]
+# 안 돌린 모델(MiniCPM · PaddleOCR-VL)은 값 한 칸(X)만 두고 '차이' 칸이 없다.
+# 채우지 않는 열이라 슬롯에서 빼되, 칸 수 계산에서는 빼 줘야 자리가 안 밀린다.
+TRAIL_COLS = {"파서500": 2}
+SLOTS_500 = ["qwen", "internvl", "minicpm", "paddlevl"]
 # 500장 run 은 리사이즈 제거본 하나로만 돈다(2026-09-16) - 원본 입력을 전제한 전처리 표는 Qwen 만 채운다
 SLOTS_PRE500 = ["qwen"]
-SUMMARY = ["전체 정확도", "cell 정확도", "field 정확도", "structure 실패",
+SUMMARY = ["전체 정확도", "품목표 정확도", "헤더 정확도", "structure 실패",
            "recognition 실패", "spurious", "행수 일치 문서", "실패"]
 
 
@@ -172,8 +175,8 @@ def metrics(acc: dict) -> dict:
     return {
         # 행 7칸 + 헤더 10칸을 한 저울에 올린 값. 두 표를 눈으로 합산할 수 없어 따로 낸다.
         "전체 정확도": r(c["match"] + f["match"], c["scored"] + f["scored"]),
-        "cell 정확도": r(c["match"], c["scored"]),
-        "field 정확도": r(f["match"], f["scored"]),
+        "품목표 정확도": r(c["match"], c["scored"]),
+        "헤더 정확도": r(f["match"], f["scored"]),
         "structure 실패": r(d["structure"], tot_def),
         "recognition 실패": r(d["recognition"], tot_def),
         "spurious": r(c["spurious"] + f["spurious"], c["scored"] + f["scored"]),
@@ -260,10 +263,10 @@ def dump(base_sum, models, crosses, costs, winner):
     print(hdr)
     for g in GROUP_ORDER:
         b = base_sum["byGroup"][g]
-        bv = metrics(b)["cell 정확도"]
+        bv = metrics(b)["품목표 정확도"]
         row = "%-16s%7s%9s" % (GROUP_LABEL[g], "{:,}".format(b["docs"]), fmt(bv))
         for n in names:
-            mv = metrics(models[n]["byGroup"][g])["cell 정확도"]
+            mv = metrics(models[n]["byGroup"][g])["품목표 정확도"]
             row += "%12s%9s" % (fmt(mv), diff(mv, bv))
         print(row)
 
@@ -395,7 +398,7 @@ def write_plan(base_sum, models, crosses, costs, winner, rebase=False):
             if not g:
                 return None
             acc = base_sum["byGroup"][g]
-            return {"base": fmt(metrics(acc)["cell 정확도"]), "docs": "{:,}".format(acc["docs"])}
+            return {"base": fmt(metrics(acc)["품목표 정확도"]), "docs": "{:,}".format(acc["docs"])}
         if sub == "종합":
             key = next((k for k in SUMMARY if k in label), None)
             return {"base": fmt(bm[key])} if key else None
@@ -413,10 +416,10 @@ def write_plan(base_sum, models, crosses, costs, winner, rebase=False):
             use = names if sub.startswith("500") else ([winner] if winner else [])
             if not g or not use:
                 return None
-            bv = metrics(base_sum["byGroup"][g])["cell 정확도"]
+            bv = metrics(base_sum["byGroup"][g])["품목표 정확도"]
             out = {}
             for n in use:
-                mv = metrics(models[n]["byGroup"][g])["cell 정확도"]
+                mv = metrics(models[n]["byGroup"][g])["품목표 정확도"]
                 out[n] = [fmt(mv), diff(mv, bv)]
             return out, 2
         if sec == "교차" and sub and ("셀 이동" in sub or "문서 이동" in sub):
@@ -544,7 +547,7 @@ def write_plan(base_sum, models, crosses, costs, winner, rebase=False):
         per, k = got
         slot_list = slots_for(h2, h3, per)
         tds = TD.findall(ln)
-        lead = len(tds) - k * len(slot_list)
+        lead = len(tds) - k * len(slot_list) - TRAIL_COLS.get(h2, 0)
         if lead < 1:
             continue
         for n, vals in per.items():

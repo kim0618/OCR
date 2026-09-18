@@ -13,7 +13,9 @@
 set -eo pipefail
 source ~/OCR/vlm-env.sh
 
-MODEL="PaddlePaddle/PaddleOCR-VL"
+# paddleocr 3.7.0 의 기본 파이프라인이 1.6 이고, 클라이언트가 부르는 이름이 PaddleOCR-VL-1.6-0.9B 다.
+# v1 가중치를 PaddleOCR-VL-0.9B 로 띄웠더니 404(모델 없음)로 50장 전부 실패했다(2026-09-17).
+MODEL="PaddlePaddle/PaddleOCR-VL-1.6"
 PVL_ROOT="$NVME/paddlevl"
 PVL_VENV="$PVL_ROOT/venv"
 LOG="$HOME/OCR/logs/paddlevl_setup_$(date +%Y%m%d_%H%M%S).log"
@@ -59,7 +61,7 @@ tmux kill-session -t vllm 2>/dev/null || true
 tmux new-session -d -s vllm \
   "export HF_HOME='$HF_HOME' VLLM_CACHE_ROOT='$VLLM_CACHE_ROOT' XDG_CACHE_HOME='$XDG_CACHE_HOME' TRITON_CACHE_DIR='$TRITON_CACHE_DIR' VLLM_USE_FLASHINFER_SAMPLER='$VLLM_USE_FLASHINFER_SAMPLER'; \
    '$VLM_VENV/bin/vllm' serve '$MODEL' --port $VLM_PORT \
-     --trust-remote-code --served-model-name PaddleOCR-VL-0.9B \
+     --trust-remote-code --served-model-name PaddleOCR-VL-1.6-0.9B \
      --max-num-batched-tokens 16384 --no-enable-prefix-caching --mm-processor-cache-gb 0 \
      2>&1 | tee -a ~/OCR/logs/vllm.log"
 

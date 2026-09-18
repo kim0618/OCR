@@ -23,12 +23,17 @@ vlm_stop_backend
 
 [[ -x "$VLM_VENV/bin/vllm" ]] || { echo "✗ vLLM 미설치. bash ~/OCR/run-vlm-setup.sh $KEY 먼저." >&2; exit 1; }
 
+# 모델별 전처리 옵션(vlm-env.sh 의 VLM_MM_KWARGS). 없는 모델은 빈 값이라 플래그가 안 붙는다.
+MM_KWARGS="${VLM_MM_KWARGS[$KEY]:-}"
+MM_FLAG=""
+[[ -n "$MM_KWARGS" ]] && MM_FLAG="--mm-processor-kwargs '$MM_KWARGS'"
+
 tmux kill-session -t vllm 2>/dev/null || true
-vlm_say "$KEY  ($REPO)  포트 $VLM_PORT  len=$VLM_MAX_LEN util=$VLM_GPU_UTIL"
+vlm_say "$KEY  ($REPO)  포트 $VLM_PORT  len=$VLM_MAX_LEN util=$VLM_GPU_UTIL${MM_KWARGS:+  mm=$MM_KWARGS}"
 tmux new-session -d -s vllm \
   "export HF_HOME='$HF_HOME' VLLM_CACHE_ROOT='$VLLM_CACHE_ROOT' XDG_CACHE_HOME='$XDG_CACHE_HOME' TRITON_CACHE_DIR='$TRITON_CACHE_DIR' VLLM_USE_FLASHINFER_SAMPLER='$VLLM_USE_FLASHINFER_SAMPLER'; \
    '$VLM_VENV/bin/vllm' serve '$REPO' --port $VLM_PORT \
-     --max-model-len $VLM_MAX_LEN --gpu-memory-utilization $VLM_GPU_UTIL \
+     --trust-remote-code --max-model-len $VLM_MAX_LEN --gpu-memory-utilization $VLM_GPU_UTIL $MM_FLAG \
      2>&1 | tee -a ~/OCR/logs/vllm.log"
 
 echo "기동 대기 중 (모델 로딩에 수 분)..."

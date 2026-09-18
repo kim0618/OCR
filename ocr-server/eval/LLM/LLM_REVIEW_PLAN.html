@@ -35,6 +35,8 @@ tfoot td{border-top:2px solid var(--line);border-bottom:none;font-weight:700;bac
 tr.hi td{border-top:2px solid var(--line);font-weight:700;background:#f6f8fa}
 code{background:#eff1f3;border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:12.5px}
 .up{color:var(--up);font-weight:600}
+.win{background:#eef6ff}
+th.win{background:#dceaf8}
 .down{color:var(--down);font-weight:600}
 .warnc{color:var(--warn);font-weight:600}
 .muted{color:var(--muted)}
@@ -122,12 +124,12 @@ color:var(--muted);cursor:pointer;border-radius:8px 8px 0 0}
   <h2>후보 비교</h2>
   <h3>500장 <span class="muted">모델 선정</span></h3>
   <table>
-    <thead><tr><th>항목</th><th>Paddle base</th><th class="grpline">Qwen3-VL 4B</th><th>Qwen3-VL 4B <span class="muted">전처리본</span></th><th>Qwen3-VL 4B <span class="muted">리사이즈 제거</span></th><th>InternVL3.5-4B <span class="muted">리사이즈 제거</span></th><th>PaddleOCR-VL 0.9B <span class="muted">리사이즈 제거</span></th></tr></thead>
+    <thead><tr><th>항목</th><th>Paddle base</th><th class="grpline">Qwen3-VL 4B</th><th>Qwen3-VL 4B <span class="muted">전처리본</span></th><th>Qwen3-VL 4B <span class="muted">리사이즈 제거</span></th><th>InternVL3.5-4B <span class="muted">리사이즈 제거</span></th><th>MiniCPM-V 4</th><th>PaddleOCR-VL 0.9B</th></tr></thead>
     <tbody>
-      <tr><td>처리량 <span class="muted">장/시간</span></td><td>2,606</td><td class="grpline">292</td><td>281</td><td>243</td><td>373</td><td class="muted">?</td></tr>
-      <tr><td>소요</td><td>11.5분</td><td class="grpline">1시간 43분</td><td>1시간 47분</td><td>2시간 3분</td><td>1시간 21분</td><td class="muted">?</td></tr>
-      <tr><td><b>비용</b></td><td>$0.19</td><td class="grpline">$1.69</td><td>$1.76</td><td>$2.03</td><td>$1.33</td><td class="muted">?</td></tr>
-      <tr><td>Paddle 대비</td><td>1×</td><td class="grpline">9×</td><td>9×</td><td>11×</td><td>7×</td><td class="muted">?</td></tr>
+      <tr><td>처리량 <span class="muted">장/시간</span></td><td>2,606</td><td class="grpline">292</td><td>281</td><td>243</td><td>373</td><td class="muted">X</td><td class="muted">X</td></tr>
+      <tr><td>소요</td><td>11.5분</td><td class="grpline">1시간 43분</td><td>1시간 47분</td><td>2시간 3분</td><td>1시간 21분</td><td class="muted">X</td><td class="muted">X</td></tr>
+      <tr><td><b>비용</b></td><td>$0.19</td><td class="grpline">$1.69</td><td>$1.76</td><td>$2.03</td><td>$1.33</td><td class="muted">X</td><td class="muted">X</td></tr>
+      <tr><td>Paddle 대비</td><td>1×</td><td class="grpline">9×</td><td>9×</td><td>11×</td><td>7×</td><td class="muted">X</td><td class="muted">X</td></tr>
     </tbody>
   </table>
 
@@ -159,10 +161,11 @@ color:var(--muted);cursor:pointer;border-radius:8px 8px 0 0}
       <tr><td class="muted">8</td><td>MiniCPM-V 4 · 스모크 50장 (slice 16 · 중단)</td><td class="muted">g6.xlarge · vLLM</td><td>4분</td><td>$0.07</td></tr>
       <tr><td class="muted">9</td><td>InternVL3.5-4B · 스모크 50장</td><td class="muted">g6.xlarge · vLLM</td><td>16분</td><td>$0.27</td></tr>
       <tr><td class="muted">10</td><td>InternVL3.5-4B · 500장 리사이즈 제거</td><td class="muted">g6.xlarge · vLLM</td><td>1시간 21분</td><td>$1.33</td></tr>
+      <tr><td class="muted">11</td><td>PaddleOCR-VL 1.6 · 스모크 50장</td><td class="muted">g6.xlarge · vLLM</td><td>6분</td><td>$0.11</td></tr>
     </tbody>
     <tfoot>
-      <tr><td></td><td><b>run 합</b></td><td></td><td>8시간 22분</td><td><b>$8.29</b></td></tr>
-      <tr><td></td><td><b>AWS 실제 청구</b> <span class="muted">인스턴스가 켜져 있던 시간 - 모델 내려받기·서버 기동·결과 확인이 run 밖에 있어 더 길다</span></td><td></td><td>11시간 43분</td><td><b>$11.34</b></td></tr>
+      <tr><td></td><td><b>run 합</b></td><td></td><td>8시간 29분</td><td><b>$8.40</b></td></tr>
+      <tr><td></td><td><b>AWS 실제 청구</b> <span class="muted">인스턴스가 켜져 있던 시간 - 모델 내려받기·서버 기동·결과 확인이 run 밖에 있어 더 길다</span></td><td></td><td>15시간 59분</td><td><b>$15.57</b></td></tr>
     </tfoot>
   </table>
 </section>
@@ -192,14 +195,14 @@ color:var(--muted);cursor:pointer;border-radius:8px 8px 0 0}
   <h3>500장 - 모델 선정</h3>
   <table>
     <thead>
-      <tr><th rowspan="2">문서군</th><th rowspan="2">문서</th><th rowspan="2">Base</th><th class="grp" colspan="2">Qwen3-VL 4B</th><th class="grp" colspan="2">InternVL3.5-4B</th><th class="grp" colspan="2">PaddleOCR-VL 0.9B</th></tr>
+      <tr><th rowspan="2">문서군</th><th rowspan="2">문서</th><th rowspan="2">Base</th><th class="grp" colspan="2">Qwen3-VL 4B</th><th class="grp" colspan="2">InternVL3.5-4B</th><th class="grp" colspan="2">MiniCPM-V 4</th><th class="grp" colspan="2">PaddleOCR-VL 0.9B</th></tr>
       <tr><th class="grpline">값</th><th>차이</th><th class="grpline">값</th><th>차이</th><th class="grpline">값</th><th>차이</th></tr>
     </thead>
     <tbody>
-      <tr><td>전처리 없음</td><td>224</td><td>49.2%</td><td class="grpline">71.5%</td><td class="diff">+22.3%p</td><td class="grpline muted">해당 없음</td><td class="diff muted">-</td><td class="grpline muted">해당 없음</td><td class="diff muted">-</td></tr>
-      <tr><td>기울기 보정</td><td>41</td><td>42.4%</td><td class="grpline">77.2%</td><td class="diff">+34.7%p</td><td class="grpline muted">해당 없음</td><td class="diff muted">-</td><td class="grpline muted">해당 없음</td><td class="diff muted">-</td></tr>
-      <tr><td>회전 적용 · 정상</td><td>100</td><td>53.2%</td><td class="grpline">62.5%</td><td class="diff">+9.3%p</td><td class="grpline muted">해당 없음</td><td class="diff muted">-</td><td class="grpline muted">해당 없음</td><td class="diff muted">-</td></tr>
-      <tr class="hi"><td><b>회전 적용 · 붕괴</b> <span class="muted">= 오회전</span></td><td>133</td><td>4.7%</td><td class="grpline">60.0%</td><td class="diff">+55.3%p</td><td class="grpline muted">해당 없음</td><td class="diff muted">-</td><td class="grpline muted">해당 없음</td><td class="diff muted">-</td></tr>
+      <tr><td>전처리 없음</td><td>224</td><td>49.2%</td><td class="grpline">71.5%</td><td class="diff">+22.3%p</td><td class="grpline muted">해당 없음</td><td class="diff muted">-</td><td class="grpline muted">해당 없음</td><td class="diff muted">-</td><td class="grpline muted">해당 없음</td></tr>
+      <tr><td>기울기 보정</td><td>41</td><td>42.4%</td><td class="grpline">77.2%</td><td class="diff">+34.7%p</td><td class="grpline muted">해당 없음</td><td class="diff muted">-</td><td class="grpline muted">해당 없음</td><td class="diff muted">-</td><td class="grpline muted">해당 없음</td></tr>
+      <tr><td>회전 적용 · 정상</td><td>100</td><td>53.2%</td><td class="grpline">62.5%</td><td class="diff">+9.3%p</td><td class="grpline muted">해당 없음</td><td class="diff muted">-</td><td class="grpline muted">해당 없음</td><td class="diff muted">-</td><td class="grpline muted">해당 없음</td></tr>
+      <tr class="hi"><td><b>회전 적용 · 붕괴</b> <span class="muted">= 오회전</span></td><td>133</td><td>4.7%</td><td class="grpline">60.0%</td><td class="diff">+55.3%p</td><td class="grpline muted">해당 없음</td><td class="diff muted">-</td><td class="grpline muted">해당 없음</td><td class="diff muted">-</td><td class="grpline muted">해당 없음</td></tr>
     </tbody>
   </table>
 
@@ -226,10 +229,10 @@ color:var(--muted);cursor:pointer;border-radius:8px 8px 0 0}
   <table>
     <thead><tr><th>문서군</th><th>문서</th><th>Base <span class="muted">072</span></th><th class="grpline">선정 모델</th><th>차이</th></tr></thead>
     <tbody>
-      <tr><td>전처리 없음</td><td>6,682</td><td>48.3%</td><td class="grpline muted">?</td><td class="diff muted">?</td></tr>
-      <tr><td>기울기 보정</td><td>1,212</td><td>40.5%</td><td class="grpline muted">?</td><td class="diff muted">?</td></tr>
-      <tr><td>회전 적용 · 정상</td><td>972</td><td>48.7%</td><td class="grpline muted">?</td><td class="diff muted">?</td></tr>
-      <tr class="hi"><td><b>회전 적용 · 붕괴</b> <span class="muted">= 오회전</span></td><td>135</td><td>4.7%</td><td class="grpline muted">?</td><td class="diff muted">?</td></tr>
+      <tr><td>전처리 없음</td><td>6,682</td><td>48.3%</td><td class="grpline muted">X</td><td class="diff muted">-</td></tr>
+      <tr><td>기울기 보정</td><td>1,212</td><td>40.5%</td><td class="grpline muted">X</td><td class="diff muted">-</td></tr>
+      <tr><td>회전 적용 · 정상</td><td>972</td><td>48.7%</td><td class="grpline muted">X</td><td class="diff muted">-</td></tr>
+      <tr class="hi"><td><b>회전 적용 · 붕괴</b> <span class="muted">= 오회전</span></td><td>135</td><td>4.7%</td><td class="grpline muted">X</td><td class="diff muted">-</td></tr>
     </tbody>
   </table>
 
@@ -327,64 +330,67 @@ color:var(--muted);cursor:pointer;border-radius:8px 8px 0 0}
   <h3>종합</h3>
     <table>
     <thead>
-      <tr><th rowspan="2">지표</th><th rowspan="2">Base</th><th class="grp" colspan="2">Qwen3-VL 4B</th><th class="grp" colspan="2">Qwen3-VL 4B <span class="muted">전처리본</span></th><th class="grp" colspan="2">Qwen3-VL 4B <span class="muted">리사이즈 제거</span></th><th class="grp" colspan="2">InternVL3.5-4B <span class="muted">리사이즈 제거</span></th><th class="grp" colspan="2">PaddleOCR-VL 0.9B <span class="muted">리사이즈 제거</span></th></tr>
-      <tr><th class="grpline">값</th><th>차이</th><th class="grpline">값</th><th>차이</th><th class="grpline">값</th><th>차이</th><th class="grpline">값</th><th>차이</th><th class="grpline">값</th><th>차이</th></tr>
+      <tr><th rowspan="2">지표</th><th rowspan="2">Base</th><th class="grp" colspan="2">Qwen3-VL 4B</th><th class="grp" colspan="2">Qwen3-VL 4B <span class="muted">전처리본</span></th><th class="grp" colspan="2">Qwen3-VL 4B <span class="muted">리사이즈 제거</span></th><th class="grp" colspan="2">InternVL3.5-4B <span class="muted">리사이즈 제거</span></th><th class="grp">MiniCPM-V 4</th><th class="grp">PaddleOCR-VL 0.9B</th></tr>
+      <tr><th class="grpline">값</th><th>차이</th><th class="grpline">값</th><th>차이</th><th class="grpline">값</th><th>차이</th><th class="grpline">값</th><th>차이</th><th class="grpline">값</th><th class="grpline">값</th></tr>
     </thead>
     <tbody>
-      <tr><td><b>전체 정확도</b> <span class="muted">행 7칸 + 헤더 10칸</span></td><td class="muted">42.3%</td><td class="grpline">65.1%</td><td class="diff">+22.8%p</td><td class="grpline">54.5%</td><td class="diff">+12.1%p</td><td class="grpline">66.3%</td><td class="diff">+23.9%p</td><td class="grpline">56.4%</td><td class="diff">+14.1%p</td><td class="grpline muted">?</td><td class="diff muted">?</td></tr>
-      <tr><td>cell 정확도 <span class="muted">행 컬럼</span></td><td>41.3%</td><td class="grpline">67.5%</td><td class="diff">+26.2%p</td><td class="grpline">56.2%</td><td class="diff">+14.9%p</td><td class="grpline">68.7%</td><td class="diff">+27.4%p</td><td class="grpline">57.9%</td><td class="diff">+16.6%p</td><td class="grpline muted">?</td><td class="diff muted">?</td></tr>
-      <tr><td>field 정확도 <span class="muted">헤더 10</span></td><td>49.0%</td><td class="grpline">50.2%</td><td class="diff">+1.2%p</td><td class="grpline">43.7%</td><td class="diff">-5.3%p</td><td class="grpline">51.0%</td><td class="diff">+1.9%p</td><td class="grpline">47.0%</td><td class="diff">-2.0%p</td><td class="grpline muted">?</td><td class="diff muted">?</td></tr>
-      <tr><td>spurious <span class="muted">환각 · GT 빈칸을 채움</span></td><td>0.0%</td><td class="grpline">0.0%</td><td class="diff inv">+0.0%p</td><td class="grpline">0.0%</td><td class="diff inv">+0.0%p</td><td class="grpline">0.0%</td><td class="diff inv">+0.0%p</td><td class="grpline">0.0%</td><td class="diff inv">+0.0%p</td><td class="grpline muted">?</td><td class="diff inv muted">?</td></tr>
-      <tr><td>행수 일치 문서</td><td>23.9%</td><td class="grpline">85.5%</td><td class="diff">+61.6%p</td><td class="grpline">82.4%</td><td class="diff">+58.5%p</td><td class="grpline">86.6%</td><td class="diff">+62.7%p</td><td class="grpline">81.7%</td><td class="diff">+57.8%p</td><td class="grpline muted">?</td><td class="diff muted">?</td></tr>
-      <tr><td><b>실패</b> <span class="muted">JSON 이 깨져 채점 불가 · 반복 루프</span></td><td>0.0%</td><td class="grpline">0.4%</td><td class="diff inv">+0.4%p</td><td class="grpline">2.8%</td><td class="diff inv">+2.8%p</td><td class="grpline">0.8%</td><td class="diff inv">+0.8%p</td><td class="grpline">1.0%</td><td class="diff inv">+1.0%p</td><td class="grpline muted">?</td><td class="diff inv muted">?</td></tr>
+      <tr><td><b>전체 정확도</b> <span class="muted">품목표 7칸 + 헤더 10필드</span></td><td class="muted">42.3%</td><td class="grpline">65.1%</td><td class="diff">+22.8%p</td><td class="grpline">54.5%</td><td class="diff">+12.1%p</td><td class="grpline win">66.3%</td><td class="diff">+23.9%p</td><td class="grpline">56.4%</td><td class="diff">+14.1%p</td><td class="grpline muted">X</td><td class="grpline muted">X</td></tr>
+      <tr><td>품목표 정확도 <span class="muted">칸 단위 · 문서당 행 수만큼</span></td><td>41.3%</td><td class="grpline">67.5%</td><td class="diff">+26.2%p</td><td class="grpline">56.2%</td><td class="diff">+14.9%p</td><td class="grpline win">68.7%</td><td class="diff">+27.4%p</td><td class="grpline">57.9%</td><td class="diff">+16.6%p</td><td class="grpline muted">X</td><td class="grpline muted">X</td></tr>
+      <tr><td>헤더 정확도 <span class="muted">필드 단위 · 문서당 10개</span></td><td>49.0%</td><td class="grpline">50.2%</td><td class="diff">+1.2%p</td><td class="grpline">43.7%</td><td class="diff">-5.3%p</td><td class="grpline win">51.0%</td><td class="diff">+1.9%p</td><td class="grpline">47.0%</td><td class="diff">-2.0%p</td><td class="grpline muted">X</td><td class="grpline muted">X</td></tr>
+      <tr><td>spurious <span class="muted">환각 · GT 빈칸을 채움</span></td><td>0.0%</td><td class="grpline">0.0%</td><td class="diff inv">+0.0%p</td><td class="grpline">0.0%</td><td class="diff inv">+0.0%p</td><td class="grpline">0.0%</td><td class="diff inv">+0.0%p</td><td class="grpline">0.0%</td><td class="diff inv">+0.0%p</td><td class="grpline muted">X</td><td class="grpline muted">X</td></tr>
+      <tr><td>행수 일치 문서</td><td>23.9%</td><td class="grpline">85.5%</td><td class="diff">+61.6%p</td><td class="grpline">82.4%</td><td class="diff">+58.5%p</td><td class="grpline win">86.6%</td><td class="diff">+62.7%p</td><td class="grpline">81.7%</td><td class="diff">+57.8%p</td><td class="grpline muted">X</td><td class="grpline muted">X</td></tr>
+      <tr><td><b>실패</b> <span class="muted">JSON 이 깨져 채점 불가 · 반복 루프</span></td><td>0.0%</td><td class="grpline win">0.4%</td><td class="diff inv">+0.4%p</td><td class="grpline">2.8%</td><td class="diff inv">+2.8%p</td><td class="grpline">0.8%</td><td class="diff inv">+0.8%p</td><td class="grpline">1.0%</td><td class="diff inv">+1.0%p</td><td class="grpline muted">X</td><td class="grpline muted">X</td></tr>
     </tbody>
   </table>
 
-  <h3>행 컬럼</h3>
+  <h3>품목표 칸별</h3>
   <table>
     <thead>
-      <tr><th rowspan="2">컬럼</th><th rowspan="2">채점셀</th><th rowspan="2">Base</th><th class="grp" colspan="2">Qwen3-VL 4B</th><th class="grp" colspan="2">Qwen3-VL 4B <span class="muted">전처리본</span></th><th class="grp" colspan="2">Qwen3-VL 4B <span class="muted">리사이즈 제거</span></th><th class="grp" colspan="2">InternVL3.5-4B <span class="muted">리사이즈 제거</span></th><th class="grp" colspan="2">PaddleOCR-VL 0.9B <span class="muted">리사이즈 제거</span></th></tr>
-      <tr><th class="grpline">값</th><th>차이</th><th class="grpline">값</th><th>차이</th><th class="grpline">값</th><th>차이</th><th class="grpline">값</th><th>차이</th><th class="grpline">값</th><th>차이</th></tr>
+      <tr><th rowspan="2">컬럼</th><th rowspan="2">채점셀</th><th rowspan="2">Base</th><th class="grp" colspan="2">Qwen3-VL 4B</th><th class="grp" colspan="2">Qwen3-VL 4B <span class="muted">전처리본</span></th><th class="grp" colspan="2">Qwen3-VL 4B <span class="muted">리사이즈 제거</span></th><th class="grp" colspan="2">InternVL3.5-4B <span class="muted">리사이즈 제거</span></th><th class="grp">MiniCPM-V 4</th><th class="grp">PaddleOCR-VL 0.9B</th></tr>
+      <tr><th class="grpline">값</th><th>차이</th><th class="grpline">값</th><th>차이</th><th class="grpline">값</th><th>차이</th><th class="grpline">값</th><th>차이</th><th class="grpline">값</th><th class="grpline">값</th></tr>
     </thead>
     <tbody>
-      <tr><td><code>itemName</code> <span class="muted">품명</span></td><td>4,542</td><td>38.9%</td><td class="grpline">47.4%</td><td class="diff">+8.4%p</td><td class="grpline">25.6%</td><td class="diff">-13.4%p</td><td class="grpline">48.1%</td><td class="diff">+9.1%p</td><td class="grpline">34.7%</td><td class="diff">-4.2%p</td><td class="grpline muted">?</td><td class="diff muted">?</td></tr>
-      <tr><td><code>spec</code> <span class="muted">규격</span></td><td>4,512</td><td>35.2%</td><td class="grpline">63.6%</td><td class="diff">+28.4%p</td><td class="grpline">50.7%</td><td class="diff">+15.5%p</td><td class="grpline">64.7%</td><td class="diff">+29.5%p</td><td class="grpline">59.2%</td><td class="diff">+24.0%p</td><td class="grpline muted">?</td><td class="diff muted">?</td></tr>
-      <tr><td><code>quantity</code> <span class="muted">수량</span></td><td>4,537</td><td>49.2%</td><td class="grpline">85.9%</td><td class="diff">+36.8%p</td><td class="grpline">79.9%</td><td class="diff">+30.7%p</td><td class="grpline">87.1%</td><td class="diff">+37.9%p</td><td class="grpline">80.9%</td><td class="diff">+31.7%p</td><td class="grpline muted">?</td><td class="diff muted">?</td></tr>
-      <tr><td><code>unitPrice</code> <span class="muted">단가</span></td><td>4,542</td><td>46.6%</td><td class="grpline">71.7%</td><td class="diff">+25.1%p</td><td class="grpline">65.8%</td><td class="diff">+19.2%p</td><td class="grpline">74.2%</td><td class="diff">+27.6%p</td><td class="grpline">65.2%</td><td class="diff">+18.6%p</td><td class="grpline muted">?</td><td class="diff muted">?</td></tr>
-      <tr><td><code>amount</code> <span class="muted">금액</span></td><td>4,542</td><td>53.1%</td><td class="grpline">79.4%</td><td class="diff">+26.4%p</td><td class="grpline">68.8%</td><td class="diff">+15.8%p</td><td class="grpline">80.3%</td><td class="diff">+27.3%p</td><td class="grpline">69.5%</td><td class="diff">+16.4%p</td><td class="grpline muted">?</td><td class="diff muted">?</td></tr>
-      <tr><td><code>manufacturingNo</code> <span class="muted">제조번호</span></td><td>3,923</td><td>27.1%</td><td class="grpline">60.2%</td><td class="diff">+33.0%p</td><td class="grpline">49.2%</td><td class="diff">+22.1%p</td><td class="grpline">62.2%</td><td class="diff">+35.1%p</td><td class="grpline">45.8%</td><td class="diff">+18.7%p</td><td class="grpline muted">?</td><td class="diff muted">?</td></tr>
-      <tr><td><code>expiryDate</code> <span class="muted">유효기간</span></td><td>3,930</td><td>36.2%</td><td class="grpline">62.5%</td><td class="diff">+26.3%p</td><td class="grpline">51.8%</td><td class="diff">+15.6%p</td><td class="grpline">62.6%</td><td class="diff">+26.3%p</td><td class="grpline">47.2%</td><td class="diff">+11.0%p</td><td class="grpline muted">?</td><td class="diff muted">?</td></tr>
+      <tr><td><code>itemName</code> <span class="muted">품명</span></td><td>4,542</td><td>38.9%</td><td class="grpline">47.4%</td><td class="diff">+8.4%p</td><td class="grpline">25.6%</td><td class="diff">-13.4%p</td><td class="grpline win">48.1%</td><td class="diff">+9.1%p</td><td class="grpline">34.7%</td><td class="diff">-4.2%p</td><td class="grpline muted">X</td><td class="grpline muted">X</td></tr>
+      <tr><td><code>spec</code> <span class="muted">규격</span></td><td>4,512</td><td>35.2%</td><td class="grpline">63.6%</td><td class="diff">+28.4%p</td><td class="grpline">50.7%</td><td class="diff">+15.5%p</td><td class="grpline win">64.7%</td><td class="diff">+29.5%p</td><td class="grpline">59.2%</td><td class="diff">+24.0%p</td><td class="grpline muted">X</td><td class="grpline muted">X</td></tr>
+      <tr><td><code>quantity</code> <span class="muted">수량</span></td><td>4,537</td><td>49.2%</td><td class="grpline">85.9%</td><td class="diff">+36.8%p</td><td class="grpline">79.9%</td><td class="diff">+30.7%p</td><td class="grpline win">87.1%</td><td class="diff">+37.9%p</td><td class="grpline">80.9%</td><td class="diff">+31.7%p</td><td class="grpline muted">X</td><td class="grpline muted">X</td></tr>
+      <tr><td><code>unitPrice</code> <span class="muted">단가</span></td><td>4,542</td><td>46.6%</td><td class="grpline">71.7%</td><td class="diff">+25.1%p</td><td class="grpline">65.8%</td><td class="diff">+19.2%p</td><td class="grpline win">74.2%</td><td class="diff">+27.6%p</td><td class="grpline">65.2%</td><td class="diff">+18.6%p</td><td class="grpline muted">X</td><td class="grpline muted">X</td></tr>
+      <tr><td><code>amount</code> <span class="muted">금액</span></td><td>4,542</td><td>53.1%</td><td class="grpline">79.4%</td><td class="diff">+26.4%p</td><td class="grpline">68.8%</td><td class="diff">+15.8%p</td><td class="grpline win">80.3%</td><td class="diff">+27.3%p</td><td class="grpline">69.5%</td><td class="diff">+16.4%p</td><td class="grpline muted">X</td><td class="grpline muted">X</td></tr>
+      <tr><td><code>manufacturingNo</code> <span class="muted">제조번호</span></td><td>3,923</td><td>27.1%</td><td class="grpline">60.2%</td><td class="diff">+33.0%p</td><td class="grpline">49.2%</td><td class="diff">+22.1%p</td><td class="grpline win">62.2%</td><td class="diff">+35.1%p</td><td class="grpline">45.8%</td><td class="diff">+18.7%p</td><td class="grpline muted">X</td><td class="grpline muted">X</td></tr>
+      <tr><td><code>expiryDate</code> <span class="muted">유효기간</span></td><td>3,930</td><td>36.2%</td><td class="grpline">62.5%</td><td class="diff">+26.3%p</td><td class="grpline">51.8%</td><td class="diff">+15.6%p</td><td class="grpline win">62.6%</td><td class="diff">+26.3%p</td><td class="grpline">47.2%</td><td class="diff">+11.0%p</td><td class="grpline muted">X</td><td class="grpline muted">X</td></tr>
     </tbody>
   </table>
 
-  <h3>헤더 필드</h3>
+  <h3>헤더 필드별</h3>
   <table>
     <thead>
-      <tr><th rowspan="2">컬럼</th><th rowspan="2">채점셀</th><th rowspan="2">Base</th><th class="grp" colspan="2">Qwen3-VL 4B</th><th class="grp" colspan="2">Qwen3-VL 4B <span class="muted">전처리본</span></th><th class="grp" colspan="2">Qwen3-VL 4B <span class="muted">리사이즈 제거</span></th><th class="grp" colspan="2">InternVL3.5-4B <span class="muted">리사이즈 제거</span></th><th class="grp" colspan="2">PaddleOCR-VL 0.9B <span class="muted">리사이즈 제거</span></th></tr>
-      <tr><th class="grpline">값</th><th>차이</th><th class="grpline">값</th><th>차이</th><th class="grpline">값</th><th>차이</th><th class="grpline">값</th><th>차이</th><th class="grpline">값</th><th>차이</th></tr>
+      <tr><th rowspan="2">컬럼</th><th rowspan="2">채점셀</th><th rowspan="2">Base</th><th class="grp" colspan="2">Qwen3-VL 4B</th><th class="grp" colspan="2">Qwen3-VL 4B <span class="muted">전처리본</span></th><th class="grp" colspan="2">Qwen3-VL 4B <span class="muted">리사이즈 제거</span></th><th class="grp" colspan="2">InternVL3.5-4B <span class="muted">리사이즈 제거</span></th><th class="grp">MiniCPM-V 4</th><th class="grp">PaddleOCR-VL 0.9B</th></tr>
+      <tr><th class="grpline">값</th><th>차이</th><th class="grpline">값</th><th>차이</th><th class="grpline">값</th><th>차이</th><th class="grpline">값</th><th>차이</th><th class="grpline">값</th><th class="grpline">값</th></tr>
     </thead>
     <tbody>
-      <tr><td><code>issueDate</code> <span class="muted">작성일자</span></td><td>479</td><td>80.6%</td><td class="grpline">91.2%</td><td class="diff">+10.6%p</td><td class="grpline">85.4%</td><td class="diff">+4.8%p</td><td class="grpline">92.6%</td><td class="diff">+12.0%p</td><td class="grpline">88.4%</td><td class="diff">+7.8%p</td><td class="grpline muted">?</td><td class="diff muted">?</td></tr>
-      <tr><td><code>supplierCompany</code> <span class="muted">공급자 상호</span></td><td>497</td><td>53.7%</td><td class="grpline">50.3%</td><td class="diff">-3.4%p</td><td class="grpline">43.7%</td><td class="diff">-10.0%p</td><td class="grpline">49.7%</td><td class="diff">-4.0%p</td><td class="grpline">50.6%</td><td class="diff">-3.1%p</td><td class="grpline muted">?</td><td class="diff muted">?</td></tr>
-      <tr><td><code>supplierBizNumber</code> <span class="muted">공급자 사업자번호</span></td><td>487</td><td>83.4%</td><td class="grpline">72.7%</td><td class="diff">-10.7%p</td><td class="grpline">59.6%</td><td class="diff">-23.7%p</td><td class="grpline">72.9%</td><td class="diff">-10.5%p</td><td class="grpline">73.0%</td><td class="diff">-10.3%p</td><td class="grpline muted">?</td><td class="diff muted">?</td></tr>
-      <tr><td><code>supplierAddress</code> <span class="muted">공급자 주소</span></td><td>464</td><td>33.4%</td><td class="grpline">31.7%</td><td class="diff">-1.7%p</td><td class="grpline">25.5%</td><td class="diff">-7.9%p</td><td class="grpline">29.6%</td><td class="diff">-3.8%p</td><td class="grpline">29.3%</td><td class="diff">-4.1%p</td><td class="grpline muted">?</td><td class="diff muted">?</td></tr>
-      <tr><td><code>buyerCompany</code> <span class="muted">공급받는자 상호</span></td><td>498</td><td>14.3%</td><td class="grpline">13.7%</td><td class="diff">-0.6%p</td><td class="grpline">7.6%</td><td class="diff">-6.6%p</td><td class="grpline">15.6%</td><td class="diff">+1.3%p</td><td class="grpline">14.4%</td><td class="diff">+0.1%p</td><td class="grpline muted">?</td><td class="diff muted">?</td></tr>
-      <tr><td><code>buyerBizNumber</code> <span class="muted">공급받는자 사업자번호</span></td><td>439</td><td>82.9%</td><td class="grpline">77.0%</td><td class="diff">-5.9%p</td><td class="grpline">69.3%</td><td class="diff">-13.6%p</td><td class="grpline">80.5%</td><td class="diff">-2.4%p</td><td class="grpline">76.3%</td><td class="diff">-6.6%p</td><td class="grpline muted">?</td><td class="diff muted">?</td></tr>
-      <tr><td><code>buyerAddress</code> <span class="muted">공급받는자 주소</span></td><td>498</td><td>1.0%</td><td class="grpline">0.6%</td><td class="diff">-0.4%p</td><td class="grpline">0.6%</td><td class="diff">-0.4%p</td><td class="grpline">0.8%</td><td class="diff">-0.2%p</td><td class="grpline">0.4%</td><td class="diff">-0.6%p</td><td class="grpline muted">?</td><td class="diff muted">?</td></tr>
-      <tr><td><code>supplyAmount</code> <span class="muted">공급가액</span></td><td>476</td><td>48.3%</td><td class="grpline">51.7%</td><td class="diff">+3.4%p</td><td class="grpline">46.1%</td><td class="diff">-2.2%p</td><td class="grpline">53.0%</td><td class="diff">+4.6%p</td><td class="grpline">36.4%</td><td class="diff">-11.9%p</td><td class="grpline muted">?</td><td class="diff muted">?</td></tr>
-      <tr><td><code>taxAmount</code> <span class="muted">세액</span></td><td>498</td><td>47.2%</td><td class="grpline">60.2%</td><td class="diff">+13.1%p</td><td class="grpline">51.7%</td><td class="diff">+4.5%p</td><td class="grpline">60.7%</td><td class="diff">+13.5%p</td><td class="grpline">52.3%</td><td class="diff">+5.1%p</td><td class="grpline muted">?</td><td class="diff muted">?</td></tr>
-      <tr><td><code>totalAmount</code> <span class="muted">합계금액</span></td><td>488</td><td>50.6%</td><td class="grpline">57.4%</td><td class="diff">+6.8%p</td><td class="grpline">51.4%</td><td class="diff">+0.8%p</td><td class="grpline">58.9%</td><td class="diff">+8.3%p</td><td class="grpline">53.0%</td><td class="diff">+2.4%p</td><td class="grpline muted">?</td><td class="diff muted">?</td></tr>
+      <tr><td><code>issueDate</code> <span class="muted">작성일자</span></td><td>479</td><td>80.6%</td><td class="grpline">91.2%</td><td class="diff">+10.6%p</td><td class="grpline">85.4%</td><td class="diff">+4.8%p</td><td class="grpline win">92.6%</td><td class="diff">+12.0%p</td><td class="grpline">88.4%</td><td class="diff">+7.8%p</td><td class="grpline muted">X</td><td class="grpline muted">X</td></tr>
+      <tr><td><code>supplierCompany</code> <span class="muted">공급자 상호</span></td><td>497</td><td>53.7%</td><td class="grpline">50.3%</td><td class="diff">-3.4%p</td><td class="grpline">43.7%</td><td class="diff">-10.0%p</td><td class="grpline">49.7%</td><td class="diff">-4.0%p</td><td class="grpline win">50.6%</td><td class="diff">-3.1%p</td><td class="grpline muted">X</td><td class="grpline muted">X</td></tr>
+      <tr><td><code>supplierBizNumber</code> <span class="muted">공급자 사업자번호</span></td><td>487</td><td>83.4%</td><td class="grpline">72.7%</td><td class="diff">-10.7%p</td><td class="grpline">59.6%</td><td class="diff">-23.7%p</td><td class="grpline">72.9%</td><td class="diff">-10.5%p</td><td class="grpline win">73.0%</td><td class="diff">-10.3%p</td><td class="grpline muted">X</td><td class="grpline muted">X</td></tr>
+      <tr><td><code>supplierAddress</code> <span class="muted">공급자 주소</span></td><td>464</td><td>33.4%</td><td class="grpline win">31.7%</td><td class="diff">-1.7%p</td><td class="grpline">25.5%</td><td class="diff">-7.9%p</td><td class="grpline">29.6%</td><td class="diff">-3.8%p</td><td class="grpline">29.3%</td><td class="diff">-4.1%p</td><td class="grpline muted">X</td><td class="grpline muted">X</td></tr>
+      <tr><td><code>buyerCompany</code> <span class="muted">공급받는자 상호</span></td><td>498</td><td>14.3%</td><td class="grpline">13.7%</td><td class="diff">-0.6%p</td><td class="grpline">7.6%</td><td class="diff">-6.6%p</td><td class="grpline win">15.6%</td><td class="diff">+1.3%p</td><td class="grpline">14.4%</td><td class="diff">+0.1%p</td><td class="grpline muted">X</td><td class="grpline muted">X</td></tr>
+      <tr><td><code>buyerBizNumber</code> <span class="muted">공급받는자 사업자번호</span></td><td>439</td><td>82.9%</td><td class="grpline">77.0%</td><td class="diff">-5.9%p</td><td class="grpline">69.3%</td><td class="diff">-13.6%p</td><td class="grpline win">80.5%</td><td class="diff">-2.4%p</td><td class="grpline">76.3%</td><td class="diff">-6.6%p</td><td class="grpline muted">X</td><td class="grpline muted">X</td></tr>
+      <tr><td><code>buyerAddress</code> <span class="muted">공급받는자 주소</span></td><td>498</td><td>1.0%</td><td class="grpline">0.6%</td><td class="diff">-0.4%p</td><td class="grpline">0.6%</td><td class="diff">-0.4%p</td><td class="grpline win">0.8%</td><td class="diff">-0.2%p</td><td class="grpline">0.4%</td><td class="diff">-0.6%p</td><td class="grpline muted">X</td><td class="grpline muted">X</td></tr>
+      <tr><td><code>supplyAmount</code> <span class="muted">공급가액</span></td><td>476</td><td>48.3%</td><td class="grpline">51.7%</td><td class="diff">+3.4%p</td><td class="grpline">46.1%</td><td class="diff">-2.2%p</td><td class="grpline win">53.0%</td><td class="diff">+4.6%p</td><td class="grpline">36.4%</td><td class="diff">-11.9%p</td><td class="grpline muted">X</td><td class="grpline muted">X</td></tr>
+      <tr><td><code>taxAmount</code> <span class="muted">세액</span></td><td>498</td><td>47.2%</td><td class="grpline">60.2%</td><td class="diff">+13.1%p</td><td class="grpline">51.7%</td><td class="diff">+4.5%p</td><td class="grpline win">60.7%</td><td class="diff">+13.5%p</td><td class="grpline">52.3%</td><td class="diff">+5.1%p</td><td class="grpline muted">X</td><td class="grpline muted">X</td></tr>
+      <tr><td><code>totalAmount</code> <span class="muted">합계금액</span></td><td>488</td><td>50.6%</td><td class="grpline">57.4%</td><td class="diff">+6.8%p</td><td class="grpline">51.4%</td><td class="diff">+0.8%p</td><td class="grpline win">58.9%</td><td class="diff">+8.3%p</td><td class="grpline">53.0%</td><td class="diff">+2.4%p</td><td class="grpline muted">X</td><td class="grpline muted">X</td></tr>
     </tbody>
   </table>
 
-  <h3>실물 확인 <span class="muted">Qwen 리사이즈 제거</span></h3>
+    <h3>실물 확인 <span class="muted">품목표 7칸 · Qwen 리사이즈 제거</span></h3>
   <table>
-    <thead><tr><th>구분</th><th>셀</th><th>비율</th></tr></thead>
+    <thead><tr><th>구분</th><th>품목표 칸</th><th>비율</th></tr></thead>
     <tbody>
-      <tr><td><b>모델이 살린 것</b> <span class="muted">Base 가 틀린 셀 중 모델이 맞힘</span></td><td>17,599 중 <b>10,125</b></td><td class="diff">57.5%</td></tr>
-      <tr class="hi"><td><b>모델이 잃은 것</b> <span class="muted">Base 가 맞힌 셀 중 모델이 틀림</span></td><td>12,586 중 <b>1,974</b></td><td class="diff inv">15.7%</td></tr>
-      <tr><td><b>순증</b></td><td colspan="2"><b>+8,151셀</b> <span class="muted">(살림 : 잃음 = 5.1 : 1 · 모델 맞음 20,737 − Base 맞음 12,586 과 일치)</span></td></tr>
-      <tr><td colspan="3">칸별 표와 유형별 대표 10장(행 크롭 · GT · Base · 모델 값) → <a href="LLM_CASES_PARSER.html">LLM_CASES_PARSER.html</a></td></tr>
+      <tr><td>둘 다 맞음</td><td>10,612</td><td class="muted">35.2%</td></tr>
+      <tr><td><b>Qwen 이 살린 것</b></td><td><b class="ok">10,125</b></td><td class="muted">33.5%</td></tr>
+      <tr><td><b>Qwen 이 잃은 것</b></td><td><b class="down">1,974</b></td><td class="muted">6.5%</td></tr>
+      <tr class="hi"><td><b>둘 다 틀림</b></td><td><b>7,474</b></td><td class="muted">24.8%</td></tr>
+      <tr><td><b>전체 채점 칸</b></td><td><b>30,185</b></td><td class="muted">100%</td></tr>
+      <tr><td><b>순증</b></td><td colspan="2"><b>+8,151칸</b> <span class="muted">(살림 10,125 − 잃음 1,974 · 살림 : 잃음 = 5.1 : 1)</span></td></tr>
+      <tr><td colspan="3">칸별 표와 유형별 대표 10장(행 크롭 · GT · Base · Qwen 값) → <a href="LLM_CASES_PARSER.html">LLM_CASES_PARSER.html</a></td></tr>
     </tbody>
   </table>
 </section>
@@ -396,18 +402,18 @@ color:var(--muted);cursor:pointer;border-radius:8px 8px 0 0}
     <table>
     <thead><tr><th>지표</th><th>Base <span class="muted">072</span></th><th class="grpline">선정 모델</th><th>차이</th></tr></thead>
     <tbody>
-      <tr><td><b>전체 정확도</b> <span class="muted">행 7칸 + 헤더 10칸</span></td><td class="muted">?</td><td class="grpline muted">?</td><td class="diff muted">?</td></tr>
-      <tr><td>cell 정확도 <span class="muted">행 컬럼</span></td><td>46.8%</td><td class="grpline muted">?</td><td class="diff muted">?</td></tr>
-      <tr><td>field 정확도 <span class="muted">헤더 10</span></td><td>52.6%</td><td class="grpline muted">?</td><td class="diff muted">?</td></tr>
+      <tr><td><b>전체 정확도</b> <span class="muted">품목표 7칸 + 헤더 10필드</span></td><td>47.6%</td><td class="grpline muted">?</td><td class="diff muted">?</td></tr>
+      <tr><td>품목표 정확도 <span class="muted">칸 단위 · 문서당 행 수만큼</span></td><td>46.8%</td><td class="grpline muted">?</td><td class="diff muted">?</td></tr>
+      <tr><td>헤더 정확도 <span class="muted">필드 단위 · 문서당 10개</span></td><td>52.6%</td><td class="grpline muted">?</td><td class="diff muted">?</td></tr>
       <tr><td>spurious <span class="muted">환각 · GT 빈칸을 채움</span></td><td>0.0%</td><td class="grpline muted">?</td><td class="diff inv muted">?</td></tr>
       <tr><td>행수 일치 문서</td><td>26.0%</td><td class="grpline muted">?</td><td class="diff muted">?</td></tr>
       <tr><td><b>실패</b> <span class="muted">JSON 이 깨져 채점 불가 · 반복 루프</span></td><td>0.0%</td><td class="grpline muted">?</td><td class="diff inv muted">?</td></tr>
     </tbody>
   </table>
 
-  <h3>행 컬럼 <span class="muted">낮은 순</span></h3>
+  <h3>품목표 칸별 <span class="muted">낮은 순</span></h3>
   <table>
-    <thead><tr><th>컬럼</th><th>채점셀</th><th>Base <span class="muted">072</span></th><th class="grpline">선정 모델</th><th>차이</th></tr></thead>
+    <thead><tr><th>컬럼</th><th>채점 칸</th><th>Base <span class="muted">072</span></th><th class="grpline">선정 모델</th><th>차이</th></tr></thead>
     <tbody>
       <tr><td><code>manufacturingNo</code> <span class="muted">제조번호</span></td><td>71,187</td><td>29.4%</td><td class="grpline muted">?</td><td class="diff muted">?</td></tr>
       <tr><td><code>expiryDate</code> <span class="muted">유효기간</span></td><td>71,434</td><td>38.9%</td><td class="grpline muted">?</td><td class="diff muted">?</td></tr>
@@ -419,9 +425,9 @@ color:var(--muted);cursor:pointer;border-radius:8px 8px 0 0}
     </tbody>
   </table>
 
-  <h3>헤더 필드 <span class="muted">낮은 순</span></h3>
+  <h3>헤더 필드별 <span class="muted">낮은 순</span></h3>
   <table>
-    <thead><tr><th>컬럼</th><th>채점셀</th><th>Base <span class="muted">072</span></th><th class="grpline">선정 모델</th><th>차이</th></tr></thead>
+    <thead><tr><th>컬럼</th><th>채점 칸</th><th>Base <span class="muted">072</span></th><th class="grpline">선정 모델</th><th>차이</th></tr></thead>
     <tbody>
       <tr><td><code>buyerAddress</code> <span class="muted">공급받는자 주소</span></td><td>8,998</td><td>0.8%</td><td class="grpline muted">?</td><td class="diff muted">?</td></tr>
       <tr><td><code>buyerCompany</code> <span class="muted">공급받는자 상호</span></td><td>8,998</td><td>19.8%</td><td class="grpline muted">?</td><td class="diff muted">?</td></tr>

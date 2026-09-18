@@ -132,6 +132,14 @@ def to_record(source_file: str, image_path: str, resp: dict, ms: float,
             continue
         row = {k: str(r.get(k) or "") for k in ROW_FIELDS}
         row["rowIndex"] = row["rowIndex"] or str(i)
+        # box 는 채점에 안 쓰지만(compare_run 이 모르는 키를 무시한다) 진단에 필요하므로 살려 둔다.
+        # ROW_FIELDS 로만 거르면 프롬프트가 좌표를 줘도 여기서 버려진다(prompt_v1_box).
+        b = r.get("box")
+        if isinstance(b, (list, tuple)) and len(b) == 4:
+            try:
+                row["box"] = [int(float(v)) for v in b]
+            except (TypeError, ValueError):
+                pass
         rows.append(row)
     fields["tableRows"] = rows
     fields["rowCount"] = len(rows)

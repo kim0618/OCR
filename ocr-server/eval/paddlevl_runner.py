@@ -22,6 +22,7 @@ import argparse
 import io
 import json
 import os
+import re
 import sys
 import time
 
@@ -29,6 +30,20 @@ sys.stdout.reconfigure(encoding="utf-8")
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
+
+
+def source_name(path: str) -> str:
+    """llm_runner.source_name 과 같은 규약이어야 compare_run 이 GT 를 찾는다.
+    .../images_replay/2501/10006/NAME.jpg -> 2501__10006__NAME.jpg
+    run 폴더의 파생 이미지(rotated/)는 꼬리 .jpg.jpg 를 한 번 뗀다."""
+    norm = path.replace("\\", "/")
+    m = re.search(r"images_replay/([^/]+)/([^/]+)/([^/]+)$", norm)
+    if m:
+        return "%s__%s__%s" % (m.group(1), m.group(2), m.group(3))
+    base = os.path.basename(path)
+    if "/runs/" in norm and base.endswith(".jpg.jpg"):
+        return base[:-4]
+    return base
 
 
 def to_jsonable(o):
@@ -49,14 +64,18 @@ def main() -> int:
     ap.add_argument("--list", required=True, help="이미지 경로 목록(eval/ 기준 상대경로)")
     ap.add_argument("--run", required=True, help="eval/runs/ 아래 run 이름")
     ap.add_argument("--server", default="http://localhost:8000/v1")
-    ap.add_argument("--layout-dir", default="", help="PP-DocLayoutV2 로컬 경로(비우면 자동 다운로드)")
+    ap.add_argument("--layout-name", default="", help="레이아웃 모델 이름(비우면 파이프라인 기본값)")
+    ap.add_argument("--layout-dir", default="", help="레이아웃 모델 로컬 경로(비우면 자동 다운로드)")
     ap.add_argument("--limit", type=int, default=0)
     a = ap.parse_args()
 
     from paddleocr import PaddleOCRVL                       # noqa: PLC0415
 
-    kw = {"vl_rec_backend": "vllm-server", "vl_rec_server_url": a.server,
-          "layout_detection_model_name": "PP-DocLayoutV2"}
+    # 레이아웃 모델은 파이프라인 기본값에 맡긴다 - 버전마다 다르다(v1=PP-DocLayoutV2 · 1.6=PP-DocLayoutV3).
+    # 고정했다가 1.6 에서 어긋났다(2026-09-17).
+    kw = {"vl_rec_backend": "vllm-server", "vl_rec_server_url": a.server}
+    if a.layout_name:
+        kw["layout_detection_model_name"] = a.layout_name
     if a.layout_dir:
         kw["layout_detection_model_dir"] = a.layout_dir
     pipeline = PaddleOCRVL(**kw)
@@ -71,7 +90,7 @@ def main() -> int:
     ok = fail = 0
     for i, rel in enumerate(paths, 1):
         img = rel if os.path.isabs(rel) else os.path.join(HERE, rel)
-        src = os.path.basename(rel)
+        src = source_name(rel)
         dst = os.path.join(out_dir, src + ".json")
         if os.path.exists(dst):                              # 이어서 돌리기
             ok += 1

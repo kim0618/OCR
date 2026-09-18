@@ -104,25 +104,38 @@ def table_lines(content: str, bbox: list) -> list:
     return out
 
 
-def header_keys(rows: list) -> list | None:
-    """표 머리글 → 우리 정규 키. 파서의 _EXPECTED_COLUMN_ALIASES 를 그대로 빌려 쓴다."""
+def _row_keys(cells: list) -> tuple[list, int]:
+    """한 행을 우리 정규 키로 옮긴다. (키 목록, 알아본 칸 수)"""
     try:
         from extractors.invoice_statement import _EXPECTED_COLUMN_ALIASES as AL
     except Exception:
-        return None
+        return [], 0
     norm = lambda t: re.sub(r"\s+", "", t or "").lower()
     lut = {norm(v): k for k, vs in AL.items() for v in vs}
-    head = [clean(c) for c in (rows[0] if rows else [])]
-    if not head or not any(head):
-        return None
     keys, hit = [], 0
-    for i, t in enumerate(head):
-        k = lut.get(norm(t))
+    for i, c in enumerate(cells):
+        k = lut.get(norm(clean(c)))
         if k:
             hit += 1
         keys.append(k or "_col%d" % i)
-    # 절반도 못 알아보면 머리글이 아니라 데이터 행이다 - 가이드를 포기하고 파서에 맡긴다
-    return keys if hit >= max(2, len(head) // 2) else None
+    return keys, hit
+
+
+def find_header(rows: list) -> tuple[int, list] | tuple[None, None]:
+    """품목표 머리글이 몇 번째 행인가.
+
+    ★모델은 헤더부(공급자·공급받는자 등록번호…)와 품목표를 **한 덩어리 표**로 낸다
+      (2026-09-17 실측: rowspan 으로 묶인 한 표 안에 둘 다 들어 있다).
+      그래서 첫 행만 보면 못 찾는다 - 표 중간에서 찾아야 하고,
+      그 앞은 품목이 아니라 문서 머리글이므로 글자로만 넣어야 한다.
+    """
+    for i, cells in enumerate(rows[:12]):          # 머리글이 12행보다 아래 있는 경우는 없다
+        if len(cells) < 3:
+            continue
+        keys, hit = _row_keys(cells)
+        if hit >= max(2, len(cells) // 2):
+            return i, keys
+    return None, None
 
 
 def grid_lines(rows: list, bbox: list, ncol: int, skip_head: bool = False) -> list:
@@ -143,8 +156,15 @@ def grid_lines(rows: list, bbox: list, ncol: int, skip_head: bool = False) -> li
 
 
 def to_snapshot(parse: dict) -> dict:
-    blocks = sorted(parse.get("parsing_res_list") or [],
-                    key=lambda b: b.get("block_order", b.get("block_id", 0)))
+    # block_order 가 키는 있는데 값이 None 인 블록이 섞여 온다(2026-09-17 실측) -
+    # .get(k, default) 는 그 경우 None 을 돌려줘 정렬에서 TypeError 가 난다.
+    def order(b):
+        for k in ("block_order", "block_id"):
+            v = b.get(k)
+            if isinstance(v, (int, float)):
+                return v
+        return 1e9
+    blocks = sorted(parse.get("parsing_res_list") or [], key=order)
     # 품목표 = 가장 큰 표 블록 하나. 나머지 표는 글자로만 넣는다(합계표·안내문 등).
     tables = [b for b in blocks
               if (b.get("block_label") or "").lower() == "table" or "<t" in (b.get("block_content") or "").lower()]
@@ -157,8 +177,17 @@ def to_snapshot(parse: dict) -> dict:
         if b is main:
             rows = [TD.findall(r) for r in TR.findall(content)]
             rows = [r for r in rows if r]
-            keys = header_keys(rows)
+            hi, keys = find_header(rows)
             if keys:
+                if hi:
+                    # 머리글 위쪽(문서 헤더부)은 품목이 아니다 - 표 bbox 를 행 비율로 갈라
+                    # 위쪽은 글자로만 넣는다. 안 가르면 그게 전부 품목 행이 된다(+22행 사고).
+                    x0, y0, x1, y1 = bbox
+                    ysplit = y0 + (y1 - y0) * hi / max(1, len(rows))
+                    head_txt = chr(10).join(" ".join(clean(c) for c in r if clean(c)) for r in rows[:hi])
+                    lines += text_lines(head_txt, [x0, y0, x1, ysplit])
+                    bbox = [x0, ysplit, x1, y1]
+                    rows = rows[hi:]
                 # ★모델이 표를 표로 주므로 파서가 컬럼을 추론할 이유가 없다.
                 #   격자를 그대로 넘겨 헤더 검출 경로를 건너뛴다(T-6j colGuides).
                 #   합성 GT 로도 열이 밀리던 문제가 여기서 잡힌다.
@@ -204,12 +233,25 @@ def main() -> int:
     if a.keep_snapshots:
         os.makedirs(snap_dir, exist_ok=True)
 
+    def src_of(parse: dict, fallback: str) -> str:
+        """sourceFile 은 image_path 에서 유도한다(llm_runner.source_name 과 같은 규약).
+        파싱 파일 이름만 쓰면 2605__437387__ 같은 앞부분이 없어 compare_run 이 GT 를 못 찾는다."""
+        norm = (parse.get("image_path") or "").replace("\\", "/")
+        m = re.search(r"images_replay/([^/]+)/([^/]+)/([^/]+)$", norm)
+        if m:
+            return "%s__%s__%s" % (m.group(1), m.group(2), m.group(3))
+        base = os.path.basename(norm) or fallback
+        if "/runs/" in norm and base.endswith(".jpg.jpg"):
+            base = base[:-4]
+        return base or fallback
+
     files = sorted(f for f in os.listdir(a.parse) if f.endswith(".json"))
     ok = fail = 0
     for fn in files:
         src = fn[:-5]
         try:
             parse = json.load(io.open(os.path.join(a.parse, fn), encoding="utf-8"))
+            src = src_of(parse, src)
             snap = to_snapshot(parse)
             if a.keep_snapshots:
                 with io.open(os.path.join(snap_dir, fn), "w", encoding="utf-8") as fh:

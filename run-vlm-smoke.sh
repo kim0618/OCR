@@ -1,6 +1,12 @@
 #!/bin/bash
 # run-vlm-smoke — 스모크 50장을 full_text 있음(A)/없음(B) 두 번 돌리고 게이트를 요약한다.
 #
+#   bash ~/OCR/run-vlm-smoke.sh minicpm          # A/B 둘 다
+#   bash ~/OCR/run-vlm-smoke.sh minicpm b        # B(full_text 제외)만 - 기본 경로
+#
+# full_text 제외는 2026-09-07 에 확정됐다. A 는 그 결정을 낳은 비교라 이미 끝난 것이고,
+# 새 모델을 줄 세울 때 다시 돌리면 40분·$0.66 을 버린다. 특별한 이유가 없으면 b 로 돌린다.
+#
 #   bash ~/OCR/run-vlm-smoke.sh            # qwen
 #   bash ~/OCR/run-vlm-smoke.sh minicpm
 #
@@ -19,6 +25,7 @@ REPO=$(vlm_repo "$KEY")
 LIST=eval/LLM/inputs/smoke_50.txt
 RUN_A="vlm_${KEY}_smoke_A"
 RUN_B="vlm_${KEY}_smoke_B"
+MODE="${2:-ab}"          # b = A(full_text 포함) 건너뜀
 
 curl -sf "http://localhost:$VLM_PORT/v1/models" >/dev/null 2>&1 \
   || { echo "✗ vLLM 서버가 안 떠 있다. bash ~/OCR/run-vlm-serve.sh $KEY 먼저." >&2; exit 1; }
@@ -36,17 +43,23 @@ run_one() {   # run_one <run 이름> [추가 인자...]
     | tee -a ~/OCR/logs/vlm_smoke.log || true
 }
 
-vlm_say "A · full_text 포함  ($RUN_A)"
-run_one "$RUN_A"
-nvidia-smi --query-gpu=memory.used,memory.total --format=csv,noheader
+if [[ "$MODE" == "b" ]]; then
+  vlm_say "A 건너뜀 (full_text 제외 확정 · 2026-09-07)"
+else
+  vlm_say "A · full_text 포함  ($RUN_A)"
+  run_one "$RUN_A"
+  nvidia-smi --query-gpu=memory.used,memory.total --format=csv,noheader
+fi
 
 vlm_say "B · full_text 제거  ($RUN_B)"
 run_one "$RUN_B" --no-fulltext
 
 vlm_say "게이트 요약"
-VLM_MAX_TOKENS="$VLM_MAX_TOKENS" python3 - "$RUN_A" "$RUN_B" "$LIST" <<'PY'
+RUNS=("$RUN_A" "$RUN_B")
+[[ "$MODE" == "b" ]] && RUNS=("$RUN_B")
+VLM_MAX_TOKENS="$VLM_MAX_TOKENS" python3 - "${RUNS[@]}" "$LIST" <<'PY'
 import json, os, sys
-runs, list_path = sys.argv[1:3], sys.argv[3]
+runs, list_path = sys.argv[1:-1], sys.argv[-1]
 want = sum(1 for l in open(list_path, encoding='utf-8') if l.strip())
 meta = {}
 for r in runs:
@@ -81,14 +94,22 @@ for r in runs:
     else:
         print("  O 잘림 없음 (전 문서 finish_reason=stop)")
 
-a, b = (meta[r] for r in runs)
-ha, hb = a.get('docsPerHour'), b.get('docsPerHour')
-if ha and hb:
-    print(f"\nfull_text 오버헤드 = {(hb/ha - 1)*100:.1f}%  "
-          f"(A {ha}장/h 포함 · B {hb}장/h 제거)")
-    for n, label in ((500*3, '500x3 모델'), (9001, '9,001 본판정')):
-        h = n / ha
-        print(f"  A 기준 {label:<12} {n:>6,}장 -> {h*60:6.1f}분 · ${h:.2f}")
+if len(runs) == 2:
+    a, b = (meta[r] for r in runs)
+    ha, hb = a.get('docsPerHour'), b.get('docsPerHour')
+    if ha and hb:
+        print(f"\nfull_text 오버헤드 = {(hb/ha - 1)*100:.1f}%  "
+              f"(A {ha}장/h 포함 · B {hb}장/h 제거)")
+        for n, label in ((500*3, '500x3 모델'), (9001, '9,001 본판정')):
+            h = n / ha
+            print(f"  A 기준 {label:<12} {n:>6,}장 -> {h*60:6.1f}분 · ${h:.2f}")
+else:
+    hb = meta[runs[0]].get('docsPerHour')
+    if hb:
+        print(f"\n처리량 {hb}장/h (full_text 제외) · 줄 세울 기준 = Qwen3-VL 4B 176.1장/h")
+        for n, label in ((500, '500장 1모델'), (9001, '9,001 본판정')):
+            h = n / hb
+            print(f"  {label:<12} {n:>6,}장 -> {h*60:6.1f}분 · ${h:.2f}")
 print("""
 판정할 것
   1 JSON 파싱률   오류 0 인가
