@@ -33,8 +33,16 @@ def esc(v) -> str:
     return html.escape(str(v or ""))
 
 
+def to_px(box, w: int, h: int):
+    """0~1000 정규화 좌표를 원본 픽셀로. Qwen3-VL 의 bbox_2d 규약."""
+    try:
+        x1, y1, x2, y2 = [float(v) for v in box]
+    except (TypeError, ValueError):
+        return None
+    return [int(x1 * w / 1000), int(y1 * h / 1000), int(x2 * w / 1000), int(y2 * h / 1000)]
+
+
 def crop_b64(img, box, pad: int = 4) -> str | None:
-    from PIL import Image                                   # noqa: PLC0415
     try:
         x1, y1, x2, y2 = [int(v) for v in box]
     except (TypeError, ValueError):
@@ -66,10 +74,10 @@ def main() -> int:
     for fn in files:
         s = json.load(io.open(os.path.join(sam, fn), encoding="utf-8"))
         rows = (s.get("documentFields") or {}).get("tableRows") or []
-        boxes = [r for r in rows if isinstance(r.get("box"), list) and len(r["box"]) == 4]
+        boxes = [r for r in rows if isinstance(r.get("bbox_2d"), list) and len(r["bbox_2d"]) == 4]
         stat["rows"] += len(rows)
         stat["boxed"] += len(boxes)
-        stat["zero"] += sum(1 for r in boxes if r["box"] == [0, 0, 0, 0])
+        stat["zero"] += sum(1 for r in boxes if r["bbox_2d"] == [0, 0, 0, 0])
         if stat["docs"] >= a.docs or not boxes:
             continue
         path = s.get("imagePath") or ""
@@ -81,19 +89,20 @@ def main() -> int:
         w, h = img.size
         trs = []
         for r in boxes[:a.rows]:
-            b = r["box"]
-            if b != [0, 0, 0, 0] and (b[2] > w * 1.05 or b[3] > h * 1.05):
-                stat["outside"] += 1
+            n = r["bbox_2d"]
+            if n != [0, 0, 0, 0] and (n[2] > 1050 or n[3] > 1050):
+                stat["outside"] += 1          # 0~1000 밖 = 규약을 안 따른 것
+            b = to_px(n, w, h) or [0, 0, 0, 0]
             c = crop_b64(img, b)
             if c:
                 stat["cropped"] += 1
             vals = " · ".join("%s %s" % (ko, esc(r.get(k))) for k, ko in COLS if r.get(k))
             trs.append("<tr><td>%s</td><td class='m'>%s</td><td>%s</td></tr>" % (
                 ("<img src='data:image/jpeg;base64,%s'>" % c) if c else "<span class='m'>(못 자름)</span>",
-                esc(b), vals))
+                esc(n) + " → " + esc(b), vals))
         cards.append("<h3>%s <span class='m'>· %d×%d · 행 %d개</span></h3>"
                      "<table><tr><th style='width:52%%'>모델 박스대로 자른 그림</th>"
-                     "<th style='width:170px'>box</th><th>그 행의 값</th></tr>%s</table>"
+                     "<th style='width:230px'>bbox_2d → 픽셀</th><th>그 행의 값</th></tr>%s</table>"
                      % (esc(s.get("sourceFile"))[:60], w, h, len(rows), "".join(trs)))
         stat["docs"] += 1
 

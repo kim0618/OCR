@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# run-vlm-smoke-box.sh — 좌표(box)까지 요구하는 스모크 50장. **진단 전용**이다.
+# run-vlm-smoke-box.sh — 좌표(bbox_2d · 0~1000 정규화)까지 요구하는 스모크 50장. **진단 전용**이다.
 #
 #   ~/OCR/run-vlm-smoke-box.sh            # qwen
 #
@@ -34,9 +34,15 @@ SERVED="$(curl -sf http://127.0.0.1:8000/v1/models | python3 -c 'import sys,json
   echo "✗ 서버가 $WANT 가 아니다 (지금: ${SERVED:-없음}). run-vlm-serve.sh $KEY 먼저." >&2; exit 1; }
 [[ -f "$PROMPT" ]] || { echo "✗ 프롬프트가 없다: $PROMPT - git pull 먼저." >&2; exit 1; }
 [[ -f "$LIST" ]] || { echo "✗ 목록이 없다: $LIST" >&2; exit 1; }
-grep -q '"box"' eval/llm_runner.py || {
-  echo "✗ llm_runner.py 가 옛 버전이다 - box 를 저장하지 않고 버린다. git pull 먼저." >&2; exit 1; }
-[[ -d "eval/runs/$RUN" ]] && { echo "✗ 이미 있다: eval/runs/$RUN - 지우거나 이름을 바꾸고 다시." >&2; exit 1; }
+grep -q '"bbox_2d"' eval/llm_runner.py || {
+  echo "✗ llm_runner.py 가 옛 버전이다 - bbox_2d 를 저장하지 않고 버린다. git pull 먼저." >&2; exit 1; }
+# 1차(2026-09-18)가 남아 있으면 옆으로 치운다 - 같은 이름으로 다시 돌린다.
+if [[ -d "eval/runs/$RUN" ]]; then
+  OLD="eval/runs/${RUN}_v1attempt"
+  [[ -d "$OLD" ]] && rm -rf "$OLD"
+  mv "eval/runs/$RUN" "$OLD"
+  echo "이전 run 을 $OLD 로 옮겼다(1차: 박스 전부 [0,0,0,0])."
+fi
 
 # ── 실행 (v1 스모크 B 와 같은 설정 · 프롬프트만 다르다) ──────────────────────
 python3 -u eval/llm_runner.py \
@@ -66,7 +72,7 @@ for fn in os.listdir(os.path.join(d, "samples")):
         cut += 1
     for r in ((s.get("documentFields") or {}).get("tableRows") or []):
         rows += 1
-        b = r.get("box")
+        b = r.get("bbox_2d")
         if isinstance(b, list) and len(b) == 4:
             boxed += 1
             if b == [0, 0, 0, 0]:

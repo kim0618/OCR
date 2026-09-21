@@ -132,12 +132,14 @@ def to_record(source_file: str, image_path: str, resp: dict, ms: float,
             continue
         row = {k: str(r.get(k) or "") for k in ROW_FIELDS}
         row["rowIndex"] = row["rowIndex"] or str(i)
-        # box 는 채점에 안 쓰지만(compare_run 이 모르는 키를 무시한다) 진단에 필요하므로 살려 둔다.
+        # 좌표는 채점에 안 쓰지만(compare_run 이 모르는 키를 무시한다) 진단에 필요하므로 살려 둔다.
         # ROW_FIELDS 로만 거르면 프롬프트가 좌표를 줘도 여기서 버려진다(prompt_v1_box).
-        b = r.get("box")
+        # Qwen3-VL 은 bbox_2d · 0~1000 정규화로 학습돼 있다. 픽셀 환산은 로컬에서 한다
+        # (DLAMI 시스템 python3 에 PIL 이 없어 여기서는 이미지 크기를 모른다).
+        b = r.get("bbox_2d") or r.get("box")
         if isinstance(b, (list, tuple)) and len(b) == 4:
             try:
-                row["box"] = [int(float(v)) for v in b]
+                row["bbox_2d"] = [int(float(v)) for v in b]
             except (TypeError, ValueError):
                 pass
         rows.append(row)
