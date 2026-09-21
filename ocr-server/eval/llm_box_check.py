@@ -80,9 +80,17 @@ def main() -> int:
         stat["zero"] += sum(1 for r in boxes if r["bbox_2d"] == [0, 0, 0, 0])
         if stat["docs"] >= a.docs or not boxes:
             continue
+        # imagePath 는 AWS 절대경로다(/home/ubuntu/OCR/ocr-server/...). 로컬에서는 레포 아래로 되짚는다.
         path = s.get("imagePath") or ""
         if not os.path.exists(path):
-            path = os.path.join(ROOT, path.lstrip("/"))
+            norm = path.replace(chr(92), "/")
+            for anchor in ("/ocr-server/", "/eval/"):
+                i = norm.find(anchor)
+                if i >= 0:
+                    cand = os.path.join(ROOT, norm[i + len("/ocr-server/"):]) if anchor == "/ocr-server/"                         else os.path.join(ROOT, norm[i + 1:])
+                    if os.path.exists(cand):
+                        path = cand
+                        break
         if not os.path.exists(path):
             continue
         img = Image.open(path)
